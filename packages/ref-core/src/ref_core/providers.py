@@ -36,6 +36,9 @@ class MetricsProvider:
             raise ValueError("Metric must be an instance of Metric")
         self._metrics[metric.name.lower()] = metric
 
+    def __iter__(self):
+        return iter(self._metrics.values())
+
     def get(self, name: str) -> Metric:
         """
         Get a metric by name.

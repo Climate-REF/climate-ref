@@ -1,7 +1,7 @@
 [project]
-name = "ref-metrics-example"
+name = "ref-celery"
 version = "0.1.0"
-description = "Example metrics provider for the CMIP Rapid Evaluation Framework"
+description = "Celery app for mananging tasks and workers"
 readme = "README.md"
 authors = [
     { name = "Jared Lewis", email = "jared.lewis@climate-resource.com" }
@@ -21,15 +21,13 @@ classifiers = [
     "Topic :: Scientific/Engineering",
 ]
 dependencies = [
-    "ref-core",
-    "ref-celery",
-    "xarray >= 2022",
-    "netcdf4",
-    "dask>=2024.10.0",
+    "celery[redis]>=5.4.0",
+    "ref-core"
 ]
 
 [tool.uv]
 dev-dependencies = [
+
 ]
 
 [tool.uv.sources]

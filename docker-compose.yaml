@@ -1,0 +1,16 @@
+name: cmip-ref
+services:
+  redis:
+    image: redis:7
+    restart: always
+    ports:
+      - "6379:6379"
+  flower:
+    image: mher/flower
+    restart: always
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
+    ports:
+      - "5555:5555"
+    depends_on:
+      - redis

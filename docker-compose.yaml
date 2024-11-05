@@ -14,3 +14,11 @@ services:
       - "5555:5555"
     depends_on:
       - redis
+  metrics-example:
+    image: ref-metrics-example
+    restart: always
+    build:
+      context: packages/ref-metrics-example
+      additional_contexts:
+        - root=.
+    command: ref-celery worker

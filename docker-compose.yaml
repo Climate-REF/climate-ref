@@ -21,4 +21,4 @@ services:
       context: packages/ref-metrics-example
       additional_contexts:
         - root=.
-    command: ref-celery worker
+    command: ref-celery --package ref-metrics-example

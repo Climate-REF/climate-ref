@@ -22,8 +22,13 @@ classifiers = [
 ]
 dependencies = [
     "celery[redis]>=5.4.0",
-    "ref-core"
+    "ref-core",
+    "typer"
 ]
+
+[project.scripts]
+ref-celery = "ref_celery.cli:app"
+
 
 [tool.uv]
 dev-dependencies = [

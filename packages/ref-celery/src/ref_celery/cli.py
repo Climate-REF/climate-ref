@@ -32,7 +32,7 @@ def start_worker(
 
     # Attempt to import the package
     try:
-        imp = importlib.import_module(package.replace("-", "_"))  # type: ignore
+        imp = importlib.import_module(package.replace("-", "_"))
     except ModuleNotFoundError:
         typer.echo(f"Package '{package}' not found")
         raise typer.Abort()

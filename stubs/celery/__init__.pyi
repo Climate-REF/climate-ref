@@ -1,0 +1,13 @@
+from collections.abc import Callable
+from typing import Any
+
+class Celery:
+    def __init__(self, name: str | None = None) -> None: ...
+    def config_from_envvar(self, envvar: str) -> None: ...
+    def worker_main(self, argv: list[str] | None = None) -> None: ...
+    def task(
+        self,
+        task: Callable[..., Any],
+        name: str | None = None,
+        queue: str | None = None,
+    ) -> None: ...

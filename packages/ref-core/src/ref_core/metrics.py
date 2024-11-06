@@ -1,5 +1,5 @@
 import json
-import pathlib
+from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
 
 from attrs import frozen
@@ -13,7 +13,7 @@ class Configuration:
     Configuration that describes the input data sources
     """
 
-    output_fragment: pathlib.Path
+    output_fragment: Path
     """
     Directory to write output files to relative to the output root.
     """
@@ -21,7 +21,7 @@ class Configuration:
     # TODO: Add more configuration options here
 
     @staticmethod
-    def as_output_path(file_fragment: str | pathlib.Path, ensure_parent_exists: bool = False) -> pathlib.Path:
+    def as_output_path(file_fragment: str | Path, ensure_parent_exists: bool = False) -> Path:
         """
         Get the output path for a file in the output directory.
 
@@ -37,7 +37,7 @@ class Configuration:
         :
             The path to the file in the output directory.
         """
-        root_output_dir = env.path("REF_OUTPUT_ROOT")
+        root_output_dir: Path = env.path("REF_OUTPUT_ROOT", Path("out"))
 
         output_path = root_output_dir / file_fragment
 
@@ -46,7 +46,7 @@ class Configuration:
         return output_path
 
     @staticmethod
-    def as_esgf_path(file_fragment: str | pathlib.Path) -> pathlib.Path:
+    def as_esgf_path(file_fragment: str | Path) -> Path:
         """
         Get the output path for a file in the output directory.
 
@@ -60,7 +60,7 @@ class Configuration:
         :
             The path to the file in the esgf directory.
         """
-        root_output_dir = env.path("REF_ESGF_ROOT")
+        root_output_dir: Path = env.path("REF_ESGF_ROOT", Path(".esgpull/data"))
 
         return root_output_dir / file_fragment
 
@@ -76,7 +76,7 @@ class MetricResult:
 
     # Do we want to load a serialised version of the output bundle here or just a file path?
 
-    output_bundle: pathlib.Path | None
+    output_bundle: Path | None
     """
     Path to the output bundle file.
 
@@ -128,7 +128,7 @@ class TriggerInfo:
     The reason why the metric was run.
     """
 
-    dataset: pathlib.Path
+    dataset: Path
     """
     Path to the dataset that triggered the metric run.
     """

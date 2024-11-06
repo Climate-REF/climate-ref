@@ -18,11 +18,14 @@ from typing import Any
 
 from celery import Celery
 from loguru import logger
+from mypy_extensions import Arg, KwArg
 from ref_core.metrics import Configuration, Metric, MetricResult, TriggerInfo
 from ref_core.providers import MetricsProvider
 
 
-def metric_task_factory(metric: Metric) -> Callable:
+def metric_task_factory(
+    metric: Metric,
+) -> Callable[[Arg(Configuration, "configuration"), Arg(TriggerInfo, "trigger"), KwArg(Any)], MetricResult]:
     """
     Create a new task for the given metric
     """
@@ -38,7 +41,7 @@ def metric_task_factory(metric: Metric) -> Callable:
     return task
 
 
-def register_celery_tasks(app: Celery, provider: MetricsProvider):
+def register_celery_tasks(app: Celery, provider: MetricsProvider) -> None:
     """
     Register all tasks for the given provider
 

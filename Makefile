@@ -30,6 +30,7 @@ pre-commit:  ## run all the linting checks of the codebase
 .PHONY: mypy
 mypy:  ## run mypy on the codebase
 	MYPYPATH=stubs uv run --package ref-core mypy packages/ref-core
+	MYPYPATH=stubs uv run --package ref-celery mypy packages/ref-celery
 	MYPYPATH=stubs uv run --package ref-metrics-example mypy packages/ref-metrics-example
 
 .PHONY: ruff-fixes

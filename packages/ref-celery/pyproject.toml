@@ -34,7 +34,7 @@ ref-celery = "ref_celery.cli:app"
 
 [tool.uv]
 dev-dependencies = [
-
+    "pytest-mock>=3.14.0",
 ]
 
 [tool.uv.sources]

@@ -34,13 +34,15 @@ def start_worker(
     try:
         imp = importlib.import_module(package.replace("-", "_"))  # type: ignore
     except ModuleNotFoundError:
-        raise ValueError(f"Package '{package}' not found")
+        typer.echo(f"Package '{package}' not found")
+        raise typer.Abort()
 
     # Get the provider from the package
     try:
         provider = imp.provider
     except AttributeError:
-        raise ValueError("The package must define a 'provider' variable")
+        typer.echo("The package must define a 'provider' variable")
+        raise typer.Abort()
 
     # Wrap each metrics in the provider with a celery tasks
     register_celery_tasks(celery_app, provider)
@@ -49,5 +51,5 @@ def start_worker(
     celery_app.worker_main(argv=argv)
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     app()

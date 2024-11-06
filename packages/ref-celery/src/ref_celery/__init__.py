@@ -1,5 +1,7 @@
 """
-Rapid evaluating CMIP data
+Celery application for running metrics asynchronously across multiple workers
+
+
 """
 
 import importlib.metadata

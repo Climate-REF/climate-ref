@@ -1,3 +1,5 @@
+# Services to run the Rapid Evaluation Framework (REF)
+
 name: cmip-ref
 services:
   redis:

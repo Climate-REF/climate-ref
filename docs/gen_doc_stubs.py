@@ -111,12 +111,13 @@ def write_module_page(
     with mkdocs_gen_files.open(write_file, "w") as fh:
         fh.write(f"# {package_full_name}\n")
 
-        if sub_packages:
-            fh.write("\n")
-            fh.write(f"{create_sub_packages_table(sub_packages)}\n")
-
         fh.write("\n")
         fh.write(f"::: {package_full_name}")
+
+        if sub_packages:
+            fh.write("\n")
+            fh.write("## sub-packages \n")
+            fh.write(f"{create_sub_packages_table(sub_packages)}\n")
 
     if package.__doc__ is None:
         summary = ""
@@ -131,7 +132,9 @@ def write_module_page(
 
 
 write_module_page("ref_core")
+write_module_page("ref_celery")
 write_module_page("ref_metrics_example")
 
 with mkdocs_gen_files.open(ROOT_DIR / "NAVIGATION.md", "w") as fh:
+    print(list(nav.build_literate_nav()))
     fh.writelines(nav.build_literate_nav())

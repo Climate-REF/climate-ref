@@ -1,3 +1,7 @@
+"""
+CLI for the ref-celery package.
+"""
+
 import importlib
 
 import typer

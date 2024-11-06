@@ -15,6 +15,7 @@ nav:
   - Tutorials: tutorials.md
   - Further background:
     - Explanation: explanation.md
+  - API: api/
   - Development: development.md
   - Changelog: changelog.md
 
@@ -51,6 +52,10 @@ plugins:
   - gen-files:
       scripts:
         - docs/gen_doc_stubs.py
+  # Make the navigation easier to handle/auto-generate if we wish
+  # https://oprypin.github.io/mkdocs-literate-nav/
+  - literate-nav:
+      nav_file: NAVIGATION.md
   # Notebook support.
   # Working out how to make this play with nb-exec would be nice,
   # then it wouldn't run every time.

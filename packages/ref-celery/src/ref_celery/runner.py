@@ -1,3 +1,7 @@
+"""
+Example script for running a set of metrics asynchronously
+"""
+
 import pathlib
 from pathlib import Path
 

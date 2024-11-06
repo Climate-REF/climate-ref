@@ -17,8 +17,12 @@ services:
   metrics-example:
     image: ref-metrics-example
     restart: always
+    environment:
+      - CELERY_BROKER_URL=redis://redis:6379/1
     build:
       context: packages/ref-metrics-example
       additional_contexts:
         - root=.
     command: ref-celery --package ref-metrics-example
+    volumes:
+      - ./packages/ref-metrics-example:/app

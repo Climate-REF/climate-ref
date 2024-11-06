@@ -1,3 +1,18 @@
+"""
+Task generation and registration for Celery
+
+This module provides a factory function to create Celery tasks for metrics.
+These celery tasks are then registered with the Celery app to enable them to be run asynchronously.
+
+Since the metric definition may be in a different virtual environment it is not possible to directly
+import the provider and create the tasks in both the worker and the main process.
+
+Instead, the tasks are registered only in the worker process.
+The main process can then send tasks to the worker using the task name.
+The main process is responsible for tracking what metrics have been registered
+and to respond to new workers coming online.
+"""
+
 from collections.abc import Callable
 from typing import Any
 

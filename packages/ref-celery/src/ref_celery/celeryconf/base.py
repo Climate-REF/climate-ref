@@ -4,7 +4,7 @@ Base configuration for Celery.
 Other environments can use these settings as a base and override them as needed.
 """
 
-from ref_celery.env import load_environment
+from ref_core.env import load_environment
 
 env = load_environment()
 

@@ -3,7 +3,8 @@ import pathlib
 from typing import Any, Protocol, runtime_checkable
 
 from attrs import frozen
-from ref_celery.env import env
+
+from ref_core.env import env
 
 
 @frozen

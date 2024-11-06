@@ -1,0 +1,21 @@
+name: "Setup test-data cache"
+description: "Share a set of cached data for use in the tests"
+runs:
+  using: "composite"
+  steps:
+    - name: Cache test data
+      id: cache-test-data
+      uses: actions/cache@v4
+      with:
+        path: .esgpull
+        key: test-data-${{ hashFiles('scripts/fetch_test_data.py') }}
+    - name: Install esgpull
+      run: |
+        uv run esgpull self install .esgpull || uv run esgpull self choose .esgpull
+      shell: bash
+    - if: ${{ steps.cache-test-data.outputs.cache-hit != 'true' }}
+      name: Fetch the test data
+      run: |
+        uv run esgpull config api.index_node esgf-node.llnl.gov
+        make fetch-test-data
+      shell: bash

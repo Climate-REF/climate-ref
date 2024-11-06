@@ -19,6 +19,8 @@ services:
     restart: always
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
+      - REF_OUTPUT_ROOT=/output
+      - REF_ESGF_ROOT=/esgf
     build:
       context: packages/ref-metrics-example
       additional_contexts:
@@ -26,3 +28,5 @@ services:
     command: ref-celery --package ref-metrics-example
     volumes:
       - ./packages/ref-metrics-example:/app
+      - .esgpull/data:/esgf
+      - ./out:/output

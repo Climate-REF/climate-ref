@@ -148,3 +148,6 @@ dmypy.json
 
 # Esgpull
 .esgpull
+
+# Local output directory
+out/

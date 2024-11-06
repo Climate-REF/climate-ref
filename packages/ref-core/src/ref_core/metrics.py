@@ -3,6 +3,7 @@ import pathlib
 from typing import Any, Protocol, runtime_checkable
 
 from attrs import frozen
+from ref_celery.env import env
 
 
 @frozen
@@ -11,12 +12,56 @@ class Configuration:
     Configuration that describes the input data sources
     """
 
-    output_directory: pathlib.Path
+    output_fragment: pathlib.Path
     """
-    Directory to write output files to
+    Directory to write output files to relative to the output root.
     """
 
     # TODO: Add more configuration options here
+
+    @staticmethod
+    def as_output_path(file_fragment: str | pathlib.Path, ensure_parent_exists: bool = False) -> pathlib.Path:
+        """
+        Get the output path for a file in the output directory.
+
+        Parameters
+        ----------
+        file_fragment
+            Relative path to a file with respect to the output directory.
+        ensure_parent_exists
+            Whether to create the parent directory if it does not exist.
+
+        Returns
+        -------
+        :
+            The path to the file in the output directory.
+        """
+        root_output_dir = env.path("REF_OUTPUT_ROOT")
+
+        output_path = root_output_dir / file_fragment
+
+        if ensure_parent_exists:
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+        return output_path
+
+    @staticmethod
+    def as_esgf_path(file_fragment: str | pathlib.Path) -> pathlib.Path:
+        """
+        Get the output path for a file in the output directory.
+
+        Parameters
+        ----------
+        file_fragment
+            Relative path to a file with respect to the esgf directory.
+
+        Returns
+        -------
+        :
+            The path to the file in the esgf directory.
+        """
+        root_output_dir = env.path("REF_ESGF_ROOT")
+
+        return root_output_dir / file_fragment
 
 
 @frozen
@@ -63,10 +108,15 @@ class MetricResult:
             A prepared MetricResult object.
             The output bundle will be written to the output directory.
         """
-        with open(configuration.output_directory / "output.json", "w") as file_handle:
+        with open(
+            configuration.as_output_path(
+                configuration.output_fragment / "output.json", ensure_parent_exists=True
+            ),
+            "w",
+        ) as file_handle:
             json.dump(cmec_output_bundle, file_handle)
         return MetricResult(
-            output_bundle=configuration.output_directory / "output.json",
+            output_bundle=configuration.output_fragment / "output.json",
             successful=True,
         )
 

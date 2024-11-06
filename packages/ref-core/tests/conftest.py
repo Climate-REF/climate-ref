@@ -8,7 +8,7 @@ class MockMetric:
 
     def run(self, configuration: Configuration, trigger: TriggerInfo) -> MetricResult:
         return MetricResult(
-            output_bundle=configuration.output_directory / "output.json",
+            output_bundle=configuration.output_fragment / "output.json",
             successful=True,
         )
 
@@ -39,5 +39,5 @@ def mock_metric() -> MockMetric:
 @pytest.fixture
 def configuration(tmp_path) -> Configuration:
     return Configuration(
-        output_directory=tmp_path,
+        output_fragment=tmp_path,
     )

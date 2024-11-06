@@ -74,12 +74,12 @@ def format_cmec_output_bundle(dataset: xr.Dataset) -> dict[str, Any]:
     return cmec_output
 
 
-class ExampleMetric:
+class AnnualGlobalMeanTimeseries:
     """
     Calculate the annual mean global mean timeseries for a dataset
     """
 
-    name = "example"
+    name = "annual-global-mean-timeseries"
 
     def run(self, configuration: Configuration, trigger: TriggerInfo | None) -> MetricResult:
         """
@@ -101,14 +101,16 @@ class ExampleMetric:
         if trigger is None:
             # TODO: This should probably raise an exception
             return MetricResult(
-                output_bundle=configuration.output_directory / "output.json",
+                output_bundle=configuration.output_fragment / "output.json",
                 successful=False,
             )
 
         # This is where one would hook into how ever they want to run
         # their benchmarking packages.
         # cmec-driver, python calls, subprocess calls all would work
-        annual_mean_global_mean_timeseries = calculate_annual_mean_timeseries(trigger.dataset)
+        annual_mean_global_mean_timeseries = calculate_annual_mean_timeseries(
+            configuration.as_esgf_path(trigger.dataset)
+        )
 
         return MetricResult.build(
             configuration, format_cmec_output_bundle(annual_mean_global_mean_timeseries)

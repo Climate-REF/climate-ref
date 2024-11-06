@@ -22,7 +22,10 @@ FROM python:3.12-slim-bookworm
 LABEL maintainer="Jared Lewis <jared.lewis@climate-resource.com>"
 LABEL description="Docker image with the execution environment for the ref-metrics-example package"
 
+ENV C_FORCE_ROOT=false
+
 WORKDIR /app
+RUN useradd -ms /bin/bash celery
 
 COPY pyproject.toml README.md /app/
 
@@ -35,5 +38,7 @@ RUN pip install --no-cache-dir /wheels/*.whl
 #RUN pip install ref-celery
 
 COPY . /app
-
+RUN chown -R celery:celery /app
 RUN pip install -e .
+
+USER celery

@@ -3,7 +3,7 @@ from ref_core.metrics import Configuration, MetricResult
 
 class TestMetricResult:
     def test_build(self, tmp_path):
-        config = Configuration(output_directory=tmp_path)
+        config = Configuration(output_fragment=tmp_path)
         result = MetricResult.build(config, {"data": "value"})
 
         assert result.successful

@@ -1,7 +1,9 @@
 from collections.abc import Callable
+from typing import Any
 
 from celery import Celery
-from ref_core.metrics import Metric
+from loguru import logger
+from ref_core.metrics import Configuration, Metric, MetricResult, TriggerInfo
 from ref_core.providers import MetricsProvider
 
 
@@ -10,14 +12,13 @@ def metric_task_factory(metric: Metric) -> Callable:
     Create a new task for the given metric
     """
 
-    def task():
+    def task(configuration: Configuration, trigger: TriggerInfo, **kwargs: Any) -> MetricResult:
         """
         Task to run the metric
         """
-        return metric.name
+        logger.info(f"Running metric {metric.name} with configuration {configuration} and trigger {trigger}")
 
-    # def task(configuration: Configuration, trigger: TriggerInfo):
-    # metric.run(configuration, trigger)
+        return metric.run(configuration, trigger)
 
     return task
 
@@ -25,6 +26,8 @@ def metric_task_factory(metric: Metric) -> Callable:
 def register_celery_tasks(app: Celery, provider: MetricsProvider):
     """
     Register all tasks for the given provider
+
+    This is run on worker startup to register all tasks a given provider
 
     Parameters
     ----------

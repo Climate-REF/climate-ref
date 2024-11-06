@@ -74,7 +74,9 @@ jobs:
           make fetch-test-data
       - name: Run tests
         run: |
+          cp .env.example .env
           uv run --package ref-core pytest packages/ref-core -r a -v --doctest-modules --cov=packages/ref-core/src --cov-report=term
+          uv run --package ref-celery pytest packages/ref-celery -r a -v --doctest-modules --cov=packages/ref-celery/src --cov-report=term
           uv run --package ref-metrics-example pytest packages/ref-metrics-example -r a -v --doctest-modules --cov=packages/ref-metrics-example/src --cov-report=term --cov-append
           uv run coverage xml
           # Run integration tests (without adding to the coverage)

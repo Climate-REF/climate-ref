@@ -1,6 +1,7 @@
 import pytest
 from ref_core.executor import Executor, ExecutorManager, run_metric
 from ref_core.executor.local import LocalExecutor
+from ref_core.metrics import TriggerInfo
 
 
 class TestExecutorManager:
@@ -29,10 +30,11 @@ class TestLocalExecutor:
 
 
 @pytest.mark.parametrize("executor_name", ["local", None])
-def test_run_metric_local(monkeypatch, executor_name, mock_metric, provider, configuration):
+def test_run_metric_local(monkeypatch, executor_name, mock_metric, provider, configuration, test_dataset):
     if executor_name:
         monkeypatch.setenv("REF_EXECUTOR", executor_name)
-    result = run_metric("mock", provider, configuration=configuration)
+    trigger = TriggerInfo(dataset=test_dataset)
+    result = run_metric("mock", provider, configuration=configuration, trigger=trigger)
     assert result.successful
 
 

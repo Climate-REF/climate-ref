@@ -1,25 +1,5 @@
-from pathlib import Path
-
-import pytest
 from ref_core.metrics import Configuration, TriggerInfo
 from ref_metrics_example.example import AnnualGlobalMeanTimeseries, calculate_annual_mean_timeseries
-
-
-@pytest.fixture
-def test_dataset(esgf_data_dir) -> Path:
-    return (
-        esgf_data_dir
-        / "CMIP6"
-        / "ScenarioMIP"
-        / "CSIRO"
-        / "ACCESS-ESM1-5"
-        / "ssp126"
-        / "r1i1p1f1"
-        / "Amon"
-        / "tas"
-        / "gn"
-        / "v20210318"
-    )
 
 
 def test_annual_mean(esgf_data_dir, test_dataset):

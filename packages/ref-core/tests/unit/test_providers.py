@@ -1,3 +1,4 @@
+import pytest
 from ref_core.metrics import Metric
 from ref_core.providers import MetricsProvider
 
@@ -17,6 +18,11 @@ class TestMetricsProvider:
         assert len(provider) == 1
         assert "mock" in provider._metrics
         assert isinstance(provider.get("mock"), Metric)
+
+    def test_provider_register_invalid(self, mock_metric):
+        provider = MetricsProvider("provider_name", "v0.23")
+        with pytest.raises(ValueError):
+            provider.register("invalid")
 
     def test_provider_fixture(self, provider):
         assert provider.name == "mock_provider"

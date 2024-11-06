@@ -7,10 +7,9 @@ from pathlib import Path
 
 from celery.exceptions import NotRegistered
 from loguru import logger
+from ref_celery.app import create_celery_app
 from ref_core.env import env
 from ref_core.metrics import Configuration, TriggerInfo
-
-from ref_celery.app import create_celery_app
 
 config = {
     "providers": [

@@ -44,6 +44,36 @@ mamba install -c conda-forge cmip-ref
 conda install -c conda-forge cmip-ref
 ```
 
+## Getting started
+
+### As a metrics provider
+
+Metrics providers are the core of the REF.
+They define the metrics that will be calculated and the data that will be used to calculate them,
+by providing a consistent interface for the REF to interact with.
+
+
+These metrics providers can be run as standalone applications or as part of the REF.
+See
+
+### As a modelling center
+
+The REF requires a number of different services to be running in order to function.
+To make it easy to deploy and use locally,
+we provide a `docker-compose` file that will start all the necessary services.
+
+The background services for the REF can be deployed using the following command:
+
+```bash
+docker-compose up
+```
+
+This will start the following services:
+* `redis` - a message broker for the REF
+* `flower` - a monitoring tool for the background tasks in REF
+* `ref-metrics-example` - A worker for executing the 'example' metric provider
+
+Metric calculations can then be queued up using `scripts/runner.py`
 
 <!--- sec-end-installation -->
 

@@ -12,7 +12,7 @@ class LocalExecutor:
     the exact manner of which is yet to be determined.
     """
 
-    name = "local"
+    name: str = "local"
 
     def run_metric(
         self, metric: Metric, configuration: Configuration, trigger: TriggerInfo | None, **kwargs: Any

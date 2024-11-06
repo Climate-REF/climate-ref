@@ -5,10 +5,10 @@ def load_environment() -> Env:
     """
     Load the environment variables from the `.env` file.
     """
-    env = Env()
-    env.read_env()
+    new_env = Env()
+    new_env.read_env(verbose=True)
 
-    return env
+    return new_env
 
 
 env = load_environment()

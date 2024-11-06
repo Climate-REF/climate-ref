@@ -31,13 +31,13 @@ class TestLocalExecutor:
 @pytest.mark.parametrize("executor_name", ["local", None])
 def test_run_metric_local(monkeypatch, executor_name, mock_metric, provider, configuration):
     if executor_name:
-        monkeypatch.setenv("CMIP_REF_EXECUTOR", executor_name)
+        monkeypatch.setenv("REF_EXECUTOR", executor_name)
     result = run_metric("mock", provider, configuration=configuration)
     assert result.successful
 
 
 def test_run_metric_unknown_executor(monkeypatch, provider):
-    monkeypatch.setenv("CMIP_REF_EXECUTOR", "missing")
+    monkeypatch.setenv("REF_EXECUTOR", "missing")
     with pytest.raises(KeyError):
         run_metric("mock", metrics_provider=provider, kwarg="test")
 

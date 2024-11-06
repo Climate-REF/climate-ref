@@ -528,6 +528,7 @@ dev = [
     { name = "mkdocstrings", extra = ["python"] },
     { name = "mypy" },
     { name = "myst-nb" },
+    { name = "notebook" },
     { name = "pip" },
     { name = "pre-commit" },
     { name = "pytest" },
@@ -560,6 +561,7 @@ dev = [
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.25.0" },
     { name = "mypy", specifier = ">=1.11.0" },
     { name = "myst-nb", specifier = ">=1.1.1" },
+    { name = "notebook", specifier = ">=7" },
     { name = "pip", specifier = ">=24.3.1" },
     { name = "pre-commit", specifier = ">=3.3.1" },
     { name = "pytest", specifier = ">=7.3.1" },
@@ -1932,6 +1934,22 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/43/16/fc88b08840de0e0a72a2f9d8c6bae36be573e475a6326ae854bcc549fc45/nodeenv-1.9.1.tar.gz", hash = "sha256:6ec12890a2dab7946721edbfbcd91f3319c6ccc9aec47be7c7e6b7011ee6645f", size = 47437 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/d2/1d/1b658dbd2b9fa9c4c9f32accbfc0205d532c8c6194dc0f2a4c0428e7128a/nodeenv-1.9.1-py2.py3-none-any.whl", hash = "sha256:ba11c9782d29c27c70ffbdda2d7415098754709be8a7056d79a737cd901155c9", size = 22314 },
+]
+
+[[package]]
+name = "notebook"
+version = "7.2.2"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jupyter-server" },
+    { name = "jupyterlab" },
+    { name = "jupyterlab-server" },
+    { name = "notebook-shim" },
+    { name = "tornado" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/0f/33/30b83c1c84e368087059bde1269549612584924db156bff53654e165a498/notebook-7.2.2.tar.gz", hash = "sha256:2ef07d4220421623ad3fe88118d687bc0450055570cdd160814a59cf3a1c516e", size = 4948876 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/46/77/53732fbf48196af9e51c2a61833471021c1d77d335d57b96ee3588c0c53d/notebook-7.2.2-py3-none-any.whl", hash = "sha256:c89264081f671bc02eec0ed470a627ed791b9156cad9285226b31611d3e9fe1c", size = 5037123 },
 ]
 
 [[package]]

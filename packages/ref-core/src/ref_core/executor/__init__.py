@@ -4,7 +4,7 @@ Execute metrics in different environments
 We support running metrics in different environments, such as locally,
 in a separate process, or in a container.
 These environments are represented by `Executor` classes.
-The `CMIP_REF_EXECUTOR` environment variable determines which executor is used.
+The `REF_EXECUTOR` environment variable determines which executor is used.
 
 The simplest executor is the `LocalExecutor`, which runs the metric in the same process.
 This is useful for local testing and debugging.
@@ -119,7 +119,7 @@ def run_metric(metric_name: str, /, metrics_provider: MetricsProvider, **kwargs:
     """
     Run a metric using the default executor
 
-    The executor is determined by the `CMIP_REF_EXECUTOR` environment variable.
+    The executor is determined by the `REF_EXECUTOR` environment variable.
     The arguments will be updated in the future as the metric execution interface is expanded.
 
     TODO: migrate to a configuration object rather than relying on environment variables.
@@ -138,12 +138,12 @@ def run_metric(metric_name: str, /, metrics_provider: MetricsProvider, **kwargs:
     :
         The result of the metric execution
     """
-    executor_name = os.environ.get("CMIP_REF_EXECUTOR", "local")
+    executor_name = os.environ.get("REF_EXECUTOR", "local")
 
     executor = get_executor(executor_name)
     metric = metrics_provider.get(metric_name)
 
-    result = executor.run_metric(metric, trigger=None, **kwargs)
+    result = executor.run_metric(metric, **kwargs)
 
     # TODO: Validate the result
     # TODO: Log the result

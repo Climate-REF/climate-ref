@@ -98,7 +98,6 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
-
   imports-without-extras:
     strategy:
       fail-fast: false
@@ -142,3 +141,19 @@ jobs:
         run: |
           echo "No changelog present."
           exit 1
+
+  check-build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Check build
+        run: |
+          uv build --package cmip-ref -o dist
+          uv build --package cmip-ref-core -o dist
+          tar -tvf dist/cmip_ref-*.tar.gz --wildcards '*ref/py.typed' '*/LICENCE' '*/NOTICE'
+          tar -tvf dist/cmip_ref_core-*.tar.gz --wildcards '*ref_core/py.typed' '*/LICENCE' '*/NOTICE'
+      - name: Check installable
+        run: |
+          uv pip install dist/*.whl

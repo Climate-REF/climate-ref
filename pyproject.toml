@@ -1,5 +1,5 @@
 [project]
-name = "cmip-ref"
+name = "cmip-ref-root"
 version = "0.1.0"
 description = "CMIP Rapid Evaluation Framework"
 readme = "README.md"
@@ -8,9 +8,9 @@ authors = [
 ]
 requires-python = ">=3.10"
 dependencies = [
-    "ref[postgres]",
-    "ref-core",
-    "ref-metrics-example",
+    "cmip-ref[postgres]",
+    "cmip-ref-core",
+    "cmip-ref-metrics-example",
 ]
 
 [project.license]
@@ -54,9 +54,9 @@ dev-dependencies = [
 members = ["packages/*"]
 
 [tool.uv.sources]
-ref = { workspace = true }
-ref-core = { workspace = true }
-ref-metrics-example = { workspace = true }
+cmip-ref = { workspace = true }
+cmip-ref-core = { workspace = true }
+cmip-ref-metrics-example = { workspace = true }
 
 [tool.coverage.run]
 source = ["packages"]

@@ -1,0 +1,32 @@
+[project]
+name = "cmip_ref_metrics_ilamb"
+version = "0.1.5"
+description = "ILAMB/IOMB metrics provider for the CMIP Rapid Evaluation Framework"
+readme = "README.md"
+authors = [
+    { name = "Nathan Collier", email = "nathaniel.collier@gmail.com" }
+]
+requires-python = ">=3.10"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Operating System :: OS Independent",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+]
+dependencies = [
+    "cmip_ref_core",
+]
+
+[project.license]
+text = "Apache-2.0"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

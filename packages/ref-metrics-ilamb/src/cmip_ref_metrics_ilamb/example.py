@@ -16,10 +16,14 @@ class ILAMBStandardTAS(Metric):
     name = "ILAMB Standard TAS"
     slug = "ilamb-standard-tas"
 
-    data_requirements = DataRequirement(
-        source_type=SourceDatasetType.CMIP6,
-        filters=(FacetFilter(facets={"variable_id": "tas", "experiment_id": ["historical", "land-hist"]}),),
-        group_by=("source_id", "variant_label", "grid_label"),
+    data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(
+                FacetFilter(facets={"variable_id": "tas", "experiment_id": ["historical", "land-hist"]}),
+            ),
+            group_by=("source_id", "variant_label", "grid_label"),
+        ),
     )
 
     def run(self, definition: MetricExecutionDefinition) -> MetricResult:
@@ -55,8 +59,8 @@ class ILAMBStandardTAS(Metric):
         # larger file or iterate over them setting up these metrics
         # programmatically.
         cfg_file = definition.to_output_path("fluxnet_tas.cfg")
-        with open(cfg_file, "w") as out:
-            out.write("""
+        with open(cfg_file, "w") as cfg:
+            cfg.write("""
 [h1: ILAMB-REF Output]
 [h2: Surface Air Temperature]
 variable = "tas"
@@ -69,29 +73,29 @@ source   = "Fluxnet2015_tas.nc"
         # apply them to the datasets found in the `definition``. TODO: Add pointers
         # to cell measures, think about how to assign colors for models.
         mod_file = definition.to_output_path("models_fluxnet_tas.yaml")
-        df = self.data_requirements.apply_filters(
-            definition.metric_dataset[self.data_requirements.source_type].datasets
-        )
+        dr = self.data_requirements[0]
+        df = dr.apply_filters(definition.metric_dataset[dr.source_type].datasets)
         mod_config = ""
-        for grp, dfg in df.groupby(list(self.data_requirements.group_by)):
-            mod_name = "_".join(grp)
-            paths = "\n".join(set([f"  - {Path(row.path).parent}" for _, row in dfg.iterrows()]))
-            mod_config += f"""
+        if dr.group_by is not None:
+            for grp, dfg in df.groupby(list(dr.group_by)):
+                mod_name = "_".join(grp)
+                paths = "\n".join(set([f"  - {Path(row.path).parent}" for _, row in dfg.iterrows()]))
+                mod_config += f"""
 {mod_name}:
   modelname: {mod_name}
   path: null
   paths:
 {paths}
 """
-        with open(mod_file, "w") as out:
-            out.write(mod_config)
+        with open(mod_file, "w") as mod:
+            mod.write(mod_config)
 
         # Run the ilamb study. The reference data path is relative to an
         # environment variable which we will set here. This also dumps the
         # screen output into a log file to help debug what happened.
         env = os.environ.copy()
         env["ILAMB_ROOT"] = str(definition.output_fragment)
-        out = subprocess.run(  # noqa: S603
+        res = subprocess.run(  # noqa: S603
             [  # noqa: S607
                 "ilamb-run",
                 "--config",
@@ -108,8 +112,8 @@ source   = "Fluxnet2015_tas.nc"
             env=env,
         )
         with open(definition.to_output_path("run.log"), mode="w") as log:
-            log.write(out.stdout)
-        out.check_returncode()
+            log.write(res.stdout)
+        res.check_returncode()
 
         # read from output
         return MetricResult.build_from_output_bundle(definition, {})

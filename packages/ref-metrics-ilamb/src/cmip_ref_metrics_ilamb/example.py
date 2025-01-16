@@ -24,7 +24,7 @@ class ILAMBStandardTAS(Metric):
 
     def run(self, definition: MetricExecutionDefinition) -> MetricResult:
         """
-        Run a metric from ILAMB. Will factor out in functions once it is more clear how things will work.
+        Run a metric from ILAMB.
 
         Parameters
         ----------
@@ -65,9 +65,9 @@ source   = "Fluxnet2015_tas.nc"
 """)
 
         # Write a model setup file. It seems counter-intuitive to me that even
-        # though I defined data_requirements above, I stil lhave to manually
-        # apply them to the datasets found in the definition. TODO: Add pointers
-        # to cell measures, think about how to assign colors for plots.
+        # though I defined data_requirements above, I still have to manually
+        # apply them to the datasets found in the `definition``. TODO: Add pointers
+        # to cell measures, think about how to assign colors for models.
         mod_file = definition.to_output_path("models_fluxnet_tas.yaml")
         df = self.data_requirements.apply_filters(
             definition.metric_dataset[self.data_requirements.source_type].datasets
@@ -111,4 +111,5 @@ source   = "Fluxnet2015_tas.nc"
             log.write(out.stdout)
         out.check_returncode()
 
+        # read from output
         return MetricResult.build_from_output_bundle(definition, {})

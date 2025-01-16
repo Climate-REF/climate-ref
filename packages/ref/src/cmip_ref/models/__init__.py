@@ -15,4 +15,4 @@ from cmip_ref.models.provider import Provider
 Table = TypeVar("Table", bound=Base)
 
 
-__all__ = ["Base", "Dataset", "Table", "Metric", "MetricExecution", "MetricExecutionResult", "Provider"]
+__all__ = ["Base", "Dataset", "Metric", "MetricExecution", "MetricExecutionResult", "Provider", "Table"]

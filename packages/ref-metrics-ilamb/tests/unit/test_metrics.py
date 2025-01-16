@@ -40,7 +40,6 @@ def test_example_metric(tmp_path, mocker, metric_dataset, cmip6_data_catalog):
     result_dir = definition.output_fragment / "results"
     result = result_dir / "result.nc"
 
-
     def mock_check_call(cmd, *args, **kwargs):
         result.parent.mkdir(parents=True)
         result.touch()

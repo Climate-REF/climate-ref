@@ -22,6 +22,8 @@ classifiers = [
 ]
 dependencies = [
     "cmip_ref_core",
+    "requests",
+    "types-requests",
 ]
 
 [project.license]

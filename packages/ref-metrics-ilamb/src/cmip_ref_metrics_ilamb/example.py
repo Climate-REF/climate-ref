@@ -1,3 +1,4 @@
+import json
 import os
 import subprocess
 from pathlib import Path
@@ -116,4 +117,8 @@ source   = "Fluxnet2015_tas.nc"
         res.check_returncode()
 
         # read from output
-        return MetricResult.build_from_output_bundle(definition, {})
+        bundle = {}
+        if definition.output_directory is not None:
+            with open(definition.output_directory / "scalar_database.json") as cmec:
+                bundle = json.load(cmec)
+        return MetricResult.build_from_output_bundle(definition, bundle)

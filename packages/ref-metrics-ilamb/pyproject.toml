@@ -24,6 +24,7 @@ dependencies = [
     "cmip_ref_core",
     "requests",
     "types-requests",
+    "ilamb"
 ]
 
 [project.license]

@@ -20,6 +20,8 @@ runs:
         python-version: ${{ inputs.python-version }}
         enable-cache: true
     # Install dependencies and builds the rust crate
+    - name: Install MPI
+      uses: mpi4py/setup-mpi@v1
     - name: Install the project
       shell: bash
       run: |

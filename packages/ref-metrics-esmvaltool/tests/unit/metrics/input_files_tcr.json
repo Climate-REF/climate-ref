@@ -1,0 +1,146 @@
+{
+    "start_time": {
+        "94": "0101-01-16T12:00:00.000",
+        "92": "0101-01-16T12:00:00.000"
+    },
+    "end_time": {
+        "94": "0250-12-16T12:00:00.000",
+        "92": "0600-12-16T12:00:00.000"
+    },
+    "path": {
+        "94": "/home/bandela/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/1pctCO2/r1i1p1f1/Amon/tas/gn/v20191115/tas_Amon_ACCESS-ESM1-5_1pctCO2_r1i1p1f1_gn_010101-025012.nc",
+        "92": "/home/bandela/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/tas/gn/v20210316/tas_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-060012.nc"
+    },
+    "activity_id": {
+        "94": "CMIP",
+        "92": "CMIP"
+    },
+    "branch_method": {
+        "94": "standard",
+        "92": "standard"
+    },
+    "branch_time_in_child": {
+        "94": 0.0,
+        "92": 0.0
+    },
+    "branch_time_in_parent": {
+        "94": 0.0,
+        "92": 36524.0
+    },
+    "experiment": {
+        "94": "1 percent per year increase in CO2",
+        "92": "pre-industrial control"
+    },
+    "experiment_id": {
+        "94": "1pctCO2",
+        "92": "piControl"
+    },
+    "frequency": {
+        "94": "mon",
+        "92": "mon"
+    },
+    "grid": {
+        "94": "native atmosphere N96 grid (145x192 latxlon)",
+        "92": "native atmosphere N96 grid (145x192 latxlon)"
+    },
+    "grid_label": {
+        "94": "gn",
+        "92": "gn"
+    },
+    "institution_id": {
+        "94": "CSIRO",
+        "92": "CSIRO"
+    },
+    "nominal_resolution": {
+        "94": "250 km",
+        "92": "250 km"
+    },
+    "parent_activity_id": {
+        "94": "CMIP",
+        "92": "CMIP"
+    },
+    "parent_experiment_id": {
+        "94": "piControl",
+        "92": "piControl-spinup"
+    },
+    "parent_source_id": {
+        "94": "ACCESS-ESM1-5",
+        "92": "ACCESS-ESM1-5"
+    },
+    "parent_time_units": {
+        "94": "days since 0101-01-01",
+        "92": "days since 0001-01-01"
+    },
+    "parent_variant_label": {
+        "94": "r1i1p1f1",
+        "92": "r1i1p1f1"
+    },
+    "product": {
+        "94": "model-output",
+        "92": "model-output"
+    },
+    "realm": {
+        "94": "atmos",
+        "92": "atmos"
+    },
+    "source_id": {
+        "94": "ACCESS-ESM1-5",
+        "92": "ACCESS-ESM1-5"
+    },
+    "source_type": {
+        "94": "AOGCM",
+        "92": "AOGCM"
+    },
+    "sub_experiment": {
+        "94": "none",
+        "92": "none"
+    },
+    "sub_experiment_id": {
+        "94": "none",
+        "92": "none"
+    },
+    "table_id": {
+        "94": "Amon",
+        "92": "Amon"
+    },
+    "variable_id": {
+        "94": "tas",
+        "92": "tas"
+    },
+    "variant_label": {
+        "94": "r1i1p1f1",
+        "92": "r1i1p1f1"
+    },
+    "member_id": {
+        "94": "r1i1p1f1",
+        "92": "r1i1p1f1"
+    },
+    "standard_name": {
+        "94": "air_temperature",
+        "92": "air_temperature"
+    },
+    "long_name": {
+        "94": "Near-Surface Air Temperature",
+        "92": "Near-Surface Air Temperature"
+    },
+    "units": {
+        "94": "K",
+        "92": "K"
+    },
+    "vertical_levels": {
+        "94": 1,
+        "92": 1
+    },
+    "init_year": {
+        "94": null,
+        "92": null
+    },
+    "version": {
+        "94": "v20191115",
+        "92": "v20210316"
+    },
+    "instance_id": {
+        "94": "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191115",
+        "92": "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316"
+    }
+}

@@ -1,6 +1,7 @@
 from collections import defaultdict
 from typing import Protocol, runtime_checkable
 
+import numpy as np
 import pandas as pd
 from attrs import frozen
 from loguru import logger
@@ -133,7 +134,7 @@ class RequireFacets:
     """
 
     dimension: str
-    required_facets: tuple[str]
+    required_facets: tuple[str, ...]
 
     def validate(self, group: pd.DataFrame) -> bool:
         """
@@ -195,6 +196,89 @@ class AddSupplementaryDataset:
             supplementary_group = supplementary_group.loc[list(indices)].drop_duplicates()
 
         return pd.concat([group, supplementary_group])
+
+
+@frozen
+class RequireContiguousTimerange:
+    """
+    A constraint that requires datasets to have a contiguous timerange.
+    """
+
+    group_by: tuple[str, ...]
+    """
+    The fields to group the datasets by. Each group must be contiguous in time
+    to fulfill the constraint.
+    """
+
+    def validate(self, group: pd.DataFrame) -> bool:
+        """
+        Check that all subgroups of the group have a contiguous timerange.
+        """
+        # Maximum allowed time difference between the end of one file and the
+        # start of the next file.
+        max_timedelta = pd.Timedelta(
+            days=31,  # Maximum number of days in a month.
+            hours=1,  # Allow for potential rounding errors.
+        )
+        group = group.dropna(subset=["start_time", "end_time"])
+        if len(group) < 2:  # noqa: PLR2004
+            return True
+
+        for _, subgroup in group.groupby(self.group_by):
+            if len(subgroup) < 2:  # noqa: PLR2004
+                continue
+            sorted_group = subgroup.sort_values("start_time", kind="stable")
+            start_series = sorted_group["start_time"]
+            end_series = sorted_group["end_time"]
+            # Sometimes the elements of start_series.values are of type datetime64[ns]
+            # and sometimes its elements are of type datetime.datetime.
+            # Convert both arrays to datetime.datetime objects to make sure they
+            # can be subtracted.
+            if hasattr(start_series, "dt"):
+                start_array = np.array(start_series.dt.to_pydatetime())
+            else:
+                start_array = start_series.values  # type: ignore[assignment]
+            if hasattr(end_series, "dt"):
+                end_array = np.array(end_series.dt.to_pydatetime())
+            else:
+                end_array = end_series.values  # type: ignore[assignment]
+            diff = start_array[1:] - end_array[:-1]
+            gap_indices = diff > max_timedelta
+            if gap_indices.any():
+                paths = sorted_group["path"]
+                for gap_idx in np.flatnonzero(gap_indices):
+                    logger.debug(
+                        f"Constraint {self.__class__.__name__} not satisfied "
+                        f"because gap larger than {max_timedelta} found between "
+                        f"{paths.iloc[gap_idx]} and {paths.iloc[gap_idx+1]}"
+                    )
+                return False
+        return True
+
+
+@frozen
+class RequireOverlappingTimerange:
+    """
+    A constraint that requires datasets to have an overlapping timerange.
+    """
+
+    group_by: tuple[str, ...]
+    """
+    The fields to group the datasets by. There must be overlap in time between
+    the groups to fulfill the constraint.
+    """
+
+    def validate(self, group: pd.DataFrame) -> bool:
+        """
+        Check that all subgroups of the group have an overlapping timerange.
+        """
+        group = group.dropna(subset=["start_time", "end_time"])
+        if len(group) < 2:  # noqa: PLR2004
+            return True
+
+        starts = group.groupby(self.group_by)["start_time"].min()
+        ends = group.groupby(self.group_by)["end_time"].max()
+        return starts.max() < ends.min()  # type: ignore[no-any-return]
 
 
 @frozen

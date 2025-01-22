@@ -12,23 +12,17 @@ from cmip_ref_metrics_esmvaltool.recipe import dataframe_to_recipe
 from cmip_ref_metrics_esmvaltool.types import OutputBundle, Recipe
 
 
-class EquilibriumClimateSensitivity(ESMValToolMetric):
+class TransientClimateResponse(ESMValToolMetric):
     """
-    Calculate the global mean equilibrium climate sensitivity for a dataset.
+    Calculate the global mean transient climate response for a dataset.
     """
 
-    name = "Equilibrium Climate Sensitivity"
-    slug = "esmvaltool-equilibrium-climate-sensitivity"
-    base_recipe = "recipe_ecs.yml"
+    name = "Transient Climate Response"
+    slug = "esmvaltool-transient-climate-response"
+    base_recipe = "recipe_tcr.yml"
 
-    variables = (
-        "rlut",
-        "rsdt",
-        "rsut",
-        "tas",
-    )
     experiments = (
-        "abrupt-4xCO2",
+        "1pctCO2",
         "piControl",
     )
     data_requirements = (
@@ -37,14 +31,13 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": variables,
+                        "variable_id": ("tas",),
                         "experiment_id": experiments,
                     },
                 ),
             ),
             group_by=("source_id", "member_id"),
             constraints=(
-                RequireFacets("variable_id", variables),
                 RequireFacets("experiment_id", experiments),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -57,22 +50,18 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
     @staticmethod
     def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
         """Update the recipe."""
-        # Only run the diagnostic that computes ECS for a single model.
+        # Only run the diagnostic that computes TCR for a single model.
         recipe["diagnostics"] = {
             "cmip6": {
-                "description": "Calculate ECS.",
+                "description": "Calculate TCR.",
                 "variables": {
                     "tas": {
                         "preprocessor": "spatial_mean",
                     },
-                    "rtnt": {
-                        "preprocessor": "spatial_mean",
-                        "derive": True,
-                    },
                 },
                 "scripts": {
-                    "ecs": {
-                        "script": "climate_metrics/ecs.py",
+                    "tcr": {
+                        "script": "climate_metrics/tcr.py",
                         "calculate_mmm": False,
                     },
                 },
@@ -80,7 +69,7 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
         }
 
         # Prepare updated datasets section in recipe. It contains two
-        # datasets, one for the "abrupt-4xCO2" and one for the "piControl"
+        # datasets, one for the "1pctCO2" and one for the "piControl"
         # experiment.
         recipe_variables = dataframe_to_recipe(input_files)
 
@@ -102,16 +91,16 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
     @staticmethod
     def format_result(result_dir: Path) -> OutputBundle:
         """Format the result."""
-        ecs_file = result_dir / "work/cmip6/ecs/ecs.nc"
-        ecs = xarray.open_dataset(ecs_file)
+        tcr_file = result_dir / "work/cmip6/tcr/tcr.nc"
+        tcr = xarray.open_dataset(tcr_file)
 
-        source_id = ecs.dataset.values[0].decode("utf-8")
+        source_id = tcr.dataset.values[0].decode("utf-8")
         cmec_output = {
             "DIMENSIONS": {
                 "dimensions": {
                     "source_id": {source_id: {}},
                     "region": {"global": {}},
-                    "variable": {"ecs": {}},
+                    "variable": {"tcr": {}},
                 },
                 "json_structure": [
                     "model",
@@ -126,7 +115,7 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
                 "version": __version__,
             },
             "RESULTS": {
-                source_id: {"global": {"ecs": ecs.ecs.values[0]}},
+                source_id: {"global": {"tcr": float(tcr.tcr.values[0])}},
             },
         }
 

@@ -179,7 +179,9 @@ def test_solve_metrics_default_solver(mock_executor, db_seeded, solver):
     with db_seeded.session.begin():
         solve_metrics(db_seeded)
 
-    assert mock_executor.return_value.run_metric.call_count == 6
+    # One of the datasets is incomplete due to slicing along the time axis
+    # in the sample data.
+    assert mock_executor.return_value.run_metric.call_count == 5
 
 
 @mock.patch("cmip_ref.solver.get_executor")

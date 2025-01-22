@@ -3,7 +3,7 @@ from pathlib import Path
 import pandas
 import xarray
 
-from cmip_ref_core.constraints import AddSupplementaryDataset
+from cmip_ref_core.constraints import AddSupplementaryDataset, RequireContiguousTimerange
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement
 from cmip_ref_metrics_esmvaltool._version import __version__
@@ -27,6 +27,7 @@ class GlobalMeanTimeseries(ESMValToolMetric):
             filters=(FacetFilter(facets={"variable_id": ("tas",)}),),
             group_by=("instance_id",),
             constraints=(
+                RequireContiguousTimerange(group_by=("instance_id",)),
                 AddSupplementaryDataset(
                     supplementary_facets={"variable_id": "areacella"},
                     matching_facets=("source_id", "grid_label"),

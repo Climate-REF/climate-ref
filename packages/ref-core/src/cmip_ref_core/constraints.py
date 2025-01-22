@@ -224,7 +224,7 @@ class RequireContiguousTimerange:
         if len(group) < 2:  # noqa: PLR2004
             return True
 
-        for _, subgroup in group.groupby(self.group_by):
+        for _, subgroup in group.groupby(list(self.group_by)):
             if len(subgroup) < 2:  # noqa: PLR2004
                 continue
             sorted_group = subgroup.sort_values("start_time", kind="stable")
@@ -276,8 +276,8 @@ class RequireOverlappingTimerange:
         if len(group) < 2:  # noqa: PLR2004
             return True
 
-        starts = group.groupby(self.group_by)["start_time"].min()
-        ends = group.groupby(self.group_by)["end_time"].max()
+        starts = group.groupby(list(self.group_by))["start_time"].min()
+        ends = group.groupby(list(self.group_by))["end_time"].max()
         return starts.max() < ends.min()  # type: ignore[no-any-return]
 
 

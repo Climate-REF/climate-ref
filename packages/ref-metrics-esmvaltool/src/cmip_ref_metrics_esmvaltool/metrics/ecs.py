@@ -42,14 +42,14 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
                     },
                 ),
             ),
-            # TODO: Add cell areas to the groups
-            # constraints=(AddCellAreas(),),
-            group_by=("source_id", "variant_label"),
+            group_by=("source_id", "member_id"),
             constraints=(
                 RequireFacets("variable_id", list(variables)),
                 RequireFacets("experiment_id", list(experiments)),
                 RequireContiguousTimerange(group_by=["instance_id"]),
                 RequireOverlappingTimerange(group_by=["instance_id"]),
+                # TODO: Add cell areas to the groups
+                # constraints=(AddCellAreas(),),
             ),
         ),
     )

@@ -3,6 +3,7 @@ from pathlib import Path
 import pandas
 import xarray
 
+from cmip_ref_core.constraints import RequireContiguousTimerange, RequireFacets, RequireOverlappingTimerange
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement
 from cmip_ref_metrics_esmvaltool._version import __version__
@@ -20,6 +21,10 @@ class TransientClimateResponse(ESMValToolMetric):
     slug = "esmvaltool-transient-climate-response"
     base_recipe = "recipe_tcr.yml"
 
+    experiments = (
+        "1pctCO2",
+        "piControl",
+    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
@@ -27,18 +32,18 @@ class TransientClimateResponse(ESMValToolMetric):
                 FacetFilter(
                     facets={
                         "variable_id": ("tas",),
-                        "experiment_id": (
-                            "1pctCO2",
-                            "piControl",
-                        ),
+                        "experiment_id": experiments,
                     },
                 ),
             ),
-            # TODO: Select only datasets that have both experiments
-            # TODO: Select only datasets that have a contiguous, shared timerange
-            # TODO: Add cell areas to the groups
-            # constraints=(AddCellAreas(),),
-            group_by=("source_id", "variant_label"),
+            group_by=("source_id", "member_id"),
+            constraints=(
+                RequireFacets("experiment_id", list(experiments)),
+                RequireContiguousTimerange(group_by=["instance_id"]),
+                RequireOverlappingTimerange(group_by=["instance_id"]),
+                # TODO: Add cell areas to the groups
+                # constraints=(AddCellAreas(),),
+            ),
         ),
     )
 

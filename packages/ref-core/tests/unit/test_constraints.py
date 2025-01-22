@@ -15,16 +15,6 @@ from cmip_ref_core.constraints import (
 from cmip_ref_core.exceptions import ConstraintNotSatisfied
 
 
-@pytest.fixture
-def data_catalog():
-    return pd.DataFrame(
-        {
-            "variable": ["tas", "pr", "rsut", "tas", "tas"],
-            "source_id": ["CESM2", "CESM2", "CESM2", "ACCESS", "CAS"],
-        }
-    )
-
-
 class TestRequireFacets:
     validator = RequireFacets(dimension="variable_id", required_facets=["tas", "pr"])
 
@@ -59,6 +49,7 @@ class TestContiguousTimerange:
                         "variable_id": [],
                         "start_time": [],
                         "end_time": [],
+                        "path": [],
                     }
                 ),
                 True,
@@ -75,6 +66,10 @@ class TestContiguousTimerange:
                             datetime(2000, 12, 16, 12),
                             datetime(2001, 12, 16, 12),
                         ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200112.nc",
+                        ],
                     }
                 ),
                 True,
@@ -82,14 +77,21 @@ class TestContiguousTimerange:
             (
                 pd.DataFrame(
                     {
-                        "variable_id": ["tas", "tas"],
+                        "variable_id": ["tas", "tas", "tas"],
                         "start_time": [
                             datetime(2000, 1, 16, 12),
-                            datetime(2002, 1, 16, 12),
+                            datetime(2001, 1, 16, 12),
+                            datetime(2003, 1, 16, 12),
                         ],
                         "end_time": [
                             datetime(2000, 12, 16, 12),
                             datetime(2001, 12, 16, 12),
+                            datetime(2003, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200112.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200112.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200301-200312.nc",
                         ],
                     }
                 ),
@@ -109,6 +111,11 @@ class TestContiguousTimerange:
                             datetime(2001, 12, 16, 12),
                             None,
                         ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200112.nc",
+                            "areacella_fx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc",
+                        ],
                     }
                 ),
                 True,
@@ -126,6 +133,11 @@ class TestContiguousTimerange:
                             datetime(2000, 12, 16, 12),
                             datetime(2000, 12, 16, 12),
                             datetime(2002, 12, 16, 12),
+                        ],
+                        "path": [
+                            "pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200201-200212.nc",
                         ],
                     }
                 ),
@@ -217,6 +229,16 @@ class TestSelectParentExperiment:
 
         assert isinstance(validator, GroupOperation)
         assert not isinstance(validator, GroupValidator)
+
+
+@pytest.fixture
+def data_catalog():
+    return pd.DataFrame(
+        {
+            "variable": ["tas", "pr", "rsut", "tas", "tas"],
+            "source_id": ["CESM2", "CESM2", "CESM2", "ACCESS", "CAS"],
+        }
+    )
 
 
 def test_apply_constraint_operation(data_catalog):

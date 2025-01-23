@@ -1,11 +1,19 @@
+import sys
 from collections import defaultdict
+from collections.abc import Mapping
 from typing import Protocol, runtime_checkable
+
+if sys.version_info < (3, 11):
+    from typing_extensions import Self
+else:
+    from typing import Self
 
 import numpy as np
 import pandas as pd
 from attrs import frozen
 from loguru import logger
 
+from cmip_ref_core.datasets import SourceDatasetType
 from cmip_ref_core.exceptions import ConstraintNotSatisfied
 
 
@@ -136,7 +144,7 @@ class RequireFacets:
     dimension: str
     required_facets: tuple[str, ...]
 
-    def validate(self, group: pd.DataFrame) -> bool:
+    def validate(self: Self, group: pd.DataFrame) -> bool:
         """
         Check that the required facets are present in the group
         """
@@ -152,7 +160,7 @@ class AddSupplementaryDataset:
     Include e.g. a cell measure or ancillary variable in the selection.
     """
 
-    supplementary_facets: dict[str, str | tuple[str, ...]]
+    supplementary_facets: Mapping[str, str | tuple[str, ...]]
     """
     Facets describing the supplementary dataset.
     """
@@ -167,7 +175,11 @@ class AddSupplementaryDataset:
     Select only the best matching datasets based on similarity with these facets.
     """
 
-    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+    def apply(
+        self: Self,
+        group: pd.DataFrame,
+        data_catalog: pd.DataFrame,
+    ) -> pd.DataFrame:
         """
         Add a supplementary dataset to the group.
         """
@@ -197,6 +209,51 @@ class AddSupplementaryDataset:
 
         return pd.concat([group, supplementary_group])
 
+    @classmethod
+    def from_defaults(
+        cls: type[Self],
+        variable: str,
+        source_type: SourceDatasetType,
+    ) -> Self:
+        """
+        Include e.g. a cell measure or ancillary variable in the selection.
+
+        The constraint is created using the defaults for the source_type.
+
+        Parameters
+        ----------
+        variable:
+            The name of the variable to add.
+        source_type:
+            The source_type of the variable to add.
+
+        Returns
+        -------
+        :
+            A constraint to include a supplementary variable.
+
+        """
+        kwargs = {
+            SourceDatasetType.CMIP6: {
+                "matching_facets": (
+                    "source_id",
+                    "grid_label",
+                ),
+                "optional_matching_facets": (
+                    "table_id",
+                    "experiment_id",
+                    "member_id",
+                    "version",
+                ),
+            }
+        }
+        variable_facet = {
+            SourceDatasetType.CMIP6: "variable_id",
+        }
+
+        supplementary_facets = {variable_facet[source_type]: variable}
+        return cls(supplementary_facets, **kwargs[source_type])
+
 
 @frozen
 class RequireContiguousTimerange:
@@ -210,7 +267,7 @@ class RequireContiguousTimerange:
     to fulfill the constraint.
     """
 
-    def validate(self, group: pd.DataFrame) -> bool:
+    def validate(self: Self, group: pd.DataFrame) -> bool:
         """
         Check that all subgroups of the group have a contiguous timerange.
         """
@@ -268,7 +325,7 @@ class RequireOverlappingTimerange:
     the groups to fulfill the constraint.
     """
 
-    def validate(self, group: pd.DataFrame) -> bool:
+    def validate(self: Self, group: pd.DataFrame) -> bool:
         """
         Check that all subgroups of the group have an overlapping timerange.
         """
@@ -287,7 +344,7 @@ class SelectParentExperiment:
     Include a dataset's parent experiment in the selection
     """
 
-    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+    def apply(self: Self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
         Include a dataset's parent experiment in the selection
 

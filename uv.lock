@@ -507,10 +507,14 @@ version = "0.1.5"
 source = { editable = "packages/ref-core" }
 dependencies = [
     { name = "attrs" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
-requires-dist = [{ name = "attrs", specifier = ">=22.1.0" }]
+requires-dist = [
+    { name = "attrs", specifier = ">=22.1.0" },
+    { name = "typing-extensions" },
+]
 
 [package.metadata.requires-dev]
 dev = []

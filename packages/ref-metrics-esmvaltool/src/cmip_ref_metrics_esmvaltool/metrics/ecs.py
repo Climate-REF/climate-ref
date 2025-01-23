@@ -3,7 +3,12 @@ from pathlib import Path
 import pandas
 import xarray
 
-from cmip_ref_core.constraints import RequireContiguousTimerange, RequireFacets, RequireOverlappingTimerange
+from cmip_ref_core.constraints import (
+    AddSupplementaryDataset,
+    RequireContiguousTimerange,
+    RequireFacets,
+    RequireOverlappingTimerange,
+)
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement
 from cmip_ref_metrics_esmvaltool._version import __version__
@@ -42,14 +47,13 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
                     },
                 ),
             ),
-            group_by=("source_id", "member_id"),
+            group_by=("source_id", "member_id", "grid_label"),
             constraints=(
                 RequireFacets("variable_id", variables),
                 RequireFacets("experiment_id", experiments),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireOverlappingTimerange(group_by=("instance_id",)),
-                # TODO: Add cell areas to the groups
-                # constraints=(AddCellAreas(),),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
     )
@@ -83,6 +87,7 @@ class EquilibriumClimateSensitivity(ESMValToolMetric):
         # datasets, one for the "abrupt-4xCO2" and one for the "piControl"
         # experiment.
         recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
 
         # Select a timerange covered by all datasets.
         start_times, end_times = [], []

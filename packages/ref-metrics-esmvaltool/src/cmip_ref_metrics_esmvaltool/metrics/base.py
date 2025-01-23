@@ -13,7 +13,7 @@ from cmip_ref_metrics_esmvaltool.types import OutputBundle, Recipe
 class ESMValToolMetric(Metric):
     """ESMValTool Metric base class."""
 
-    base_recipe: ClassVar
+    base_recipe: ClassVar[str]
 
     @staticmethod
     @abstractmethod

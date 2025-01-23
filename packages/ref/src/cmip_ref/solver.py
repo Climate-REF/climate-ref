@@ -52,13 +52,9 @@ class MetricExecution:
 
             _subset = source_datasets[list(requirement.group_by)] if requirement.group_by else source_datasets
             unique_values = _subset.drop_duplicates()
-            if len(unique_values) != 1:
-                logger.error(f"Unique values: {unique_values}")
-                raise InvalidMetricException(
-                    self.metric,
-                    f"Expected a single group for {requirement.source_type} but got {len(unique_values)}",
-                )
-            key_values.extend(unique_values.iloc[0].to_list())
+            for i, row in enumerate(unique_values.itertuples(index=False), 1):
+                key_values.append(f"dataset{i}")
+                key_values.extend(row)
 
         key = "_".join(key_values)
 

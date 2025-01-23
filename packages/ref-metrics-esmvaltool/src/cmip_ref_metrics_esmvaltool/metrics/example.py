@@ -28,11 +28,7 @@ class GlobalMeanTimeseries(ESMValToolMetric):
             group_by=("instance_id",),
             constraints=(
                 RequireContiguousTimerange(group_by=("instance_id",)),
-                AddSupplementaryDataset(
-                    supplementary_facets={"variable_id": "areacella"},
-                    matching_facets=("source_id", "grid_label"),
-                    optional_matching_facets=("table_id", "experiment_id", "member_id", "version"),
-                ),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
     )
@@ -48,6 +44,7 @@ class GlobalMeanTimeseries(ESMValToolMetric):
 
         # Prepare updated variables section in recipe.
         recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
         for variable in recipe_variables.values():
             variable["preprocessor"] = "annual_mean_global"
             variable["caption"] = "Annual global mean {long_name} according to {dataset}."

@@ -10,8 +10,12 @@ from cmip_ref_core.metrics import MetricExecutionDefinition
 @pytest.fixture
 def metric_dataset(cmip6_data_catalog) -> MetricDataset:
     selected_dataset = cmip6_data_catalog[
-        cmip6_data_catalog["instance_id"]
-        == "CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318"
+        cmip6_data_catalog["instance_id"].isin(
+            {
+                "CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318",
+                "CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn.v20210318",
+            }
+        )
     ]
     return MetricDataset(
         {

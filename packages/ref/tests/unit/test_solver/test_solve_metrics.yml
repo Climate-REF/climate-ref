@@ -1,27 +1,36 @@
-dataset1_ACCESS-ESM1-5_rsut_abrupt-4xCO2_r1i1p1f1:
+dataset1_ACCESS-ESM1-5_rsut_abrupt-4xCO2_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_abrupt-4xCO2_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20191115
-dataset1_ACCESS-ESM1-5_rsut_historical_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.fx.areacella.gn.v20191115
+dataset1_ACCESS-ESM1-5_rsut_historical_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_historical_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsut.gn.v20191115
-dataset1_ACCESS-ESM1-5_rsut_piControl_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+dataset1_ACCESS-ESM1-5_rsut_piControl_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_piControl_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsut.gn.v20210316
-dataset1_ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.fx.areacella.gn.v20210316
+dataset1_ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_ssp126_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.rsut.gn.v20210318
-dataset1_ACCESS-ESM1-5_tas_1pctCO2_r1i1p1f1:
+  - CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn.v20210318
+dataset1_ACCESS-ESM1-5_tas_1pctCO2_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_1pctCO2_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191115
-dataset1_ACCESS-ESM1-5_tas_abrupt-4xCO2_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191115
+dataset1_ACCESS-ESM1-5_tas_abrupt-4xCO2_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_abrupt-4xCO2_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.tas.gn.v20191115
-dataset1_ACCESS-ESM1-5_tas_historical_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.fx.areacella.gn.v20191115
+dataset1_ACCESS-ESM1-5_tas_historical_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_historical_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
-dataset1_ACCESS-ESM1-5_tas_piControl_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+dataset1_ACCESS-ESM1-5_tas_piControl_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_piControl_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316
-dataset1_ACCESS-ESM1-5_tas_ssp126_r1i1p1f1:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.fx.areacella.gn.v20210316
+dataset1_ACCESS-ESM1-5_tas_ssp126_r1i1p1f1_dataset2_ACCESS-ESM1-5_areacella_ssp126_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318
+  - CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn.v20210318

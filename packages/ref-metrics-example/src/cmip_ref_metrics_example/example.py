@@ -3,6 +3,7 @@ from typing import Any
 
 import xarray as xr
 
+from cmip_ref_core.constraints import AddSupplementaryDataset
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement, Metric, MetricExecutionDefinition, MetricResult
 
@@ -30,7 +31,7 @@ def calculate_annual_mean_timeseries(input_files: list[Path]) -> xr.Dataset:
     xr_ds = xr.open_mfdataset(input_files, combine="by_coords", chunks=None, use_cftime=True)
 
     annual_mean = xr_ds.resample(time="YS").mean()
-    return annual_mean.mean(dim=["lat", "lon"], keep_attrs=True)
+    return annual_mean.weighted(xr_ds.areacella).mean(dim=["lat", "lon"], keep_attrs=True)
 
 
 def format_cmec_output_bundle(dataset: xr.Dataset) -> dict[str, Any]:
@@ -90,10 +91,12 @@ class GlobalMeanTimeseries(Metric):
                 # Ignore some experiments because they are not relevant
                 FacetFilter(facets={"experiment_id": ("1pctCO2-*", "hist-*")}, keep=False),
             ),
-            # Add cell areas to the groups
-            # constraints=(AddCellAreas(),),
             # Run the metric on each unique combination of model, variable, experiment, and variant
             group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
+            constraints=(
+                # Add cell areas to the groups
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+            ),
         ),
     )
 

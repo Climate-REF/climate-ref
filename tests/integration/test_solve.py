@@ -27,22 +27,26 @@ class ExampleProviderRegistry(ProviderRegistry):
         return ProviderRegistry(providers=[example_provider])
 
 
-def test_solve(sample_data_dir, config, invoke_cli, monkeypatch):
+def test_solve(sample_data_dir, cmip6_data_catalog, config, invoke_cli, monkeypatch):
+    num_expected_datasets = cmip6_data_catalog["instance_id"].nunique()
+    num_expected_metrics = 9
+
     db = Database.from_config(config)
     monkeypatch.setattr(cmip_ref.solver, "ProviderRegistry", ExampleProviderRegistry)
     invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir)])
-    assert db.session.query(Dataset).count() == 10
+    assert db.session.query(Dataset).count() == num_expected_datasets
 
     result = invoke_cli(["--verbose", "solve"])
-    assert "Created metric execution ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1" in result.stderr
+    expected_metric_execution_name = "dataset1_ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1"
+    assert f"Created metric execution {expected_metric_execution_name}" in result.stderr
     assert "Running metric" in result.stderr
-    assert db.session.query(MetricExecution).count() == 4
+    assert db.session.query(MetricExecution).count() == num_expected_metrics
 
     # Running solve again should not trigger any new metric executions
     result = invoke_cli(["--verbose", "solve"])
-    assert "Created metric execution ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1" not in result.stderr
-    assert db.session.query(MetricExecution).count() == 4
-    execution = db.session.query(MetricExecution).filter_by(key="ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1").one()
+    assert f"Created metric execution {expected_metric_execution_name}" not in result.stderr
+    assert db.session.query(MetricExecution).count() == num_expected_metrics
+    execution = db.session.query(MetricExecution).filter_by(key=expected_metric_execution_name).one()
 
     assert len(execution.results[0].datasets) == 1
     assert (

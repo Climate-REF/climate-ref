@@ -5,10 +5,10 @@ import pytest
 from cmip_ref_metrics_example import provider
 
 from cmip_ref.provider_registry import ProviderRegistry
-from cmip_ref.solver import MetricSolver, extract_covered_datasets, solve_metrics
+from cmip_ref.solver import MetricExecution, MetricSolver, extract_covered_datasets, solve_metrics
 from cmip_ref_core.constraints import RequireFacets, SelectParentExperiment
 from cmip_ref_core.datasets import SourceDatasetType
-from cmip_ref_core.metrics import DataRequirement, FacetFilter
+from cmip_ref_core.metrics import DataRequirement, FacetFilter, MetricExecutionDefinition
 
 
 @pytest.fixture
@@ -20,6 +20,22 @@ def solver(db_seeded) -> MetricSolver:
     metric_solver.provider_registry = registry
 
     return metric_solver
+
+
+@pytest.fixture
+def mock_metric_execution() -> MetricExecution:
+    mock_execution = mock.MagicMock(spec=MetricExecution)
+    mock_execution.provider = provider
+    mock_execution.metric = provider.metrics()[0]
+
+    mock_metric_dataset = mock.Mock(hash="123456", items=mock.Mock(return_value=[]))
+
+    mock_execution.build_metric_execution_info.return_value = MetricExecutionDefinition(
+        key="key",
+        metric_dataset=mock_metric_dataset,
+        output_fragment="output_fragment",
+    )
+    return mock_execution
 
 
 class TestMetricSolver:
@@ -175,40 +191,48 @@ def test_data_coverage(requirement, data_catalog, expected):
 
 
 @mock.patch("cmip_ref.solver.get_executor")
-def test_solve_metrics_default_solver(mock_executor, db_seeded, solver):
+@mock.patch.object(MetricSolver, "build_from_db")
+def test_solve_metrics_default_solver(
+    mock_build_solver, mock_executor, mock_metric_execution, db_seeded, solver
+):
+    # Create a mock solver that "solves" to create a single execution
+    solver = mock.MagicMock(spec=MetricSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    # Run with no solver specified
     with db_seeded.session.begin():
         solve_metrics(db_seeded)
 
-    # One of the datasets is incomplete due to slicing along the time axis
-    # in the sample data.
-    assert mock_executor.return_value.run_metric.call_count == 5
+    # Solver should be created
+    assert mock_build_solver.call_count == 1
+    # A single run would have been run
+    assert mock_executor.return_value.run_metric.call_count == 1
+    mock_executor.return_value.run_metric.assert_called_with(
+        metric=mock_metric_execution.metric, definition=mock_metric_execution.build_metric_execution_info()
+    )
 
 
 @mock.patch("cmip_ref.solver.get_executor")
-def test_solve_metrics(mock_executor, db_seeded, solver):
+@mock.patch.object(MetricSolver, "build_from_db")
+def test_solve_metrics(mock_build_solver, mock_executor, db_seeded, solver, data_regression):
     with db_seeded.session.begin():
         solve_metrics(db_seeded, dry_run=False, solver=solver)
 
+    assert mock_build_solver.call_count == 0
+
     definitions = [call.kwargs["definition"] for call in mock_executor.return_value.run_metric.mock_calls]
 
-    expected_instance_ids = [
-        ["CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115"],
-        ["CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsut.gn.v20191115"],
-        ["CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318"],
-        ["CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.rsut.gn.v20210318"],
-    ]
-    expected_keys = [
-        "dataset1_ACCESS-ESM1-5_rsut_historical_r1i1p1f1",
-        "dataset1_ACCESS-ESM1-5_tas_historical_r1i1p1f1",
-        "dataset1_ACCESS-ESM1-5_rsut_ssp126_r1i1p1f1",
-        "dataset1_ACCESS-ESM1-5_tas_ssp126_r1i1p1f1",
-    ]
-
-    assert mock_executor.return_value.run_metric.call_count == len(expected_instance_ids)
-
+    # Create a dictionary of the metric key and the source datasets that were used
+    output = {}
     for definition in definitions:
-        assert definition.metric_dataset["cmip6"].instance_id.unique().tolist() in expected_instance_ids
-        assert definition.key in expected_keys
+        output[definition.key] = {
+            str(source_type): ds_collection.instance_id.unique().tolist()
+            for source_type, ds_collection in definition.metric_dataset.items()
+        }
+
+    # Write to a file for regression testing
+    data_regression.check(output)
 
 
 @mock.patch("cmip_ref.solver.get_executor")

@@ -41,9 +41,6 @@ class TestCMIP6Adapter:
         for k in adapter.dataset_specific_metadata + adapter.file_specific_metadata:
             assert k in df.columns
 
-        assert len(df) == 13  # unique files
-        assert df.groupby("instance_id").ngroups == 10  # unique datasets
-
         # The order of the rows may be flakey due to sqlite ordering and the created time resolution
         catalog_regression(df.sort_values(["instance_id", "start_time"]), basename="cmip6_catalog_db")
 

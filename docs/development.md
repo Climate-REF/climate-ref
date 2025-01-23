@@ -84,6 +84,36 @@ make mypy
 make test
 ```
 
+### Sample data
+
+We use sample data  from [ref-sample-data](https://github.com/CMIP-REF/ref-sample-data)
+to provide a consistent set of data for testing.
+These data are fetched automatically by the test suite.
+
+As we support more metrics,
+we should expand the sample data to include additional datasets to be able to adequately test the REF.
+If you wish to use a particular dataset for testing,
+please open a pull request to add it to the sample data repository.
+
+The sample data is versioned and periodically we need to update the targeted version in the REF.
+Updating the sample data can be done by running the following command:
+
+```bash
+# Fetch the latest registry from the sample data repository
+make update-test-data-registry
+
+# Manually edit the `SAMPLE_VERSION` in `packages/ref/src/cmip_ref/testing.py`
+
+# Regenerate any failing regression tests that depend on the sample data catalog
+export PYTEST_ADDOPTS="--force-regen"
+make test
+````
+
+Some other manual tweaks may be required to get the test suite to pass,
+but we should try and write tests that don't change when new data becomes available,
+or to use [pytest-regressions](https://pytest-regressions.readthedocs.io/en/latest/api.html) to be able to
+regenerate the expected output files.
+
 ## Documentation
 
 Our documentation is written in Markdown and built using

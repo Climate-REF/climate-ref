@@ -1,7 +1,7 @@
 import pathlib
 
 import pytest
-from cmip_ref_metrics_example.example import GlobalMeanTimeseries, calculate_annual_mean_timeseries
+from cmip_ref_metrics_ilamb.example import GlobalMeanTimeseries, calculate_global_mean_timeseries
 
 from cmip_ref_core.datasets import DatasetCollection, MetricDataset, SourceDatasetType
 from cmip_ref_core.metrics import MetricExecutionDefinition
@@ -23,19 +23,17 @@ def metric_dataset(cmip6_data_catalog) -> MetricDataset:
     )
 
 
-def test_annual_mean(sample_data_dir, metric_dataset):
-    annual_mean = calculate_annual_mean_timeseries(metric_dataset["cmip6"].path.to_list())
+def test_annual_mean(metric_dataset):
+    annual_mean = calculate_global_mean_timeseries(metric_dataset["cmip6"].path.to_list())
+    assert annual_mean.time.size == 132
 
-    assert annual_mean.time.size == 11
 
-
-def test_example_metric(tmp_path, metric_dataset, cmip6_data_catalog, mocker):
+def test_example_metric(tmp_path, cmip6_data_catalog, mocker):
     metric = GlobalMeanTimeseries()
     ds = cmip6_data_catalog.groupby("instance_id").first()
     output_directory = tmp_path / "output"
 
-    mock_calc = mocker.patch("cmip_ref_metrics_example.example.calculate_annual_mean_timeseries")
-
+    mock_calc = mocker.patch("cmip_ref_metrics_ilamb.example.calculate_global_mean_timeseries")
     mock_calc.return_value.attrs.__getitem__.return_value = "ABC"
 
     definition = MetricExecutionDefinition(

@@ -46,6 +46,21 @@ class TestAddSupplementaryDataset:
         "data_catalog, expected_rows",
         [
             (
+                # Test that missing supplementary files are handled gracefully.
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "source_id": ["ACCESS-ESM1-5"],
+                        "grid_label": ["gn"],
+                        "table_id": ["Amon"],
+                        "experiment_id": ["historical"],
+                        "member_id": ["r1i1p1f1"],
+                        "version": ["v20210316"],
+                    }
+                ),
+                [0],
+            ),
+            (
                 # Test that the grid_label matches.
                 pd.DataFrame(
                     {

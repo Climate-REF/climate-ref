@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 
 from cmip_ref_core.constraints import (
+    AddSupplementaryDataset,
     GroupOperation,
     GroupValidator,
     RequireContiguousTimerange,
@@ -12,15 +13,16 @@ from cmip_ref_core.constraints import (
     SelectParentExperiment,
     apply_constraint,
 )
+from cmip_ref_core.datasets import SourceDatasetType
 from cmip_ref_core.exceptions import ConstraintNotSatisfied
 
 
 class TestRequireFacets:
-    validator = RequireFacets(dimension="variable_id", required_facets=["tas", "pr"])
+    constraint = RequireFacets(dimension="variable_id", required_facets=["tas", "pr"])
 
     def test_is_group_validator(self):
-        assert isinstance(self.validator, GroupValidator)
-        assert not isinstance(self.validator, GroupOperation)
+        assert isinstance(self.constraint, GroupValidator)
+        assert not isinstance(self.constraint, GroupOperation)
 
     @pytest.mark.parametrize(
         "data, expected",
@@ -34,11 +36,86 @@ class TestRequireFacets:
         ],
     )
     def test_validate(self, data, expected):
-        assert self.validator.validate(data) == expected
+        assert self.constraint.validate(data) == expected
+
+
+class TestAddSupplementaryDataset:
+    constraint = AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6)
+
+    @pytest.mark.parametrize(
+        "data_catalog, expected_rows",
+        [
+            (
+                # Test that the grid_label matches.
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "areacella", "areacella"],
+                        "source_id": ["ACCESS-ESM1-5"] * 3,
+                        "grid_label": ["gn", "gn", "gr"],
+                        "table_id": ["Amon", "fx", "fx"],
+                        "experiment_id": ["historical"] * 3,
+                        "member_id": ["r1i1p1f1", "r2i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210316"] * 3,
+                    }
+                ),
+                [0, 1],
+            ),
+            (
+                # Test that the source_id matches.
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "areacella", "areacella"],
+                        "source_id": ["ACCESS-ESM1-5", "X", "ACCESS-ESM1-5"],
+                        "grid_label": ["gn"] * 3,
+                        "table_id": ["Amon", "fx", "fx"],
+                        "experiment_id": ["historical"] * 3,
+                        "member_id": ["r1i1p1f1", "r1i1p1f1", "r2i1p1f1"],
+                        "version": ["v20210316"] * 3,
+                    }
+                ),
+                [0, 2],
+            ),
+            (
+                # Test that the latest version is selected.
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "areacella", "areacella"],
+                        "source_id": ["ACCESS-ESM1-5"] * 3,
+                        "grid_label": ["gn"] * 3,
+                        "table_id": ["Amon", "fx", "fx"],
+                        "experiment_id": ["historical"] * 3,
+                        "member_id": ["r1i1p1f1"] * 3,
+                        "version": ["v20210316", "v202200101", "v20230101"],
+                    }
+                ),
+                [0, 2],
+            ),
+            (
+                # Test that the best match for each "tas" dataset is selected.
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "areacella", "tas", "areacella"],
+                        "source_id": ["ACCESS-ESM1-5"] * 4,
+                        "grid_label": ["gn"] * 4,
+                        "table_id": ["Amon", "fx", "Amon", "fx"],
+                        "experiment_id": ["historical", "historical", "ssp585", "ssp585"],
+                        "member_id": ["r1i1p1f1", "r1i1p1f1", "r2i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210316", "v20220101", "v20210316", "v20210316"],
+                    }
+                ),
+                [0, 2, 1, 3],
+            ),
+        ],
+    )
+    def test_apply(self, data_catalog, expected_rows):
+        group = data_catalog[data_catalog["variable_id"] == "tas"]
+        result = self.constraint.apply(group=group, data_catalog=data_catalog)
+        expected = data_catalog.loc[expected_rows]
+        assert (result == expected).all().all()
 
 
 class TestContiguousTimerange:
-    validator = RequireContiguousTimerange(group_by=["variable_id"])
+    constraint = RequireContiguousTimerange(group_by=["variable_id"])
 
     @pytest.mark.parametrize(
         "data, expected",
@@ -146,11 +223,11 @@ class TestContiguousTimerange:
         ],
     )
     def test_validate(self, data, expected):
-        assert self.validator.validate(data) == expected
+        assert self.constraint.validate(data) == expected
 
 
 class TestOverlappingTimerange:
-    validator = RequireOverlappingTimerange(group_by=["variable_id"])
+    constraint = RequireOverlappingTimerange(group_by=["variable_id"])
 
     @pytest.mark.parametrize(
         "data, expected",
@@ -220,15 +297,15 @@ class TestOverlappingTimerange:
         ],
     )
     def test_validate(self, data, expected):
-        assert self.validator.validate(data) == expected
+        assert self.constraint.validate(data) == expected
 
 
 class TestSelectParentExperiment:
-    def test_is_group_validator(self):
-        validator = SelectParentExperiment()
+    def test_is_group_constraint(self):
+        constraint = SelectParentExperiment()
 
-        assert isinstance(validator, GroupOperation)
-        assert not isinstance(validator, GroupValidator)
+        assert isinstance(constraint, GroupOperation)
+        assert not isinstance(constraint, GroupValidator)
 
 
 @pytest.fixture

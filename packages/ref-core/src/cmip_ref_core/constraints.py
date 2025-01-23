@@ -203,6 +203,7 @@ class AddSupplementaryDataset:
             for i in range(len(datasets)):
                 scores = (supplementary_group[facets] == datasets.iloc[i]).sum(axis=1)
                 matches = supplementary_group[scores == scores.max()]
+                # Select the latest version if there are multiple matches
                 matches = matches[matches["version"] == matches["version"].max()]
                 indices.add(matches.index[0])
             supplementary_group = supplementary_group.loc[list(indices)].drop_duplicates()

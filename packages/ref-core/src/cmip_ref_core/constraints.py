@@ -144,7 +144,7 @@ class RequireFacets:
     dimension: str
     required_facets: tuple[str, ...]
 
-    def validate(self: Self, group: pd.DataFrame) -> bool:
+    def validate(self, group: pd.DataFrame) -> bool:
         """
         Check that the required facets are present in the group
         """
@@ -176,7 +176,7 @@ class AddSupplementaryDataset:
     """
 
     def apply(
-        self: Self,
+        self,
         group: pd.DataFrame,
         data_catalog: pd.DataFrame,
     ) -> pd.DataFrame:
@@ -212,7 +212,7 @@ class AddSupplementaryDataset:
 
     @classmethod
     def from_defaults(
-        cls: type[Self],
+        cls,
         variable: str,
         source_type: SourceDatasetType,
     ) -> Self:
@@ -268,7 +268,7 @@ class RequireContiguousTimerange:
     to fulfill the constraint.
     """
 
-    def validate(self: Self, group: pd.DataFrame) -> bool:
+    def validate(self, group: pd.DataFrame) -> bool:
         """
         Check that all subgroups of the group have a contiguous timerange.
         """
@@ -326,7 +326,7 @@ class RequireOverlappingTimerange:
     the groups to fulfill the constraint.
     """
 
-    def validate(self: Self, group: pd.DataFrame) -> bool:
+    def validate(self, group: pd.DataFrame) -> bool:
         """
         Check that all subgroups of the group have an overlapping timerange.
         """
@@ -345,7 +345,7 @@ class SelectParentExperiment:
     Include a dataset's parent experiment in the selection
     """
 
-    def apply(self: Self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
         Include a dataset's parent experiment in the selection
 

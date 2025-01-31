@@ -45,8 +45,16 @@ clean:  ## clean up temporary files
 build: clean  ## build the packages to be deployed to PyPI
 	cp LICENCE NOTICE packages/ref
 	cp LICENCE NOTICE packages/ref-core
+	cp LICENCE NOTICE packages/ref-metrics-example
+	cp LICENCE NOTICE packages/ref-metrics-esmvaltool
+	cp LICENCE NOTICE packages/ref-metrics-ilamb
+	cp LICENCE NOTICE packages/ref-metrics-pmp
 	uv build --package cmip_ref --no-sources
 	uv build --package cmip_ref_core --no-sources
+	uv build --package cmip_ref_metrics_example --no-sources
+	uv build --package cmip_ref_metrics_esmvaltool --no-sources
+	uv build --package cmip_ref_metrics_ilamb --no-sources
+	uv build --package cmip_ref_metrics_pmp --no-sources
 
 .PHONY: ruff-fixes
 ruff-fixes:  ## fix the code using ruff

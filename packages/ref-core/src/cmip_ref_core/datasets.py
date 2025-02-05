@@ -1,10 +1,16 @@
 import enum
 import hashlib
+import pathlib
 from collections.abc import Iterable
 from typing import Any
 
 import pandas as pd
 from attrs import field, frozen
+
+try:
+    from typing import Self
+except ImportError:
+    from typing_extensions import Self
 
 
 class SourceDatasetType(enum.Enum):
@@ -124,3 +130,31 @@ class MetricDataset:
         hash_sum = sum(hash(item) for item in self._collection.values())
         hash_bytes = hash_sum.to_bytes(16, "little", signed=True)
         return hashlib.sha1(hash_bytes).hexdigest()  # noqa: S324
+
+    def to_abs_paths(self, data_directory: pathlib.Path) -> Self:
+        """
+        Convert the relative paths in the datasets to absolute paths
+
+        Parameters
+        ----------
+        data_directory
+
+        Returns
+        -------
+        :
+            A new MetricDataset with the paths converted to absolute paths
+        """
+        # TODO: This currently always uses the data directory,
+        #  but in future we may want to allow for different directories depending on source type
+        # There is an implicit assumption that the "path" column is present in the datasets
+        return MetricDataset(
+            {
+                key: DatasetCollection(
+                    datasets=value.datasets.assign(
+                        path=lambda df: df["path"].apply(lambda x: data_directory / x)
+                    ),
+                    slug_column=value.slug_column,
+                )
+                for key, value in self._collection.items()
+            }
+        )

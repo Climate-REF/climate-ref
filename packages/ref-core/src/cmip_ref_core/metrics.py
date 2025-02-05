@@ -10,7 +10,7 @@ from cmip_ref_core.datasets import FacetFilter, MetricDataset, SourceDatasetType
 
 
 @frozen
-class MetricExecutionDefinition:
+class ProposedMetricExecutionDefinition:
     """
     Definition of a metric execution.
 
@@ -37,7 +37,46 @@ class MetricExecutionDefinition:
     This is relative to the temporary directory which may differ by executor.
     """
 
-    output_directory: pathlib.Path | None = None
+    def to_metric_execution_definition(
+        self, data_directory: pathlib.Path, temp_directory: pathlib.Path
+    ) -> "MetricExecutionDefinition":
+        """
+        Convert the proposed metric execution definition to a metric execution definition
+
+        Returns
+        -------
+        :
+            Metric execution definition
+        """
+        return MetricExecutionDefinition(
+            key=self.key,
+            metric_dataset=self.metric_dataset.to_abs_paths(data_directory),
+            output_directory=temp_directory / self.output_fragment,
+        )
+
+
+@frozen
+class MetricExecutionDefinition:
+    """
+    Definition of a metric execution.
+
+    This represents the information needed by a metric to perform a single execution of the metric
+    """
+
+    key: str
+    """
+    A unique identifier for the metric execution
+
+    The key is a hash of the group by values for the datasets used in the metric execution.
+    Duplicate keys will occur when new datasets are available that match the same group by values.
+    """
+
+    metric_dataset: MetricDataset
+    """
+    Collection of datasets required for the metric execution
+    """
+
+    output_directory: pathlib.Path
     """
     Root directory for output data
 
@@ -59,13 +98,10 @@ class MetricExecutionDefinition:
         :
             Full path to the file in the output directory
         """
-        if self.output_directory is None:
-            raise AssertionError("Output directory is not set")  # pragma: no cover
-
         if filename is None:
-            return self.output_directory / self.output_fragment
+            return self.output_directory
         else:
-            return self.output_directory / self.output_fragment / filename
+            return self.output_directory / filename
 
 
 @frozen

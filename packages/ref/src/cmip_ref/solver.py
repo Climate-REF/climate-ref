@@ -26,7 +26,7 @@ from cmip_ref.provider_registry import ProviderRegistry
 from cmip_ref_core.constraints import apply_constraint
 from cmip_ref_core.datasets import DatasetCollection, MetricDataset, SourceDatasetType
 from cmip_ref_core.exceptions import InvalidMetricException
-from cmip_ref_core.metrics import DataRequirement, Metric, MetricExecutionDefinition
+from cmip_ref_core.metrics import DataRequirement, Metric, ProposedMetricExecutionDefinition
 from cmip_ref_core.providers import MetricsProvider
 
 
@@ -40,9 +40,17 @@ class MetricExecution:
     metric: Metric
     metric_dataset: MetricDataset
 
-    def build_metric_execution_info(self) -> MetricExecutionDefinition:
+    def build_proposed_metric_execution_definition(self) -> ProposedMetricExecutionDefinition:
         """
-        Build the metric execution info for the current metric execution
+        Build the metric execution definition for the current metric execution
+
+        This definition contains the information needed to execute the metric.
+        Relative paths are used in the object.
+        This allows the compute engine to be agnostic about where data is stored on the node
+        that executes the metric.
+
+        The Exectors are responsible for translating this definition into a concrete
+        `MetricExecutionDefinition` that contains absolute paths at runtime.
         """
         # TODO: We might want to pretty print the dataset slug
         key_values = []
@@ -57,7 +65,7 @@ class MetricExecution:
 
         key = "_".join(key_values)
 
-        return MetricExecutionDefinition(
+        return ProposedMetricExecutionDefinition(
             output_fragment=pathlib.Path(self.provider.slug) / self.metric.slug / self.metric_dataset.hash,
             key=key,
             metric_dataset=self.metric_dataset,
@@ -223,14 +231,14 @@ def solve_metrics(
     executor = config.executor.build()
 
     for metric_execution in solver.solve():
-        info = metric_execution.build_metric_execution_info()
+        definition = metric_execution.build_proposed_metric_execution_definition()
 
-        logger.debug(f"Identified candidate metric execution {info.key}")
+        logger.debug(f"Identified candidate metric execution {definition.key}")
 
         if not dry_run:
             metric_execution_model, created = db.get_or_create(
                 MetricExecutionModel,
-                key=info.key,
+                key=definition.key,
                 metric_id=db.session.query(MetricModel)
                 .join(MetricModel.provider)
                 .filter(
@@ -247,22 +255,22 @@ def solve_metrics(
             )
 
             if created:
-                logger.info(f"Created metric execution {info.key}")
+                logger.info(f"Created metric execution {definition.key}")
                 db.session.flush()
 
-            if metric_execution_model.should_run(info.metric_dataset.hash):
+            if metric_execution_model.should_run(definition.metric_dataset.hash):
                 logger.info(f"Running metric {metric_execution_model.key}")
                 metric_execution_result = MetricExecutionResult(
                     metric_execution=metric_execution_model,
-                    dataset_hash=info.metric_dataset.hash,
-                    output_fragment=str(info.output_fragment),
+                    dataset_hash=definition.metric_dataset.hash,
+                    output_fragment=str(definition.output_fragment),
                 )
                 db.session.add(metric_execution_result)
                 db.session.flush()
 
                 # Add links to the datasets used in the execution
-                metric_execution_result.register_datasets(db, info.metric_dataset)
+                metric_execution_result.register_datasets(db, definition.metric_dataset)
 
-                executor.run_metric(metric=metric_execution.metric, definition=info)
+                executor.run_metric(metric=metric_execution.metric, definition=definition)
                 metric_execution_result.successful = True
                 metric_execution_model.dirty = False

@@ -209,7 +209,8 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, db_seeded, 
     # A single run would have been run
     assert mock_executor.return_value.run_metric.call_count == 1
     mock_executor.return_value.run_metric.assert_called_with(
-        metric=mock_metric_execution.metric, definition=mock_metric_execution.build_metric_execution_info()
+        metric=mock_metric_execution.metric,
+        definition=mock_metric_execution.build_proposed_metric_execution_definition(),
     )
 
 

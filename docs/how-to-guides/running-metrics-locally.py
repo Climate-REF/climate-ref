@@ -32,7 +32,6 @@ import attrs
 import cmip_ref_metrics_example
 import pandas as pd
 import prettyprinter
-from attr import evolve
 
 from cmip_ref.config import Config
 from cmip_ref.database import Database
@@ -136,7 +135,7 @@ metric_executions[0].metric_dataset["cmip6"]
 
 # %%
 output_directory = Path("out")
-definition = metric_executions[0].build_metric_execution_info()
+definition = metric_executions[0].build_proposed_metric_execution_definition()
 prettyprinter.pprint(definition)
 
 # %%
@@ -180,7 +179,9 @@ with open(output_file) as fh:
 # This will not perform and validation/verification of the output results.
 
 # %%
-direct_result = metric.run(definition=evolve(definition, output_directory=output_directory))
+direct_result = metric.run(
+    definition=definition.to_metric_execution_definition(output_directory=output_directory)
+)
 assert direct_result.successful
 
 prettyprinter.pprint(direct_result)

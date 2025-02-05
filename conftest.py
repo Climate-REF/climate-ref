@@ -47,6 +47,8 @@ def config(tmp_path, monkeypatch) -> Config:
 
     # Allow adding datasets from outside the tree for testing
     cfg.paths.allow_out_of_tree_datasets = True
+
+    cfg.paths.tmp = tmp_path / "tmp"
     cfg.metric_providers = [MetricsProviderConfig(provider="cmip_ref_metrics_example")]
 
     # Use a SQLite in-memory database for testing

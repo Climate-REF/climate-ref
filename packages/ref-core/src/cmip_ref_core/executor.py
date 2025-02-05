@@ -1,6 +1,10 @@
 from typing import Protocol, runtime_checkable
 
-from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricResult
+from cmip_ref_core.metrics import (
+    Metric,
+    MetricResult,
+    ProposedMetricExecutionDefinition,
+)
 
 
 @runtime_checkable
@@ -18,7 +22,7 @@ class Executor(Protocol):
 
     name: str
 
-    def run_metric(self, metric: Metric, definition: MetricExecutionDefinition) -> MetricResult:
+    def run_metric(self, metric: Metric, definition: ProposedMetricExecutionDefinition) -> MetricResult:
         """
         Execute a metric
 
@@ -28,6 +32,9 @@ class Executor(Protocol):
             Metric to run
         definition
             Definition of the information needed to execute a metric
+
+            This definition needs to be translated into a concrete `MetricExecutionDefinition`
+            before running the metric.
 
             This definition describes which datasets are required to run the metric and where
             the output should be stored.

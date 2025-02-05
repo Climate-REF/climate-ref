@@ -1,3 +1,5 @@
+import pathlib
+
 import pytest
 
 from cmip_ref.executor import import_executor_cls
@@ -5,13 +7,20 @@ from cmip_ref.executor.local import LocalExecutor
 from cmip_ref_core.datasets import MetricDataset
 from cmip_ref_core.exceptions import InvalidExecutorException
 from cmip_ref_core.executor import Executor
-from cmip_ref_core.metrics import MetricExecutionDefinition
+from cmip_ref_core.metrics import MetricExecutionDefinition, ProposedMetricExecutionDefinition
+
+
+@pytest.fixture
+def proposed_metric_definition(tmp_path) -> ProposedMetricExecutionDefinition:
+    return ProposedMetricExecutionDefinition(
+        output_fragment=pathlib.Path("test"), key="mocked-metric-slug", metric_dataset=MetricDataset({})
+    )
 
 
 @pytest.fixture
 def metric_definition(tmp_path) -> MetricExecutionDefinition:
     return MetricExecutionDefinition(
-        output_fragment=tmp_path, key="mocked-metric-slug", metric_dataset=MetricDataset({})
+        output_directory=tmp_path / "test", key="mocked-metric-slug", metric_dataset=MetricDataset({})
     )
 
 
@@ -41,18 +50,21 @@ class TestLocalExecutor:
         assert executor.name == "local"
         assert isinstance(executor, Executor)
 
-    def test_run_metric(self, metric_definition, mock_metric):
+    def test_run_metric(self, proposed_metric_definition, mock_metric, config):
         executor = LocalExecutor()
 
-        result = executor.run_metric(mock_metric, metric_definition)
+        result = executor.run_metric(mock_metric, proposed_metric_definition)
         assert result.successful
-        assert result.bundle_filename == metric_definition.output_fragment / "output.json"
+        assert (
+            result.bundle_filename
+            == config.paths.tmp / proposed_metric_definition.output_fragment / "output.json"
+        )
 
-    def test_raises_exception(self, metric_definition, mock_metric):
+    def test_raises_exception(self, proposed_metric_definition, mock_metric):
         executor = LocalExecutor()
 
         mock_metric.run = lambda definition: 1 / 0
 
-        result = executor.run_metric(mock_metric, metric_definition)
+        result = executor.run_metric(mock_metric, proposed_metric_definition)
         assert result.successful is False
         assert result.bundle_filename is None

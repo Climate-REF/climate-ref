@@ -1,8 +1,7 @@
-from attrs import evolve
 from loguru import logger
 
 from cmip_ref.config import Config
-from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricResult
+from cmip_ref_core.metrics import Metric, MetricResult, ProposedMetricExecutionDefinition
 
 
 class LocalExecutor:
@@ -19,7 +18,7 @@ class LocalExecutor:
     def __init__(self, config: Config | None = None):
         self.config = Config.default() if config is None else config
 
-    def run_metric(self, metric: Metric, definition: MetricExecutionDefinition) -> MetricResult:
+    def run_metric(self, metric: Metric, definition: ProposedMetricExecutionDefinition) -> MetricResult:
         """
         Run a metric in process
 
@@ -35,14 +34,15 @@ class LocalExecutor:
         :
             Results from running the metric
         """
-        # TODO: This should be changed to use executor specific configuration
-        definition = evolve(definition, output_directory=self.config.paths.scratch)
-        execution_output_path = definition.to_output_path(filename=None)
-        execution_output_path.mkdir(parents=True, exist_ok=True)
+        concrete_definition = definition.to_metric_execution_definition(
+            data_root=self.config.paths.data,
+            output_directory=self.config.paths.scratch,
+        )
+        concrete_definition.output_directory.mkdir(parents=True, exist_ok=True)
 
         try:
-            return metric.run(definition=definition)
+            return metric.run(definition=concrete_definition)
             # TODO: Copy results to the output directory
         except Exception:
             logger.exception(f"Error running metric {metric.slug}")
-            return MetricResult.build_from_failure(definition)
+            return MetricResult.build_from_failure(concrete_definition)

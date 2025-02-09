@@ -7,11 +7,11 @@ from cmip_ref_core.metrics import MetricExecutionDefinition
 from cmip_ref_core.providers import MetricsProvider
 
 
-def test_metric_task_factory():
+def test_metric_task_factory(tmp_path):
     # Mock Metric and MetricExecutionDefinition
     mock_metric = Mock()
 
-    definition = MetricExecutionDefinition(key="test", metric_dataset=None, output_fragment=None)
+    definition = MetricExecutionDefinition(key="test", metric_dataset=None, output_directory=tmp_path)
 
     # Create task using factory
     task = metric_task_factory(mock_metric)

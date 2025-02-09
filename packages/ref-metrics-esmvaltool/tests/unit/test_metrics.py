@@ -25,6 +25,7 @@ def test_example_metric(tmp_path, mocker, metric_dataset, cmip6_data_catalog):
     metric = GlobalMeanTimeseries()
     ds = cmip6_data_catalog.groupby("instance_id", as_index=False).first()
     output_directory = tmp_path / "output"
+    output_directory.mkdir(parents=True)
 
     definition = MetricExecutionDefinition(
         output_directory=output_directory,

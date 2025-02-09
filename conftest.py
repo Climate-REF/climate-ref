@@ -16,7 +16,7 @@ from cmip_ref import cli
 from cmip_ref.config import Config, MetricsProviderConfig
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from cmip_ref.testing import TEST_DATA_DIR, fetch_sample_data
-from cmip_ref_core.datasets import SourceDatasetType
+from cmip_ref_core.datasets import DatasetCollection, MetricDataset, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement, MetricExecutionDefinition, MetricResult
 from cmip_ref_core.providers import MetricsProvider
 
@@ -36,6 +36,23 @@ def sample_data() -> None:
 def cmip6_data_catalog(sample_data_dir) -> pd.DataFrame:
     adapter = CMIP6DatasetAdapter()
     return adapter.find_local_datasets(sample_data_dir / "CMIP6")
+
+
+@pytest.fixture
+def dataset_collection(cmip6_data_catalog) -> DatasetCollection:
+    return DatasetCollection(
+        cmip6_data_catalog[cmip6_data_catalog.variable_id == "tas"],
+        "instance_id",
+    )
+
+
+@pytest.fixture
+def metric_dataset(dataset_collection, sample_data_dir) -> MetricDataset:
+    # Translate into relative paths as that generally happens before initialisation
+    dataset_collection.datasets.path = dataset_collection.path.apply(
+        lambda x: str(Path(x).relative_to(sample_data_dir))
+    )
+    return MetricDataset({SourceDatasetType.CMIP6: dataset_collection})
 
 
 @pytest.fixture(autouse=True)

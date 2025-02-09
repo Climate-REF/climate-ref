@@ -146,7 +146,7 @@ class MetricDataset:
             {
                 key: DatasetCollection(
                     datasets=value.datasets.assign(
-                        path=lambda df: df["path"].apply(lambda x: data_directory / x)
+                        path=lambda df: df["path"].apply(lambda x: pathlib.Path(data_directory) / x)
                     ),
                     slug_column=value.slug_column,
                 )

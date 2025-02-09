@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -165,12 +166,14 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
-        builder = Builder(
-            paths=[str(file_or_directory)],
-            depth=10,
-            include_patterns=["*.nc"],
-            joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-        ).build(parsing_func=ecgtools.parsers.parse_cmip6)
+        with warnings.catch_warnings():
+            warnings.simplefilter("ignore")
+            builder = Builder(
+                paths=[str(file_or_directory)],
+                depth=10,
+                include_patterns=["*.nc"],
+                joblib_parallel_kwargs={"n_jobs": self.n_jobs},
+            ).build(parsing_func=ecgtools.parsers.parse_cmip6)
 
         datasets = builder.df
 

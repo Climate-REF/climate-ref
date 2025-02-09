@@ -27,7 +27,8 @@ def calculate_annual_cycle(input_files: list[Path]) -> xr.Dataset:
     :
         The annual mean timeseries of the dataset
     """
-    xr_ds = xr.open_mfdataset(input_files, combine="by_coords", chunks=None, use_cftime=True)
+    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+    xr_ds = xr.open_mfdataset(input_files, combine="by_coords", chunks=None, decode_times=time_coder)
 
     annual_mean = xr_ds.resample(time="YS").mean()
     return annual_mean.mean(dim=["lat", "lon"], keep_attrs=True)

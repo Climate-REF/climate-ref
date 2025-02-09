@@ -1,19 +1,8 @@
+import pathlib
+
 import pytest
 
 from cmip_ref_core.datasets import DatasetCollection, MetricDataset, SourceDatasetType
-
-
-@pytest.fixture
-def dataset_collection(cmip6_data_catalog) -> DatasetCollection:
-    return DatasetCollection(
-        cmip6_data_catalog[cmip6_data_catalog.variable_id == "tas"],
-        "instance_id",
-    )
-
-
-@pytest.fixture
-def metric_dataset(dataset_collection) -> MetricDataset:
-    return MetricDataset({SourceDatasetType.CMIP6: dataset_collection})
 
 
 class TestMetricDataset:
@@ -46,6 +35,19 @@ class TestMetricDataset:
         # This will change if the data catalog changes
         # Specifically if more tas datasets are provided
         data_regression.check(metric_dataset.hash, basename="metric_dataset_hash")
+
+    def test_to_abs_paths(self, metric_dataset):
+        assert not metric_dataset["cmip6"].datasets.path.str.startswith("/absolute/data").all()
+
+        result = metric_dataset.to_abs_paths(
+            data_directory=pathlib.Path("/absolute/data"),
+        )
+
+        # A new object is returned
+        assert id(result) != id(metric_dataset)
+
+        # The paths are now absolute
+        assert result["cmip6"].datasets.path.str.startswith("/absolute/data").all()
 
 
 class TestDatasetCollection:

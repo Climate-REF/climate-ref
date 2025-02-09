@@ -7,11 +7,6 @@ from typing import Any
 import pandas as pd
 from attrs import field, frozen
 
-try:
-    from typing import Self
-except ImportError:
-    from typing_extensions import Self
-
 
 class SourceDatasetType(enum.Enum):
     """
@@ -131,7 +126,7 @@ class MetricDataset:
         hash_bytes = hash_sum.to_bytes(16, "little", signed=True)
         return hashlib.sha1(hash_bytes).hexdigest()  # noqa: S324
 
-    def to_abs_paths(self, data_directory: pathlib.Path) -> Self:
+    def to_abs_paths(self, data_directory: pathlib.Path) -> "MetricDataset":
         """
         Convert the relative paths in the datasets to absolute paths
 

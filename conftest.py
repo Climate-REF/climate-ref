@@ -48,7 +48,7 @@ def config(tmp_path, monkeypatch) -> Config:
     # Allow adding datasets from outside the tree for testing
     cfg.paths.allow_out_of_tree_datasets = True
 
-    cfg.paths.tmp = tmp_path / "tmp"
+    cfg.paths.scratch = tmp_path / "scratch"
     cfg.metric_providers = [MetricsProviderConfig(provider="cmip_ref_metrics_example")]
 
     # Use a SQLite in-memory database for testing
@@ -99,8 +99,9 @@ class MockMetric:
 
     def run(self, definition: MetricExecutionDefinition) -> MetricResult:
         # TODO: This doesn't write output.json, use build function?
+        assert definition.output_directory is not None
         return MetricResult(
-            bundle_filename=self.temp_dir / definition.output_fragment / "output.json",
+            bundle_filename=definition.output_directory / "output.json",
             successful=True,
             definition=definition,
         )

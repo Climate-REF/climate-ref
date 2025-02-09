@@ -57,7 +57,7 @@ class TestLocalExecutor:
         assert result.successful
         assert (
             result.bundle_filename
-            == config.paths.tmp / proposed_metric_definition.output_fragment / "output.json"
+            == config.paths.scratch / proposed_metric_definition.output_fragment / "output.json"
         )
 
     def test_raises_exception(self, proposed_metric_definition, mock_metric):

@@ -38,7 +38,7 @@ class ProposedMetricExecutionDefinition:
     """
 
     def to_metric_execution_definition(
-        self, data_directory: pathlib.Path, temp_directory: pathlib.Path
+        self, data_directory: pathlib.Path, scratch_directory: pathlib.Path
     ) -> "MetricExecutionDefinition":
         """
         Convert the proposed metric execution definition to a metric execution definition
@@ -51,7 +51,9 @@ class ProposedMetricExecutionDefinition:
         return MetricExecutionDefinition(
             key=self.key,
             metric_dataset=self.metric_dataset.to_abs_paths(data_directory),
-            output_directory=temp_directory / self.output_fragment,
+            # The executors should write their output to scratch.
+            # This is rather unfortunate naming
+            output_directory=scratch_directory / self.output_fragment,
         )
 
 

@@ -35,8 +35,8 @@ class LocalExecutor:
             Results from running the metric
         """
         concrete_definition = definition.to_metric_execution_definition(
-            data_root=self.config.paths.data,
-            output_directory=self.config.paths.scratch,
+            data_directory=self.config.paths.data,
+            scratch_directory=self.config.paths.scratch,
         )
         concrete_definition.output_directory.mkdir(parents=True, exist_ok=True)
 

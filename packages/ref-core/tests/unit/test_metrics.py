@@ -2,7 +2,6 @@ import re
 
 import pandas as pd
 import pytest
-from attr import evolve
 
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement, MetricExecutionDefinition, MetricResult
@@ -11,10 +10,8 @@ from cmip_ref_core.metrics import DataRequirement, MetricExecutionDefinition, Me
 class TestMetricResult:
     def test_build_from_output_bundle(self, tmp_path):
         definition = MetricExecutionDefinition(
-            output_fragment=tmp_path, key="mocked-metric-slug", metric_dataset=None
+            output_directory=tmp_path, key="mocked-metric-slug", metric_dataset=None
         )
-        # Setting the output directory generally happens as a side effect of the executor
-        definition = evolve(definition, output_directory=tmp_path)
 
         result = MetricResult.build_from_output_bundle(definition, {"data": "value"})
 
@@ -30,9 +27,9 @@ class TestMetricResult:
 
         assert output_filename.is_relative_to(tmp_path)
 
-    def test_build_from_failure(self):
+    def test_build_from_failure(self, tmp_path):
         definition = MetricExecutionDefinition(
-            output_fragment="output", key="mocked-metric-slug", metric_dataset=None
+            output_directory=tmp_path, key="mocked-metric-slug", metric_dataset=None
         )
         result = MetricResult.build_from_failure(definition)
 

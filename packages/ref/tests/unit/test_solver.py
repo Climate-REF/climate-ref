@@ -9,7 +9,11 @@ from cmip_ref.provider_registry import ProviderRegistry
 from cmip_ref.solver import MetricExecution, MetricSolver, extract_covered_datasets, solve_metrics
 from cmip_ref_core.constraints import RequireFacets, SelectParentExperiment
 from cmip_ref_core.datasets import SourceDatasetType
-from cmip_ref_core.metrics import DataRequirement, FacetFilter, MetricExecutionDefinition
+from cmip_ref_core.metrics import (
+    DataRequirement,
+    FacetFilter,
+    ProposedMetricExecutionDefinition,
+)
 
 
 @pytest.fixture
@@ -24,17 +28,19 @@ def solver(db_seeded, config) -> MetricSolver:
 
 
 @pytest.fixture
-def mock_metric_execution() -> MetricExecution:
+def mock_metric_execution(tmp_path) -> MetricExecution:
     mock_execution = mock.MagicMock(spec=MetricExecution)
     mock_execution.provider = provider
     mock_execution.metric = provider.metrics()[0]
 
     mock_metric_dataset = mock.Mock(hash="123456", items=mock.Mock(return_value=[]))
 
-    mock_execution.build_metric_execution_info.return_value = MetricExecutionDefinition(
-        key="key",
-        metric_dataset=mock_metric_dataset,
-        output_fragment="output_fragment",
+    mock_execution.build_proposed_metric_execution_definition.return_value = (
+        ProposedMetricExecutionDefinition(
+            key="key",
+            metric_dataset=mock_metric_dataset,
+            output_fragment="output_fragment",
+        )
     )
     return mock_execution
 

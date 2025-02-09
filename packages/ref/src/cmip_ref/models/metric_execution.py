@@ -102,13 +102,6 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
     """
 
     __tablename__ = "metric_execution_result"
-    __table_args__ = (
-        # TODO: This unique constraint is constraining...
-        # If we perform a run with hash A, then run with hash B, then run with hash A again this will fail
-        # This may happen if a dataset is retracted
-        # This will currently result in a IntegrityError so we will know if it ever occurs
-        UniqueConstraint("metric_execution_id", "dataset_hash", name="metric_execution_result_ident"),
-    )
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -157,3 +150,10 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
                 metric_datasets.insert(),
                 [{"metric_execution_result_id": self.id, "dataset_id": idx} for idx in dataset.index],
             )
+
+    def mark_successful(self, path: str) -> None:
+        """
+        Mark the metric execution as successful
+        """
+        self.successful = True
+        self.path = path

@@ -23,8 +23,9 @@ services:
     restart: always
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
+      - REF_DATA_ROOT=/data
+      - REF_SCRATCH_ROOT=/scratch
       - REF_RESULTS_ROOT=/output
-      - REF_DATA_ROOT=/esgf
     build:
       context: .
       dockerfile: packages/ref/Dockerfile
@@ -32,17 +33,21 @@ services:
         - linux/amd64
     command: celery start-worker
     volumes:
-      - .esgpull/data:/esgf
+      - ./tests/test-data/sample-data:/data
+      - ./.ref/scratch:/scratch
       - ./out:/output
       - ./.ref:/app/.ref
   metrics-example:
     image: ref
     restart: always
     environment:
+      # TODO: Make these the defaults in the docker container
       - CELERY_BROKER_URL=redis://redis:6379/1
+      - REF_DATA_ROOT=/data
+      - REF_SCRATCH_ROOT=/scratch
       - REF_RESULTS_ROOT=/output
-      - REF_DATA_ROOT=/esgf
     command: celery start-worker --package cmip-ref-metrics-example
     volumes:
-      - .esgpull/data:/esgf
+      - ./tests/test-data/sample-data:/data
+      - ./.ref/scratch:/scratch
       - ./out:/output

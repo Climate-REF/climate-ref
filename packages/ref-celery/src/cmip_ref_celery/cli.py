@@ -70,14 +70,17 @@ def start_worker(
     if package:
         # Attempt to import the provider
         provider = import_provider(package)
+        queue = provider.slug
 
         # Wrap each metrics in the provider with a celery tasks
         register_celery_tasks(celery_app, provider)
     else:
-        # This might need some tweaking in later PRs to pull in the appropriate tasks
-        import cmip_ref_celery.tasks  # noqa: F401
+        # Include the tasks that should be run on the core worker
+        import cmip_ref_celery.worker_tasks  # noqa: F401
 
-    argv = ["worker", f"--loglevel={loglevel}", *(extra_args or [])]
+        queue = "celery"
+
+    argv = ["worker", f"--loglevel={loglevel}", f"--queues={queue}", *(extra_args or [])]
     celery_app.worker_main(argv=argv)
 
 

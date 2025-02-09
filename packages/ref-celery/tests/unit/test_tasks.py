@@ -1,7 +1,7 @@
 from unittest.mock import Mock
 
 from celery import Celery
-from cmip_ref_celery.tasks import metric_task_factory, register_celery_tasks
+from cmip_ref_celery.tasks import _metric_task_factory, register_celery_tasks
 
 from cmip_ref_core.metrics import MetricExecutionDefinition
 from cmip_ref_core.providers import MetricsProvider
@@ -14,7 +14,7 @@ def test_metric_task_factory(tmp_path):
     definition = MetricExecutionDefinition(key="test", metric_dataset=None, output_directory=tmp_path)
 
     # Create task using factory
-    task = metric_task_factory(mock_metric)
+    task = _metric_task_factory(mock_metric)
 
     # Run task and check result
     result = task(definition)

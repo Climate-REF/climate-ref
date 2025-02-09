@@ -271,6 +271,9 @@ def solve_metrics(
                 # Add links to the datasets used in the execution
                 metric_execution_result.register_datasets(db, definition.metric_dataset)
 
-                executor.run_metric(metric=metric_execution.metric, definition=definition)
-                metric_execution_result.successful = True
-                metric_execution_model.dirty = False
+                executor.run_metric(
+                    provider=metric_execution.provider,
+                    metric=metric_execution.metric,
+                    definition=definition,
+                    metric_execution_result=metric_execution_result,
+                )

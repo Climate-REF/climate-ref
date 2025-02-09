@@ -180,7 +180,10 @@ with open(output_file) as fh:
 
 # %%
 direct_result = metric.run(
-    definition=definition.to_metric_execution_definition(output_directory=output_directory)
+    definition=definition.to_metric_execution_definition(
+        data_directory=config.paths.data,
+        scratch_directory=output_directory,
+    )
 )
 assert direct_result.successful
 

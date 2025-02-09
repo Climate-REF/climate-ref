@@ -38,8 +38,7 @@ def test_example_metric(tmp_path, cmip6_data_catalog, mocker):
     mock_calc.return_value.attrs.__getitem__.return_value = "ABC"
 
     definition = MetricExecutionDefinition(
-        output_directory=output_directory,
-        output_fragment=pathlib.Path(metric.slug),
+        output_directory=output_directory / pathlib.Path(metric.slug),
         key="global_mean_timeseries",
         metric_dataset=MetricDataset(
             {
@@ -54,7 +53,7 @@ def test_example_metric(tmp_path, cmip6_data_catalog, mocker):
 
     assert str(result.bundle_filename) == "output.json"
 
-    output_bundle_path = definition.output_directory / definition.output_fragment / result.bundle_filename
+    output_bundle_path = definition.output_directory / result.bundle_filename
 
     assert result.successful
     assert output_bundle_path.exists()
@@ -75,8 +74,7 @@ def test_standard_metric(tmp_path, cmip6_data_catalog):
     (output_directory / metric.slug).mkdir(parents=True, exist_ok=True)
 
     definition = MetricExecutionDefinition(
-        output_directory=output_directory,
-        output_fragment=pathlib.Path(metric.slug),
+        output_directory=output_directory / pathlib.Path(metric.slug),
         key="ilamb-standard-test_test",
         metric_dataset=MetricDataset(
             {
@@ -89,7 +87,7 @@ def test_standard_metric(tmp_path, cmip6_data_catalog):
 
     assert str(result.bundle_filename) == "output.json"
 
-    output_bundle_path = definition.output_directory / definition.output_fragment / result.bundle_filename
+    output_bundle_path = definition.output_directory / result.bundle_filename
 
     assert result.successful
     assert output_bundle_path.exists()

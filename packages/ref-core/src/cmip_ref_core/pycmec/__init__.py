@@ -1,0 +1,3 @@
+"""
+CMEC python package
+"""

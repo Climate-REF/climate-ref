@@ -42,6 +42,10 @@ clean:  ## clean up temporary files
 	rm -rf site dist build
 	rm -rf .coverage
 
+.PHONY: clean-sample-data
+clean-sample-data:  ## clean up the sample data
+	rm -rf tests/test-data/sample-data
+
 .PHONY: build
 build: clean  ## build the packages to be deployed to PyPI
 	cp LICENCE NOTICE packages/ref
@@ -148,7 +152,7 @@ virtual-environment:  ## update virtual environment, create a new one if it does
 
 .PHONY: fetch-test-data
 fetch-test-data:  ## Download any data needed by the test suite
-	uv run python ./scripts/fetch-sample-data.py
+	uv run ref datasets fetch-sample-data
 	uv run python ./scripts/fetch-ilamb-data.py test.txt
 
 .PHONY: update-test-data-registry

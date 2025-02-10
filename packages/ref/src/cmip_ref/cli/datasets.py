@@ -17,6 +17,7 @@ from rich.table import Table
 from cmip_ref.datasets import get_dataset_adapter
 from cmip_ref.models import Dataset
 from cmip_ref.solver import solve_metrics
+from cmip_ref.testing import SAMPLE_DATA_VERSION, fetch_sample_data
 from cmip_ref_core.datasets import SourceDatasetType
 
 app = typer.Typer(help=__doc__)
@@ -164,3 +165,25 @@ def ingest(  # noqa: PLR0913
             db=db,
             dry_run=dry_run,
         )
+
+
+@app.command(name="fetch-sample-data")
+def _fetch_sample_data(
+    version: str = SAMPLE_DATA_VERSION, force_cleanup: bool = False, symlink: bool = False
+) -> None:
+    """
+    Fetch the sample data for the given version.
+
+    Parameters
+    ----------
+    version
+        The version tag of the sample data to fetch.
+
+        Defaults to the current version of data expected by the test suite
+    force_cleanup
+        If True, remove any existing files.
+    symlink : bool
+        If True, symlink in the data otherwise copy the files.
+    """
+    logger.info(f"Fetching data for version {version}")
+    fetch_sample_data(version=version, force_cleanup=force_cleanup, symlink=symlink)

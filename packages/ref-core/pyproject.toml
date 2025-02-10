@@ -22,6 +22,7 @@ classifiers = [
 ]
 dependencies = [
     "attrs>=22.1.0",
+    "pydantic>=2.10.6",
     "typing_extensions",
 ]
 

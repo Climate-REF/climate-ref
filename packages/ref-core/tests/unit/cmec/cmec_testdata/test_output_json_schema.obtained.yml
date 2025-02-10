@@ -1,0 +1,104 @@
+$defs:
+  OutputProvenance:
+    additionalProperties: true
+    description: CMEC output bundle provenance object
+    properties:
+      environment:
+        additionalProperties:
+          anyOf:
+          - type: string
+          - type: 'null'
+        title: Environment
+        type: object
+      log:
+        title: Log
+        type: string
+      modeldata:
+        anyOf:
+        - type: string
+        - items:
+            type: string
+          type: array
+        - type: object
+        title: Modeldata
+      obsdata:
+        anyOf:
+        - type: string
+        - items:
+            type: string
+          type: array
+        - type: object
+        title: Obsdata
+    required:
+    - environment
+    - modeldata
+    - obsdata
+    - log
+    title: OutputProvenance
+    type: object
+  _OutputDict:
+    additionalProperties: true
+    properties:
+      description:
+        title: Description
+        type: string
+      filename:
+        title: Filename
+        type: string
+      long_name:
+        title: Long Name
+        type: string
+    required:
+    - filename
+    - long_name
+    - description
+    title: _OutputDict
+    type: object
+$schema: https://json-schema.org/draft/2020-12/schema
+additionalProperties: true
+description: CMEC output bundle object
+properties:
+  data:
+    anyOf:
+    - additionalProperties:
+        $ref: '#/$defs/_OutputDict'
+      type: object
+    - type: 'null'
+    default: null
+    title: Data
+  html:
+    anyOf:
+    - additionalProperties:
+        $ref: '#/$defs/_OutputDict'
+      type: object
+    - type: 'null'
+    default: null
+    title: Html
+  index:
+    anyOf:
+    - type: string
+    - type: 'null'
+    default: null
+    title: Index
+  metrics:
+    anyOf:
+    - additionalProperties:
+        $ref: '#/$defs/_OutputDict'
+      type: object
+    - type: 'null'
+    default: null
+    title: Metrics
+  plots:
+    anyOf:
+    - additionalProperties:
+        $ref: '#/$defs/_OutputDict'
+      type: object
+    - type: 'null'
+    default: null
+    title: Plots
+  provenance:
+    $ref: '#/$defs/OutputProvenance'
+required:
+- provenance
+title: CMEC
+type: object

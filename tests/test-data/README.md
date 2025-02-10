@@ -10,6 +10,9 @@ Alternatively, these data can be downloaded manually by running:
 make fetch-test-data
 ```
 
+This also fetches the test data neeed by the ILAMB metric provider.
+These data are stored in a pooch cache outside of the repository.
+
 ## Sample Data
 
 A consistent set of [sample data](https://github.com/CMIP-REF/ref-sample-data)
@@ -19,7 +22,7 @@ This ensures that the tests are reproducible and that the test data are versione
 These data are used in the REF tests and are not intended to be used for any other purpose
 as they are decimated to reduce the size of the test dataset.
 
-These data are fetched using pooch and then symlinked into the `sample-data` directory,
+These data are fetched using pooch and then copied into the `sample-data` directory,
 during the `make fetch-test-data` process.
 These sample data are also used to generate the documentation.
 

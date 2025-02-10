@@ -253,8 +253,8 @@ class Config:
     db: DbConfig = Factory(DbConfig)
     executor: ExecutorConfig = Factory(ExecutorConfig)
     metric_providers: list[MetricsProviderConfig] = Factory(default_metric_providers)
-    _raw: TOMLDocument | None = field(init=False, default=None)
-    _config_file: Path | None = field(init=False, default=None)
+    _raw: TOMLDocument | None = field(init=False, default=None, repr=False)
+    _config_file: Path | None = field(init=False, default=None, repr=False)
 
     @classmethod
     def load(cls, config_file: Path, allow_missing: bool = True) -> "Config":

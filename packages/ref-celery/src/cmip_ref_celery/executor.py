@@ -82,7 +82,7 @@ class CeleryExecutor(Executor):
                 definition,
             ],
             queue=provider.slug,
-            link=handle_result.s(metric_execution_result.id).set(queue="celery")
+            link=handle_result.s(metric_execution_result_id=metric_execution_result.id).set(queue="celery")
             if metric_execution_result
             else None,
         )

@@ -3,11 +3,13 @@ from loguru import logger
 
 from cmip_ref.config import Config
 from cmip_ref.database import Database
+from cmip_ref.executor import handle_execution_result
 from cmip_ref.models import MetricExecutionResult
+from cmip_ref_core.metrics import MetricResult
 
 
 @current_app.task
-def handle_result(metric_execution_id: int, **kwargs) -> None:
+def handle_result(result: MetricResult, metric_execution_result_id: int) -> None:
     """
     Handle the result of a metric execution
 
@@ -15,21 +17,21 @@ def handle_result(metric_execution_id: int, **kwargs) -> None:
 
     Parameters
     ----------
-    metric_execution_id
+    metric_execution_result_id
         The unique identifier for the metric execution
     result
         The result of the metric execution
     """
-    logger.info(f"Handling result for metric execution {metric_execution_id}")
-    logger.info(f"Received: {kwargs}")
+    logger.info(f"Handling result for metric execution {metric_execution_result_id} + {result}")
 
     config = Config.default()
     db = Database.from_config(config, run_migrations=False)
 
     with db.session.begin():
-        metric_execution_result = db.session.get(MetricExecutionResult, metric_execution_id)
+        metric_execution_result = db.session.get(MetricExecutionResult, metric_execution_result_id)
 
         if metric_execution_result is None:
-            logger.error(f"Metric execution result {metric_execution_id} not found")
+            logger.error(f"Metric execution result {metric_execution_result_id} not found")
             return
-        logger.info(f"{metric_execution_result} found")
+
+        handle_execution_result(config, metric_execution_result, result)

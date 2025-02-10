@@ -23,6 +23,7 @@ services:
     restart: always
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
+      - REF_DATABASE_URL=sqlite:////app/.ref/db/cmip_ref.db
       - REF_DATA_ROOT=/data
       - REF_SCRATCH_ROOT=/scratch
       - REF_RESULTS_ROOT=/output

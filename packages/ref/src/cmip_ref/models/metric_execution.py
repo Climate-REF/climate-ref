@@ -1,3 +1,4 @@
+import pathlib
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -135,6 +136,8 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
     path: Mapped[str] = mapped_column(nullable=True)
     """
     Path to the output bundle
+
+    Relative to the output directory
     """
 
     metric_execution: Mapped["MetricExecution"] = relationship(back_populates="results")
@@ -151,9 +154,15 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
                 [{"metric_execution_result_id": self.id, "dataset_id": idx} for idx in dataset.index],
             )
 
-    def mark_successful(self, path: str) -> None:
+    def mark_successful(self, path: pathlib.Path | str) -> None:
         """
         Mark the metric execution as successful
         """
         self.successful = True
-        self.path = path
+        self.path = str(path)
+
+    def mark_failed(self) -> None:
+        """
+        Mark the metric execution as successful
+        """
+        self.successful = False

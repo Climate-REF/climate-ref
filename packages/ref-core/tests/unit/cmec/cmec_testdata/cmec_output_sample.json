@@ -1,0 +1,64 @@
+{
+    "html": {},
+    "metrics": {
+        "hfls": {
+            "filename": "hfls_2.5x2.5_regrid2_linear_metrics.json",
+            "long_name": "hfls metrics",
+            "description": "Metrics results for variable hfls"
+        },
+        "hfss": {
+            "filename": "hfss_2.5x2.5_regrid2_linear_metrics.json",
+            "long_name": "hfss metrics",
+            "description": "Metrics results for variable hfss"
+        },
+        "hur-200": {
+            "filename": "hur-200_2.5x2.5_regrid2_linear_metrics.json",
+            "long_name": "hur-200 metrics",
+            "description": "Metrics results for variable hur-200"
+        },
+        "hus-200": {
+            "filename": "hus-200_2.5x2.5_regrid2_linear_metrics.json",
+            "long_name": "hus-200 metrics",
+            "description": "Metrics results for variable hus-200"
+        },
+        "pr": {
+            "filename": "pr_2.5x2.5_regrid2_linear_metrics.json",
+            "long_name": "pr metrics",
+            "description": "Metrics results for variable pr"
+        },
+        "prw": {
+            "filename": "prw_2.5x2.5_regrid2_linear_metrics.json",
+            "long_name": "prw metrics",
+            "description": "Metrics results for variable prw"
+        }
+    },
+    "data": {},
+    "plots": {},
+    "provenance": {
+        "environment": {
+            "cdat_info": "8.2.1",
+            "cdms": "3.1.5",
+            "cdp": "1.7.0",
+            "cdtime": "3.2",
+            "cdutil": "8.2.1",
+            "esmf": "8.2.0",
+            "esmpy": "8.2.0",
+            "genutil": "8.2.1",
+            "python": "3.10.6",
+            "blas": "0.3.21",
+            "lapack": "3.9.0",
+            "numpy": "1.22.4",
+            "clapack": null,
+            "mesalib": null,
+            "uvcdat": null,
+            "vcs": null,
+            "vtk": null,
+            "matplotlib": "3.5.3",
+            "scipy": "1.9.3",
+            "PMP": "2.0"
+        },
+        "modeldata": "/home/ordonez4/cmec_run_inputs",
+        "obsdata": "/p/user_pub/PCMDIobs/obs4MIPs_clims",
+        "log": "pcmdi_metrics_driver.E3SM.log"
+    }
+}

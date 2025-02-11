@@ -3,6 +3,7 @@ from pathlib import Path
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from cmip_ref.models import Dataset
 from cmip_ref.models.dataset import CMIP6Dataset, CMIP6File
+from cmip_ref.testing import SAMPLE_DATA_VERSION
 
 
 def test_ingest_help(invoke_cli):
@@ -129,7 +130,7 @@ class TestIngest:
             [
                 "datasets",
                 "ingest",
-                str(sample_data_dir),
+                str(sample_data_dir / "CMIP6"),
                 "--source-type",
                 "cmip6",
                 "--dry-run",
@@ -138,3 +139,31 @@ class TestIngest:
 
         # Check that no data was loaded
         assert db.session.query(Dataset).count() == 0
+
+
+class TestFetchSampleData:
+    def test_fetch_defaults(self, mocker, invoke_cli):
+        mock_fetch = mocker.patch("cmip_ref.cli.datasets.fetch_sample_data")
+        invoke_cli(
+            [
+                "datasets",
+                "fetch-sample-data",
+            ]
+        )
+
+        mock_fetch.assert_called_once_with(version=SAMPLE_DATA_VERSION, force_cleanup=False, symlink=False)
+
+    def test_fetch(self, mocker, invoke_cli):
+        mock_fetch = mocker.patch("cmip_ref.cli.datasets.fetch_sample_data")
+        invoke_cli(
+            [
+                "datasets",
+                "fetch-sample-data",
+                "--version",
+                "v0.1.0",
+                "--force-cleanup",
+                "--symlink",
+            ]
+        )
+
+        mock_fetch.assert_called_once_with(version="v0.1.0", force_cleanup=True, symlink=True)

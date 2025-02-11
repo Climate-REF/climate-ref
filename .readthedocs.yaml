@@ -18,6 +18,6 @@ build:
     - uv sync --frozen
     # Fetch test data from ESGF (needed by notebooks)
     - make fetch-test-data
-    - uv run ref datasets ingest --source-type cmip6 $READTHEDOCS_REPOSITORY_PATH/tests/test-data/sample-data
+    - uv run ref datasets ingest --source-type cmip6 $READTHEDOCS_REPOSITORY_PATH/tests/test-data/sample-data/CMIP6
     # Run a strict build
     - NO_COLOR=1 REF_DATA_ROOT=$READTHEDOCS_REPOSITORY_PATH/tests/test-data/sample-data uv run mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html

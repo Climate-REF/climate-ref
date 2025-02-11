@@ -100,7 +100,7 @@ Updating the sample data can be done by running the following command:
 
 ```bash
 # Fetch the latest registry from the sample data repository
-make update-test-data-registry
+make update-sample-data-registry
 
 # Manually edit the `SAMPLE_VERSION` in `packages/ref/src/cmip_ref/testing.py`
 

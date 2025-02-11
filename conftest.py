@@ -29,7 +29,7 @@ def sample_data_dir() -> Path:
 @pytest.fixture(autouse=True, scope="session")
 def sample_data() -> None:
     # Downloads the sample data if it doesn't exist
-    fetch_sample_data()
+    fetch_sample_data(force_cleanup=False, symlink=False)
 
 
 @pytest.fixture

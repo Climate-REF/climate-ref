@@ -48,7 +48,7 @@ class TestCMIP6Adapter:
         # Indexes and ordering may be different
         adapter = CMIP6DatasetAdapter()
         local_data_catalog = (
-            adapter.find_local_datasets(sample_data_dir)
+            adapter.find_local_datasets(sample_data_dir / "CMIP6")
             .drop(columns=["time_range"])
             .sort_values(["instance_id", "start_time"])
             .reset_index(drop=True)
@@ -64,7 +64,7 @@ class TestCMIP6Adapter:
 
     def test_load_local_datasets(self, sample_data_dir, catalog_regression):
         adapter = CMIP6DatasetAdapter()
-        data_catalog = adapter.find_local_datasets(sample_data_dir)
+        data_catalog = adapter.find_local_datasets(sample_data_dir / "CMIP6")
 
         # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(

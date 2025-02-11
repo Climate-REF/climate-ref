@@ -155,6 +155,6 @@ fetch-test-data:  ## Download any data needed by the test suite
 	uv run ref datasets fetch-sample-data
 	uv run python ./scripts/fetch-ilamb-data.py test.txt
 
-.PHONY: update-test-data-registry
-update-test-data-registry:  ## Update the test data registry
+.PHONY: update-sample-data-registry
+update-sample-data-registry:  ## Update the sample data registry
 	curl --output packages/ref/src/cmip_ref/datasets/sample_data.txt https://raw.githubusercontent.com/CMIP-REF/ref-sample-data/refs/heads/main/registry.txt

@@ -578,6 +578,42 @@
   branch_method: standard
   branch_time_in_child: 0.0
   branch_time_in_parent: 36524.0
+  end_time: 0125-12-16 12:00:00
+  experiment: pre-industrial control
+  experiment_id: piControl
+  frequency: mon
+  grid: native atmosphere N96 grid (145x192 latxlon)
+  grid_label: gn
+  init_year: null
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316
+  institution_id: CSIRO
+  long_name: Near-Surface Air Temperature
+  member_id: r1i1p1f1
+  nominal_resolution: 250 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl-spinup
+  parent_source_id: ACCESS-ESM1-5
+  parent_time_units: days since 0001-01-01
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/tas/gn/v20210316/tas_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-012512.nc'
+  product: model-output
+  realm: atmos
+  source_id: ACCESS-ESM1-5
+  source_type: AOGCM
+  standard_name: air_temperature
+  start_time: 0101-01-16 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  units: K
+  variable_id: tas
+  variant_label: r1i1p1f1
+  version: v20210316
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 36524.0
   end_time: 0180-12-16 12:00:00
   experiment: pre-industrial control
   experiment_id: piControl

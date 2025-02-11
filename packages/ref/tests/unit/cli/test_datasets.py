@@ -130,7 +130,7 @@ class TestIngest:
             [
                 "datasets",
                 "ingest",
-                str(sample_data_dir),
+                str(sample_data_dir / "CMIP6"),
                 "--source-type",
                 "cmip6",
                 "--dry-run",

@@ -39,7 +39,7 @@ def _build_sample_data_registry(sample_data_version: str) -> pooch.Pooch:
 
 
 TEST_DATA_DIR = _determine_test_directory()
-SAMPLE_DATA_VERSION = "v0.3.0"
+SAMPLE_DATA_VERSION = "v0.3.1"
 
 
 def fetch_sample_data(

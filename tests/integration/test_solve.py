@@ -7,7 +7,7 @@ def test_solve(sample_data_dir, cmip6_data_catalog, config, invoke_cli, monkeypa
     num_expected_metrics = 9
 
     db = Database.from_config(config)
-    invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir)])
+    invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir / "CMIP6")])
     assert db.session.query(Dataset).count() == num_expected_datasets
 
     result = invoke_cli(["--verbose", "solve"])

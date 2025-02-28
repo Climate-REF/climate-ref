@@ -1,5 +1,7 @@
 import re
 
+import pytest
+
 from cmip_ref import __version__
 from cmip_ref.cli import build_app
 from cmip_ref_core import __version__ as __core_version__
@@ -59,17 +61,22 @@ def test_config_directory_append(config, invoke_cli):
     )
 
 
-def test_build_app():
+@pytest.fixture()
+def expected_groups() -> set[str]:
+    return {"config", "datasets", "executions", "celery"}
+
+
+def test_build_app(expected_groups):
     app = build_app()
 
     registered_commands = [command.name for command in app.registered_commands]
     registered_groups = [group.name for group in app.registered_groups]
 
-    assert ["solve"] == registered_commands
-    assert ["config", "datasets", "celery"] == registered_groups
+    assert registered_commands == ["solve"]
+    assert set(registered_groups) == expected_groups
 
 
-def test_build_app_without_celery(mocker):
+def test_build_app_without_celery(mocker, expected_groups):
     mocker.patch("cmip_ref.cli.importlib.import_module", side_effect=ModuleNotFoundError)
     app = build_app()
 
@@ -77,4 +84,4 @@ def test_build_app_without_celery(mocker):
     registered_groups = [group.name for group in app.registered_groups]
 
     assert ["solve"] == registered_commands
-    assert ["config", "datasets"] == registered_groups
+    assert set(registered_groups) == expected_groups - {"celery"}

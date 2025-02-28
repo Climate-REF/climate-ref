@@ -2,8 +2,9 @@ import pathlib
 from typing import TYPE_CHECKING
 
 from loguru import logger
-from sqlalchemy import Column, ForeignKey, Table, UniqueConstraint
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import Column, ForeignKey, Table, UniqueConstraint, func
+from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm.query import RowReturningQuery
 
 from cmip_ref.models import Dataset
 from cmip_ref.models.base import Base, CreatedUpdatedMixin
@@ -165,3 +166,45 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
         Mark the metric execution as successful
         """
         self.successful = False
+
+
+def get_execution_and_latest_result(
+    session: Session,
+) -> RowReturningQuery[tuple[MetricExecution, MetricExecutionResult | None]]:
+    """
+    Query to get the most recent result for each metric execution
+
+    Parameters
+    ----------
+    session
+        The database session to use for the query.
+
+    Returns
+    -------
+        Query to get the most recent result for each metric execution.
+        The result is a tuple of the metric execution and the most recent result,
+        which can be None.
+    """
+    # Find the most recent result for each metric execution
+    # This uses an aggregate function because it is more efficient than order by
+    subquery = (
+        session.query(
+            MetricExecutionResult.metric_execution_id,
+            func.max(MetricExecutionResult.created_at).label("latest_created_at"),
+        )
+        .group_by(MetricExecutionResult.metric_execution_id)
+        .subquery()
+    )
+
+    # Join the metric execution with the latest result
+    query = (
+        session.query(MetricExecution, MetricExecutionResult)
+        .outerjoin(subquery, MetricExecution.id == subquery.c.metric_execution_id)
+        .outerjoin(
+            MetricExecutionResult,
+            (MetricExecutionResult.metric_execution_id == MetricExecution.id)
+            & (MetricExecutionResult.created_at == subquery.c.latest_created_at),
+        )
+    )
+
+    return query  # type: ignore

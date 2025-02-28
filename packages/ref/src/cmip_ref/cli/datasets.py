@@ -7,13 +7,11 @@ import os
 from pathlib import Path
 from typing import Annotated
 
-import pandas as pd
 import typer
 from loguru import logger
-from rich import box
 from rich.console import Console
-from rich.table import Table
 
+from cmip_ref.cli._utils import pretty_print_df
 from cmip_ref.datasets import get_dataset_adapter
 from cmip_ref.models import Dataset
 from cmip_ref.solver import solve_metrics
@@ -22,34 +20,6 @@ from cmip_ref_core.datasets import SourceDatasetType
 
 app = typer.Typer(help=__doc__)
 console = Console()
-
-
-def _pretty_print_df(df: pd.DataFrame) -> None:
-    """
-    Pretty print a DataFrame
-
-    Parameters
-    ----------
-    df
-        DataFrame to print
-    """
-    # Initiate a Table instance to be modified
-    max_col_count = console.width // 10
-    if len(df.columns) > max_col_count:
-        logger.warning(f"Too many columns to display ({len(df.columns)}), truncating to {max_col_count}")
-        df = df.iloc[:, :max_col_count]
-
-    table = Table(*[str(column) for column in df.columns])
-
-    for index, value_list in enumerate(df.values.tolist()):
-        row = [str(x) for x in value_list]
-        table.add_row(*row)
-
-    # Update the style of the table
-    table.row_styles = ["none", "dim"]
-    table.box = box.SIMPLE_HEAD
-
-    console.print(table)
 
 
 @app.command(name="list")
@@ -78,7 +48,7 @@ def list_(
             raise typer.Exit(code=1)
         data_catalog = data_catalog[column]
 
-    _pretty_print_df(data_catalog)
+    pretty_print_df(data_catalog, console=console)
 
 
 @app.command()
@@ -145,7 +115,7 @@ def ingest(  # noqa: PLR0913
     logger.info(
         f"Found {len(data_catalog)} files for {len(data_catalog[adapter.slug_column].unique())} datasets"
     )
-    _pretty_print_df(adapter.pretty_subset(data_catalog))
+    pretty_print_df(adapter.pretty_subset(data_catalog), console=console)
 
     for instance_id, data_catalog_dataset in data_catalog.groupby(adapter.slug_column):
         logger.info(f"Processing dataset {instance_id}")

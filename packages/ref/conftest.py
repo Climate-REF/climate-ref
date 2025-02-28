@@ -4,12 +4,14 @@ from urllib import parse as urlparse
 
 import pandas as pd
 import pytest
+from cmip_ref_metrics_example import provider as example_provider
 from pytest_regressions.data_regression import RegressionYamlDumper
 from yaml.representer import SafeRepresenter
 
 from cmip_ref.config import Config
 from cmip_ref.database import Database
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
+from cmip_ref.provider_registry import _register_provider
 
 # Ignore the alembic folder
 collect_ignore = ["src/cmip_ref/migrations"]
@@ -50,6 +52,8 @@ def db_seeded_template(tmp_path_session, cmip6_data_catalog) -> Path:
     with database.session.begin():
         for instance_id, data_catalog_dataset in cmip6_data_catalog.groupby(adapter.slug_column):
             adapter.register_dataset(config, database, data_catalog_dataset)
+
+        _register_provider(database, example_provider)
 
     return template_db_path
 

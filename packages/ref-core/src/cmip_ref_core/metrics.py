@@ -1,4 +1,6 @@
 import pathlib
+from abc import abstractmethod
+from collections.abc import Iterable
 from typing import Any, Protocol, runtime_checkable
 
 import pandas as pd
@@ -6,6 +8,8 @@ from attrs import field, frozen
 
 from cmip_ref_core.constraints import GroupConstraint
 from cmip_ref_core.datasets import FacetFilter, MetricDataset, SourceDatasetType
+
+# from cmip_ref_core.providers import
 from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput
 
@@ -345,3 +349,61 @@ class Metric(Protocol):
         MetricResult
             The result of running the metric.
         """
+
+
+class CommandLineMetric(Metric):
+    """
+    Metric that can be run from the command line.
+    """
+
+    provider: Any  # TODO: CommandLineMetricsProvider causes circular import
+
+    @abstractmethod
+    def build_cmd(self, definition: MetricExecutionDefinition) -> Iterable[str]:
+        """
+        Build the command to run the metric on the given configuration.
+
+        Parameters
+        ----------
+        definition : MetricExecutionDefinition
+            The configuration to run the metric on.
+
+        Returns
+        -------
+        :
+            A command that can be run with :func:`subprocess.run`.
+        """
+
+    @abstractmethod
+    def build_metric_result(self, definition: MetricExecutionDefinition) -> MetricResult:
+        """
+        Build the result from running the metric on the given configuration.
+
+        Parameters
+        ----------
+        definition : MetricExecutionDefinition
+            The configuration to run the metric on.
+
+        Returns
+        -------
+        :
+            The result of running the metric.
+        """
+
+    def run(self, definition: MetricExecutionDefinition) -> MetricResult:
+        """
+        Run the metric on the given configuration.
+
+        Parameters
+        ----------
+        definition : MetricExecutionDefinition
+            The configuration to run the metric on.
+
+        Returns
+        -------
+        :
+            The result of running the metric.
+        """
+        cmd = self.build_cmd(definition)
+        self.provider.run(cmd)
+        return self.build_metric_result(definition)

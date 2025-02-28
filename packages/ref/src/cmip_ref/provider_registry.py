@@ -9,15 +9,12 @@ For remote providers, a proxy is used to access the metadata associated with the
 These metrics cannot be run locally, but can be executed using other executors.
 """
 
-import importlib
-
 from attrs import field, frozen
 from loguru import logger
 
 from cmip_ref.config import Config
 from cmip_ref.database import Database
-from cmip_ref_core.exceptions import InvalidProviderException
-from cmip_ref_core.providers import MetricsProvider
+from cmip_ref_core.providers import MetricsProvider, import_provider
 
 
 def _register_provider(db: Database, provider: MetricsProvider) -> None:
@@ -56,52 +53,6 @@ def _register_provider(db: Database, provider: MetricsProvider) -> None:
         )
         if created:
             logger.info(f"Created metric {metric_model.slug}")
-
-
-def import_provider(fqn: str) -> MetricsProvider:
-    """
-    Import a provider by name
-
-    Parameters
-    ----------
-    fqn
-        Full package and attribute name of the provider to import
-
-        For example: `cmip_ref_metrics_example.provider` will use the `provider` attribute from the
-        `cmip_ref_metrics_example` package.
-
-        If only a package name is provided, the default attribute name is `provider`.
-
-    Raises
-    ------
-    InvalidProviderException
-        If the provider cannot be imported
-
-        If the provider isn't a valid `MetricsProvider`.
-
-    Returns
-    -------
-    :
-        MetricsProvider instance
-    """
-    if "." in fqn:
-        module, name = fqn.rsplit(".", 1)
-    else:
-        module = fqn
-        name = "provider"
-
-    try:
-        imp = importlib.import_module(module)
-        provider = getattr(imp, name)
-        if not isinstance(provider, MetricsProvider):
-            raise InvalidProviderException(fqn, f"Expected MetricsProvider, got {type(provider)}")
-        return provider
-    except ModuleNotFoundError:
-        logger.error(f"Module '{fqn}' not found")
-        raise InvalidProviderException(fqn, f"Module '{module}' not found")
-    except AttributeError:
-        logger.error(f"Provider '{fqn}' not found")
-        raise InvalidProviderException(fqn, f"Provider '{name}' not found in {module}")
 
 
 @frozen

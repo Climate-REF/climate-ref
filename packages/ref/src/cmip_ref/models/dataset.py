@@ -131,3 +131,68 @@ class CMIP6File(Base):
     """
 
     dataset = relationship("CMIP6Dataset", backref="files")
+
+
+class OBS4MIPSDataset(Dataset):
+    """
+    Represents a obs4mips dataset
+
+    TODO: Should the metadata fields be part of the file or dataset?
+    """
+
+    __tablename__ = "obs4mips_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    activity_id: Mapped[str] = mapped_column()
+    frequency: Mapped[str] = mapped_column()
+    grid: Mapped[str] = mapped_column()
+    grid_label: Mapped[str] = mapped_column()
+    institution_id: Mapped[str] = mapped_column()
+    long_name: Mapped[str] = mapped_column()
+    nominal_resolution: Mapped[str] = mapped_column()
+    realm: Mapped[str] = mapped_column()
+    product: Mapped[str] = mapped_column()
+    source_id: Mapped[str] = mapped_column()
+    source_type: Mapped[str] = mapped_column()
+    units: Mapped[str] = mapped_column()
+    variable_id: Mapped[str] = mapped_column()
+    variant_label: Mapped[str] = mapped_column()
+    vertical_levels: Mapped[int] = mapped_column()
+    source_version_number: Mapped[str] = mapped_column()
+
+    instance_id: Mapped[str] = mapped_column()
+    """
+    Unique identifier for the dataset.
+    """
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.obs4MIPs}  # type: ignore
+
+
+class OBS4MIPSFile(Base):
+    """
+    Capture metadata for a file in an obs4mips dataset
+
+    A dataset may have multiple files, but is represented as a single dataset in the database.
+    A lot of the metadata will be duplicated for each file in the dataset,
+    but this will be more efficient for querying, filtering and building a data catalog.
+    """
+
+    __tablename__ = "obs4mips_dataset_file"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+    dataset_id: Mapped[int] = mapped_column(
+        ForeignKey("obs4mips_dataset.id", ondelete="CASCADE"), nullable=False
+    )
+    """
+    Foreign key to the dataset table
+    """
+
+    # File-specific metadata fields to track
+    end_time: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    start_time: Mapped[datetime.datetime] = mapped_column(nullable=True)
+
+    path: Mapped[str] = mapped_column()
+    """
+    Prefix that describes where the dataset is stored relative to the data directory
+    """
+
+    dataset = relationship("OBS4MIPSDataset", backref="files")

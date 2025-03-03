@@ -87,6 +87,7 @@ def test_validate_data_catalog_metadata_variance(caplog):
     "source_type, expected_adapter",
     [
         (SourceDatasetType.CMIP6.value, "cmip_ref.datasets.cmip6.CMIP6DatasetAdapter"),
+        (SourceDatasetType.obs4MIPs.value, "cmip_ref.datasets.obs4mips.OBS4MIPSDatasetAdapter"),
     ],
 )
 def test_get_dataset_adapter_valid(source_type, expected_adapter):

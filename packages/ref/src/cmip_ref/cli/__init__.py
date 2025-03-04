@@ -11,7 +11,7 @@ from attrs import define
 from loguru import logger
 
 from cmip_ref import __version__
-from cmip_ref.cli import config, datasets, executions, solve
+from cmip_ref.cli import config, datasets, executions, providers, solve
 from cmip_ref.cli._logging import capture_logging
 from cmip_ref.config import Config
 from cmip_ref.constants import config_filename
@@ -94,6 +94,7 @@ def build_app() -> typer.Typer:
     app.add_typer(config.app, name="config")
     app.add_typer(datasets.app, name="datasets")
     app.add_typer(executions.app, name="executions")
+    app.add_typer(providers.app, name="providers")
 
     try:
         celery_app = importlib.import_module("cmip_ref_celery.cli").app

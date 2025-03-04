@@ -1,0 +1,6 @@
+channels:
+  - conda-forge
+  - nodefaults
+
+dependencies:
+  - esmvaltool-python

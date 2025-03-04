@@ -65,6 +65,24 @@ for package in packages/cmip_ref_core packages/cmip_ref packages/cmip_ref_metric
 done
 ```
 
+### Installing metric provider dependencies
+
+
+Some metric providers can use their own conda environments. The REF can manage
+these for you, provided that conda is installed.
+
+```bash
+ref --log-level=info providers create-env --provider ESMValTool
+```
+
+
+To update a conda-lock file, run for example:
+
+```bash
+uv run conda-lock -k explicit -p linux-64 -f packages/ref-metrics-esmvaltool/src/cmip_ref_metrics_esmvaltool/requirements/environment.yml
+mv conda-linux-64.lock packages/ref-metrics-esmvaltool/src/cmip_ref_metrics_esmvaltool/requirements/conda-lock.yml
+```
+
 ## Tests and code quality
 
 The test suite can then be run using `make test`.

@@ -39,6 +39,7 @@ class MetricCV(Enum):
 
     DIMENSIONS = "DIMENSIONS"
     JSON_STRUCTURE = "json_structure"
+    SCHEMA = "SCHEMA"
     RESULTS = "RESULTS"
     PROVENANCE = "PROVENANCE"
     DISCLAIMER = "DISCLAMER"
@@ -56,7 +57,6 @@ class MetricSchema(BaseModel):
     package: str
 
 
-# class MetricDimensions(RootModel[dict[str, Union[list[str], dict[str, Any]]]]):
 class MetricDimensions(RootModel[Any]):
     """
     CMEC metric bundle DIMENSIONS object
@@ -134,7 +134,6 @@ class MetricDimensions(RootModel[Any]):
         if not (mdim1.root[MetricCV.JSON_STRUCTURE.value] == mdim2.root[MetricCV.JSON_STRUCTURE.value]):
             raise ValueError("JSON_STRUCTURES are not same")
 
-        merged_dim = {}
         merged_dim = {MetricCV.JSON_STRUCTURE.value: mdim1.root[MetricCV.JSON_STRUCTURE.value]}
 
         for dim in mdim1.root[MetricCV.JSON_STRUCTURE.value]:
@@ -175,7 +174,7 @@ class MetricResults(RootModel[Any]):
     @field_validator("root", mode="after")
     @classmethod
     def _validate_results(cls, rlt: Any, info: ValidationInfo) -> Any:
-        """Validate a MeticResults object"""
+        """Validate a MetricResults object"""
         if not isinstance(info.context, MetricDimensions):
             s = "\nTo validate MetricResults object, MetricDimensions is needed,\n"
             s += "please use model_validate(Results, context=MetricDimensions to instantiate\n"
@@ -301,8 +300,6 @@ class CMECMetric(BaseModel):
 
         merged_obj_dims = MetricDimensions.merge_dimension(mobj1.DIMENSIONS, mobj2.DIMENSIONS)
 
-        merged_obj_rlts = {}
-
         result1 = mobj2.RESULTS
         result2 = mobj1.RESULTS
         merged_obj_rlts = cls._merge(dict(result1), result2)
@@ -312,6 +309,22 @@ class CMECMetric(BaseModel):
         MetricResults.model_validate(merged_obj_rlts, context=merged_obj_dims)
 
         return cls(DIMENSIONS=merged_obj_dims, RESULTS=merged_obj_rlts)
+
+    @staticmethod
+    def create_template() -> dict[str, Any]:
+        """
+        Return an empty dictionary in CMEC metric bundle format
+        """
+        default_dimensions = MetricDimensions()
+
+        return {
+            MetricCV.DIMENSIONS.value: default_dimensions.root,
+            MetricCV.RESULTS.value: {},
+            MetricCV.SCHEMA.value: None,
+            MetricCV.PROVENANCE.value: None,
+            MetricCV.DISCLAIMER.value: None,
+            MetricCV.NOTES.value: None,
+        }
 
 
 class CMECGenerateJsonSchema(GenerateJsonSchema):

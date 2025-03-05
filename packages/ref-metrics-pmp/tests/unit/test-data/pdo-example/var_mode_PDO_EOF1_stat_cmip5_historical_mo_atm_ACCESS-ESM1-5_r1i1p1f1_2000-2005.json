@@ -1,0 +1,150 @@
+{
+    "REF": {
+        "obs": {
+            "defaultReference": {
+                "PDO": {
+                    "monthly": {
+                        "frac": 0.26088888494274287,
+                        "mean": -0.0045735968738200615,
+                        "mean_glo": 0.0848038963391425,
+                        "stdv_pc": 0.2359616756163025
+                    }
+                },
+                "period": "1900-2005",
+                "reference_eofs": 1,
+                "source": "/Users/jared/Library/Caches/pmp/v3.8.2/obs4MIPs_PCMDI_monthly/MOHC/HadISST-1-1/mon/ts/gn/v20210727/ts_mon_HadISST-1-1_PCMDI_gn_187001-201907.nc"
+            }
+        }
+    },
+    "RESULTS": {
+        "ACCESS-ESM1-5": {
+            "r1i1p1f1": {
+                "defaultReference": {
+                    "PDO": {
+                        "monthly": {
+                            "best_matching_model_eofs__cor": 1,
+                            "best_matching_model_eofs__rms": 1,
+                            "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                            "cbf": {
+                                "bias": -0.012902166924045364,
+                                "bias_glo": -0.027594450759993304,
+                                "cor": 0.797497520580893,
+                                "cor_glo": 0.539850032722944,
+                                "frac": 0.14558572272748813,
+                                "frac_cbf_regrid": NaN,
+                                "mean": -1.3598494495664377e-17,
+                                "mean_glo": 0.05255197769815338,
+                                "rms": 0.17961250689980823,
+                                "rms_glo": 0.16476819402114168,
+                                "rmsc": 0.6316084962604089,
+                                "rmsc_glo": 0.9725677948591159,
+                                "stdv_pc": 0.16029172298312772,
+                                "stdv_pc_ratio_to_obs": 0.679312530581357
+                            },
+                            "eof1": {
+                                "bias": -0.01652146200736649,
+                                "bias_glo": 0.011659611181871048,
+                                "cor": 0.5652352738737196,
+                                "cor_glo": 0.4252881919344693,
+                                "frac": 0.17062006725773204,
+                                "mean": -5.137209031695431e-17,
+                                "mean_glo": 0.09657039849775795,
+                                "rms": 0.23501344422885248,
+                                "rms_glo": 0.19391372450948022,
+                                "rmsc": 0.807101806247296,
+                                "rmsc_glo": 1.0614597382421767,
+                                "stdv_pc": 0.22235014222791247,
+                                "stdv_pc_ratio_to_obs": 0.9423146434570852,
+                                "tcor_cbf_vs_eof_pc": 0.7403027370758615
+                            },
+                            "eof2": {
+                                "bias": 0.008926109627551774,
+                                "bias_glo": -0.08696577442062267,
+                                "cor": 0.44108107989722517,
+                                "cor_glo": 0.25387830826925795,
+                                "frac": 0.13916421819740024,
+                                "mean": -4.532831498554792e-18,
+                                "mean_glo": -0.008353541035970549,
+                                "rms": 0.2621811134807549,
+                                "rms_glo": 0.1950720273885096,
+                                "rmsc": 0.9465831906280049,
+                                "rmsc_glo": 1.169161343571275,
+                                "stdv_pc": 0.20081037596488932,
+                                "stdv_pc_ratio_to_obs": 0.851029623519996,
+                                "tcor_cbf_vs_eof_pc": 0.4957421217010295
+                            },
+                            "eof3": {
+                                "bias": 0.011126245471238805,
+                                "bias_glo": -0.1277303184964513,
+                                "cor": 0.29879302094910243,
+                                "cor_glo": 0.20919576910751386,
+                                "frac": 0.11527045372273034,
+                                "mean": 4.532831498554792e-18,
+                                "mean_glo": -0.04475285081735812,
+                                "rms": 0.3226646343823165,
+                                "rms_glo": 0.2128277778590923,
+                                "rmsc": 1.187751817172092,
+                                "rmsc_glo": 1.242562520694965,
+                                "stdv_pc": 0.18276008799354257,
+                                "stdv_pc_ratio_to_obs": 0.7745329300455084,
+                                "tcor_cbf_vs_eof_pc": 0.3375081037173286
+                            },
+                            "period": "2000-2005"
+                        },
+                        "target_model_eofs": 1
+                    }
+                }
+            }
+        }
+    },
+    "json_structure": [
+        "model",
+        "realization",
+        "reference",
+        "mode",
+        "season",
+        "method",
+        "statistic"
+    ],
+    "json_version": 3.0,
+    "provenance": {
+        "commandLine": "/Users/jared/code/CMIP-REF/cmip-ref/.venv/lib/python3.10/site-packages/pcmdi_metrics/variability_mode/variability_modes_driver.py -p /Users/jared/code/CMIP-REF/cmip-ref/packages/ref-metrics-pmp/src/cmip_ref_metrics_pmp/params/pmp_param_MoV-PDO.py --modnames ACCESS-ESM1-5 --realization r1i1p1f1 --modpath /Users/jared/code/CMIP-REF/cmip-ref/tests/test-data/sample-data/CMIP6/DAMIP/CSIRO/ACCESS-ESM1-5/hist-GHG/r1i1p1f1/Amon/ts/gn/v20200615/ts_Amon_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_gn_200001-202012.nc --reference_data_path /Users/jared/Library/Caches/pmp/v3.8.2/obs4MIPs_PCMDI_monthly/MOHC/HadISST-1-1/mon/ts/gn/v20210727/ts_mon_HadISST-1-1_PCMDI_gn_187001-201907.nc --reference_data_name HadISST-1-1 --results_dir /private/var/folders/kq/_m_fz0ld2y7_1q9mxcbthnfh0000gn/T/pytest-of-jared/pytest-25/test_example_metric0/output_fragment",
+        "conda": {
+            "Platform": "osx-arm64",
+            "PythonVersion": "3.12.8.final.0",
+            "Version": "24.11.3",
+            "buildVersion": "not installed"
+        },
+        "date": "2025-03-05 02:19:33",
+        "openGL": {
+            "GLX": {
+                "client": {},
+                "server": {}
+            }
+        },
+        "osAccess": false,
+        "packages": {
+            "PMP": "3.8.2",
+            "PMPObs": "See 'References' key below, for detailed obs provenance information.",
+            "cdat_info": "8.2.1",
+            "cdms": "3.1.5",
+            "cdp": "1.7.0",
+            "cdtime": "3.1.4",
+            "cdutil": "8.2.1",
+            "esmf": "0.8.8",
+            "esmpy": "8.8.0",
+            "matplotlib": "3.10.0",
+            "numpy": "2.1.3",
+            "python": "3.10.10",
+            "scipy": "1.15.2",
+            "xarray": "2025.1.2",
+            "xcdat": "0.8.0"
+        },
+        "platform": {
+            "Name": "Jareds-Laptop.local",
+            "OS": "Darwin",
+            "Version": "24.3.0"
+        },
+        "userId": "root"
+    }
+}

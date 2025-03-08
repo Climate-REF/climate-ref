@@ -17,6 +17,34 @@ if TYPE_CHECKING:
     from cmip_ref_core.providers import CommandLineMetricsProvider, MetricsProvider
 
 
+def ensure_relative_path(path: pathlib.Path | str, root_directory: pathlib.Path) -> pathlib.Path:
+    """
+    Ensure that a path is relative to a root directory
+
+    If a path an absolute path, but not relative to the root directory, a ValueError is raised.
+
+    Parameters
+    ----------
+    path
+        The path to check
+    root_directory
+        The root directory that the path should be relative to
+
+    Raises
+    ------
+    ValueError
+        If the path is not relative to the root directory
+
+    Returns
+    -------
+        The path relative to the root directory
+    """
+    path = pathlib.Path(path)
+    if path.is_absolute():
+        return path.relative_to(root_directory)
+    return path
+
+
 @frozen
 class MetricExecutionDefinition:
     """
@@ -66,6 +94,24 @@ class MetricExecutionDefinition:
             return self.output_directory
         else:
             return self.output_directory / filename
+
+    def as_relative_path(self, filename: pathlib.Path | str) -> pathlib.Path:
+        """
+        Get the relative path of a file in the output directory
+
+        Parameters
+        ----------
+        filename
+            Path to a file in the output directory
+
+            If this is an absolute path, it will be converted to a relative path within the output directory.
+
+        Returns
+        -------
+        :
+            Relative path to the file in the output directory
+        """
+        return ensure_relative_path(filename, self.output_directory)
 
     def output_fragment(self) -> pathlib.Path:
         """
@@ -179,7 +225,7 @@ class MetricResult:
             output_bundle_filename=None, metric_bundle_filename=None, successful=False, definition=definition
         )
 
-    def to_output_path(self, filename: str | None) -> pathlib.Path:
+    def to_output_path(self, filename: str | pathlib.Path | None) -> pathlib.Path:
         """
         Get the absolute path for a file in the output directory
 
@@ -196,6 +242,24 @@ class MetricResult:
             Full path to the file in the output directory
         """
         return self.definition.to_output_path(filename)
+
+    def as_relative_path(self, filename: pathlib.Path | str) -> pathlib.Path:
+        """
+        Get the relative path of a file in the output directory
+
+        Parameters
+        ----------
+        filename
+            Path to a file in the output directory
+
+            If this is an absolute path, it will be converted to a relative path within the output directory.
+
+        Returns
+        -------
+        :
+            Relative path to the file in the output directory
+        """
+        return self.definition.as_relative_path(filename)
 
 
 @frozen(hash=True)

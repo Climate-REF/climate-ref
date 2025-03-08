@@ -130,6 +130,9 @@ filterwarnings = [
     'ignore:The `validate_arguments` method is deprecated:pydantic.warnings.PydanticDeprecatedSince20',
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
 ]
+markers = [
+    "slow",
+]
 
 # We currently check for GPL licensed code, but this restriction may be removed
 [tool.liccheck]

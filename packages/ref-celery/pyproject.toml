@@ -1,5 +1,5 @@
 [project]
-name = "cmip-ref-celery"
+name = "cmip_ref_celery"
 version = "0.2.0"
 description = "Celery app for mananging tasks and workers"
 readme = "README.md"

@@ -46,6 +46,30 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  tests-slow:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ "ubuntu-latest" ]
+        python-version: [ "3.10" ]
+    runs-on: "${{ matrix.os }}"
+    defaults:
+      run:
+        # This might be needed for Windows and doesn't seem to affect unix-based systems
+        # so we include it. If you have better proof of whether this is needed or not,
+        # feel free to update.
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Run tests
+        run: |
+          make fetch-test-data
+          make test-integration-slow
+
   imports-without-extras:
     strategy:
       fail-fast: false

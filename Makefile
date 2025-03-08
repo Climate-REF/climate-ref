@@ -44,6 +44,11 @@ clean-sample-data:  ## clean up the sample data
 build: clean  ## build the packages to be deployed to PyPI
 	cp LICENCE NOTICE packages/ref
 	cp LICENCE NOTICE packages/ref-core
+	cp LICENCE NOTICE packages/ref-celery
+	cp LICENCE NOTICE packages/ref-metrics-example
+	cp LICENCE NOTICE packages/ref-metrics-esmvaltool
+	cp LICENCE NOTICE packages/ref-metrics-ilamb
+	cp LICENCE NOTICE packages/ref-metrics-pmp
 	uv build --package cmip_ref --no-sources
 	uv build --package cmip_ref_core --no-sources
 	uv build --package cmip_ref_celery --no-sources
@@ -103,7 +108,13 @@ test-metrics-pmp:  ## run the tests
 .PHONY: test-integration
 test-integration:  ## run the integration tests
 	uv run \
-		pytest tests \
+		pytest tests -m "not slow" \
+		-r a -v
+
+.PHONY: test-integration-slow
+test-integration-slow:  ## run the integration tests, including the slow tests which may take a while
+	uv run \
+		pytest tests\
 		-r a -v
 
 .PHONY: test-metrics-packages

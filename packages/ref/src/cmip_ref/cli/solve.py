@@ -9,6 +9,7 @@ app = typer.Typer()
 def solve(
     ctx: typer.Context,
     dry_run: bool = typer.Option(False, help="Do not execute any metrics"),
+    timeout: int = typer.Option(60, help="Timeout in seconds for the solve operation"),
 ) -> None:
     """
     Solve for metrics that require recalculation
@@ -19,4 +20,4 @@ def solve(
     config = ctx.obj.config
     db = ctx.obj.database
     with ctx.obj.database.session.begin():
-        solve_metrics(config=config, db=db, dry_run=dry_run)
+        solve_metrics(config=config, db=db, dry_run=dry_run, timeout=timeout)

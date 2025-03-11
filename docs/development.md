@@ -74,7 +74,8 @@ uv run ref solve
 
 Afterwards, you can check the output of `uv run ref executions list` to see if metrics
 were evaluated successfully, and if they were, you find the results in the
-`.ref/results` folder.
+`.ref/results` folder. Don't worry too much if some executions are failing for you,
+things are still in active development at the moment.
 
 ### Pip editable installation
 

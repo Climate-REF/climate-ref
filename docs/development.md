@@ -55,6 +55,27 @@ If there are any issues, the messages from the `Makefile` should guide you
 through. If not, please raise an issue in the
 [issue tracker](https://github.com/Climate-REF/climate-ref/issues).
 
+### Running your first `solve`
+
+If you want to run the sample data through the whole pipeline, you need to download
+reference data, but note that the reference data is severable Gigabytes in size.
+
+```shell
+# Download reference data which is not (yet) included in obs4mips
+make fetch-ref-data
+```
+
+After that, you can let the REF calculate all included metrics for the sample data.
+Note that this will take a while to run.
+
+```shell
+uv run ref solve
+```
+
+Afterwards, you can check the output of `uv run ref executions list` to see if metrics
+were evaluated successfully, and if they were, you find the results in the
+`.ref/results` folder.
+
 ### Pip editable installation
 
 If you would like to install the REF into an existing (conda) environment

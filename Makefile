@@ -164,6 +164,7 @@ fetch-test-data:  ## Download any data needed by the test suite
 .PHONY: fetch-ref-data
 fetch-ref-data:  ## Download reference data needed by providers and (temporarily) not in obs4mips
 	uv run python ./scripts/fetch-ilamb-data.py ilamb.txt
+	uv run python ./scripts/fetch-ilamb-data.py iomb.txt
 
 .PHONY: update-sample-data-registry
 update-sample-data-registry:  ## Update the sample data registry

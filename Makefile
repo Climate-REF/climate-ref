@@ -161,6 +161,10 @@ fetch-test-data:  ## Download any data needed by the test suite
 	uv run ref datasets fetch-sample-data
 	uv run python ./scripts/fetch-ilamb-data.py test.txt
 
+.PHONY: fetch-ref-data
+fetch-ref-data:  ## Download reference data needed by providers and (temporarily) not in obs4mips
+	uv run python ./scripts/fetch-ilamb-data.py ilamb.txt
+
 .PHONY: update-sample-data-registry
 update-sample-data-registry:  ## Update the sample data registry
 	curl --output packages/ref/src/cmip_ref/datasets/sample_data.txt https://raw.githubusercontent.com/Climate-REF/ref-sample-data/refs/heads/main/registry.txt

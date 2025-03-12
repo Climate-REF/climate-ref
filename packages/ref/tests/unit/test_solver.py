@@ -11,6 +11,7 @@ from cmip_ref.solver import MetricExecution, MetricSolver, extract_covered_datas
 from cmip_ref_core.constraints import RequireFacets, SelectParentExperiment
 from cmip_ref_core.datasets import SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement, FacetFilter
+from cmip_ref_core.providers import MetricsProvider
 
 
 @pytest.fixture
@@ -286,3 +287,41 @@ def test_solve_metrics_dry_run(mocker, db_seeded, config, solver):
     assert mock_executor.return_value.run_metric.call_count == 0
 
     # TODO: Check that no new metrics were added to the db
+
+
+@pytest.mark.parametrize("variable,expected", [("tas", 4), ("not_a_variable", 0)])
+def test_solve_metric_executions(solver, mock_metric, variable, expected):
+    metric = mock_metric
+    metric.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(FacetFilter(facets={"variable_id": variable}),),
+            group_by=("variable_id", "source_id"),
+        ),
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id", "experiment_id"),
+        ),
+    )
+    provider = MetricsProvider("mock_provider", "v0.1.0")
+    provider.register(mock_metric)
+
+    solver.data_catalog = {
+        SourceDatasetType.obs4MIPs: pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "pr"],
+                "source_id": ["ERA-5", "AIRX3STM-006", "GPCPMON-3-1"],
+                "frequency": ["mon", "mon", "mon"],
+            }
+        ),
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "pr"],
+                "experiment_id": ["ssp119", "ssp126", "ssp119"],
+                "variant_label": ["r1i1p1f1", "r1i1p1f1", "r1i1p1f1"],
+            }
+        ),
+    }
+    executions = solver.solve_metric_executions(metric, provider)
+    assert len(list(executions)) == expected

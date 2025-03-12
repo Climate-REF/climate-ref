@@ -289,7 +289,7 @@ def test_solve_metrics_dry_run(mocker, db_seeded, config, solver):
     # TODO: Check that no new metrics were added to the db
 
 
-@pytest.mark.parametrize("variable,expected", [("tas", 4), ("not_a_variable", 0)])
+@pytest.mark.parametrize("variable,expected", [("tas", 4), ("pr", 1), ("not_a_variable", 0)])
 def test_solve_metric_executions(solver, mock_metric, variable, expected):
     metric = mock_metric
     metric.data_requirements = (
@@ -300,7 +300,7 @@ def test_solve_metric_executions(solver, mock_metric, variable, expected):
         ),
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
-            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            filters=(FacetFilter(facets={"variable_id": variable}),),
             group_by=("variable_id", "experiment_id"),
         ),
     )

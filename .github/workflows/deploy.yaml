@@ -1,15 +1,15 @@
-# Deploys the published wheels to PyPI
-# Uses the artifact from the release job to publish to PyPI
+# # Deploys the published wheels to PyPI
+# # Uses the artifact from the release job to publish to PyPI
 
-name: Deploy
+# name: Deploy
 
-on:
-  release:
-    types: [published]
+# on:
+#   release:
+#     types: [published]
 
-defaults:
-  run:
-    shell: bash
+# defaults:
+#   run:
+#     shell: bash
 
 jobs:
   deploy-pypi:

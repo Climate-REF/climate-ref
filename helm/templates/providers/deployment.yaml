@@ -1,0 +1,85 @@
+{{- range $provider, $spec := (omit .Values.providers "defaults") -}}
+{{- $spec := merge (deepCopy $.Values.defaults) $spec -}}
+{{- $args := list "celery" "start-worker" "--loglevel" "DEBUG" -}}
+{{- if ne $provider "orchestrator" -}} {{- $args = concat $args (list "--provider" $provider) -}} {{- end -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ref.fullname" $ }}-{{ $provider }}
+  {{- with $spec.annotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+  labels:
+    app.kubernetes.io/component: {{ $provider }}
+    {{- include "ref.labels" $ | nindent 4 }}
+spec:
+  {{- if not (and $spec.autoscaling $spec.autoscaling.enabled) }}
+  replicas: {{ $spec.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: {{ $provider }}
+      {{- include "ref.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/providers/secret.yaml") $ | sha256sum }}
+      {{- with $spec.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: {{ $provider }}
+        {{- include "ref.labels" $ | nindent 8 }}
+        {{- with $spec.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ref.fullname" $ }}-{{ $provider }}
+      {{- with $spec.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ $provider }}
+        {{- with $spec.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        image: "{{ $spec.image.repository }}:{{ $spec.image.tag }}"
+        imagePullPolicy: {{ $spec.image.pullPolicy }}
+        args:
+        {{- toYaml $args | nindent 8 }}
+        envFrom:
+        - secretRef:
+            name: {{ include "ref.fullname" $ }}-{{ $provider }}
+        {{- with $spec.resources }}
+        resources:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with $spec.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with $spec.volumes }}
+      volumes:
+        {{- toYaml . | nindent 6 }}
+      {{- end }}
+      {{- with $spec.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $spec.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $spec.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+---
+{{ end -}}

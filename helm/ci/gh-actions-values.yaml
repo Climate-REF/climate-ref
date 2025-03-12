@@ -1,0 +1,31 @@
+ingress:
+  host: Climate-ref.test
+
+service:
+  type: NodePort
+
+flower:
+  podSecurityContext:
+    runAsUser: 1000
+
+defaults:
+  podSecurityContext:
+    runAsUser: 1000
+  volumes:
+  - name: gha-cached
+    hostPath:
+      path: /cache/ref-config
+  - name: tmp
+    emptyDir: {}
+  volumeMounts:
+  - name: gha-cached
+    mountPath: /ref
+    readOnly: false
+  - name: tmp
+    mountPath: /tmp
+    readOnly: false
+
+dragonfly:
+  extraArgs:
+  - --proactor_threads=1
+  - --maxmemory=256mb

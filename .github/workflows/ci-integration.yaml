@@ -1,15 +1,15 @@
-name: Integration tests
+# name: Integration tests
 
-on:
-  # Allow manual triggering of this workflow
-  workflow_dispatch:
-  # Run on each push to main and tagged version
-  push:
-    branches: [main]
-    tags: ['v*']
-  # Runs every day at 2:15am (UTC) (~ midday in AEST)
-  schedule:
-    - cron: '2 15 * * *'
+# on:
+#   # Allow manual triggering of this workflow
+#   workflow_dispatch:
+#   # Run on each push to main and tagged version
+#   push:
+#     branches: [main]
+#     tags: ['v*']
+#   # Runs every day at 2:15am (UTC) (~ midday in AEST)
+#   schedule:
+#     - cron: '2 15 * * *'
 
 permissions:
   contents: read

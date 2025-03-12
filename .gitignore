@@ -164,3 +164,6 @@ packages/*/NOTICE
 
 # User-specific catalog paths (test data)
 *.paths.yaml
+
+# Helm dependencies
+helm/charts/*

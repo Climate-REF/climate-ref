@@ -16,7 +16,6 @@ from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.executor import handle_execution_result
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.datasets import ExecutionDatasetCollection
@@ -122,8 +121,11 @@ def validate_result(
     if not result.to_output_path("out.log").exists():
         result.to_output_path("out.log").touch()
 
+    # Import late to avoid importing executors,
+    # some of which have on-import side effects, at package load time
+    from climate_ref.executor import handle_execution_result
+
     # Process and store the result
-    # TODO: This is missing from RegressionValidator
     handle_execution_result(config, database=database, execution=execution, result=result)
 
 

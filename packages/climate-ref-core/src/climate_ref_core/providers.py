@@ -316,7 +316,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         self._conda_exe: Path | None = None
         self._prefix: Path | None = None
         self.url = f"git+{repo}@{tag_or_commit}" if repo and tag_or_commit else None
-        self.env_vars: dict[str, str] = {}
+        self.env_vars: dict[str, str] = os.environ.copy()
 
     @property
     def prefix(self) -> Path:
@@ -338,9 +338,26 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """Configure the provider."""
         super().configure(config)
         self.prefix = config.paths.software / "conda"
+        self.env_vars.setdefault("HOME", str(self.prefix))
+
+    def _is_stale(self, path: Path) -> bool:
+        """Check if a file is older than `MICROMAMBA_MAX_AGE`.
+
+        Parameters
+        ----------
+        path
+            The path to the file to check.
+
+        Returns
+        -------
+            True if the file is older than `MICROMAMBA_MAX_AGE`, False otherwise.
+        """
+        creation_time = datetime.datetime.fromtimestamp(path.stat().st_ctime)
+        age = datetime.datetime.now() - creation_time
+        return age > MICROMAMBA_MAX_AGE
 
     def _install_conda(self, update: bool) -> Path:
-        """Install micromamba in a temporary location.
+        """Install micromamba in a specific location.
 
         Parameters
         ----------
@@ -354,20 +371,15 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """
         conda_exe = self.prefix / "micromamba"
 
-        if conda_exe.exists() and update:
-            # Only update if the executable is older than `MICROMAMBA_MAX_AGE`.
-            creation_time = datetime.datetime.fromtimestamp(conda_exe.stat().st_ctime)
-            age = datetime.datetime.now() - creation_time
-            if age < MICROMAMBA_MAX_AGE:
-                update = False
-
-        if not conda_exe.exists() or update:
+        if not conda_exe.exists() or update or self._is_stale(conda_exe):
             logger.info("Installing conda")
             self.prefix.mkdir(parents=True, exist_ok=True)
-            response = requests.get(_get_micromamba_url(), timeout=120)
+            response = requests.get(_get_micromamba_url(), timeout=120, stream=True)
             response.raise_for_status()
             with conda_exe.open(mode="wb") as file:
-                file.write(response.content)
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:  # Filter out keep-alive new chunks
+                        file.write(chunk)
             conda_exe.chmod(stat.S_IRWXU)
             logger.info("Successfully installed conda.")
 
@@ -428,7 +440,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 f"{self.env_path}",
             ]
             logger.debug(f"Running {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)  # noqa: S603
+            subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
 
             if self.url is not None:
                 logger.info(f"Installing development version of {self.slug} from {self.url}")
@@ -443,7 +455,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     self.url,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
-                subprocess.run(cmd, check=True)  # noqa: S603
+                subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
 
     def run(self, cmd: Iterable[str]) -> None:
         """
@@ -476,8 +488,6 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             *cmd,
         ]
         logger.info(f"Running '{' '.join(cmd)}'")
-        env_vars = os.environ.copy()
-        env_vars.update(self.env_vars)
         try:
             # This captures the log output until the execution is complete
             # We could poll using `subprocess.Popen` if we want something more responsive
@@ -487,7 +497,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=env_vars,
+                env=self.env_vars,
             )
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")

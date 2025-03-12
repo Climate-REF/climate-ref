@@ -1,0 +1,73 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ref.fullname" . }}-ref
+  labels:
+    app.kubernetes.io/component: ref
+    {{- include "ref.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.ref.autoscaling.enabled }}
+  replicas: {{ .Values.ref.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: ref
+      {{- include "ref.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/ref/secret.yaml") . | sha256sum }}
+      {{- with .Values.ref.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: ref
+        {{- include "ref.labels" . | nindent 8 }}
+        {{- with .Values.ref.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ref.fullname" . }}-ref
+      {{- with .Values.ref.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: ref
+        {{- with .Values.ref.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        image: "{{ .Values.ref.image.repository }}:{{ .Values.ref.image.tag | default .Chart.AppVersion }}"
+        imagePullPolicy: {{ .Values.ref.image.pullPolicy }}
+        envFrom:
+        - secretRef:
+            name: {{ include "ref.fullname" . }}-ref
+        {{- with .Values.ref.resources }}
+        resources:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with .Values.ref.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+      {{- with .Values.ref.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ref.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ref.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.ref.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

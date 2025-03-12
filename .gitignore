@@ -156,3 +156,6 @@ out
 # Ignore copied LICENCE/NOTICE files
 packages/*/LICENCE
 packages/*/NOTICE
+
+# Helm dependencies
+helm/charts/*

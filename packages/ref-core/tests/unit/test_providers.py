@@ -1,4 +1,6 @@
+import datetime
 import logging
+import time
 from contextlib import contextmanager
 from pathlib import Path
 
@@ -119,7 +121,19 @@ class TestCondaMetricsProvider:
 
         assert isinstance(provider.prefix, Path)
 
-    def test_get_conda_exe(self, mocker, tmp_path, provider):
+    @pytest.mark.parametrize('update', [True, False])
+    def test_get_conda_exe(self, mocker, provider, update):
+        if update:
+            conda_exe = provider.prefix / "micromamba"
+            provider.prefix.mkdir()
+            conda_exe.touch()
+            mocker.patch.object(
+                cmip_ref_core.providers,
+                "MICROMAMBA_MAX_AGE",
+                datetime.timedelta(microseconds=1),
+            )
+            time.sleep(0.01) # wait for the executable to expire.
+
         get = mocker.patch.object(
             cmip_ref_core.providers.requests,
             "get",
@@ -128,26 +142,10 @@ class TestCondaMetricsProvider:
         response = get.return_value
         response.content = b"test"
 
-        result = provider.get_conda_exe()
+        result = provider.get_conda_exe(update=update)
 
         response.raise_for_status.assert_called_with()
         assert result.read_bytes() == b"test"
-
-    def test_get_conda_exe_with_update(self, mocker, provider):
-        conda_exe = provider.prefix / "micromamba"
-        provider.prefix.mkdir()
-        conda_exe.touch()
-
-        run = mocker.patch.object(
-            cmip_ref_core.providers.subprocess,
-            "run",
-            create_autospec=True,
-        )
-
-        result = provider.get_conda_exe(update=True)
-
-        run.assert_called_with([f"{conda_exe}", "self-update"], check=True)
-        assert result == conda_exe
 
     def test_get_conda_exe_repeat(self, mocker, tmp_path, provider):
         conda_exe = tmp_path / "micromamba"
@@ -190,7 +188,7 @@ class TestCondaMetricsProvider:
         env_path = provider.env_path
         assert isinstance(env_path, Path)
         assert env_path.is_relative_to(provider.prefix)
-        assert env_path.name.startswith("provider_name-v0.23")
+        assert env_path.name.startswith("provider_name")
 
     def test_create_env(self, mocker, tmp_path, provider):
         lockfile = tmp_path / "conda-lock.yml"

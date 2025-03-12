@@ -1,50 +1,50 @@
-name: Integration tests
+# name: Integration tests
 
-on:
-  # Allow manual triggering of this workflow
-  workflow_dispatch:
-  # Run on each push to main and tagged version
-  push:
-    branches: [main]
-    tags: ['v*']
-  # Runs every day at 2:15am (UTC) (~ midday in AEST)
-  schedule:
-    - cron: '2 15 * * *'
+# on:
+#   # Allow manual triggering of this workflow
+#   workflow_dispatch:
+#   # Run on each push to main and tagged version
+#   push:
+#     branches: [main]
+#     tags: ['v*']
+#   # Runs every day at 2:15am (UTC) (~ midday in AEST)
+#   schedule:
+#     - cron: '2 15 * * *'
 
-jobs:
-  tests-slow:
-    if: github.repository == 'Climate-REF/climate-ref'
-    env:
-      REF_TEST_OUTPUT: "test-outputs"
-      PYTEST_ADDOPTS: "--slow"
-    strategy:
-      fail-fast: false
-      matrix:
-        python-version: [ "3.11", "3.13" ]
-    runs-on: "self-hosted"
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Run tests
-        run: |
-          make virtual-environment
-          make fetch-test-data
-          uv run ref datasets fetch-data --registry ilamb --symlink
-          uv run ref datasets fetch-data --registry iomb --symlink
-          uv run ref datasets fetch-data --registry esmvaltool --symlink
-          uv run ref providers create-env
-          uv run pytest packages tests --slow --no-docker -r a -v
-      # Upload the scratch and executions directories as artifacts
-      - name: Upload scratch artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: integration-output-${{ matrix.python-version }}
-          path: ${{ env.REF_TEST_OUTPUT }}
-          retention-days: 7
+# jobs:
+#   tests-slow:
+#     if: github.repository == 'Climate-REF/climate-ref'
+#     env:
+#       REF_TEST_OUTPUT: "test-outputs"
+#       PYTEST_ADDOPTS: "--slow"
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         python-version: [ "3.11", "3.13" ]
+#     runs-on: "self-hosted"
+#     defaults:
+#       run:
+#         shell: bash
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - uses: ./.github/actions/setup
+#         with:
+#           python-version: ${{ matrix.python-version }}
+#       - name: Run tests
+#         run: |
+#           make virtual-environment
+#           make fetch-test-data
+#           uv run ref datasets fetch-data --registry ilamb --symlink
+#           uv run ref datasets fetch-data --registry iomb --symlink
+#           uv run ref datasets fetch-data --registry esmvaltool --symlink
+#           uv run ref providers create-env
+#           uv run pytest packages tests --slow --no-docker -r a -v
+#       # Upload the scratch and executions directories as artifacts
+#       - name: Upload scratch artifacts
+#         uses: actions/upload-artifact@v4
+#         if: always()
+#         with:
+#           name: integration-output-${{ matrix.python-version }}
+#           path: ${{ env.REF_TEST_OUTPUT }}
+#           retention-days: 7

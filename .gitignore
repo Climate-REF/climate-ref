@@ -158,3 +158,6 @@ packages/*/NOTICE
 
 # Local directory for data
 /data
+
+# Helm dependencies
+helm/charts/*

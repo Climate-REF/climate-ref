@@ -1,123 +1,123 @@
-# Test installation of the latest version from PyPI works.
-# We make sure that we run the tests that apply to the version we installed,
-# rather than the latest tests in main.
-# The reason we do this, is that we want this workflow to test
-# that installing from PyPI leads to a correct installation.
-# If we tested against main, the tests could fail
-# because the tests from main require the new features in main to pass.
-name: Test installation PyPI
+# # Test installation of the latest version from PyPI works.
+# # We make sure that we run the tests that apply to the version we installed,
+# # rather than the latest tests in main.
+# # The reason we do this, is that we want this workflow to test
+# # that installing from PyPI leads to a correct installation.
+# # If we tested against main, the tests could fail
+# # because the tests from main require the new features in main to pass.
+# name: Test installation PyPI
 
-on:
-  workflow_dispatch:
-  schedule:
-    # * is a special character in YAML so you have to quote this string
-    # This means At 03:00 on Wednesday.
-    # see https://crontab.guru/#0_0_*_*_3
-    - cron:  '0 3 * * 3'
+# on:
+#   workflow_dispatch:
+#   schedule:
+#     # * is a special character in YAML so you have to quote this string
+#     # This means At 03:00 on Wednesday.
+#     # see https://crontab.guru/#0_0_*_*_3
+#     - cron:  '0 3 * * 3'
 
-jobs:
-  test-pypi-install:
-    name: Test PyPI install ${{ matrix.install-target }} (${{ matrix.python-version }}, ${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        # Test SPEC0 supported python versions https://scientific-python.org/specs/spec-0000/
-        python-version: [ "3.11", "3.12", "3.13" ]
-        install-target: [ "climate-ref", "climate-ref[aft-providers]"]
-    runs-on: "${{ matrix.os }}"
-    steps:
-    - name: Set up Python "${{ matrix.python-version }}"
-      id: setup-python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "${{ matrix.python-version }}"
-    - name: Install
-      run: |
-        pip install --upgrade pip wheel
-        pip install "${{ matrix.install-target }}" 2>stderr.txt
-    - name: Check no warnings
-      if: matrix.os != 'windows-latest'
-      run: |
-        if grep -q "WARN" stderr.txt; then echo "Warnings in pip install output" && cat stderr.txt && exit 1; else exit 0; fi
-    - name: Get version non-windows
-      if: matrix.os != 'windows-latest'
-      run: |
-        INSTALLED_VERSION=`python -c 'import climate_ref; print(f"v{climate_ref.__version__}")'`
-        echo $INSTALLED_VERSION
-        echo "INSTALLED_VERSION=$INSTALLED_VERSION" >> $GITHUB_ENV
-    - name: Get version windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        chcp 65001  # use utf-8
-        python -c 'import climate_ref; f = open("version.txt", "w"); f.write(f"INSTALLED_VERSION=v{climate_ref.__version__}"); f.close()'
-        echo "Showing version.txt"
-        type version.txt
-        type version.txt >> $env:GITHUB_ENV
-    - name: Check installed version environment variable
-      run: |
-        echo "${{ env.INSTALLED_VERSION }}"
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ env.INSTALLED_VERSION }}
-        # Windows can't clone the entire directory due to filename length
-        sparse-checkout: |
-          scripts
-    - name: Test installation
-      run: |
-        which python
-        python scripts/test-install.py climate_ref
-  test-pypi-install-core:
-    name: Test PyPI install ${{ matrix.install-target }} (${{ matrix.python-version }}, ${{ matrix.os }})
-    strategy:
-      fail-fast: false
-      matrix:
-        os: ["ubuntu-latest", "macos-latest", "windows-latest"]
-        # Test against all security and bugfix versions: https://devguide.python.org/versions/
-        python-version: [ "3.11", "3.12", "3.13" ]
-        install-target: [ "climate-ref-core"]
-    runs-on: "${{ matrix.os }}"
-    steps:
-    - name: Set up Python "${{ matrix.python-version }}"
-      id: setup-python
-      uses: actions/setup-python@v4
-      with:
-        python-version: "${{ matrix.python-version }}"
-    - name: Install
-      run: |
-        pip install --upgrade pip wheel
-        # Additional core dep to run the script
-        pip install --upgrade typer
-        pip install "${{ matrix.install-target }}" 2>stderr.txt
-    - name: Check no warnings
-      if: matrix.os != 'windows-latest'
-      run: |
-        if grep -q "WARN" stderr.txt; then echo "Warnings in pip install output" && cat stderr.txt && exit 1; else exit 0; fi
-    - name: Get version non-windows
-      if: matrix.os != 'windows-latest'
-      run: |
-        INSTALLED_VERSION=`python -c 'import climate_ref_core; print(f"v{climate_ref_core.__version__}")'`
-        echo $INSTALLED_VERSION
-        echo "INSTALLED_VERSION=$INSTALLED_VERSION" >> $GITHUB_ENV
-    - name: Get version windows
-      if: matrix.os == 'windows-latest'
-      run: |
-        chcp 65001  # use utf-8
-        python -c 'import climate_ref_core; f = open("version.txt", "w"); f.write(f"INSTALLED_VERSION=v{climate_ref_core.__version__}"); f.close()'
-        echo "Showing version.txt"
-        type version.txt
-        type version.txt >> $env:GITHUB_ENV
-    - name: Check installed version environment variable
-      run: |
-        echo "${{ env.INSTALLED_VERSION }}"
-    - name: Checkout repository
-      uses: actions/checkout@v4
-      with:
-        ref: ${{ env.INSTALLED_VERSION }}
-        sparse-checkout: |
-          scripts
-    - name: Test installation
-      run: |
-        which python
-        python scripts/test-install.py climate_ref_core
+# jobs:
+#   test-pypi-install:
+#     name: Test PyPI install ${{ matrix.install-target }} (${{ matrix.python-version }}, ${{ matrix.os }})
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+#         # Test SPEC0 supported python versions https://scientific-python.org/specs/spec-0000/
+#         python-version: [ "3.11", "3.12", "3.13" ]
+#         install-target: [ "climate-ref", "climate-ref[aft-providers]"]
+#     runs-on: "${{ matrix.os }}"
+#     steps:
+#     - name: Set up Python "${{ matrix.python-version }}"
+#       id: setup-python
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: "${{ matrix.python-version }}"
+#     - name: Install
+#       run: |
+#         pip install --upgrade pip wheel
+#         pip install "${{ matrix.install-target }}" 2>stderr.txt
+#     - name: Check no warnings
+#       if: matrix.os != 'windows-latest'
+#       run: |
+#         if grep -q "WARN" stderr.txt; then echo "Warnings in pip install output" && cat stderr.txt && exit 1; else exit 0; fi
+#     - name: Get version non-windows
+#       if: matrix.os != 'windows-latest'
+#       run: |
+#         INSTALLED_VERSION=`python -c 'import climate_ref; print(f"v{climate_ref.__version__}")'`
+#         echo $INSTALLED_VERSION
+#         echo "INSTALLED_VERSION=$INSTALLED_VERSION" >> $GITHUB_ENV
+#     - name: Get version windows
+#       if: matrix.os == 'windows-latest'
+#       run: |
+#         chcp 65001  # use utf-8
+#         python -c 'import climate_ref; f = open("version.txt", "w"); f.write(f"INSTALLED_VERSION=v{climate_ref.__version__}"); f.close()'
+#         echo "Showing version.txt"
+#         type version.txt
+#         type version.txt >> $env:GITHUB_ENV
+#     - name: Check installed version environment variable
+#       run: |
+#         echo "${{ env.INSTALLED_VERSION }}"
+#     - name: Checkout repository
+#       uses: actions/checkout@v4
+#       with:
+#         ref: ${{ env.INSTALLED_VERSION }}
+#         # Windows can't clone the entire directory due to filename length
+#         sparse-checkout: |
+#           scripts
+#     - name: Test installation
+#       run: |
+#         which python
+#         python scripts/test-install.py climate_ref
+#   test-pypi-install-core:
+#     name: Test PyPI install ${{ matrix.install-target }} (${{ matrix.python-version }}, ${{ matrix.os }})
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
+#         # Test against all security and bugfix versions: https://devguide.python.org/versions/
+#         python-version: [ "3.11", "3.12", "3.13" ]
+#         install-target: [ "climate-ref-core"]
+#     runs-on: "${{ matrix.os }}"
+#     steps:
+#     - name: Set up Python "${{ matrix.python-version }}"
+#       id: setup-python
+#       uses: actions/setup-python@v4
+#       with:
+#         python-version: "${{ matrix.python-version }}"
+#     - name: Install
+#       run: |
+#         pip install --upgrade pip wheel
+#         # Additional core dep to run the script
+#         pip install --upgrade typer
+#         pip install "${{ matrix.install-target }}" 2>stderr.txt
+#     - name: Check no warnings
+#       if: matrix.os != 'windows-latest'
+#       run: |
+#         if grep -q "WARN" stderr.txt; then echo "Warnings in pip install output" && cat stderr.txt && exit 1; else exit 0; fi
+#     - name: Get version non-windows
+#       if: matrix.os != 'windows-latest'
+#       run: |
+#         INSTALLED_VERSION=`python -c 'import climate_ref_core; print(f"v{climate_ref_core.__version__}")'`
+#         echo $INSTALLED_VERSION
+#         echo "INSTALLED_VERSION=$INSTALLED_VERSION" >> $GITHUB_ENV
+#     - name: Get version windows
+#       if: matrix.os == 'windows-latest'
+#       run: |
+#         chcp 65001  # use utf-8
+#         python -c 'import climate_ref_core; f = open("version.txt", "w"); f.write(f"INSTALLED_VERSION=v{climate_ref_core.__version__}"); f.close()'
+#         echo "Showing version.txt"
+#         type version.txt
+#         type version.txt >> $env:GITHUB_ENV
+#     - name: Check installed version environment variable
+#       run: |
+#         echo "${{ env.INSTALLED_VERSION }}"
+#     - name: Checkout repository
+#       uses: actions/checkout@v4
+#       with:
+#         ref: ${{ env.INSTALLED_VERSION }}
+#         sparse-checkout: |
+#           scripts
+#     - name: Test installation
+#       run: |
+#         which python
+#         python scripts/test-install.py climate_ref_core

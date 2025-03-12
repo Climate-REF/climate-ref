@@ -1,0 +1,134 @@
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+ingress:
+  enabled: false
+  host:
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  labels: {}
+
+dragonfly:
+  storage:
+    enabled: true
+
+flower:
+  env:
+    CELERY_BROKER_URL: redis://{{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port }}
+    CELERY_RESULT_BACKEND: redis://{{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port }}
+
+  serviceMonitor:
+    enabled: false
+
+  replicaCount: 1
+
+  image:
+    repository: mher/flower
+    pullPolicy: IfNotPresent
+    tag: 2.0.1
+
+  serviceAccount:
+    create: true
+    automount: false
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+  podLabels: {}
+
+  podSecurityContext: {}
+
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+
+  service:
+    type: ClusterIP
+    port: 5555
+
+  resources: {}
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  volumes: []
+  volumeMounts: []
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# A mapping of name: size for PVCs to create. Name will be prepended with release name.
+# Not mounted unless specified in volumes and volumeMounts arrays
+createPVCs: {}
+
+defaults:
+  env:
+    CELERY_BROKER_URL: redis://{{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port }}
+    CELERY_RESULT_BACKEND: redis://{{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port }}
+    CELERY_ACCEPT_CONTENT: |
+      ["json", "pickle"]
+    REF_EXECUTOR: climate_ref_celery.executor.CeleryExecutor
+
+  replicaCount: 1
+
+  image:
+    repository: ghcr.io/climate-ref/climate-ref
+    pullPolicy: IfNotPresent
+    tag: pr-388
+
+  annotations: {}
+
+  serviceAccount:
+    create: true
+    automount: false
+    annotations: {}
+    name: ""
+
+  podAnnotations: {}
+  podLabels: {}
+
+  podSecurityContext:
+    fsGroup: 1000
+
+  securityContext:
+    capabilities:
+      drop:
+      - ALL
+    readOnlyRootFilesystem: true
+    runAsNonRoot: true
+
+  service:
+    type: ClusterIP
+    port: 80
+
+  resources:
+
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 100
+    targetCPUUtilizationPercentage: 80
+    # targetMemoryUtilizationPercentage: 80
+
+  volumes: []
+  volumeMounts: []
+  nodeSelector: {}
+  tolerations: []
+  affinity: {}
+
+# Map of instances to deploy, where the key is the instance name and the value is any provider-specific overrides. If no overrides are provided, the provider will be deployed with the defaults above.
+providers:
+  orchestrator: {}
+  esmvaltool: {}
+  pmp: {}
+  # ilamb: {}  # currently wants to write to .config/ilamb3/config.py, needs to be made configurable

@@ -25,6 +25,7 @@ repos:
       - id: check-yaml
         args:
         - --unsafe
+        exclude: helm/templates
       - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer

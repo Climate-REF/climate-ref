@@ -21,7 +21,6 @@ from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutputType
 from climate_ref_core.diagnostics import ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
-from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
@@ -195,12 +194,12 @@ def handle_execution_result(
         The result of the diagnostic execution, either successful or failed
     """
     # Always copy log data to the results directory
-    _copy_file_to_results(
-        config.paths.scratch,
-        config.paths.results,
-        execution.output_fragment,
-        EXECUTION_LOG_FILENAME,
-    )
+    # _copy_file_to_results(
+    #     config.paths.scratch,
+    #     config.paths.results,
+    #     execution.output_fragment,
+    #     EXECUTION_LOG_FILENAME,
+    # )
 
     if not result.successful or result.metric_bundle_filename is None:
         logger.error(f"{execution} failed")

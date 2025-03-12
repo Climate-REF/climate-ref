@@ -26,11 +26,12 @@ def list_(ctx: typer.Context) -> None:
         provider_registry = ProviderRegistry.build_from_config(config, db)
 
     def get_env(provider: MetricsProvider) -> str:
+        env = ""
         if isinstance(provider, CondaMetricsProvider):
-            if provider.env_path.exists():
-                return f"{provider.env_path}"
-            return "not installed"
-        return ""
+            env = f"{provider.env_path}"
+            if not provider.env_path.exists():
+                env += " (not installed)"
+        return env
 
     results_df = pd.DataFrame(
         [

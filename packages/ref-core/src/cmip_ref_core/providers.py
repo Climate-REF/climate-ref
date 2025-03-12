@@ -6,6 +6,7 @@ This defines how metrics packages interoperate with the REF framework.
 
 from __future__ import annotations
 
+import datetime
 import hashlib
 import importlib
 import os
@@ -179,6 +180,11 @@ class CommandLineMetricsProvider(MetricsProvider):
 MICROMAMBA_EXE_URL = (
     "https://github.com/mamba-org/micromamba-releases/releases/latest/download/micromamba-{platform}-{arch}"
 )
+"""The URL to download the micromamba executable from."""
+
+
+MICROMAMBA_MAX_AGE = datetime.timedelta(days=7)
+"""Do not update if the micromamba executable is younger than this age."""
 
 
 def _get_micromamba_url() -> str:
@@ -253,21 +259,36 @@ class CondaMetricsProvider(CommandLineMetricsProvider):
         self.prefix = config.paths.software / "conda"
 
     def _install_conda(self, update: bool) -> Path:
-        """Install micromamba in a temporary location."""
-        self.prefix.mkdir(parents=True, exist_ok=True)
+        """Install micromamba in a temporary location.
+
+        Parameters
+        ----------
+        update:
+            Update the micromamba executable if it is older than a week.
+
+        Returns
+        -------
+            The path to the executable.
+
+        """
         conda_exe = self.prefix / "micromamba"
-        if not conda_exe.exists():
+
+        if conda_exe.exists() and update:
+            # Only update if the executable is older than `MICROMAMBA_MAX_AGE`.
+            creation_time = datetime.datetime.fromtimestamp(conda_exe.stat().st_ctime)
+            age = datetime.datetime.now() - creation_time
+            if age < MICROMAMBA_MAX_AGE:
+                update = False
+
+        if not conda_exe.exists() or update:
             logger.info("Installing conda")
+            self.prefix.mkdir(parents=True, exist_ok=True)
             response = requests.get(_get_micromamba_url(), timeout=120)
             response.raise_for_status()
             with conda_exe.open(mode="wb") as file:
                 file.write(response.content)
             conda_exe.chmod(stat.S_IRWXU)
             logger.info("Successfully installed conda.")
-        elif update:
-            logger.info("Updating conda")
-            subprocess.run([str(conda_exe), "self-update"], check=True)  # noqa: S603
-            logger.info("Successfully updated conda")
 
         return conda_exe
 
@@ -301,7 +322,7 @@ class CondaMetricsProvider(CommandLineMetricsProvider):
         """
         with self.get_environment_file() as file:
             suffix = hashlib.sha1(file.read_bytes(), usedforsecurity=False).hexdigest()
-        return self.prefix / f"{self.slug}-{self.version}-{suffix}"
+        return self.prefix / f"{self.slug}-{suffix}"
 
     def create_env(self) -> None:
         """

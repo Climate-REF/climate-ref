@@ -268,7 +268,6 @@ class CondaMetricsProvider(CommandLineMetricsProvider):
 
         Returns
         -------
-        :
             The path to the executable.
 
         """

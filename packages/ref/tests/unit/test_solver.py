@@ -180,6 +180,39 @@ class TestMetricSolver:
             ],
             id="simple-validation",
         ),
+        pytest.param(
+            DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id", "source_id"),
+            ),
+            pd.DataFrame(
+                {
+                    "variable_id": ["tas", "tas", "pr"],
+                    "source_id": ["ERA-5", "AIRX3STM-006", "GPCPMON-3-1"],
+                    "frequency": ["mon", "mon", "mon"],
+                }
+            ),
+            [
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "source_id": ["AIRX3STM-006"],
+                        "frequency": ["mon"],
+                    },
+                    index=[1],
+                ),
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "source_id": ["ERA-5"],
+                        "frequency": ["mon"],
+                    },
+                    index=[0],
+                ),
+            ],
+            id="simple-obs4MIPs",
+        ),
     ],
 )
 def test_data_coverage(requirement, data_catalog, expected):

@@ -16,8 +16,10 @@ yaml = YAML()
 
 FACETS = {
     "CMIP6": {
+        "activity": "activity_id",
         "dataset": "source_id",
         "ensemble": "member_id",
+        "institute": "institution_id",
         "exp": "experiment_id",
         "grid": "grid_label",
         "mip": "table_id",

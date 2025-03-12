@@ -15,7 +15,6 @@ During the hackathon, there will also be dedicated drop-ins for wider community 
 
 * A laptop with Python 3.10 or later installed
 * A GitHub account
-* Conda installed
 * Docker installed (Optional)
 * [uv](https://docs.astral.sh/uv) installed
 

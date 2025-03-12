@@ -121,7 +121,7 @@ class TestCondaMetricsProvider:
 
         assert isinstance(provider.prefix, Path)
 
-    @pytest.mark.parametrize('update', [True, False])
+    @pytest.mark.parametrize("update", [True, False])
     def test_get_conda_exe(self, mocker, provider, update):
         if update:
             conda_exe = provider.prefix / "micromamba"
@@ -132,7 +132,7 @@ class TestCondaMetricsProvider:
                 "MICROMAMBA_MAX_AGE",
                 datetime.timedelta(microseconds=1),
             )
-            time.sleep(0.01) # wait for the executable to expire.
+            time.sleep(0.01)  # wait for the executable to expire.
 
         get = mocker.patch.object(
             cmip_ref_core.providers.requests,

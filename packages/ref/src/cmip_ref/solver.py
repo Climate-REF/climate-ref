@@ -20,7 +20,7 @@ from cmip_ref.datasets import get_dataset_adapter
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from cmip_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from cmip_ref.models import Metric as MetricModel
-from cmip_ref.models import MetricExecution as MetricExecutionModel
+from cmip_ref.models import MetricExecutionGroup as MetricExecutionGroupModel
 from cmip_ref.models import Provider as ProviderModel
 from cmip_ref.models.metric_execution import MetricExecutionResult
 from cmip_ref.provider_registry import ProviderRegistry
@@ -64,7 +64,7 @@ class MetricExecution:
         return MetricExecutionDefinition(
             root_directory=output_root,
             output_directory=output_root / fragment,
-            key=key,
+            dataset_key=key,
             metric_dataset=self.metric_dataset,
         )
 
@@ -241,7 +241,7 @@ def solve_metrics(
         # The metric output is first written to the scratch directory
         definition = metric_execution.build_metric_execution_info(output_root=config.paths.scratch)
 
-        logger.debug(f"Identified candidate metric execution {definition.key}")
+        logger.debug(f"Identified candidate metric execution {definition.dataset_key}")
 
         if dry_run:
             continue
@@ -249,9 +249,9 @@ def solve_metrics(
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
         with db.session.begin(nested=True):
-            metric_execution_model, created = db.get_or_create(
-                MetricExecutionModel,
-                key=definition.key,
+            metric_execution_group_model, created = db.get_or_create(
+                MetricExecutionGroupModel,
+                dataset_key=definition.dataset_key,
                 metric_id=db.session.query(MetricModel)
                 .join(MetricModel.provider)
                 .filter(
@@ -263,18 +263,17 @@ def solve_metrics(
                 .id,
                 defaults={
                     "dirty": True,
-                    "retracted": False,
                 },
             )
 
             if created:
-                logger.info(f"Created metric execution {definition.key}")
+                logger.info(f"Created metric execution {definition.dataset_key}")
                 db.session.flush()
 
-            if metric_execution_model.should_run(definition.metric_dataset.hash):
-                logger.info(f"Running metric {metric_execution_model.key}")
+            if metric_execution_group_model.should_run(definition.metric_dataset.hash):
+                logger.info(f"Running metric {metric_execution_group_model.dataset_key}")
                 metric_execution_result = MetricExecutionResult(
-                    metric_execution=metric_execution_model,
+                    metric_execution_group=metric_execution_group_model,
                     dataset_hash=definition.metric_dataset.hash,
                     output_fragment=str(definition.output_fragment()),
                 )

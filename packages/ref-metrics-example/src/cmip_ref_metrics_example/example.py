@@ -9,7 +9,7 @@ from cmip_ref_core.metrics import (
     DataRequirement,
     Metric,
     MetricExecutionDefinition,
-    MetricResult,
+    MetricExecutionResult,
 )
 from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput
@@ -149,7 +149,7 @@ class GlobalMeanTimeseries(Metric):
         ),
     )
 
-    def run(self, definition: MetricExecutionDefinition) -> MetricResult:
+    def run(self, definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Run a metric
 
@@ -173,7 +173,7 @@ class GlobalMeanTimeseries(Metric):
             input_files=input_datasets.path.to_list()
         )
 
-        return MetricResult.build_from_output_bundle(
+        return MetricExecutionResult.build_from_output_bundle(
             definition,
             cmec_output_bundle=format_cmec_output_bundle(annual_mean_global_mean_timeseries),
             cmec_metric_bundle=format_cmec_metric_bundle(annual_mean_global_mean_timeseries),

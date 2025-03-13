@@ -17,10 +17,11 @@ from typing import TYPE_CHECKING
 from loguru import logger
 
 from cmip_ref.database import Database
-from cmip_ref.models.metric_execution import MetricExecutionResult, ResultOutput, ResultOutputType
+from cmip_ref.models.metric_execution import MetricExecutionResult as MetricExecutionResultModel
+from cmip_ref.models.metric_execution import ResultOutput, ResultOutputType
 from cmip_ref_core.exceptions import InvalidExecutorException
 from cmip_ref_core.executor import Executor
-from cmip_ref_core.metrics import MetricResult
+from cmip_ref_core.metrics import MetricExecutionResult
 from cmip_ref_core.pycmec.output import CMECOutput, OutputDict
 
 if TYPE_CHECKING:
@@ -104,8 +105,8 @@ def _copy_file_to_results(
 def handle_execution_result(
     config: "Config",
     database: Database,
-    metric_execution_result: "MetricExecutionResult",
-    result: "MetricResult",
+    metric_execution_result: MetricExecutionResultModel,
+    result: "MetricExecutionResult",
 ) -> None:
     """
     Handle the result of a metric execution
@@ -174,7 +175,7 @@ def handle_execution_result(
         # TODO: This should check if the result is the most recent for the execution,
         # if so then update the dirty fields
         # i.e. if there are outstanding results don't make as clean
-        metric_execution_result.metric_execution.dirty = False
+        metric_execution_result.metric_execution_group.dirty = False
     else:
         logger.info(f"{metric_execution_result} failed")
         metric_execution_result.mark_failed()
@@ -185,7 +186,7 @@ def _handle_outputs(
     output_type: ResultOutputType,
     config: "Config",
     database: Database,
-    metric_execution_result: MetricExecutionResult,
+    metric_execution_result: MetricExecutionResultModel,
 ) -> None:
     if outputs is None:
         return

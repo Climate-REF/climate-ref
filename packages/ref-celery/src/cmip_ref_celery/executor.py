@@ -6,11 +6,11 @@ import celery.result
 from loguru import logger
 from tqdm import tqdm
 
-from cmip_ref.models import MetricExecutionResult
+from cmip_ref.models import MetricExecutionResult as MetricExecutionResultModel
 from cmip_ref_celery.app import app
 from cmip_ref_celery.tasks import generate_task_name
 from cmip_ref_core.executor import Executor
-from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricResult
+from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricExecutionResult
 from cmip_ref_core.providers import MetricsProvider
 
 
@@ -33,14 +33,14 @@ class CeleryExecutor(Executor):
 
     def __init__(self, **kwargs: Any) -> None:
         super().__init__(**kwargs)  # type: ignore
-        self._results: list[celery.result.AsyncResult[MetricResult]] = []
+        self._results: list[celery.result.AsyncResult[MetricExecutionResult]] = []
 
     def run_metric(
         self,
         provider: MetricsProvider,
         metric: Metric,
         definition: MetricExecutionDefinition,
-        metric_execution_result: MetricExecutionResult | None = None,
+        metric_execution_result: MetricExecutionResultModel | None = None,
     ) -> None:
         """
         Run a metric calculation asynchronously

@@ -5,8 +5,8 @@ from loguru import logger
 from cmip_ref.config import Config
 from cmip_ref.database import Database
 from cmip_ref.executor import handle_execution_result
-from cmip_ref.models import MetricExecutionResult
-from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricResult
+from cmip_ref.models import MetricExecutionResult as MetricExecutionResultModel
+from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricExecutionResult
 from cmip_ref_core.providers import MetricsProvider
 
 
@@ -37,7 +37,7 @@ class LocalExecutor:
         provider: MetricsProvider,
         metric: Metric,
         definition: MetricExecutionDefinition,
-        metric_execution_result: MetricExecutionResult | None = None,
+        metric_execution_result: MetricExecutionResultModel | None = None,
     ) -> None:
         """
         Run a metric in process
@@ -60,7 +60,7 @@ class LocalExecutor:
             result = metric.run(definition=definition)
         except Exception:
             logger.exception(f"Error running metric {metric.slug}")
-            result = MetricResult.build_from_failure(definition)
+            result = MetricExecutionResult.build_from_failure(definition)
 
         if metric_execution_result:
             handle_execution_result(self.config, self.database, metric_execution_result, result)

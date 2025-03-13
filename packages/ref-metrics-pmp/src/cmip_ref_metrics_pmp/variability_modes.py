@@ -1,7 +1,12 @@
 from collections.abc import Iterable
 
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
-from cmip_ref_core.metrics import CommandLineMetric, DataRequirement, MetricExecutionDefinition, MetricResult
+from cmip_ref_core.metrics import (
+    CommandLineMetric,
+    DataRequirement,
+    MetricExecutionDefinition,
+    MetricExecutionResult,
+)
 from cmip_ref_metrics_pmp.pmp_driver import build_pmp_command, process_json_result
 
 
@@ -89,7 +94,7 @@ class ExtratropicalModesOfVariability_PDO(CommandLineMetric):
             output_directory_path=str(definition.output_directory),
         )
 
-    def build_metric_result(self, definition: MetricExecutionDefinition) -> MetricResult:
+    def build_metric_result(self, definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Build a metric result from the output of the PMP driver
 
@@ -104,7 +109,7 @@ class ExtratropicalModesOfVariability_PDO(CommandLineMetric):
         """
         results_files = list(definition.output_directory.glob("*_cmec.json"))
         if len(results_files) != 1:  # pragma: no cover
-            return MetricResult.build_from_failure(definition)
+            return MetricExecutionResult.build_from_failure(definition)
 
         # Find the other outputs
         png_files = list(definition.output_directory.glob("*.png"))
@@ -112,7 +117,7 @@ class ExtratropicalModesOfVariability_PDO(CommandLineMetric):
 
         cmec_output, cmec_metric = process_json_result(results_files[0], png_files, data_files)
 
-        return MetricResult.build_from_output_bundle(
+        return MetricExecutionResult.build_from_output_bundle(
             definition,
             cmec_output_bundle=cmec_output,
             cmec_metric_bundle=cmec_metric,

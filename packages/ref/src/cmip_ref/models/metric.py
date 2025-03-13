@@ -6,7 +6,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from cmip_ref.models.base import Base, CreatedUpdatedMixin
 
 if TYPE_CHECKING:
-    from cmip_ref.models.metric_execution import MetricExecution
+    from cmip_ref.models.metric_execution import MetricExecutionGroup
     from cmip_ref.models.provider import Provider
 
 
@@ -44,7 +44,7 @@ class Metric(CreatedUpdatedMixin, Base):
     """
 
     provider: Mapped["Provider"] = relationship(back_populates="metrics")
-    executions: Mapped[list["MetricExecution"]] = relationship(back_populates="metric")
+    execution_groups: Mapped[list["MetricExecutionGroup"]] = relationship(back_populates="metric")
 
     def __repr__(self) -> str:
         return f"<Metric slug={self.slug}>"

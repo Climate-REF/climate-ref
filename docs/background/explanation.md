@@ -75,3 +75,16 @@ The following environments are planned to be supported in the future:
 
 The selected executor is defined using the `REF_EXECUTOR` environment variable.
 See the [Configuration](../configuration.md) page for more information.
+
+## Metric Execution Groups
+
+When actually running metrics with a given set of ingested datasets, the REF
+will figure out which (set of) datasets fulfill the requirements to run a given metric.
+Generally, each given metric can be executed for many different (sets of) datasets,
+e.g. model results from different models. Additionally, there might be multiple
+versions of datasets, and a metric will need to be re-executed when new versions
+of datasets become available. Within the REF, we group all executions for different
+versions of datasets together into a metric execution group, so the metric execution
+group would be specific to a specific metric and e.g. a specific model. This enables us
+to determine if the results for the metric execution group are up to date, so
+if the metric is evaluated for the most up-to-date version of the input datasets.

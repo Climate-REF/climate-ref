@@ -5,11 +5,11 @@ from sqlalchemy.orm import Session
 
 from cmip_ref.executor import _copy_file_to_results, handle_execution_result, import_executor_cls
 from cmip_ref.executor.local import LocalExecutor
-from cmip_ref.models import MetricExecutionResult
+from cmip_ref.models import MetricExecutionResult as MetricExecutionResultModel
 from cmip_ref.models.metric_execution import ResultOutput, ResultOutputType
 from cmip_ref_core.exceptions import InvalidExecutorException
 from cmip_ref_core.executor import Executor
-from cmip_ref_core.metrics import MetricResult
+from cmip_ref_core.metrics import MetricExecutionResult
 from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput
 
@@ -35,14 +35,14 @@ def test_import_executor_missing():
 
 @pytest.fixture
 def mock_execution_result(mocker):
-    mock_result = mocker.Mock(spec=MetricExecutionResult)
+    mock_result = mocker.Mock(spec=MetricExecutionResultModel)
     mock_result.output_fragment = "output_fragment"
     return mock_result
 
 
 def test_handle_execution_result_successful(db, config, mock_execution_result, mocker, definition_factory):
     metric_bundle_filename = pathlib.Path("bundle.zip")
-    result = MetricResult(
+    result = MetricExecutionResult(
         definition=definition_factory(), successful=True, metric_bundle_filename=metric_bundle_filename
     )
     mock_copy = mocker.patch("cmip_ref.executor._copy_file_to_results")
@@ -56,7 +56,7 @@ def test_handle_execution_result_successful(db, config, mock_execution_result, m
         metric_bundle_filename,
     )
     mock_execution_result.mark_successful.assert_called_once_with(metric_bundle_filename)
-    assert not mock_execution_result.metric_execution.dirty
+    assert not mock_execution_result.metric_execution_group.dirty
 
 
 def test_handle_execution_result_with_files(config, mock_execution_result, mocker, definition_factory):
@@ -94,7 +94,7 @@ def test_handle_execution_result_with_files(config, mock_execution_result, mocke
     )
 
     definition = definition_factory()
-    result = MetricResult.build_from_output_bundle(
+    result = MetricExecutionResult.build_from_output_bundle(
         definition=definition, cmec_output_bundle=cmec_output, cmec_metric_bundle=cmec_metric
     )
 
@@ -120,7 +120,9 @@ def test_handle_execution_result_with_files(config, mock_execution_result, mocke
 
 
 def test_handle_execution_result_failed(config, db, mock_execution_result, definition_factory):
-    result = MetricResult(definition=definition_factory(), successful=False, metric_bundle_filename=None)
+    result = MetricExecutionResult(
+        definition=definition_factory(), successful=False, metric_bundle_filename=None
+    )
 
     handle_execution_result(config, db, mock_execution_result, result)
 
@@ -128,7 +130,7 @@ def test_handle_execution_result_failed(config, db, mock_execution_result, defin
 
 
 def test_handle_execution_result_missing_file(config, db, mock_execution_result, definition_factory):
-    result = MetricResult(
+    result = MetricExecutionResult(
         definition=definition_factory(), successful=True, metric_bundle_filename=pathlib.Path("metric.json")
     )
 

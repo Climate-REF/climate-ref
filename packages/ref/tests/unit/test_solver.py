@@ -242,7 +242,7 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, db_seeded, 
     execution_result = db_seeded.session.query(MetricExecutionResult).first()
     assert execution_result.output_fragment == "output_fragment"
     assert execution_result.dataset_hash == "123456"
-    assert execution_result.metric_execution.key == "key"
+    assert execution_result.metric_execution_group.dataset_key == "key"
 
     # Solver should be created
     assert mock_build_solver.call_count == 1
@@ -270,7 +270,7 @@ def test_solve_metrics(mocker, db_seeded, solver, data_regression):
     # Create a dictionary of the metric key and the source datasets that were used
     output = {}
     for definition in definitions:
-        output[definition.key] = {
+        output[definition.dataset_key] = {
             str(source_type): ds_collection.instance_id.unique().tolist()
             for source_type, ds_collection in definition.metric_dataset.items()
         }

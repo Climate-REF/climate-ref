@@ -27,7 +27,7 @@ each metric has an associated data request that defines the input datasets requi
 
 As new datasets are ingested into the system,
 the REF will "solve" for which metrics need to be executed based on the data requirements of the metrics.
-Each metric may produce multiple metric executions depending how it is configured.
+Each metric may produce multiple metric execution groups depending how it is configured.
 The framework is agnostic to what operation is performed and (somewhat) what output is produced.
 The external benchmarking packages provide the operations.
 
@@ -155,7 +155,7 @@ These abstractions include:
 
 /// admonition | Packaging
 
-The metrics provider packages are named `cmip_ref_metrics-*` and are available on PyPI.
+The metrics provider packages are named `cmip_ref_metrics_*` and are available on PyPI.
 These REF-related packages are generally pretty lightweight and may not include the actual benchmarking code.
 The benchmarking code is expected to be in a separate package that is installed as a dependency,
 depending on how the REF will be deployed.

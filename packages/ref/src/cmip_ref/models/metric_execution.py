@@ -16,74 +16,75 @@ if TYPE_CHECKING:
     from cmip_ref.models.metric import Metric
 
 
-class MetricExecution(CreatedUpdatedMixin, Base):
+class MetricExecutionGroup(CreatedUpdatedMixin, Base):
     """
-    Represents an execution of a metric calculation
+    Represents a group of executions of a metric with a set of input datasets.
 
-    Each execution is a run of a metric calculation with a specific set of input datasets.
-    The metric_id, key form an identifier of a unique group.
+    When solving, the MetricExecutionGroups are derived from the available datasets,
+    the defined metrics and their data requirements. From the information in the
+    group an execution can be triggered, which is an actual run of a metric calculation
+    with a specific set of input datasets.
+
+    When the MetricExecutionGroup is created, it is marked dirty, meaning there are no
+    current results available. When an Execution was run successfully for a
+    MetricExecutionGroup, the dirty mark is removed. After ingesting new data and
+    solving again and if new versions of the input datasets are available, the
+    MetricExecutionGroup will be marked dirty again.
+
+    The metric_id and dataset_key form a unique identifier for MetricExecutionGroups.
     """
 
-    __tablename__ = "metric_execution"
-    __table_args__ = (UniqueConstraint("metric_id", "key", name="metric_execution_ident"),)
+    __tablename__ = "metric_execution_group"
+    __table_args__ = (UniqueConstraint("metric_id", "dataset_key", name="metric_execution_group_ident"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-
-    retracted: Mapped[bool] = mapped_column(default=False)
-    """
-    Whether the metric execution has been retracted or not
-
-    This may happen if a dataset has been retracted, or if the metric execution was incorrect.
-    Rather than delete the values, they are marked as retracted.
-    These data may still be visible in the UI, but should be marked as retracted.
-    """
 
     metric_id: Mapped[int] = mapped_column(ForeignKey("metric.id"))
     """
     The target metric
     """
 
-    key: Mapped[str] = mapped_column(index=True)
+    dataset_key: Mapped[str] = mapped_column(index=True)
     """
-    Key for the metric execution
-
-    This should be unique for each run of a metric.
+    Key for the datasets in this Execution group.
     """
 
     dirty: Mapped[bool] = mapped_column(default=False)
     """
-    Whether the execution should be rerun
+    Whether the execution group should be rerun
 
-    An execution is dirty if the metric or any of the input datasets has been updated since the last run.
+    An execution group is dirty if the metric or any of the input datasets has been
+    updated since the last execution.
     """
 
-    metric: Mapped["Metric"] = relationship(back_populates="executions")
+    metric: Mapped["Metric"] = relationship(back_populates="execution_groups")
     results: Mapped[list["MetricExecutionResult"]] = relationship(
-        back_populates="metric_execution", order_by="MetricExecutionResult.created_at"
+        back_populates="metric_execution_group", order_by="MetricExecutionResult.created_at"
     )
 
     def should_run(self, dataset_hash: str) -> bool:
         """
-        Check if a new run of the metric execution should be performed
+        Check if the metric execution group needs to be executed.
 
-        The metric execution should be run if:
+        The metric execution group should be run if:
 
-        * the execution if marked as dirty
-        * no runs have been performed
+        * the execution group is marked as dirty
+        * no executions have been performed ever
         * the dataset hash is different from the last run
         """
         if not self.results:
-            logger.debug(f"Execution {self.key} no previous results")
+            logger.debug(f"Execution group {self.metric.slug}/{self.dataset_key} was never executed")
             return True
 
         if self.results[-1].dataset_hash != dataset_hash:
             logger.debug(
-                f"Execution {self.key} hash mismatch: {self.results[-1].dataset_hash} != {dataset_hash}"
+                f"Execution group {self.metric.slug}/{self.dataset_key} hash mismatch:"
+                f" {self.results[-1].dataset_hash} != {dataset_hash}"
             )
             return True
 
         if self.dirty:
-            logger.debug(f"Execution {self.key} is dirty")
+            logger.debug(f"Execution group {self.metric.slug}/{self.dataset_key} is dirty")
             return True
 
         return False
@@ -101,7 +102,8 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
     """
     Represents a run of a metric calculation
 
-    An execution might be run multiple times as new data becomes available.
+    An execution group might be run multiple times as new data becomes available,
+    each run will create a MetricExecutionResult.
     """
 
     __tablename__ = "metric_execution_result"
@@ -118,9 +120,9 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
     This directory may contain multiple input and output files.
     """
 
-    metric_execution_id: Mapped[int] = mapped_column(ForeignKey("metric_execution.id"))
+    metric_execution_group_id: Mapped[int] = mapped_column(ForeignKey("metric_execution_group.id"))
     """
-    The target metric execution
+    The target metric execution group
     """
 
     dataset_hash: Mapped[str] = mapped_column(index=True)
@@ -140,7 +142,16 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
     Path to the output bundle
     """
 
-    metric_execution: Mapped["MetricExecution"] = relationship(back_populates="results")
+    retracted: Mapped[bool] = mapped_column(default=False)
+    """
+    Whether the metric execution result has been retracted or not
+
+    This may happen if a dataset has been retracted, or if the metric execution was incorrect.
+    Rather than delete the values, they are marked as retracted.
+    These data may still be visible in the UI, but should be marked as retracted.
+    """
+
+    metric_execution_group: Mapped["MetricExecutionGroup"] = relationship(back_populates="results")
     outputs: Mapped[list["ResultOutput"]] = relationship(back_populates="metric_execution_result")
 
     datasets: Mapped[list[Dataset]] = relationship(secondary=metric_datasets)
@@ -165,7 +176,7 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
 
     def mark_failed(self) -> None:
         """
-        Mark the metric execution as successful
+        Mark the metric execution as unsuccessful
         """
         self.successful = False
 
@@ -231,11 +242,11 @@ class ResultOutput(CreatedUpdatedMixin, Base):
     metric_execution_result: Mapped["MetricExecutionResult"] = relationship(back_populates="outputs")
 
 
-def get_execution_and_latest_result(
+def get_execution_group_and_latest_result(
     session: Session,
-) -> RowReturningQuery[tuple[MetricExecution, MetricExecutionResult | None]]:
+) -> RowReturningQuery[tuple[MetricExecutionGroup, MetricExecutionResult | None]]:
     """
-    Query to get the most recent result for each metric execution
+    Query to get the most recent result for each metric execution group
 
     Parameters
     ----------
@@ -244,28 +255,28 @@ def get_execution_and_latest_result(
 
     Returns
     -------
-        Query to get the most recent result for each metric execution.
-        The result is a tuple of the metric execution and the most recent result,
+        Query to get the most recent result for each metric execution group.
+        The result is a tuple of the metric execution group and the most recent result,
         which can be None.
     """
-    # Find the most recent result for each metric execution
+    # Find the most recent result for each metric execution group
     # This uses an aggregate function because it is more efficient than order by
     subquery = (
         session.query(
-            MetricExecutionResult.metric_execution_id,
+            MetricExecutionResult.metric_execution_group_id,
             func.max(MetricExecutionResult.created_at).label("latest_created_at"),
         )
-        .group_by(MetricExecutionResult.metric_execution_id)
+        .group_by(MetricExecutionResult.metric_execution_group_id)
         .subquery()
     )
 
     # Join the metric execution with the latest result
     query = (
-        session.query(MetricExecution, MetricExecutionResult)
-        .outerjoin(subquery, MetricExecution.id == subquery.c.metric_execution_id)
+        session.query(MetricExecutionGroup, MetricExecutionResult)
+        .outerjoin(subquery, MetricExecutionGroup.id == subquery.c.metric_execution_group_id)
         .outerjoin(
             MetricExecutionResult,
-            (MetricExecutionResult.metric_execution_id == MetricExecution.id)
+            (MetricExecutionResult.metric_execution_group_id == MetricExecutionGroup.id)
             & (MetricExecutionResult.created_at == subquery.c.latest_created_at),
         )
     )

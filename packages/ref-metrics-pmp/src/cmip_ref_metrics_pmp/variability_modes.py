@@ -11,42 +11,78 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
     """
 
     def __init__(self, mode_id: str):
-        self.mode_id = mode_id
+        self.mode_id = mode_id.upper()
         self.name = f"PMP Extratropical modes of variability {mode_id}"
-        self.slug = f"pmp-extratropical-modes-of-variability-{mode_id}"
+        self.slug = f"pmp-extratropical-modes-of-variability-{mode_id.lower()}"
 
-    data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "source_id": ("HadISST-1-1",),
-                        "variable_id": ("ts",),
-                    }
+        if self.mode_id in ["PDO", "NPGO", "AMO"]:
+            self.data_requirements = (
+                DataRequirement(
+                    source_type=SourceDatasetType.obs4MIPs,
+                    filters=(
+                        FacetFilter(
+                            facets={
+                                "source_id": ("HadISST-1-1",),
+                                "variable_id": ("ts",),
+                            }
+                        ),
+                    ),
+                    group_by=("source_id", "variable_id"),
                 ),
-            ),
-            group_by=("source_id", "variable_id"),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "frequency": "mon",
-                        "experiment_id": ("historical", "hist-GHG", "piControl"),
-                        "variable_id": "ts",
-                    }
+                DataRequirement(
+                    source_type=SourceDatasetType.CMIP6,
+                    filters=(
+                        FacetFilter(
+                            facets={
+                                "frequency": "mon",
+                                "experiment_id": ("historical", "hist-GHG", "piControl"),
+                                "variable_id": "ts",
+                            }
+                        ),
+                        # Ignore some experiments because they are not relevant
+                        FacetFilter(facets={"experiment_id": ("amip",)}, keep=False),
+                    ),
+                    # Add cell areas to the groups
+                    # constraints=(AddCellAreas(),),
+                    # Run the metric on each unique combination of model, variable, experiment, and variant
+                    group_by=("source_id", "experiment_id", "variant_label", "member_id"),
                 ),
-                # Ignore some experiments because they are not relevant
-                FacetFilter(facets={"experiment_id": ("amip",)}, keep=False),
-            ),
-            # Add cell areas to the groups
-            # constraints=(AddCellAreas(),),
-            # Run the metric on each unique combination of model, variable, experiment, and variant
-            group_by=("source_id", "experiment_id", "variant_label", "member_id"),
-        ),
-    )
+            )
+        elif self.mode_id in ["NAO", "NAM", "PNA", "NPO", "SAM"]:
+            self.data_requirements = (
+                DataRequirement(
+                    source_type=SourceDatasetType.obs4MIPs,
+                    filters=(
+                        FacetFilter(
+                            facets={
+                                "source_id": ("20CR",),
+                                "variable_id": ("psl",),
+                            }
+                        ),
+                    ),
+                    group_by=("source_id", "variable_id"),
+                ),
+                DataRequirement(
+                    source_type=SourceDatasetType.CMIP6,
+                    filters=(
+                        FacetFilter(
+                            facets={
+                                "frequency": "mon",
+                                "experiment_id": ("historical", "hist-GHG", "piControl", "amip"),
+                                "variable_id": "ts",
+                            }
+                        ),
+                    ),
+                    # Add cell areas to the groups
+                    # constraints=(AddCellAreas(),),
+                    # Run the metric on each unique combination of model, variable, experiment, and variant
+                    group_by=("source_id", "experiment_id", "variant_label", "member_id"),
+                ),
+            )
+        else:
+            raise ValueError(
+                f"Unknown mode_id {mode_id}. Must be one of " "PDO, NPGO, AMO, NAO, NAM, PNA, NPO, SAM"
+            )
 
     def build_cmd(self, definition: MetricExecutionDefinition) -> Iterable[str]:
         """
@@ -79,14 +115,18 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
         print("reference_dataset_name:", reference_dataset_name)
         print("reference_dataset_path:", reference_dataset_path)
 
-        if self.mode_id == "PDO":
+        if self.mode_id in ["PDO", "NPGO", "AMO"]:
             parameter_file = "pmp_param_MoV-PDO.py"
-        elif self.mode_id == "NAO":
+        elif self.mode_id in ["NAO", "NAM", "PNA", "NPO", "SAM"]:
             parameter_file = "pmp_param_MoV-NAO.py"
+        else:
+            raise ValueError(
+                f"Unknown mode_id {self.mode_id}. Must be one of " "PDO, NPGO, AMO, NAO, NAM, PNA, NPO, SAM"
+            )
 
         return build_pmp_command(
             driver_file="variability_mode/variability_modes_driver.py",
-            parameter_file,
+            parameter_file=parameter_file,
             model_files=input_datasets.path.to_list(),
             reference_name=reference_dataset_name,
             reference_paths=reference_dataset_path,

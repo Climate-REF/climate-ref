@@ -33,6 +33,13 @@
             "Hydrology Cycle": {
                 "overall score": 0.26,
                 "bias": 0.70
+            },
+            "attributes":{
+                "resolution": "low",
+                "attr0": "1980-2015",
+                "attr1":{},
+                "attr2":[],
+                "attr3": -999
             }
         },
         "CESM2": {
@@ -43,18 +50,44 @@
             "Hydrology Cycle": {
                 "overall score": 0.61,
                 "bias": 0.18
+            },
+            "attributes":{
+                "resolution": "low",
+                "attr0": "1980-2015",
+                "attr1":{},
+                "attr2":[],
+                "attr3": -999
             }
         },
         "IPSL-CM5A-LR": {
             "Ecosystem and Carbon Cycle": {
                 "overall score": 0.08,
                 "bias": 0.92,
-                "rmse": 0.34
+                "rmse": 0.34,
+                "attributes":{
+                    "overall score": "ILAMB scoring system",
+                    "bias": "mean bias",
+                    "rmse": "root mean squre error"
+                }
             },
             "Hydrology Cycle": {
                 "overall score": 0.67,
                 "rmse": 0.68
+            },
+            "attributes":{
+                "attr1":{
+                    "attr2":{
+                        "attr3":{}
+                    }
+                }
             }
+        },
+        "attributes":{
+            "attr0": "1980-2015",
+            "attr1":{},
+            "attr2":[],
+            "attr3": -999,
+            "attr4":"first level"
         }
     }
 }

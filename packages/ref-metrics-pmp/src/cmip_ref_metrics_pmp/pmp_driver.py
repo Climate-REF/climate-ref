@@ -85,7 +85,8 @@ def process_json_result(
 
     # Remove the "attributes" key from the RESULTS
     # This isn't standard CMEC output, but it is what PMP produces
-    results = _remove_nested_key(json_result["RESULTS"], "attributes")
+    # - results = _remove_nested_key(json_result["RESULTS"], "attributes")
+    results = json_result["RESULTS"]
 
     cmec_metric["RESULTS"] = results
     cmec_metric["DIMENSIONS"] = dimensions

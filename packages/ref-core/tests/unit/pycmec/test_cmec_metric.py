@@ -198,18 +198,50 @@ def test_metric_merge():
             "GFDL-ESM2M": {
                 "NinoSstDiversity_2": -75,
                 "BiasTauxLonRmse": 5.959564210237568,
-            }
+                "attributes": {
+                    "NinoSstDiversity_2": "Nino SST diversity",
+                    "BiasTauxLonRmse": "Bias Taux RMSE",
+                },
+            },
+            "attributes": {
+                "package": "pmp",
+                "NinoSstDiversity_2": {},
+            },
         },
     }
     dict_ilamb = {
         "DIMENSIONS": {
             "json_structure": ["model", "metric"],
-            "model": {"E3SM": {"name": "E3SM"}, "CESM": {"name": "CESM"}},
+            "model": {
+                "E3SM": {"name": "E3SM"},
+                "CESM": {"name": "CESM"},
+                "GFDL-ESM2M": {"name": "GFDL-ESM2M"},
+            },
             "metric": {"carbon": {"name": "carbon"}},
         },
         "RESULTS": {
-            "E3SM": {"carbon": {"overall score": 0.11, "bias": 0.56}},
-            "CESM": {"carbon": {"overall score": 0.05, "bias": 0.72}},
+            "E3SM": {
+                "carbon": {
+                    "overall score": 0.11,
+                    "bias": 0.56,
+                    "attributes": {
+                        "score": "ILAMB scoring system",
+                    },
+                },
+            },
+            "CESM": {
+                "carbon": {"overall score": 0.05, "bias": 0.72},
+            },
+            "GFDL-ESM2M": {
+                "carbon": {"overall score": 0.35, "bias": 0.37},
+                "attributes": {
+                    "score": "ILAMB scoring system",
+                },
+            },
+            "attributes": {
+                "package": "ilamb",
+                "overall score": {},
+            },
         },
     }
 
@@ -229,7 +261,13 @@ def test_metric_merge():
         },
         "RESULTS": {
             "E3SM": {
-                "carbon": {"overall score": 0.11, "bias": 0.56},
+                "carbon": {
+                    "overall score": 0.11,
+                    "bias": 0.56,
+                    "attributes": {
+                        "score": "ILAMB scoring system",
+                    },
+                },
                 "NinoSstDiversity_2": {},
                 "BiasTauxLonRmse": {},
             },
@@ -241,7 +279,17 @@ def test_metric_merge():
             "GFDL-ESM2M": {
                 "NinoSstDiversity_2": -75,
                 "BiasTauxLonRmse": 5.959564210237568,
-                "carbon": {},
+                "attributes": {
+                    "NinoSstDiversity_2": "Nino SST diversity",
+                    "BiasTauxLonRmse": "Bias Taux RMSE",
+                    "score": "ILAMB scoring system",
+                },
+                "carbon": {"overall score": 0.35, "bias": 0.37},
+            },
+            "attributes": {
+                "package": "ilamb",
+                "NinoSstDiversity_2": {},
+                "overall score": {},
             },
         },
         "PROVENANCE": None,

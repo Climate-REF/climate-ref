@@ -128,7 +128,22 @@ def test_pdo_metric_failed(cmip6_data_catalog, mocker, definition_factory, pdo_e
     metric._provider = provider
     metric_dataset = get_first_metric_match(cmip6_data_catalog, metric)
 
-    definition = definition_factory(cmip6=DatasetCollection(metric_dataset, "instance_id"))
+    definition = definition_factory(
+        cmip6=DatasetCollection(metric_dataset, "instance_id"),
+        obs4mips=DatasetCollection(
+            pd.Series(
+                {
+                    "instance_id": "HadISST",
+                    "source_id": "HadISST-1-1",
+                    "variable_id": "ts",
+                    "path": "not_a_file",
+                }
+            )
+            .to_frame()
+            .T,
+            "instance_id",
+        ),
+    )
 
     # Mock the subprocess.run call to avoid running PMP
     # Instead the mock_run_call function will be called

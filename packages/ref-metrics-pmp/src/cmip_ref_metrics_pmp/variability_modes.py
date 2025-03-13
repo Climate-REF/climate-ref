@@ -5,13 +5,15 @@ from cmip_ref_core.metrics import CommandLineMetric, DataRequirement, MetricExec
 from cmip_ref_metrics_pmp.pmp_driver import build_pmp_command, process_json_result
 
 
-class ExtratropicalModesOfVariability_PDO(CommandLineMetric):
+class ExtratropicalModesOfVariability(CommandLineMetric):
     """
     Calculate the annual cycle for a dataset
     """
 
-    name = "PMP Extratropical modes of variability PDO"
-    slug = "pmp-extratropical-modes-of-variability-pdo"
+    def __init__(self, mode_id: str):
+        self.mode_id = mode_id
+        self.name = f"PMP Extratropical modes of variability {mode_id}"
+        self.slug = f"pmp-extratropical-modes-of-variability-{mode_id}"
 
     data_requirements = (
         DataRequirement(
@@ -77,9 +79,14 @@ class ExtratropicalModesOfVariability_PDO(CommandLineMetric):
         print("reference_dataset_name:", reference_dataset_name)
         print("reference_dataset_path:", reference_dataset_path)
 
+        if self.mode_id == "PDO":
+            parameter_file = "pmp_param_MoV-PDO.py"
+        elif self.mode_id == "NAO":
+            parameter_file = "pmp_param_MoV-NAO.py"
+
         return build_pmp_command(
             driver_file="variability_mode/variability_modes_driver.py",
-            parameter_file="pmp_param_MoV-PDO.py",
+            parameter_file,
             model_files=input_datasets.path.to_list(),
             reference_name=reference_dataset_name,
             reference_paths=reference_dataset_path,

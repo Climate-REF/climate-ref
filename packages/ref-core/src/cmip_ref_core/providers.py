@@ -328,6 +328,7 @@ class CondaMetricsProvider(CommandLineMetricsProvider):
         """
         Create a conda environment.
         """
+        logger.debug(f"Attempting to create environment at {self.env_path}")
         if self.env_path.exists():
             logger.info(f"Environment at {self.env_path} already exists, skipping.")
             return

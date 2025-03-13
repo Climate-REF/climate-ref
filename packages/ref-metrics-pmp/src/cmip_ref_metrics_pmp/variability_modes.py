@@ -1,5 +1,7 @@
 from collections.abc import Iterable
 
+from loguru import logger
+
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import CommandLineMetric, DataRequirement, MetricExecutionDefinition, MetricResult
 from cmip_ref_metrics_pmp.pmp_driver import build_pmp_command, process_json_result
@@ -104,7 +106,11 @@ class ExtratropicalModesOfVariability_PDO(CommandLineMetric):
         """
         results_files = list(definition.output_directory.glob("*_cmec.json"))
         if len(results_files) != 1:  # pragma: no cover
-            return MetricResult.build_from_failure(definition)
+            logger.warning(
+                f"More than one result file was found: {[str(f) for f in results_files]}. "
+                f"Using the first item"
+            )
+            results_files = [results_files[0]]
 
         # Find the other outputs
         png_files = list(definition.output_directory.glob("*.png"))

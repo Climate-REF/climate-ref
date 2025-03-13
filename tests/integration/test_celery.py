@@ -6,50 +6,16 @@ This test requires a running Redis server, which is started as a Docker containe
 
 import gc
 import time
-from pathlib import Path
 
 import pytest
-import redis
 from cmip_ref_celery.app import create_celery_app
 from cmip_ref_celery.tasks import register_celery_tasks
 from cmip_ref_metrics_example import provider
-from pytest_docker_tools import container, fetch, wrappers
 
 from cmip_ref.database import Database
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from cmip_ref.models import MetricExecutionResult
 from cmip_ref.solver import solve_metrics
-
-ROOT_DIR = Path(__file__).parents[2]
-
-
-class RedisContainer(wrappers.Container):
-    def ready(self):
-        if super().ready() and len(self.ports["6379/tcp"]) > 0:
-            print(f"Redis using port:{self.ports['6379/tcp'][0]}")
-            # Perform a simple ping to check if the server is ready
-            r = redis.Redis(host="localhost", port=self.ports["6379/tcp"][0])
-            try:
-                return r.ping()
-            except redis.ConnectionError:
-                return False
-
-        return False
-
-    def connection_url(self) -> str:
-        port = self.ports["6379/tcp"][0]
-        return f"redis://localhost:{port}/0"
-
-
-redis_image = fetch(repository="redis:7")
-
-redis_container = container(
-    image="{redis_image.id}",
-    ports={
-        "6379/tcp": None,
-    },
-    wrapper_class=RedisContainer,
-)
 
 
 @pytest.fixture
@@ -74,8 +40,9 @@ def celery_app(redis_container, monkeypatch, config):
     as it registers both to the "example" and "celery" queues.
     Typically, these are done on separate workers.
     """
-    monkeypatch.setenv("CELERY_BROKER_URL", redis_container.connection_url())
-    monkeypatch.setenv("CELERY_RESULT_BACKEND", redis_container.connection_url())
+    celery_url = redis_container.connection_url()
+    monkeypatch.setenv("CELERY_BROKER_URL", celery_url)
+    monkeypatch.setenv("CELERY_RESULT_BACKEND", celery_url)
 
     app = create_celery_app("test")
 
@@ -93,8 +60,9 @@ def celery_worker_parameters():
 
 def test_celery_solving(db_seeded, config, celery_worker, redis_container, monkeypatch):
     config.executor.executor = "cmip_ref_celery.executor.CeleryExecutor"
-    monkeypatch.setenv("CELERY_BROKER_URL", redis_container.connection_url())
-    monkeypatch.setenv("CELERY_RESULT_BACKEND", redis_container.connection_url())
+    celery_url = redis_container.connection_url()
+    monkeypatch.setenv("CELERY_BROKER_URL", celery_url)
+    monkeypatch.setenv("CELERY_RESULT_BACKEND", celery_url)
 
     # Run the solver which executes the metrics
     solve_metrics(db_seeded, timeout=10, config=config)

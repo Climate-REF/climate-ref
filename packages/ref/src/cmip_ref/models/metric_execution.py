@@ -138,6 +138,8 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
     path: Mapped[str] = mapped_column(nullable=True)
     """
     Path to the output bundle
+
+    Relative to the metric execution result output directory
     """
 
     metric_execution: Mapped["MetricExecution"] = relationship(back_populates="results")

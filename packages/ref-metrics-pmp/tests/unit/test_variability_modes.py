@@ -5,7 +5,7 @@ import cmip_ref_metrics_pmp
 import pandas as pd
 import pytest
 from cmip_ref_metrics_pmp.pmp_driver import _get_resource
-from cmip_ref_metrics_pmp.variability_modes import ExtratropicalModesOfVariability_PDO
+from cmip_ref_metrics_pmp.variability_modes import ExtratropicalModesOfVariability
 
 import cmip_ref_core.providers
 from cmip_ref.solver import extract_covered_datasets
@@ -35,7 +35,7 @@ def provider(tmp_path):
 def test_pdo_metric(  # noqa: PLR0913
     cmip6_data_catalog, obs4mips_data_catalog, mocker, definition_factory, pdo_example_dir, provider
 ):
-    metric = ExtratropicalModesOfVariability_PDO()
+    metric = ExtratropicalModesOfVariability("PDO")
     metric._provider = provider
     metric_dataset = get_first_metric_match(cmip6_data_catalog, metric)
 
@@ -124,7 +124,7 @@ def test_pdo_metric(  # noqa: PLR0913
 
 
 def test_pdo_metric_failed(cmip6_data_catalog, mocker, definition_factory, pdo_example_dir, provider):
-    metric = ExtratropicalModesOfVariability_PDO()
+    metric = ExtratropicalModesOfVariability("PDO")
     metric._provider = provider
     metric_dataset = get_first_metric_match(cmip6_data_catalog, metric)
 

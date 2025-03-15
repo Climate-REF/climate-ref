@@ -6,4 +6,4 @@ def test_provider():
     assert provider.slug == "pmp"
     assert provider.version == __version__
 
-    assert len(provider) == 1
+    assert len(provider) == 2

@@ -10,14 +10,6 @@ from cmip_ref_core.pycmec.metric import (
 )
 
 
-@pytest.fixture
-def cmec_right_metric_dict(datadir):
-    with open(datadir / "cmec_metric_sample.json") as fh:
-        content = json.loads(fh.read())
-
-    return content
-
-
 @pytest.fixture(params=["dict", "CMECMetric"])
 def cmec_right_metric_data(request, cmec_right_metric_dict):
     if request.param == "dict":

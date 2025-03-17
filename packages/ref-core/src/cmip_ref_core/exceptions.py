@@ -38,3 +38,7 @@ class ConstraintNotSatisfied(RefException):
     """Exception raised when a constraint is violated"""
 
     # TODO: implement when we have agreed on using constraints
+
+
+class ResultValidationError(RefException):
+    """Exception raised when the results from a metric execution are invalid"""

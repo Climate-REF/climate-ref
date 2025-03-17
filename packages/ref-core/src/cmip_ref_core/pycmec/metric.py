@@ -13,8 +13,9 @@ Both ways will create the CMECMetric instance (cmec)
 
 import pathlib
 from collections import Counter
+from collections.abc import Generator
 from enum import Enum
-from typing import Any
+from typing import Any, cast
 
 from pydantic import (
     BaseModel,
@@ -136,6 +137,9 @@ class MetricDimensions(RootModel[Any]):
                     merged_dim[dim][key] = mdim2.root[dim][key]
         return cls(merged_dim)
 
+    def __getitem__(self, item: str) -> Any:
+        return self.root[item]
+
 
 class MetricResults(RootModel[Any]):
     """
@@ -184,6 +188,18 @@ class StrNumDict(RootModel[Any]):
 
     model_config = ConfigDict(strict=True)
     root: dict[str, float | str]
+
+
+class MetricValue(BaseModel):
+    """
+    A flattened representation of a metric value
+
+    This includes the dimensions and the value of the metric
+    """
+
+    dimensions: dict[str, str]
+    value: float | str
+    attributes: dict[str, str | float | int] | None = None
 
 
 class CMECMetric(BaseModel):
@@ -345,6 +361,42 @@ class CMECMetric(BaseModel):
             MetricCV.DISCLAIMER.value: None,
             MetricCV.NOTES.value: None,
         }
+
+    def iter_results(self) -> Generator[MetricValue]:
+        """
+        Iterate over the results in the metric bundle
+
+        This will yield a dictionary for each result, with the dimensions and the value
+
+        Returns
+        -------
+            A generator of metric values
+
+        """
+        dimensions = cast(list[str], self.DIMENSIONS[MetricCV.JSON_STRUCTURE.value])
+        # TODO: This is pretty hacky
+        # A missing dimension in the results should be a validationError
+        if "statistic" not in dimensions:
+            dimensions = [*dimensions, "statistic"]
+
+        yield from _walk_results(dimensions, self.RESULTS, {})
+
+
+def _walk_results(
+    dimensions: list[str], results: dict[str, Any], metadata: dict[str, str]
+) -> Generator[MetricValue]:
+    assert len(dimensions), "Not enough dimensions"  # noqa: S101
+    dimension = dimensions[0]
+    for key, value in results.items():
+        if key == MetricCV.ATTRIBUTES.value:
+            continue
+        metadata[dimension] = key
+        if isinstance(value, str | float):
+            yield MetricValue(
+                dimensions=metadata, value=value, attributes=results.get(MetricCV.ATTRIBUTES.value)
+            )
+        else:
+            yield from _walk_results(dimensions[1:], value, {**metadata})
 
 
 class CMECGenerateJsonSchema(GenerateJsonSchema):

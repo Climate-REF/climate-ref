@@ -1,0 +1,75 @@
+{{- range $pkg, $spec := .Values.packages }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ref.fullname" $ }}-{{ $pkg }}
+  labels:
+    app.kubernetes.io/component: {{ $pkg }}
+    {{- include "ref.labels" $ | nindent 4 }}
+spec:
+  {{- if not (and $spec.autoscaling $spec.autoscaling.enabled) }}
+  replicas: {{ $spec.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: {{ $pkg }}
+      {{- include "ref.selectorLabels" $ | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/packages/secret.yaml") $ | sha256sum }}
+      {{- with $spec.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: {{ $pkg }}
+        {{- include "ref.labels" $ | nindent 8 }}
+        {{- with $spec.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with $.Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ref.fullname" $ }}-{{ $pkg }}
+      {{- with $spec.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      containers:
+      - name: {{ $pkg }}
+        {{- with $spec.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        image: "{{ $spec.image.repository }}:{{ $spec.image.tag }}"
+        imagePullPolicy: {{ $spec.image.pullPolicy }}
+        envFrom:
+        - secretRef:
+            name: {{ include "ref.fullname" $ }}-{{ $pkg }}
+        {{- with $spec.resources }}
+        resources:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        {{- with $spec.volumeMounts }}
+        volumeMounts:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+      {{- with $spec.volumes }}
+      volumes:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $spec.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $spec.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with $spec.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{ end -}}

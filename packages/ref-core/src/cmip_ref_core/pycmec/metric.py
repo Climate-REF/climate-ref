@@ -157,10 +157,14 @@ class MetricResults(RootModel[Any]):
             raise ValueError("Error in dicts of Results")
 
         for key, value in nested.items():
-            if isinstance(value, dict) and level < len(metdims[MetricCV.JSON_STRUCTURE.value]) - 1:
-                cls._check_nested_dict_keys(value, metdims, level + 1)
-            elif isinstance(value, dict):
-                StrNumDict(value)
+            if not (key == MetricCV.ATTRIBUTES.value):
+                if isinstance(value, dict) and level < len(metdims[MetricCV.JSON_STRUCTURE.value]) - 1:
+                    cls._check_nested_dict_keys(value, metdims, level + 1)
+                elif isinstance(value, dict):
+                    tmp = dict(value)
+                    if MetricCV.ATTRIBUTES.value in tmp:
+                        tmp.pop(MetricCV.ATTRIBUTES.value)
+                    StrNumDict(tmp)
 
     @field_validator("root", mode="after")
     @classmethod
@@ -168,7 +172,7 @@ class MetricResults(RootModel[Any]):
         """Validate a MetricResults object"""
         if not isinstance(info.context, MetricDimensions):
             s = "\nTo validate MetricResults object, MetricDimensions is needed,\n"
-            s += "please use model_validate(Results, context=MetricDimensions to instantiate\n"
+            s += "please use model_validate(Results, context=MetricDimensions) to instantiate\n"
             raise ValueError(s)
         else:
             # results = rlt.root
@@ -295,7 +299,11 @@ class CMECMetric(BaseModel):
                 mdict[key] = {}
 
         for key, value in mdict.items():
-            if isinstance(value, dict) and level < len(mdims[MetricCV.JSON_STRUCTURE.value]) - 1:
+            if (
+                isinstance(value, dict)
+                and level < len(mdims[MetricCV.JSON_STRUCTURE.value]) - 1
+                and key != MetricCV.ATTRIBUTES.value
+            ):
                 cls._fill(value, mdims, level + 1)
 
     @classmethod
@@ -321,8 +329,8 @@ class CMECMetric(BaseModel):
 
         merged_obj_dims = MetricDimensions.merge_dimension(mobj1.DIMENSIONS, mobj2.DIMENSIONS)
 
-        result1 = mobj2.RESULTS
-        result2 = mobj1.RESULTS
+        result1 = mobj1.RESULTS
+        result2 = mobj2.RESULTS
         merged_obj_rlts = cls._merge(dict(result1), result2)
 
         cls._fill(merged_obj_rlts, merged_obj_dims.root)

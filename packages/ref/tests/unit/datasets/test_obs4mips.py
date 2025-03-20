@@ -1,3 +1,5 @@
+import os
+import shutil
 from pathlib import Path
 
 import pandas as pd
@@ -16,6 +18,14 @@ def catalog_regression(data_regression, sample_data_dir):
         data_regression.check(df.to_dict(orient="records"), basename=basename)
 
     return check
+
+
+@pytest.fixture
+def test_empty_dir():
+    dir_path = "test_empty_directory"
+    os.makedirs(dir_path, exist_ok=True)
+    yield dir_path
+    shutil.rmtree(dir_path)
 
 
 @pytest.mark.parametrize(
@@ -128,3 +138,15 @@ class Testobs4MIPsAdapter:
         catalog_regression(
             data_catalog.sort_values(["instance_id", "start_time"]), basename="obs4mips_catalog_local"
         )
+
+    def test_load_local_CMIP6_datasets(self, sample_data_dir):
+        with pytest.raises(ValueError) as excinfo:
+            adapter = Obs4MIPsDatasetAdapter()
+            adapter.find_local_datasets(str(sample_data_dir) + "/CMIP6")
+        assert str(excinfo.value) == "No obs4MIPs-compliant datasets found"
+
+    def test_empty_directory_exception(self, test_empty_dir):
+        with pytest.raises(ValueError) as excinfo:
+            adapter = Obs4MIPsDatasetAdapter()
+            adapter.find_local_datasets(test_empty_dir)
+        assert str(excinfo.value) == "asset list provided is None. Please run `.get_assets()` first"

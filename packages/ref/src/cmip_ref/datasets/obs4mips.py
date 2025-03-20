@@ -63,6 +63,11 @@ def parse_obs4mips(file: str) -> dict[str, Any | None]:
     try:
         time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
         with xr.open_dataset(file, chunks={}, decode_times=time_coder) as ds:
+            has_none_value = any(ds.attrs.get(key) is None for key in keys)
+            if has_none_value:
+                missing_fields = [key for key in keys if ds.attrs.get(key) is None]
+                traceback_message = str(missing_fields) + " are missing from the file metadata"
+                raise AttributeError(traceback_message)
             info = {key: ds.attrs.get(key) for key in keys}
 
             if info["activity_id"] != "obs4MIPs":
@@ -83,7 +88,6 @@ def parse_obs4mips(file: str) -> dict[str, Any | None]:
                 vertical_levels = ds[ds.cf["vertical"].name].size
             except (KeyError, AttributeError, ValueError):
                 ...
-
             try:
                 start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
             except (KeyError, AttributeError, ValueError):
@@ -105,9 +109,14 @@ def parse_obs4mips(file: str) -> dict[str, Any | None]:
         )
         return info
 
-    except TypeError:
+    except (TypeError, AttributeError) as err:
+        if (len(err.args)) == 1:
+            logger.warning(str(err.args[0]))
+        else:
+            logger.warning(str(err.args))
         return {"INVALID_ASSET": file, "TRACEBACK": traceback_message}
     except Exception:
+        logger.warning(traceback.format_exc())
         return {"INVALID_ASSET": file, "TRACEBACK": traceback.format_exc()}
 
 
@@ -197,6 +206,10 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         ).build(parsing_func=parse_obs4mips)  # type: ignore[arg-type]
 
         datasets = builder.df
+        if datasets.empty:
+            logger.error("No datasets found")
+            raise ValueError("No obs4MIPs-compliant datasets found")
+
         # Convert the start_time and end_time columns to datetime objects
         # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
         datasets["start_time"] = _parse_datetime(datasets["start_time"])

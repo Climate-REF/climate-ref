@@ -12,7 +12,7 @@ from cmip_ref_core.metrics import (
     DataRequirement,
     Metric,
     MetricExecutionDefinition,
-    MetricResult,
+    MetricExecutionResult,
 )
 from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput
@@ -171,7 +171,7 @@ class ILAMBStandard(Metric):
             build_ilamb_data_registry(self.registry_file, ILAMB_DATA_VERSION)
         )
 
-    def run(self, definition: MetricExecutionDefinition) -> MetricResult:
+    def run(self, definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Run the ILAMB standard analysis.
         """
@@ -186,7 +186,7 @@ class ILAMBStandard(Metric):
             **self.ilamb_kwargs,
         )
         df = _load_csv_and_merge(definition.output_directory)
-        metric_bundle, output_bundle = _form_bundles(definition.key, df)
-        return MetricResult.build_from_output_bundle(
+        metric_bundle, output_bundle = _form_bundles(definition.dataset_key, df)
+        return MetricExecutionResult.build_from_output_bundle(
             definition, cmec_output_bundle=output_bundle, cmec_metric_bundle=metric_bundle
         )

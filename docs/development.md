@@ -58,7 +58,7 @@ through. If not, please raise an issue in the
 ### Running your first `solve`
 
 If you want to run the sample data through the whole pipeline, you need to download
-reference data, but note that the reference data is severable Gigabytes in size.
+reference data, but note that the reference data is several Gigabytes in size.
 
 ```shell
 # Download reference data which is not (yet) included in obs4mips
@@ -72,7 +72,7 @@ Note that this will take a while to run.
 uv run ref solve
 ```
 
-Afterwards, you can check the output of `uv run ref executions list` to see if metrics
+Afterwards, you can check the output of `uv run ref executions list-groups` to see if metrics
 were evaluated successfully, and if they were, you find the results in the
 `.ref/results` folder. Don't worry too much if some executions are failing for you,
 things are still in active development at the moment.

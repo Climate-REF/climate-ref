@@ -50,15 +50,17 @@ class MetricExecutionDefinition:
     """
     Definition of a metric execution.
 
-    This represents the information needed by a metric to perform a single execution of the metric
+    This represents the information needed by a metric to perform an execution of the metric
+    for a specific set of datasets fulfilling the requirements.
     """
 
-    key: str
+    dataset_key: str
     """
-    A unique identifier for the metric execution
+    The unique identifier for the datasets in the metric execution group.
 
-    The key is a hash of the group by values for the datasets used in the metric execution.
-    Duplicate keys will occur when new datasets are available that match the same group by values.
+    The key is derived from the datasets in the group using facet values.
+    New datasets which match the same group by facet values will result in the same
+    dataset_key.
     """
 
     metric_dataset: MetricDataset
@@ -126,7 +128,7 @@ class MetricExecutionDefinition:
 
 
 @frozen
-class MetricResult:
+class MetricExecutionResult:
     """
     The result of running a metric.
 
@@ -159,7 +161,7 @@ class MetricResult:
 
     successful: bool = False
     """
-    Whether the metric ran successfully.
+    Whether the metric execution ran successfully.
     """
     # Log info is in the output bundle file already, but is definitely useful
 
@@ -169,14 +171,14 @@ class MetricResult:
         *,
         cmec_output_bundle: CMECOutput | dict[str, Any],
         cmec_metric_bundle: CMECMetric | dict[str, Any],
-    ) -> MetricResult:
+    ) -> MetricExecutionResult:
         """
         Build a MetricResult from a CMEC output bundle.
 
         Parameters
         ----------
         definition
-            The execution defintion.
+            The execution definition.
         cmec_output_bundle
             An output bundle in the CMEC format.
         cmec_metric_bundle
@@ -206,7 +208,7 @@ class MetricResult:
         bundle_path = definition.to_output_path("metric.json")
         cmec_metric.dump_to_json(bundle_path)
 
-        return MetricResult(
+        return MetricExecutionResult(
             definition=definition,
             output_bundle_filename=pathlib.Path("output.json"),
             metric_bundle_filename=pathlib.Path("metric.json"),
@@ -214,14 +216,14 @@ class MetricResult:
         )
 
     @staticmethod
-    def build_from_failure(definition: MetricExecutionDefinition) -> MetricResult:
+    def build_from_failure(definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Build a failed metric result.
 
         This is a placeholder.
         Additional log information should still be captured in the output bundle.
         """
-        return MetricResult(
+        return MetricExecutionResult(
             output_bundle_filename=None, metric_bundle_filename=None, successful=False, definition=definition
         )
 
@@ -395,7 +397,7 @@ class AbstractMetric(Protocol):
     The provider that provides the metric.
     """
 
-    def run(self, definition: MetricExecutionDefinition) -> MetricResult:
+    def run(self, definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Run the metric on the given configuration.
 
@@ -410,7 +412,7 @@ class AbstractMetric(Protocol):
 
         Returns
         -------
-        MetricResult
+        MetricExecutionResult
             The result of running the metric.
         """
 
@@ -478,7 +480,7 @@ class CommandLineMetric(Metric):
         """
 
     @abstractmethod
-    def build_metric_result(self, definition: MetricExecutionDefinition) -> MetricResult:
+    def build_metric_result(self, definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Build the result from running the metric on the given configuration.
 
@@ -493,7 +495,7 @@ class CommandLineMetric(Metric):
             The result of running the metric.
         """
 
-    def run(self, definition: MetricExecutionDefinition) -> MetricResult:
+    def run(self, definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Run the metric on the given configuration.
 

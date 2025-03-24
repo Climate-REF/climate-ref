@@ -18,7 +18,7 @@ from collections.abc import Callable
 from celery import Celery
 from loguru import logger
 
-from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricResult
+from cmip_ref_core.metrics import Metric, MetricExecutionDefinition, MetricExecutionResult
 from cmip_ref_core.providers import MetricsProvider
 
 
@@ -33,13 +33,13 @@ def _metric_task_factory(
     metric: Metric,
 ) -> Callable[
     [MetricExecutionDefinition],
-    MetricResult,
+    MetricExecutionResult,
 ]:
     """
     Create a new task for the given metric
     """
 
-    def task(definition: MetricExecutionDefinition) -> MetricResult:
+    def task(definition: MetricExecutionDefinition) -> MetricExecutionResult:
         """
         Task to run the metric
         """

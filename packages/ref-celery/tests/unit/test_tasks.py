@@ -12,7 +12,7 @@ def test_metric_task_factory():
     mock_metric = Mock()
 
     definition = MetricExecutionDefinition(
-        key="test", metric_dataset=None, output_directory=None, root_directory=None
+        dataset_key="test", metric_dataset=None, output_directory=None, root_directory=None
     )
 
     # Create task using factory

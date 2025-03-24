@@ -4,7 +4,7 @@ import pathlib
 from rich.console import Console
 
 from cmip_ref.cli.executions import _results_directory_panel
-from cmip_ref.models import MetricExecution, MetricExecutionResult
+from cmip_ref.models import MetricExecutionGroup, MetricExecutionResult
 from cmip_ref.models.metric_execution import metric_datasets
 
 
@@ -17,13 +17,13 @@ def test_execution_help(invoke_cli):
 class TestExecutionList:
     def _setup_db(self, db):
         with db.session.begin():
-            db.session.add(MetricExecution(key="key1", metric_id=1))
-            db.session.add(MetricExecution(key="key2", metric_id=1))
+            db.session.add(MetricExecutionGroup(dataset_key="key1", metric_id=1))
+            db.session.add(MetricExecutionGroup(dataset_key="key2", metric_id=1))
 
     def test_list(self, sample_data_dir, db_seeded, invoke_cli):
         self._setup_db(db_seeded)
 
-        result = invoke_cli(["executions", "list"])
+        result = invoke_cli(["executions", "list-groups"])
 
         assert "key1" in result.stdout
         assert "key2" in result.stdout
@@ -32,7 +32,7 @@ class TestExecutionList:
     def test_list_limit(self, sample_data_dir, db_seeded, invoke_cli):
         self._setup_db(db_seeded)
 
-        result = invoke_cli(["executions", "list", "--limit", "1"])
+        result = invoke_cli(["executions", "list-groups", "--limit", "1"])
 
         assert "key1" in result.stdout
         assert "key2" not in result.stdout
@@ -40,7 +40,7 @@ class TestExecutionList:
     def test_list_columns(self, sample_data_dir, db_seeded, invoke_cli):
         self._setup_db(db_seeded)
 
-        result = invoke_cli(["executions", "list", "--column", "key", "--column", "metric"])
+        result = invoke_cli(["executions", "list-groups", "--column", "key", "--column", "metric"])
 
         assert "key1" in result.stdout
         assert "metric" in result.stdout
@@ -49,7 +49,9 @@ class TestExecutionList:
     def test_list_columns_missing(self, sample_data_dir, db_seeded, invoke_cli):
         self._setup_db(db_seeded)
 
-        invoke_cli(["executions", "list", "--column", "key", "--column", "missing"], expected_exit_code=1)
+        invoke_cli(
+            ["executions", "list-groups", "--column", "key", "--column", "missing"], expected_exit_code=1
+        )
 
 
 class TestExecutionInspect:
@@ -58,20 +60,20 @@ class TestExecutionInspect:
         config.paths.results = pathlib.Path("/results")
         config.save()
 
-        # Create a metric execution with a result
-        metric_execution = MetricExecution(
-            key="key1",
+        # Create a metric execution group with a result
+        metric_execution_group = MetricExecutionGroup(
+            dataset_key="key1",
             metric_id=1,
             # Ensure dates are consistent
             created_at=datetime.datetime(2021, 1, 1),
             updated_at=datetime.datetime(2021, 2, 1),
         )
         with db_seeded.session.begin():
-            db_seeded.session.add(metric_execution)
+            db_seeded.session.add(metric_execution_group)
             db_seeded.session.flush()
 
             result = MetricExecutionResult(
-                metric_execution_id=metric_execution.id,
+                metric_execution_group_id=metric_execution_group.id,
                 successful=True,
                 output_fragment="output",
                 dataset_hash="hash",
@@ -82,39 +84,39 @@ class TestExecutionInspect:
                 metric_datasets.insert(),
                 [{"metric_execution_result_id": result.id, "dataset_id": idx} for idx in [1, 2]],
             )
-        result = invoke_cli(["executions", "inspect", str(metric_execution.id)])
+        result = invoke_cli(["executions", "inspect", str(metric_execution_group.id)])
 
         assert "Successful: True" in result.stdout
         file_regression.check(result.stdout)
 
     def test_inspect_failed(self, sample_data_dir, db_seeded, invoke_cli):
-        # Create a metric execution with a result
-        metric_execution = MetricExecution(
-            key="key1",
+        # Create a metric execution group with a result
+        metric_execution_group = MetricExecutionGroup(
+            dataset_key="key1",
             metric_id=1,
         )
         with db_seeded.session.begin():
-            db_seeded.session.add(metric_execution)
+            db_seeded.session.add(metric_execution_group)
             db_seeded.session.flush()
 
             result = MetricExecutionResult(
-                metric_execution_id=metric_execution.id,
+                metric_execution_group_id=metric_execution_group.id,
                 successful=False,
                 output_fragment="output",
                 dataset_hash="hash",
             )
             db_seeded.session.add(result)
 
-        result = invoke_cli(["executions", "inspect", str(metric_execution.id)])
+        result = invoke_cli(["executions", "inspect", str(metric_execution_group.id)])
 
         assert "Successful: False" in result.stdout
 
     def test_inspect_no_results(self, sample_data_dir, db_seeded, invoke_cli):
-        metric_execution = MetricExecution(key="key1", metric_id=1)
+        metric_execution_group = MetricExecutionGroup(dataset_key="key1", metric_id=1)
         with db_seeded.session.begin():
-            db_seeded.session.add(metric_execution)
+            db_seeded.session.add(metric_execution_group)
 
-        result = invoke_cli(["executions", "inspect", str(metric_execution.id)])
+        result = invoke_cli(["executions", "inspect", str(metric_execution_group.id)])
 
         assert "not-started" in result.stdout
 

@@ -17,40 +17,40 @@ from rich.text import Text
 from rich.tree import Tree
 
 from cmip_ref.cli._utils import df_to_table, pretty_print_df
-from cmip_ref.models import MetricExecution, MetricExecutionResult
-from cmip_ref.models.metric_execution import get_execution_and_latest_result
+from cmip_ref.models import MetricExecutionGroup, MetricExecutionResult
+from cmip_ref.models.metric_execution import get_execution_group_and_latest_result
 
 app = typer.Typer(help=__doc__)
 console = Console()
 
 
-@app.command(name="list")
-def list_(
+@app.command()
+def list_groups(
     ctx: typer.Context,
     column: Annotated[list[str] | None, typer.Option()] = None,
     limit: int = typer.Option(100, help="Limit the number of rows to display"),
 ) -> None:
     """
-    List the metric executions that have been identified
+    List the metric execution groups that have been identified
     """
     session = ctx.obj.database.session
 
-    executions = get_execution_and_latest_result(session).limit(limit).all()
-    execution_count = session.query(MetricExecution).count()
+    execution_groups_results = get_execution_group_and_latest_result(session).limit(limit).all()
+    execution_count = session.query(MetricExecutionGroup).count()
 
     results_df = pd.DataFrame(
         [
             {
-                "id": execution.id,
-                "key": execution.key,
-                "provider": execution.metric.provider.slug,
-                "metric": execution.metric.slug,
-                "dirty": execution.dirty,
+                "id": execution_groups.id,
+                "key": execution_groups.dataset_key,
+                "provider": execution_groups.metric.provider.slug,
+                "metric": execution_groups.metric.slug,
+                "dirty": execution_groups.dirty,
                 "successful": result.successful if result else None,
-                "created_at": execution.created_at,
-                "updated_at": execution.updated_at,
+                "created_at": execution_groups.created_at,
+                "updated_at": execution_groups.updated_at,
             }
-            for execution, result in executions
+            for execution_groups, result in execution_groups_results
         ]
     )
 
@@ -95,14 +95,14 @@ def walk_directory(directory: pathlib.Path, tree: Tree) -> None:
             tree.add(text_filename)
 
 
-def _execution_panel(execution: MetricExecution) -> Panel:
+def _execution_panel(execution: MetricExecutionGroup) -> Panel:
     if len(execution.results) == 0:
         result = None
     else:
         result = execution.results[-1]
 
     panel = Panel(
-        f"Key: [bold]{execution.key}[/]\n"
+        f"Key: [bold]{execution.dataset_key}[/]\n"
         f"Metric: [bold]{execution.metric.slug}[/]\n"
         f"Provider: [bold]{execution.metric.provider.slug}[/]\n"
         f"Dirty: [bold]{execution.dirty}[/]\n"
@@ -160,7 +160,7 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
     """
     config = ctx.obj.config
     session = ctx.obj.database.session
-    execution = session.get(MetricExecution, execution_id)
+    execution = session.get(MetricExecutionGroup, execution_id)
 
     if not execution:
         logger.error(f"Execution not found: {execution_id}")

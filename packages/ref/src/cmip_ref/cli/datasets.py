@@ -47,13 +47,13 @@ def list_(
         missing = set(column) - set(data_catalog.columns)
         if missing:
 
-            def format(columns: Iterable[str]) -> str:
+            def format_(columns: Iterable[str]) -> str:
                 return ", ".join(f"'{c}'" for c in sorted(columns))
 
             logger.error(
                 f"Column{'s' if len(missing) > 1 else ''} "
-                f"{format(missing)} not found in data catalog. "
-                f"Choose from: {format(data_catalog.columns)}"
+                f"{format_(missing)} not found in data catalog. "
+                f"Choose from: {format_(data_catalog.columns)}"
             )
             raise typer.Exit(code=1)
         data_catalog = data_catalog[column]

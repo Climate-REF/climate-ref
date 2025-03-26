@@ -33,7 +33,7 @@ def _format_key_exception(exc: BaseException, _: type | None) -> str | None:
         return None
 
 
-def _format_exception(exc: BaseException, type: type | None) -> str:
+def _format_exception(exc: BaseException, type: type | None) -> str:  # noqa: A002
     """Format an exception into a string description of the error.
 
     Parameters

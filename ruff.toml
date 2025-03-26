@@ -13,6 +13,7 @@ select = [
     "RUF",
     "UP",
     "S",
+    "A",
 ]
 unfixable = [
     "PD002",

@@ -351,7 +351,7 @@ def test_apply_filters_missing(apply_data_catalog):
 
 
 @pytest.mark.parametrize(
-    "input, expected",
+    "input_path, expected",
     (
         (Path("/example/test"), Path("test")),
         ("/example/test", Path("test")),
@@ -360,8 +360,8 @@ def test_apply_filters_missing(apply_data_catalog):
         (Path("test/other"), Path("test/other")),
     ),
 )
-def test_ensure_relative_path(input, expected):
-    assert ensure_relative_path(input, root_directory=Path("/example")) == expected
+def test_ensure_relative_path(input_path, expected):
+    assert ensure_relative_path(input_path, root_directory=Path("/example")) == expected
 
 
 def test_ensure_relative_path_failed():

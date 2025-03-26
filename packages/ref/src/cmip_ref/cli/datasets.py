@@ -4,6 +4,7 @@ View and ingest input datasets
 
 import errno
 import os
+from collections.abc import Iterable
 from pathlib import Path
 from typing import Annotated
 
@@ -43,8 +44,17 @@ def list_(
     data_catalog = adapter.load_catalog(database, include_files=include_files, limit=limit)
 
     if column:
-        if not all(col in data_catalog.columns for col in column):
-            logger.error(f"Column not found in data catalog: {column}")
+        missing = set(column) - set(data_catalog.columns)
+        if missing:
+
+            def format(columns: Iterable[str]) -> str:
+                return ", ".join(f"'{c}'" for c in sorted(columns))
+
+            logger.error(
+                f"Column{'s' if len(missing) > 1 else ''} "
+                f"{format(missing)} not found in data catalog. "
+                f"Choose from: {format(data_catalog.columns)}"
+            )
             raise typer.Exit(code=1)
         data_catalog = data_catalog[column]
 

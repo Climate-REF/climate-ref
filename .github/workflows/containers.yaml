@@ -49,7 +49,8 @@ jobs:
           labels: ${{ steps.metadata.outputs.labels }}
       - name: Attest to REF image
         uses: actions/attest-build-provenance@v2
+        if: ${{ ! github.event.pull_request.head.repo.fork }}
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/ref
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: ${{ ! github.event.pull_request.head.repo.fork }}
+          push-to-registry: true

@@ -43,7 +43,7 @@ jobs:
           cache-to: type=gha,mode=max
           context: .
           file: packages/ref/Dockerfile
-          push: true
+          push: ${{ ! github.event.pull_request.head.repo.fork }}
           sbom: true
           tags: ${{ steps.metadata.outputs.tags }}
           labels: ${{ steps.metadata.outputs.labels }}
@@ -52,4 +52,4 @@ jobs:
         with:
           subject-name: ghcr.io/${{ github.repository_owner }}/ref
           subject-digest: ${{ steps.push.outputs.digest }}
-          push-to-registry: true
+          push-to-registry: ${{ ! github.event.pull_request.head.repo.fork }}

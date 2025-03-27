@@ -58,6 +58,7 @@ def list_(
             raise typer.Exit(code=1)
         data_catalog = data_catalog[column]
 
+    data_catalog = data_catalog.drop_duplicates()
     pretty_print_df(data_catalog, console=console)
 
 

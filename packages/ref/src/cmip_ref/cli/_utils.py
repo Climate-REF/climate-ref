@@ -56,6 +56,9 @@ def pretty_print_df(df: pd.DataFrame, console: Console | None = None) -> None:
 
         If not provided, a new Console instance will be created
     """
+    # Drop duplicates as they are not informative to CLI users.
+    df = df.drop_duplicates()
+
     if console is None:
         console = Console()
 

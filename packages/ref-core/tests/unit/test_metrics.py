@@ -336,6 +336,40 @@ def test_apply_filters_dont_keep(apply_data_catalog):
     )
 
 
+def test_apply_filters_dont_keep_multifacet(apply_data_catalog):
+    """Test that all facet values must match to exclude a file from the catalog."""
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(
+            FacetFilter(
+                {
+                    "variable": "tas",
+                    "source_id": "CAS",
+                },
+                keep=False,
+            ),
+        ),
+        group_by=None,
+    )
+
+    filtered = requirement.apply_filters(apply_data_catalog)
+    pd.testing.assert_frame_equal(
+        filtered,
+        pd.DataFrame(
+            {
+                "variable": ["tas", "pr", "rsut", "tas"],
+                "source_id": [
+                    "CESM2",
+                    "CESM2",
+                    "CESM2",
+                    "ACCESS",
+                ],
+            },
+            index=[0, 1, 2, 3],
+        ),
+    )
+
+
 def test_apply_filters_missing(apply_data_catalog):
     requirement = DataRequirement(
         source_type=SourceDatasetType.CMIP6,

@@ -4,6 +4,7 @@ import pandas
 import xarray
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
     RequireFacets,
@@ -34,10 +35,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         "rsut",
         "tas",
     )
-    experiments = (
-        "abrupt-4xCO2",
-        "piControl",
-    )
+
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
@@ -45,24 +43,20 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                 FacetFilter(
                     facets={
                         "variable_id": variables,
-                        "experiment_id": experiments,
+                        "experiment_id": "abrupt-4xCO2",
                         "table_id": "Amon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireOverlappingTimerange(group_by=("instance_id",)),
+                AddParentDataset(),
+                RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireFacets(
                     "variable_id",
                     required_facets=variables,
                     group_by=("source_id", "member_id", "grid_label", "experiment_id"),
-                ),
-                RequireFacets(
-                    "experiment_id",
-                    required_facets=experiments,
-                    group_by=("source_id", "member_id", "grid_label", "variable_id"),
                 ),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),

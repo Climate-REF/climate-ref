@@ -4,10 +4,10 @@ import pandas
 import xarray
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
     RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -27,35 +27,36 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     slug = "transient-climate-response-emissions"
     base_recipe = "recipe_tcre.yml"
 
-    variables = (
-        "tas",
-        "fco2antt",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": variables,
-                        "experiment_id": "esm-1pctCO2",
-                        "table_id": "Amon",
-                    },
-                ),
-                FacetFilter(
-                    facets={
                         "variable_id": "tas",
-                        "experiment_id": "esm-piControl",
+                        "experiment_id": "esm-1pctCO2",
                         "table_id": "Amon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
+                AddParentDataset(),
+                AddSupplementaryDataset(
+                    supplementary_facets={
+                        "variable_id": "fco2antt",
+                        "experiment_id": "esm-1pctCO2",
+                    },
+                    matching_facets=(
+                        "source_id",
+                        "member_id",
+                        "table_id",
+                        "grid_label",
+                    ),
+                    optional_matching_facets=("version",),
+                ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets("experiment_id", ("esm-1pctCO2", "esm-piControl")),
-                RequireFacets("variable_id", variables),
+                RequireFacets("variable_id", ("tas", "fco2antt")),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),

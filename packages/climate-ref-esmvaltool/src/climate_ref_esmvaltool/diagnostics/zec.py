@@ -4,10 +4,9 @@ import pandas
 import xarray
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
-    RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -28,27 +27,22 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
     slug = "zero-emission-commitment"
     base_recipe = "recipe_zec.yml"
 
-    experiments = (
-        "1pctCO2",
-        "esm-1pct-brch-1000PgC",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": ("tas",),
-                        "experiment_id": experiments,
+                        "variable_id": "tas",
+                        "experiment_id": "esm-1pct-brch-1000PgC",
                         "table_id": "Amon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
+                AddParentDataset(),
                 RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets("experiment_id", experiments),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),

@@ -1,0 +1,34 @@
+dimensions:
+- name: model
+  long_name: model_id
+  description: ""
+  allow_extra_values: true
+  required: false
+- name: source_id
+  long_name: source_id
+  description: ""
+  allow_extra_values: true
+  required: false
+- name: metric
+  long_name: ""
+  description: ""
+  required: true
+  allow_extra_values: true
+- name: statistic
+  long_name: ""
+  description: ""
+  required: true
+  allow_extra_values: false
+  values:
+    - name: rmse
+      long_name: Root Mean Square Error
+      description: ""
+      units: dimensionless
+    - name: overall score
+      long_name: Overall Score
+      description: ""
+      units: dimensionless
+    - name: bias
+      long_name: Bias
+      description: ""
+      units: dimensionless

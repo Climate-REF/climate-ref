@@ -71,6 +71,7 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
             "branch_method",
             "branch_time_in_child",
             "branch_time_in_parent",
+            "calendar",
             "experiment",
             "experiment_id",
             "frequency",
@@ -81,7 +82,6 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
             "parent_activity_id",
             "parent_experiment_id",
             "parent_source_id",
-            "parent_time_units",
             "parent_variant_label",
             "realm",
             "product",
@@ -117,6 +117,7 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
 
             try:
                 start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
+                info["calendar"] = ds.cf["T"].attrs["calendar"]
             except (KeyError, AttributeError, ValueError):
                 ...
             if info.get("sub_experiment_id"):  # pragma: no branch

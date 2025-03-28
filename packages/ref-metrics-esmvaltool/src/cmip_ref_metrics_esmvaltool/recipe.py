@@ -113,12 +113,15 @@ def dataframe_to_recipe(files: pd.DataFrame) -> dict[str, Any]:
     return variables
 
 
-_ESMVALTOOL_VERSION = "2.11.0"
+_ESMVALTOOL_VERSION = "2.13.0.dev10+g7883d411e"
+_ESMVALTOOL_COMMIT = _ESMVALTOOL_VERSION.split("+")[1][1:]
 
 _RECIPES = pooch.create(
     path=pooch.os_cache("cmip_ref_metrics_esmvaltool"),
-    base_url="https://raw.githubusercontent.com/ESMValGroup/ESMValTool/refs/tags/v{version}/esmvaltool/recipes/",
-    version=_ESMVALTOOL_VERSION,
+    # TODO: use a released version
+    # base_url="https://raw.githubusercontent.com/ESMValGroup/ESMValTool/refs/tags/v{version}/esmvaltool/recipes/",
+    # version=_ESMVALTOOL_VERSION,
+    base_url=f"https://raw.githubusercontent.com/ESMValGroup/ESMValTool/{_ESMVALTOOL_COMMIT}/esmvaltool/recipes/",
     env="REF_METRICS_ESMVALTOOL_DATA_DIR",
 )
 _RECIPES.load_registry(importlib.resources.open_binary("cmip_ref_metrics_esmvaltool", "recipes.txt"))

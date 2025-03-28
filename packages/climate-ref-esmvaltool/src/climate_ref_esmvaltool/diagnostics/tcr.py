@@ -4,10 +4,9 @@ import pandas
 import xarray
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
-    RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -27,10 +26,6 @@ class TransientClimateResponse(ESMValToolDiagnostic):
     slug = "transient-climate-response"
     base_recipe = "recipe_tcr.yml"
 
-    experiments = (
-        "1pctCO2",
-        "piControl",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
@@ -38,17 +33,17 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 FacetFilter(
                     facets={
                         "variable_id": ("tas",),
-                        "experiment_id": experiments,
+                        "experiment_id": "1pctCO2",
                         "table_id": "Amon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireFacets("experiment_id", experiments),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
+                AddParentDataset(),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                RequireContiguousTimerange(group_by=("instance_id",)),
+                # RequireParentDataset(),  # TODO: implement
             ),
         ),
     )
@@ -81,6 +76,8 @@ class TransientClimateResponse(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "1pctCO2" and one for the "piControl"
         # experiment.
+        # TODO: replace equalize_timerange by a function that takes the offset
+        # of the parent experiment into account
         recipe_variables = dataframe_to_recipe(
             input_files[SourceDatasetType.CMIP6],
             equalize_timerange=True,

@@ -220,10 +220,8 @@ class AddSupplementaryDataset:
             values = tuple(group[facet].unique())
             supplementary_facets[facet] += values
 
-        supplementary_group = data_catalog
-        for facet, values in supplementary_facets.items():
-            mask = supplementary_group[facet].isin(values)
-            supplementary_group = supplementary_group[mask]
+        mask = data_catalog[list(supplementary_facets)].isin(supplementary_facets).all(axis="columns")
+        supplementary_group = data_catalog[mask]
         if not supplementary_group.empty:
             matching_facets = list(self.matching_facets)
             facets = matching_facets + list(self.optional_matching_facets)
@@ -500,15 +498,57 @@ class RequireOverlappingTimerange:
 
 
 @frozen
-class SelectParentExperiment:
+class AddParentDataset:
     """
-    Include a dataset's parent experiment in the selection
+    Include a dataset's parent in the selection.
     """
 
     def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
-        Include a dataset's parent experiment in the selection
+        Include a dataset's parent in the selection.
 
-        Not yet implemented
         """
-        raise NotImplementedError("This is not implemented yet")  # pragma: no cover
+        # branch_time_in_child
+        # time units
+        # calendar
+        # +
+        # branch_time_in_parent
+        # parent_time_units
+        # and parent calendar
+        #
+        # needed to compute parent timerange offset:
+        # cftime.num2date(branch_time_in_parent, parent_time_units, parent_calendar)
+
+        parent_facet_options = [
+            {
+                "source_id": "parent_source_id",
+                "experiment_id": "parent_experiment_id",
+                "variant_label": "parent_variant_label",
+                "table_id": "table_id",
+                "variable_id": "variable_id",
+                "grid_label": "grid_label",
+            },
+            # TODO: update for CMIP7
+        ]
+        for parent_facet_map in parent_facet_options:
+            # We do not have access to the SourceDatasetType so we need to
+            # figure out which parent_facets to use.
+            all_parent_facets = list(parent_facet_map) + list(parent_facet_map.values())
+            if set(all_parent_facets).issubset(data_catalog.keys()):
+                break
+        else:
+            # No matching parent_facets
+            return group
+
+        # TODO: select files based on start_time, end_time
+
+        datasets = group[all_parent_facets].drop_duplicates().dropna(axis="columns")
+        parent_datasets = []
+        for dataset in datasets.to_dict(orient="records"):
+            parent_facets = {k: (dataset[v],) for k, v in parent_facet_map.items()}
+            select = data_catalog[list(parent_facets)].isin(parent_facets).all(axis="columns")
+            parent_dataset = data_catalog[select]
+            parent_dataset = parent_dataset[parent_dataset["version"] == parent_dataset["version"].max()]
+            parent_datasets.append(parent_dataset)
+
+        return pd.concat([group, *parent_datasets]).drop_duplicates()

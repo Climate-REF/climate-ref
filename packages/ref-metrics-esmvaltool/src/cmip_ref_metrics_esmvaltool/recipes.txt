@@ -1,3 +1,4 @@
 examples/recipe_python.yml ab3f06d269bb2c1368f4dc39da9bcb232fb2adb1fa556ba769e6c16294ffb4a3
 recipe_ecs.yml             0cc57034fcb64e32015b4ff949ece5df8cdb8c6f493618b50ceded119fb37918
 recipe_tcr.yml             35f9ef035a4e71aff5cac5dd26c49da2162fc00291bf3b0bd16b661b7b2f606b
+recipe_zec.yml             b0af7f789b7610ab3f29a6617124aa40c40866ead958204fc199eaf82863de51

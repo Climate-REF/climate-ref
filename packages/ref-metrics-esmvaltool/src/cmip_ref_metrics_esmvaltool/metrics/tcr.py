@@ -4,10 +4,9 @@ import pandas
 import xarray
 
 from cmip_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
-    RequireFacets,
-    RequireOverlappingTimerange,
 )
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement
@@ -25,27 +24,23 @@ class TransientClimateResponse(ESMValToolMetric):
     slug = "esmvaltool-transient-climate-response"
     base_recipe = "recipe_tcr.yml"
 
-    experiments = (
-        "1pctCO2",
-        "piControl",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": ("tas",),
-                        "experiment_id": experiments,
+                        "variable_id": "tas",
+                        "experiment_id": "1pctCO2",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireFacets("experiment_id", experiments),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
+                AddParentDataset(),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                RequireContiguousTimerange(group_by=("instance_id",)),
+                # RequireParentDataset(),  # TODO: implement
             ),
         ),
     )
@@ -78,6 +73,7 @@ class TransientClimateResponse(ESMValToolMetric):
         recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
 
         # Select a timerange covered by all datasets.
+        # TODO: replace this by a function that takes into account the offset of the parent experiment
         start_times, end_times = [], []
         for variable in recipe_variables.values():
             for dataset in variable["additional_datasets"]:

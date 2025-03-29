@@ -4,7 +4,7 @@ from cmip_ref.models import Dataset, MetricExecutionGroup
 
 def test_solve(sample_data_dir, cmip6_data_catalog, config, invoke_cli, monkeypatch):
     num_expected_datasets = cmip6_data_catalog["instance_id"].nunique()
-    num_expected_metrics = 9
+    num_expected_metrics = 11
 
     db = Database.from_config(config)
     invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir / "CMIP6")])

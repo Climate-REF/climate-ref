@@ -12,8 +12,10 @@
 │                                                                              │
 │   id   slug                                        dataset_type              │
 │  ──────────────────────────────────────────────────────────────────────────  │
-│   1    CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r…   SourceDatasetType.CMIP6   │
-│   2    CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r…   SourceDatasetType.CMIP6   │
+│   1    CMIP6.C4MIP                                 SourceDatasetType.CMIP6   │
+│        CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch…                             │
+│   2    CMIP6.C4MIP                                 SourceDatasetType.CMIP6   │
+│        CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch…                             │
 │                                                                              │
 ╰──────────────────────────────────────────────────────────────────────────────╯
 ╭───────────────────────────────── File Tree ──────────────────────────────────╮

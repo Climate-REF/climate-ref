@@ -52,7 +52,12 @@ def cmip6_data_catalog(sample_data_dir) -> pd.DataFrame:
 @pytest.fixture(scope="session")
 def obs4mips_data_catalog(sample_data_dir) -> pd.DataFrame:
     adapter = Obs4MIPsDatasetAdapter()
-    return adapter.find_local_datasets(sample_data_dir / "obs4MIPs")
+    return pd.concat(
+        [
+            adapter.find_local_datasets(sample_data_dir / "obs4MIPs"),
+            adapter.find_local_datasets(sample_data_dir / "obs4REF"),
+        ]
+    )
 
 
 @pytest.fixture(autouse=True)

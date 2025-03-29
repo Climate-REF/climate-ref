@@ -132,6 +132,7 @@ test-quick: clean  ## run all the tests at once
 	# It doesn't execute each test using the target package as above
 	uv run \
 		pytest tests packages \
+		-m "not slow" \
 		-r a -v  --cov-report=term
 
 # Note on code coverage and testing:

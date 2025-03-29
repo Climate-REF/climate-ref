@@ -18,7 +18,7 @@ class TestDatasetsList:
         assert "experi…" in result.stdout
 
     def test_list_limit(self, db_seeded, invoke_cli):
-        result = invoke_cli(["datasets", "list", "--limit", "1", "--column", "instance_id"])
+        result = invoke_cli(["datasets", "list", "--limit", "1", "--column", "variable_id"])
         assert len(result.stdout.strip().split("\n")) == 3  # header + spacer + 1 row
 
     def test_list_column(self, db_seeded, invoke_cli):

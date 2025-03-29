@@ -103,7 +103,7 @@ def test_celery_solving(db_seeded, config, celery_worker, redis_container, monke
     results = db_seeded.session.query(MetricExecutionResult).all()
     assert len(results)
     for result in results:
-        assert result.successful
+        assert result.successful, result.key
         assert (config.paths.results / result.output_fragment / result.path).exists()
 
     # Attempt to avoid a flakey outcome where the celery tasks aren't cleaned up properly

@@ -108,12 +108,11 @@ class Testobs4MIPsAdapter:
         # The order of the rows may be flakey due to sqlite ordering and the created time resolution
         catalog_regression(df.sort_values(["instance_id", "start_time"]), basename="obs4mips_catalog_db")
 
-    def test_round_trip(self, db_seeded, sample_data_dir):
+    def test_round_trip(self, db_seeded, obs4mips_data_catalog, sample_data_dir):
         # Indexes and ordering may be different
         adapter = Obs4MIPsDatasetAdapter()
         local_data_catalog = (
-            adapter.find_local_datasets(str(sample_data_dir) + "/obs4MIPs")
-            .drop(columns=["time_range"])
+            obs4mips_data_catalog.drop(columns=["time_range"])
             .sort_values(["start_time"])
             .reset_index(drop=True)
         )

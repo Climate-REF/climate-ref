@@ -66,7 +66,8 @@ def test_solve_ar7_ft(
 
     # Solve
     # This will also create conda environments for the metric providers
-    invoke_cli(["--verbose", "solve", "--timeout", f"{60 * 60}"])
+    # We always log the std out and stderr from the command as it is useful for debugging
+    invoke_cli(["--verbose", "solve", "--timeout", f"{60 * 60}"], always_log=True)
 
     execution_groups = db.session.query(MetricExecutionGroup).all()
     df = create_execution_dataframe(execution_groups)

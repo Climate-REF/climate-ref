@@ -3,12 +3,13 @@ Testing utilities
 """
 
 import importlib.resources
-import os
 import shutil
 from pathlib import Path
 
 import pooch
 from loguru import logger
+
+from cmip_ref.dataset_registry import fetch_all_files
 
 
 def _determine_test_directory() -> Path | None:
@@ -68,7 +69,7 @@ def fetch_sample_data(
         logger.warning("Test data directory not found, skipping sample data fetch")
         return
 
-    sample_registry = _build_sample_data_registry(version)
+    sample_data_registry = _build_sample_data_registry(version)
 
     output_dir = TEST_DATA_DIR / "sample-data"
     version_file = output_dir / "version.txt"
@@ -83,21 +84,7 @@ def fetch_sample_data(
             logger.warning("Removing existing sample data")
             shutil.rmtree(output_dir)
 
-    output_dir.mkdir(parents=True, exist_ok=True)
-
-    for key in sample_registry.registry.keys():
-        fetch_file = sample_registry.fetch(key)
-
-        linked_file = output_dir / key
-        linked_file.parent.mkdir(parents=True, exist_ok=True)
-        if not linked_file.exists():  # pragma: no cover
-            if symlink:
-                logger.info(f"Linking {key} to {linked_file}")
-
-                os.symlink(fetch_file, linked_file)
-            else:
-                logger.info(f"Copying {key} to {linked_file}")
-                shutil.copy(fetch_file, linked_file)
+    fetch_all_files(sample_data_registry, output_dir, symlink)
 
     # Write out the current sample data version to the copying as complete
     with open(output_dir / "version.txt", "w") as fh:

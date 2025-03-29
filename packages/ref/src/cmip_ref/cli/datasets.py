@@ -4,6 +4,7 @@ View and ingest input datasets
 
 import errno
 import os
+import shutil
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Annotated
@@ -13,6 +14,7 @@ from loguru import logger
 from rich.console import Console
 
 from cmip_ref.cli._utils import pretty_print_df
+from cmip_ref.dataset_registry import build_reference_data_registry, fetch_all_files
 from cmip_ref.datasets import get_dataset_adapter
 from cmip_ref.models import Dataset
 from cmip_ref.solver import solve_metrics
@@ -149,21 +151,44 @@ def ingest(  # noqa: PLR0913
 
 @app.command(name="fetch-sample-data")
 def _fetch_sample_data(
-    version: str = SAMPLE_DATA_VERSION, force_cleanup: bool = False, symlink: bool = False
+    version: Annotated[
+        str,
+        "The version tag of the sample data to fetch. "
+        "Defaults to the current version of data expected by the test suite",
+    ] = SAMPLE_DATA_VERSION,
+    force_cleanup: Annotated[bool, typer.Option(help="If True, remove any existing files")] = False,
+    symlink: Annotated[
+        bool, typer.Option(help="If True, symlink files into the output directory, otherwise perform a copy")
+    ] = False,
 ) -> None:
     """
     Fetch the sample data for the given version.
 
-    Parameters
-    ----------
-    version
-        The version tag of the sample data to fetch.
-
-        Defaults to the current version of data expected by the test suite
-    force_cleanup
-        If True, remove any existing files.
-    symlink : bool
-        If True, symlink in the data otherwise copy the files.
+    These data will be written into the test data directory.
+    This operation may fail if the test data directory does not exist,
+    as is the case for non-source-based installations.
     """
     logger.info(f"Fetching data for version {version}")
     fetch_sample_data(version=version, force_cleanup=force_cleanup, symlink=symlink)
+
+
+@app.command(name="fetch-obs4ref-data")
+def fetch_obs4ref_data(
+    output_directory: Annotated[Path, typer.Option(help="Output directory where files will be saved")],
+    force_cleanup: Annotated[bool, typer.Option(help="If True, remove any existing files")] = False,
+    symlink: Annotated[
+        bool, typer.Option(help="If True, symlink files into the output directory, otherwise perform a copy")
+    ] = False,
+) -> None:
+    """
+    Fetch non-published Obs4MIPs data that is used by the REF
+
+    These datasets have been verified to have open licenses
+    and are in the process of being added to Obs4MIPs.
+    """
+    if force_cleanup and output_directory.exists():
+        logger.warning(f"Removing existing directory {output_directory}")
+        shutil.rmtree(output_directory)
+
+    data_registry = build_reference_data_registry()
+    fetch_all_files(data_registry, output_directory, symlink=symlink)

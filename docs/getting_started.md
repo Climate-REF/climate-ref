@@ -40,7 +40,7 @@ $ uv run ref
 
 This provides the ability to:
 
-* **Ingest** new input datasetes
+* **Ingest** new input datasets
 * **Solve** for the unique metrics executions that are required
 * **Execute** the metrics either locally or remotely
 

@@ -1,5 +1,8 @@
+import logging
 from pathlib import Path
 from typing import IO, Any
+
+def get_logger() -> logging.Logger: ...
 
 class Pooch:
     registry: dict[str, dict[str, str]]

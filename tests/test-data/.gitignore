@@ -1,2 +1,5 @@
 # Regenerated using `make fetch-test-data`
 sample-data
+
+# Local location for obs4REF datasets
+obs4ref

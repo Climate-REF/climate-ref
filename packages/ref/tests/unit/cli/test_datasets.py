@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import pytest
+
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from cmip_ref.models import Dataset
 from cmip_ref.models.dataset import CMIP6Dataset, CMIP6File
@@ -167,3 +169,44 @@ class TestFetchSampleData:
         )
 
         mock_fetch.assert_called_once_with(version="v0.1.0", force_cleanup=True, symlink=True)
+
+
+@pytest.fixture(scope="function")
+def mock_obs4ref(mocker):
+    mock_build_registry = mocker.patch("cmip_ref.cli.datasets.build_reference_data_registry")
+    mock_fetch = mocker.patch("cmip_ref.cli.datasets.fetch_all_files")
+
+    return mock_build_registry, mock_fetch
+
+
+class TestFetchObs4REFData:
+    def test_fetch_defaults(self, mock_obs4ref, invoke_cli, tmp_path):
+        mock_build_registry, mock_fetch = mock_obs4ref
+
+        invoke_cli(["datasets", "fetch-obs4ref-data", "--output-directory", str(tmp_path)])
+
+        mock_fetch.assert_called_once_with(mock_build_registry(), tmp_path, symlink=False)
+
+    def test_fetch_symlink(self, mock_obs4ref, invoke_cli, tmp_path):
+        mock_build_registry, mock_fetch = mock_obs4ref
+        invoke_cli(["datasets", "fetch-obs4ref-data", "--output-directory", str(tmp_path), "--symlink"])
+
+        mock_fetch.assert_called_once_with(mock_build_registry(), tmp_path, symlink=True)
+
+    def test_fetch_force_cleanup(self, mock_obs4ref, invoke_cli, tmp_path):
+        assert tmp_path.exists()
+
+        invoke_cli(["datasets", "fetch-obs4ref-data", "--output-directory", str(tmp_path), "--force-cleanup"])
+
+        assert not tmp_path.exists()
+
+    def test_fetch_force_cleanup_missing(self, mock_obs4ref, invoke_cli, tmp_path):
+        invoke_cli(
+            [
+                "datasets",
+                "fetch-obs4ref-data",
+                "--output-directory",
+                str(tmp_path / "missing"),
+                "--force-cleanup",
+            ]
+        )

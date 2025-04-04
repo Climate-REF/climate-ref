@@ -39,6 +39,30 @@ def extract_attr_with_regex(
         return None
 
 
+def parse_citation_metadata(info: dict[str, Any | None], ds: xr.Dataset) -> dict[str, Any | None]:
+    """Parser for doi and tracking_id"""
+    try:
+        info["tracking_id"] = ds.attrs["tracking_id"]
+
+    except (KeyError, AttributeError, ValueError):
+        ...
+
+    try:
+        info["doi"] = ds.attrs["doi"]
+    except (KeyError, AttributeError, ValueError):
+        info["doi"] = None
+    try:
+        info["references"] = ds.attrs["references"]
+    except (KeyError, AttributeError, ValueError):
+        info["references"] = None
+    if info["doi"] is None and info["references"] is not None:
+        doi_pattern = r"10.\d{4,9}/[-._;()/:A-Z0-9]+"
+        dois = re.findall(doi_pattern, info["references"], re.IGNORECASE)
+        if dois:
+            info["doi"] = dois[0]
+    return info
+
+
 def parse_obs4mips(file: str) -> dict[str, Any | None]:
     """Parser for obs4mips"""
     keys = sorted(
@@ -92,6 +116,7 @@ def parse_obs4mips(file: str) -> dict[str, Any | None]:
                 start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
             except (KeyError, AttributeError, ValueError):
                 ...
+            info = parse_citation_metadata(info, ds)
 
             info["vertical_levels"] = vertical_levels
             info["start_time"] = start_time
@@ -111,7 +136,7 @@ def parse_obs4mips(file: str) -> dict[str, Any | None]:
 
     except (TypeError, AttributeError) as err:
         if (len(err.args)) == 1:
-            logger.warning(str(err.args[0]))
+            logger.warning(str(file + " " + err.args[0]))
         else:
             logger.warning(str(err.args))
         return {"INVALID_ASSET": file, "TRACEBACK": traceback_message}
@@ -145,6 +170,9 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         "units",
         "vertical_levels",
         "source_version_number",
+        "doi",
+        "references",
+        "tracking_id",
         slug_column,
     )
 
@@ -178,6 +206,8 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
                 "variable_id",
                 "grid_label",
                 "source_version_number",
+                "doi",
+                "tracking_id",
             ]
         ]
 

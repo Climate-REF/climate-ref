@@ -1,4 +1,5 @@
 import pathlib
+import shutil
 
 import pytest
 from sqlalchemy.orm import Session
@@ -40,11 +41,22 @@ def mock_execution_result(mocker):
     return mock_result
 
 
-def test_handle_execution_result_successful(db, config, mock_execution_result, mocker, definition_factory):
-    metric_bundle_filename = pathlib.Path("bundle.zip")
+def test_handle_execution_result_successful(  # noqa: PLR0913
+    db, config, mock_execution_result, mocker, definition_factory, test_data_dir
+):
+    metric_bundle_filename = pathlib.Path("bundle.json")
+    definition = definition_factory()
     result = MetricExecutionResult(
-        definition=definition_factory(), successful=True, metric_bundle_filename=metric_bundle_filename
+        definition=definition, successful=True, metric_bundle_filename=metric_bundle_filename
     )
+
+    # Copy a sample metric bundle to the output directory
+    definition.output_directory.mkdir(parents=True, exist_ok=True)
+    shutil.copy(
+        test_data_dir / "cmec-output" / "pr_v3-LR_0101_1x1_esmf_metrics_default_v20241023_cmec.json",
+        definition.to_output_path(metric_bundle_filename),
+    )
+
     mock_copy = mocker.patch("cmip_ref.executor._copy_file_to_results")
 
     handle_execution_result(config, db, mock_execution_result, result)

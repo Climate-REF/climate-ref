@@ -1,6 +1,7 @@
 import datetime
+from typing import Any
 
-from sqlalchemy import func
+from sqlalchemy import JSON, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -9,7 +10,9 @@ class Base(DeclarativeBase):
     Base class for all models
     """
 
-    pass
+    type_annotation_map = {  # noqa: RUF012
+        dict[str, Any]: JSON,
+    }
 
 
 class CreatedUpdatedMixin:

@@ -116,8 +116,9 @@ filename = "sqlite://cmip_ref.db"
 
         assert (tmp_path / "ref.toml").exists()
 
-    def test_defaults(self, monkeypatch):
+    def test_defaults(self, monkeypatch, mocker):
         monkeypatch.setenv("REF_CONFIGURATION", "test")
+        mocker.patch("cmip_ref.config.importlib.resources.files", return_value=Path("pycmec"))
 
         cfg = Config.load(Path("test.toml"))
 
@@ -153,6 +154,7 @@ filename = "sqlite://cmip_ref.db"
                 "results": "test/results",
                 "scratch": "test/scratch",
                 "software": "test/software",
+                "dimensions_cv": str(Path("pycmec") / "cv_cmip_ar7ft.yaml"),
             },
             "db": {"database_url": "sqlite:///test/db/cmip_ref.db", "run_migrations": True},
         }

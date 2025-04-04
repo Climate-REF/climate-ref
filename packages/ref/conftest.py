@@ -1,3 +1,4 @@
+import importlib.resources
 import shutil
 from pathlib import Path
 from urllib import parse as urlparse
@@ -12,7 +13,9 @@ from cmip_ref.config import Config
 from cmip_ref.database import Database
 from cmip_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from cmip_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+from cmip_ref.models.metric_value import MetricValue
 from cmip_ref.provider_registry import _register_provider
+from cmip_ref_core.pycmec.controlled_vocabulary import CV
 
 # Ignore the alembic folder
 collect_ignore = ["src/cmip_ref/migrations"]
@@ -40,7 +43,19 @@ def db(config) -> Database:
 
 
 @pytest.fixture(scope="session")
-def db_seeded_template(tmp_path_session, cmip6_data_catalog, obs4mips_data_catalog) -> Path:
+def ar7_ft_cv() -> CV:
+    cv_file = str(importlib.resources.files("cmip_ref_core.pycmec") / "cv_cmip_ar7ft.yaml")
+
+    return CV.load_from_file(cv_file)
+
+
+@pytest.fixture(scope="session")
+def prepare_db(ar7_ft_cv):
+    MetricValue.register_cv_dimensions(ar7_ft_cv)
+
+
+@pytest.fixture(scope="session")
+def db_seeded_template(tmp_path_session, cmip6_data_catalog, obs4mips_data_catalog, prepare_db) -> Path:
     template_db_path = tmp_path_session / "cmip_ref_template_seeded.db"
 
     config = Config.default()  # This is just dummy config

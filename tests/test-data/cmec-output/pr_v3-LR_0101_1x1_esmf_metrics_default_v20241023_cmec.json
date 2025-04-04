@@ -1,49 +1,47 @@
 {
     "DIMENSIONS": {
-        "dimensions": {
-            "model": {
-                "v3-LR": {}
-            },
-            "reference": {
-                "default": {}
-            },
-            "rip": {
-                "0101": {}
-            },
-            "region": {
-                "global": {},
-                "ocean": {},
-                "land": {},
-                "NHEX": {},
-                "SHEX": {},
-                "TROPICS": {}
-            },
-            "statistic": {
-                "bias_xy": {},
-                "cor_xy": {},
-                "mae_xy": {},
-                "mean-obs_xy": {},
-                "mean_xy": {},
-                "rms_devzm": {},
-                "rms_xy": {},
-                "rms_xyt": {},
-                "rms_y": {},
-                "rmsc_xy": {},
-                "std-obs_xy": {},
-                "std-obs_xy_devzm": {},
-                "std-obs_xyt": {},
-                "std_xy": {},
-                "std_xy_devzm": {},
-                "std_xyt": {}
-            },
-            "season": {
-                "ann": {},
-                "djf": {},
-                "mam": {},
-                "jja": {},
-                "son": {},
-                "CalendarMonths": {}
-            }
+        "model": {
+            "v3-LR": {}
+        },
+        "reference": {
+            "default": {}
+        },
+        "rip": {
+            "0101": {}
+        },
+        "region": {
+            "global": {},
+            "ocean": {},
+            "land": {},
+            "NHEX": {},
+            "SHEX": {},
+            "TROPICS": {}
+        },
+        "statistic": {
+            "bias_xy": {},
+            "cor_xy": {},
+            "mae_xy": {},
+            "mean-obs_xy": {},
+            "mean_xy": {},
+            "rms_devzm": {},
+            "rms_xy": {},
+            "rms_xyt": {},
+            "rms_y": {},
+            "rmsc_xy": {},
+            "std-obs_xy": {},
+            "std-obs_xy_devzm": {},
+            "std-obs_xyt": {},
+            "std_xy": {},
+            "std_xy_devzm": {},
+            "std_xyt": {}
+        },
+        "season": {
+            "ann": {},
+            "djf": {},
+            "mam": {},
+            "jja": {},
+            "son": {},
+            "CalendarMonths": {}
         },
         "json_structure": [
             "model",

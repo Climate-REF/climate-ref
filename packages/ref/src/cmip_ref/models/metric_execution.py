@@ -14,6 +14,7 @@ from cmip_ref_core.datasets import MetricDataset
 if TYPE_CHECKING:
     from cmip_ref.database import Database
     from cmip_ref.models.metric import Metric
+    from cmip_ref.models.metric_value import MetricValue
 
 
 class MetricExecutionGroup(CreatedUpdatedMixin, Base):
@@ -155,6 +156,7 @@ class MetricExecutionResult(CreatedUpdatedMixin, Base):
 
     metric_execution_group: Mapped["MetricExecutionGroup"] = relationship(back_populates="results")
     outputs: Mapped[list["ResultOutput"]] = relationship(back_populates="metric_execution_result")
+    values: Mapped[list["MetricValue"]] = relationship(back_populates="metric_execution_result")
 
     datasets: Mapped[list[Dataset]] = relationship(secondary=metric_datasets)
 

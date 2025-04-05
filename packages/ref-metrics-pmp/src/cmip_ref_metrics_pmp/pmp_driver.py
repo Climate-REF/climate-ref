@@ -4,6 +4,8 @@ import json
 import pathlib
 from typing import Any
 
+from loguru import logger
+
 from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput
 
@@ -134,16 +136,9 @@ def _get_resource(package: str, resource_name: str | pathlib.Path, use_resources
     return str(resource_path)
 
 
-def build_pmp_command(  # noqa: PLR0913
+def build_pmp_command(
     driver_file: str,
     parameter_file: str,
-    model_files: list[str] | str,
-    reference_name: str,
-    reference_paths: list[str] | str,
-    source_id: str,
-    experiment_id: str,
-    member_id: str,
-    output_directory_path: str,
     **kwargs: dict[str, str | int | float | list[str]],
 ) -> list[str]:
     """
@@ -158,26 +153,8 @@ def build_pmp_command(  # noqa: PLR0913
     ----------
     driver_file
         Filename of the PMP driver script to run
-
-        Relative to the pcmdi_metrics package.
     parameter_file
         Filename of the parameter file to use
-
-        Relative to the cmip_ref_metrics_pmp.params package.
-    model_files
-        A list of model files to evaluate
-
-        Currently, we only support a single model file.
-    reference_name
-        Name of the reference dataset to use
-    reference_paths
-        Path to the reference dataset
-    source_id
-        Source ID of the model data
-    member_id
-        Member ID of the model data
-    output_directory_path
-        Output data where all the results are stored
     kwargs
         Additional arguments to pass to the driver script
     """
@@ -185,51 +162,24 @@ def build_pmp_command(  # noqa: PLR0913
     _driver_script = _get_resource("pcmdi_metrics", driver_file, use_resources=False)
     _parameter_file = _get_resource("cmip_ref_metrics_pmp.params", parameter_file, use_resources=True)
 
-    if isinstance(model_files, list):
-        modpath = " ".join([str(p) for p in model_files])
-    else:
-        modpath = model_files
-
-    if isinstance(reference_paths, list):
-        reference_data_path = " ".join([str(p) for p in reference_paths])
-    else:
-        reference_data_path = reference_paths
-
-    if len(model_files) != 1:
-        # Have some logic to replace the dates in the filename with a wildcard
-        raise NotImplementedError("Only one model file is supported at this time.")
-
     # Run the driver script inside the PMP conda environment
     cmd = [
         "python",
         _driver_script,
         "-p",
         _parameter_file,
-        "--modnames",
-        source_id,
-        "--exp",
-        experiment_id,
-        "--realization",
-        member_id,
-        "--modpath",
-        modpath,
-        "--reference_data_path",
-        reference_data_path,
-        "--reference_data_name",
-        reference_name,
-        "--results_dir",
-        output_directory_path,
-        "--cmec",
-        "--no_provenance",
     ]
 
     # Loop through additional arguments if they exist
     if kwargs:  # pragma: no cover
-        print("Additional info:")
         for key, value in kwargs.items():
-            print(f"  {key}: {value}")
-            cmd.extend([f"--{key}", str(value)])
+            if value:
+                cmd.extend([f"--{key}", str(value)])
+            else:
+                cmd.extend([f"--{key}"])
 
-    print("[PMP] Command to run:", " ".join(map(str, cmd)))
+    logger.info("-- PMP command to run --")
+    logger.info("[PMP] Command to run:", " ".join(map(str, cmd)))
+    logger.info("[PMP] Command generation for the driver completed.")
 
     return cmd

@@ -60,8 +60,14 @@ def upgrade() -> None:
             "fk_metric_execution_result_metric_execution_id_metric_execution", type_="foreignkey"
         )
         batch_op.alter_column("metric_execution_id", new_column_name="metric_execution_group_id")
+
+        fk = "fk_metric_execution_result_metric_execution_group_id_metric_execution_group"
+        if batch_op.get_context().dialect.name == "postgresql":
+            # Postgres doesn't support identifier with a length > 63 chars.
+            # This is a workaround to avoid the error
+            fk = "fk_metric_execution_result_group_id"
         batch_op.create_foreign_key(
-            "fk_metric_execution_result_metric_execution_group_id_metric_execution_group",
+            fk,
             "metric_execution_group",
             ["metric_execution_group_id"],
             ["id"],

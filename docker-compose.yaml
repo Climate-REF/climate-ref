@@ -8,6 +8,14 @@ services:
     restart: always
     ports:
       - "6379:6379"
+  postgres:
+    image: postgres:17
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: example
+    ports:
+      - "5432:5432"
   flower:
     image: mher/flower
     restart: always
@@ -30,10 +38,9 @@ services:
       dockerfile: packages/ref/Dockerfile
       platforms:
         - linux/amd64
-    command: celery start-worker
+    command: ref celery start-worker
     volumes:
       - ./tests/test-data/sample-data:/ref/data
-      - ./results:/ref/results
       - ref:/ref
   # Worker to run the example metrics
   metrics-example:
@@ -41,7 +48,7 @@ services:
     restart: always
     environment:
       - CELERY_BROKER_URL=redis://redis:6379/1
-    command: celery start-worker --package cmip-ref-metrics-example
+    command: ref celery start-worker --package cmip_ref_metrics_example
     volumes:
       - ./tests/test-data/sample-data:/ref/data
       - ref:/ref

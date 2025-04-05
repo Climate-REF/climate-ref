@@ -63,6 +63,7 @@ def test_solve_ar7_ft(
     # Ingest the sample data
     invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir / "CMIP6")])
     invoke_cli(["datasets", "ingest", "--source-type", "obs4mips", str(sample_data_dir / "obs4MIPs")])
+    invoke_cli(["datasets", "ingest", "--source-type", "obs4mips", str(sample_data_dir / "obs4REF")])
 
     # Solve
     # This will also create conda environments for the metric providers
@@ -75,7 +76,7 @@ def test_solve_ar7_ft(
 
     # Check that all 3 metric providers have been used
     # TODO: Update once the PMP metrics are solving
-    assert set(df["provider"].unique()) == {"esmvaltool", "ilamb"}
+    assert set(df["provider"].unique()) == {"esmvaltool", "ilamb", "pmp"}
 
     # Check that all metrics have been successful
     assert df["successful"].all(), df[["metric", "successful"]]

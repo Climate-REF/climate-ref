@@ -108,13 +108,13 @@ test-metrics-pmp:  ## run the tests
 .PHONY: test-integration
 test-integration:  ## run the integration tests
 	uv run \
-		pytest tests -m "not slow" \
+		pytest tests \
 		-r a -v
 
 .PHONY: test-integration-slow
 test-integration-slow:  ## run the integration tests, including the slow tests which may take a while
 	uv run \
-		pytest tests \
+		pytest tests --slow \
 		-r a -v
 
 .PHONY: test-metrics-packages
@@ -132,7 +132,6 @@ test-quick: clean  ## run all the tests at once
 	# It doesn't execute each test using the target package as above
 	uv run \
 		pytest tests packages \
-		-m "not slow" \
 		-r a -v  --cov-report=term
 
 # Note on code coverage and testing:

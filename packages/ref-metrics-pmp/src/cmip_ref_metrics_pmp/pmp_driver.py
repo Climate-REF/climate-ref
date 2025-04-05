@@ -4,6 +4,9 @@ import json
 import pathlib
 from typing import Any
 
+from loguru import logger
+from rich.pretty import pretty_repr
+
 from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput
 
@@ -50,8 +53,6 @@ def process_json_result(
     -------
         tuple of CMEC output and metric bundles
     """
-    print("process_json_result called with:", json_filename, png_files, data_files)
-
     with open(json_filename) as fh:
         json_result = json.load(fh)
 
@@ -95,7 +96,8 @@ def process_json_result(
     if "provenance" in json_result:  # pragma: no branch
         cmec_metric["provenance"] = json_result["provenance"]
 
-    print("process_json_result returning:", cmec_output, cmec_metric)
+    logger.info(f"cmec_output: {pretty_repr(cmec_output)}")
+    logger.info(f"cmec_metric: {pretty_repr(cmec_metric)}")
 
     return CMECOutput(**cmec_output), CMECMetric(**cmec_metric)
 
@@ -225,11 +227,9 @@ def build_pmp_command(  # noqa: PLR0913
 
     # Loop through additional arguments if they exist
     if kwargs:  # pragma: no cover
-        print("Additional info:")
         for key, value in kwargs.items():
-            print(f"  {key}: {value}")
             cmd.extend([f"--{key}", str(value)])
 
-    print("[PMP] Command to run:", " ".join(map(str, cmd)))
+    logger.info(f"pmp command to run: {cmd}")
 
     return cmd

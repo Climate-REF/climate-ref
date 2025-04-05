@@ -1,5 +1,7 @@
 from collections.abc import Iterable
 
+from loguru import logger
+
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import (
     CommandLineMetric,
@@ -14,6 +16,9 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
     """
     Calculate the annual cycle for a dataset
     """
+
+    ts_modes = ("PDO", "NPGO", "AMO")
+    psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
     def __init__(self, mode_id: str):
         self.mode_id = mode_id.upper()
@@ -55,17 +60,17 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
                 ),
             )
 
-        if self.mode_id in ["PDO", "NPGO", "AMO"]:
+        if self.mode_id in self.ts_modes:
             self.parameter_file = "pmp_param_MoV-ts.py"
             self.data_requirements = get_data_requirements(
                 "HadISST-1-1", "ts", "ts", remove_experiments=("amip",)
             )
-        elif self.mode_id in ["NAO", "NAM", "PNA", "NPO", "SAM"]:
+        elif self.mode_id in self.psl_modes:
             self.parameter_file = "pmp_param_MoV-psl.py"
             self.data_requirements = get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
         else:
             raise ValueError(
-                f"Unknown mode_id '{self.mode_id}'. Must be one of PDO, NPGO, AMO, NAO, NAM, PNA, NPO, SAM"
+                f"Unknown mode_id '{self.mode_id}'. Must be one of {self.ts_modes + self.psl_modes}"
             )
 
     def build_cmd(self, definition: MetricExecutionDefinition) -> Iterable[str]:
@@ -86,19 +91,19 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
         experiment_id = input_datasets["experiment_id"].unique()[0]
         member_id = input_datasets["member_id"].unique()[0]
 
-        print("input_datasets:", input_datasets)
-        print("source_id:", source_id)
-        print("experiment_id:", experiment_id)
-        print("member_id:", member_id)
+        logger.debug(f"input_datasets: {input_datasets}")
+        logger.debug(f"source_id: {source_id}")
+        logger.debug(f"experiment_id: {experiment_id}")
+        logger.debug(f"member_id: {member_id}")
 
         reference_dataset = definition.metric_dataset[SourceDatasetType.obs4MIPs]
         reference_dataset_name = reference_dataset["source_id"].unique()[0]
         # reference_dataset_path = reference_dataset.datasets[0]["path"]
         reference_dataset_path = reference_dataset.datasets.iloc[0]["path"]
 
-        print("reference_dataset:", reference_dataset)
-        print("reference_dataset_name:", reference_dataset_name)
-        print("reference_dataset_path:", reference_dataset_path)
+        logger.debug(f"reference_dataset: {reference_dataset}")
+        logger.debug(f"reference_dataset_name: {reference_dataset_name}")
+        logger.debug(f"reference_dataset_path: {reference_dataset_path}")
 
         params = {
             "driver_file": "variability_mode/variability_modes_driver.py",
@@ -152,14 +157,14 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
         -------
             Result of the metric execution
         """
-        print("build_metric_result start")
         results_files = list(definition.output_directory.glob("*_cmec.json"))
         if len(results_files) != 1:  # pragma: no cover
+            logger.warning(f"A single cmec output file not found: {results_files}")
             return MetricExecutionResult.build_from_failure(definition)
 
         # Find the other outputs
-        png_files = list(definition.output_directory.glob("*.png"))
-        data_files = list(definition.output_directory.glob("*.nc"))
+        png_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.png")]
+        data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
 
         cmec_output, cmec_metric = process_json_result(results_files[0], png_files, data_files)
 

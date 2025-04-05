@@ -35,5 +35,11 @@ def capture_logging() -> None:
 
     logging.basicConfig(handlers=[_InterceptHandler()], level=0, force=True)
 
+    # Disable some overly verbose logs
+    logger.disable("matplotlib.colorbar")
+    logger.disable("matplotlib.ticker")
+    logger.disable("matplotlib.font_manager")
+    logger.disable("pyproj.transformer")
+
 
 __all__ = ["capture_logging", "logger"]

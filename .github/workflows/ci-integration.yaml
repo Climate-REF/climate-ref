@@ -12,9 +12,11 @@ on:
     - cron: '2 15 * * *'
 
 jobs:
-  tests:
-    # These tests are also run on each push to main and tagged version via the `ci` workflow
-    if: github.event_name != 'push'
+  tests-slow:
+    env:
+      REF_TEST_OUTPUT: "test-outputs"
+      REF_METRICS_ILAMB_DATA_DIR: "data/ilamb"
+      PYTEST_ADDOPTS: "--slow"
     strategy:
       fail-fast: false
       matrix:
@@ -30,33 +32,17 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Run tests
-        run: |
-          make fetch-test-data
-          make test
-  tests-slow:
-    env:
-      REF_TEST_OUTPUT: "test-outputs"
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ "ubuntu-latest" ]
-        python-version: [ "3.11" ]
-    runs-on: "${{ matrix.os }}"
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
+      - name: Cache downloaded ILAMB data
+        uses: actions/cache@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          path: |
+            ${{ env.REF_METRICS_ILAMB_DATA_DIR }}
+          key: ilamb
       - name: Run tests
         run: |
           make fetch-test-data
           uv run python scripts/fetch-ilamb-data.py ilamb.txt
-          make test-integration-slow
+          make test
       # Upload the scratch and results directories as artifacts
       - name: Upload scratch artifacts
         uses: actions/upload-artifact@v4

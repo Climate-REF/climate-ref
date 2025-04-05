@@ -35,8 +35,7 @@ import prettyprinter
 from cmip_ref.config import Config
 from cmip_ref.database import Database
 from cmip_ref.datasets import get_dataset_adapter
-from cmip_ref.provider_registry import ProviderRegistry
-from cmip_ref.solver import MetricSolver
+from cmip_ref.solver import solve_metric_executions
 from cmip_ref_core.datasets import SourceDatasetType
 
 prettyprinter.install_extras(["attrs"])
@@ -91,15 +90,12 @@ data_catalog[["source_id", "variant_label", "variable_id", "experiment_id"]].dro
 # This doesn't require the use of the REF database.
 
 # %%
-solver = MetricSolver(
-    provider_registry=ProviderRegistry(provider),
+metric_executions = solve_metric_executions(
     data_catalog={
         SourceDatasetType.CMIP6: data_catalog,
     },
-)
-
-metric_executions = solver.solve_metric_executions(
-    metric=provider.get("global-mean-timeseries"), provider=provider
+    metric=provider.get("global-mean-timeseries"),
+    provider=provider,
 )
 
 # Convert from a generator to a list to inspect the complete set of results

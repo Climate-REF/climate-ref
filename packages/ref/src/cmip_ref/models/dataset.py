@@ -163,6 +163,8 @@ class Obs4MIPsDataset(Dataset):
     references: Mapped[str] = mapped_column(nullable=True)
     tracking_id: Mapped[str] = mapped_column(nullable=True)
     instance_id: Mapped[str] = mapped_column()
+    has_auxdata: Mapped[str] = mapped_column(nullable=True)
+    aux_variable_id: Mapped[str] = mapped_column(nullable=True)
     """
     Unique identifier for the dataset.
     """

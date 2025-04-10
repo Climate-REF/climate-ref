@@ -63,6 +63,24 @@ def parse_citation_metadata(info: dict[str, Any | None], ds: xr.Dataset) -> dict
     return info
 
 
+def parse_uncertainty(info: dict[str, Any | None], ds: xr.Dataset) -> dict[str, Any | None]:
+    """Parser for uncertainty information"""
+    if "has_auxdata" in ds.attrs:
+        info["has_auxdata"] = ds.attrs["has_auxdata"]
+    else:
+        info["has_auxdata"] = "False"
+
+    if info["has_auxdata"] is True:
+        try:
+            info["aux_variable_id"] = ds.attrs["aux_variable_id"]
+        except (KeyError, AttributeError, ValueError):
+            info["has_auxdata"] = "False"
+            info["aux_variable_id"] = None
+    else:
+        info["aux_variable_id"] = None
+    return info
+
+
 def parse_obs4mips(file: str) -> dict[str, Any | None]:
     """Parser for obs4mips"""
     keys = sorted(
@@ -117,7 +135,7 @@ def parse_obs4mips(file: str) -> dict[str, Any | None]:
             except (KeyError, AttributeError, ValueError):
                 ...
             info = parse_citation_metadata(info, ds)
-
+            info = parse_uncertainty(info, ds)
             info["vertical_levels"] = vertical_levels
             info["start_time"] = start_time
             info["end_time"] = end_time
@@ -208,6 +226,8 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
                 "source_version_number",
                 "doi",
                 "tracking_id",
+                "has_auxdata",
+                "aux_variable_id",
             ]
         ]
 

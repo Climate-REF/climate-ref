@@ -1,6 +1,7 @@
 import datetime
+from typing import Any
 
-from sqlalchemy import MetaData, func
+from sqlalchemy import JSON, MetaData, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
@@ -9,6 +10,9 @@ class Base(DeclarativeBase):
     Base class for all models
     """
 
+    type_annotation_map = {  # noqa: RUF012
+        dict[str, Any]: JSON,
+    }
     metadata = MetaData(
         # Enforce a common naming convention for constraints
         # https://alembic.sqlalchemy.org/en/latest/naming.html

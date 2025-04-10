@@ -1,9 +1,12 @@
 import pytest
 import sqlalchemy
+from sqlalchemy import inspect
 
 from cmip_ref.database import Database, validate_database_url
+from cmip_ref.models import MetricValue
 from cmip_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
 from cmip_ref_core.datasets import SourceDatasetType
+from cmip_ref_core.pycmec.controlled_vocabulary import CV
 
 
 @pytest.mark.parametrize(
@@ -115,3 +118,23 @@ def test_database_invalid_url(config, monkeypatch):
 
     with pytest.raises(sqlalchemy.exc.OperationalError):
         Database.from_config(config, run_migrations=True)
+
+
+def test_database_cvs(config, mocker):
+    cv = CV.load_from_file(config.paths.dimensions_cv)
+
+    mock_register_cv = mocker.patch.object(MetricValue, "register_cv_dimensions")
+    mock_cv = mocker.patch.object(CV, "load_from_file", return_value=cv)
+
+    db = Database.from_config(config, run_migrations=True)
+
+    # CV is loaded once during a migration and once when registering
+    assert mock_cv.call_count == 2
+    mock_cv.assert_called_with(config.paths.dimensions_cv)
+    mock_register_cv.assert_called_once_with(mock_cv.return_value)
+
+    # Verify that the dimensions have automatically been created
+    inspector = inspect(db._engine)
+    existing_columns = [c["name"] for c in inspector.get_columns("metric_value")]
+    for dimension in cv.dimensions:
+        assert dimension.name in existing_columns

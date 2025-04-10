@@ -14,6 +14,7 @@ which always take precedence over any other configuration values.
 # `esgpull` configuration management system with some of the extra complexity removed.
 # https://github.com/ESGF/esgf-download/blob/main/esgpull/config.py
 
+import importlib.resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -115,6 +116,18 @@ class PathConfig:
     Path to store the results of the metrics
     """
 
+    dimensions_cv: Path = env_field(name="DIMENSIONS_CV_PATH", converter=Path)
+    """
+    Path to a file containing the controlled vocabulary for the dimensions in a CMEC metrics bundle
+
+    This defaults to the controlled vocabulary for the AR7-FT metrics,
+    which is included in the `cmip_ref_core` package.
+
+    This controlled vocabulary is used to validate the dimensions in the metrics bundle.
+    If custom metrics are implemented,
+    this file may need to be extended to include any new dimensions.
+    """
+
     @log.default
     def _log_factory(self) -> Path:
         return env.path("REF_CONFIGURATION").resolve() / "log"
@@ -130,6 +143,11 @@ class PathConfig:
     @results.default
     def _results_factory(self) -> Path:
         return env.path("REF_CONFIGURATION").resolve() / "results"
+
+    @dimensions_cv.default
+    def _dimensions_cv_factory(self) -> Path:
+        filename = "cv_cmip_ar7ft.yaml"
+        return Path(str(importlib.resources.files("cmip_ref_core.pycmec") / filename))
 
 
 @config(prefix=env_prefix)

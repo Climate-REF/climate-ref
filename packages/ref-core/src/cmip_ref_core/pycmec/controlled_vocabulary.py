@@ -77,7 +77,7 @@ class CV:
 
     # TODO: There might be some additional fields in future if this CV is project-specific
 
-    dimensions: list[Dimension]
+    dimensions: tuple[Dimension, ...]
 
     def get_dimension_by_name(self, name: str) -> Dimension:
         """

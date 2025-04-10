@@ -15,13 +15,17 @@ import shutil
 from typing import TYPE_CHECKING
 
 from loguru import logger
+from sqlalchemy import insert
 
 from cmip_ref.database import Database
 from cmip_ref.models.metric_execution import MetricExecutionResult as MetricExecutionResultModel
 from cmip_ref.models.metric_execution import ResultOutput, ResultOutputType
-from cmip_ref_core.exceptions import InvalidExecutorException
+from cmip_ref.models.metric_value import MetricValue
+from cmip_ref_core.exceptions import InvalidExecutorException, ResultValidationError
 from cmip_ref_core.executor import Executor
 from cmip_ref_core.metrics import MetricExecutionResult, ensure_relative_path
+from cmip_ref_core.pycmec.controlled_vocabulary import CV
+from cmip_ref_core.pycmec.metric import CMECMetric
 from cmip_ref_core.pycmec.output import CMECOutput, OutputDict
 
 if TYPE_CHECKING:
@@ -147,34 +151,46 @@ def handle_execution_result(
                 metric_execution_result.output_fragment,
                 result.output_bundle_filename,
             )
+            _handle_output_bundle(
+                config,
+                database,
+                metric_execution_result,
+                result.to_output_path(result.output_bundle_filename),
+            )
 
-            # Extract the registered outputs
-            # Copy the content to the output directory
-            # Track in the db
-            cmec_output_bundle = CMECOutput.load_from_json(
-                result.to_output_path(result.output_bundle_filename)
-            )
-            _handle_outputs(
-                cmec_output_bundle.plots,
-                output_type=ResultOutputType.Plot,
-                config=config,
-                database=database,
-                metric_execution_result=metric_execution_result,
-            )
-            _handle_outputs(
-                cmec_output_bundle.data,
-                output_type=ResultOutputType.Data,
-                config=config,
-                database=database,
-                metric_execution_result=metric_execution_result,
-            )
-            _handle_outputs(
-                cmec_output_bundle.html,
-                output_type=ResultOutputType.HTML,
-                config=config,
-                database=database,
-                metric_execution_result=metric_execution_result,
-            )
+        cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
+
+        # Check that the metric values conform with the controlled vocabulary
+        try:
+            cv = CV.load_from_file(config.paths.dimensions_cv)
+            cv.validate_metrics(cmec_metric_bundle)
+        except (ResultValidationError, AssertionError):
+            logger.exception("Metric values do not conform with the controlled vocabulary")
+            # TODO: Mark the metric execution result as failed once the CV has stabilised
+            # metric_execution_result.mark_failed()
+
+        # Perform a bulk insert of a metric bundle
+        # TODO: The section below will likely fail until we have agreed on a controlled vocabulary
+        # The current implementation will swallow the exception, but display a log message
+        try:
+            # Perform this in a nested transaction to (hopefully) gracefully rollback if something
+            # goes wrong
+            with database.session.begin_nested():
+                database.session.execute(
+                    insert(MetricValue),
+                    [
+                        {
+                            "metric_execution_result_id": metric_execution_result.id,
+                            "value": result.value,
+                            "attributes": result.attributes,
+                            **result.dimensions,
+                        }
+                        for result in cmec_metric_bundle.iter_results()
+                    ],
+                )
+        except Exception:
+            # TODO: Remove once we have settled on a controlled vocabulary
+            logger.exception("Something went wrong when ingesting metric values")
 
         # TODO: This should check if the result is the most recent for the execution,
         # if so then update the dirty fields
@@ -183,6 +199,39 @@ def handle_execution_result(
     else:
         logger.error(f"{metric_execution_result} failed")
         metric_execution_result.mark_failed()
+
+
+def _handle_output_bundle(
+    config: "Config",
+    database: Database,
+    metric_execution_result: MetricExecutionResultModel,
+    cmec_output_bundle_filename: pathlib.Path,
+) -> None:
+    # Extract the registered outputs
+    # Copy the content to the output directory
+    # Track in the db
+    cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
+    _handle_outputs(
+        cmec_output_bundle.plots,
+        output_type=ResultOutputType.Plot,
+        config=config,
+        database=database,
+        metric_execution_result=metric_execution_result,
+    )
+    _handle_outputs(
+        cmec_output_bundle.data,
+        output_type=ResultOutputType.Data,
+        config=config,
+        database=database,
+        metric_execution_result=metric_execution_result,
+    )
+    _handle_outputs(
+        cmec_output_bundle.html,
+        output_type=ResultOutputType.HTML,
+        config=config,
+        database=database,
+        metric_execution_result=metric_execution_result,
+    )
 
 
 def _handle_outputs(

@@ -3,3 +3,4 @@ recipe_ecs.yml             0cc57034fcb64e32015b4ff949ece5df8cdb8c6f493618b50cede
 recipe_tcr.yml             35f9ef035a4e71aff5cac5dd26c49da2162fc00291bf3b0bd16b661b7b2f606b
 recipe_tcre.yml            4668e357e00c515a8264ac75cb319ce558289689e10189e6f9e982886c414c94
 recipe_zec.yml             b0af7f789b7610ab3f29a6617124aa40c40866ead958204fc199eaf82863de51
+ref/recipe_ref_cre.yml     4f35d9639f1008be3b5382a5bd8933a855cb5368ccf5d04a1c70227172e2e82c

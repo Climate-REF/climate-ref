@@ -67,7 +67,7 @@ class SeaIceAreaSeasonalCycle(ESMValToolMetric):
             "tier": 2,
             "timerange": timerange,
             "type": "reanaly",
-            "version": "v2",  # TODO: update to v3 and check results.
+            "version": "v3",
         }
         sh_obs = nh_obs.copy()
         sh_obs["dataset"] = "OSI-450-sh"

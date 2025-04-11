@@ -14,7 +14,7 @@ import shutil
 import pooch
 from loguru import logger
 
-DATA_VERSION = "v3.9"
+PMP_DATA_VERSION = "v3.9"
 """
 Default version identifier for the datasets
 
@@ -23,20 +23,29 @@ Changing this will bust any existing caches.
 
 
 def build_reference_data_registry(
-    version: str = DATA_VERSION,
+    version: str = PMP_DATA_VERSION,
+    registry_package: str = "cmip_ref_core.dataset_registry",
+    registry_resource: str = "pmp_reference.txt",
 ) -> pooch.Pooch:
     """
     Build a pooch registry of reference data associated with PMP that isn't currently in obs4MIPs.
 
-    Currently we only have reference datasets published from PMP,
+    Currently, we only have reference datasets published from PMP,
     but this may change in the future.
 
     Parameters
     ----------
-    version : str
+    version
         The version of the data.
 
         Changing the version will invalidate the cache and force a re-download of the data.
+    registry_package
+        Name of the package containing the registry resource.
+
+    registry_resource
+        Name of the resource in the package that contains a list of files and checksums.
+
+        This must be formatted in a way that is expected by pooch.
 
     Returns
     -------
@@ -49,9 +58,7 @@ def build_reference_data_registry(
         version=version,
         env="REF_METRICS_PMP_DATA_DIR",
     )
-    registry.load_registry(
-        importlib.resources.open_binary("cmip_ref_core.dataset_registry", "pmp_reference.txt")
-    )
+    registry.load_registry(importlib.resources.open_binary(registry_package, registry_resource))
     return registry
 
 

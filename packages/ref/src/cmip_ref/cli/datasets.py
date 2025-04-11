@@ -6,6 +6,7 @@ import errno
 import os
 import shutil
 from collections.abc import Iterable
+from enum import Enum
 from pathlib import Path
 from typing import Annotated
 
@@ -172,6 +173,11 @@ def _fetch_sample_data(
     fetch_sample_data(version=version, force_cleanup=force_cleanup, symlink=symlink)
 
 
+class _DatasetRegistry(str, Enum):
+    PMP_OBS4REF = "pmp-obs4ref"
+    PMP_ANNUAL_CYCLE = "pmp-annual-cycle"
+
+
 @app.command(name="fetch-obs4ref-data")
 def fetch_obs4ref_data(
     output_directory: Annotated[Path, typer.Option(help="Output directory where files will be saved")],
@@ -179,6 +185,9 @@ def fetch_obs4ref_data(
     symlink: Annotated[
         bool, typer.Option(help="If True, symlink files into the output directory, otherwise perform a copy")
     ] = False,
+    registry: Annotated[
+        _DatasetRegistry, typer.Option(help="Registry to use")
+    ] = _DatasetRegistry.PMP_OBS4REF,
 ) -> None:
     """
     Fetch non-published Obs4MIPs data that is used by the REF
@@ -190,5 +199,14 @@ def fetch_obs4ref_data(
         logger.warning(f"Removing existing directory {output_directory}")
         shutil.rmtree(output_directory)
 
-    data_registry = build_reference_data_registry()
+    if registry == _DatasetRegistry.PMP_OBS4REF:
+        data_registry = build_reference_data_registry()
+    elif registry == _DatasetRegistry.PMP_ANNUAL_CYCLE:
+        data_registry = build_reference_data_registry(
+            registry_package="cmip_ref_metrics_pmp.dataset_registry",
+            registry_resource="pmp_annual_cycle.txt",
+        )
+    else:
+        raise typer.BadParameter(f"Registry {registry} not supported")
+
     fetch_all_files(data_registry, output_directory, symlink=symlink)

@@ -1,0 +1,218 @@
+{
+    "start_time":{
+        "4":"1850-01-16T12:00:00.000",
+        "3":"1850-01-16T12:00:00.000",
+        "2":"1850-01-16T12:00:00.000",
+        "1":"1850-01-16T12:00:00.000"
+    },
+    "end_time":{
+        "4":"2014-12-16T12:00:00.000",
+        "3":"2014-12-16T12:00:00.000",
+        "2":"2014-12-16T12:00:00.000",
+        "1":"2014-12-16T12:00:00.000"
+    },
+    "path":{
+        "4":"\/work\/bd0854\/DATA\/ESMValTool2\/CMIP6_DKRZ\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/rsut\/gn\/v20191115\/rsut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+        "3":"\/work\/bd0854\/DATA\/ESMValTool2\/CMIP6_DKRZ\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/rsutcs\/gn\/v20191115\/rsutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+        "2":"\/work\/bd0854\/DATA\/ESMValTool2\/CMIP6_DKRZ\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/rlutcs\/gn\/v20191115\/rlutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+        "1":"\/work\/bd0854\/DATA\/ESMValTool2\/CMIP6_DKRZ\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/rlut\/gn\/v20191115\/rlut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc"
+    },
+    "activity_id":{
+        "4":"CMIP",
+        "3":"CMIP",
+        "2":"CMIP",
+        "1":"CMIP"
+    },
+    "branch_method":{
+        "4":"standard",
+        "3":"standard",
+        "2":"standard",
+        "1":"standard"
+    },
+    "branch_time_in_child":{
+        "4":0.0,
+        "3":0.0,
+        "2":0.0,
+        "1":0.0
+    },
+    "branch_time_in_parent":{
+        "4":21915.0,
+        "3":21915.0,
+        "2":21915.0,
+        "1":21915.0
+    },
+    "experiment":{
+        "4":"all-forcing simulation of the recent past",
+        "3":"all-forcing simulation of the recent past",
+        "2":"all-forcing simulation of the recent past",
+        "1":"all-forcing simulation of the recent past"
+    },
+    "experiment_id":{
+        "4":"historical",
+        "3":"historical",
+        "2":"historical",
+        "1":"historical"
+    },
+    "frequency":{
+        "4":"mon",
+        "3":"mon",
+        "2":"mon",
+        "1":"mon"
+    },
+    "grid":{
+        "4":"native atmosphere N96 grid (145x192 latxlon)",
+        "3":"native atmosphere N96 grid (145x192 latxlon)",
+        "2":"native atmosphere N96 grid (145x192 latxlon)",
+        "1":"native atmosphere N96 grid (145x192 latxlon)"
+    },
+    "grid_label":{
+        "4":"gn",
+        "3":"gn",
+        "2":"gn",
+        "1":"gn"
+    },
+    "institution_id":{
+        "4":"CSIRO",
+        "3":"CSIRO",
+        "2":"CSIRO",
+        "1":"CSIRO"
+    },
+    "nominal_resolution":{
+        "4":"250 km",
+        "3":"250 km",
+        "2":"250 km",
+        "1":"250 km"
+    },
+    "parent_activity_id":{
+        "4":"CMIP",
+        "3":"CMIP",
+        "2":"CMIP",
+        "1":"CMIP"
+    },
+    "parent_experiment_id":{
+        "4":"piControl",
+        "3":"piControl",
+        "2":"piControl",
+        "1":"piControl"
+    },
+    "parent_source_id":{
+        "4":"ACCESS-ESM1-5",
+        "3":"ACCESS-ESM1-5",
+        "2":"ACCESS-ESM1-5",
+        "1":"ACCESS-ESM1-5"
+    },
+    "parent_time_units":{
+        "4":"days since 0101-1-1",
+        "3":"days since 0101-1-1",
+        "2":"days since 0101-1-1",
+        "1":"days since 0101-1-1"
+    },
+    "parent_variant_label":{
+        "4":"r1i1p1f1",
+        "3":"r1i1p1f1",
+        "2":"r1i1p1f1",
+        "1":"r1i1p1f1"
+    },
+    "product":{
+        "4":"model-output",
+        "3":"model-output",
+        "2":"model-output",
+        "1":"model-output"
+    },
+    "realm":{
+        "4":"atmos",
+        "3":"atmos",
+        "2":"atmos",
+        "1":"atmos"
+    },
+    "source_id":{
+        "4":"ACCESS-ESM1-5",
+        "3":"ACCESS-ESM1-5",
+        "2":"ACCESS-ESM1-5",
+        "1":"ACCESS-ESM1-5"
+    },
+    "source_type":{
+        "4":"AOGCM",
+        "3":"AOGCM",
+        "2":"AOGCM",
+        "1":"AOGCM"
+    },
+    "sub_experiment":{
+        "4":"none",
+        "3":"none",
+        "2":"none",
+        "1":"none"
+    },
+    "sub_experiment_id":{
+        "4":"none",
+        "3":"none",
+        "2":"none",
+        "1":"none"
+    },
+    "table_id":{
+        "4":"Amon",
+        "3":"Amon",
+        "2":"Amon",
+        "1":"Amon"
+    },
+    "variable_id":{
+        "4":"rsut",
+        "3":"rsutcs",
+        "2":"rlutcs",
+        "1":"rlut"
+    },
+    "variant_label":{
+        "4":"r1i1p1f1",
+        "3":"r1i1p1f1",
+        "2":"r1i1p1f1",
+        "1":"r1i1p1f1"
+    },
+    "member_id":{
+        "4":"r1i1p1f1",
+        "3":"r1i1p1f1",
+        "2":"r1i1p1f1",
+        "1":"r1i1p1f1"
+    },
+    "standard_name":{
+        "4":"toa_outgoing_shortwave_flux",
+        "3":"toa_outgoing_shortwave_flux_assuming_clear_sky",
+        "2":"toa_outgoing_longwave_flux_assuming_clear_sky",
+        "1":"toa_outgoing_longwave_flux"
+    },
+    "long_name":{
+        "4":"TOA Outgoing Shortwave Radiation",
+        "3":"TOA Outgoing Clear-Sky Shortwave Radiation",
+        "2":"TOA Outgoing Clear-Sky Longwave Radiation",
+        "1":"TOA Outgoing Longwave Radiation"
+    },
+    "units":{
+        "4":"W m-2",
+        "3":"W m-2",
+        "2":"W m-2",
+        "1":"W m-2"
+    },
+    "vertical_levels":{
+        "4":1,
+        "3":1,
+        "2":1,
+        "1":1
+    },
+    "init_year":{
+        "4":null,
+        "3":null,
+        "2":null,
+        "1":null
+    },
+    "version":{
+        "4":"v20191115",
+        "3":"v20191115",
+        "2":"v20191115",
+        "1":"v20191115"
+    },
+    "instance_id":{
+        "4":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsut.gn.v20191115",
+        "3":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsutcs.gn.v20191115",
+        "2":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlutcs.gn.v20191115",
+        "1":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlut.gn.v20191115"
+    }
+}

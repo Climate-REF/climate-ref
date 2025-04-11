@@ -44,13 +44,6 @@ def test_example_metric(mocker, tmp_path, metric_dataset, cmip6_data_catalog, de
         spec_set=True,
         side_effect=mock_run_fn,
     )
-    open_dataset = mocker.patch.object(
-        cmip_ref_metrics_esmvaltool.metrics.example.xarray,
-        "open_dataset",
-        autospec=True,
-        spec_set=True,
-    )
-    open_dataset.return_value.attrs.__getitem__.return_value = "ABC"
 
     result = metric.run(definition)
 

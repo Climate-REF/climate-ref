@@ -6,12 +6,12 @@ from typing import ClassVar
 import pandas
 from ruamel.yaml import YAML
 
-from cmip_ref_core.datasets import SourceDatasetType
+from cmip_ref_core.datasets import MetricDataset, SourceDatasetType
 from cmip_ref_core.metrics import CommandLineMetric, MetricExecutionDefinition, MetricExecutionResult
 from cmip_ref_core.pycmec.metric import CMECMetric
-from cmip_ref_core.pycmec.output import CMECOutput
+from cmip_ref_core.pycmec.output import CMECOutput, OutputCV
 from cmip_ref_metrics_esmvaltool.recipe import load_recipe, prepare_climate_data
-from cmip_ref_metrics_esmvaltool.types import OutputBundle, Recipe
+from cmip_ref_metrics_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 yaml = YAML()
 
@@ -37,20 +37,31 @@ class ESMValToolMetric(CommandLineMetric):
         """
 
     @staticmethod
-    @abstractmethod
-    def format_result(result_dir: Path) -> OutputBundle:
+    def format_result(
+        result_dir: Path,
+        metric_dataset: MetricDataset,
+        metric_args: MetricBundleArgs,
+        output_args: OutputBundleArgs,
+    ) -> tuple[MetricBundleArgs, OutputBundleArgs]:
         """
-        Create a CMEC output bundle for the results.
+        Update the arguments needed to create a CMEC metric and output bundle.
 
         Parameters
         ----------
         result_dir
             Directory containing results from an ESMValTool run.
+        metric_dataset
+            The metric dataset used for the metric execution.
+        metric_args
+            Generic metric bundle arguments.
+        output_args
+            Generic output bundle arguments.
 
         Returns
         -------
-            A CMEC output bundle.
+            The arguments needed to create a CMEC metric and output bundle.
         """
+        return metric_args, output_args
 
     def build_cmd(self, definition: MetricExecutionDefinition) -> Iterable[str]:
         """
@@ -122,14 +133,48 @@ class ESMValToolMetric(CommandLineMetric):
         """
         result_dir = next(definition.to_output_path("results").glob("*"))
 
-        metric_bundle = self.format_result(result_dir)
-        CMECMetric.model_validate(metric_bundle)
+        metric_args = CMECMetric.create_template()
+        output_args = CMECOutput.create_template()
 
-        output_bundle = CMECOutput.create_template()
-        CMECOutput.model_validate(output_bundle)
+        # Add the plots and data files
+        plot_suffixes = {".png", ".jpg", ".pdf", ".ps"}
+        for metadata_file in result_dir.glob("run/*/*/diagnostic_provenance.yml"):
+            metadata = yaml.load(metadata_file.read_text(encoding="utf-8"))
+            for filename in metadata:
+                caption = metadata[filename].get("caption", "")
+                relative_path = Path(filename).relative_to(result_dir.absolute())
+                if relative_path.suffix in plot_suffixes:
+                    key = OutputCV.PLOTS.value
+                else:
+                    key = OutputCV.DATA.value
+                output_args[key][f"{relative_path}"] = {
+                    OutputCV.FILENAME.value: f"{relative_path}",
+                    OutputCV.LONG_NAME.value: caption,
+                    OutputCV.DESCRIPTION.value: "",
+                }
+
+        # Add the index.html file
+        index_html = f"{result_dir}/index.html"
+        output_args[OutputCV.HTML.value][index_html] = {
+            OutputCV.FILENAME.value: index_html,
+            OutputCV.LONG_NAME.value: "Results page",
+            OutputCV.DESCRIPTION.value: "Page showing the results of the ESMValTool run.",
+        }
+        output_args[OutputCV.INDEX.value] = index_html
+
+        # Add the (debug) log file
+        output_args[OutputCV.PROVENANCE.value][OutputCV.LOG.value] = f"{result_dir}/run/main_log_debug.txt"
+
+        # Update the metric and output bundle with metric specific results.
+        metric_args, output_args = self.format_result(
+            result_dir=result_dir,
+            metric_dataset=definition.metric_dataset,
+            metric_args=metric_args,
+            output_args=output_args,
+        )
 
         return MetricExecutionResult.build_from_output_bundle(
             definition,
-            cmec_output_bundle=output_bundle,
-            cmec_metric_bundle=metric_bundle,
+            cmec_output_bundle=output_args,
+            cmec_metric_bundle=metric_args,
         )

@@ -1,14 +1,11 @@
-from pathlib import Path
-
 import pandas
-import xarray
 
 from cmip_ref_core.constraints import AddSupplementaryDataset, RequireContiguousTimerange
 from cmip_ref_core.datasets import FacetFilter, SourceDatasetType
 from cmip_ref_core.metrics import DataRequirement
 from cmip_ref_metrics_esmvaltool.metrics.base import ESMValToolMetric
 from cmip_ref_metrics_esmvaltool.recipe import dataframe_to_recipe
-from cmip_ref_metrics_esmvaltool.types import OutputBundle, Recipe
+from cmip_ref_metrics_esmvaltool.types import Recipe
 
 
 class GlobalMeanTimeseries(ESMValToolMetric):
@@ -50,28 +47,3 @@ class GlobalMeanTimeseries(ESMValToolMetric):
 
         # Populate recipe with new variables/datasets.
         variables.update(recipe_variables)
-
-    @staticmethod
-    def format_result(result_dir: Path) -> OutputBundle:
-        """Format the result."""
-        result = next(result_dir.glob("work/timeseries/script1/*.nc"))
-        dataset = xarray.open_dataset(result)
-
-        # TODO: Check how timeseries data are generally serialised
-        cmec_output = {
-            "DIMENSIONS": {
-                "model": {dataset.attrs["source_id"]: {}},
-                "region": {"global": {}},
-                "metric": {"tas": {}},
-                "json_structure": [
-                    "model",
-                    "region",
-                    "metric",
-                ],
-            },
-            "RESULTS": {
-                dataset.attrs["source_id"]: {"global": {"tas": 0}},
-            },
-        }
-
-        return cmec_output

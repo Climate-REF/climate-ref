@@ -2,16 +2,33 @@ from pathlib import Path
 
 import numpy as np
 import pandas
+import pytest
 import xarray as xr
 from cmip_ref_metrics_esmvaltool.metrics import TransientClimateResponseEmissions
 from cmip_ref_metrics_esmvaltool.recipe import load_recipe
 
+from cmip_ref_core.datasets import DatasetCollection, MetricDataset, SourceDatasetType
+from cmip_ref_core.pycmec.metric import CMECMetric
+from cmip_ref_core.pycmec.output import CMECOutput
 
-def test_update_recipe():
+
+@pytest.fixture
+def metric_dataset():
+    return MetricDataset(
+        {
+            SourceDatasetType.CMIP6: DatasetCollection(
+                datasets=pandas.read_json(Path(__file__).parent / "input_files_tcre.json"),
+                slug_column="test",
+            ),
+        }
+    )
+
+
+def test_update_recipe(metric_dataset):
     # Insert the following code in ZeroEmissionCommitment.update_recipe to
     # save an example input dataframe:
     # input_files.to_json(Path("input_files_tcre.json"), orient='records', indent=4, date_format="iso")
-    input_files = pandas.read_json(Path(__file__).parent / "input_files_tcre.json")
+    input_files = metric_dataset[SourceDatasetType.CMIP6].datasets
     recipe = load_recipe("recipe_tcre.yml")
     TransientClimateResponseEmissions().update_recipe(recipe, input_files)
     assert recipe["diagnostics"]["tcre"]["variables"] == {
@@ -68,21 +85,24 @@ def test_update_recipe():
     }
 
 
-def test_format_output(tmp_path):
+def test_format_output(tmp_path, metric_dataset):
+    result_dir = tmp_path
+    subdir = result_dir / "work" / "tcre" / "calculate_tcre"
+    subdir.mkdir(parents=True)
     tcr = xr.Dataset(
         data_vars={
             "tcre": (["dim0"], np.array([1.0], dtype=np.float32)),
         },
-        coords={
-            "dataset": ("dim0", np.array([b"abc"])),
-        },
     )
-    result_dir = tmp_path
-    subdir = result_dir / "work" / "tcre" / "calculate_tcre"
-    subdir.mkdir(parents=True)
     tcr.to_netcdf(subdir / "tcre.nc")
 
-    output_bundle = TransientClimateResponseEmissions().format_result(result_dir)
+    metric_args, output_args = TransientClimateResponseEmissions().format_result(
+        result_dir,
+        metric_dataset=metric_dataset,
+        metric_args=CMECMetric.create_template(),
+        output_args=CMECOutput.create_template(),
+    )
 
-    assert isinstance(output_bundle, dict)
-    assert output_bundle["RESULTS"]["abc"]["global"]["tcre"] == 1.0
+    CMECMetric.model_validate(metric_args)
+    assert metric_args["RESULTS"]["MPI-ESM1-2-LR"]["global"]["tcre"] == 1.0
+    CMECOutput.model_validate(output_args)

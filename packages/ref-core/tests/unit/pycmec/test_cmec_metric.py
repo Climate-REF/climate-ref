@@ -57,6 +57,21 @@ def cmec_wrongdim_metric_dict(cmec_right_metric_dict):
     return cmec_right_metric_dict
 
 
+def test_metric_missing_deepest_dimension(cmec_right_metric_dict):
+    cmec_metric = cmec_right_metric_dict
+    cmec_metric["DIMENSIONS"]["json_structure"] = cmec_right_metric_dict["DIMENSIONS"]["json_structure"][:-1]
+    cmec_metric["DIMENSIONS"].pop("statistic")
+    with pytest.raises(ValidationError):
+        CMECMetric(**cmec_metric)
+
+
+def test_metric_missing_deepest_dimension_key(cmec_right_metric_dict):
+    cmec_metric = cmec_right_metric_dict
+    cmec_metric["RESULTS"]["E3SM"]["Hydrology Cycle"].pop("rmse")
+    with pytest.raises(ValidationError):
+        CMECMetric(**cmec_metric)
+
+
 def test_metric_right(cmec_right_metric_data):
     CMECMetric.model_validate(cmec_right_metric_data)
 
@@ -213,19 +228,16 @@ def test_metric_merge():
         },
         "RESULTS": {
             "E3SM": {
-                "carbon": {
-                    "overall score": 0.11,
-                    "bias": 0.56,
-                    "attributes": {
-                        "score": "ILAMB scoring system",
-                    },
+                "carbon": 0.11,
+                "attributes": {
+                    "score": "ILAMB scoring system",
                 },
             },
             "CESM": {
-                "carbon": {"overall score": 0.05, "bias": 0.72},
+                "carbon": 0.05,
             },
             "GFDL-ESM2M": {
-                "carbon": {"overall score": 0.35, "bias": 0.37},
+                "carbon": 0.35,
                 "attributes": {
                     "score": "ILAMB scoring system",
                 },
@@ -253,20 +265,17 @@ def test_metric_merge():
         },
         "RESULTS": {
             "E3SM": {
-                "carbon": {
-                    "overall score": 0.11,
-                    "bias": 0.56,
-                    "attributes": {
-                        "score": "ILAMB scoring system",
-                    },
+                "carbon": 0.11,
+                "NinoSstDiversity_2": -999.0,
+                "BiasTauxLonRmse": -999.0,
+                "attributes": {
+                    "score": "ILAMB scoring system",
                 },
-                "NinoSstDiversity_2": {},
-                "BiasTauxLonRmse": {},
             },
             "CESM": {
-                "carbon": {"overall score": 0.05, "bias": 0.72},
-                "NinoSstDiversity_2": {},
-                "BiasTauxLonRmse": {},
+                "carbon": 0.05,
+                "NinoSstDiversity_2": -999.0,
+                "BiasTauxLonRmse": -999.0,
             },
             "GFDL-ESM2M": {
                 "NinoSstDiversity_2": -75,
@@ -276,7 +285,7 @@ def test_metric_merge():
                     "BiasTauxLonRmse": "Bias Taux RMSE",
                     "score": "ILAMB scoring system",
                 },
-                "carbon": {"overall score": 0.35, "bias": 0.37},
+                "carbon": 0.35,
             },
             "attributes": {
                 "package": "ilamb",

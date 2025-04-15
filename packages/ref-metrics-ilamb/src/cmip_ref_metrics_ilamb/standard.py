@@ -34,7 +34,7 @@ def _build_cmec_bundle(name: str, df: pd.DataFrame) -> dict[str, Any]:
     ilamb_regions = ilr.Regions()
     bundle = {
         "DIMENSIONS": {
-            "json_structure": ["region", "model", "metric"],
+            "json_structure": ["region", "model", "metric", "statistic"],
             "region": {
                 r: {
                     "LongName": "None" if r == "None" else ilamb_regions.get_name(r),
@@ -55,6 +55,7 @@ def _build_cmec_bundle(name: str, df: pd.DataFrame) -> dict[str, Any]:
                     "Contact": "forrest AT climatemodeling.org",
                 }
             },
+            "statistic": {s: {} for s in df["name"].unique()},
         },
         "RESULTS": {
             r: {

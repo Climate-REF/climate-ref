@@ -23,13 +23,17 @@ def test_validate(cv, cmec_metric):
 def test_invalid_dimension(cv, cmec_metric):
     cmec_metric = CMECMetric(
         DIMENSIONS={
-            "json_structure": ["model", "extra"],
+            "json_structure": ["model", "extra", "statistic"],
             "model": {
                 "E3SM": {"name": "E3SM"},
             },
             "extra": {
                 "Ecosystem and Carbon Cycle": {"name": "Ecosystem and Carbon Cycle"},
                 "Hydrology Cycle": {"name": "Hydrology Cycle"},
+            },
+            "statistic": {
+                "overall score": {"name": "overall score", "units": "-"},
+                "bias": {"name": "mean bias", "units": "inherit"},
             },
         },
         RESULTS={
@@ -46,12 +50,16 @@ def test_invalid_dimension(cv, cmec_metric):
 def test_missing_value(cv, cmec_metric):
     cmec_metric = CMECMetric(
         DIMENSIONS={
-            "json_structure": ["model", "metric"],
+            "json_structure": ["model", "metric", "statistic"],
             "model": {
                 "E3SM": {"name": "E3SM"},
             },
             "metric": {
                 "Hydrology Cycle": {"name": "Hydrology Cycle"},
+            },
+            "statistic": {
+                "unknown": {"name": "unknown", "units": "-"},
+                "bias": {"name": "mean bias", "units": "inherit"},
             },
         },
         RESULTS={

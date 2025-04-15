@@ -109,13 +109,15 @@ def format_cmec_metric_bundle(dataset: xr.Dataset) -> dict[str, Any]:
                 "model",
                 "region",
                 "metric",
+                "statistic",
             ],
             "model": {dataset.attrs["source_id"]: {}},
             "region": {"global": {}},
             "metric": {"tas": {}, "pr": {}},
+            "statistic": {"rmse": {}, "mb": {}},
         },
         "RESULTS": {
-            dataset.attrs["source_id"]: {"global": {"tas": 0, "pr": {"rmse": 0, "mb": 0}}},
+            dataset.attrs["source_id"]: {"global": {"tas": {"rmse": 0, "mb": 0}, "pr": {"rmse": 0, "mb": 0}}},
         },
     }
 

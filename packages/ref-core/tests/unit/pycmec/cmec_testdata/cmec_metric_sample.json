@@ -2,7 +2,8 @@
     "DIMENSIONS": {
         "json_structure": [
             "model",
-            "metric"
+            "metric",
+            "statistic"
         ],
         "model": {
             "E3SM": {
@@ -22,17 +23,33 @@
             "Hydrology Cycle": {
                 "name": "Hydrology Cycle"
             }
+        },
+        "statistic": {
+            "overall score": {
+                "name": "overall score",
+                "units": "-"
+            },
+            "bias": {
+                "name": "mean bias",
+                "units": "inherit"
+            },
+            "rmse": {
+                "name": "root mean square error",
+                "units": "inherit"
+            }
         }
     },
     "RESULTS": {
         "E3SM": {
             "Ecosystem and Carbon Cycle": {
                 "overall score": 0.11,
-                "bias": 0.56
+                "bias": 0.56,
+                "rmse": -999.0
             },
             "Hydrology Cycle": {
                 "overall score": 0.26,
-                "bias": 0.70
+                "bias": 0.70,
+                "rmse": -999.0
             },
             "attributes":{
                 "resolution": "low",
@@ -45,11 +62,13 @@
         "CESM2": {
             "Ecosystem and Carbon Cycle": {
                 "overall score": 0.05,
-                "bias": 0.72
+                "bias": 0.72,
+                "rmse": -999.0
             },
             "Hydrology Cycle": {
                 "overall score": 0.61,
-                "bias": 0.18
+                "bias": 0.18,
+                "rmse": -999.0
             },
             "attributes":{
                 "resolution": "low",
@@ -72,6 +91,7 @@
             },
             "Hydrology Cycle": {
                 "overall score": 0.67,
+                "bias": -999.0,
                 "rmse": 0.68
             },
             "attributes":{

@@ -60,7 +60,7 @@ def cmec_right_output_dict():
 def cmec_right_metric_dict():
     return {
         "DIMENSIONS": {
-            "json_structure": ["model", "metric"],
+            "json_structure": ["model", "metric", "statistic"],
             "model": {
                 "E3SM": {"name": "E3SM"},
                 "CESM2": {"name": "CESM2"},
@@ -70,15 +70,20 @@ def cmec_right_metric_dict():
                 "Ecosystem and Carbon Cycle": {"name": "Ecosystem and Carbon Cycle"},
                 "Hydrology Cycle": {"name": "Hydrology Cycle"},
             },
+            "statistic": {
+                "overall score": {"name": "overall sccore", "units": "-"},
+                "bias": {"name": "mean bias", "units": "inherit"},
+                "rmse": {"name": "root mean squre error", "units": "inherit"},
+            },
         },
         "RESULTS": {
             "E3SM": {
-                "Ecosystem and Carbon Cycle": {"overall score": 0.11, "bias": 0.56},
-                "Hydrology Cycle": {"overall score": 0.26, "bias": 0.70},
+                "Ecosystem and Carbon Cycle": {"overall score": 0.11, "bias": 0.56, "rmse": -999.0},
+                "Hydrology Cycle": {"overall score": 0.26, "bias": 0.70, "rmse": -999.0},
             },
             "CESM2": {
-                "Ecosystem and Carbon Cycle": {"overall score": 0.05, "bias": 0.72},
-                "Hydrology Cycle": {"overall score": 0.61, "bias": 0.18},
+                "Ecosystem and Carbon Cycle": {"overall score": 0.05, "bias": 0.72, "rmse": -999.0},
+                "Hydrology Cycle": {"overall score": 0.61, "bias": 0.18, "rmse": -999.0},
             },
             "IPSL-CM5A-LR": {
                 "Ecosystem and Carbon Cycle": {
@@ -86,7 +91,7 @@ def cmec_right_metric_dict():
                     "bias": 0.92,
                     "rmse": 0.34,
                 },
-                "Hydrology Cycle": {"overall score": 0.67, "rmse": 0.68},
+                "Hydrology Cycle": {"overall score": 0.67, "bias": -999.0, "rmse": 0.68},
             },
         },
         "DISCLAIMER": {},

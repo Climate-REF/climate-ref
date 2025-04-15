@@ -1,13 +1,15 @@
 from __future__ import annotations
 
+import traceback
 import warnings
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import ecgtools.parsers
+import ecgtools.builder  # type: ignore
+import ecgtools.parsers.utilities  # type: ignore
 import pandas as pd
-from ecgtools import Builder
+import xarray as xr
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
@@ -82,17 +84,20 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         "branch_method",
         "branch_time_in_child",
         "branch_time_in_parent",
+        "calendar",
         "experiment",
         "experiment_id",
         "frequency",
         "grid",
         "grid_label",
+        "init_year",
         "institution_id",
+        "long_name",
+        "member_id",
         "nominal_resolution",
         "parent_activity_id",
         "parent_experiment_id",
         "parent_source_id",
-        "parent_time_units",
         "parent_variant_label",
         "product",
         "realm",
@@ -100,16 +105,14 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         "source_type",
         "sub_experiment",
         "sub_experiment_id",
+        "standard_name",
         "table_id",
+        "time_units",
+        "units",
         "variable_id",
         "variant_label",
-        "member_id",
-        "standard_name",
-        "long_name",
-        "units",
-        "vertical_levels",
-        "init_year",
         "version",
+        "vertical_levels",
         slug_column,
     )
 
@@ -168,9 +171,7 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         """
         with warnings.catch_warnings():
             # Ignore the DeprecationWarning from xarray
-            warnings.simplefilter("ignore", DeprecationWarning)
-
-            builder = Builder(
+            builder = ecgtools.builder.Builder(
                 paths=[str(file_or_directory)],
                 depth=10,
                 include_patterns=["*.nc"],
@@ -203,7 +204,8 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
         datasets = _apply_fixes(datasets)
 
-        return datasets
+        # Ignore the error resulting the missing type hints in ecgtools.
+        return datasets  # type: ignore[no-any-return]
 
     def register_dataset(
         self, config: Config, db: Database, data_catalog_dataset: pd.DataFrame
@@ -308,3 +310,65 @@ class CMIP6DatasetAdapter(DatasetAdapter):
                 ],
                 index=[file.id for file in result_datasets],
             )
+
+
+def parse_cmip6(file: Path) -> dict[str, str]:
+    """Parser for CMIP6"""
+    # Adapted from https://github.com/ncar-xdev/ecgtools/blob/8945f332e0b2dd5cc74e77ae7acbd2b818ec401e/ecgtools/parsers/cmip.py#L12C1-L89C72
+    # See also https://wcrp-cmip.github.io/CMIP6_CVs/
+    try:
+        info = {
+            "path": str(file),
+            "version": ecgtools.parsers.utilities.extract_attr_with_regex(
+                str(file), regex=r"v\d{4}\d{2}\d{2}|v\d{1}"
+            )
+            or "v0",
+        }
+        with xr.open_dataset(file, chunks={}, decode_times=False) as ds:
+            for key in (
+                CMIP6DatasetAdapter.dataset_specific_metadata + CMIP6DatasetAdapter.file_specific_metadata
+            ):
+                info[key] = ds.attrs.get(key)
+
+            variable_id = info["variable_id"]
+            if variable_id:
+                attrs = ds[variable_id].attrs
+                for attr in ["standard_name", "long_name", "units"]:
+                    info[attr] = attrs.get(attr)
+
+            try:
+                info["calendar"] = ds.cf["T"].attrs["calendar"]
+                info["time_units"] = ds.cf["T"].attrs["units"]
+            except (KeyError, AttributeError, ValueError):
+                pass
+
+            # Set the default of # of vertical levels to 1
+            vertical_levels = 1
+            try:
+                vertical_levels = ds[ds.cf["vertical"].name].size
+            except (KeyError, AttributeError, ValueError):
+                pass
+            info["vertical_levels"] = vertical_levels
+
+            if info["sub_experiment_id"] is None:
+                info["member_id"] = info["variant_label"]
+            else:
+                info["member_id"] = "{sub_experiment_id}-{variant_label}".format(**info)
+                init_year = ecgtools.parsers.utilities.extract_attr_with_regex(
+                    info["sub_experiment_id"], r"\d{4}"
+                )
+                if init_year:
+                    info["init_year"] = int(init_year)
+
+        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+        with xr.open_dataset(file, chunks={}, decode_times=time_coder) as ds:
+            try:
+                info["start_time"] = str(ds.cf["T"][0].data)
+                info["end_time"] = str(ds.cf["T"][-1].data)
+            except (KeyError, AttributeError, ValueError):
+                pass
+
+        return info
+
+    except Exception:
+        return {ecgtools.builder.INVALID_ASSET: str(file), ecgtools.builder.TRACEBACK: traceback.format_exc()}

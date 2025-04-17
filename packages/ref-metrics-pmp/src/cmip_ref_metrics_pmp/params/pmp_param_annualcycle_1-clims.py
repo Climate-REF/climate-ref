@@ -1,0 +1,21 @@
+#
+#  OPTIONS ARE SET BY USER IN THIS FILE AS INDICATED BELOW BY:
+#
+#
+
+# VARIABLES TO USE
+vars = ["rlut"]
+
+# START AND END DATES FOR CLIMATOLOGY
+start = "1981-01"
+end = "2005-12"
+
+# INPUT DATASET - CAN BE MODEL OR OBSERVATIONS
+infile = (
+    "obs4MIPs_PCMDI_monthly/NASA-LaRC/CERES-EBAF-4-1"
+    "/mon/rlut/gn/v20210727"
+    "/rlut_mon_CERES-EBAF-4-1_PCMDI_gn_200301-201812.nc"
+)
+
+# DIRECTORY WHERE TO PUT RESULTS
+outfile = "climo/rlut_mon_CERES-EBAF-4-1_BE_gn.nc"

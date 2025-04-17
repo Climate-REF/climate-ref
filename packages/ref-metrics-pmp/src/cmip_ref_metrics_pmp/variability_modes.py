@@ -105,17 +105,37 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
         logger.debug(f"reference_dataset_name: {reference_dataset_name}")
         logger.debug(f"reference_dataset_path: {reference_dataset_path}")
 
+        model_files = input_datasets.path.to_list()
+
+        if len(model_files) != 1:
+            # Have some logic to replace the dates in the filename with a wildcard
+            raise NotImplementedError("Only one model file is supported at this time.")
+
+        if isinstance(model_files, list):
+            modpath = " ".join([str(p) for p in model_files])
+        else:
+            modpath = model_files
+
+        if isinstance(reference_dataset_path, list):
+            reference_data_path = " ".join([str(p) for p in reference_dataset_path])
+        else:
+            reference_data_path = reference_dataset_path
+
+        # Build the command to run the PMP driver script
         params = {
             "driver_file": "variability_mode/variability_modes_driver.py",
             "parameter_file": self.parameter_file,
-            "model_files": input_datasets.path.to_list(),
-            "reference_name": reference_dataset_name,
-            "reference_paths": reference_dataset_path,
-            "source_id": source_id,
-            "experiment_id": experiment_id,
-            "member_id": member_id,
-            "output_directory_path": str(definition.output_directory),
             "variability_mode": self.mode_id,
+            "modpath": modpath,
+            "modpath_lf": "none",
+            "exp": experiment_id,
+            "realization": member_id,
+            "modnames": source_id,
+            "reference_data_name": reference_dataset_name,
+            "reference_data_path": reference_data_path,
+            "results_dir": str(definition.output_directory),
+            "cmec": None,
+            "no_provenance": None,
         }
 
         # Add conditional parameters
@@ -123,7 +143,9 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
             params["osyear"] = 1950
             params["oeyear"] = 2005
 
-        development_mode = False
+        print("jwlee123_test-1 params:", params)
+
+        development_mode = True
 
         if development_mode:  # pragma: no cover
             # Get current time in 'yyyymmdd-hhmm' format
@@ -137,9 +159,15 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
                     "meyear": 2005,
                     "osyear": 2000,
                     "oeyear": 2005,
-                    "output_directory_path": output_directory_path,
+                    "results_dir": output_directory_path,
                 }
             )
+
+            print("jwlee123_test-2 params:", params)
+
+            # definition.output_directory = output_directory_path
+
+        print("jwlee123_test-3 done")
 
         # Pass the parameters using **kwargs
         return build_pmp_command(**params)

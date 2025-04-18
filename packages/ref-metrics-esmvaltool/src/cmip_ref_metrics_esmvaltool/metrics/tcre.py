@@ -63,6 +63,7 @@ class TransientClimateResponseEmissions(ESMValToolMetric):
             ),
         ),
     )
+    facets = ("source_id", "region", "metric")
 
     @staticmethod
     def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:

@@ -400,6 +400,18 @@ class AbstractMetric(Protocol):
     Any modifications to the input data will new metric calculation.
     """
 
+    facets: tuple[str, ...]
+    """
+    Facets that are used to describe the values produced by this metric.
+
+    These facets represent the dimensions that can be used to uniquely identify a metric value.
+    Each metric value should have a unique set of keys for the dimension (this isn't checked).
+    A faceted search can then be performed on these facets.
+
+    These facets must be present in the controlled vocabulary otherwise a `KeyError` exception
+    is raised.
+    """
+
     provider: MetricsProvider
     """
     The provider that provides the metric.

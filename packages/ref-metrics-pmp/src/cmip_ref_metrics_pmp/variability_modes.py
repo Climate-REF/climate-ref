@@ -20,6 +20,8 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
+    facets = ("model", "realization", "reference", "mode", "season", "method", "statistic")
+
     def __init__(self, mode_id: str):
         self.mode_id = mode_id.upper()
         self.name = f"PMP Extratropical modes of variability {mode_id}"

@@ -50,6 +50,7 @@ class ZeroEmissionCommitment(ESMValToolMetric):
             ),
         ),
     )
+    facets = ("source_id", "region", "metric")
 
     @staticmethod
     def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
@@ -75,8 +76,9 @@ class ZeroEmissionCommitment(ESMValToolMetric):
             "additional_datasets": [dataset],
         }
 
-    @staticmethod
+    @classmethod
     def format_result(
+        cls,
         result_dir: Path,
         metric_dataset: MetricDataset,
         metric_args: MetricBundleArgs,
@@ -91,11 +93,7 @@ class ZeroEmissionCommitment(ESMValToolMetric):
 
         # Update the metric bundle arguments with the computed metrics.
         metric_args[MetricCV.DIMENSIONS.value] = {
-            "json_structure": [
-                "source_id",
-                "region",
-                "metric",
-            ],
+            "json_structure": cls.facets,
             "source_id": {source_id: {}},
             "region": {"global": {}},
             "metric": {"zec": {}},

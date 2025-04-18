@@ -100,7 +100,7 @@ def test_fetch_all_files(mocker, tmp_path, symlink):
     registry = dataset_registry_manager["obs4ref"]
     registry.fetch = mocker.MagicMock(return_value=downloaded_file)
 
-    fetch_all_files(registry, tmp_path, symlink=symlink)
+    fetch_all_files(registry, "obs4ref", tmp_path, symlink=symlink)
     assert registry.fetch.call_count == 2
 
     expected_file = (
@@ -116,5 +116,5 @@ def test_fetch_all_files_no_output(mocker):
     registry = dataset_registry_manager["obs4ref"]
     registry.fetch = mocker.MagicMock()
 
-    fetch_all_files(registry, None)
+    fetch_all_files(registry, "obs4ref", None)
     assert registry.fetch.call_count == 2

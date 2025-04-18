@@ -202,4 +202,4 @@ def fetch_data(
         logger.error(f"Available registries: {', '.join(dataset_registry_manager.keys())}")
         raise typer.Exit(code=1)
 
-    fetch_all_files(_registry, output_directory, symlink=symlink)
+    fetch_all_files(_registry, registry, output_directory, symlink=symlink)

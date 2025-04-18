@@ -68,7 +68,7 @@ def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> Non
             logger.warning("Removing existing sample data")
             shutil.rmtree(output_dir)
 
-    fetch_all_files(sample_data_registry, output_dir, symlink)
+    fetch_all_files(sample_data_registry, "sample", output_dir, symlink)
 
     # Write out the current sample data version to the copying as complete
     with open(output_dir / "version.txt", "w") as fh:

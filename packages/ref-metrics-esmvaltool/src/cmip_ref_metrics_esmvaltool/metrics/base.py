@@ -4,8 +4,10 @@ from pathlib import Path
 from typing import ClassVar
 
 import pandas
+from loguru import logger
 from ruamel.yaml import YAML
 
+from cmip_ref_core.dataset_registry import dataset_registry_manager
 from cmip_ref_core.datasets import MetricDataset, SourceDatasetType
 from cmip_ref_core.metrics import CommandLineMetric, MetricExecutionDefinition, MetricExecutionResult
 from cmip_ref_core.pycmec.metric import CMECMetric
@@ -102,6 +104,32 @@ class ESMValToolMetric(CommandLineMetric):
             },
             "search_esgf": "never",
         }
+
+        # Configure the paths to OBS/OBS6/native6 data
+        registry = dataset_registry_manager["esmvaltool"]
+        data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
+        if not data_dir.exists():
+            logger.warning(
+                "ESMValTool observational and reanalysis data is not available "
+                f"in {data_dir}, you may want to run the command "
+                "`ref datasets fetch-data --registry esmvaltool`."
+            )
+        else:
+            config["drs"].update(  # type: ignore[attr-defined]
+                {
+                    "OBS": "default",
+                    "OBS6": "default",
+                    "native6": "default",
+                }
+            )
+            config["rootpath"].update(  # type: ignore[attr-defined]
+                {
+                    "OBS": str(data_dir / "OBS"),
+                    "OBS6": str(data_dir / "OBS6"),
+                    "native6": str(data_dir / "RAWOBS"),
+                }
+            )
+
         config_dir = definition.to_output_path("config")
         config_dir.mkdir()
         with (config_dir / "config.yml").open("w", encoding="utf-8") as file:

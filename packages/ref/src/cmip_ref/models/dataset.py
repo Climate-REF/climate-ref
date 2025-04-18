@@ -157,11 +157,15 @@ class Obs4MIPsDataset(Dataset):
     source_type: Mapped[str] = mapped_column()
     units: Mapped[str] = mapped_column()
     variable_id: Mapped[str] = mapped_column()
-    variant_label: Mapped[str] = mapped_column()
+    variant_label: Mapped[str] = mapped_column(nullable=True)
     vertical_levels: Mapped[int] = mapped_column()
     source_version_number: Mapped[str] = mapped_column()
-
+    doi: Mapped[str] = mapped_column(nullable=True)
+    references: Mapped[str] = mapped_column(nullable=True)
+    tracking_id: Mapped[str] = mapped_column(nullable=True)
     instance_id: Mapped[str] = mapped_column()
+    has_auxdata: Mapped[str] = mapped_column(nullable=True)
+    aux_variable_id: Mapped[str] = mapped_column(nullable=True)
     """
     Unique identifier for the dataset.
     """
@@ -183,6 +187,7 @@ class Obs4MIPsFile(Base):
     dataset_id: Mapped[int] = mapped_column(
         ForeignKey("obs4mips_dataset.id", ondelete="CASCADE"), nullable=False
     )
+
     """
     Foreign key to the dataset table
     """

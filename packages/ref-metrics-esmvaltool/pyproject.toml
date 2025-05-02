@@ -22,7 +22,7 @@ classifiers = [
 dependencies = [
     "pooch >= 1.8",
     "cmip_ref_core",
-    "ruamel.yaml >= 0.18",
+    "pyyaml",
     "xarray >= 2023.3.0",
 ]
 

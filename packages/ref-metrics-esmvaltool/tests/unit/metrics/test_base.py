@@ -41,7 +41,7 @@ def test_build_cmd(mocker, tmp_path, metric_definition, mock_metric, data_dir_ex
     assert cmd == ["esmvaltool", "run", f"--config-dir={config_dir}", f"{recipe}"]
     assert (output_dir / "climate_data").is_dir()
     config = yaml.load((config_dir / "config.yml").read_text(encoding="utf-8"))
-    assert len(config["rootpath"]) == 4 if data_dir_exists else 1
+    assert len(config["rootpath"]) == 5 if data_dir_exists else 1
 
 
 def test_build_metric_result(metric_definition, mock_metric):

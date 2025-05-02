@@ -53,7 +53,10 @@ class TransientClimateResponse(ESMValToolMetric):
     facets = ("source_id", "region", "metric")
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
         # Only run the diagnostic that computes TCR for a single model.
         recipe["diagnostics"] = {
@@ -76,23 +79,11 @@ class TransientClimateResponse(ESMValToolMetric):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "1pctCO2" and one for the "piControl"
         # experiment.
-        recipe_variables = dataframe_to_recipe(input_files)
-        recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
-
-        # Select a timerange covered by all datasets.
-        start_times, end_times = [], []
-        for variable in recipe_variables.values():
-            for dataset in variable["additional_datasets"]:
-                start, end = dataset["timerange"].split("/")
-                start_times.append(start)
-                end_times.append(end)
-        timerange = f"{max(start_times)}/{min(end_times)}"
-
-        datasets = recipe_variables["tas"]["additional_datasets"]
-        for dataset in datasets:
-            dataset["timerange"] = timerange
-
-        recipe["datasets"] = datasets
+        recipe_variables = dataframe_to_recipe(
+            input_files[SourceDatasetType.CMIP6],
+            equalize_timerange=True,
+        )
+        recipe["datasets"] = recipe_variables["tas"]["additional_datasets"]
 
     @staticmethod
     def format_result(

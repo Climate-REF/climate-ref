@@ -34,6 +34,18 @@ class TestMetricDataset:
         with pytest.raises(KeyError):
             metric_dataset["cmip7"]
 
+    def test_iter(self, metric_dataset):
+        assert tuple(iter(metric_dataset)) == tuple(iter(metric_dataset._collection))
+
+    def test_keys(self, metric_dataset):
+        assert metric_dataset.keys() == metric_dataset._collection.keys()
+
+    def test_values(self, metric_dataset):
+        assert tuple(metric_dataset.values()) == tuple(metric_dataset._collection.values())
+
+    def test_items(self, metric_dataset):
+        assert metric_dataset.items() == metric_dataset._collection.items()
+
     def test_python_hash(self, metric_dataset, cmip6_data_catalog, data_regression):
         dataset_hash = hash(metric_dataset)
 

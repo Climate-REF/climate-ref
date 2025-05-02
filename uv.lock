@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -559,6 +560,7 @@ dependencies = [
     { name = "environs" },
     { name = "loguru" },
     { name = "platformdirs" },
+    { name = "ruamel-yaml" },
     { name = "setuptools" },
     { name = "sqlalchemy" },
     { name = "tomlkit" },
@@ -593,11 +595,13 @@ requires-dist = [
     { name = "loguru", specifier = ">=0.7.2" },
     { name = "platformdirs", specifier = ">=4.3.6" },
     { name = "psycopg2-binary", marker = "extra == 'postgres'", specifier = ">=2.9.2" },
+    { name = "ruamel-yaml", specifier = ">=0.18" },
     { name = "setuptools", specifier = ">=75.8.0" },
     { name = "sqlalchemy", specifier = ">=2.0.36" },
     { name = "tomlkit", specifier = ">=0.13.2" },
     { name = "typer", specifier = ">=0.12.5" },
 ]
+provides-extras = ["postgres", "celery", "metrics"]
 
 [package.metadata.requires-dev]
 dev = []
@@ -677,7 +681,7 @@ source = { editable = "packages/ref-metrics-esmvaltool" }
 dependencies = [
     { name = "cmip-ref-core" },
     { name = "pooch" },
-    { name = "ruamel-yaml" },
+    { name = "pyyaml" },
     { name = "xarray" },
 ]
 
@@ -685,7 +689,7 @@ dependencies = [
 requires-dist = [
     { name = "cmip-ref-core", editable = "packages/ref-core" },
     { name = "pooch", specifier = ">=1.8" },
-    { name = "ruamel-yaml", specifier = ">=0.18" },
+    { name = "pyyaml" },
     { name = "xarray", specifier = ">=2023.3.0" },
 ]
 

@@ -25,7 +25,7 @@ def metric_dataset():
 
 
 def test_update_recipe(metric_dataset):
-    input_files = metric_dataset[SourceDatasetType.CMIP6].datasets
+    input_files = {k: v.datasets for k, v in metric_dataset.items()}
     recipe = load_recipe("recipe_ecs.yml")
     EquilibriumClimateSensitivity().update_recipe(recipe, input_files)
     assert len(recipe["datasets"]) == 2

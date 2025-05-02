@@ -41,13 +41,16 @@ class SeaIceAreaSeasonalCycle(ESMValToolMetric):
     )
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
         # Overlap between observations and historical experiment.
         timerange = "1995/2014"
 
         # Update datasets
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe["datasets"] = recipe_variables["siconc"]["additional_datasets"]
         for dataset in recipe["datasets"]:
             dataset["timerange"] = timerange

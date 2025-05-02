@@ -31,6 +31,7 @@ dependencies = [
     "loguru>=0.7.2",
     "ecgtools>=2024.7.31",
     "platformdirs>=4.3.6",
+    "ruamel.yaml >= 0.18",
     "setuptools>=75.8.0",
 ]
 

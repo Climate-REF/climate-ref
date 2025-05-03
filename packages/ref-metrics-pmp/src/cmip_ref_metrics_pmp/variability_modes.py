@@ -32,7 +32,6 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
             extra_experiments: str | tuple[str, ...] | list[str] = (),
             remove_experiments: str | tuple[str, ...] | list[str] = (),
         ) -> tuple[DataRequirement, DataRequirement]:
-            
             filters = [
                 FacetFilter(
                     facets={

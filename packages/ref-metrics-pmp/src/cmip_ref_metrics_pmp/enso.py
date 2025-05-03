@@ -24,3 +24,51 @@ class ENSO(CommandLineMetric):
         self.name = metrics_collection
         self.slug = metrics_collection.lower()
         self.metrics_collection = metrics_collection
+        
+        def _get_data_requirements(
+            metrics_collection: str,
+            extra_experiments: str | tuple[str, ...] | list[str] = (),
+            remove_experiments: str | tuple[str, ...] | list[str] = (),
+        ) -> tuple[DataRequirement, DataRequirement]:
+            
+            if metrics_collection == "ENSO_perf":
+                model_variables = ("pr", "ts", "taux")
+                obs_sources = ("GPCP", "ERA5")
+            elif metrics_collection == "ENSO_tel":
+                model_variables = ("pr", "ts")
+                obs_sources = ("GPCP", "ERA5")
+            elif metrics_collection == "ENSO_proc":
+                model_variables = ("ts", "taux", "hfls", "hfss", "rlds", "rlus", "rsds", "rsus")
+                obs_sources = ("GPCP", "ERA5", "TropFlux")
+            else:
+                raise ValueError(f"Unknown metrics collection: {metrics_collection}. Valid options are: ENSO_perf, ENSO_tel, ENSO_proc")
+            
+            obs_variables = model_variables
+            
+            filters = [
+                FacetFilter(
+                    facets={
+                        "frequency": "mon",
+                        "experiment_id": ("historical", *extra_experiments),
+                        "variable_id": model_variables,
+                    }
+                )
+            ]
+            
+            if remove_experiments:
+                filters.append(FacetFilter(facets={"experiment_id": remove_experiments}, keep=False))
+            
+            return (
+                DataRequirement(
+                    source_type=SourceDatasetType.obs4MIPs,
+                    filters=(
+                        FacetFilter(facets={"source_id": obs_sources, "variable_id": obs_variables}),
+                    ),
+                    group_by=("source_id", "variable_id"),
+                ),
+                DataRequirement(
+                    source_type=SourceDatasetType.CMIP6,
+                    filters=tuple(filters),
+                    group_by=("source_id", "experiment_id", "variant_label", "member_id"),
+                ),
+            )

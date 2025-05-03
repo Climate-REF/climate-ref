@@ -28,7 +28,7 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
         def _get_data_requirements(
             obs_source: str,
             obs_variable: str,
-            cmip_variable: str,
+            model_variable: str,
             extra_experiments: str | tuple[str, ...] | list[str] = (),
             remove_experiments: str | tuple[str, ...] | list[str] = (),
         ) -> tuple[DataRequirement, DataRequirement]:
@@ -38,7 +38,7 @@ class ExtratropicalModesOfVariability(CommandLineMetric):
                     facets={
                         "frequency": "mon",
                         "experiment_id": ("historical", "hist-GHG", "piControl", *extra_experiments),
-                        "variable_id": cmip_variable,
+                        "variable_id": model_variable,
                     }
                 )
             ]

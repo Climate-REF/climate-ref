@@ -1,13 +1,27 @@
 registry: iomb
 
-thetao-WOA2018-0m:
+thetao-WOA2023-surface:
   sources:
-    thetao: WOA2018/thetao.nc
-  variable_cmap: cool
+    thetao: WOA/thetao_mon_WOA_A5B4_gn_200501-201412.nc
+  variable_cmap: Reds
   depth: 0.0
+  alternate_vars:
+  - tos
 
-thetao-WOA2018-200m:
+so-WOA2023-surface:
   sources:
-    thetao: WOA2018/thetao.nc
-  variable_cmap: cool
-  depth: 200.0
+    so: WOA/so_mon_WOA_A5B4_gn_200501-201412.nc
+  variable_cmap: YlGn
+  depth: 0.0
+  alternate_vars:
+  - sos
+
+amoc-RAPID:
+  analyses:
+  - timeseries
+  alternate_vars:
+  - msftmz
+  transform:
+  - msftmz_to_rapid
+  sources:
+    amoc: RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc

@@ -12,3 +12,34 @@ gpp-FLUXNET2015:
   sources:
     gpp: gpp/FLUXNET2015/gpp.nc
   variable_cmap: Greens
+
+mrro-LORA:
+  sources:
+    mrro: mrro/LORA/LORA.nc
+  variable_cmap: Blues
+
+mrsos-WangMao:
+  sources:
+    mrsol: mrsol/WangMao/mrsol_olc.nc
+  alternate_vars:
+  - mrsos
+  depth: 0.0
+  transform:
+  - soil_moisture_to_vol_fraction
+  variable_cmap: Blues
+
+cSoil-HWSD2:
+  sources:
+    cSoil: cSoil/HWSD2/hwsd2_cSoil.nc
+  variable_cmap: viridis
+
+lai-AVH15C1:
+  sources:
+    lai: lai/AVH15C1/lai.nc
+  variable_cmap: Greens
+
+nbp-Hoffman:
+  analyses:
+  - nbp
+  sources:
+    nbp: nbp/HOFFMAN/nbp_1850-2010.nc

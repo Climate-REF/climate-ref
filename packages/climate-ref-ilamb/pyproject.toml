@@ -19,12 +19,9 @@ classifiers = [
 ]
 dependencies = [
     "climate-ref-core",
-    "ilamb3",
+    "ilamb3>=2025.4.28",
     "types-pyyaml>=6.0.12.20241230",
 ]
-
-[tool.uv.sources]
-ilamb3 = { git = "https://github.com/rubisco-sfa/ilamb3", rev = "7c64e37ebda04b6902b39ef30db96f4bcabba472" }
 
 [project.license]
 text = "Apache-2.0"

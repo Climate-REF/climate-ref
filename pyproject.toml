@@ -113,7 +113,8 @@ exclude = [
     "scripts",
     "stubs",
     "tests",
-    "conftest.py"
+    "conftest.py",
+    "climate_ref_pmp/drivers"
 ]
 mypy_path = "stubs"
 # We need a custom mypy plugin to handle the way we create configuration classes

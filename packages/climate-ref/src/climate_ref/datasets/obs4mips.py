@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import traceback
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -176,7 +177,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             ]
         ]
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, directories: Sequence[Path | str]) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
@@ -185,8 +186,8 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
 
         Parameters
         ----------
-        file_or_directory
-            File or directory containing the datasets
+        directories
+            File or directories containing the datasets
 
         Returns
         -------
@@ -194,7 +195,7 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             Data catalog containing the metadata for the dataset
         """
         builder = Builder(
-            paths=[str(file_or_directory)],
+            paths=[str(directory) for directory in directories],
             depth=10,
             include_patterns=["*.nc"],
             joblib_parallel_kwargs={"n_jobs": self.n_jobs},

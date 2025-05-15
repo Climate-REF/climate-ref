@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 
 import pandas as pd
@@ -18,14 +19,15 @@ class MockDatasetAdapter(DatasetAdapter):
         # Just an example implementation that returns the file_name column
         return data_catalog[["file_name"]]
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, directories: Sequence[Path]) -> pd.DataFrame:
         # Mock implementation, return a DataFrame with fake data
+        _dir = directories[0]
         data = {
-            "dataset_slug": [f"{file_or_directory.stem}_001", f"{file_or_directory.stem}_001"],
+            "dataset_slug": [f"{_dir.stem}_001", f"{_dir.stem}_001"],
             "metadata1": ["value1", "value1"],
             "metadata2": ["value2", "value2"],
             "time_range": ["2020-01-01", "2020-01-01"],
-            "file_name": [file_or_directory.name, file_or_directory.name + "_2"],
+            "file_name": [_dir.name, _dir.name + "_2"],
             "file_size": [100, 100],
         }
         return pd.DataFrame(data)

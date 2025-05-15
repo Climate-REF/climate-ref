@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Protocol
 
@@ -53,9 +54,11 @@ class DatasetAdapter(Protocol):
         """
         ...
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, directories: Path | str | Sequence[Path | str]) -> pd.DataFrame:
         """
-        Generate a data catalog from the specified file or directory
+        Generate a data catalog from a collection of directories
+
+        Each item may also refer to a file.
 
         This data catalog should contain all the metadata needed by the database.
         The index of the data catalog should be the dataset slug.

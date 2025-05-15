@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import warnings
+from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -145,7 +146,7 @@ class CMIP6DatasetAdapter(DatasetAdapter):
             ]
         ]
 
-    def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
+    def find_local_datasets(self, directories: Path | str | Sequence[Path | str]) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
 
@@ -154,7 +155,7 @@ class CMIP6DatasetAdapter(DatasetAdapter):
 
         Parameters
         ----------
-        file_or_directory
+        directories
             File or directory containing the datasets
 
         Returns
@@ -167,7 +168,7 @@ class CMIP6DatasetAdapter(DatasetAdapter):
             warnings.simplefilter("ignore", DeprecationWarning)
 
             builder = Builder(
-                paths=[str(file_or_directory)],
+                paths=[str(directory) for directory in directories],
                 depth=10,
                 include_patterns=["*.nc"],
                 joblib_parallel_kwargs={"n_jobs": self.n_jobs},

@@ -8,11 +8,11 @@ from typing import Any
 
 import pandas as pd
 import xarray as xr
-from ecgtools import Builder
 from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.cmip6 import _parse_datetime
+from climate_ref.datasets.utils import ParallelBuilder
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset
 
 
@@ -194,12 +194,17 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
-        builder = Builder(
+        builder = ParallelBuilder(
             paths=[str(directory) for directory in directories],
             depth=10,
             include_patterns=["*.nc"],
             joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-        ).build(parsing_func=parse_obs4mips)  # type: ignore[arg-type]
+        )
+
+        logger.info(f"Walking through {len(directories)} directories")
+        builder.get_assets()
+        logger.info(f"Found {len(builder.assets)} potential assets")
+        builder.parse(parsing_func=parse_obs4mips).clean_dataframe()  # type: ignore
 
         datasets = builder.df
         if datasets.empty:

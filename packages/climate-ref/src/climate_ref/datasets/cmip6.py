@@ -8,9 +8,10 @@ from typing import Any
 
 import ecgtools.parsers
 import pandas as pd
-from ecgtools import Builder
+from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.utils import ParallelBuilder
 from climate_ref.models.dataset import CMIP6Dataset
 
 
@@ -167,12 +168,17 @@ class CMIP6DatasetAdapter(DatasetAdapter):
             # Ignore the DeprecationWarning from xarray
             warnings.simplefilter("ignore", DeprecationWarning)
 
-            builder = Builder(
+            builder = ParallelBuilder(
                 paths=[str(directory) for directory in directories],
                 depth=10,
                 include_patterns=["*.nc"],
                 joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-            ).build(parsing_func=ecgtools.parsers.parse_cmip6)
+            )
+
+        logger.info(f"Walking through {len(directories)} directories")
+        builder.get_assets()
+        logger.info(f"Found {len(builder.assets)} potential assets")
+        builder.parse(parsing_func=ecgtools.parsers.parse_cmip6).clean_dataframe()  # type: ignore
 
         datasets: pd.DataFrame = builder.df.drop(["init_year"], axis=1)
 

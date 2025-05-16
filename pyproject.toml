@@ -92,6 +92,8 @@ exclude_also = [
 omit = [
     # Skip alembic migration files
     "*/migrations/*",
+    # Skip the drivers as they can't be checked for coverage
+    "*/drivers/*",
 ]
 
 [tool.mypy]
@@ -113,7 +115,8 @@ exclude = [
     "scripts",
     "stubs",
     "tests",
-    "conftest.py"
+    "conftest.py",
+    "climate_ref_pmp/drivers"
 ]
 mypy_path = "stubs"
 # We need a custom mypy plugin to handle the way we create configuration classes

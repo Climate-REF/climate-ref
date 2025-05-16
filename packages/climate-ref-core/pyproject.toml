@@ -31,6 +31,7 @@ dependencies = [
     "typing_extensions",
     "requests",
     "rich",
+    "ruamel.yaml",
 
     # SPEC 0000 constraints
     # We follow [SPEC-0000](https://scientific-python.org/specs/spec-0000/)

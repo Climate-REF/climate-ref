@@ -19,8 +19,11 @@ class MockDatasetAdapter(DatasetAdapter):
         # Just an example implementation that returns the file_name column
         return data_catalog[["file_name"]]
 
-    def find_local_datasets(self, directories: Sequence[Path]) -> pd.DataFrame:
+    def find_local_datasets(self, directories: str | Path | Sequence[Path]) -> pd.DataFrame:
         # Mock implementation, return a DataFrame with fake data
+        if not isinstance(directories, list):
+            directories = [directories]
+
         _dir = directories[0]
         data = {
             "dataset_slug": [f"{_dir.stem}_001", f"{_dir.stem}_001"],

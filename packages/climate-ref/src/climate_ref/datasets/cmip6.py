@@ -1,18 +1,92 @@
 from __future__ import annotations
 
-import warnings
 from collections.abc import Sequence
 from datetime import datetime
 from pathlib import Path
 from typing import Any
 
-import ecgtools.parsers
 import pandas as pd
-from loguru import logger
+import xarray as xr
 
 from climate_ref.datasets.base import DatasetAdapter
-from climate_ref.datasets.utils import ParallelBuilder
+from climate_ref.datasets.utils import ParallelBuilder, get_version_from_filename
 from climate_ref.models.dataset import CMIP6Dataset
+
+CMIP6_ATTRS = (
+    "activity_id",
+    "branch_method",
+    "branch_time_in_child",
+    "branch_time_in_parent",
+    "experiment",
+    "experiment_id",
+    "frequency",
+    "grid",
+    "grid_label",
+    "institution_id",
+    "nominal_resolution",
+    "parent_activity_id",
+    "parent_experiment_id",
+    "parent_source_id",
+    "parent_time_units",
+    "parent_variant_label",
+    "realm",
+    "product",
+    "source_id",
+    "source_type",
+    "sub_experiment",
+    "sub_experiment_id",
+    "table_id",
+    "variable_id",
+    "variant_label",
+)
+CMIP6_DRS_ITEMS = [
+    "activity_id",
+    "institution_id",
+    "source_id",
+    "experiment_id",
+    "member_id",
+    "table_id",
+    "variable_id",
+    "grid_label",
+    "version",
+]
+
+
+def parse_cmip6(file: Path) -> dict[str, Any | None]:
+    """Parser for CMIP6"""
+    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+    with xr.open_dataset(file, chunks=None, decode_times=time_coder) as ds:
+        info = {key: ds.attrs.get(key) for key in CMIP6_ATTRS}
+        info["member_id"] = info["variant_label"]
+
+        variable_id = info["variable_id"]
+        if variable_id:
+            attrs = ds[variable_id].attrs
+            for attr in ["standard_name", "long_name", "units"]:
+                info[attr] = attrs.get(attr)
+
+        # Set the default of # of vertical levels to 1
+        vertical_levels = 1
+        start_time, end_time = None, None
+        try:
+            vertical_levels = ds[ds.cf["vertical"].name].size
+        except (KeyError, AttributeError, ValueError):
+            ...
+
+        try:
+            start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
+        except (KeyError, AttributeError, ValueError):
+            ...
+        info["vertical_levels"] = vertical_levels
+        info["start_time"] = start_time
+        info["end_time"] = end_time
+        if not (start_time and end_time):
+            info["time_range"] = None
+        else:
+            info["time_range"] = f"{start_time}-{end_time}"
+    info["path"] = str(file)
+    info["version"] = get_version_from_filename(file) or "v0"
+    return info
 
 
 def _parse_datetime(dt_str: pd.Series[str]) -> pd.Series[datetime | Any]:
@@ -76,31 +150,7 @@ class CMIP6DatasetAdapter(DatasetAdapter):
     slug_column = "instance_id"
 
     dataset_specific_metadata = (
-        "activity_id",
-        "branch_method",
-        "branch_time_in_child",
-        "branch_time_in_parent",
-        "experiment",
-        "experiment_id",
-        "frequency",
-        "grid",
-        "grid_label",
-        "institution_id",
-        "nominal_resolution",
-        "parent_activity_id",
-        "parent_experiment_id",
-        "parent_source_id",
-        "parent_time_units",
-        "parent_variant_label",
-        "product",
-        "realm",
-        "source_id",
-        "source_type",
-        "sub_experiment",
-        "sub_experiment_id",
-        "table_id",
-        "variable_id",
-        "variant_label",
+        *CMIP6_ATTRS,
         "member_id",
         "vertical_levels",
         "version",
@@ -133,19 +183,7 @@ class CMIP6DatasetAdapter(DatasetAdapter):
             Subset of the data catalog to pretty print
 
         """
-        return data_catalog[
-            [
-                "activity_id",
-                "institution_id",
-                "source_id",
-                "experiment_id",
-                "member_id",
-                "table_id",
-                "variable_id",
-                "grid_label",
-                "version",
-            ]
-        ]
+        return data_catalog[list(CMIP6_DRS_ITEMS)]
 
     def find_local_datasets(self, directories: Path | str | Sequence[Path | str]) -> pd.DataFrame:
         """
@@ -164,42 +202,16 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
-        with warnings.catch_warnings():
-            # Ignore the DeprecationWarning from xarray
-            warnings.simplefilter("ignore", DeprecationWarning)
-
-            builder = ParallelBuilder(
-                paths=[str(directory) for directory in directories],
-                depth=10,
-                include_patterns=["*.nc"],
-                joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-            )
-
-        logger.info(f"Walking through {len(directories)} directories")
-        builder.get_assets()
-        logger.info(f"Found {len(builder.assets)} potential assets")
-        builder.parse(parsing_func=ecgtools.parsers.parse_cmip6).clean_dataframe()  # type: ignore
-
-        datasets: pd.DataFrame = builder.df.drop(["init_year"], axis=1)
+        builder = ParallelBuilder(paths=directories)
+        datasets = builder.get_datasets(parsing_func=parse_cmip6)
 
         # Convert the start_time and end_time columns to datetime objects
         # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
         datasets["start_time"] = _parse_datetime(datasets["start_time"])
         datasets["end_time"] = _parse_datetime(datasets["end_time"])
 
-        drs_items = [
-            "activity_id",
-            "institution_id",
-            "source_id",
-            "experiment_id",
-            "member_id",
-            "table_id",
-            "variable_id",
-            "grid_label",
-            "version",
-        ]
         datasets["instance_id"] = datasets.apply(
-            lambda row: "CMIP6." + ".".join([row[item] for item in drs_items]), axis=1
+            lambda row: "CMIP6." + ".".join([row[item] for item in CMIP6_DRS_ITEMS]), axis=1
         )
 
         # Temporary fix for some datasets

@@ -77,7 +77,7 @@ def test_empty_dir():
     ),
 )
 def test_parse_obs4mips(sample_data_dir, file_fragment, exp):
-    result = parse_obs4mips(str(sample_data_dir / file_fragment))
+    result = parse_obs4mips(sample_data_dir / file_fragment)
 
     assert result == exp
 

@@ -22,7 +22,7 @@ class TestPMPClimatologyAdapter:
 
     def test_load_local_datasets(self, sample_data_dir, catalog_regression):
         adapter = PMPClimatologyDatasetAdapter()
-        data_catalog = adapter.find_local_datasets(str(sample_data_dir) + "/obs4MIPs")
+        data_catalog = adapter.find_local_datasets(str(sample_data_dir) + "/obs4REF")
 
         # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(
@@ -43,4 +43,4 @@ class TestPMPClimatologyAdapter:
         with pytest.raises(ValueError) as excinfo:
             adapter = PMPClimatologyDatasetAdapter()
             adapter.find_local_datasets(test_empty_dir)
-        assert str(excinfo.value) == "asset list provided is None. Please run `.get_assets()` first"
+        assert str(excinfo.value) == "No obs4MIPs-compliant datasets found"

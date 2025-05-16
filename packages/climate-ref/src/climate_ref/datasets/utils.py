@@ -6,7 +6,7 @@ from collections.abc import Callable, Collection
 from pathlib import Path
 from typing import Any, cast
 
-import cf_xarray  # noqa
+# import cf_xarray
 import pandas as pd
 import tqdm.contrib.concurrent
 from attrs import define, field

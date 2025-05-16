@@ -53,37 +53,37 @@ CMIP6_DRS_ITEMS = [
 
 
 def parse_cmip6(file: Path) -> dict[str, Any | None]:
-    """Parser for CMIP6"""
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    with xr.open_dataset(file, chunks=None, decode_times=time_coder) as ds:
-        info = {key: ds.attrs.get(key) for key in CMIP6_ATTRS}
-        info["member_id"] = info["variant_label"]
+    """Parser for CMIP6, optimized for speed to primarily fetch attributes."""
+    info: dict[str, Any | None] = {}
+    # Open dataset with minimal decoding for speed
+    with xr.open_dataset(
+        file,
+        chunks=None,
+        decode_cf=False,
+        decode_times=False,
+        decode_coords=False,
+        engine="netcdf4",  # Or h5netcdf, specify if known
+    ) as ds:
+        for key in CMIP6_ATTRS:
+            info[key] = ds.attrs.get(key)
+        info["member_id"] = info.get("variant_label")
 
-        variable_id = info["variable_id"]
-        if variable_id:
-            attrs = ds[variable_id].attrs
+        variable_id = info.get("variable_id")
+        if variable_id and variable_id in ds.variables:
+            var_attrs = ds[variable_id].attrs
             for attr in ["standard_name", "long_name", "units"]:
-                info[attr] = attrs.get(attr)
-
-        # Set the default of # of vertical levels to 1
-        vertical_levels = 1
-        start_time, end_time = None, None
-        try:
-            vertical_levels = ds[ds.cf["vertical"].name].size
-        except (KeyError, AttributeError, ValueError):
-            ...
-
-        try:
-            start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
-        except (KeyError, AttributeError, ValueError):
-            ...
-        info["vertical_levels"] = vertical_levels
-        info["start_time"] = start_time
-        info["end_time"] = end_time
-        if not (start_time and end_time):
-            info["time_range"] = None
+                info[attr] = var_attrs.get(attr)
         else:
-            info["time_range"] = f"{start_time}-{end_time}"
+            for attr in ["standard_name", "long_name", "units"]:
+                info[attr] = None
+
+        # Set defaults for fields that require data access or CF parsing,
+        # as per "just get attributes" and "maximum speed" requirement.
+        info["vertical_levels"] = 1  # Default value
+        info["start_time"] = None
+        info["end_time"] = None
+        info["time_range"] = None
+
     info["path"] = str(file)
     info["version"] = get_version_from_filename(file) or "v0"
     return info

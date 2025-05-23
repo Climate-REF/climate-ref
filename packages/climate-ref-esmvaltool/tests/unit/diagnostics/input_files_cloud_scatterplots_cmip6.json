@@ -1,0 +1,212 @@
+{
+    "start_time":{
+        "207":"1850-01-15T12:00:00.000",
+        "213":"1850-01-15T12:00:00.000",
+        "214":"1850-01-15T12:00:00.000",
+        "217":null
+    },
+    "end_time":{
+        "207":"2014-12-15T12:00:00.000",
+        "213":"2014-12-15T12:00:00.000",
+        "214":"2014-12-15T12:00:00.000",
+        "217":null
+    },
+    "path":{
+        "207":"\/home\/bandela\/climate_data\/CMIP6\/CMIP\/NCAR\/CESM2\/historical\/r1i1p1f1\/Amon\/clt\/gn\/v20190308\/clt_Amon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc",
+        "213":"\/home\/bandela\/climate_data\/CMIP6\/CMIP\/NCAR\/CESM2\/historical\/r1i1p1f1\/Amon\/rsut\/gn\/v20190308\/rsut_Amon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc",
+        "214":"\/home\/bandela\/climate_data\/CMIP6\/CMIP\/NCAR\/CESM2\/historical\/r1i1p1f1\/Amon\/rsutcs\/gn\/v20190308\/rsutcs_Amon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc",
+        "217":"\/home\/bandela\/climate_data\/CMIP6\/CMIP\/NCAR\/CESM2\/historical\/r1i1p1f1\/fx\/areacella\/gn\/v20190308\/areacella_fx_CESM2_historical_r1i1p1f1_gn.nc"
+    },
+    "activity_id":{
+        "207":"CMIP",
+        "213":"CMIP",
+        "214":"CMIP",
+        "217":"CMIP"
+    },
+    "branch_method":{
+        "207":"standard",
+        "213":"standard",
+        "214":"standard",
+        "217":"standard"
+    },
+    "branch_time_in_child":{
+        "207":674885.0,
+        "213":674885.0,
+        "214":674885.0,
+        "217":674885.0
+    },
+    "branch_time_in_parent":{
+        "207":219000.0,
+        "213":219000.0,
+        "214":219000.0,
+        "217":219000.0
+    },
+    "experiment":{
+        "207":"all-forcing simulation of the recent past",
+        "213":"all-forcing simulation of the recent past",
+        "214":"all-forcing simulation of the recent past",
+        "217":"all-forcing simulation of the recent past"
+    },
+    "experiment_id":{
+        "207":"historical",
+        "213":"historical",
+        "214":"historical",
+        "217":"historical"
+    },
+    "frequency":{
+        "207":"mon",
+        "213":"mon",
+        "214":"mon",
+        "217":"fx"
+    },
+    "grid":{
+        "207":"native 0.9x1.25 finite volume grid (192x288 latxlon)",
+        "213":"native 0.9x1.25 finite volume grid (192x288 latxlon)",
+        "214":"native 0.9x1.25 finite volume grid (192x288 latxlon)",
+        "217":"native 0.9x1.25 finite volume grid (192x288 latxlon)"
+    },
+    "grid_label":{
+        "207":"gn",
+        "213":"gn",
+        "214":"gn",
+        "217":"gn"
+    },
+    "institution_id":{
+        "207":"NCAR",
+        "213":"NCAR",
+        "214":"NCAR",
+        "217":"NCAR"
+    },
+    "nominal_resolution":{
+        "207":"100 km",
+        "213":"100 km",
+        "214":"100 km",
+        "217":"100 km"
+    },
+    "parent_activity_id":{
+        "207":"CMIP",
+        "213":"CMIP",
+        "214":"CMIP",
+        "217":"CMIP"
+    },
+    "parent_experiment_id":{
+        "207":"piControl",
+        "213":"piControl",
+        "214":"piControl",
+        "217":"piControl"
+    },
+    "parent_source_id":{
+        "207":"CESM2",
+        "213":"CESM2",
+        "214":"CESM2",
+        "217":"CESM2"
+    },
+    "parent_time_units":{
+        "207":"days since 0001-01-01 00:00:00",
+        "213":"days since 0001-01-01 00:00:00",
+        "214":"days since 0001-01-01 00:00:00",
+        "217":"days since 0001-01-01 00:00:00"
+    },
+    "parent_variant_label":{
+        "207":"r1i1p1f1",
+        "213":"r1i1p1f1",
+        "214":"r1i1p1f1",
+        "217":"r1i1p1f1"
+    },
+    "product":{
+        "207":"model-output",
+        "213":"model-output",
+        "214":"model-output",
+        "217":"model-output"
+    },
+    "realm":{
+        "207":"atmos",
+        "213":"atmos",
+        "214":"atmos",
+        "217":"atmos land"
+    },
+    "source_id":{
+        "207":"CESM2",
+        "213":"CESM2",
+        "214":"CESM2",
+        "217":"CESM2"
+    },
+    "source_type":{
+        "207":"AOGCM BGC",
+        "213":"AOGCM BGC",
+        "214":"AOGCM BGC",
+        "217":"AOGCM BGC"
+    },
+    "sub_experiment":{
+        "207":"none",
+        "213":"none",
+        "214":"none",
+        "217":"none"
+    },
+    "sub_experiment_id":{
+        "207":"none",
+        "213":"none",
+        "214":"none",
+        "217":"none"
+    },
+    "table_id":{
+        "207":"Amon",
+        "213":"Amon",
+        "214":"Amon",
+        "217":"fx"
+    },
+    "variable_id":{
+        "207":"clt",
+        "213":"rsut",
+        "214":"rsutcs",
+        "217":"areacella"
+    },
+    "variant_label":{
+        "207":"r1i1p1f1",
+        "213":"r1i1p1f1",
+        "214":"r1i1p1f1",
+        "217":"r1i1p1f1"
+    },
+    "member_id":{
+        "207":"r1i1p1f1",
+        "213":"r1i1p1f1",
+        "214":"r1i1p1f1",
+        "217":"r1i1p1f1"
+    },
+    "vertical_levels":{
+        "207":1,
+        "213":1,
+        "214":1,
+        "217":1
+    },
+    "version":{
+        "207":"v20190308",
+        "213":"v20190308",
+        "214":"v20190308",
+        "217":"v20190308"
+    },
+    "standard_name":{
+        "207":"cloud_area_fraction",
+        "213":"toa_outgoing_shortwave_flux",
+        "214":"toa_outgoing_shortwave_flux_assuming_clear_sky",
+        "217":"cell_area"
+    },
+    "long_name":{
+        "207":"Total Cloud Cover Percentage",
+        "213":"TOA Outgoing Shortwave Radiation",
+        "214":"TOA Outgoing Clear-Sky Shortwave Radiation",
+        "217":"Grid-Cell Area for Atmospheric Grid Variables"
+    },
+    "units":{
+        "207":"%",
+        "213":"W m-2",
+        "214":"W m-2",
+        "217":"m2"
+    },
+    "instance_id":{
+        "207":"CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clt.gn.v20190308",
+        "213":"CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsut.gn.v20190308",
+        "214":"CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsutcs.gn.v20190308",
+        "217":"CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308"
+    }
+}

@@ -67,12 +67,15 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     facets = ("grid_label", "member_id", "source_id", "region", "metric")
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
         # Prepare updated datasets section in recipe. It contains three
         # datasets, "tas" and "fco2antt" for the "esm-1pctCO2" and just "tas"
         # for the "esm-piControl" experiment.
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         tas_esm_1pctCO2 = next(
             ds for ds in recipe_variables["tas"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
         )

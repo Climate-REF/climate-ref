@@ -4,8 +4,8 @@ from pathlib import Path
 from typing import ClassVar
 
 import pandas
+import yaml
 from loguru import logger
-from ruamel.yaml import YAML
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
@@ -19,8 +19,6 @@ from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_esmvaltool.recipe import load_recipe, prepare_climate_data
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
-yaml = YAML()
-
 
 class ESMValToolDiagnostic(CommandLineDiagnostic):
     """ESMValTool Diagnostic base class."""
@@ -29,7 +27,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
     @staticmethod
     @abstractmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """
         Update the base recipe for the run.
 
@@ -83,33 +84,36 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The result of running the diagnostic.
         """
-        input_files = definition.datasets[SourceDatasetType.CMIP6].datasets
+        input_files = {project: definition.datasets[project].datasets for project in definition.datasets}
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
 
         recipe_path = definition.to_output_path("recipe.yml")
         with recipe_path.open("w", encoding="utf-8") as file:
-            yaml.dump(recipe, file)
+            yaml.safe_dump(recipe, file)
 
         climate_data = definition.to_output_path("climate_data")
 
-        prepare_climate_data(
-            definition.datasets[SourceDatasetType.CMIP6].datasets,
-            climate_data_dir=climate_data,
-        )
+        for metric_dataset in definition.datasets.values():
+            prepare_climate_data(
+                metric_dataset.datasets,
+                climate_data_dir=climate_data,
+            )
 
         config = {
             "drs": {
                 "CMIP6": "ESGF",
+                "obs4MIPs": "ESGF",
             },
             "output_dir": str(definition.to_output_path("executions")),
             "rootpath": {
-                "default": str(climate_data),
+                "CMIP6": str(climate_data),
+                "obs4MIPs": str(climate_data),
             },
             "search_esgf": "never",
         }
 
-        # Configure the paths to OBS/OBS6/native6 data
+        # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
         registry = dataset_registry_manager["esmvaltool"]
         data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
         if not data_dir.exists():
@@ -133,11 +137,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     "native6": str(data_dir / "RAWOBS"),
                 }
             )
+            config["rootpath"]["obs4MIPs"] = [  # type: ignore[index]
+                config["rootpath"]["obs4MIPs"],  # type: ignore[index]
+                str(data_dir),
+            ]
 
         config_dir = definition.to_output_path("config")
         config_dir.mkdir()
         with (config_dir / "config.yml").open("w", encoding="utf-8") as file:
-            yaml.dump(config, file)
+            yaml.safe_dump(config, file)
 
         return [
             "esmvaltool",
@@ -171,7 +179,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         # Add the plots and data files
         plot_suffixes = {".png", ".jpg", ".pdf", ".ps"}
         for metadata_file in result_dir.glob("run/*/*/diagnostic_provenance.yml"):
-            metadata = yaml.load(metadata_file.read_text(encoding="utf-8"))
+            metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
             for filename in metadata:
                 caption = metadata[filename].get("caption", "")
                 relative_path = definition.as_relative_path(filename)

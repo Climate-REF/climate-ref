@@ -32,7 +32,7 @@ mrsos-WangMao:
 
 cSoil-HWSD2:
   sources:
-    cSoil: ilamb/cSoil/HWSD2/hwsd2_cSoil.nc
+    cSoil: ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc
   variable_cmap: viridis
 
 lai-AVH15C1:
@@ -46,3 +46,7 @@ nbp-Hoffman:
   sources:
     # TODO: Update to use the obs4REF equiv
     nbp: ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
+
+snc-ESACCI:
+  sources:
+    snc: ilamb/snc/Snow-cci/snc_mon_Snow-cci_BE_gn_198201-201906.nc

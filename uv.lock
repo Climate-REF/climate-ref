@@ -513,7 +513,7 @@ name = "click"
 version = "8.1.8"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "platform_system == 'Windows'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/b9/2e/0090cbf739cee7d23781ad4b89a9894a41538e4fcf4c31dcdd705b78eb8b/click-8.1.8.tar.gz", hash = "sha256:ed53c9d8990d83c2a27deae68e4ee337473f6330c040a31d4225c9574d16096a", size = 226593 }
 wheels = [
@@ -761,7 +761,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },
-    { name = "ilamb3", specifier = ">=2025.4.28" },
+    { name = "ilamb3", specifier = ">=2025.5.20" },
 ]
 
 [package.metadata.requires-dev]
@@ -903,7 +903,7 @@ name = "colorful"
 version = "0.5.6"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "platform_system == 'Windows'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fa/5f/38e40c3bc4107c39e4062d943026b8ee25154cb4b185b882f274a1ab65da/colorful-0.5.6.tar.gz", hash = "sha256:b56d5c01db1dac4898308ea889edcb113fbee3e6ec5df4bacffd61d5241b5b8d", size = 209280 }
 wheels = [
@@ -1499,7 +1499,7 @@ wheels = [
 
 [[package]]
 name = "ilamb3"
-version = "2025.4.28"
+version = "2025.5.20"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cartopy" },
@@ -1519,9 +1519,9 @@ dependencies = [
     { name = "statsmodels" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/03/15/18be6e5490162d7076b0d839e488169a67a8bfc3134bf850d8ebd86347b7/ilamb3-2025.4.28.tar.gz", hash = "sha256:309a70f259e34f538a4dcdab41d65093267cd2c3b8f85c0f726f1b512bc4de3c", size = 413810 }
+sdist = { url = "https://files.pythonhosted.org/packages/fe/25/7456e10064bbacb022237e2c3e93883d5611c048a3308ba163cf6e368458/ilamb3-2025.5.20.tar.gz", hash = "sha256:acaedc45c99374ba80b9e490856196578c29ab983ff87e3e9523e0b5d29f1fa6", size = 422127 }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6d/54/e627139829a263f851dc61c1fa00087119338cb6ca7871753bd94ca05ef9/ilamb3-2025.4.28-py3-none-any.whl", hash = "sha256:dd1a42353b138ceadc177dcf38701f991d01509fc44ee7352c58125e38709e8c", size = 82772 },
+    { url = "https://files.pythonhosted.org/packages/17/20/9eefc45958f6eac090f4c9b4243db572da89d9e911639fe07931e0d896d1/ilamb3-2025.5.20-py3-none-any.whl", hash = "sha256:ffa2f03636d4e81f20d99d6023babc087598ae511341e7a35591bb020f95dda7", size = 92582 },
 ]
 
 [[package]]
@@ -1586,7 +1586,7 @@ name = "ipykernel"
 version = "6.29.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "appnope", marker = "sys_platform == 'darwin'" },
+    { name = "appnope", marker = "platform_system == 'Darwin'" },
     { name = "comm" },
     { name = "debugpy" },
     { name = "ipython" },
@@ -2274,7 +2274,7 @@ version = "1.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "click" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "platform_system == 'Windows'" },
     { name = "ghp-import" },
     { name = "jinja2" },
     { name = "markdown" },
@@ -4325,7 +4325,7 @@ name = "tqdm"
 version = "4.67.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "sys_platform == 'win32'" },
+    { name = "colorama", marker = "platform_system == 'Windows'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/a8/4b/29b4ef32e036bb34e4ab51796dd745cdba7ed47ad142a9f4a1eb8e0c744d/tqdm-4.67.1.tar.gz", hash = "sha256:f8aef9c52c08c13a65f30ea34f4e5aac3fd1a34959879d7e59e63027286627f2", size = 169737 }
 wheels = [

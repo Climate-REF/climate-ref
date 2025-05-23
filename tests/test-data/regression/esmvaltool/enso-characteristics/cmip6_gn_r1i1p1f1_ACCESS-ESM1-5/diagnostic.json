@@ -1,0 +1,52 @@
+{
+  "DIMENSIONS": {
+    "json_structure": [
+      "grid_label",
+      "member_id",
+      "source_id",
+      "region",
+      "metric"
+    ],
+    "region": {
+      "global": {}
+    },
+    "metric": {
+      "09pattern": {},
+      "10lifecycle": {},
+      "11amplitude": {},
+      "12seasonality": {},
+      "13asymmetry": {},
+      "14duration": {},
+      "15diversity": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    }
+  },
+  "RESULTS": {
+    "gn": {
+      "r1i1p1f1": {
+        "ACCESS-ESM1-5": {
+          "global": {
+            "09pattern": 0.1997316294442932,
+            "10lifecycle": 0.1591977882295059,
+            "11amplitude": 7.509807934001442,
+            "12seasonality": 64.42112276886938,
+            "13asymmetry": 176.8532610925655,
+            "14duration": 15.384615384615383,
+            "15diversity": 51.24999999999999
+          }
+        }
+      }
+    }
+  },
+  "PROVENANCE": null,
+  "DISCLAIMER": null,
+  "NOTES": null
+}

@@ -34,7 +34,12 @@ def list_(
     ] = SourceDatasetType.CMIP6.value,  # type: ignore
     column: Annotated[list[str] | None, typer.Option()] = None,
     include_files: bool = typer.Option(False, help="Include files in the output"),
-    limit: int = typer.Option(100, help="Limit the number of rows to display"),
+    limit: int = typer.Option(
+        100,
+        help=(
+            "Limit the number of datasets (or files when using --include-files) to display to this number."
+        ),
+    ),
 ) -> None:
     """
     List the datasets that have been ingested

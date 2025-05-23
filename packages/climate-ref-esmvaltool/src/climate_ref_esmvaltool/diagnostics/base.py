@@ -101,15 +101,17 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         config = {
             "drs": {
                 "CMIP6": "ESGF",
+                "obs4MIPs": "ESGF",
             },
             "output_dir": str(definition.to_output_path("executions")),
             "rootpath": {
-                "default": str(climate_data),
+                "CMIP6": str(climate_data),
+                "obs4MIPs": str(climate_data),
             },
             "search_esgf": "never",
         }
 
-        # Configure the paths to OBS/OBS6/native6 data
+        # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
         registry = dataset_registry_manager["esmvaltool"]
         data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
         if not data_dir.exists():
@@ -129,10 +131,14 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             config["rootpath"].update(  # type: ignore[attr-defined]
                 {
                     "OBS": str(data_dir / "OBS"),
-                    "OBS6": str(data_dir / "OBS6"),
+                    "OBS6": str(data_dir / "OBS"),
                     "native6": str(data_dir / "RAWOBS"),
                 }
             )
+            config["rootpath"]["obs4MIPs"] = [  # type: ignore[index]
+                config["rootpath"]["obs4MIPs"],  # type: ignore[index]
+                str(data_dir),
+            ]
 
         config_dir = definition.to_output_path("config")
         config_dir.mkdir()

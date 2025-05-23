@@ -84,6 +84,13 @@ This defaults to the following locations:
   environment variable, if defined. (Linux)
 * `%USERPROFILE%\AppData\Local\climate_ref\Cache` (Windows)
 
+### `REF_TEST_DATA_DIR`
+
+Override the location of the test data directory.
+If this is not set, the test data directory will be inferred from the location of the test suite.
+
+If this is set, then the sample data won't be updated.
+
 ### `REF_TEST_OUTPUT`
 
 Path where the test output is stored.

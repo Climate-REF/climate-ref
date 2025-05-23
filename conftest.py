@@ -103,6 +103,9 @@ def regression_data_dir(test_data_dir) -> Path:
 
 @pytest.fixture(autouse=True, scope="session")
 def sample_data() -> None:
+    if os.environ.get("REF_TEST_DATA_DIR"):
+        logger.warning("Not fetching sample data. Using custom test data directory")
+        return
     # Downloads the sample data if it doesn't exist
     logger.disable("climate_ref_core.dataset_registry")
     fetch_sample_data(force_cleanup=False, symlink=False)

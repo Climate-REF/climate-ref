@@ -37,10 +37,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         self.name = f"Extratropical modes of variability: {mode_id}"
         self.slug = f"extratropical-modes-of-variability-{mode_id.lower()}"
 
-        def get_data_requirements(
+        def _get_data_requirements(
             obs_source: str,
             obs_variable: str,
-            cmip_variable: str,
+            model_variable: str,
             extra_experiments: str | tuple[str, ...] | list[str] = (),
         ) -> tuple[DataRequirement, DataRequirement]:
             filters = [
@@ -48,7 +48,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                     facets={
                         "frequency": "mon",
                         "experiment_id": ("historical", "hist-GHG", "piControl", *extra_experiments),
-                        "variable_id": cmip_variable,
+                        "variable_id": model_variable,
                     }
                 )
             ]
@@ -70,10 +70,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         if self.mode_id in self.ts_modes:
             self.parameter_file = "pmp_param_MoV-ts.py"
-            self.data_requirements = get_data_requirements("HadISST-1-1", "ts", "ts")
+            self.data_requirements = _get_data_requirements("HadISST-1-1", "ts", "ts")
         elif self.mode_id in self.psl_modes:
             self.parameter_file = "pmp_param_MoV-psl.py"
-            self.data_requirements = get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
+            self.data_requirements = _get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
         else:
             raise ValueError(
                 f"Unknown mode_id '{self.mode_id}'. Must be one of {self.ts_modes + self.psl_modes}"

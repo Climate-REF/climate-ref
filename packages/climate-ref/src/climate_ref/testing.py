@@ -13,16 +13,17 @@ from climate_ref.executor import handle_execution_result
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
+from climate_ref_core.env import env
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
 
 def _determine_test_directory() -> Path | None:
-    expected = Path(__file__).parents[4] / "tests" / "test-data"
+    path = env.path("REF_TEST_DATA_DIR", default=Path(__file__).parents[4] / "tests" / "test-data")
 
-    if not expected.exists():  # pragma: no cover
+    if not path.exists():  # pragma: no cover
         return None
-    return expected
+    return path
 
 
 TEST_DATA_DIR = _determine_test_directory()

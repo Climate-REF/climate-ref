@@ -6,7 +6,7 @@ import importlib.metadata
 
 from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager
 from climate_ref_core.providers import CondaDiagnosticProvider
-from climate_ref_pmp.diagnostics import AnnualCycle, ExtratropicalModesOfVariability
+from climate_ref_pmp.diagnostics import ENSO, AnnualCycle, ExtratropicalModesOfVariability
 
 __version__ = importlib.metadata.version("climate-ref-pmp")
 
@@ -14,6 +14,15 @@ __version__ = importlib.metadata.version("climate-ref-pmp")
 # PMP uses a conda environment to run the diagnostics
 provider = CondaDiagnosticProvider("PMP", __version__)
 
+# Annual cycle diagnostics and metrics
+provider.register(AnnualCycle())
+
+# ENSO diagnostics and metrics
+# provider.register(ENSO("ENSO_perf"))  # Assigned to ESMValTool
+provider.register(ENSO("ENSO_tel"))
+provider.register(ENSO("ENSO_proc"))
+
+# Extratropical modes of variability diagnostics and metrics
 provider.register(ExtratropicalModesOfVariability("PDO"))
 provider.register(ExtratropicalModesOfVariability("NPGO"))
 provider.register(ExtratropicalModesOfVariability("NAO"))
@@ -21,7 +30,6 @@ provider.register(ExtratropicalModesOfVariability("NAM"))
 provider.register(ExtratropicalModesOfVariability("PNA"))
 provider.register(ExtratropicalModesOfVariability("NPO"))
 provider.register(ExtratropicalModesOfVariability("SAM"))
-provider.register(AnnualCycle())
 
 
 dataset_registry_manager.register(

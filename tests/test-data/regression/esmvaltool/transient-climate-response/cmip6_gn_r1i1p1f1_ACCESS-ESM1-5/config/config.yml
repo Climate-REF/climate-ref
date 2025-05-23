@@ -1,8 +1,14 @@
 drs:
   CMIP6: ESGF
+  OBS: default
+  OBS6: default
+  native6: default
 output_dir: 
   <OUTPUT_DIR>/executions
 rootpath:
   default: 
     <OUTPUT_DIR>/climate_data
+  OBS: /home/bandela/.cache/climate_ref/ESMValTool/OBS
+  OBS6: /home/bandela/.cache/climate_ref/ESMValTool/OBS6
+  native6: /home/bandela/.cache/climate_ref/ESMValTool/RAWOBS
 search_esgf: never

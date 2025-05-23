@@ -1,0 +1,96 @@
+INFO    [46992] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [46992] Package versions
+INFO    [46992] ----------------
+INFO    [46992] ESMValCore: 2.12.0
+INFO    [46992] ESMValTool: 2.13.0.dev65+g58fd0b8ec
+INFO    [46992] ----------------
+INFO    [46992] Reading configuration files from:
+/home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/lib/python3.12/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/bandela/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [46992] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20250523_140936/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20250523_140936/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20250523_140936/run/cmor_log.txt
+WARNING [46992] /home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+
+INFO    [46992] Starting the Earth System Model Evaluation Tool at time: 2025-05-23 14:09:36 UTC
+INFO    [46992] ----------------------------------------------------------------------
+INFO    [46992] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [46992] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20250523_140936/run
+INFO    [46992] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20250523_140936/work
+INFO    [46992] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20250523_140936/preproc
+INFO    [46992] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20250523_140936/plots
+INFO    [46992] ----------------------------------------------------------------------
+INFO    [46992] Running tasks using at most 1 processes
+INFO    [46992] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [46992] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [46992] Creating tasks from recipe
+INFO    [46992] Creating tasks for diagnostic timeseries
+INFO    [46992] Creating diagnostic task timeseries/script1
+INFO    [46992] Creating preprocessor task timeseries/tas
+INFO    [46992] Creating preprocessor 'annual_mean_global' task for variable 'tas'
+INFO    [46992] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, C4MIP CDRMIP, esm-1pct-brch-1000PgC, r1i1p1f1, gn, v20191206, supplementaries: areacella, fx
+INFO    [46992] PreprocessingTask timeseries/tas created.
+INFO    [46992] These tasks will be executed: timeseries/script1, timeseries/tas
+INFO    [46992] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250523_140936/run/recipe_filled.yml
+INFO    [46992] Using Dask distributed scheduler (address: tcp://127.0.0.1:44319, dashboard link: http://127.0.0.1:8787/status)
+INFO    [46992] Running 2 tasks sequentially
+INFO    [46992] Starting task timeseries/tas in process [46992]
+INFO    [46992] Computing and saving data for preprocessing task timeseries/tas
+INFO    [46992] Successfully completed task timeseries/tas (priority 1) in 0:00:01.225605
+INFO    [46992] Starting task timeseries/script1 in process [46992]
+INFO    [46992] Running command ['/home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/bin/python', '/home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/lib/python3.12/site-packages/esmvaltool/diag_scripts/examples/diagnostic.py', '<OUTPUT_DIR>/executions/recipe_20250523_140936/run/timeseries/script1/settings.yml']
+INFO    [46992] Writing output to <OUTPUT_DIR>/executions/recipe_20250523_140936/work/timeseries/script1
+INFO    [46992] Writing plots to <OUTPUT_DIR>/executions/recipe_20250523_140936/plots/timeseries/script1
+INFO    [46992] Writing log to <OUTPUT_DIR>/executions/recipe_20250523_140936/run/timeseries/script1/log.txt
+INFO    [46992] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250523_140936/run/timeseries/script1; MPLBACKEND="Agg" /home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/bin/python /home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/lib/python3.12/site-packages/esmvaltool/diag_scripts/examples/diagnostic.py <OUTPUT_DIR>/executions/recipe_20250523_140936/run/timeseries/script1/settings.yml
+INFO    [46992] Maximum memory used (estimate): 0.4 GB
+INFO    [46992] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [46992] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC
+INFO    [46992] Successfully completed task timeseries/script1 (priority 0) in 0:00:03.260454
+INFO    [46992] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250523_140936/run/recipe_filled.yml
+INFO    [46992] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20250523_140936/index.html
+INFO    [46992] Ending the Earth System Model Evaluation Tool at time: 2025-05-23 14:09:41 UTC
+INFO    [46992] Time for running the recipe was: 0:00:05.493164
+INFO    [46992] Maximum memory used (estimate): 1.4 GB
+INFO    [46992] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [46992] Removing `preproc` directory containing preprocessed data
+INFO    [46992] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [46992] Run was successful

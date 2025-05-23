@@ -102,6 +102,17 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         }
         recipe["diagnostics"].pop("barplot")
 
+        # Update descriptions.
+        dataset = tas_esm_1pctCO2["dataset"]
+        ensemble = tas_esm_1pctCO2["ensemble"]
+        settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate_tcre"]
+        settings["caption"] = (
+            settings["caption"].replace("MPI-ESM1-2-LR", dataset).replace("r1i1p1f1", ensemble)
+        )
+        settings["pyplot_kwargs"]["title"] = (
+            settings["pyplot_kwargs"]["title"].replace("MPI-ESM1-2-LR", dataset).replace("r1i1p1f1", ensemble)
+        )
+
     @staticmethod
     def format_result(
         result_dir: Path,

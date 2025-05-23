@@ -1,38 +1,38 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250518_065901/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20250523_141029/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250518_065901/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20250523_141029/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250518_065901/work/zec/zec/zec.nc": {
-      "filename": "executions/recipe_20250518_065901/work/zec/zec/zec.nc",
+    "executions/recipe_20250523_141029/work/zec/zec/zec.nc": {
+      "filename": "executions/recipe_20250523_141029/work/zec/zec/zec.nc",
       "long_name": "",
       "description": ""
     },
-    "executions/recipe_20250518_065901/work/zec/zec/zec_50.nc": {
-      "filename": "executions/recipe_20250518_065901/work/zec/zec/zec_50.nc",
+    "executions/recipe_20250523_141029/work/zec/zec/zec_50.nc": {
+      "filename": "executions/recipe_20250523_141029/work/zec/zec/zec_50.nc",
       "long_name": "",
       "description": ""
     }
   },
   "plots": {
-    "executions/recipe_20250518_065901/plots/zec/zec/zec_50_barplot.png": {
-      "filename": "executions/recipe_20250518_065901/plots/zec/zec/zec_50_barplot.png",
+    "executions/recipe_20250523_141029/plots/zec/zec/zec_50_barplot.png": {
+      "filename": "executions/recipe_20250523_141029/plots/zec/zec/zec_50_barplot.png",
       "long_name": "Barplot of ZEC_50",
       "description": ""
     },
-    "executions/recipe_20250518_065901/plots/zec/zec/zec_timeseries_all_models.png": {
-      "filename": "executions/recipe_20250518_065901/plots/zec/zec/zec_timeseries_all_models.png",
+    "executions/recipe_20250523_141029/plots/zec/zec/zec_timeseries_all_models.png": {
+      "filename": "executions/recipe_20250523_141029/plots/zec/zec/zec_timeseries_all_models.png",
       "long_name": "ZEC timeseries",
       "description": ""
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250518_065901/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250518_065901/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20250523_141029/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250523_141029/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run."
     }

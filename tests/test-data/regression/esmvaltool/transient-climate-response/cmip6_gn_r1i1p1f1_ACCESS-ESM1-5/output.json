@@ -1,33 +1,33 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250519_115953/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20250523_141012/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250519_115953/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20250523_141012/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250519_115953/work/tcr/calculate/ACCESS-ESM1-5.nc": {
-      "filename": "executions/recipe_20250519_115953/work/tcr/calculate/ACCESS-ESM1-5.nc",
-      "long_name": "Time series of the global mean surface air temperature anomaly (relative to the linear fit of the pre-industrial control run) of ACCESS-ESM1-5 for the 1% CO2 increase per year experiment. The horizontal dashed line indicates the transient climate response (TCR) defined as the 20 year average temperature anomaly centered at the time of CO2 doubling (vertical dashed lines).",
+    "executions/recipe_20250523_141012/work/tcr/calculate/ACCESS-ESM1-5.nc": {
+      "filename": "executions/recipe_20250523_141012/work/tcr/calculate/ACCESS-ESM1-5.nc",
+      "long_name": "Time series of the global annual mean near-surface air temperature anomaly ΔT of the 1% CO2 increase per year experiment for model ACCESS-ESM1-5 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The horizontal dashed line indicates the transient climate response (TCR) defined as the 20-year average ΔT centered at the time of CO2 doubling (vertical dashed lines).",
       "description": ""
     },
-    "executions/recipe_20250519_115953/work/tcr/calculate/tcr.nc": {
-      "filename": "executions/recipe_20250519_115953/work/tcr/calculate/tcr.nc",
+    "executions/recipe_20250523_141012/work/tcr/calculate/tcr.nc": {
+      "filename": "executions/recipe_20250523_141012/work/tcr/calculate/tcr.nc",
       "long_name": "Transient Climate Response (TCR) for multiple climate models.",
       "description": ""
     }
   },
   "plots": {
-    "executions/recipe_20250519_115953/plots/tcr/calculate/ACCESS-ESM1-5.png": {
-      "filename": "executions/recipe_20250519_115953/plots/tcr/calculate/ACCESS-ESM1-5.png",
-      "long_name": "Time series of the global mean surface air temperature anomaly (relative to the linear fit of the pre-industrial control run) of ACCESS-ESM1-5 for the 1% CO2 increase per year experiment. The horizontal dashed line indicates the transient climate response (TCR) defined as the 20 year average temperature anomaly centered at the time of CO2 doubling (vertical dashed lines).",
+    "executions/recipe_20250523_141012/plots/tcr/calculate/ACCESS-ESM1-5.png": {
+      "filename": "executions/recipe_20250523_141012/plots/tcr/calculate/ACCESS-ESM1-5.png",
+      "long_name": "Time series of the global annual mean near-surface air temperature anomaly ΔT of the 1% CO2 increase per year experiment for model ACCESS-ESM1-5 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The horizontal dashed line indicates the transient climate response (TCR) defined as the 20-year average ΔT centered at the time of CO2 doubling (vertical dashed lines).",
       "description": ""
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250519_115953/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250519_115953/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20250523_141012/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250523_141012/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run."
     }

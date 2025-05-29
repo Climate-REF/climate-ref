@@ -127,21 +127,6 @@ def transform_results_files(results_files: list[Any]) -> list[Any]:
     return transformed_results_files
 
 
-def _insert_results(combined_results: dict[str, Any], data: dict[str, Any], level_key: str) -> None:
-    for model, model_dict in data.get("RESULTS", {}).items():
-        if model not in combined_results["RESULTS"]:
-            combined_results["RESULTS"][model] = {}
-        for reference, reference_dict in model_dict.items():
-            if isinstance(reference_dict, dict):
-                if reference not in combined_results["RESULTS"][model]:
-                    combined_results["RESULTS"][model][reference] = {}
-                for rip, rip_dict in reference_dict.items():
-                    if rip not in ["source"]:
-                        if rip not in combined_results["RESULTS"][model][reference]:
-                            combined_results["RESULTS"][model][reference][rip] = {}
-                        combined_results["RESULTS"][model][reference][rip][level_key] = rip_dict
-
-
 def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any], levels: list[str]) -> None:
     if "DIMENSIONS" not in data:
         data["DIMENSIONS"] = {}
@@ -149,7 +134,8 @@ def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any
     top_level_keys = list(data.keys())
     top_level_keys.remove("RESULTS")
 
-    json_structure = ["model", "reference", "rip", "level", "region", "statistic", "season"]
+    json_structure = data.get("DIMENSIONS", {}).get("json_structure", {})
+    json_structure = ["level", *json_structure]
 
     for key in top_level_keys:
         combined_results[key] = data[key]
@@ -193,7 +179,9 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
             level_key = str(int(data["Variable"]["level"]))
             levels.append(level_key)
             logger.debug(f"Processing file: {file}, level_key: {level_key}")
-            _insert_results(combined_results, data, level_key)
+            # Insert the results into the combined_results dictionary
+            if level_key not in combined_results["RESULTS"]:
+                combined_results["RESULTS"][level_key] = data.get("RESULTS", {})
 
     if last_data is not None:
         _update_top_level_keys(combined_results, last_data, levels)

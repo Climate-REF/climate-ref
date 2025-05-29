@@ -51,7 +51,7 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
     )
 
 
-def transform_results(data: dict[str, Any]) -> dict[str, Any]:
+def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
     """
     Transform the executions dictionary to match the expected structure.
 
@@ -80,6 +80,49 @@ def transform_results(data: dict[str, Any]) -> dict[str, Any]:
     data["DIMENSIONS"]["season"].pop("CalendarMonths")
 
     return data
+
+
+def transform_results_files(results_files: list[Any]) -> list[Any]:
+    """
+    Transform the results files to match the expected structure.
+
+    Parameters
+    ----------
+    results_files : list
+        List of result files to transform.
+
+    Returns
+    -------
+    list
+        List of transformed result files.
+
+    """
+    if len(results_files) == 0:
+        logger.warning("No results files provided for transformation.")
+        return []
+
+    transformed_results_files = []
+
+    for results_file in results_files:
+        # Rewrite the CMEC JSON file for compatibility
+        with open(results_file) as f:
+            results = json.load(f)
+            results_transformed = _transform_results(results)
+
+        # Get the stem (filename without extension)
+        stem = results_file.stem
+
+        # Create the new filename
+        results_file_transformed = results_file.with_name(f"{stem}_transformed.json")
+
+        with open(results_file_transformed, "w") as f:
+            # Write the transformed executions back to the file
+            json.dump(results_transformed, f, indent=4)
+            logger.debug(f"Transformed executions written to {results_file_transformed}")
+
+        transformed_results_files.append(results_file_transformed)
+
+    return transformed_results_files
 
 
 def _insert_results(combined_results: dict[str, Any], data: dict[str, Any], level_key: str) -> None:

@@ -206,9 +206,9 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
     return combined_file_path
 
 
-# ================================================================================
+# ===================================================
 # PMP diagnostics main class: annual cycle diagnostic
-# ================================================================================
+# ===================================================
 
 
 class AnnualCycle(CommandLineDiagnostic):

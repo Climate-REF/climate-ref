@@ -140,11 +140,13 @@ def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any
     for key in top_level_keys:
         combined_results[key] = data[key]
         if key == "Variable":
-            combined_results[key]["level"] = ", ".join(levels)
-        if key == "DIMENSIONS":
+            combined_results[key]["level"] = levels
+        elif key == "DIMENSIONS":
             combined_results[key]["json_structure"] = json_structure
             if "level" not in combined_results[key]:
-                combined_results[key]["level"] = levels
+                combined_results[key]["level"] = {}
+                for level in levels:
+                    combined_results[key]["level"][level] = {}
 
 
 def combine_results_files(results_files: list[Any], output_directory: str | Path) -> Path:

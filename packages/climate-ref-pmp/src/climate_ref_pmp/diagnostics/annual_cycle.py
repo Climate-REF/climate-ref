@@ -72,18 +72,21 @@ class AnnualCycle(CommandLineDiagnostic):
     )
 
     data_requirements = (
-        make_data_requirement("ts", "ERA-5"),
-        make_data_requirement("uas", "ERA-5"),
-        make_data_requirement("vas", "ERA-5"),
-        make_data_requirement("psl", "ERA-5"),
-        make_data_requirement("pr", "GPCP-Monthly-3-2"),
-        make_data_requirement("rlds", "CERES-EBAF-4-2"),
-        make_data_requirement("rlus", "CERES-EBAF-4-2"),
-        make_data_requirement("rlut", "CERES-EBAF-4-2"),
-        make_data_requirement("rsds", "CERES-EBAF-4-2"),
-        make_data_requirement("rsdt", "CERES-EBAF-4-2"),
-        make_data_requirement("rsus", "CERES-EBAF-4-2"),
-        make_data_requirement("rsut", "CERES-EBAF-4-2"),
+        make_data_requirement("ta", "ERA-5"),
+        make_data_requirement("ua", "ERA-5"),
+        make_data_requirement("va", "ERA-5"),
+        # make_data_requirement("ts", "ERA-5"),
+        # make_data_requirement("uas", "ERA-5"),
+        # make_data_requirement("vas", "ERA-5"),
+        # make_data_requirement("psl", "ERA-5"),
+        # make_data_requirement("pr", "GPCP-Monthly-3-2"),
+        # make_data_requirement("rlds", "CERES-EBAF-4-2"),
+        # make_data_requirement("rlus", "CERES-EBAF-4-2"),
+        # make_data_requirement("rlut", "CERES-EBAF-4-2"),
+        # make_data_requirement("rsds", "CERES-EBAF-4-2"),
+        # make_data_requirement("rsdt", "CERES-EBAF-4-2"),
+        # make_data_requirement("rsus", "CERES-EBAF-4-2"),
+        # make_data_requirement("rsut", "CERES-EBAF-4-2"),
     )
 
     def __init__(self) -> None:
@@ -159,10 +162,9 @@ class AnnualCycle(CommandLineDiagnostic):
             )
         )
 
-        # ----------------------------------------------
+        # --------------------------------------------------
         # PART 2: Build the command to calculate diagnostics
-        # ----------------------------------------------
-
+        # --------------------------------------------------
         # Reference
         obs_dict = {
             variable_id: {
@@ -179,13 +181,32 @@ class AnnualCycle(CommandLineDiagnostic):
 
         date = datetime.datetime.now().strftime("%Y%m%d")
 
+        if variable_id in ["ua", "va", "ta"]:
+            levels = ["200", "850"]
+        elif variable_id in ["zg"]:
+            levels = ["500"]
+        else:
+            levels = None
+
+        variables = []
+        if levels is not None:
+            for level in levels:
+                variable_id_with_level = f"{variable_id}-{level}"
+                variables.append(variable_id_with_level)
+        else:
+            variables = [variable_id]
+
+        logger.debug(f"variables: {variables}")
+        logger.debug(f"levels: {levels}")
+
+        # Build the command for each level
         params = {
-            "vars": variable_id,
+            "vars": variables,
             "custom_observations": f"{output_directory_path}/obs_dict.json",
             "test_data_path": output_directory_path,
             "test_data_set": source_id,
             "realization": member_id,
-            "filename_template": f"{variable_id}_{data_name}_clims.198101-200512.AC.v{date}.nc",
+            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date}.nc",
             "metrics_output_path": output_directory_path,
             "cmec": "",
         }
@@ -197,6 +218,9 @@ class AnnualCycle(CommandLineDiagnostic):
                 **params,
             )
         )
+
+        logger.debug("build_cmd end")
+        logger.debug(f"cmds: {cmds}")
 
         return cmds
 

@@ -15,9 +15,9 @@ from climate_ref_core.diagnostics import (
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
 
-# ================================================================================
+# =================================================================
 # PMP diagnostics support functions for the annual cycle diagnostic
-# ================================================================================
+# =================================================================
 
 
 def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequirement, DataRequirement]:

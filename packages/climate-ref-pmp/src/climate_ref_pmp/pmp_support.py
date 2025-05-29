@@ -104,11 +104,13 @@ def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any
         combined_results[key] = data[key]
         if key == "Variable":
             combined_results[key]["level"] = ", ".join(levels)
-        if key == "json_structure":
-            combined_results[key] = ["model", "reference", "rip", "level", "region", "statistic", "season"]
-
-
-def combine_results_files(results_files: list[Any], output_directory: str | Path) -> Path:
+        if key == "DIMENSIONS":
+            combined_results[key]["json_structure"] = ["model", "reference", "rip", "level", "region", "statistic", "season"]
+    if "level" not in combined_results["DIMENSIONS"]:
+        combined_results["DIMENSIONS"]["level"] = levels       
+            
+            
+def combine_results_files(results_files: list[Any], output_directory: str | Path) -> tuple[Path, list[str]]:
     """
     Combine multiple results files into a single file.
 
@@ -121,8 +123,8 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
 
     Returns
     -------
-    Any
-        The path to the combined results file.
+    Path, list[str]
+        The path to the combined results file and a list of levels found in the results files.
     """
     combined_results: dict[str, dict[str, dict[str, dict[str, dict[str, Any]]]]] = {}
     combined_results["RESULTS"] = {}
@@ -154,4 +156,4 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
     with open(combined_file_path, "w") as f:
         json.dump(combined_results, f, indent=4)
 
-    return combined_file_path
+    return combined_file_path, levels

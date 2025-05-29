@@ -6,12 +6,14 @@ from typing import Any
 from loguru import logger
 
 from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
     ExecutionDefinition,
     ExecutionResult,
 )
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
+from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
 from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
 
 
@@ -365,7 +367,14 @@ class AnnualCycle(CommandLineDiagnostic):
         else:
             variable_dir_pattern = variable_id
 
+        if variable_id in ["ua", "va", "ta"]:
+            variable_dir_pattern = f"{variable_id}-???"
+        else:
+            variable_dir_pattern = variable_id
+
         results_directory = definition.output_directory
+        png_directory = results_directory / variable_dir_pattern
+        data_directory = results_directory / variable_dir_pattern
         png_directory = results_directory / variable_dir_pattern
         data_directory = results_directory / variable_dir_pattern
         png_directory = results_directory / variable_dir_pattern
@@ -376,6 +385,7 @@ class AnnualCycle(CommandLineDiagnostic):
         logger.debug(f"data_directory: {data_directory}")
 
         # Find the CMEC JSON file(s)
+        results_files = list(results_directory.glob("*_cmec.json"))
         results_files = list(results_directory.glob("*_cmec.json"))
         if len(results_files) == 1:
             # If only one file, use it directly
@@ -404,6 +414,7 @@ class AnnualCycle(CommandLineDiagnostic):
             json.dump(results_transformed, f, indent=4)
             logger.debug(f"Transformed executions written to {results_file_transformed}")
 
+        # Find the other outputs: PNG and NetCDF files
         # Find the other outputs: PNG and NetCDF files
         png_files = list(png_directory.glob("*.png"))
         data_files = list(data_directory.glob("*.nc"))

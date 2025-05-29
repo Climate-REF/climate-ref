@@ -9,7 +9,7 @@ If you want to
 
 import os
 import time
-from typing import Any, cast
+from typing import Any
 
 import parsl
 from loguru import logger
@@ -41,7 +41,7 @@ def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionRe
     except DiagnosticError as e:  # pragma: no cover
         # any diagnostic error will be caught here
         logger.exception("Error running diagnostic")
-        return cast(ExecutionResult, e.result)
+        raise e
 
 
 def _to_float(x: Any) -> float | None:
@@ -264,20 +264,27 @@ class HPCExecutor:
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
                     if result.future.done():
-                        try:
-                            execution_result = result.future.result(timeout=0)
-                        except Exception as e:
-                            # Something went wrong when attempting to run the execution
-                            # This is likely a failure in the execution itself not the diagnostic
-                            raise ExecutionError(
-                                f"Failed to execute {result.definition.execution_slug()!r}"
-                            ) from e
+                        # Cannot catch the execption raised by result.future.result
+                        if result.future.exception() is None:
+                            try:
+                                execution_result = result.future.result(timeout=0)
+                            except Exception as e:
+                                # Something went wrong when attempting to run the execution
+                                # This is likely a failure in the execution itself not the diagnostic
+                                raise ExecutionError(
+                                    f"Failed to execute {result.definition.execution_slug()!r}"
+                                ) from e
+                        else:
+                            err = result.future.exception()
+                            if isinstance(err, DiagnosticError):
+                                execution_result = err.result
+                            else:
+                                execution_result = None
 
                         assert execution_result is not None, "Execution result should not be None"
                         assert isinstance(execution_result, ExecutionResult), (
                             "Execution result should be of type ExecutionResult"
                         )
-
                         # Process the result in the main process
                         # The results should be committed after each execution
                         with self.database.session.begin():
@@ -286,7 +293,7 @@ class HPCExecutor:
                                 if result.execution_id
                                 else None
                             )
-                            process_result(self.config, self.database, result.future.result(), execution)
+                            process_result(self.config, self.database, execution_result, execution)
                         logger.debug(f"Execution completed: {result}")
                         t.update(n=1)
                         results.remove(result)

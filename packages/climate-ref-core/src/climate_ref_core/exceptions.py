@@ -60,4 +60,10 @@ class DiagnosticError(RefException):
 
     def __init__(self, message: str, result: Any):
         super().__init__(message)
+        self.message = message
         self.result = result
+
+    # need for serialization of parsl
+    def __reduce__(self) -> tuple[type["DiagnosticError"], tuple[str, Any]]:
+        # Return a tuple: (callable, args_tuple_for_reconstruction)
+        return (self.__class__, (self.message, self.result))

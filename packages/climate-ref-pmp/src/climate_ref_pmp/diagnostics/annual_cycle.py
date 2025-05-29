@@ -32,21 +32,25 @@ class AnnualCycle(CommandLineDiagnostic):
     )
 
     data_requirements = (
+        # ERA-5 as reference dataset, spatial 2-D variables
+        make_data_requirement("ts", "ERA-5"),
+        make_data_requirement("uas", "ERA-5"),
+        make_data_requirement("vas", "ERA-5"),
+        make_data_requirement("psl", "ERA-5"),
+        # ERA-5 as reference dataset, spatial 3-D variables
         make_data_requirement("ta", "ERA-5"),
         make_data_requirement("ua", "ERA-5"),
         make_data_requirement("va", "ERA-5"),
-        # make_data_requirement("ts", "ERA-5"),
-        # make_data_requirement("uas", "ERA-5"),
-        # make_data_requirement("vas", "ERA-5"),
-        # make_data_requirement("psl", "ERA-5"),
-        # make_data_requirement("pr", "GPCP-Monthly-3-2"),
-        # make_data_requirement("rlds", "CERES-EBAF-4-2"),
-        # make_data_requirement("rlus", "CERES-EBAF-4-2"),
-        # make_data_requirement("rlut", "CERES-EBAF-4-2"),
-        # make_data_requirement("rsds", "CERES-EBAF-4-2"),
-        # make_data_requirement("rsdt", "CERES-EBAF-4-2"),
-        # make_data_requirement("rsus", "CERES-EBAF-4-2"),
-        # make_data_requirement("rsut", "CERES-EBAF-4-2"),
+        make_data_requirement("zg", "ERA-5"),
+        # Other reference datasets, spatial 2-D variables
+        make_data_requirement("pr", "GPCP-Monthly-3-2"),
+        make_data_requirement("rlds", "CERES-EBAF-4-2"),
+        make_data_requirement("rlus", "CERES-EBAF-4-2"),
+        make_data_requirement("rlut", "CERES-EBAF-4-2"),
+        make_data_requirement("rsds", "CERES-EBAF-4-2"),
+        make_data_requirement("rsdt", "CERES-EBAF-4-2"),
+        make_data_requirement("rsus", "CERES-EBAF-4-2"),
+        make_data_requirement("rsut", "CERES-EBAF-4-2"),
     )
 
     def __init__(self) -> None:
@@ -68,10 +72,6 @@ class AnnualCycle(CommandLineDiagnostic):
         """
         input_datasets = definition.datasets[SourceDatasetType.CMIP6]
         reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
-        selector = input_datasets.selector_dict()
-        reference_selector = reference_datasets.selector_dict()
-        logger.debug(f"selector: {selector}")
-        logger.debug(f"reference selector: {reference_selector}")
 
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]

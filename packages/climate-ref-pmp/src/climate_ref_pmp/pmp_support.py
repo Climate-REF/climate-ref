@@ -117,10 +117,7 @@ def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any
             if "level" not in combined_results[key]:
                 combined_results[key]["level"] = levels
 
-    combined_results["json_structure"] = json_structure
 
-
-# def combine_results_files(results_files: list[Any], output_directory: str | Path) -> tuple[Path, list[str]]:
 def combine_results_files(results_files: list[Any], output_directory: str | Path) -> Path:
     """
     Combine multiple results files into a single file.

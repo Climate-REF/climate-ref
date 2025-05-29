@@ -2,6 +2,8 @@ import json
 from pathlib import Path
 from typing import Any
 
+from loguru import logger
+
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     DataRequirement,
@@ -98,19 +100,28 @@ def _insert_results(combined_results: dict[str, Any], data: dict[str, Any], leve
 
 
 def _update_top_level_keys(combined_results: dict[str, Any], data: dict[str, Any], levels: list[str]) -> None:
+    if "DIMENSIONS" not in data:
+        data["DIMENSIONS"] = {}
+
     top_level_keys = list(data.keys())
     top_level_keys.remove("RESULTS")
+
+    json_structure = ["model", "reference", "rip", "level", "region", "statistic", "season"]
+
     for key in top_level_keys:
         combined_results[key] = data[key]
         if key == "Variable":
             combined_results[key]["level"] = ", ".join(levels)
         if key == "DIMENSIONS":
-            combined_results[key]["json_structure"] = ["model", "reference", "rip", "level", "region", "statistic", "season"]
-    if "level" not in combined_results["DIMENSIONS"]:
-        combined_results["DIMENSIONS"]["level"] = levels       
-            
-            
-def combine_results_files(results_files: list[Any], output_directory: str | Path) -> tuple[Path, list[str]]:
+            combined_results[key]["json_structure"] = json_structure
+            if "level" not in combined_results[key]:
+                combined_results[key]["level"] = levels
+
+    combined_results["json_structure"] = json_structure
+
+
+# def combine_results_files(results_files: list[Any], output_directory: str | Path) -> tuple[Path, list[str]]:
+def combine_results_files(results_files: list[Any], output_directory: str | Path) -> Path:
     """
     Combine multiple results files into a single file.
 
@@ -141,7 +152,7 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
             last_data = data
             level_key = str(int(data["Variable"]["level"]))
             levels.append(level_key)
-            print("level_key:", level_key)
+            logger.debug(f"Processing file: {file}, level_key: {level_key}")
             _insert_results(combined_results, data, level_key)
 
     if last_data is not None:
@@ -156,4 +167,5 @@ def combine_results_files(results_files: list[Any], output_directory: str | Path
     with open(combined_file_path, "w") as f:
         json.dump(combined_results, f, indent=4)
 
-    return combined_file_path, levels
+    # return combined_file_path, levels
+    return combined_file_path

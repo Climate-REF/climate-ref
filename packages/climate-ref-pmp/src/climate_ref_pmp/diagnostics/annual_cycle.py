@@ -1,56 +1,16 @@
 import datetime
 import json
-from typing import Any
 
 from loguru import logger
 
-from climate_ref_core.datasets import FacetFilter, SourceDatasetType
+from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
-    DataRequirement,
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
-
-
-def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequirement, DataRequirement]:
-    """
-    Create a data requirement for the annual cycle diagnostic.
-
-    Parameters
-    ----------
-    variable_id : str
-        The variable ID to filter the data requirement.
-    obs_source : str
-        The observation source ID to filter the data requirement.
-
-    Returns
-    -------
-    DataRequirement
-        A DataRequirement object containing the necessary filters and groupings.
-    """
-    return (
-        DataRequirement(
-            source_type=SourceDatasetType.PMPClimatology,
-            filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
-            group_by=("variable_id", "source_id"),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "frequency": "mon",
-                        "experiment_id": ("amip", "historical", "hist-GHG", "piControl"),
-                        "variable_id": (variable_id,),
-                    }
-                ),
-            ),
-            group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
-        ),
-    )
+from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
 
 
 class AnnualCycle(CommandLineDiagnostic):
@@ -240,27 +200,36 @@ class AnnualCycle(CommandLineDiagnostic):
         input_datasets = definition.datasets[SourceDatasetType.CMIP6]
         variable_id = input_datasets["variable_id"].unique()[0]
 
+        if variable_id in ["ua", "va", "ta"]:
+            variable_dir_pattern = f"{variable_id}-???"
+        else:
+            variable_dir_pattern = variable_id
+
         results_directory = definition.output_directory
-        png_directory = results_directory / variable_id
-        data_directory = results_directory / variable_id
+        png_directory = results_directory / variable_dir_pattern
+        data_directory = results_directory / variable_dir_pattern
 
         logger.debug(f"results_directory: {results_directory}")
         logger.debug(f"png_directory: {png_directory}")
         logger.debug(f"data_directory: {data_directory}")
 
-        # Find the executions file
+        # Find the CMEC JSON file(s)
         results_files = list(results_directory.glob("*_cmec.json"))
-        if len(results_files) != 1:  # pragma: no cover
-            logger.error(f"More than one or no cmec file found: {results_files}")
-            return ExecutionResult.build_from_failure(definition)
-        else:
+        if len(results_files) == 1:
+            # If only one file, use it directly
             results_file = results_files[0]
             logger.debug(f"results_file: {results_file}")
+        elif len(results_files) > 1:
+            logger.error(f"More than one cmec file found: {results_files}")
+            results_file = combine_results_files(results_files, definition.output_directory)
+        else:
+            logger.error("Unexpected case: no cmec file found")
+            return ExecutionResult.build_from_failure(definition)
 
-        # Rewrite executions file for compatibility
+        # Rewrite the CMEC JSON file for compatibility
         with open(results_file) as f:
             results = json.load(f)
-            results_transformed = _transform_results(results)
+            results_transformed = transform_results(results)
 
         # Get the stem (filename without extension)
         stem = results_file.stem
@@ -273,7 +242,7 @@ class AnnualCycle(CommandLineDiagnostic):
             json.dump(results_transformed, f, indent=4)
             logger.debug(f"Transformed executions written to {results_file_transformed}")
 
-        # Find the other outputs
+        # Find the other outputs: PNG and NetCDF files
         png_files = list(png_directory.glob("*.png"))
         data_files = list(data_directory.glob("*.nc"))
 
@@ -318,34 +287,3 @@ class AnnualCycle(CommandLineDiagnostic):
 
         runs = [self.provider.run(cmd) for cmd in cmds]
         logger.debug(f"runs: {runs}")
-
-
-def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
-    """
-    Transform the executions dictionary to match the expected structure.
-
-    Parameters
-    ----------
-    data : dict
-        The original execution dictionary.
-
-    Returns
-    -------
-    dict
-        The transformed executions dictionary.
-    """
-    # Remove the model, reference, rip dimensions
-    # These are later replaced with a REF-specific naming convention
-    data = remove_dimensions(data, ["model", "reference", "rip"])
-
-    # TODO: replace this with the ability to capture series
-    # Remove the "CalendarMonths" key from the nested structure
-    for region, region_values in data["RESULTS"].items():
-        for stat, stat_values in region_values.items():
-            if "CalendarMonths" in stat_values:
-                stat_values.pop("CalendarMonths")
-
-    # Remove the "CalendarMonths" key from the nested structure in "DIMENSIONS"
-    data["DIMENSIONS"]["season"].pop("CalendarMonths")
-
-    return data

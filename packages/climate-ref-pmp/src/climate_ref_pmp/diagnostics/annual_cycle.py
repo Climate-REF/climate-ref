@@ -10,7 +10,7 @@ from climate_ref_core.diagnostics import (
     ExecutionResult,
 )
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
-from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
+from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results_files
 
 
 class AnnualCycle(CommandLineDiagnostic):
@@ -214,7 +214,8 @@ class AnnualCycle(CommandLineDiagnostic):
         logger.debug(f"data_directory: {data_directory}")
 
         # Find the CMEC JSON file(s)
-        results_files = list(results_directory.glob("*_cmec.json"))
+        results_files = transform_results_files(list(results_directory.glob("*_cmec.json")))
+
         if len(results_files) == 1:
             # If only one file, use it directly
             results_file = results_files[0]
@@ -226,29 +227,12 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
-        # Rewrite the CMEC JSON file for compatibility
-        with open(results_file) as f:
-            results = json.load(f)
-            results_transformed = transform_results(results)
-
-        # Get the stem (filename without extension)
-        stem = results_file.stem
-
-        # Create the new filename
-        results_file_transformed = results_file.with_name(f"{stem}_transformed.json")
-
-        with open(results_file_transformed, "w") as f:
-            # Write the transformed executions back to the file
-            json.dump(results_transformed, f, indent=4)
-            logger.debug(f"Transformed executions written to {results_file_transformed}")
-
         # Find the other outputs: PNG and NetCDF files
         png_files = list(png_directory.glob("*.png"))
         data_files = list(data_directory.glob("*.nc"))
 
-        cmec_output_bundle, cmec_metric_bundle = process_json_result(
-            results_file_transformed, png_files, data_files
-        )
+        # Prepare the output bundles
+        cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)
 
         # Add missing dimensions to the output
         input_selectors = input_datasets.selector_dict()

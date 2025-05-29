@@ -221,7 +221,7 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.debug(f"results_file: {results_file}")
         elif len(results_files) > 1:
             logger.error(f"More than one cmec file found: {results_files}")
-            results_file, levels = combine_results_files(results_files, definition.output_directory)
+            results_file = combine_results_files(results_files, definition.output_directory)
         else:
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)

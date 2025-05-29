@@ -1,0 +1,30 @@
+bins: 20
+cbar: true
+cbar_kws:
+  extend: max
+joint_kws:
+  cmap: YlGnBu
+  vmax: 0.03
+marginal_kws:
+  color: darkturquoise
+plot_filename: jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000
+seaborn_settings:
+  rc:
+    axes.titlepad: 15.0
+  style: ticks
+suptitle: CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000
+x: clivi
+y: lwcre
+recipe: recipe.yml
+version: 2.12.0
+script: plot
+run_dir: <OUTPUT_DIR>/executions/recipe_20250527_110438/run/plot_joint_clivi_lwcre_model/plot
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250527_110438/plots/plot_joint_clivi_lwcre_model/plot
+work_dir: <OUTPUT_DIR>/executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+scheduler_address: tcp://127.0.0.1:41725
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/clivi/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/lwcre/metadata.yml

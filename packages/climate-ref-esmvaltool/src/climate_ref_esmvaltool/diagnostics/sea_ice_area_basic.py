@@ -42,10 +42,13 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     facets = ()
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
         # Update datasets
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe["datasets"] = recipe_variables["siconc"]["additional_datasets"]
 
         # Use the timerange from the recipe, as defined in the variable.

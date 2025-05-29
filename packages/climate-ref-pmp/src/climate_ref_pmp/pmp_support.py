@@ -51,11 +51,7 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
     )
 
 
-<<<<<<< HEAD
 def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
-=======
-def transform_results(data: dict[str, Any]) -> dict[str, Any]:
->>>>>>> f8ef48a5 (update)
     """
     Transform the executions dictionary to match the expected structure.
 
@@ -86,7 +82,6 @@ def transform_results(data: dict[str, Any]) -> dict[str, Any]:
     return data
 
 
-<<<<<<< HEAD
 def transform_results_files(results_files: list[Any]) -> list[Any]:
     """
     Transform the results files to match the expected structure.
@@ -130,8 +125,6 @@ def transform_results_files(results_files: list[Any]) -> list[Any]:
     return transformed_results_files
 
 
-=======
->>>>>>> f8ef48a5 (update)
 def _insert_results(combined_results: dict[str, Any], data: dict[str, Any], level_key: str) -> None:
     for model, model_dict in data.get("RESULTS", {}).items():
         if model not in combined_results["RESULTS"]:

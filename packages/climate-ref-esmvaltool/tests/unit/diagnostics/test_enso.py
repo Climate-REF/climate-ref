@@ -4,12 +4,18 @@ import pandas
 from climate_ref_esmvaltool.diagnostics import ENSOBasicClimatology, ENSOCharacteristics
 from climate_ref_esmvaltool.recipe import load_recipe
 
+from climate_ref_core.datasets import SourceDatasetType
+
 
 def test_enso_basicclimatology_update_recipe():
     # Insert the following code in CloudRadiativeEffects.update_recipe to
     # save an example input dataframe:
     # input_files.to_json(Path("input_files_enso_climatology.json"), indent=4, date_format="iso")
-    input_files = pandas.read_json(Path(__file__).parent / "input_files_enso_climatology.json")
+    input_files = {
+        SourceDatasetType.CMIP6: pandas.read_json(
+            Path(__file__).parent / "input_files_enso_climatology.json"
+        ),
+    }
     recipe = load_recipe("ref/recipe_enso_basicclimatology.yml")
     ENSOBasicClimatology().update_recipe(recipe, input_files)
     assert "datasets" not in recipe
@@ -22,7 +28,11 @@ def test_enso_characteristics_update_recipe():
     # Insert the following code in CloudRadiativeEffects.update_recipe to
     # save an example input dataframe:
     # input_files.to_json(Path("input_files_enso_characteristics.json"), indent=4, date_format="iso")
-    input_files = pandas.read_json(Path(__file__).parent / "input_files_enso_characteristics.json")
+    input_files = {
+        SourceDatasetType.CMIP6: pandas.read_json(
+            Path(__file__).parent / "input_files_enso_characteristics.json"
+        ),
+    }
     recipe = load_recipe("ref/recipe_enso_characteristics.yml")
     ENSOCharacteristics().update_recipe(recipe, input_files)
     assert recipe["datasets"] == [

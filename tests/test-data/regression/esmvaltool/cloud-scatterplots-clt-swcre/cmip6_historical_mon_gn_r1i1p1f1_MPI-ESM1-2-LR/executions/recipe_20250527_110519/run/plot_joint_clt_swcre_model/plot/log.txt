@@ -1,0 +1,96 @@
+/home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+auxiliary_data_dir: /home/bandela/auxiliary_data
+bins: 20
+cbar: true
+cbar_kws:
+  extend: max
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20250527_110519/preproc/plot_joint_clt_swcre_model/clt/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clt_gn_20070116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: MPI-ESM1-2-LR
+    dataset: MPI-ESM1-2-LR
+    diagnostic: plot_joint_clt_swcre_model
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250527_110519/preproc/plot_joint_clt_swcre_model/clt/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clt_gn_20070116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: MPI-M
+    long_name: Total Cloud Cover Percentage
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_clt
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: clt
+    standard_name: cloud_area_fraction
+    start_year: 2007
+    timerange: 20070116T120000/20141216T120000
+    units: '%'
+    variable_group: clt
+    version: v20190710
+  ? <OUTPUT_DIR>/executions/recipe_20250527_110519/preproc/plot_joint_clt_swcre_model/swcre/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_swcre_gn_20070116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: MPI-ESM1-2-LR
+    dataset: MPI-ESM1-2-LR
+    derive: true
+    diagnostic: plot_joint_clt_swcre_model
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250527_110519/preproc/plot_joint_clt_swcre_model/swcre/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_swcre_gn_20070116T120000-20141216T120000.nc
+    force_derivation: false
+    frequency: mon
+    grid: gn
+    institute: MPI-M
+    long_name: TOA Shortwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_swcre
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: swcre
+    standard_name: ''
+    start_year: 2007
+    timerange: 20070116T120000/20141216T120000
+    units: W m-2
+    variable_group: swcre
+    version: v20190710
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250527_110519/preproc/plot_joint_clt_swcre_model/clt/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250527_110519/preproc/plot_joint_clt_swcre_model/swcre/metadata.yml
+joint_kws:
+  cmap: YlGnBu
+  vmax: 0.015
+log_level: info
+marginal_kws:
+  color: darkturquoise
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250527_110519/plots/plot_joint_clt_swcre_model/plot
+plot_filename: jointplot_clt_swcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20250527_110519/run/plot_joint_clt_swcre_model/plot
+scheduler_address: tcp://127.0.0.1:34699
+script: plot
+seaborn_settings:
+  rc:
+    axes.titlepad: 15.0
+  style: ticks
+suptitle: CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000
+version: 2.12.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20250527_110519/work/plot_joint_clt_swcre_model/plot
+x: clt
+y: swcre
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20250527_110519/work/plot_joint_clt_swcre_model/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20250527_110519/plots/plot_joint_clt_swcre_model/plot
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110519/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000.png
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110519/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clt_swcre_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110519/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clt_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110519/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_swcre_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

@@ -256,9 +256,12 @@ class TestCondaMetricsProvider:
 
         assert f"Environment at {env_path} already exists, skipping." in caplog.text
 
-    def test_run(self, mocker, tmp_path, provider):
+    @pytest.mark.parametrize("env_exists", [True, False])
+    def test_run(self, mocker, tmp_path, provider, env_exists):
         conda_exe = tmp_path / "conda" / "micromamba"
         env_path = provider.prefix / "mock-env"
+        if env_exists:
+            env_path.mkdir(parents=True)
 
         mocker.patch.object(
             CondaDiagnosticProvider,
@@ -284,18 +287,25 @@ class TestCondaMetricsProvider:
             create_autospec=True,
         )
 
-        provider.run(["mock-command"])
+        if not env_exists:
+            with pytest.raises(
+                RuntimeError,
+                match=(f"Conda environment for provider `{provider.slug}` not available at {env_path}."),
+            ):
+                provider.run(["mock-command"])
+        else:
+            provider.run(["mock-command"])
 
-        run.assert_called_with(
-            [
-                f"{conda_exe}",
-                "run",
-                "--prefix",
-                f"{env_path}",
-                "mock-command",
-            ],
-            check=True,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
-            text=True,
-        )
+            run.assert_called_with(
+                [
+                    f"{conda_exe}",
+                    "run",
+                    "--prefix",
+                    f"{env_path}",
+                    "mock-command",
+                ],
+                check=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+            )

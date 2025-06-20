@@ -390,7 +390,13 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             If the command fails
 
         """
-        self.create_env()
+        if not self.env_path.exists():
+            msg = (
+                f"Conda environment for provider `{self.slug}` not available at "
+                f"{self.env_path}. Please install it by running the command "
+                f"`ref providers create-env --provider {self.slug}`"
+            )
+            raise RuntimeError(msg)
 
         cmd = [
             f"{self.get_conda_exe(update=False)}",

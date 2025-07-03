@@ -1,0 +1,46 @@
+? <OUTPUT_DIR>/executions/recipe_20250527_110438/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000.png
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/clivi/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clivi_gn_20070116T120000-20141216T120000.nc
+  - <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/lwcre/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_lwcre_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clivi_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/clivi/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clivi_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clivi_lwcre_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/clivi/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clivi_gn_20070116T120000-20141216T120000.nc
+  - <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/lwcre/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_lwcre_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_lwcre_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110438/preproc/plot_joint_clivi_lwcre_model/lwcre/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_lwcre_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram

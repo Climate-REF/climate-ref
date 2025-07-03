@@ -54,9 +54,12 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     facets = ()
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe.pop("datasets")
         for diagnostic in recipe["diagnostics"].values():
             for variable in diagnostic["variables"].values():
@@ -97,9 +100,12 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     facets = ("grid_label", "member_id", "source_id", "region", "metric")
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe["datasets"] = recipe_variables["tos"]["additional_datasets"]
         # TODO: update the observational data requirement once available on ESGF.
         # Observations - use only one per run

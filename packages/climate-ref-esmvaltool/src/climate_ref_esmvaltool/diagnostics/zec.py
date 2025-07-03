@@ -54,12 +54,15 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
     facets = ("grid_label", "member_id", "source_id", "region", "metric")
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "esm-1pct-brch-1000PgC" and one for the "piControl"
         # experiment.
-        datasets = dataframe_to_recipe(input_files)["tas"]["additional_datasets"]
+        datasets = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])["tas"]["additional_datasets"]
         base_dataset = next(ds for ds in datasets if ds["exp"] == "1pctCO2")
         dataset = next(ds for ds in datasets if ds["exp"] == "esm-1pct-brch-1000PgC")
         start = dataset["timerange"].split("/")[0]

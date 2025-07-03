@@ -59,3 +59,4 @@ class NCIGadiPBSProProvider(PBSProProvider):
         configs['jobfs'] = self.jobfs
         configs['storage'] = self.storage
         return super()._write_submit_script(template, script_filename, job_name, configs)
+        

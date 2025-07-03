@@ -159,10 +159,17 @@ provider.register(GlobalMeanTimeseries())
 # from .another_metric import AnotherMetric
 # provider.register(AnotherMetric())
 
-# The provider instance will be discovered by the REF
 ```
 
-The REF will discover providers listed in `packages/`.
+The REF will discover providers listed under the `"climate-ref.providers`
+entrypoint group in `pyproject.toml`. For example, if your provider module is named
+`climate_ref_myprovider` and the provider instance is named `provider`
+as in the examples above, you would add the following to your `pyproject.toml`:
+
+```toml
+[project.entry-points."climate-ref.providers"]
+myprovider = "climate_ref_myprovider:provider"
+```
 
 ## 5. Write basic tests
 
@@ -256,7 +263,7 @@ Edit your `ref.toml` configuration file to include your new provider:
 
 ```toml
 [[diagnostic_providers]]
-provider = "climate_ref_myprovider.provider"
+provider = "climate_ref_myprovider:provider"
 ```
 
 Next time you run a `ref` command you should see your provider being added to the database.

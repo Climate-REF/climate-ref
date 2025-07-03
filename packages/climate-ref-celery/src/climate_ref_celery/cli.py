@@ -37,15 +37,23 @@ def import_provider(provider_package: str) -> DiagnosticProvider:
     :
         The provider instance
     """
-    try:
-        imp = importlib.import_module(provider_package.replace("-", "_"))
-    except ModuleNotFoundError:
-        typer.echo(f"Package '{provider_package}' not found")
+    # Note that this only works for provider packages that have a single provider.
+    for entry_point in importlib.metadata.entry_points(group="climate-ref.providers"):
+        if entry_point.dist is not None and entry_point.dist.name == provider_package:
+            break
+    else:
+        typer.echo(
+            f"Package '{provider_package}' is missing "
+            '[project.entry-points."climate-ref.providers"] in pyproject.toml'
+        )
         raise typer.Abort()
 
     # Get the provider from the provider_package
     try:
-        provider = imp.provider
+        provider = entry_point.load()
+    except ModuleNotFoundError:
+        typer.echo(f"Package '{provider_package}' not found")
+        raise typer.Abort()
     except AttributeError:
         typer.echo("The package must define a 'provider' attribute")
         raise typer.Abort()

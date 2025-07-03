@@ -27,6 +27,8 @@ dependencies = [
   "ilamb3>=2025.5.20",
   "scipy<1.16",  # https://github.com/statsmodels/statsmodels/issues/9584
 ]
+[project.entry-points."climate-ref.providers"]
+ilamb = "climate_ref_ilamb:provider"
 
 [dependency-groups]
 dev = ["types-pyyaml>=6.0.12"]

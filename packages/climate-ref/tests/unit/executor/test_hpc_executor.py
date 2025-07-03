@@ -74,12 +74,28 @@ class TestHPCExecutor:
 
         assert len(executor.parsl_results) == 0
 
-    def test_join_exception(self, metric_definition, tmp_path):
+    def test_join_diagnostic_exception(self, metric_definition, tmp_path):
+        executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
+        future = futures.AppFuture(1)
+        executor.parsl_results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
+
+        execution_result = ExecutionResult(
+            definition=metric_definition,
+            successful=False,
+            output_bundle_filename=None,
+            metric_bundle_filename=None,
+        )
+
+        future.set_exception(DiagnosticError("Some thing bad went wrong", execution_result))
+
+        executor.join(0.1)
+
+    def test_join_other_exception(self, metric_definition, tmp_path):
         executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
         future = futures.AppFuture(1)
         executor.parsl_results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
         future.set_exception(ValueError("Some thing bad went wrong"))
 
-        with pytest.raises(ExecutionError, match=re.escape("Failed to execute 'mock_provider/mock/key'")):
+        with pytest.raises(AssertionError, match=re.escape("Execution result should not be None")):
             executor.join(0.1)

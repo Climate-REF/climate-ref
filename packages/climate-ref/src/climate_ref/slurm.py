@@ -1,4 +1,5 @@
 import importlib.util
+import os
 from typing import Any
 
 HAS_REAL_SLURM = importlib.util.find_spec("pyslurm") is not None
@@ -85,10 +86,13 @@ class SlurmChecker:
             return False
 
         sample_acc = account_info[0]
-        for acc in account_info:
-            if acc.user == "minxu":
-                sample_acc = acc
-                break
+        user_name = os.environ["USER"]
+
+        if user_name:
+            for acc in account_info:
+                if acc.user == user_name:
+                    sample_acc = acc
+                    break
 
         allowed_qoss = sample_acc.qos
         if allowed_qoss is None:

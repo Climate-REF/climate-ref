@@ -9,6 +9,7 @@ You could use HPCExecutor if:
   - The login nodes allow users to run a program for a long time like several hours with little computational resources (less than 25% of one CPU core and negligible memory)
   - You want to run REF under the HPC workflow i.e., submitting batch jobs
   - The scheduler on your HPC is __slurm__. We may include other schedules in the future if needed. Please make an [issue](https://github.com/Climate-REF/climate-ref/issues) describing your requirements.
+  - You are using NCI Gadi. Gadi uses a custom version of PBSPro. You can select the "nci" or "gadi" scheduler in the configuration file.
 
 ## Pre-requirements
 
@@ -38,6 +39,22 @@ walltime = "00:30:00"
 username = "minxu"
 qos = "debug"
 scheduler_options = "#SBATCH -C cpu"
+cores_per_worker = 1
+max_workers_per_node = 64
+```
+If you are using NCI Gadi, you can use the following configuration:
+```toml
+[executor.config]
+scheduler = "nci" # or "gadi"
+account = "m1234"
+queue = "normal"
+walltime = "00:30:00"
+username = "minxu"
+ncpus = 1
+mem = "4GB"
+jobfs = "10GB"
+storage = "/scratch/XX" # Make sure you have access to the storage
+scheduler_options = ""
 cores_per_worker = 1
 max_workers_per_node = 64
 ```

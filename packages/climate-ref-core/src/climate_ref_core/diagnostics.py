@@ -14,6 +14,7 @@ from attrs import field, frozen
 from climate_ref_core.constraints import GroupConstraint
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.metric_values import SeriesMetricValue
+from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -193,6 +194,7 @@ class ExecutionResult:
         *,
         cmec_output_bundle: CMECOutput | dict[str, Any],
         cmec_metric_bundle: CMECMetric | dict[str, Any],
+        series: Sequence[SeriesMetricValue] = tuple(),
     ) -> ExecutionResult:
         """
         Build a ExecutionResult from a CMEC output bundle.
@@ -235,6 +237,7 @@ class ExecutionResult:
             output_bundle_filename=pathlib.Path("output.json"),
             metric_bundle_filename=pathlib.Path("diagnostic.json"),
             successful=True,
+            series=series,
         )
 
     @staticmethod
@@ -432,6 +435,11 @@ class AbstractDiagnostic(Protocol):
     is raised.
     """
 
+    series: Sequence[SeriesDefinition]
+    """
+    Definition of the series that are produced by the diagnostic.
+    """
+
     provider: DiagnosticProvider
     """
     The provider that provides the diagnostic.
@@ -495,6 +503,7 @@ class Diagnostic(AbstractDiagnostic):
 
     def __init__(self) -> None:
         super().__init__()
+        self.series = tuple()
         self._provider: DiagnosticProvider | None = None
 
     def __repr__(self) -> str:

@@ -6,6 +6,27 @@ from pydantic import BaseModel, model_validator
 Value = float | int
 
 
+class SeriesDefinition(BaseModel):
+    """
+    A definition of a 1-d array with an associated index and additional dimensions.
+    """
+
+    file_pattern: str
+    """A glob pattern to match files that contain the series values."""
+
+    dimensions: dict[str, str]
+    """Key, value pairs that identify the dimensions of the metric."""
+
+    values_name: str
+    """The name of the variable in the file that contains the values of the series."""
+
+    index_name: str
+    """The name of the variable in the file that contains the index of the series."""
+
+    attributes: Sequence[str]
+    """A list of attributes that should be extracted from the file and included in the series metadata."""
+
+
 class SeriesMetricValue(BaseModel):
     """
     A 1-d array with an associated index and additional dimensions

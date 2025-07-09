@@ -25,6 +25,8 @@ classifiers = [
 dependencies = [
     "climate-ref-core",
 ]
+[project.entry-points."climate-ref.providers"]
+pmp = "climate_ref_pmp:provider"
 
 [dependency-groups]
 dev = []

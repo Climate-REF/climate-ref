@@ -19,7 +19,7 @@ class Diagnostic(CreatedUpdatedMixin, Base):
     __table_args__ = (UniqueConstraint("provider_id", "slug", name="diagnostic_ident"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
-    slug: Mapped[str] = mapped_column(unique=True)
+    slug: Mapped[str] = mapped_column()
     """
     Unique identifier for the diagnostic
 

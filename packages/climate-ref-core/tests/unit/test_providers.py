@@ -52,7 +52,7 @@ class TestMetricsProvider:
         assert isinstance(result, Diagnostic)
 
 
-@pytest.mark.parametrize("fqn", ["climate_ref_esmvaltool.provider", "climate_ref_esmvaltool"])
+@pytest.mark.parametrize("fqn", ["climate_ref_esmvaltool:provider", "climate_ref_esmvaltool"])
 def test_import_provider(fqn):
     provider = import_provider(fqn)
 
@@ -63,21 +63,21 @@ def test_import_provider(fqn):
 
 def test_import_provider_missing():
     fqn = "climate_ref"
-    match = f"Invalid provider: '{fqn}'\n Provider 'provider' not found in climate_ref"
+    match = f"Invalid provider: '{fqn}.provider'\n Provider not found in module"
     with pytest.raises(InvalidProviderException, match=match):
         import_provider(fqn)
 
-    fqn = "climate_ref.datasets.WrongProvider"
-    match = f"Invalid provider: '{fqn}'\n Provider 'WrongProvider' not found in climate_ref.datasets"
+    fqn = "climate_ref.datasets:WrongProvider"
+    match = f"Invalid provider: '{fqn}'\n Provider not found in module"
     with pytest.raises(InvalidProviderException, match=match):
         import_provider(fqn)
 
-    fqn = "missing.local.WrongProvider"
-    match = f"Invalid provider: '{fqn}'\n Module 'missing.local' not found"
+    fqn = "missing.local:WrongProvider"
+    match = f"Invalid provider: '{fqn}'\n Module not found"
     with pytest.raises(InvalidProviderException, match=match):
         import_provider(fqn)
 
-    fqn = "climate_ref.__version__"
+    fqn = "climate_ref:__version__"
     match = f"Invalid provider: '{fqn}'\n Expected DiagnosticProvider, got <class 'str'>"
     with pytest.raises(InvalidProviderException, match=match):
         import_provider(fqn)

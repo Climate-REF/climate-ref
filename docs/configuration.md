@@ -48,17 +48,17 @@ executor = "climate_ref.executor.LocalExecutor"
 [executor.config]
 
 [[diagnostic_providers]]
-provider = "climate_ref_esmvaltool.provider"
+provider = "climate_ref_esmvaltool:provider"
 
 [diagnostic_providers.config]
 
 [[diagnostic_providers]]
-provider = "climate_ref_ilamb.provider"
+provider = "climate_ref_ilamb:provider"
 
 [diagnostic_providers.config]
 
 [[diagnostic_providers]]
-provider = "climate_ref_pmp.provider"
+provider = "climate_ref_pmp:provider"
 
 [diagnostic_providers.config]
 ```

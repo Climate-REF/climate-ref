@@ -27,6 +27,8 @@ dependencies = [
     "netcdf4>=1.5.0",
     "dask>=2024.10.0",
 ]
+[project.entry-points."climate-ref.providers"]
+example = "climate_ref_example:provider"
 
 [dependency-groups]
 dev = []

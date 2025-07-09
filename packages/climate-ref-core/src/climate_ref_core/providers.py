@@ -136,7 +136,7 @@ def import_provider(fqn: str) -> DiagnosticProvider:
     fqn
         Full package and attribute name of the provider to import
 
-        For example: `climate_ref_example.provider` will use the `provider` attribute from the
+        For example: `climate_ref_example:provider` will use the `provider` attribute from the
         `climate_ref_example` package.
 
         If only a package name is provided, the default attribute name is `provider`.
@@ -153,24 +153,22 @@ def import_provider(fqn: str) -> DiagnosticProvider:
     :
         DiagnosticProvider instance
     """
-    if "." in fqn:
-        module, name = fqn.rsplit(".", 1)
-    else:
-        module = fqn
-        name = "provider"
+    if ":" not in fqn:
+        fqn = f"{fqn}:provider"
+
+    entrypoint = importlib.metadata.EntryPoint(name="provider", value=fqn, group="climate-ref.providers")
 
     try:
-        imp = importlib.import_module(module)
-        provider = getattr(imp, name)
+        provider = entrypoint.load()
         if not isinstance(provider, DiagnosticProvider):
             raise InvalidProviderException(fqn, f"Expected DiagnosticProvider, got {type(provider)}")
         return provider
     except ModuleNotFoundError:
         logger.error(f"Module '{fqn}' not found")
-        raise InvalidProviderException(fqn, f"Module '{module}' not found")
+        raise InvalidProviderException(fqn, "Module not found")
     except AttributeError:
         logger.error(f"Provider '{fqn}' not found")
-        raise InvalidProviderException(fqn, f"Provider '{name}' not found in {module}")
+        raise InvalidProviderException(fqn, "Provider not found in module")
 
 
 class CommandLineDiagnosticProvider(DiagnosticProvider):

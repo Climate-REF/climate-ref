@@ -28,6 +28,8 @@ dependencies = [
     "ruamel.yaml >= 0.18",
     "xarray >= 2023.3.0",
 ]
+[project.entry-points."climate-ref.providers"]
+esmvaltool = "climate_ref_esmvaltool:provider"
 
 [build-system]
 requires = ["hatchling"]

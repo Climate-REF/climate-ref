@@ -53,9 +53,9 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     )
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(recipe: Recipe, input_files: dict[SourceDatasetType, pandas.DataFrame]) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
 
         # Select a timerange covered by all datasets.

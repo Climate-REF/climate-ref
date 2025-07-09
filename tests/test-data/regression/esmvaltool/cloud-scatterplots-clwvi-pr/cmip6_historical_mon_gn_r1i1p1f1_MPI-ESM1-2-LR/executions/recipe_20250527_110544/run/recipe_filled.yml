@@ -1,0 +1,152 @@
+diagnostics:
+  plot_joint_clwvi_pr_model:
+    description: Scatterplot clwvi vs pr.
+    scripts:
+      plot:
+        bins: 20
+        cbar: true
+        cbar_kws:
+          extend: max
+        joint_kws:
+          cmap: YlGnBu
+          vmax: 0.03
+        marginal_kws:
+          color: darkturquoise
+        plot_filename: jointplot_clwvi_pr_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000
+        script: seaborn_jointplot_histogram.py
+        seaborn_settings:
+          rc:
+            axes.titlepad: 15.0
+          style: ticks
+        suptitle: CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000
+        x: clwvi
+        y: pr
+    variables:
+      clwvi:
+        exp: historical
+        mip: Amon
+        preprocessor: common_grid_clivi_clwvi
+        timerange: 20070116T120000/20141216T120000
+        activity: CMIP
+        ensemble: r1i1p1f1
+        grid: gn
+        institute: MPI-M
+        project: CMIP6
+        version: v20190710
+      pr:
+        exp: historical
+        mip: Amon
+        preprocessor: common_grid_pr
+        timerange: 20070116T120000/20141216T120000
+        activity: CMIP
+        ensemble: r1i1p1f1
+        grid: gn
+        institute: MPI-M
+        project: CMIP6
+        version: v20190710
+documentation:
+  authors:
+  - bock_lisa
+  - lauer_axel
+  - andela_bouwe
+  description: Plot 2D histograms using the Seaborn diagnostic in ESMValTool.
+  maintainer:
+  - bock_lisa
+  title: Model evaluation with focus on clouds.
+levels_for_3d_vars:
+  extract_levels:
+    coordinate: air_pressure
+    levels:
+      cmor_table: CMIP6
+      coordinate: plev27
+    scheme: linear
+preprocessors:
+  common_grid_clivi_clwvi:
+    custom_order: true
+    mask_outside_range:
+      maximum: 0.2
+      minimum: 0.01
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  common_grid_clt:
+    custom_order: true
+    mask_outside_range:
+      maximum: 100.0
+      minimum: 1.0
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  common_grid_levels_cli:
+    convert_units:
+      units: g kg-1
+    custom_order: true
+    extract_levels:
+      coordinate: air_pressure
+      levels:
+        cmor_table: CMIP6
+        coordinate: plev27
+      scheme: linear
+    mask_outside_range:
+      maximum: 0.005
+      minimum: 0.0001
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  common_grid_levels_ta:
+    custom_order: true
+    extract_levels:
+      coordinate: air_pressure
+      levels:
+        cmor_table: CMIP6
+        coordinate: plev27
+      scheme: linear
+    mask_outside_range:
+      maximum: 280
+      minimum: 200
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  common_grid_lwcre:
+    custom_order: true
+    mask_outside_range:
+      maximum: 100.0
+      minimum: 1.0
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  common_grid_pr:
+    convert_units:
+      units: mm day-1
+    custom_order: true
+    mask_outside_range:
+      maximum: 4
+      minimum: 0.1
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  common_grid_swcre:
+    custom_order: true
+    mask_outside_range:
+      maximum: -1.0
+      minimum: -200.0
+    regrid:
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+      target_grid: 1x1
+  default: {}
+regridding:
+  regrid:
+    scheme:
+      reference: esmf_regrid.schemes:ESMFAreaWeighted
+    target_grid: 1x1
+timerange_for_data:
+  timerange: 2007/2011
+datasets:
+- dataset: MPI-ESM1-2-LR

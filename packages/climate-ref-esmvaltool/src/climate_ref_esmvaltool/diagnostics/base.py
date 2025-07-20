@@ -1,9 +1,11 @@
+import fnmatch
 from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
 from typing import ClassVar
 
 import pandas
+import xarray as xr
 from loguru import logger
 from ruamel.yaml import YAML
 
@@ -14,6 +16,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_esmvaltool.recipe import load_recipe, prepare_climate_data
@@ -175,6 +178,12 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         output_args = CMECOutput.create_template()
 
         # Add the plots and data files
+        default_series_attributes = (
+            "long_name",
+            "standard_name",
+            "units",
+        )
+        series = []
         plot_suffixes = {".png", ".jpg", ".pdf", ".ps"}
         for metadata_file in result_dir.glob("run/*/*/diagnostic_provenance.yml"):
             metadata = yaml.load(metadata_file.read_text(encoding="utf-8"))
@@ -190,6 +199,31 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     OutputCV.LONG_NAME.value: caption,
                     OutputCV.DESCRIPTION.value: "",
                 }
+                for series_def in definition.diagnostic.series:
+                    if fnmatch.fnmatch(str(relative_path), f"executions/*/{series_def.file_pattern}"):
+                        dataset = xr.open_dataset(filename)
+                        attributes = {
+                            attr: dataset.attrs[attr]
+                            for attr in (tuple(series_def.attributes) + default_series_attributes)
+                            if attr in dataset.attrs
+                        }
+                        attributes["caption"] = caption
+                        index = dataset[series_def.index_name].values.tolist()
+                        if hasattr(index[0], "isoformat"):
+                            # Convert time objects to strings.
+                            index = [v.isoformat() for v in index]
+                        if hasattr(index[0], "calendar"):
+                            attributes["calendar"] = index[0].calendar
+
+                        series.append(
+                            SeriesMetricValue(
+                                dimensions=series_def.dimensions,
+                                values=dataset[series_def.values_name].values.tolist(),
+                                index=index,
+                                index_name=series_def.index_name,
+                                attributes=attributes,
+                            )
+                        )
 
         # Add the index.html file
         index_html = f"{result_dir}/index.html"
@@ -220,4 +254,5 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             definition,
             cmec_output_bundle=output_bundle,
             cmec_metric_bundle=metric_bundle,
+            series=series,
         )

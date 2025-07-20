@@ -1,0 +1,46 @@
+? <OUTPUT_DIR>/executions/recipe_20250527_110023/plots/plot_joint_cli_ta_model/plot/png/jointplot_cli_ta_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000.png
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110023/preproc/plot_joint_cli_ta_model/cli/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_cli_gn_20070116T120000-20141216T120000.nc
+  - <OUTPUT_DIR>/executions/recipe_20250527_110023/preproc/plot_joint_cli_ta_model/ta/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_ta_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot cli vs ta (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20250527_110023/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_cli_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110023/preproc/plot_joint_cli_ta_model/cli/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_cli_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot cli vs ta (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20250527_110023/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_cli_ta_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110023/preproc/plot_joint_cli_ta_model/cli/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_cli_gn_20070116T120000-20141216T120000.nc
+  - <OUTPUT_DIR>/executions/recipe_20250527_110023/preproc/plot_joint_cli_ta_model/ta/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_ta_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot cli vs ta (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20250527_110023/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_ta_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20250527_110023/preproc/plot_joint_cli_ta_model/ta/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_ta_gn_20070116T120000-20141216T120000.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot cli vs ta (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)
+  plot_types:
+  - histogram

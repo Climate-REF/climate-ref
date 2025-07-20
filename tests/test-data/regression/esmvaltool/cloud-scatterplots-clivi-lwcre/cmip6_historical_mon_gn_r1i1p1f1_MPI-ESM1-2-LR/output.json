@@ -1,0 +1,42 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe_20250527_110438/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe_20250527_110438/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clivi_histogram.nc": {
+      "filename": "executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clivi_histogram.nc",
+      "long_name": "Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)",
+      "description": ""
+    },
+    "executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clivi_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clivi_lwcre_histogram.nc",
+      "long_name": "Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)",
+      "description": ""
+    },
+    "executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20250527_110438/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_lwcre_histogram.nc",
+      "long_name": "Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)",
+      "description": ""
+    }
+  },
+  "plots": {
+    "executions/recipe_20250527_110438/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000.png": {
+      "filename": "executions/recipe_20250527_110438/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000.png",
+      "long_name": "Scatterplot clivi vs lwcre (CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000)",
+      "description": ""
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe_20250527_110438/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250527_110438/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run."
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

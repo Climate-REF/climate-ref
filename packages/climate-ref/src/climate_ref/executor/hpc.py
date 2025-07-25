@@ -21,7 +21,7 @@ from loguru import logger
 from parsl import python_app
 from parsl.config import Config as ParslConfig
 from parsl.executors import HighThroughputExecutor
-from parsl.launchers import SrunLauncher
+from parsl.launchers import SimpleLauncher, SrunLauncher
 from parsl.providers import SlurmProvider
 from tqdm import tqdm
 
@@ -34,6 +34,7 @@ from climate_ref_core.exceptions import DiagnosticError, ExecutionError
 from climate_ref_core.executor import execute_locally
 
 from .local import ExecutionFuture, process_result
+from .pbs_scheduler import SmartPBSProvider
 
 
 @python_app
@@ -96,8 +97,9 @@ class HPCExecutor:
         self.account = str(executor_config.get("account", os.environ.get("USER")))
         self.username = executor_config.get("username", os.environ.get("USER"))
         self.partition = str(executor_config.get("partition")) if executor_config.get("partition") else None
+        self.queue = str(executor_config.get("queue")) if executor_config.get("queue") else None
         self.qos = str(executor_config.get("qos")) if executor_config.get("qos") else None
-        self.req_nodes = int(executor_config.get("req_nodes", 1))
+        self.req_nodes = int(executor_config.get("req_nodes", 1)) if self.scheduler == "slurm" else 1
         self.walltime = str(executor_config.get("walltime", "00:10:00"))
         self.log_dir = str(executor_config.get("log_dir", "runinfo"))
 
@@ -181,21 +183,47 @@ class HPCExecutor:
     def _initialize_parsl(self) -> None:
         executor_config = self.config.executor.config
 
-        provider = SlurmProvider(
-            account=self.account,
-            partition=self.partition,
-            qos=self.qos,
-            nodes_per_block=self.req_nodes,
-            max_blocks=int(executor_config.get("max_blocks", 1)),
-            scheduler_options=executor_config.get("scheduler_options", "#SBATCH -C cpu"),
-            worker_init=executor_config.get("worker_init", "source .venv/bin/activate"),
-            launcher=SrunLauncher(
-                debug=True,
-                overrides=executor_config.get("overrides", ""),
-            ),
-            walltime=self.walltime,
-            cmd_timeout=int(executor_config.get("cmd_timeout", 120)),
-        )
+        provider: SlurmProvider | SmartPBSProvider
+        if self.scheduler == "slurm":
+            provider = SlurmProvider(
+                account=self.account,
+                partition=self.partition,
+                qos=self.qos,
+                nodes_per_block=self.req_nodes,
+                max_blocks=int(executor_config.get("max_blocks", 1)),
+                scheduler_options=executor_config.get("scheduler_options", "#SBATCH -C cpu"),
+                worker_init=executor_config.get("worker_init", "source .venv/bin/activate"),
+                launcher=SrunLauncher(
+                    debug=True,
+                    overrides=executor_config.get("overrides", ""),
+                ),
+                walltime=self.walltime,
+                cmd_timeout=int(executor_config.get("cmd_timeout", 120)),
+            )
+
+        elif self.scheduler == "pbs":
+            provider = SmartPBSProvider(
+                account=self.account,
+                queue=self.queue,
+                worker_init=executor_config.get("worker_init", "source .venv/bin/activate"),
+                nodes_per_block=_to_int(executor_config.get("nodes_per_block", 1)),
+                cpus_per_node=_to_int(executor_config.get("cpus_per_node", None)),
+                ncpus=_to_int(executor_config.get("ncpus", None)),
+                mem=executor_config.get("mem", "4GB"),
+                jobfs=executor_config.get("jobfs", "10GB"),
+                storage=executor_config.get("storage", ""),
+                init_blocks=executor_config.get("init_blocks", 1),
+                min_blocks=executor_config.get("min_blocks", 0),
+                max_blocks=executor_config.get("max_blocks", 1),
+                parallelism=executor_config.get("parallelism", 1),
+                scheduler_options=executor_config.get("scheduler_options", ""),
+                launcher=SimpleLauncher(),
+                walltime=self.walltime,
+                cmd_timeout=int(executor_config.get("cmd_timeout", 120)),
+            )
+        else:
+            raise ValueError(f"Unsupported scheduler: {self.scheduler}")
+
         executor = HighThroughputExecutor(
             label="ref_hpc_executor",
             cores_per_worker=self.cores_per_worker if self.cores_per_worker else 1,
@@ -206,8 +234,11 @@ class HPCExecutor:
         )
 
         hpc_config = ParslConfig(
-            run_dir=self.log_dir, executors=[executor], retries=int(executor_config.get("retries", 2))
+            run_dir=self.log_dir,
+            executors=[executor],
+            retries=int(executor_config.get("retries", 2)),
         )
+
         parsl.load(hpc_config)
 
     def run(

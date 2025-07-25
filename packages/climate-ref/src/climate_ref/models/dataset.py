@@ -90,9 +90,7 @@ class CMIP6Dataset(Dataset):
     """
     Represents a CMIP6 dataset
 
-    Fields that are not marked as required in
-    https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf
-    are optional.
+    Fields that are not in the DRS are marked optional.
     """
 
     __tablename__ = "cmip6_dataset"
@@ -102,29 +100,29 @@ class CMIP6Dataset(Dataset):
     branch_method: Mapped[str] = mapped_column(nullable=True)
     branch_time_in_child: Mapped[float] = mapped_column(nullable=True)
     branch_time_in_parent: Mapped[float] = mapped_column(nullable=True)
-    experiment: Mapped[str] = mapped_column()
+    experiment: Mapped[str] = mapped_column(nullable=True)
     experiment_id: Mapped[str] = mapped_column()
-    frequency: Mapped[str] = mapped_column()
-    grid: Mapped[str] = mapped_column()
+    frequency: Mapped[str] = mapped_column(nullable=True)
+    grid: Mapped[str] = mapped_column(nullable=True)
     grid_label: Mapped[str] = mapped_column()
     institution_id: Mapped[str] = mapped_column()
     long_name: Mapped[str] = mapped_column(nullable=True)
     member_id: Mapped[str] = mapped_column()
-    nominal_resolution: Mapped[str] = mapped_column()
+    nominal_resolution: Mapped[str] = mapped_column(nullable=True)
     parent_activity_id: Mapped[str] = mapped_column(nullable=True)
     parent_experiment_id: Mapped[str] = mapped_column(nullable=True)
     parent_source_id: Mapped[str] = mapped_column(nullable=True)
     parent_time_units: Mapped[str] = mapped_column(nullable=True)
     parent_variant_label: Mapped[str] = mapped_column(nullable=True)
-    realm: Mapped[str] = mapped_column()
-    product: Mapped[str] = mapped_column()
+    realm: Mapped[str] = mapped_column(nullable=True)
+    product: Mapped[str] = mapped_column(nullable=True)
     source_id: Mapped[str] = mapped_column()
-    standard_name: Mapped[str] = mapped_column()
-    source_type: Mapped[str] = mapped_column()
-    sub_experiment: Mapped[str] = mapped_column()
-    sub_experiment_id: Mapped[str] = mapped_column()
+    standard_name: Mapped[str] = mapped_column(nullable=True)
+    source_type: Mapped[str] = mapped_column(nullable=True)
+    sub_experiment: Mapped[str] = mapped_column(nullable=True)
+    sub_experiment_id: Mapped[str] = mapped_column(nullable=True)
     table_id: Mapped[str] = mapped_column()
-    units: Mapped[str] = mapped_column()
+    units: Mapped[str] = mapped_column(nullable=True)
     variable_id: Mapped[str] = mapped_column()
     variant_label: Mapped[str] = mapped_column()
     vertical_levels: Mapped[int] = mapped_column(nullable=True)
@@ -132,7 +130,16 @@ class CMIP6Dataset(Dataset):
 
     instance_id: Mapped[str] = mapped_column()
     """
-    Unique identifier for the dataset.
+    Unique identifier for the dataset (including the version).
+    """
+
+    finalised: Mapped[bool] = mapped_column(default=False)
+    """
+    Whether the complete set of metadata for the dataset has been finalised.
+
+    This is set to true once all the metadata has been extracted.
+    Before this is set to true, missing fields may or may not be present in the dataset,
+    but after this is set to true, any missing fields are indeed missing in the dataset.
     """
 
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore

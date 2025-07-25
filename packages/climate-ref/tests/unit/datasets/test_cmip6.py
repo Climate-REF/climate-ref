@@ -2,14 +2,15 @@ import datetime
 
 import numpy as np
 import pandas as pd
+import pytest
 
 from climate_ref.datasets.cmip6 import (
     CMIP6DatasetAdapter,
     _apply_fixes,
     _clean_branch_time,
     _parse_datetime,
-    parse_cmip6,
 )
+from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 
 
 def test_parse_datetime():
@@ -22,8 +23,9 @@ def test_parse_datetime():
     )
 
 
-def test_parse_exception():
-    result = parse_cmip6("missing_file")
+@pytest.mark.parametrize("parsing_func", [parse_cmip6_complete, parse_cmip6_drs])
+def test_parse_exception(parsing_func):
+    result = parsing_func("missing_file")
 
     assert result["INVALID_ASSET"] == "missing_file"
     assert "TRACEBACK" in result
@@ -42,15 +44,20 @@ class TestCMIP6Adapter:
         df = adapter.load_catalog(db)
         assert df.empty
 
-    def test_load_catalog(self, db_seeded, catalog_regression, sample_data_dir):
-        adapter = CMIP6DatasetAdapter()
+    @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
+    def test_load_catalog(self, cmip6_parser, db_seeded, catalog_regression, sample_data_dir, config):
+        config.cmip6_parser = cmip6_parser
+
+        adapter = CMIP6DatasetAdapter(config=config)
         df = adapter.load_catalog(db_seeded)
 
         for k in adapter.dataset_specific_metadata + adapter.file_specific_metadata:
             assert k in df.columns
 
         # The order of the rows may be flakey due to sqlite ordering and the created time resolution
-        catalog_regression(df.sort_values(["instance_id", "start_time"]), basename="cmip6_catalog_db")
+        catalog_regression(
+            df.sort_values(["instance_id", "start_time"]), basename=f"cmip6_catalog_db_{cmip6_parser}"
+        )
 
     def test_load_catalog_multiple_versions(self, config, db_seeded, catalog_regression, sample_data_dir):
         adapter = CMIP6DatasetAdapter()
@@ -97,21 +104,32 @@ class TestCMIP6Adapter:
             adapter.load_catalog(db_seeded).sort_values(["instance_id", "start_time"]).reset_index(drop=True)
         )
 
-        # TODO: start_time has a different dtype from the database due to pandas dt coercion
-        db_data_catalog["start_time"] = db_data_catalog["start_time"].astype(object)
-        pd.testing.assert_frame_equal(local_data_catalog, db_data_catalog, check_like=True)
+        pd.testing.assert_frame_equal(
+            local_data_catalog.infer_objects(),
+            db_data_catalog.replace({None: np.nan}).infer_objects(),
+            check_like=True,
+        )
 
-    def test_load_local_datasets(self, sample_data_dir, catalog_regression):
-        adapter = CMIP6DatasetAdapter()
+    @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
+    def test_load_local_datasets(self, config, cmip6_parser, sample_data_dir, catalog_regression):
+        # Set the parser in the config
+        config.cmip6_parser = cmip6_parser
+
+        # Parse the local datasets
+        adapter = CMIP6DatasetAdapter(config=config)
         data_catalog = adapter.find_local_datasets(sample_data_dir / "CMIP6")
+
+        if cmip6_parser == "complete":
+            assert data_catalog["finalised"].all()
 
         # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(
-            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata, "time_range"]
+            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata, "time_range", "finalised"]
         )
 
         catalog_regression(
-            data_catalog.sort_values(["instance_id", "start_time"]), basename="cmip6_catalog_local"
+            data_catalog.sort_values(["instance_id", "start_time"]),
+            basename=f"cmip6_catalog_local_{cmip6_parser}",
         )
 
 

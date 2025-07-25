@@ -15,7 +15,7 @@ flowchart LR
     Execute --> Visualise
 ```
 
-* **Ingest** Ingesting datasets that can be used for analysis into a local database. This includes support for CMIP6, Obs4MIPs, and other observational datasets.
+* **Ingest** Ingesting [datasets](./datasets.md) that can be used for analysis into a local database. This includes support for CMIP6, Obs4MIPs, and other observational datasets.
 * **Solve** Using the ingested datasets and the data requirements from the metrics, the REF determines which metrics need to be executed.
 * **Execute** The metrics are executed and the results collated. We support multiple different ways of running metrics that may be useful for different use cases.
 * **Visualise** The results of the metrics are visualised. This can be in the form of plots, tables, or other outputs.
@@ -24,7 +24,8 @@ flowchart LR
 ## Ingest (`ref datasets ingest`)
 
 We require metadata about each of the available datasets to determine which diagnostics should be executed.
-The metadata required for each dataset depends on the `Source Type` of the data.
+The metadata required for each dataset depends on the `Source Type` of the data
+(see [datasets](./datasets.md) for more information about what information is used from each dataset source).
 We currently support:
 
 * obs4MIPs

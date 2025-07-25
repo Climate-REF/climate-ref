@@ -17,7 +17,7 @@ which always take precedence over any other configuration values.
 import importlib.resources
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import tomlkit
 from attr import Factory
@@ -352,6 +352,18 @@ class Config:
 
     Examples of the formatting options are available in the
     [loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html#module-loguru._logger).
+    """
+
+    cmip6_parser: Literal["drs", "complete"] = env_field("CMIP6_PARSER", default="drs")
+    """
+    Parser to use for CMIP6 datasets
+
+    This can be either `drs` or `complete`.
+
+    - `drs`: Use the DRS parser, which parses the dataset based on the DRS naming conventions.
+    - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
+
+    `drs` is the default parser and is recommended for most use cases, as it is much faster.
     """
 
     paths: PathConfig = Factory(PathConfig)  # noqa

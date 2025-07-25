@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Protocol, cast
+from typing import Any, Protocol, cast
 
 import pandas as pd
 from loguru import logger
@@ -33,6 +33,31 @@ def _log_duplicate_metadata(
         logger.error(
             f"Dataset {instance_id} has varying metadata:\n{data_catalog_subset[invalid_dataset_columns]}"
         )
+
+
+class DatasetParsingFunction(Protocol):
+    """
+    Protocol for a function that parses metadata from a file or directory
+    """
+
+    def __call__(self, file: str, **kwargs: Any) -> dict[str, Any]:
+        """
+        Parse a file or directory and return metadata for the dataset
+
+        Parameters
+        ----------
+        file_or_directory
+            File or directory to parse
+
+        kwargs
+            Additional keyword arguments to pass to the parsing function.
+
+        Returns
+        -------
+        :
+            Data catalog containing the metadata for the dataset
+        """
+        ...
 
 
 class DatasetAdapter(Protocol):
@@ -173,7 +198,7 @@ class DatasetAdapter(Protocol):
         slug = unique_slugs[0]
 
         dataset_metadata = data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
-        dataset, created = db.get_or_create(DatasetModel, slug=slug, **dataset_metadata)
+        dataset, created = db.get_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
         if not created:
             logger.warning(f"{dataset} already exists in the database. Skipping")
             return None

@@ -6,6 +6,7 @@
   experiment: zero emissions simulation branched from 1% run after 1000 PgC cumulative
     emission
   experiment_id: esm-1pct-brch-1000PgC
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -43,6 +44,7 @@
   experiment: zero emissions simulation branched from 1% run after 1000 PgC cumulative
     emission
   experiment_id: esm-1pct-brch-1000PgC
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -79,6 +81,7 @@
   end_time: 1869-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -116,6 +119,7 @@
   end_time: 1889-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -153,6 +157,7 @@
   end_time: 1909-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -190,6 +195,7 @@
   end_time: 1914-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -227,6 +233,7 @@
   end_time: 1869-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -263,6 +270,7 @@
   end_time: 1889-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -299,6 +307,7 @@
   end_time: 1909-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -335,6 +344,7 @@
   end_time: 1914-12-16 12:00:00
   experiment: emissions driven 1% run
   experiment_id: esm-1pctCO2
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -371,6 +381,7 @@
   end_time: 0250-12-16 12:00:00
   experiment: 1 percent per year increase in CO2
   experiment_id: 1pctCO2
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -407,6 +418,7 @@
   end_time: null
   experiment: 1 percent per year increase in CO2
   experiment_id: 1pctCO2
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -443,6 +455,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: abrupt quadrupling of CO2
   experiment_id: abrupt-4xCO2
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -479,6 +492,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: abrupt quadrupling of CO2
   experiment_id: abrupt-4xCO2
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -515,6 +529,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: abrupt quadrupling of CO2
   experiment_id: abrupt-4xCO2
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -551,6 +566,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: abrupt quadrupling of CO2
   experiment_id: abrupt-4xCO2
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -587,6 +603,7 @@
   end_time: null
   experiment: abrupt quadrupling of CO2
   experiment_id: abrupt-4xCO2
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -623,6 +640,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -659,6 +677,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -695,6 +714,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -731,6 +751,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -767,6 +788,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -803,6 +825,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -839,6 +862,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -875,6 +899,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -911,6 +936,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -947,6 +973,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -983,6 +1010,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1019,6 +1047,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1056,6 +1085,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1092,6 +1122,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1128,6 +1159,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1164,6 +1196,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1201,6 +1234,7 @@
   end_time: null
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1237,6 +1271,7 @@
   end_time: null
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1273,6 +1308,7 @@
   end_time: 2009-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1309,6 +1345,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1345,6 +1382,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1381,6 +1419,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1417,6 +1456,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1453,6 +1493,7 @@
   end_time: null
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1489,6 +1530,7 @@
   end_time: null
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1525,6 +1567,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1561,6 +1604,7 @@
   end_time: 2014-12-16 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1597,6 +1641,7 @@
   end_time: null
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1633,6 +1678,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: pre-industrial control
   experiment_id: piControl
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1669,6 +1715,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: pre-industrial control
   experiment_id: piControl
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1705,6 +1752,7 @@
   end_time: 0125-12-16 12:00:00
   experiment: pre-industrial control
   experiment_id: piControl
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1741,6 +1789,7 @@
   end_time: 0180-12-16 12:00:00
   experiment: pre-industrial control
   experiment_id: piControl
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1777,6 +1826,7 @@
   end_time: null
   experiment: pre-industrial control
   experiment_id: piControl
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -1813,6 +1863,7 @@
   end_time: 1869-12-16 12:00:00
   experiment: pre-industrial control simulation with CO2 concentration calculated
   experiment_id: esm-piControl
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -1849,6 +1900,7 @@
   end_time: 1889-12-16 12:00:00
   experiment: pre-industrial control simulation with CO2 concentration calculated
   experiment_id: esm-piControl
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -1885,6 +1937,7 @@
   end_time: 1909-12-16 12:00:00
   experiment: pre-industrial control simulation with CO2 concentration calculated
   experiment_id: esm-piControl
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -1921,6 +1974,7 @@
   end_time: 1915-12-16 12:00:00
   experiment: pre-industrial control simulation with CO2 concentration calculated
   experiment_id: esm-piControl
+  finalised: true
   frequency: mon
   grid: gn
   grid_label: gn
@@ -1957,6 +2011,7 @@
   end_time: null
   experiment: pre-industrial control simulation with CO2 concentration calculated
   experiment_id: esm-piControl
+  finalised: true
   frequency: fx
   grid: gn
   grid_label: gn
@@ -1993,6 +2048,7 @@
   end_time: 2014-12-15 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
@@ -2029,6 +2085,7 @@
   end_time: 2014-12-15 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
@@ -2065,6 +2122,7 @@
   end_time: 2014-12-15 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
@@ -2101,6 +2159,7 @@
   end_time: 2014-12-15 12:00:00
   experiment: all-forcing simulation of the recent past
   experiment_id: historical
+  finalised: true
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
@@ -2138,6 +2197,7 @@
   end_time: 2020-12-16 12:00:00
   experiment: historical well-mixed GHG-only run
   experiment_id: hist-GHG
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2174,6 +2234,7 @@
   end_time: 2020-12-16 12:00:00
   experiment: historical well-mixed GHG-only run
   experiment_id: hist-GHG
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2210,6 +2271,7 @@
   end_time: null
   experiment: historical well-mixed GHG-only run
   experiment_id: hist-GHG
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2246,6 +2308,7 @@
   end_time: 2020-12-16 12:00:00
   experiment: historical well-mixed GHG-only run
   experiment_id: hist-GHG
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2282,6 +2345,7 @@
   end_time: 2020-12-16 12:00:00
   experiment: historical well-mixed GHG-only run
   experiment_id: hist-GHG
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2318,6 +2382,7 @@
   end_time: null
   experiment: historical well-mixed GHG-only run
   experiment_id: hist-GHG
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2354,6 +2419,7 @@
   end_time: 2100-12-16 12:00:00
   experiment: update of RCP2.6 based on SSP1
   experiment_id: ssp126
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2390,6 +2456,7 @@
   end_time: 2025-12-16 12:00:00
   experiment: update of RCP2.6 based on SSP1
   experiment_id: ssp126
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2426,6 +2493,7 @@
   end_time: 2025-12-16 12:00:00
   experiment: update of RCP2.6 based on SSP1
   experiment_id: ssp126
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2462,6 +2530,7 @@
   end_time: 2100-12-16 12:00:00
   experiment: update of RCP2.6 based on SSP1
   experiment_id: ssp126
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2498,6 +2567,7 @@
   end_time: 2025-12-16 12:00:00
   experiment: update of RCP2.6 based on SSP1
   experiment_id: ssp126
+  finalised: true
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
@@ -2534,6 +2604,7 @@
   end_time: null
   experiment: update of RCP2.6 based on SSP1
   experiment_id: ssp126
+  finalised: true
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn

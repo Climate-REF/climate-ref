@@ -1,7 +1,8 @@
-from collections.abc import Callable
 from typing import Any
 
 import pandas as pd
+
+from climate_ref.datasets.base import DatasetParsingFunction
 
 class Builder:
     df = pd.DataFrame()
@@ -13,4 +14,4 @@ class Builder:
         include_patterns: list[str],
         joblib_parallel_kwargs: dict[str, Any],
     ) -> None: ...
-    def build(self, *, parsing_func: Callable[[str], pd.DataFrame]) -> Builder: ...
+    def build(self, *, parsing_func: DatasetParsingFunction) -> Builder: ...

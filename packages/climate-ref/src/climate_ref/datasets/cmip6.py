@@ -12,6 +12,7 @@ from loguru import logger
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
+from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.models.dataset import CMIP6Dataset
 
 
@@ -71,7 +72,7 @@ def _clean_branch_time(branch_time: pd.Series[str]) -> pd.Series[float]:
     return pd.to_numeric(branch_time.astype(str).str.replace("D", ""), errors="coerce")
 
 
-class CMIP6DatasetAdapter(DatasetAdapter):
+class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
     """
     Adapter for CMIP6 datasets
     """
@@ -211,5 +212,45 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         # Temporary fix for some datasets
         # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
         datasets = _apply_fixes(datasets)
+
+        return datasets
+
+    def finalise_datasets(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Finalise a subset of datasets by applying the complete parser
+
+        This is used to lazily parse the datasets after they have been filtered.
+
+        Parameters
+        ----------
+        datasets
+            DataFrame of datasets to finalise
+
+        Returns
+        -------
+        :
+            DataFrame of finalised datasets
+        """
+        if "path" not in datasets.columns:
+            raise ValueError("The 'path' column is required to finalise the datasets")
+
+        finalised_rows = []
+        for _, row in datasets.iterrows():
+            finalised_rows.append(parse_cmip6_complete(row["path"]))
+
+        finalised_df = pd.DataFrame(finalised_rows)
+
+        # We need to preserve the original index to be able to update the original dataframe
+        finalised_df.index = datasets.index
+
+        # Convert the start_time and end_time columns to datetime objects
+        finalised_df["start_time"] = _parse_datetime(finalised_df["start_time"])
+        finalised_df["end_time"] = _parse_datetime(finalised_df["end_time"])
+
+        # Apply the same fixes as in find_local_datasets
+        finalised_df = _apply_fixes(finalised_df)
+
+        # Update the original dataframe with the new metadata
+        datasets.update(finalised_df)
 
         return datasets

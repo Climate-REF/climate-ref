@@ -237,7 +237,6 @@ class DatasetAdapter(Protocol):
                 {
                     **{k: getattr(file, k) for k in self.file_specific_metadata},
                     **{k: getattr(file.dataset, k) for k in self.dataset_specific_metadata},
-                    "finalised": file.dataset.finalised,
                 }
                 for file in result
             ],

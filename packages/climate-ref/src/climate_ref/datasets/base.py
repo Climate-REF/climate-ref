@@ -1,11 +1,10 @@
 from pathlib import Path
-from typing import Any, Protocol, cast
+from typing import Any, Protocol, cast, runtime_checkable
 
 import pandas as pd
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
-from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.datasets.utils import validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
@@ -60,6 +59,7 @@ class DatasetParsingFunction(Protocol):
         ...
 
 
+@runtime_checkable
 class DatasetAdapter(Protocol):
     """
     An adapter to provide a common interface for different dataset types
@@ -169,16 +169,15 @@ class DatasetAdapter(Protocol):
 
         return data_catalog
 
-    def register_dataset(
-        self, config: Config, db: Database, data_catalog_dataset: pd.DataFrame
-    ) -> Dataset | None:
+    def register_dataset(self, db: Database, data_catalog_dataset: pd.DataFrame) -> Dataset | None:
         """
         Register a dataset in the database using the data catalog
 
+        If an existing dataset with the same slug already exists in the database,
+        this will update the dataset with the new metadata and files.
+
         Parameters
         ----------
-        config
-            Configuration object
         db
             Database instance
         data_catalog_dataset
@@ -198,21 +197,23 @@ class DatasetAdapter(Protocol):
         slug = unique_slugs[0]
 
         dataset_metadata = data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
-        dataset, created = db.get_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
-        if not created:
-            logger.warning(f"{dataset} already exists in the database. Skipping")
-            return None
+        dataset, created = db.create_or_update(DatasetModel, values=dataset_metadata, slug=slug)
         db.session.flush()
+
+        if not created:
+            # If the dataset already exists, then we are updating it
+            # We need to check if the dataset type matches
+            logger.info(f"Updating existing dataset {slug}")
         for dataset_file in data_catalog_dataset.to_dict(orient="records"):
             path = validate_path(dataset_file.pop("path"))
 
-            db.session.add(
-                DatasetFile(
-                    path=str(path),
-                    dataset_id=dataset.id,
-                    start_time=dataset_file.pop("start_time"),
-                    end_time=dataset_file.pop("end_time"),
-                )
+            db.create_or_update(
+                DatasetFile,
+                values={
+                    "dataset_id": dataset.id,
+                    **{k: dataset_file[k] for k in self.file_specific_metadata if k in dataset_file},
+                },
+                path=str(path),
             )
         return dataset
 

@@ -32,13 +32,26 @@ class DataCatalog:
             subset_to_finalise = subset[~subset["finalised"]].copy()
             logger.info(f"Finalising {len(subset_to_finalise)} datasets")
             finalised_datasets = self.adapter.finalise_datasets(subset_to_finalise)
-            subset.update(finalised_datasets)
+
+            if len(finalised_datasets) < len(subset_to_finalise):
+                logger.warning(
+                    f"Finalised {len(finalised_datasets)} datasets, but expected {len(subset_to_finalise)}. "
+                    "Some datasets may not have been finalised."
+                )
+
+            # Merge the finalised datasets back into the original subset/data catalog
+            subset.update(finalised_datasets, overwrite=True)
+            subset = subset.infer_objects()
 
             # Update the database with the finalised datasets
-            self.adapter.update_catalog(self.database, finalised_datasets)
+            for instance_id, data_catalog_dataset in finalised_datasets.groupby(self.adapter.slug_column):
+                logger.debug(f"Processing dataset {instance_id}")
+                with self.database.session.begin():
+                    self.adapter.register_dataset(self.database, data_catalog_dataset)
+            if self._df is not None:
+                self._df.update(subset_to_finalise, overwrite=True)
+                self._df = self._df.infer_objects()
 
-            # if self._df:
-            #     self._df = pd.concat([subset])
         return subset
 
     def to_frame(self) -> pd.DataFrame:

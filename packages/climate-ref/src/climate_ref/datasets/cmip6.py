@@ -63,6 +63,10 @@ def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
     if "branch_time_in_parent" in data_catalog:
         data_catalog["branch_time_in_parent"] = _clean_branch_time(data_catalog["branch_time_in_parent"])
 
+    if "init_year" in data_catalog:
+        # Convert init_year to numeric, coercing errors to NaN
+        data_catalog["init_year"] = pd.to_numeric(data_catalog["init_year"], errors="coerce")
+
     return data_catalog
 
 
@@ -156,6 +160,32 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             logger.info(f"Using DRS CMIP6 parser (config value: {parser_type})")
             return parse_cmip6_drs
 
+    def _clean_dataframe(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        # Convert the start_time and end_time columns to datetime objects
+        # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
+        datasets["start_time"] = _parse_datetime(datasets["start_time"])
+        datasets["end_time"] = _parse_datetime(datasets["end_time"])
+
+        drs_items = [
+            *self.dataset_id_metadata,
+            self.version_metadata,
+        ]
+        datasets["instance_id"] = datasets.apply(
+            lambda row: "CMIP6." + ".".join([row[item] for item in drs_items]), axis=1
+        )
+
+        # Add in any missing metadata columns
+        missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
+            datasets.columns
+        )
+        if missing_columns:
+            for column in missing_columns:
+                datasets[column] = pd.NA
+
+        # Temporary fix for some datasets
+        # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
+        return _apply_fixes(datasets)
+
     def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
@@ -186,34 +216,7 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
                 joblib_parallel_kwargs={"n_jobs": self.n_jobs},
             ).build(parsing_func=parsing_function)
 
-        datasets: pd.DataFrame = builder.df.drop(["init_year"], axis=1)
-
-        # Convert the start_time and end_time columns to datetime objects
-        # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
-        datasets["start_time"] = _parse_datetime(datasets["start_time"])
-        datasets["end_time"] = _parse_datetime(datasets["end_time"])
-
-        drs_items = [
-            *self.dataset_id_metadata,
-            self.version_metadata,
-        ]
-        datasets["instance_id"] = datasets.apply(
-            lambda row: "CMIP6." + ".".join([row[item] for item in drs_items]), axis=1
-        )
-
-        # Add in any missing metadata columns
-        missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
-            datasets.columns
-        )
-        if missing_columns:
-            for column in missing_columns:
-                datasets[column] = pd.NA
-
-        # Temporary fix for some datasets
-        # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
-        datasets = _apply_fixes(datasets)
-
-        return datasets
+        return self._clean_dataframe(builder.df)
 
     def finalise_datasets(self, datasets: pd.DataFrame) -> pd.DataFrame:
         """
@@ -235,22 +238,15 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             raise ValueError("The 'path' column is required to finalise the datasets")
 
         finalised_rows = []
-        for _, row in datasets.iterrows():
-            finalised_rows.append(parse_cmip6_complete(row["path"]))
-
-        finalised_df = pd.DataFrame(finalised_rows)
+        for index, row in datasets.iterrows():
+            parsed_row = parse_cmip6_complete(row["path"])
+            if "INVALID_ASSET" in parsed_row:
+                logger.warning(f"Failed to finalise dataset at {row['path']}: {parsed_row['INVALID_ASSET']}")
+                continue
+            finalised_rows.append({"index": index, **parsed_row})
 
         # We need to preserve the original index to be able to update the original dataframe
-        finalised_df.index = datasets.index
+        finalised_df = pd.DataFrame(finalised_rows).set_index("index")
+        finalised_df.index.name = None
 
-        # Convert the start_time and end_time columns to datetime objects
-        finalised_df["start_time"] = _parse_datetime(finalised_df["start_time"])
-        finalised_df["end_time"] = _parse_datetime(finalised_df["end_time"])
-
-        # Apply the same fixes as in find_local_datasets
-        finalised_df = _apply_fixes(finalised_df)
-
-        # Update the original dataframe with the new metadata
-        datasets.update(finalised_df)
-
-        return datasets
+        return self._clean_dataframe(finalised_df)

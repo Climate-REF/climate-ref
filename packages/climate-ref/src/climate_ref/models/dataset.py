@@ -105,6 +105,7 @@ class CMIP6Dataset(Dataset):
     frequency: Mapped[str] = mapped_column(nullable=True)
     grid: Mapped[str] = mapped_column(nullable=True)
     grid_label: Mapped[str] = mapped_column()
+    init_year: Mapped[int] = mapped_column(nullable=True)
     institution_id: Mapped[str] = mapped_column()
     long_name: Mapped[str] = mapped_column(nullable=True)
     member_id: Mapped[str] = mapped_column()

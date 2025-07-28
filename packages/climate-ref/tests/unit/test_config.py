@@ -143,6 +143,7 @@ filename = "sqlite://climate_ref.db"
         assert without_defaults == {
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
+            "cmip6_parser": "complete",
             "diagnostic_providers": [
                 {"provider": "climate_ref_example:provider"},
             ],
@@ -150,6 +151,7 @@ filename = "sqlite://climate_ref.db"
         assert with_defaults == {
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
+            "cmip6_parser": "complete",
             "diagnostic_providers": [
                 {
                     "provider": "climate_ref_example:provider",

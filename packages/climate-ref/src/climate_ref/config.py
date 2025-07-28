@@ -354,7 +354,7 @@ class Config:
     [loguru documentation](https://loguru.readthedocs.io/en/stable/api/logger.html#module-loguru._logger).
     """
 
-    cmip6_parser: Literal["drs", "complete"] = env_field("CMIP6_PARSER", default="drs")
+    cmip6_parser: Literal["drs", "complete"] = env_field("CMIP6_PARSER", default="complete")
     """
     Parser to use for CMIP6 datasets
 
@@ -362,8 +362,6 @@ class Config:
 
     - `drs`: Use the DRS parser, which parses the dataset based on the DRS naming conventions.
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
-
-    `drs` is the default parser and is recommended for most use cases, as it is much faster.
     """
 
     paths: PathConfig = Factory(PathConfig)  # noqa

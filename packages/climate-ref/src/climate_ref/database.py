@@ -268,3 +268,40 @@ class Database:
             instance = model(**params)
             self.session.add(instance)
             return instance, True
+
+    def create_or_update(
+        self, model: type[Table], values: dict[str, Any] | None = None, **kwargs: Any
+    ) -> tuple[Table, bool]:
+        """
+        Create or update an instance of a model
+
+        This doesn't commit the transaction,
+        so you will need to call `session.commit()` after this method
+        or use a transaction context manager.
+
+        Parameters
+        ----------
+        model
+            The model to create or update
+        values
+            Value to set on the instance when creating or updating it
+        kwargs
+            The filter parameters to use when querying for an instance
+
+        Returns
+        -------
+        :
+            A tuple containing the instance and a boolean indicating if the instance was created
+        """
+        instance = self.session.query(model).filter_by(**kwargs).first()
+        if instance and values:
+            for key, value in values.items():
+                setattr(instance, key, value)
+            created = False
+        else:
+            params = {**kwargs, **(values or {})}
+            instance = model(**params)
+            self.session.add(instance)
+            created = True
+
+        return instance, created

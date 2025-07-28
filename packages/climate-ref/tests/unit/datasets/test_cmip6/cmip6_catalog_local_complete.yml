@@ -10,6 +10,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
@@ -30,7 +31,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0168-01-16 12:00:00-0268-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -48,6 +48,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191206
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -68,7 +69,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -85,6 +85,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
@@ -106,7 +107,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1850-01-16 12:00:00-1869-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: fco2antt
   variant_label: r1i1p1f1
@@ -123,6 +123,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
@@ -144,7 +145,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1870-01-16 12:00:00-1889-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: fco2antt
   variant_label: r1i1p1f1
@@ -161,6 +161,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
@@ -182,7 +183,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1890-01-16 12:00:00-1909-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: fco2antt
   variant_label: r1i1p1f1
@@ -199,6 +199,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
   institution_id: MPI-M
   long_name: Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of
@@ -220,7 +221,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1910-01-16 12:00:00-1914-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: fco2antt
   variant_label: r1i1p1f1
@@ -237,6 +237,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -257,7 +258,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1850-01-16 12:00:00-1869-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -274,6 +274,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -294,7 +295,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1870-01-16 12:00:00-1889-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -311,6 +311,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -331,7 +332,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1890-01-16 12:00:00-1909-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -348,6 +348,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.C4MIP CDRMIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -368,7 +369,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1910-01-16 12:00:00-1914-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -385,6 +385,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191115
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
@@ -405,7 +406,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0250-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -422,6 +422,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191115
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -442,7 +443,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -459,6 +459,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rlut.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Outgoing Longwave Radiation
@@ -479,7 +480,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: W m-2
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -496,6 +496,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rsdt.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Incident Shortwave Radiation
@@ -516,7 +517,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: W m-2
   variable_id: rsdt
   variant_label: r1i1p1f1
@@ -533,6 +533,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Outgoing Shortwave Radiation
@@ -553,7 +554,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: W m-2
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -570,6 +570,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.tas.gn.v20191115
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
@@ -590,7 +591,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -607,6 +607,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.fx.areacella.gn.v20191115
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -627,7 +628,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -644,6 +644,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
   institution_id: CSIRO
   long_name: Precipitation
@@ -664,7 +665,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
   variant_label: r1i1p1f1
@@ -681,6 +681,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.psl.gn.v20191115
   institution_id: CSIRO
   long_name: Sea Level Pressure
@@ -701,7 +702,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: Pa
   variable_id: psl
   variant_label: r1i1p1f1
@@ -718,6 +718,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlut.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Outgoing Longwave Radiation
@@ -738,7 +739,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -755,6 +755,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlutcs.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Outgoing Clear-Sky Longwave Radiation
@@ -775,7 +776,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2005-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rlutcs
   variant_label: r1i1p1f1
@@ -792,6 +792,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsdt.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Incident Shortwave Radiation
@@ -812,7 +813,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rsdt
   variant_label: r1i1p1f1
@@ -829,6 +829,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsut.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Outgoing Shortwave Radiation
@@ -849,7 +850,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -866,6 +866,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsutcs.gn.v20191115
   institution_id: CSIRO
   long_name: TOA Outgoing Clear-Sky Shortwave Radiation
@@ -886,7 +887,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2005-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rsutcs
   variant_label: r1i1p1f1
@@ -903,6 +903,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
@@ -923,7 +924,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -940,6 +940,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tauu.gn.v20191115
   institution_id: CSIRO
   long_name: Surface Downward Eastward Wind Stress
@@ -960,7 +961,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
   units: Pa
   variable_id: tauu
   variant_label: r1i1p1f1
@@ -977,6 +977,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
   institution_id: CSIRO
   long_name: Surface Temperature
@@ -997,7 +998,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: K
   variable_id: ts
   variant_label: r1i1p1f1
@@ -1014,6 +1014,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Emon.cSoil.gn.v20191115
   institution_id: CSIRO
   long_name: Carbon Mass in Model Soil Pool
@@ -1034,7 +1035,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Emon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: kg m-2
   variable_id: cSoil
   variant_label: r1i1p1f1
@@ -1051,6 +1051,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.gpp.gn.v20191115
   institution_id: CSIRO
   long_name: Carbon Mass Flux out of Atmosphere Due to Gross Primary Production on
@@ -1072,7 +1073,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Lmon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: gpp
   variant_label: r1i1p1f1
@@ -1089,6 +1089,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.lai.gn.v20191115
   institution_id: CSIRO
   long_name: Leaf Area Index
@@ -1109,7 +1110,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Lmon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: '1'
   variable_id: lai
   variant_label: r1i1p1f1
@@ -1126,6 +1126,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.mrro.gn.v20191115
   institution_id: CSIRO
   long_name: Total Runoff
@@ -1146,7 +1147,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Lmon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: mrro
   variant_label: r1i1p1f1
@@ -1163,6 +1163,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.mrsos.gn.v20191115
   institution_id: CSIRO
   long_name: Moisture in Upper Portion of Soil Column
@@ -1183,7 +1184,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Lmon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: kg m-2
   variable_id: mrsos
   variant_label: r1i1p1f1
@@ -1200,6 +1200,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.nbp.gn.v20191115
   institution_id: CSIRO
   long_name: Carbon Mass Flux out of Atmosphere Due to Net Biospheric Production on
@@ -1221,7 +1222,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Lmon
-  time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: nbp
   variant_label: r1i1p1f1
@@ -1238,6 +1238,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.areacello.gn.v20191115
   institution_id: CSIRO
   long_name: Grid-Cell Area for Ocean Variables
@@ -1258,7 +1259,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Ofx
-  time_range: null
   units: m2
   variable_id: areacello
   variant_label: r1i1p1f1
@@ -1275,6 +1275,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.sftof.gn.v20191115
   institution_id: CSIRO
   long_name: Sea Area Percentage
@@ -1295,7 +1296,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Ofx
-  time_range: null
   units: '%'
   variable_id: sftof
   variant_label: r1i1p1f1
@@ -1312,6 +1312,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.msftmz.gn.v20191115
   institution_id: CSIRO
   long_name: Ocean Meridional Overturning Mass Streamfunction
@@ -1332,7 +1333,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Omon
-  time_range: 2000-01-16 12:00:00-2009-12-16 12:00:00
   units: kg s-1
   variable_id: msftmz
   variant_label: r1i1p1f1
@@ -1349,6 +1349,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.msftmz.gn.v20191115
   institution_id: CSIRO
   long_name: Ocean Meridional Overturning Mass Streamfunction
@@ -1369,7 +1370,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Omon
-  time_range: 2010-01-16 12:00:00-2014-12-16 12:00:00
   units: kg s-1
   variable_id: msftmz
   variant_label: r1i1p1f1
@@ -1386,6 +1386,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.sos.gn.v20191115
   institution_id: CSIRO
   long_name: Sea Surface Salinity
@@ -1406,7 +1407,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Omon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: '0.001'
   variable_id: sos
   variant_label: r1i1p1f1
@@ -1423,6 +1423,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
   institution_id: CSIRO
   long_name: Sea Surface Temperature
@@ -1443,7 +1444,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Omon
-  time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
   units: degC
   variable_id: tos
   variant_label: r1i1p1f1
@@ -1460,6 +1460,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.SImon.siconc.gn.v20200817
   institution_id: CSIRO
   long_name: Sea-Ice Area Percentage (Ocean Grid)
@@ -1480,7 +1481,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: SImon
-  time_range: 1979-01-16 12:00:00-2014-12-16 12:00:00
   units: '%'
   variable_id: siconc
   variant_label: r1i1p1f1
@@ -1497,6 +1497,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -1517,7 +1518,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -1534,6 +1534,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
   institution_id: CSIRO
   long_name: Percentage of the grid  cell occupied by land (including lakes)
@@ -1554,7 +1555,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: '%'
   variable_id: sftlf
   variant_label: r1i1p1f1
@@ -1571,6 +1571,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.psl.gn.v20191128
   institution_id: CSIRO
   long_name: Sea Level Pressure
@@ -1591,7 +1592,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: Pa
   variable_id: psl
   variant_label: r2i1p1f1
@@ -1608,6 +1608,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.ts.gn.v20191128
   institution_id: CSIRO
   long_name: Surface Temperature
@@ -1628,7 +1629,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
   units: K
   variable_id: ts
   variant_label: r2i1p1f1
@@ -1645,6 +1645,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.fx.areacella.gn.v20191128
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -1665,7 +1666,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r2i1p1f1
@@ -1682,6 +1682,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rlut.gn.v20210316
   institution_id: CSIRO
   long_name: TOA Outgoing Longwave Radiation
@@ -1702,7 +1703,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: W m-2
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -1719,6 +1719,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsdt.gn.v20210316
   institution_id: CSIRO
   long_name: TOA Incident Shortwave Radiation
@@ -1739,7 +1740,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: W m-2
   variable_id: rsdt
   variant_label: r1i1p1f1
@@ -1756,6 +1756,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsut.gn.v20210316
   institution_id: CSIRO
   long_name: TOA Outgoing Shortwave Radiation
@@ -1776,7 +1777,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0125-12-16 12:00:00
   units: W m-2
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -1793,6 +1793,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
@@ -1813,7 +1814,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 0101-01-16 12:00:00-0180-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -1830,6 +1830,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.fx.areacella.gn.v20210316
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -1850,7 +1851,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -1867,6 +1867,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -1887,7 +1888,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1850-01-16 12:00:00-1869-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -1904,6 +1904,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -1924,7 +1925,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1870-01-16 12:00:00-1889-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -1941,6 +1941,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -1961,7 +1962,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1890-01-16 12:00:00-1909-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -1978,6 +1978,7 @@
   frequency: mon
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
   institution_id: MPI-M
   long_name: Near-Surface Air Temperature
@@ -1998,7 +1999,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 1910-01-16 12:00:00-1915-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -2015,6 +2015,7 @@
   frequency: fx
   grid: gn
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.fx.areacella.gn.v20190815
   institution_id: MPI-M
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -2035,7 +2036,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -2052,6 +2052,7 @@
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonAnt.snc.gn.v20190308
   institution_id: NCAR
   long_name: Snow Area Percentage
@@ -2072,7 +2073,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: ImonAnt
-  time_range: 2000-01-15 12:00:00-2014-12-15 12:00:00
   units: '%'
   variable_id: snc
   variant_label: r1i1p1f1
@@ -2089,6 +2089,7 @@
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonGre.snc.gn.v20190308
   institution_id: NCAR
   long_name: Snow Area Percentage
@@ -2109,7 +2110,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: ImonGre
-  time_range: 2000-01-15 12:00:00-2014-12-15 12:00:00
   units: '%'
   variable_id: snc
   variant_label: r1i1p1f1
@@ -2126,6 +2126,7 @@
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.LImon.snc.gn.v20190308
   institution_id: NCAR
   long_name: Snow Area Percentage
@@ -2146,7 +2147,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: LImon
-  time_range: 2000-01-15 12:00:00-2014-12-15 12:00:00
   units: '%'
   variable_id: snc
   variant_label: r1i1p1f1
@@ -2163,6 +2163,7 @@
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190308
   institution_id: NCAR
   long_name: Percentage of Entire Grid cell  that is Covered by Burnt Vegetation (All
@@ -2184,7 +2185,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Lmon
-  time_range: 2000-01-15 12:00:00-2014-12-15 12:00:00
   units: '%'
   variable_id: burntFractionAll
   variant_label: r1i1p1f1
@@ -2201,6 +2201,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.Amon.psl.gn.v20200615
   institution_id: CSIRO
   long_name: Sea Level Pressure
@@ -2221,7 +2222,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2020-12-16 12:00:00
   units: Pa
   variable_id: psl
   variant_label: r1i1p1f1
@@ -2238,6 +2238,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.Amon.ts.gn.v20200615
   institution_id: CSIRO
   long_name: Surface Temperature
@@ -2258,7 +2259,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2020-12-16 12:00:00
   units: K
   variable_id: ts
   variant_label: r1i1p1f1
@@ -2275,6 +2275,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.fx.areacella.gn.v20200615
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -2295,7 +2296,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1
@@ -2312,6 +2312,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.Amon.psl.gn.v20200615
   institution_id: CSIRO
   long_name: Sea Level Pressure
@@ -2332,7 +2333,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2020-12-16 12:00:00
   units: Pa
   variable_id: psl
   variant_label: r2i1p1f1
@@ -2349,6 +2349,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.Amon.ts.gn.v20200615
   institution_id: CSIRO
   long_name: Surface Temperature
@@ -2369,7 +2370,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2020-12-16 12:00:00
   units: K
   variable_id: ts
   variant_label: r2i1p1f1
@@ -2386,6 +2386,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.fx.areacella.gn.v20200615
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -2406,7 +2407,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r2i1p1f1
@@ -2423,6 +2423,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.pr.gn.v20210318
   institution_id: CSIRO
   long_name: Precipitation
@@ -2443,7 +2444,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2015-01-16 12:00:00-2100-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
   variant_label: r1i1p1f1
@@ -2460,6 +2460,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.rsdt.gn.v20210318
   institution_id: CSIRO
   long_name: TOA Incident Shortwave Radiation
@@ -2480,7 +2481,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2015-01-16 12:00:00-2025-12-16 12:00:00
   units: W m-2
   variable_id: rsdt
   variant_label: r1i1p1f1
@@ -2497,6 +2497,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.rsut.gn.v20210318
   institution_id: CSIRO
   long_name: TOA Outgoing Shortwave Radiation
@@ -2517,7 +2518,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2015-01-16 12:00:00-2025-12-16 12:00:00
   units: W m-2
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -2534,6 +2534,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318
   institution_id: CSIRO
   long_name: Near-Surface Air Temperature
@@ -2554,7 +2555,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2015-01-16 12:00:00-2100-12-16 12:00:00
   units: K
   variable_id: tas
   variant_label: r1i1p1f1
@@ -2571,6 +2571,7 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Omon.tos.gn.v20210318
   institution_id: CSIRO
   long_name: Sea Surface Temperature
@@ -2591,7 +2592,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: Omon
-  time_range: 2015-01-16 12:00:00-2025-12-16 12:00:00
   units: degC
   variable_id: tos
   variant_label: r1i1p1f1
@@ -2608,6 +2608,7 @@
   frequency: fx
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  init_year: .nan
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn.v20210318
   institution_id: CSIRO
   long_name: Grid-Cell Area for Atmospheric Grid Variables
@@ -2628,7 +2629,6 @@
   sub_experiment: none
   sub_experiment_id: none
   table_id: fx
-  time_range: null
   units: m2
   variable_id: areacella
   variant_label: r1i1p1f1

@@ -60,15 +60,23 @@ class TestCMIP6Adapter:
             df.sort_values(["instance_id", "start_time"]), basename=f"cmip6_catalog_db_{cmip6_parser}"
         )
 
-    def test_load_catalog_multiple_versions(self, config, db_seeded, catalog_regression, sample_data_dir):
+    def test_load_catalog_multiple_versions(
+        self, config, db_seeded, catalog_regression, sample_data_dir, mocker
+    ):
+        # Don't check if the path is valid
+        mocker.patch("climate_ref.datasets.base.validate_path", side_effect=lambda x: x)
+
         adapter = CMIP6DatasetAdapter()
         data_catalog = adapter.load_catalog(db_seeded)
         target_ds = "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115"
+        default_version = "v20191115"
         target_metadata = data_catalog[data_catalog["instance_id"] == target_ds]
 
         # Make an old version
-        target_metadata.version = "v20000101"
-        target_metadata.instance_id = target_ds.replace("v20191115", "v20000101")
+        old_version = "v20000101"
+        target_metadata.version = old_version
+        target_metadata.instance_id = target_ds.replace(default_version, old_version)
+        target_metadata.path = target_metadata.path.str.replace(default_version, old_version)
         with db_seeded.session.begin():
             adapter.register_dataset(db_seeded, target_metadata)
 
@@ -79,9 +87,11 @@ class TestCMIP6Adapter:
         )
 
         # Make a new version
-        target_metadata.version = "v20230101"
-        new_instance_id = target_ds.replace("v20191115", "v20230101")
+        new_version = "v20230101"
+        target_metadata.version = new_version
+        new_instance_id = target_ds.replace(default_version, new_version)
         target_metadata.instance_id = new_instance_id
+        target_metadata.path = target_metadata.path.str.replace(default_version, new_version)
         with db_seeded.session.begin():
             adapter.register_dataset(db_seeded, target_metadata)
 
@@ -104,11 +114,7 @@ class TestCMIP6Adapter:
             for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
                 adapter.register_dataset(database, data_catalog_dataset)
 
-        local_data_catalog = (
-            catalog.drop(columns=["time_range"])
-            .sort_values(["instance_id", "start_time"])
-            .reset_index(drop=True)
-        )
+        local_data_catalog = catalog.sort_values(["instance_id", "start_time"]).reset_index(drop=True)
 
         db_data_catalog = (
             adapter.load_catalog(database).sort_values(["instance_id", "start_time"]).reset_index(drop=True)
@@ -136,7 +142,7 @@ class TestCMIP6Adapter:
 
         # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(
-            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata, "time_range"]
+            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata]
         )
 
         catalog_regression(

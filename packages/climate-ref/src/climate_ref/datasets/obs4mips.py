@@ -81,10 +81,6 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
             info["vertical_levels"] = vertical_levels
             info["start_time"] = start_time
             info["end_time"] = end_time
-            if not (start_time and end_time):
-                info["time_range"] = None
-            else:
-                info["time_range"] = f"{start_time}-{end_time}"
         info["path"] = str(file)
         info["source_version_number"] = (
             extract_attr_with_regex(

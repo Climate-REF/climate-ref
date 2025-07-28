@@ -13,7 +13,12 @@ def test_data_catalog_finalise(cmip6_data_catalog, cmip6_data_catalog_drs, db):
     assert finalised_df["finalised"].all()
 
     pd.testing.assert_frame_equal(cmip6_data_catalog, finalised_df[cmip6_data_catalog.columns])
-    pd.testing.assert_frame_equal(cmip6_data_catalog, data_catalog.to_frame())
+
+    # Rework the index to match the database
+    db_frame = data_catalog.to_frame()
+    db_frame["init_year"] = pd.to_numeric(db_frame["init_year"])
+    cmip6_data_catalog.index = db_frame.index
+    pd.testing.assert_frame_equal(cmip6_data_catalog, db_frame[cmip6_data_catalog.columns])
 
 
 def test_data_catalog_to_frame(mocker):

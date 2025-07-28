@@ -127,10 +127,6 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
             info["init_year"] = init_year
             info["start_time"] = start_time
             info["end_time"] = end_time
-            if not (start_time and end_time):
-                info["time_range"] = None
-            else:
-                info["time_range"] = f"{start_time}-{end_time}"
         info["path"] = str(file)
         info["version"] = extract_attr_with_regex(str(file), regex=r"v\d{4}\d{2}\d{2}|v\d{1}") or "v0"
 
@@ -180,7 +176,7 @@ def parse_cmip6_drs(file: str, **kwargs: Any) -> dict[str, Any]:
 
     if info.get("time_range"):
         # Parse the time range if it exists
-        start_time, end_time = _parse_daterange(info["time_range"])
+        start_time, end_time = _parse_daterange(info.pop("time_range"))
         info["start_time"] = start_time
         info["end_time"] = end_time
 

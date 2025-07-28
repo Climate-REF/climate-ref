@@ -24,9 +24,6 @@ def _log_duplicate_metadata(
         invalid_dataset_nunique = invalid_datasets.loc[instance_id]
         invalid_dataset_columns = invalid_dataset_nunique[invalid_dataset_nunique.gt(1)].index.tolist()
 
-        # Include time_range in the list of invalid columns to make debugging easier
-        invalid_dataset_columns.append("time_range")
-
         data_catalog_subset = data_catalog[data_catalog[slug_column] == instance_id]
 
         logger.error(

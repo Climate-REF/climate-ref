@@ -46,7 +46,6 @@ def test_empty_dir():
                 "source_type": "satellite_blended",
                 "source_version_number": "v20210727",
                 "start_time": "1870-01-16 11:59:59.464417",
-                "time_range": "1870-01-16 11:59:59.464417-2019-07-16 12:00:00",
                 "units": "K",
                 "variable_id": "ts",
                 "variant_label": "PCMDI",
@@ -114,12 +113,7 @@ class Testobs4MIPsAdapter:
     def test_round_trip(self, db_seeded, obs4mips_data_catalog, sample_data_dir):
         # Indexes and ordering may be different
         adapter = Obs4MIPsDatasetAdapter()
-        local_data_catalog = (
-            obs4mips_data_catalog.drop(columns=["time_range"])
-            .sort_values(["instance_id"])
-            .reset_index(drop=True)
-        )
-
+        local_data_catalog = obs4mips_data_catalog.sort_values(["instance_id"]).reset_index(drop=True)
         db_data_catalog = adapter.load_catalog(db_seeded).sort_values(["instance_id"]).reset_index(drop=True)
 
         # TODO: start_time has a different dtype from the database due to pandas dt coercion
@@ -131,9 +125,8 @@ class Testobs4MIPsAdapter:
         adapter = Obs4MIPsDatasetAdapter()
         data_catalog = adapter.find_local_datasets(str(sample_data_dir / "obs4REF"))
 
-        # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(
-            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata, "time_range"]
+            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata]
         )
 
         catalog_regression(

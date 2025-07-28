@@ -65,7 +65,7 @@ def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
 
     if "init_year" in data_catalog:
         # Convert init_year to numeric, coercing errors to NaN
-        data_catalog["init_year"] = pd.to_numeric(data_catalog["init_year"], errors="coerce")
+        data_catalog["init_year"] = pd.to_numeric(data_catalog["init_year"])
 
     return data_catalog
 
@@ -94,6 +94,7 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         "frequency",
         "grid",
         "grid_label",
+        "init_year",
         "institution_id",
         "nominal_resolution",
         "parent_activity_id",

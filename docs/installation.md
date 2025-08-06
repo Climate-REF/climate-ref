@@ -1,6 +1,6 @@
 # Installation
 
-There are several ways to install and use the `climate-ref` package and associated CLI tool.
+There are several ways to install and use the `climate-ref` package (REF) and associated CLI tool.
 
 The REF itself doesn't require any conda-based dependencies and can be installed as a pure Python package.
 This was a deliberate decision to make it easy to make the framework easy to install in a range of different environments.
@@ -37,7 +37,7 @@ You can install `climate-ref` using `pip`:
 pip install climate-ref
 ```
 
-The PyPi package contains some additional extras that bundle some additional dependencies.
+The PyPI package contains some additional extras that bundle some additional dependencies.
 Depending on your use case you may want to install additional extras:
 
 * `celery` - for running the REF in a distributed manner

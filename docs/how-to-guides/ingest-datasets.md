@@ -33,7 +33,7 @@ and the type of the dataset being ingested (only cmip6 is currently supported).
 This will walk through the provided directory looking for `*.nc` files to ingest.
 Each file will be loaded and its metadata extracted.
 
-```bash
+```
 >>> ref --log-level INFO datasets ingest --source-type cmip6 /path/to/cmip6
 2024-12-05 12:00:05.979 | INFO     | climate_ref.database:__init__:77 - Connecting to database at sqlite:///.climate_ref/db/climate_ref.db
 2024-12-05 12:00:05.987 | INFO     | alembic.runtime.migration:__init__:215 - Context impl SQLiteImpl.
@@ -69,7 +69,7 @@ This will display a list of datasets and their associated metadata.
 The `--column` flag allows you to specify which columns to display (defaults to all columns).
 See `ref datasets list-columns` for a list of available columns.
 
-```bash
+```
 >>> ref datasets list --column instance_id --column variable_id
 
   instance_id                                                             variable_id

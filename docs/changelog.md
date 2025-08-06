@@ -21,6 +21,24 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.6.4 (2025-08-04)
+
+### Deprecations
+
+- The `--package` option of the `ref celery start-worker` command has been deprecated and scheduled for removal.
+  This functionality is now handled by the `--provider` option which uses entry points declared in the provider packages. ([#367](https://github.com/Climate-REF/climate-ref/pulls/367))
+
+### Features
+
+- Use entrypoints to register provider plugins. ([#360](https://github.com/Climate-REF/climate-ref/pulls/360))
+- Support celery workers to consume tasks for multiple providers ([#367](https://github.com/Climate-REF/climate-ref/pulls/367))
+
+### Improvements
+
+- Add additional dimensions to the example metric for testing purposes. ([#372](https://github.com/Climate-REF/climate-ref/pulls/372))
+- Added a basic script to the CMIP6 data targetted by the current set of diagnostics for the Assessment Fast Track. ([#373](https://github.com/Climate-REF/climate-ref/pulls/373))
+
+
 ## climate-ref 0.6.3 (2025-07-17)
 
 ### Improvements

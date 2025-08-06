@@ -31,6 +31,7 @@ nav:
     - Basic Concepts: background/basic-concepts.md
     - Architecture: background/architecture.md
     - Explanation: background/explanation.md
+    - Datasets: background/datasets.md
   - CLI: cli.md
   - API: api/
   - Development: development.md
@@ -108,7 +109,7 @@ plugins:
       handlers:
         python:
           paths: [packages]
-          import:
+          inventories:
             # Cross-climate_ref helpers (lots included here, remove what you don't want)
             - https://www.attrs.org/en/stable/objects.inv
             - https://catt.rs/en/stable/objects.inv

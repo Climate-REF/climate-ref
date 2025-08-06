@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-root"
-version = "0.6.3"
+version = "0.6.4"
 description = "Climate Rapid Evaluation Framework (REF) root package"
 readme = "README.md"
 authors = [
@@ -62,6 +62,7 @@ dev = [
     "pytest-xdist>=3.6.1",
     "types-pyyaml>=6.0.12",
     "mkdocs-typer>=0.0.3",
+    "intake-esgf>=2025.7.16",
 ]
 
 [tool.uv.workspace]

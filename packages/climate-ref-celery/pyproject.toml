@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-celery"
-version = "0.6.3"
+version = "0.6.4"
 description = "Celery app for mananging tasks and workers"
 readme = "README.md"
 authors = [

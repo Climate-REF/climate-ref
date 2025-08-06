@@ -4,7 +4,7 @@ from collections.abc import Iterable
 import pandas as pd
 import pytest
 
-from climate_ref.config import default_providers
+from climate_ref.config import DiagnosticProviderConfig
 from climate_ref.database import Database
 from climate_ref.models import ExecutionGroup
 
@@ -38,7 +38,10 @@ def config_cmip7_aft(config):
     Overwrite the default test config to use the diagnostic providers for CMIP7 Assessment Fast Track
     """
     # Force the default diagnostic providers
-    config.diagnostic_providers = default_providers()
+    config.diagnostic_providers = [
+        DiagnosticProviderConfig(provider=provider)
+        for provider in ["climate_ref_esmvaltool", "climate_ref_ilamb", "climate_ref_pmp"]
+    ]
     # Use the local executor to parallise the executions
     config.executor.executor = "climate_ref.executor.LocalExecutor"
 
@@ -59,6 +62,9 @@ def test_solve_cmip7_aft(
     # Arm-based MacOS users will need to set the environment variable `MAMBA_PLATFORM=osx-64`
     if platform.system() == "Darwin" and platform.machine() == "arm64":
         monkeypatch.setenv("MAMBA_PLATFORM", "osx-64")
+
+    # The conda environments should already be created in the default location
+    # See github CI integration test
 
     assert len(config_cmip7_aft.diagnostic_providers) == 3
 

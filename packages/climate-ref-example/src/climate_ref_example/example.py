@@ -152,7 +152,7 @@ class GlobalMeanTimeseries(Diagnostic):
             ),
         ),
     )
-    facets = ("region", "metric", "statistic")
+    facets = ("source_id", "variable_id", "experiment_id", "variant_label", "region", "metric", "statistic")
 
     def execute(self, definition: ExecutionDefinition) -> None:
         """
@@ -187,8 +187,19 @@ class GlobalMeanTimeseries(Diagnostic):
             definition.output_directory / "annual_mean_global_mean_timeseries.nc", decode_times=time_coder
         )
 
+        input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
+
+        cmec_metric_bundle = CMECMetric(**format_cmec_metric_bundle(ds)).prepend_dimensions(
+            {
+                "source_id": input_selectors["source_id"],
+                "variable_id": input_selectors["variable_id"],
+                "experiment_id": input_selectors["experiment_id"],
+                "variant_label": input_selectors["variant_label"],
+            }
+        )
+
         return ExecutionResult.build_from_output_bundle(
             definition,
             cmec_output_bundle=format_cmec_output_bundle(ds),
-            cmec_metric_bundle=format_cmec_metric_bundle(ds),
+            cmec_metric_bundle=cmec_metric_bundle,
         )

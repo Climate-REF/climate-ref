@@ -17,6 +17,12 @@ def metric_dataset(cmip6_data_catalog) -> DatasetCollection:
     return DatasetCollection(
         selected_dataset,
         "instance_id",
+        selector=(
+            ("source_id", "CSIRO.ACCESS-ESM1-5"),
+            ("variable_id", "tas"),
+            ("experiment_id", "ssp126"),
+            ("variant_label", "r1i1p1f1"),
+        ),
     )
 
 

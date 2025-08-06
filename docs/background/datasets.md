@@ -1,17 +1,20 @@
 # Datasets in the REF
 
-The Reference Evaluation Framework (REF) supports multiple types of datasets, each with specific metadata requirements and use cases. Understanding these dataset types is essential for working with the REF data catalog and ingestion workflows.
+The Reference Evaluation Framework (REF) supports multiple types of datasets, each with specific metadata requirements and use cases.
+Understanding these dataset types is essential for working with the REF data catalog and ingestion workflows.
 
 ## Dataset Types
 
 ### Target Datasets
 
-These datasets are the datasets that diagnostics are designed to evaluate. Currently, the REF only supports CMIP6 datasets, but CMIP7 and other future datasets will be added in the future.
+These datasets are the datasets that diagnostics are designed to evaluate. Currently, the REF only supports CMIP6 datasets,
+but CMIP7 and other future datasets will be added in the future.
 
 #### CMIP6 Datasets
 
 - **Description:** Climate model output from the Coupled Model Intercomparison Project Phase 6 (CMIP6).
-- **Metadata:** Includes detailed model and experiment information such as `activity_id`, `institution_id`, `source_id`, `experiment_id`, `member_id`, `table_id`, `variable_id`, `grid_label`, and `version`. Additional fields may include parent experiment details, grid information, and variable metadata.
+- **Metadata:** Includes detailed model and experiment information such as `activity_id`, `institution_id`, `source_id`, `experiment_id`, `member_id`, `table_id`, `variable_id`, `grid_label`, and `version`.
+  Additional fields may include parent experiment details, grid information, and variable metadata.
 - **Unique Identifier:** `instance_id` (constructed from key metadata fields and version).
 - **Usage:** Used as model reference data for benchmarking and evaluation.
 - **Metadata Parsing:**
@@ -19,7 +22,7 @@ These datasets are the datasets that diagnostics are designed to evaluate. Curre
   - **DRS Parser (default)**: Extracts metadata from file paths and names according to the [Data Reference Syntax (DRS)](https://docs.google.com/document/d/1h0r8RZr_f3-8egBMMh7aqLwy3snpD6_MrDz1q8n5XUk/edit?tab=t.0). This approach enables fast loading of metadata without opening each file.
   - **Complete Parser**: Opens each file and extracts all available metadata from the file's attributes. This provides more comprehensive metadata but is significantly slower.
 
-  You can select the parser by setting `cmip6_parser: "drs"` or `cmip6_parser: "complete"` in your REF configuration file.
+You can select the parser by setting `cmip6_parser: "drs"` or `cmip6_parser: "complete"` in your REF configuration file.
 
 ### Reference Datasets
 

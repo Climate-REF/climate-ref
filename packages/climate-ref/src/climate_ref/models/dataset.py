@@ -45,6 +45,16 @@ class Dataset(Base):
     Updating a dataset will trigger a new diagnostic calculation.
     """
 
+    # Universal finalisation flag for all dataset types
+    # Only CMIP6 currently uses unfinalised datasets in practice; other types should be finalised on creation.
+    finalised: Mapped[bool] = mapped_column(default=True, nullable=False)
+    """
+    Whether the complete set of metadata for the dataset has been finalised.
+
+    For CMIP6, ingestion may initially create unfinalised datasets (False) until all metadata is extracted.
+    For other dataset types (e.g., obs4MIPs, PMP climatology), this should be True upon creation.
+    """
+
     def __repr__(self) -> str:
         return f"<Dataset slug={self.slug} dataset_type={self.dataset_type} >"
 
@@ -132,15 +142,6 @@ class CMIP6Dataset(Dataset):
     instance_id: Mapped[str] = mapped_column()
     """
     Unique identifier for the dataset (including the version).
-    """
-
-    finalised: Mapped[bool] = mapped_column(default=False)
-    """
-    Whether the complete set of metadata for the dataset has been finalised.
-
-    This is set to true once all the metadata has been extracted.
-    Before this is set to true, missing fields may or may not be present in the dataset,
-    but after this is set to true, any missing fields are indeed missing in the dataset.
     """
 
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore

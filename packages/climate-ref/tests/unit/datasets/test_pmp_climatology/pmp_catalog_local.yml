@@ -1,5 +1,6 @@
 - activity_id: obs4MIPs
   end_time: 2019-12-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
@@ -21,6 +22,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-12-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -42,6 +44,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-12-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -63,6 +66,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -84,6 +88,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -105,6 +110,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -126,6 +132,7 @@
   vertical_levels: 19
 - activity_id: obs4MIPs
   end_time: 2010-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -147,6 +154,7 @@
   vertical_levels: 19
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -168,6 +176,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -189,6 +198,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -210,6 +220,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -231,6 +242,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -252,6 +264,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -273,6 +286,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -294,6 +308,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -315,6 +330,7 @@
   vertical_levels: 19
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -336,6 +352,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -357,6 +374,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -378,6 +396,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -399,6 +418,7 @@
   vertical_levels: 19
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -420,6 +440,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -441,6 +462,7 @@
   vertical_levels: 19
 - activity_id: obs4MIPs
   end_time: 2019-03-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -462,6 +484,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2010-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
   grid_label: gn
@@ -483,6 +506,7 @@
   vertical_levels: 19
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -504,6 +528,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -525,6 +550,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -546,6 +572,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -567,6 +594,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -588,6 +616,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -609,6 +638,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-07-15 12:00:00
+  finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
   grid_label: gn
@@ -630,6 +660,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-07-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
   grid_label: gn
@@ -651,6 +682,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2017-12-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
   grid_label: gn
@@ -672,6 +704,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2012-12-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
   grid_label: gn
@@ -693,6 +726,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2012-12-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
   grid_label: gn
@@ -714,6 +748,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-01-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
   grid_label: gn
@@ -735,6 +770,7 @@
   vertical_levels: 1
 - activity_id: obs4MIPs
   end_time: 2019-07-16 12:00:00
+  finalised: true
   frequency: mon
   grid: 2.5x2.5 degree latitude x longitude
   grid_label: gn

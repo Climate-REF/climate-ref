@@ -1,0 +1,3 @@
+Additional data citation information was found, for which no entry is available in the bibtex file:
+- Stengel et al., Earth Syst. Sci. Data, doi:10.5194/essd-9-881-2017, 2017
+- doi:10.1175/jcli-d-17-0208.1

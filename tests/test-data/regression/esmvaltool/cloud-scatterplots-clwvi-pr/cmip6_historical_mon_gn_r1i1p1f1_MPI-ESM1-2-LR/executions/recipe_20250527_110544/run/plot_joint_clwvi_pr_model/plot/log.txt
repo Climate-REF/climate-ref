@@ -1,0 +1,94 @@
+/home/bandela/src/Climate-REF/climate-ref/.ref/software/conda/esmvaltool-9776cff81b525ef5fc839c1b70ccfa40943cee1d/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+auxiliary_data_dir: /home/bandela/auxiliary_data
+bins: 20
+cbar: true
+cbar_kws:
+  extend: max
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20250527_110544/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clwvi_gn_20070116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: MPI-ESM1-2-LR
+    dataset: MPI-ESM1-2-LR
+    diagnostic: plot_joint_clwvi_pr_model
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250527_110544/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_clwvi_gn_20070116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: MPI-M
+    long_name: Condensed Water Path
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_clivi_clwvi
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: clwvi
+    standard_name: atmosphere_mass_content_of_cloud_condensed_water
+    start_year: 2007
+    timerange: 20070116T120000/20141216T120000
+    units: kg m-2
+    variable_group: clwvi
+    version: v20190710
+  ? <OUTPUT_DIR>/executions/recipe_20250527_110544/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_pr_gn_20070116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: MPI-ESM1-2-LR
+    dataset: MPI-ESM1-2-LR
+    diagnostic: plot_joint_clwvi_pr_model
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250527_110544/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_MPI-ESM1-2-LR_Amon_historical_r1i1p1f1_pr_gn_20070116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: MPI-M
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_pr
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: pr
+    standard_name: lwe_precipitation_rate
+    start_year: 2007
+    timerange: 20070116T120000/20141216T120000
+    units: mm day-1
+    variable_group: pr
+    version: v20190710
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250527_110544/preproc/plot_joint_clwvi_pr_model/clwvi/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250527_110544/preproc/plot_joint_clwvi_pr_model/pr/metadata.yml
+joint_kws:
+  cmap: YlGnBu
+  vmax: 0.03
+log_level: info
+marginal_kws:
+  color: darkturquoise
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250527_110544/plots/plot_joint_clwvi_pr_model/plot
+plot_filename: jointplot_clwvi_pr_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20250527_110544/run/plot_joint_clwvi_pr_model/plot
+scheduler_address: tcp://127.0.0.1:37813
+script: plot
+seaborn_settings:
+  rc:
+    axes.titlepad: 15.0
+  style: ticks
+suptitle: CMIP6 MPI-ESM1-2-LR r1i1p1f1 gn 20070116T120000/20141216T120000
+version: 2.12.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20250527_110544/work/plot_joint_clwvi_pr_model/plot
+x: clwvi
+y: pr
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20250527_110544/work/plot_joint_clwvi_pr_model/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20250527_110544/plots/plot_joint_clwvi_pr_model/plot
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110544/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000.png
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110544/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clwvi_pr_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110544/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_clwvi_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20250527_110544/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_MPI-ESM1-2-LR_r1i1p1f1_gn_20070116T120000-20141216T120000_pr_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

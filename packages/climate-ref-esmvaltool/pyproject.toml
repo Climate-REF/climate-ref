@@ -23,9 +23,9 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
-    "pooch >= 1.8",
     "climate-ref-core",
-    "ruamel.yaml >= 0.18",
+    "pooch >= 1.8",
+    "pyyaml",
     "xarray >= 2023.3.0",
 ]
 [project.entry-points."climate-ref.providers"]

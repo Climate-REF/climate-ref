@@ -4,12 +4,18 @@ import pandas
 from climate_ref_esmvaltool.diagnostics import CloudRadiativeEffects
 from climate_ref_esmvaltool.recipe import load_recipe
 
+from climate_ref_core.datasets import SourceDatasetType
+
 
 def test_update_recipe():
     # Insert the following code in CloudRadiativeEffects.update_recipe to
     # save an example input dataframe:
     # input_files.to_json(Path("input_files_cloud_radiative_effects.json"), indent=4, date_format="iso")
-    input_files = pandas.read_json(Path(__file__).parent / "input_files_cloud_radiative_effects.json")
+    input_files = {
+        SourceDatasetType.CMIP6: pandas.read_json(
+            Path(__file__).parent / "input_files_cloud_radiative_effects.json"
+        )
+    }
     recipe = load_recipe("ref/recipe_ref_cre.yml")
     CloudRadiativeEffects().update_recipe(recipe, input_files)
     assert recipe["datasets"] == [

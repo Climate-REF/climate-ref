@@ -5,7 +5,7 @@ Dataset management and filtering
 import enum
 import functools
 import hashlib
-from collections.abc import Collection, Iterable
+from collections.abc import Collection, Iterable, Iterator
 from typing import Any, Self
 
 import pandas as pd
@@ -172,9 +172,24 @@ class ExecutionDatasetCollection:
     def __hash__(self) -> int:
         return hash(self.hash)
 
+    def __iter__(self) -> Iterator[SourceDatasetType]:
+        return iter(self._collection)
+
+    def keys(self) -> Iterable[SourceDatasetType]:
+        """
+        Iterate over the source types in the collection.
+        """
+        return self._collection.keys()
+
+    def values(self) -> Iterable[DatasetCollection]:
+        """
+        Iterate over the datasets in the collection.
+        """
+        return self._collection.values()
+
     def items(self) -> Iterable[tuple[SourceDatasetType, DatasetCollection]]:
         """
-        Iterate over the datasets in the collection
+        Iterate over the items in the collection.
         """
         return self._collection.items()
 

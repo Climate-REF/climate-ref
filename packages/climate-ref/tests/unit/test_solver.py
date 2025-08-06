@@ -7,6 +7,7 @@ import pytest
 from climate_ref_example import provider as example_provider
 
 from climate_ref.config import ExecutorConfig
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.models import Execution
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
@@ -75,8 +76,7 @@ class TestMetricSolver:
         assert isinstance(solver, ExecutionSolver)
         assert isinstance(solver.provider_registry, ProviderRegistry)
         assert SourceDatasetType.CMIP6 in solver.data_catalog
-        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], pd.DataFrame)
-        assert len(solver.data_catalog[SourceDatasetType.CMIP6])
+        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
 
 
 @pytest.mark.parametrize(

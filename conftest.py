@@ -119,6 +119,15 @@ def cmip6_data_catalog(sample_data_dir) -> pd.DataFrame:
 
 
 @pytest.fixture(scope="session")
+def cmip6_data_catalog_drs(sample_data_dir) -> pd.DataFrame:
+    config = Config.default()
+    config.cmip6_parser = "drs"
+
+    adapter = CMIP6DatasetAdapter(config=config)
+    return adapter.find_local_datasets(sample_data_dir / "CMIP6")
+
+
+@pytest.fixture(scope="session")
 def obs4mips_data_catalog(sample_data_dir) -> pd.DataFrame:
     adapter = Obs4MIPsDatasetAdapter()
     return adapter.find_local_datasets(sample_data_dir / "obs4REF")

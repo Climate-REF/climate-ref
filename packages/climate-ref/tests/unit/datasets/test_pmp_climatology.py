@@ -25,9 +25,8 @@ class TestPMPClimatologyAdapter:
         adapter = PMPClimatologyDatasetAdapter()
         data_catalog = adapter.find_local_datasets(str(sample_data_dir / "obs4REF"))
 
-        # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(
-            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata, "time_range"]
+            [*adapter.dataset_specific_metadata, *adapter.file_specific_metadata]
         )
 
         catalog_regression(

@@ -156,7 +156,7 @@ def ingest(  # noqa: PLR0913
                         logger.info(f"Would save dataset {instance_id} to the database")
                         continue
                 else:
-                    adapter.register_dataset(config, db, data_catalog_dataset)
+                    adapter.register_dataset(db, data_catalog_dataset)
 
     if solve:
         solve_required_executions(

@@ -17,11 +17,12 @@ from loguru import logger
 from sqlalchemy import insert
 
 from climate_ref.database import Database
-from climate_ref.models import ScalarMetricValue
+from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutputType
 from climate_ref_core.diagnostics import ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.metric_values import SeriesMetricValue as TSeries
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputDict
@@ -65,6 +66,111 @@ def _copy_file_to_results(
     shutil.copy(input_directory / filename, output_filename)
 
 
+def _process_execution_scalar(
+    database: Database,
+    result: "ExecutionResult",
+    execution: Execution,
+    cv: CV,
+) -> None:
+    """
+    Process the scalar values from the execution result and store them in the database
+
+    This also validates the scalar values against the controlled vocabulary
+    """
+    # Load the metric bundle from the file
+    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
+
+    # Check that the diagnostic values conform with the controlled vocabulary
+    try:
+        cv.validate_metrics(cmec_metric_bundle)
+    except (ResultValidationError, AssertionError):
+        # TODO: Remove once we have settled on a controlled vocabulary
+        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
+        # execution.mark_failed()
+
+    # Perform a bulk insert of scalar values
+    # The current implementation will swallow the exception, but display a log message
+    try:
+        scalar_values = [
+            {
+                "execution_id": execution.id,
+                "value": result.value,
+                "attributes": result.attributes,
+                **result.dimensions,
+            }
+            for result in cmec_metric_bundle.iter_results()
+        ]
+        logger.debug(f"Ingesting {len(scalar_values)} scalar values for execution {execution.id}")
+        if scalar_values:
+            # Perform this in a nested transaction to rollback if something goes wrong
+            # We will lose the metric values for a given execution, but not the whole execution
+            with database.session.begin_nested():
+                database.session.execute(
+                    insert(ScalarMetricValue),
+                    scalar_values,
+                )
+    # This is a broad exception catch to ensure we log any issues
+    except Exception:
+        logger.exception("Something went wrong when ingesting diagnostic values")
+
+
+def _process_execution_series(
+    config: "Config",
+    database: Database,
+    result: "ExecutionResult",
+    execution: Execution,
+    cv: CV,
+) -> None:
+    """
+    Process the series values from the execution result and store them in the database
+
+    This also copies the series values file from the scratch directory to the results directory
+    and validates the series values against the controlled vocabulary.
+    """
+    assert result.series_filename, "Series filename must be set in the result"
+
+    _copy_file_to_results(
+        config.paths.scratch,
+        config.paths.results,
+        execution.output_fragment,
+        result.series_filename,
+    )
+
+    # Load the series values from the file
+    series_values_path = result.to_output_path(result.series_filename)
+    series_values = TSeries.load_from_json(series_values_path)
+
+    try:
+        cv.validate_metrics(series_values)
+    except (ResultValidationError, AssertionError):
+        # TODO: Remove once we have settled on a controlled vocabulary
+        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
+        # execution.mark_failed()
+
+    # Perform a bulk insert of series values
+    try:
+        series_values_content = [
+            {
+                "execution_id": execution.id,
+                "values": series_result.values,
+                "attributes": series_result.attributes,
+                **series_result.dimensions,
+            }
+            for series_result in series_values
+        ]
+        logger.debug(f"Ingesting {len(series_values)} series values for execution {execution.id}")
+        if series_values:
+            # Perform this in a nested transaction to rollback if something goes wrong
+            # We will lose the metric values for a given execution, but not the whole execution
+            with database.session.begin_nested():
+                database.session.execute(
+                    insert(SeriesMetricValue),
+                    series_values_content,
+                )
+    except Exception:
+        logger.exception("Something went wrong when ingesting diagnostic series values")
+
+
 def handle_execution_result(
     config: "Config",
     database: Database,
@@ -88,7 +194,7 @@ def handle_execution_result(
     result
         The result of the diagnostic execution, either successful or failed
     """
-    # Always copy log data
+    # Always copy log data to the results directory
     _copy_file_to_results(
         config.paths.scratch,
         config.paths.results,
@@ -96,74 +202,52 @@ def handle_execution_result(
         EXECUTION_LOG_FILENAME,
     )
 
-    if result.successful and result.metric_bundle_filename is not None:
-        logger.info(f"{execution} successful")
+    if not result.successful or result.metric_bundle_filename is None:
+        logger.error(f"{execution} failed")
+        execution.mark_failed()
+        return
 
+    logger.info(f"{execution} successful")
+
+    _copy_file_to_results(
+        config.paths.scratch,
+        config.paths.results,
+        execution.output_fragment,
+        result.metric_bundle_filename,
+    )
+
+    if result.output_bundle_filename:
         _copy_file_to_results(
             config.paths.scratch,
             config.paths.results,
             execution.output_fragment,
-            result.metric_bundle_filename,
+            result.output_bundle_filename,
         )
-        execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
+        _handle_output_bundle(
+            config,
+            database,
+            execution,
+            result.to_output_path(result.output_bundle_filename),
+        )
 
-        if result.output_bundle_filename:
-            _copy_file_to_results(
-                config.paths.scratch,
-                config.paths.results,
-                execution.output_fragment,
-                result.output_bundle_filename,
-            )
-            _handle_output_bundle(
-                config,
-                database,
-                execution,
-                result.to_output_path(result.output_bundle_filename),
-            )
+    cv = CV.load_from_file(config.paths.dimensions_cv)
 
-        cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
+    if result.series_filename:
+        # Process the series values if they are present
+        # This will ingest the series values into the database
+        _process_execution_series(config=config, database=database, result=result, execution=execution, cv=cv)
 
-        # Check that the diagnostic values conform with the controlled vocabulary
-        try:
-            cv = CV.load_from_file(config.paths.dimensions_cv)
-            cv.validate_metrics(cmec_metric_bundle)
-        except (ResultValidationError, AssertionError):
-            logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-            # execution.mark_failed()
+    # Process the scalar values
+    # This will ingest the scalar values into the database
+    _process_execution_scalar(database=database, result=result, execution=execution, cv=cv)
 
-        # Perform a bulk insert of scalar values
-        # The current implementation will swallow the exception, but display a log message
-        try:
-            scalar_values = [
-                {
-                    "execution_id": execution.id,
-                    "value": result.value,
-                    "attributes": result.attributes,
-                    **result.dimensions,
-                }
-                for result in cmec_metric_bundle.iter_results()
-            ]
-            if scalar_values:
-                # Perform this in a nested transaction to rollback if something goes wrong
-                # We will lose the metric values for a given execution, but not the whole execution
-                with database.session.begin_nested():
-                    database.session.execute(
-                        insert(ScalarMetricValue),
-                        scalar_values,
-                    )
-        except Exception:
-            # TODO: Remove once we have settled on a controlled vocabulary
-            logger.exception("Something went wrong when ingesting diagnostic values")
+    # TODO: This should check if the result is the most recent for the execution,
+    # if so then update the dirty fields
+    # i.e. if there are outstanding executions don't make as clean
+    execution.execution_group.dirty = False
 
-        # TODO Ingest the series values
-
-        # TODO: This should check if the result is the most recent for the execution,
-        # if so then update the dirty fields
-        # i.e. if there are outstanding executions don't make as clean
-        execution.execution_group.dirty = False
-    else:
-        logger.error(f"{execution} failed")
-        execution.mark_failed()
+    # Finally, mark the execution as successful
+    execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
 
 
 def _handle_output_bundle(

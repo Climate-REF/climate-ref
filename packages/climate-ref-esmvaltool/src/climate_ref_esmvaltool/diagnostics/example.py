@@ -3,6 +3,7 @@ import pandas
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireContiguousTimerange
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -16,6 +17,15 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
     name = "Global Mean Timeseries"
     slug = "global-mean-timeseries"
     base_recipe = "examples/recipe_python.yml"
+    series = (
+        SeriesDefinition(
+            file_pattern="timeseries/script1/*.nc",
+            dimensions={},
+            values_name="tas",
+            index_name="time",
+            attributes=[],
+        ),
+    )
 
     data_requirements = (
         DataRequirement(

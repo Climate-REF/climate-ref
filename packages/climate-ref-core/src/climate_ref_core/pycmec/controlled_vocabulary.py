@@ -1,4 +1,5 @@
 import pathlib
+from collections.abc import Iterable, Sequence
 from typing import Any
 
 from attrs import field, frozen, validators
@@ -7,6 +8,7 @@ from loguru import logger
 from yaml import safe_load
 
 from climate_ref_core.exceptions import ResultValidationError
+from climate_ref_core.metric_values import ScalarMetricValue, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 
 RESERVED_DIMENSION_NAMES = {"attributes", "json_structure", "created_at", "updated_at", "value", "id"}
@@ -122,33 +124,49 @@ class CV:
                 return dim
         raise KeyError(f"Dimension {name} not found")
 
-    def validate_metrics(self, metric_bundle: CMECMetric) -> None:
+    def _validate_value(self, metric_value: ScalarMetricValue | SeriesMetricValue) -> None:
         """
-        Validate a diagnostic bundle against a CV
+        Validate a single metric value against the CV
+        """
+        for k, v in metric_value.dimensions.items():
+            try:
+                dimension = self.get_dimension_by_name(k)
+            except KeyError:
+                raise ResultValidationError(f"Unknown dimension: {k!r}")
+            if not dimension.allow_extra_values:
+                if v not in [dv.name for dv in dimension.values]:
+                    raise ResultValidationError(f"Unknown value {v!r} for dimension {k!r}")
+
+        if hasattr(metric_value, "value") and not isinstance(metric_value.value, float):  # pragma: no cover
+            # This may not be possible with the current CMECMetric implementation
+            raise ResultValidationError(f"Unexpected value: {metric_value.value!r}")
+
+    def validate_metrics(self, metric_value_collection: CMECMetric | Sequence[SeriesMetricValue]) -> None:
+        """
+        Validate a set of metric values (either scalar or series) against a CV
 
         The CV describes the accepted dimensions and values within a bundle
 
         Parameters
         ----------
-        metric_bundle
+        metric_value_collection
+            A collection of metric values to validate.
+
+        This can be a CMECMetric instance or a sequence of SeriesMetricValue instances.
 
         Raises
         ------
         ResultValidationError
             If the validation of the dimensions or values fails
         """
-        for result in metric_bundle.iter_results():
-            for k, v in result.dimensions.items():
-                try:
-                    dimension = self.get_dimension_by_name(k)
-                except KeyError:
-                    raise ResultValidationError(f"Unknown dimension: {k!r}")
-                if not dimension.allow_extra_values:
-                    if v not in [dv.name for dv in dimension.values]:
-                        raise ResultValidationError(f"Unknown value {v!r} for dimension {k!r}")
-            if not isinstance(result.value, float):  # pragma: no cover
-                # This may not be possible with the current CMECMetric implementation
-                raise ResultValidationError(f"Unexpected value: {result.value!r}")
+        generator: Iterable[SeriesMetricValue | ScalarMetricValue]
+        if isinstance(metric_value_collection, CMECMetric):
+            generator = metric_value_collection.iter_results()
+        else:
+            generator = iter(metric_value_collection)
+
+        for result in generator:
+            self._validate_value(result)
 
     @staticmethod
     def load_from_file(filename: pathlib.Path | str) -> "CV":

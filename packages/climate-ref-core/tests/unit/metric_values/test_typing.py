@@ -1,4 +1,5 @@
 import re
+from pathlib import Path
 
 import pytest
 
@@ -65,3 +66,34 @@ class TestSeriesMetricValue:
                 index=[1.0],
                 index_name="time",
             )
+
+    def test_dump_and_load_json(self, tmp_path: Path):
+        series = [
+            SeriesMetricValue(
+                dimensions={"model": "test1"},
+                values=[1.0, 2.0, 3.0],
+                index=[0, 1, 2],
+                index_name="time",
+                attributes={"attr": "value1"},
+            ),
+            SeriesMetricValue(
+                dimensions={"model": "test2"},
+                values=[4.0, 5.0],
+                index=["a", "b"],
+                index_name="other",
+                attributes=None,
+            ),
+        ]
+        path = tmp_path / "test.json"
+
+        SeriesMetricValue.dump_to_json(path, series)
+        loaded_series = SeriesMetricValue.load_from_json(path)
+
+        assert loaded_series == series
+
+    def test_load_from_json_not_a_list(self, tmp_path: Path):
+        path = tmp_path / "test.json"
+        path.write_text('{"not": "a list"}')
+
+        with pytest.raises(ValueError, match="Expected a list of series values, got <class 'dict'>"):
+            SeriesMetricValue.load_from_json(path)

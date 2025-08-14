@@ -17,8 +17,8 @@ specific execution.
 
 The contents of this result directory depends on the diagnostic that was run, but typically includes:
 
-* __output.json__: A CMEC Output bundle containing links to other output files such as NetCDF, CSV, and PNG files.
-* __diagnostic.json__: A CMEC Metric bundle containing the scalar metric values
+* __output.json__: A [CMEC](https://pcmdi.github.io/CMEC/) Output bundle containing links to other output files such as NetCDF, CSV, and PNG files.
+* __diagnostic.json__: A [CMEC](https://pcmdi.github.io/CMEC/) Metric bundle containing the scalar metric values
 * __out.log__: The log output captured during the execution of the diagnostic
     (there may be additional provider-specific log files as well)
 

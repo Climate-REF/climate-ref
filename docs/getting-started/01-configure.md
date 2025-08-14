@@ -1,11 +1,10 @@
 # Configuration
 
 This tutorial assumes that you have already installed Climate-REF and are using a Linux or MacOS operating system.
-The `ref` CLI tool should be available in your terminal after installation
-(or via `uv run ref` if you are installing from source).
+The `ref` CLI tool should be available in your terminal after installation.
 For installation instructions, see [Installation](../installation.md).
 
-Climate-REF uses a TOML configuration file to specify data paths, output directories, and other settings. In this step, we'll generate and customize your configuration file.
+Climate-REF uses a [TOML](https://toml.io/en/) configuration file to specify data paths, output directories, and other settings. In this step, we will generate and customize your configuration file.
 
 Additional information about the configuration file can be found in the [Configuration documentation](../configuration.md).
 
@@ -20,7 +19,7 @@ If no value is provided a default location will be used, but this will not be su
 who use shared computing facilities.
 
 This environment variable can be set in your shell configuration file (e.g., `.bashrc`, `.zshrc`, etc.)
-or exported directly in your terminal session.
+or exported directly in your terminal session (assuming a bash shell):
 
 ```bash
 export REF_CONFIGURATION="/path/to/your/ref/configuration"
@@ -119,7 +118,7 @@ This can be set as follows:
 export REF_DATASET_CACHE_DIR="/path/to/your/dataset/cache"
 ```
 
-If set, Climate-REF will use these environment variables in preference to the configuration file.
+If environment variables are set, Climate-REF will use their values in preference to those found in the configuration file.
 
 
 ## 5. Validate your configuration
@@ -133,11 +132,11 @@ ref config list
 Your configuration should be displayed without errors and should include any changes you made in the `ref.toml` file.
 
 
-## 6. Create Proivider-specific conda environments
+## 6. Create Provider-specific conda environments
 
 Some diagnostic providers require specific conda environments to be created before they can be used.
 This should happen before you run any diagnostics to avoid multiple installations of the same environment.
-By default, these conda environments will be installed the `$REF_CONFIGURATION/software` directory,
+By default, these conda environments will be installed in the `$REF_CONFIGURATION/software` directory,
 but the location can be changed in the configuration file using the [paths.software](../configuration.md#paths_software).
 
 You can create these environments using the following command:

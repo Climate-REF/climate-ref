@@ -38,7 +38,7 @@ ref datasets ingest --source-type cmip6 /path/to/cmip6/data
 ```
 
 
-Globbed-style paths can be used to specify multiple directories or file patterns.
+[Globbed-style](https://en.wikipedia.org/wiki/Glob_(programming)) paths can be used to specify multiple directories or file patterns.
 For example, if you have CMIP6 data organized by the CMIP6 DRS,
 you can use the following command to ingest all monthly and ancillary variables:
 

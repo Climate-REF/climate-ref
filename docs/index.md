@@ -6,11 +6,12 @@ The Rapid Evaluation Framework(REF) is a set of Python packages that provide the
 The aim is to be able to evaluate climate data against a set of reference data in near-real time as datasets are published,
 and to update any produced data and figures as new datasets become available.
 This is somewhat analogous to a CI/CD pipeline for climate data.
+To get a better idea of what REF is and does, see this [overview](nutshell.md).
 
 The REF is designed to be run in a variety of environments, including local execution, cloud-based execution, and execution on HPC systems.
 The REF can be run as a standalone application, as a set of services, or as a set of docker containers.
 
-REF is a [community project](https://wcrp-cmip.org/cmip-phases/cmip7/rapid-evaluation-framework/), and we welcome contributions from anyone.
+REF is a [community project](https://wcrp-cmip.org/cmip-phases/cmip7/rapid-evaluation-framework/), and we welcome [contributions](development.md) from anyone.
 
 ---
 
@@ -30,9 +31,9 @@ REF is a [community project](https://wcrp-cmip.org/cmip-phases/cmip7/rapid-evalu
 
 ---
 
-After [installation](installation.md), you can start using the REF via the CLI tool:
+After [installation](installation.md), you can start using the REF via the commandline interface (CLI) tool:
 
-```bash
+```
 $ ref
 
  Usage: ref [OPTIONS] COMMAND [ARGS]...

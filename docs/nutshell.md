@@ -1,0 +1,12 @@
+# REF in a Nutshell
+
+As in any code project, the REF developers have created a jargon to faciliate naming conventions and speaking concisely about different aspects of the design. Throughout this documentation you will find many references to these terms which may be unfamiliar. Here we present this jargon in the context of a brief overview of the main function of REF in the hopes that it helps clarify the documentation elsewhere.
+
+1. The REF relies on **diagnostic providers** to provide the model evaluation code. At the moment this is limited to a few already-mature packages, but the interface REF defines is flexible with the idea that it can be [expanded](how-to-guides/adding_custom_diagnostics.md). REF also manages building the software environments required for each diagnostic provider.
+2. Each diagnostic provider implements a set of comparisons which use model data and possibly other reference datasets to create plots and/or scalars summarizing the state or performance of each model. These are called **diagnostics** in the REF system.
+3. REF does not inheritantly know about ESGF or other model data. For the REF to know about any dataset, it must be **ingested** into its database (see [here](getting-started/03-ingest.md) for details).
+4. Once data is ingested, REF can check model datasets and diangostics to see which from each provider may be computed, known in REF as a **solve** (see [here](getting-started/04-solve.md) for details). Each unique combination of a model's datasets and a diagnostic is known in the REF as an **execution**.
+5. REF maintains a database of executions which keeps track of the results in the case of a successful run and logs in the case of failures. Only the unsuccessul executions are inserted into a work list to be run.
+6. Once REF has solved for which executions need to be run, there is also control for how these executions are computed, encapsulated as an **executor**. By default, REF will use a local executor to run. This means that executions will be computed on the system using from which you are running REF. However, it is also possible to run in parallel with a distribted task queue and even on HPC resources by using a different executor (see [here](how-to-guides/executors.md) for details).
+
+In short, REF lets diagnostic providers focus on the science of comparison while it takes care of the workflow tasks--determining what to compute, how to compute it, and where the result is stored.

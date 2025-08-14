@@ -14,7 +14,7 @@ Certain emergent characteristics – such as climate sensitivity, ECS (Equilibri
 TCRE (Transient Climate Response to Cumulative Emissions), and others –
 could be pre-computed in a standardised manner supporting users including IPCC author teams.
 
-This document outlines the some key design principles for the Rapid Evaluation Framework (REF) for the CMIP7 FastTrack (CMIP7 FT) process,
+This document outlines some key design principles for the Rapid Evaluation Framework (REF) for the CMIP7 FastTrack (CMIP7 FT) process,
 with an eye towards a scalable solution.
 
 
@@ -49,7 +49,7 @@ The key objectives that determine the design of the system are as follows:
 * **Modular:** This is a community project.
     It should be easy for existing and future benchmarking packages to integrate with the framework.
     The developer experience for the benchmarking package providers should be paramount.
-* **Scalable:** For CMIP7-FT we are focusing on a small subset of possible derived metrics and diagnostics.
+* **Extensible:** For CMIP7-FT we are focusing on a small subset of possible derived metrics and diagnostics.
     The metrics will scale over time as the science progresses in terms of data volume and complexity.
 * **Reusable:** We are targeting multiple different deployment environments and a range of different potential users.
     Where possible, we should preserve the ability to reuse components of the REF in different contexts.
@@ -60,7 +60,7 @@ The key objectives that determine the design of the system are as follows:
     No metadata fixes will be able to be performed on the incoming datasets
     since this is intended to be run as new CMIP7 datasets are submitted.
 * To speed up development, we are focussing on only monthly data.
-    This greatly reduces the data volumes that we need to deal wit, lowering the systems requirement for using the REF.
+    This greatly reduces the data volumes that we need to deal with, lowering the systems requirement for using the REF.
 * The benchmarking packages already provide the metrics that are targeted in the REF beta.
     We are working with an understanding of what those packages require.
 
@@ -134,7 +134,7 @@ Figure 4:  Compute Engine - responsible for tracking input data and metric execu
 ///
 
 The compute engine is responsible for orchestrating the workflow to execute metrics.
-It will be executed either via a CLI tool.
+It will be executed via a CLI tool.
 The compute engine will track the results that have been previously run in a database (SQLite by default).
 
 The solver at the core of the compute engine will use the requirements from the defined metrics,

@@ -1,6 +1,6 @@
 # Solve Diagnostics
 
-With your datasets ingested and cataloged, you can now solve and execute diagnostics using the `ref solve` command.
+With your datasets ingested and cataloged, you can now [solve and execute](../nutshell.md) diagnostics using the `ref solve` command.
 
 ## 1. Run all diagnostics (default)
 

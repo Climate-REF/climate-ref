@@ -27,7 +27,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
     @staticmethod
     @abstractmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """
         Update the base recipe for the run.
 
@@ -81,7 +84,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The result of running the diagnostic.
         """
-        input_files = definition.datasets[SourceDatasetType.CMIP6].datasets
+        input_files = {
+            project: dataset_collection.datasets
+            for project, dataset_collection in definition.datasets.items()
+        }
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
 
@@ -91,10 +97,11 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
         climate_data = definition.to_output_path("climate_data")
 
-        prepare_climate_data(
-            definition.datasets[SourceDatasetType.CMIP6].datasets,
-            climate_data_dir=climate_data,
-        )
+        for metric_dataset in definition.datasets.values():
+            prepare_climate_data(
+                metric_dataset.datasets,
+                climate_data_dir=climate_data,
+            )
 
         config = {
             "drs": {
@@ -130,7 +137,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 {
                     "OBS": str(data_dir / "OBS"),
                     "OBS6": str(data_dir / "OBS"),
-                    "native6": str(data_dir / "RAWOBS"),
+                    "native6": str(data_dir / "native6"),
                 }
             )
             config["rootpath"]["obs4MIPs"] = [  # type: ignore[index]

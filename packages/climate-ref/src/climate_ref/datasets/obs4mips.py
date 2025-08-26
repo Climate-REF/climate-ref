@@ -7,7 +7,6 @@ from typing import Any
 import pandas as pd
 import xarray as xr
 from ecgtools import Builder
-from ecgtools.parsers.utilities import extract_attr_with_regex  # type: ignore
 from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter
@@ -15,7 +14,7 @@ from climate_ref.datasets.cmip6 import _parse_datetime
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset
 
 
-def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
+def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:  # noqa: PLR0912
     """
     Parser for obs4mips
 
@@ -41,6 +40,7 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
                 "source_type",
                 "variable_id",
                 "variant_label",
+                "source_version_number",
             }
         )
     )
@@ -48,16 +48,16 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
     try:
         time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
         with xr.open_dataset(file, chunks={}, decode_times=time_coder) as ds:
+            if ds.attrs.get("activity_id", "") != "obs4MIPs":
+                traceback_message = f"{file} is not an obs4MIPs dataset"
+                raise TypeError(traceback_message)
+
             has_none_value = any(ds.attrs.get(key) is None for key in keys)
             if has_none_value:
                 missing_fields = [key for key in keys if ds.attrs.get(key) is None]
                 traceback_message = str(missing_fields) + " are missing from the file metadata"
                 raise AttributeError(traceback_message)
             info = {key: ds.attrs.get(key) for key in keys}
-
-            if info["activity_id"] != "obs4MIPs":
-                traceback_message = f"{file} is not an obs4MIPs dataset"
-                raise TypeError(traceback_message)
 
             variable_id = info["variable_id"]
 
@@ -86,12 +86,12 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
             else:
                 info["time_range"] = f"{start_time}-{end_time}"
         info["path"] = str(file)
-        info["source_version_number"] = (
-            extract_attr_with_regex(
-                str(file), regex=r"v\d{4}\d{2}\d{2}|v\d{1}", strip_chars=None, ignore_case=True
-            )
-            or "v0"
-        )
+        # Parsing the version like for CMIP6 fails because some obs4REF paths
+        # do not include "v" in the version directory name.
+        # TODO: fix obs4REF paths
+        info["version"] = Path(file).parent.name
+        if not info["version"].startswith("v"):  # type: ignore[union-attr]
+            info["version"] = "v{version}".format(**info)
         return info
 
     except (TypeError, AttributeError) as err:
@@ -99,7 +99,7 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
             logger.warning(str(err.args[0]))
         else:
             logger.warning(str(err.args))
-        return {"INVALID_ASSET": file, "TRACEBACK": traceback_message}
+        return {"INVALID_ASSET": file, "TRACEBACK": str(err)}
     except Exception:
         logger.warning(traceback.format_exc())
         return {"INVALID_ASSET": file, "TRACEBACK": traceback.format_exc()}
@@ -129,18 +129,22 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         "variant_label",
         "long_name",
         "units",
+        "version",
         "vertical_levels",
         "source_version_number",
         slug_column,
     )
 
     file_specific_metadata = ("start_time", "end_time", "path")
-    version_metadata = "source_version_number"
+    version_metadata = "version"
+    # See ODS2.5 at https://doi.org/10.5281/zenodo.11500474 under "Directory structure template"
     dataset_id_metadata = (
         "activity_id",
         "institution_id",
         "source_id",
+        "frequency",
         "variable_id",
+        "nominal_resolution",
         "grid_label",
     )
 
@@ -186,7 +190,14 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             self.version_metadata,
         ]
         datasets["instance_id"] = datasets.apply(
-            lambda row: "obs4MIPs." + ".".join([row[item] for item in drs_items]), axis=1
+            lambda row: "obs4MIPs."
+            + ".".join(
+                [
+                    row[item].replace(" ", "") if item == "nominal_resolution" else row[item]
+                    for item in drs_items
+                ]
+            ),
+            axis=1,
         )
         datasets["finalised"] = True
         return datasets

@@ -101,11 +101,12 @@ def test_dataset_polymorphic(db):
             product="",
             source_id="",
             source_type="",
+            source_version_number="",
             units="",
             variable_id="",
             variant_label="",
+            version="v12",
             vertical_levels=2,
-            source_version_number="v12",
             instance_id="test_obs",
             slug="test_obs",
         )

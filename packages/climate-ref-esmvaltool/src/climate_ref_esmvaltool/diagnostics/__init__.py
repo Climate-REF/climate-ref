@@ -5,6 +5,11 @@ from climate_ref_esmvaltool.diagnostics.cloud_radiative_effects import CloudRadi
 from climate_ref_esmvaltool.diagnostics.ecs import EquilibriumClimateSensitivity
 from climate_ref_esmvaltool.diagnostics.enso import ENSOBasicClimatology, ENSOCharacteristics
 from climate_ref_esmvaltool.diagnostics.example import GlobalMeanTimeseries
+from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
+    RegionalHistoricalAnnualCycle,
+    RegionalHistoricalTimeSeries,
+    RegionalHistoricalTrend,
+)
 from climate_ref_esmvaltool.diagnostics.sea_ice_area_basic import SeaIceAreaBasic
 from climate_ref_esmvaltool.diagnostics.sea_ice_sensitivity import SeaIceSensitivity
 from climate_ref_esmvaltool.diagnostics.tcr import TransientClimateResponse
@@ -18,6 +23,9 @@ __all__ = [
     "ENSOCharacteristics",
     "EquilibriumClimateSensitivity",
     "GlobalMeanTimeseries",
+    "RegionalHistoricalAnnualCycle",
+    "RegionalHistoricalTimeSeries",
+    "RegionalHistoricalTrend",
     "SeaIceAreaBasic",
     "SeaIceSensitivity",
     "TransientClimateResponse",

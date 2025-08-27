@@ -142,7 +142,16 @@ def load_recipe(recipe: str) -> Recipe:
         The loaded recipe.
     """
     filename = _RECIPES.fetch(recipe)
-    return yaml.safe_load(Path(filename).read_text(encoding="utf-8"))  # type: ignore[no-any-return]
+
+    def normalize(obj: Any) -> Any:
+        # Ensure objects in the recipe are not shared.
+        if isinstance(obj, dict):
+            return {k: normalize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [normalize(item) for item in obj]
+        return obj
+
+    return normalize(yaml.safe_load(Path(filename).read_text(encoding="utf-8")))  # type: ignore[no-any-return]
 
 
 def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None:
@@ -165,6 +174,11 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if not isinstance(row.path, str):  # pragma: no branch
             msg = f"Invalid path encountered in {row}"
             raise ValueError(msg)
-        tgt = climate_data_dir.joinpath(*row.instance_id.split(".")) / Path(row.path).name
+        if row.instance_id.startswith("obs4MIPs."):
+            version = row.instance_id.split(".")[-1]
+            subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
+        else:
+            subdirs = row.instance_id.split(".")
+        tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
         tgt.symlink_to(row.path)

@@ -119,6 +119,8 @@ class CMIP6DatasetAdapter(DatasetAdapter):
     file_specific_metadata = ("start_time", "end_time", "path")
 
     version_metadata = "version"
+    # See https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/Papers/CMIP6_global_attributes_filenames_CVs_v6.2.7.pdf
+    # under "Directory structure template"
     dataset_id_metadata = (
         "activity_id",
         "institution_id",

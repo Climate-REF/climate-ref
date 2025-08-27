@@ -372,6 +372,154 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
+  institution_id: CCCma
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/Amon/tas/gn/v20190429/tas_Amon_CanESM5_historical_r1i1p1f1_gn_197901-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CanESM5
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1979-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 197901-201412
+  units: .nan
+  variable_id: tas
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: null
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
+  institution_id: CCCma
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/Ofx/areacello/gn/v20190429/areacello_Ofx_CanESM5_historical_r1i1p1f1_gn.nc'
+  product: .nan
+  realm: .nan
+  source_id: CanESM5
+  source_type: .nan
+  standard_name: .nan
+  start_time: null
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Ofx
+  time_range: .nan
+  units: .nan
+  variable_id: areacello
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.SImon.siconc.gn.v20190429
+  institution_id: CCCma
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/SImon/siconc/gn/v20190429/siconc_SImon_CanESM5_historical_r1i1p1f1_gn_197901-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CanESM5
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1979-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: SImon
+  time_range: 197901-201412
+  units: .nan
+  variable_id: siconc
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: null
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
+  institution_id: CCCma
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/fx/areacella/gn/v20190429/areacella_fx_CanESM5_historical_r1i1p1f1_gn.nc'
+  product: .nan
+  realm: .nan
+  source_id: CanESM5
+  source_type: .nan
+  standard_name: .nan
+  start_time: null
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: fx
+  time_range: .nan
+  units: .nan
+  variable_id: areacella
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
   end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: 1pctCO2
@@ -638,6 +786,43 @@
   frequency: .nan
   grid: .nan
   grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
+  institution_id: CSIRO
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/hus/gn/v20191115/hus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: ACCESS-ESM1-5
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1980-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 198001-201412
+  units: .nan
+  variable_id: hus
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
   institution_id: CSIRO
   long_name: .nan
@@ -685,17 +870,17 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/psl/gn/v20191115/psl_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/psl/gn/v20191115/psl_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
   source_type: .nan
   standard_name: .nan
-  start_time: 2000-01-01 00:00:00
+  start_time: 1980-01-01 00:00:00
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 200001-201412
+  time_range: 198001-201412
   units: .nan
   variable_id: psl
   variant_label: r1i1p1f1
@@ -722,17 +907,17 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlut/gn/v20191115/rlut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlut/gn/v20191115/rlut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
   source_type: .nan
   standard_name: .nan
-  start_time: 2000-01-01 00:00:00
+  start_time: 1996-01-01 00:00:00
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 200001-201412
+  time_range: 199601-201412
   units: .nan
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -759,17 +944,17 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlutcs/gn/v20191115/rlutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlutcs/gn/v20191115/rlutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
   source_type: .nan
   standard_name: .nan
-  start_time: 2005-01-01 00:00:00
+  start_time: 1996-01-01 00:00:00
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 200501-201412
+  time_range: 199601-201412
   units: .nan
   variable_id: rlutcs
   variant_label: r1i1p1f1
@@ -833,17 +1018,17 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsut/gn/v20191115/rsut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsut/gn/v20191115/rsut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
   source_type: .nan
   standard_name: .nan
-  start_time: 2000-01-01 00:00:00
+  start_time: 1996-01-01 00:00:00
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 200001-201412
+  time_range: 199601-201412
   units: .nan
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -870,17 +1055,17 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsutcs/gn/v20191115/rsutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsutcs/gn/v20191115/rsutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
   source_type: .nan
   standard_name: .nan
-  start_time: 2005-01-01 00:00:00
+  start_time: 1996-01-01 00:00:00
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 200501-201412
+  time_range: 199601-201412
   units: .nan
   variable_id: rsutcs
   variant_label: r1i1p1f1
@@ -994,6 +1179,43 @@
   time_range: 200001-201412
   units: .nan
   variable_id: ts
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
+  institution_id: CSIRO
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/ua/gn/v20191115/ua_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: ACCESS-ESM1-5
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1980-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 198001-201412
+  units: .nan
+  variable_id: ua
   variant_label: r1i1p1f1
   version: v20191115
   vertical_levels: .nan
@@ -1852,6 +2074,154 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
+  institution_id: MOHC
+  long_name: .nan
+  member_id: r1i1p1f3
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/historical/r1i1p1f3/Amon/tas/gn/v20190624/tas_Amon_HadGEM3-GC31-LL_historical_r1i1p1f3_gn_197901-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: HadGEM3-GC31-LL
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1979-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 197901-201412
+  units: .nan
+  variable_id: tas
+  variant_label: r1i1p1f3
+  version: v20190624
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.SImon.siconc.gn.v20200330
+  institution_id: MOHC
+  long_name: .nan
+  member_id: r1i1p1f3
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/historical/r1i1p1f3/SImon/siconc/gn/v20200330/siconc_SImon_HadGEM3-GC31-LL_historical_r1i1p1f3_gn_197901-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: HadGEM3-GC31-LL
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1979-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: SImon
+  time_range: 197901-201412
+  units: .nan
+  variable_id: siconc
+  variant_label: r1i1p1f3
+  version: v20200330
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: null
+  experiment: .nan
+  experiment_id: piControl
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Ofx.areacello.gn.v20190709
+  institution_id: MOHC
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/piControl/r1i1p1f1/Ofx/areacello/gn/v20190709/areacello_Ofx_HadGEM3-GC31-LL_piControl_r1i1p1f1_gn.nc'
+  product: .nan
+  realm: .nan
+  source_id: HadGEM3-GC31-LL
+  source_type: .nan
+  standard_name: .nan
+  start_time: null
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Ofx
+  time_range: .nan
+  units: .nan
+  variable_id: areacello
+  variant_label: r1i1p1f1
+  version: v20190709
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: null
+  experiment: .nan
+  experiment_id: piControl
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
+  institution_id: MOHC
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/piControl/r1i1p1f1/fx/areacella/gn/v20190709/areacella_fx_HadGEM3-GC31-LL_piControl_r1i1p1f1_gn.nc'
+  product: .nan
+  realm: .nan
+  source_id: HadGEM3-GC31-LL
+  source_type: .nan
+  standard_name: .nan
+  start_time: null
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: fx
+  time_range: .nan
+  units: .nan
+  variable_id: areacella
+  variant_label: r1i1p1f1
+  version: v20190709
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
   end_time: 1869-12-30 00:00:00
   experiment: .nan
   experiment_id: esm-piControl
@@ -2044,6 +2414,376 @@
   frequency: .nan
   grid: .nan
   grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.cli.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/cli/gn/v20190308/cli_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: cli
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clivi.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clivi/gn/v20190308/clivi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: clivi
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clt.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clt/gn/v20190308/clt_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: clt
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clwvi.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: clwvi
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20190401
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: pr
+  variant_label: r1i1p1f1
+  version: v20190401
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rlut.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rlut/gn/v20190308/rlut_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: rlut
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rlutcs.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rlutcs/gn/v20190308/rlutcs_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: rlutcs
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsut.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rsut/gn/v20190308/rsut_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: rsut
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsutcs.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rsutcs/gn/v20190308/rsutcs_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: rsutcs
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.ta.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/ta/gn/v20190308/ta_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2007-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200701-201412
+  units: .nan
+  variable_id: ta
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonAnt.snc.gn.v20190308
   institution_id: NCAR
   long_name: .nan
@@ -2178,6 +2918,43 @@
   time_range: 200001-201412
   units: .nan
   variable_id: burntFractionAll
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: null
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: .nan
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+  institution_id: NCAR
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/fx/areacella/gn/v20190308/areacella_fx_CESM2_historical_r1i1p1f1_gn.nc'
+  product: .nan
+  realm: .nan
+  source_id: CESM2
+  source_type: .nan
+  standard_name: .nan
+  start_time: null
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: fx
+  time_range: .nan
+  units: .nan
+  variable_id: areacella
   variant_label: r1i1p1f1
   version: v20190308
   vertical_levels: .nan

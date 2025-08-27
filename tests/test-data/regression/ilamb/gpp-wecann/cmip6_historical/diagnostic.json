@@ -99,28 +99,28 @@
           "gn": {
             "global": {
               "Annual Cycle": {
-                "Phase Shift": 0.3460071505100462,
-                "Seasonal Cycle Score": 0.7302961501719643
+                "Phase Shift": 0.3460071505100452,
+                "Seasonal Cycle Score": 0.7302961501719626
               },
               "Bias": {
-                "Bias": 0.0864657532640795,
-                "Bias Score": 0.4676109048415688,
-                "Period Mean": 2.1024021549781216
+                "Bias": 0.0864657532640793,
+                "Bias Score": 0.4676109048415676,
+                "Period Mean": 2.102402154978122
               },
               "RMSE": {
-                "RMSE": 1.6552676976411935,
-                "RMSE Score": 0.4274016614067758
+                "RMSE": 1.6552676976411893,
+                "RMSE Score": 0.4274016614067749
               },
               "Relationship pr": {
                 "Relationship Score pr": 0.4648701436860109
               },
               "Relationship tas": {
-                "Relationship Score tas": 0.5961174687755966
+                "Relationship Score tas": 0.5961174687755967
               },
               "Spatial Distribution": {
-                "Correlation": 0.7954204310685823,
+                "Correlation": 0.7954204310685824,
                 "Normalized Standard Deviation": 1.2191835212182185,
-                "Spatial Distribution Score": 0.8633549384785634
+                "Spatial Distribution Score": 0.8633549384785635
               }
             },
             "tropical": {
@@ -129,7 +129,7 @@
                 "Seasonal Cycle Score": 0.6585526247077628
               },
               "Bias": {
-                "Bias": 0.2906089675036236,
+                "Bias": 0.2906089675036235,
                 "Bias Score": 0.3600624305629896,
                 "Period Mean": 4.880223654215761
               },
@@ -138,15 +138,15 @@
                 "RMSE Score": 0.3714562972753612
               },
               "Relationship pr": {
-                "Relationship Score pr": 0.4842782825391371
+                "Relationship Score pr": 0.484278282539137
               },
               "Relationship tas": {
                 "Relationship Score tas": 0.4321457150215198
               },
               "Spatial Distribution": {
-                "Correlation": 0.506508637302237,
-                "Normalized Standard Deviation": 2.1002205009486556,
-                "Spatial Distribution Score": 0.453929277719741
+                "Correlation": 0.5065086373022373,
+                "Normalized Standard Deviation": 2.100220500948656,
+                "Spatial Distribution Score": 0.4539292777197412
               }
             }
           }

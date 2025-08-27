@@ -1,28 +1,28 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250523_140936/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20250827_110101/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250523_140936/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20250827_110101/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250523_140936/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.nc": {
-      "filename": "executions/recipe_20250523_140936/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.nc",
+    "executions/recipe_20250827_110101/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.nc": {
+      "filename": "executions/recipe_20250827_110101/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.nc",
       "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.",
       "description": ""
     }
   },
   "plots": {
-    "executions/recipe_20250523_140936/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.png": {
-      "filename": "executions/recipe_20250523_140936/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.png",
+    "executions/recipe_20250827_110101/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.png": {
+      "filename": "executions/recipe_20250827_110101/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_esm-1pct-brch-1000PgC_r1i1p1f1_tas_gn_01680116T120000-02681216T120000.png",
       "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.",
       "description": ""
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250523_140936/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250523_140936/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20250827_110101/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250827_110101/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run."
     }

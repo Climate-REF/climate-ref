@@ -17,11 +17,12 @@ def test_standard_site(cmip6_data_catalog, definition_factory):
         cmip6_data_catalog[
             (cmip6_data_catalog["experiment_id"] == "historical")
             & (cmip6_data_catalog["variable_id"] == "tas")
+            # Exclude the HadGEM model because it has a 360 day calendar and ilamb3 cannot handle that.
+            & (~cmip6_data_catalog["source_id"].str.contains("HadGEM", na=False))
         ]
         .groupby("instance_id")
         .first()
     )
-
     definition = definition_factory(
         diagnostic=diagnostic,
         cmip6=DatasetCollection(ds, "instance_id", selector=(("experiment_id", "historical"),)),

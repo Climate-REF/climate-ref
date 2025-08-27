@@ -7,8 +7,23 @@
     "log": "cmec_output.log"
   },
   "data": {
-    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
-      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
+    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc": {
+      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_SON_obs_1900-2005.nc": {
+      "filename": "NPO_psl_EOF1_SON_obs_1900-2005.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
+      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc": {
+      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc",
       "long_name": "Output data",
       "description": "Data produced by the diagnostic"
     },
@@ -22,33 +37,13 @@
       "long_name": "Output data",
       "description": "Data produced by the diagnostic"
     },
-    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
-      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
-      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
-      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_JJA_obs_1900-2005.nc": {
-      "filename": "NPO_psl_EOF1_JJA_obs_1900-2005.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_SON_obs_1900-2005.nc": {
-      "filename": "NPO_psl_EOF1_SON_obs_1900-2005.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
     "NPO_psl_EOF1_MAM_obs_1900-2005.nc": {
       "filename": "NPO_psl_EOF1_MAM_obs_1900-2005.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
+      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
       "long_name": "Output data",
       "description": "Data produced by the diagnostic"
     },
@@ -57,30 +52,25 @@
       "long_name": "Output data",
       "description": "Data produced by the diagnostic"
     },
-    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc": {
-      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc",
+    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
+      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
       "long_name": "Output data",
       "description": "Data produced by the diagnostic"
     },
-    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc": {
-      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc",
+    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
+      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_obs_1900-2005.nc": {
+      "filename": "NPO_psl_EOF1_JJA_obs_1900-2005.nc",
       "long_name": "Output data",
       "description": "Data produced by the diagnostic"
     }
   },
   "plots": {
-    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
-      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_MAM_obs_1900-2005.png": {
-      "filename": "NPO_psl_EOF1_MAM_obs_1900-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
+    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
+      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
@@ -89,73 +79,8 @@
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
-      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_SON_obs_1900-2005.png": {
-      "filename": "NPO_psl_EOF1_SON_obs_1900-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
-      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_MAM_obs_1900-2005_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_MAM_obs_1900-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
-      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
     "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
       "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
-      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
-      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_DJF_obs_1900-2005_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_DJF_obs_1900-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
-      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_DJF_obs_1900-2005.png": {
-      "filename": "NPO_psl_EOF1_DJF_obs_1900-2005.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
@@ -164,48 +89,28 @@
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
-      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png": {
-      "filename": "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
     "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
       "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
-      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
+    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
+      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
-      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
+      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_JJA_obs_1900-2005.png": {
-      "filename": "NPO_psl_EOF1_JJA_obs_1900-2005.png",
+    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
+      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
-      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
-      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
+    "NPO_psl_EOF1_MAM_obs_1900-2005_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_MAM_obs_1900-2005_teleconnection.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
@@ -214,8 +119,28 @@
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
-    "NPO_psl_EOF1_JJA_obs_1900-2005_teleconnection.png": {
-      "filename": "NPO_psl_EOF1_JJA_obs_1900-2005_teleconnection.png",
+    "NPO_psl_EOF1_DJF_obs_1900-2005_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_DJF_obs_1900-2005_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png": {
+      "filename": "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
+      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
+      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
@@ -224,8 +149,83 @@
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     },
+    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_obs_1900-2005.png": {
+      "filename": "NPO_psl_EOF1_JJA_obs_1900-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
+      "filename": "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
+      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_MAM_obs_1900-2005.png": {
+      "filename": "NPO_psl_EOF1_MAM_obs_1900-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_SON_obs_1900-2005.png": {
+      "filename": "NPO_psl_EOF1_SON_obs_1900-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
+      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
+      "filename": "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
+      "filename": "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
     "EG_Spec_North_test_NPO_MAM_20CR_1900-2005.png": {
       "filename": "EG_Spec_North_test_NPO_MAM_20CR_1900-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
+      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_JJA_obs_1900-2005_teleconnection.png": {
+      "filename": "NPO_psl_EOF1_JJA_obs_1900-2005_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic"
+    },
+    "NPO_psl_EOF1_DJF_obs_1900-2005.png": {
+      "filename": "NPO_psl_EOF1_DJF_obs_1900-2005.png",
       "long_name": "Plot",
       "description": "Plot produced by the diagnostic"
     }

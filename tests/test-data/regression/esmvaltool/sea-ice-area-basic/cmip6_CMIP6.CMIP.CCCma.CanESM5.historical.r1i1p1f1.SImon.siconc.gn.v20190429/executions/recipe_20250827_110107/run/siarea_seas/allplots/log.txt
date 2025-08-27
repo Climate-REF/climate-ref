@@ -1,0 +1,171 @@
+/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script allplots with configuration:
+auxiliary_data_dir: /home/bandela/auxiliary_data
+facet_used_for_labels: dataset
+group_variables_by: variable_group
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/CMIP6_CanESM5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: CanESM5
+    diagnostic: siarea_seas
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/CMIP6_CanESM5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+    frequency: mon
+    grid: gn
+    institute: CCCma
+    long_name: Sea-Ice Area Percentage (Ocean Grid)
+    mip: SImon
+    modeling_realm:
+    - seaIce
+    preprocessor: pp_nh
+    project: CMIP6
+    recipe_dataset_index: 0
+    reference_dataset: OSI-450-nh
+    short_name: siconc
+    standard_name: sea_ice_area_fraction
+    start_year: 1995
+    timerange: 1995/2014
+    units: 1e6 km2
+    variable_group: sea_ice_area_nh
+    version: v20190429
+  ? <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/OBS_OSI-450-nh_reanaly_v3_OImon_siconc_1995-2014.nc
+  : alias: OBS_OSI-450-nh
+    dataset: OSI-450-nh
+    diagnostic: siarea_seas
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/OBS_OSI-450-nh_reanaly_v3_OImon_siconc_1995-2014.nc
+    frequency: mon
+    grid: gr
+    long_name: Sea Ice Area Fraction
+    mip: OImon
+    modeling_realm:
+    - seaIce
+    - ocean
+    preprocessor: pp_nh
+    project: OBS
+    recipe_dataset_index: 1
+    reference_dataset: OSI-450-nh
+    short_name: sic
+    standard_name: sea_ice_area_fraction
+    start_year: 1995
+    tier: 2
+    timerange: 1995/2014
+    type: reanaly
+    units: 1e6 km2
+    variable_group: sea_ice_area_nh
+    version: v3
+  ? <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/CMIP6_CanESM5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: CanESM5
+    diagnostic: siarea_seas
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/CMIP6_CanESM5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+    frequency: mon
+    grid: gn
+    institute: CCCma
+    long_name: Sea-Ice Area Percentage (Ocean Grid)
+    mip: SImon
+    modeling_realm:
+    - seaIce
+    preprocessor: pp_sh
+    project: CMIP6
+    recipe_dataset_index: 0
+    reference_dataset: OSI-450-sh
+    short_name: siconc
+    standard_name: sea_ice_area_fraction
+    start_year: 1995
+    timerange: 1995/2014
+    units: 1e6 km2
+    variable_group: sea_ice_area_sh
+    version: v20190429
+  ? <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc
+  : alias: OBS_OSI-450-sh
+    dataset: OSI-450-sh
+    diagnostic: siarea_seas
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc
+    frequency: mon
+    grid: gr
+    long_name: Sea Ice Area Fraction
+    mip: OImon
+    modeling_realm:
+    - seaIce
+    - ocean
+    preprocessor: pp_sh
+    project: OBS
+    recipe_dataset_index: 1
+    reference_dataset: OSI-450-sh
+    short_name: sic
+    standard_name: sea_ice_area_fraction
+    start_year: 1995
+    tier: 2
+    timerange: 1995/2014
+    type: reanaly
+    units: 1e6 km2
+    variable_group: sea_ice_area_sh
+    version: v3
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250827_110107/plots/siarea_seas/allplots
+plot_folder: '{plot_dir}'
+plots:
+  annual_cycle:
+    caption: 20-year average seasonal cycle of the sea ice area in million km2 from
+      CanESM5.r1i1p1f1.gn compared with OSI-450.
+    plot_kwargs:
+      OSI-450-nh:
+        color: blue
+        label: OSISAF/CCI
+        linestyle: '-'
+        linewidth: 2
+        zorder: 3
+      OSI-450-sh:
+        color: blue
+        label: OSISAF/CCI
+        linestyle: '-'
+        linewidth: 2
+        zorder: 3
+      default:
+        color: red
+        label: '{dataset}'
+        linestyle: '-'
+        linewidth: 2
+        zorder: 4
+    pyplot_kwargs:
+      title: Sea ice area (million km2)
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20250827_110107/run/siarea_seas/allplots
+script: allplots
+version: 2.12.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20250827_110107/work/siarea_seas/allplots
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20250827_110107/work/siarea_seas/allplots
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20250827_110107/plots/siarea_seas/allplots
+INFO:multi_datasets:Using facet 'variable_group' to group variables
+INFO:multi_datasets:Using facet 'dataset' to create labels
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/CMIP6_CanESM5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_nh/OBS_OSI-450-nh_reanaly_v3_OImon_siconc_1995-2014.nc
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/CMIP6_CanESM5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20250827_110107/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc
+INFO:multi_datasets:Plotting annual_cycle
+INFO:multi_datasets:Processing variable sea_ice_area_nh
+INFO:multi_datasets:Wrote <OUTPUT_DIR>/executions/recipe_20250827_110107/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20250827_110107/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc
+INFO:multi_datasets:Processing variable sea_ice_area_sh
+INFO:multi_datasets:Wrote <OUTPUT_DIR>/executions/recipe_20250827_110107/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20250827_110107/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

@@ -1,0 +1,16 @@
+recipe: recipe.yml
+version: 2.12.0
+script: plot_script
+run_dir: <OUTPUT_DIR>/executions/recipe_20250827_110022/run/diagnostic_metrics/plot_script
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script
+work_dir: <OUTPUT_DIR>/executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250827_110022/preproc/diagnostic_metrics/tos_seas_asym/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110022/preproc/diagnostic_metrics/tos_amp/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110022/preproc/diagnostic_metrics/tos_patdiv1/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110022/preproc/diagnostic_metrics/tos_lifdur1/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110022/preproc/diagnostic_metrics/tos_lifdurdiv2/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110022/preproc/diagnostic_metrics/tos_pat2/metadata.yml

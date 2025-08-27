@@ -1,0 +1,667 @@
+2025-08-27 13:03:22.025 | ERROR    | ilamb3.run:run_simple:290 - ILAMB analysis 'gpp-wecann' failed for 'CanESM5-r1i1p1f1-gn'.
+Traceback (most recent call last):
+
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1153, in _construct_dataarray
+    variable = self._variables[name]
+               │    │          └ 'gpp'
+               │    └ <member '_variables' of 'Dataset' objects>
+               └ <xarray.Dataset> Size: 266kB
+                 Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+                 Coordinates:
+                   * time       (time) object 7...
+
+KeyError: 'gpp'
+
+
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1252, in __getitem__
+    return self._construct_dataarray(key)
+           │    │                    └ 'gpp'
+           │    └ <function Dataset._construct_dataarray at 0x7643dc93a340>
+           └ <xarray.Dataset> Size: 266kB
+             Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+             Coordinates:
+               * time       (time) object 7...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1155, in _construct_dataarray
+    _, name, variable = _get_virtual_variable(self._variables, name, self.sizes)
+       │                │                     │    │           │     │    └ <property object at 0x7643dc926d40>
+       │                │                     │    │           │     └ <xarray.Dataset> Size: 266kB
+       │                │                     │    │           │       Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+       │                │                     │    │           │       Coordinates:
+       │                │                     │    │           │         * time       (time) object 7...
+       │                │                     │    │           └ 'gpp'
+       │                │                     │    └ <member '_variables' of 'Dataset' objects>
+       │                │                     └ <xarray.Dataset> Size: 266kB
+       │                │                       Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+       │                │                       Coordinates:
+       │                │                         * time       (time) object 7...
+       │                └ <function _get_virtual_variable at 0x7643dc8e4540>
+       └ 'gpp'
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset_utils.py", line 79, in _get_virtual_variable
+    raise KeyError(key)
+                   └ 'gpp'
+
+KeyError: 'gpp'
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/bin/pytest", line 10, in <module>
+    sys.exit(console_main())
+    │   │    └ <function console_main at 0x764422a4bce0>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+           └ <function main at 0x764422a4bc40>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+         │                │      │    │                          └ <_pytest.config.Config object at 0x7644228f4050>
+         │                │      │    └ <HookCaller 'pytest_cmdline_main'>
+         │                │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7644228f4290>
+         │                └ <_pytest.config.Config object at 0x7644228f4050>
+         └ <enum 'ExitCode'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'config': <_pytest.config.Config object at 0x7644228f4050>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_cmdline_main'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_cmdline_main'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_cmdline_main'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'config': <_pytest.config.Config object at 0x7644228f4050>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python...
+           │    │               └ 'pytest_cmdline_main'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<_pytest.config.Config object at 0x7644228f4050>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 330, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           │            │       └ <function _main at 0x764422ac65c0>
+           │            └ <_pytest.config.Config object at 0x7644228f4050>
+           └ <function wrap_session at 0x764422ac6480>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 283, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+    │       │            │    │       └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>
+    │       │            │    └ <_pytest.config.Config object at 0x7644228f4050>
+    │       │            └ <function _main at 0x764422ac65c0>
+    │       └ <ExitCode.OK: 0>
+    └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 337, in _main
+    config.hook.pytest_runtestloop(session=session)
+    │      │    │                          └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>
+    │      │    └ <HookCaller 'pytest_runtestloop'>
+    │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7644228f4290>
+    └ <_pytest.config.Config object at 0x7644228f4050>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtestloop'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtestloop'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtestloop'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python...
+           │    │               └ 'pytest_runtestloop'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 362, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+    │    │                                        │              └ <Function test_diagnostics[gpp-fluxnet2015]>
+    │    │                                        └ <Function test_diagnostics[gpp-wecann]>
+    │    └ <member 'config' of 'Node' objects>
+    └ <Function test_diagnostics[gpp-wecann]>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'item': <Function test_diagnostics[gpp-wecann]>, 'nextitem': <Function test_diagnostics[gpp-fluxnet2015]>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_protocol'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_protocol'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_protocol'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'item': <Function test_diagnostics[gpp-wecann]>, 'nextitem': <Function test_diagnostics[gpp-fluxnet2015]>}
+           │    │               │          └ [<HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/py...
+           │    │               └ 'pytest_runtest_protocol'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Function test_diagnostics[gpp-wecann]>, <Function test_diagnostics[gpp-fluxnet2015]>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/pyt...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 113, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+    │               │              └ <Function test_diagnostics[gpp-fluxnet2015]>
+    │               └ <Function test_diagnostics[gpp-wecann]>
+    └ <function runtestprotocol at 0x764422ac5760>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 132, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+    │       │      │               │             └ True
+    │       │      │               └ <Function test_diagnostics[gpp-wecann]>
+    │       │      └ <function call_and_report at 0x764422ac5bc0>
+    │       └ <method 'append' of 'list' objects>
+    └ [<TestReport 'packages/climate-ref-ilamb/tests/integration/test_diagnostics.py::test_diagnostics[gpp-wecann]' when='setup' ou...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 241, in call_and_report
+    call = CallInfo.from_call(
+           │        └ <classmethod(<function CallInfo.from_call at 0x764422ac5ee0>)>
+           └ <class '_pytest.runner.CallInfo'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: TResult | None = func()
+            │                └ <function call_and_report.<locals>.<lambda> at 0x76439acb28e0>
+            └ +TResult
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 242, in <lambda>
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            │                 │       └ {}
+            │                 └ <Function test_diagnostics[gpp-wecann]>
+            └ <HookCaller 'pytest_runtest_call'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ False
+           │    │         │    │     │    │                  └ {'item': <Function test_diagnostics[gpp-wecann]>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_call'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_call'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_call'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ False
+           │    │               │          │        └ {'item': <Function test_diagnostics[gpp-wecann]>}
+           │    │               │          └ [<HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/py...
+           │    │               └ 'pytest_runtest_call'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Function test_diagnostics[gpp-wecann]>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/pyt...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 174, in pytest_runtest_call
+    item.runtest()
+    │    └ <function Function.runtest at 0x7644229ddf80>
+    └ <Function test_diagnostics[gpp-wecann]>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/python.py", line 1627, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+    │    │                                   └ <Function test_diagnostics[gpp-wecann]>
+    │    └ <property object at 0x764422a80ea0>
+    └ <Function test_diagnostics[gpp-wecann]>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'pyfuncitem': <Function test_diagnostics[gpp-wecann]>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_pyfunc_call'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_pyfunc_call'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_pyfunc_call'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'pyfuncitem': <Function test_diagnostics[gpp-wecann]>}
+           │    │               │          └ [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/py...
+           │    │               └ 'pytest_pyfunc_call'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Function test_diagnostics[gpp-wecann]>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/pyt...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/python.py", line 159, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+             │              └ {'diagnostic': ILAMBStandard(name='gpp-WECANN'), 'diagnostic_validation': <function diagnostic_validation.<locals>._create_va...
+             └ <function test_diagnostics at 0x7643a1d94b80>
+
+  File "/home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-ilamb/tests/integration/test_diagnostics.py", line 28, in test_diagnostics
+    validator.execute(definition)
+    │         │       └ ExecutionDefinition(diagnostic=ILAMBStandard(name='gpp-WECANN'), key='cmip6_historical', datasets=<climate_ref_core.datasets....
+    │         └ <function DiagnosticValidator.execute at 0x7643dc5fe340>
+    └ DiagnosticValidator(config=Config(log_level='INFO', log_format='<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{lev...
+
+  File "/home/bandela/src/Climate-REF/climate-ref/conftest.py", line 437, in execute
+    self.diagnostic.run(definition)
+    │    │              └ ExecutionDefinition(diagnostic=ILAMBStandard(name='gpp-WECANN'), key='cmip6_historical', datasets=<climate_ref_core.datasets....
+    │    └ <member 'diagnostic' of 'DiagnosticValidator' objects>
+    └ DiagnosticValidator(config=Config(log_level='INFO', log_format='<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{lev...
+
+  File "/home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-core/src/climate_ref_core/diagnostics.py", line 538, in run
+    self.execute(definition)
+    │    │       └ ExecutionDefinition(diagnostic=ILAMBStandard(name='gpp-WECANN'), key='cmip6_historical', datasets=<climate_ref_core.datasets....
+    │    └ <function ILAMBStandard.execute at 0x7643a1d66e80>
+    └ ILAMBStandard(name='gpp-WECANN')
+
+  File "/home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-ilamb/src/climate_ref_ilamb/standard.py", line 263, in execute
+    run.run_simple(
+    │   └ <function run_simple at 0x7643a1d66020>
+    └ <module 'ilamb3.run' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/run.py'>
+
+> File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/run.py", line 280, in run_simple
+    dfs, ds_ref, ds_com[source_name] = run_analyses(ref, com, analyses)
+    │    │       │      │              │            │    │    └ {'Bias': <ilamb3.analysis.bias.bias_analysis object at 0x76439a0dc190>, 'RMSE': <ilamb3.analysis.rmse.rmse_analysis object at...
+    │    │       │      │              │            │    └ <xarray.Dataset> Size: 1MB
+    │    │       │      │              │            │      Dimensions:    (time: 432, lat: 19, lon: 36, bnds: 2)
+    │    │       │      │              │            │      Coordinates:
+    │    │       │      │              │            │        * time       (time) object 3k...
+    │    │       │      │              │            └ <xarray.Dataset> Size: 140MB
+    │    │       │      │              │              Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+    │    │       │      │              │              Coordinates:
+    │    │       │      │              │                * time         (time) obj...
+    │    │       │      │              └ <function run_analyses at 0x7643a1d66160>
+    │    │       │      └ 'CanESM5-r1i1p1f1-gn'
+    │    │       └ {'ACCESS-ESM1-5-r1i1p1f1-gn': <xarray.Dataset> Size: 3MB
+    │    │         Dimensions:                            (lat: 182, lon: 361, lat_: 19...
+    │    └ <xarray.Dataset> Size: 1MB
+    │      Dimensions:                            (lat: 180, lon: 360, time: 96,
+    │                                  ...
+    └                        source    region  ...      units     value
+      0                   Reference    global  ...  g d-1 m-2  2....
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/run.py", line 419, in run_analyses
+    df, ds_ref, ds_com = a(ref, com)
+                         │ │    └ <xarray.Dataset> Size: 1MB
+                         │ │      Dimensions:    (time: 432, lat: 19, lon: 36, bnds: 2)
+                         │ │      Coordinates:
+                         │ │        * time       (time) object 3k...
+                         │ └ <xarray.Dataset> Size: 140MB
+                         │   Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+                         │   Coordinates:
+                         │     * time         (time) obj...
+                         └ <ilamb3.analysis.bias.bias_analysis object at 0x76439a0dc190>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/analysis/bias.py", line 147, in __call__
+    ref, com = cmp.make_comparable(ref, com, varname)
+    │          │   │               │    │    └ 'gpp'
+    │          │   │               │    └ <xarray.Dataset> Size: 1MB
+    │          │   │               │      Dimensions:    (time: 432, lat: 19, lon: 36, bnds: 2)
+    │          │   │               │      Coordinates:
+    │          │   │               │        * time       (time) object 3k...
+    │          │   │               └ <xarray.Dataset> Size: 140MB
+    │          │   │                 Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+    │          │   │                 Coordinates:
+    │          │   │                   * time         (time) obj...
+    │          │   └ <function make_comparable at 0x7643a4721f80>
+    │          └ <module 'ilamb3.compare' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/compare.py'>
+    └ <xarray.Dataset> Size: 140MB
+      Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+      Coordinates:
+        * time         (time) obj...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/compare.py", line 309, in make_comparable
+    if dset.is_latlon2d(com[varname]):
+       │    │           │   └ 'gpp'
+       │    │           └ <xarray.Dataset> Size: 266kB
+       │    │             Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+       │    │             Coordinates:
+       │    │               * time       (time) object 7...
+       │    └ <function is_latlon2d at 0x7643a4d293a0>
+       └ <module 'ilamb3.dataset' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/dataset.py'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1265, in __getitem__
+    raise KeyError(message) from e
+                   └ "No variable named 'gpp'. Variables on the dataset include ['tas', 'time', 'height', 'lat', 'lon', 'lat_bnds', 'lon_bnds', 't...
+
+KeyError: "No variable named 'gpp'. Variables on the dataset include ['tas', 'time', 'height', 'lat', 'lon', 'lat_bnds', 'lon_bnds', 'time_bnds']"
+2025-08-27 13:03:23.820 | ERROR    | ilamb3.run:run_simple:290 - ILAMB analysis 'gpp-wecann' failed for 'HadGEM3-GC31-LL-r1i1p1f3-gn'.
+Traceback (most recent call last):
+
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1153, in _construct_dataarray
+    variable = self._variables[name]
+               │    │          └ 'gpp'
+               │    └ <member '_variables' of 'Dataset' objects>
+               └ <xarray.Dataset> Size: 266kB
+                 Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+                 Coordinates:
+                   * time       (time) object 7...
+
+KeyError: 'gpp'
+
+
+During handling of the above exception, another exception occurred:
+
+
+Traceback (most recent call last):
+
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1252, in __getitem__
+    return self._construct_dataarray(key)
+           │    │                    └ 'gpp'
+           │    └ <function Dataset._construct_dataarray at 0x7643dc93a340>
+           └ <xarray.Dataset> Size: 266kB
+             Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+             Coordinates:
+               * time       (time) object 7...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1155, in _construct_dataarray
+    _, name, variable = _get_virtual_variable(self._variables, name, self.sizes)
+       │                │                     │    │           │     │    └ <property object at 0x7643dc926d40>
+       │                │                     │    │           │     └ <xarray.Dataset> Size: 266kB
+       │                │                     │    │           │       Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+       │                │                     │    │           │       Coordinates:
+       │                │                     │    │           │         * time       (time) object 7...
+       │                │                     │    │           └ 'gpp'
+       │                │                     │    └ <member '_variables' of 'Dataset' objects>
+       │                │                     └ <xarray.Dataset> Size: 266kB
+       │                │                       Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+       │                │                       Coordinates:
+       │                │                         * time       (time) object 7...
+       │                └ <function _get_virtual_variable at 0x7643dc8e4540>
+       └ 'gpp'
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset_utils.py", line 79, in _get_virtual_variable
+    raise KeyError(key)
+                   └ 'gpp'
+
+KeyError: 'gpp'
+
+
+The above exception was the direct cause of the following exception:
+
+
+Traceback (most recent call last):
+
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/bin/pytest", line 10, in <module>
+    sys.exit(console_main())
+    │   │    └ <function console_main at 0x764422a4bce0>
+    │   └ <built-in function exit>
+    └ <module 'sys' (built-in)>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 201, in console_main
+    code = main()
+           └ <function main at 0x764422a4bc40>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/config/__init__.py", line 175, in main
+    ret: ExitCode | int = config.hook.pytest_cmdline_main(config=config)
+         │                │      │    │                          └ <_pytest.config.Config object at 0x7644228f4050>
+         │                │      │    └ <HookCaller 'pytest_cmdline_main'>
+         │                │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7644228f4290>
+         │                └ <_pytest.config.Config object at 0x7644228f4050>
+         └ <enum 'ExitCode'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'config': <_pytest.config.Config object at 0x7644228f4050>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_cmdline_main'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_cmdline_main'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_cmdline_main'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'config': <_pytest.config.Config object at 0x7644228f4050>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python...
+           │    │               └ 'pytest_cmdline_main'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<_pytest.config.Config object at 0x7644228f4050>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 330, in pytest_cmdline_main
+    return wrap_session(config, _main)
+           │            │       └ <function _main at 0x764422ac65c0>
+           │            └ <_pytest.config.Config object at 0x7644228f4050>
+           └ <function wrap_session at 0x764422ac6480>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 283, in wrap_session
+    session.exitstatus = doit(config, session) or 0
+    │       │            │    │       └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>
+    │       │            │    └ <_pytest.config.Config object at 0x7644228f4050>
+    │       │            └ <function _main at 0x764422ac65c0>
+    │       └ <ExitCode.OK: 0>
+    └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 337, in _main
+    config.hook.pytest_runtestloop(session=session)
+    │      │    │                          └ <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>
+    │      │    └ <HookCaller 'pytest_runtestloop'>
+    │      └ <_pytest.config.compat.PathAwareHookProxy object at 0x7644228f4290>
+    └ <_pytest.config.Config object at 0x7644228f4050>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtestloop'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtestloop'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtestloop'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'session': <Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>}
+           │    │               │          └ [<HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python...
+           │    │               └ 'pytest_runtestloop'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Session  exitstatus=<ExitCode.OK: 0> testsfailed=0 testscollected=32>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='main', plugin=<module '_pytest.main' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/main.py", line 362, in pytest_runtestloop
+    item.config.hook.pytest_runtest_protocol(item=item, nextitem=nextitem)
+    │    │                                        │              └ <Function test_diagnostics[gpp-fluxnet2015]>
+    │    │                                        └ <Function test_diagnostics[gpp-wecann]>
+    │    └ <member 'config' of 'Node' objects>
+    └ <Function test_diagnostics[gpp-wecann]>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'item': <Function test_diagnostics[gpp-wecann]>, 'nextitem': <Function test_diagnostics[gpp-fluxnet2015]>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_protocol'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_protocol'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_protocol'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'item': <Function test_diagnostics[gpp-wecann]>, 'nextitem': <Function test_diagnostics[gpp-fluxnet2015]>}
+           │    │               │          └ [<HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/py...
+           │    │               └ 'pytest_runtest_protocol'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Function test_diagnostics[gpp-wecann]>, <Function test_diagnostics[gpp-fluxnet2015]>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/pyt...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 113, in pytest_runtest_protocol
+    runtestprotocol(item, nextitem=nextitem)
+    │               │              └ <Function test_diagnostics[gpp-fluxnet2015]>
+    │               └ <Function test_diagnostics[gpp-wecann]>
+    └ <function runtestprotocol at 0x764422ac5760>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 132, in runtestprotocol
+    reports.append(call_and_report(item, "call", log))
+    │       │      │               │             └ True
+    │       │      │               └ <Function test_diagnostics[gpp-wecann]>
+    │       │      └ <function call_and_report at 0x764422ac5bc0>
+    │       └ <method 'append' of 'list' objects>
+    └ [<TestReport 'packages/climate-ref-ilamb/tests/integration/test_diagnostics.py::test_diagnostics[gpp-wecann]' when='setup' ou...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 241, in call_and_report
+    call = CallInfo.from_call(
+           │        └ <classmethod(<function CallInfo.from_call at 0x764422ac5ee0>)>
+           └ <class '_pytest.runner.CallInfo'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 341, in from_call
+    result: TResult | None = func()
+            │                └ <function call_and_report.<locals>.<lambda> at 0x76439acb28e0>
+            └ +TResult
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 242, in <lambda>
+    lambda: runtest_hook(item=item, **kwds), when=when, reraise=reraise
+            │                 │       └ {}
+            │                 └ <Function test_diagnostics[gpp-wecann]>
+            └ <HookCaller 'pytest_runtest_call'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ False
+           │    │         │    │     │    │                  └ {'item': <Function test_diagnostics[gpp-wecann]>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_runtest_call'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_runtest_call'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_runtest_call'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ False
+           │    │               │          │        └ {'item': <Function test_diagnostics[gpp-wecann]>}
+           │    │               │          └ [<HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/py...
+           │    │               └ 'pytest_runtest_call'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Function test_diagnostics[gpp-wecann]>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='runner', plugin=<module '_pytest.runner' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/pyt...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/runner.py", line 174, in pytest_runtest_call
+    item.runtest()
+    │    └ <function Function.runtest at 0x7644229ddf80>
+    └ <Function test_diagnostics[gpp-wecann]>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/python.py", line 1627, in runtest
+    self.ihook.pytest_pyfunc_call(pyfuncitem=self)
+    │    │                                   └ <Function test_diagnostics[gpp-wecann]>
+    │    └ <property object at 0x764422a80ea0>
+    └ <Function test_diagnostics[gpp-wecann]>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_hooks.py", line 513, in __call__
+    return self._hookexec(self.name, self._hookimpls.copy(), kwargs, firstresult)
+           │    │         │    │     │    │                  │       └ True
+           │    │         │    │     │    │                  └ {'pyfuncitem': <Function test_diagnostics[gpp-wecann]>}
+           │    │         │    │     │    └ <member '_hookimpls' of 'HookCaller' objects>
+           │    │         │    │     └ <HookCaller 'pytest_pyfunc_call'>
+           │    │         │    └ <member 'name' of 'HookCaller' objects>
+           │    │         └ <HookCaller 'pytest_pyfunc_call'>
+           │    └ <member '_hookexec' of 'HookCaller' objects>
+           └ <HookCaller 'pytest_pyfunc_call'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_manager.py", line 120, in _hookexec
+    return self._inner_hookexec(hook_name, methods, kwargs, firstresult)
+           │    │               │          │        │       └ True
+           │    │               │          │        └ {'pyfuncitem': <Function test_diagnostics[gpp-wecann]>}
+           │    │               │          └ [<HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/py...
+           │    │               └ 'pytest_pyfunc_call'
+           │    └ <function _multicall at 0x764422ee2e80>
+           └ <_pytest.config.PytestPluginManager object at 0x76442301f6d0>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/pluggy/_callers.py", line 103, in _multicall
+    res = hook_impl.function(*args)
+          │         │         └ [<Function test_diagnostics[gpp-wecann]>]
+          │         └ <member 'function' of 'HookImpl' objects>
+          └ <HookImpl plugin_name='python', plugin=<module '_pytest.python' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/pyt...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/_pytest/python.py", line 159, in pytest_pyfunc_call
+    result = testfunction(**testargs)
+             │              └ {'diagnostic': ILAMBStandard(name='gpp-WECANN'), 'diagnostic_validation': <function diagnostic_validation.<locals>._create_va...
+             └ <function test_diagnostics at 0x7643a1d94b80>
+
+  File "/home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-ilamb/tests/integration/test_diagnostics.py", line 28, in test_diagnostics
+    validator.execute(definition)
+    │         │       └ ExecutionDefinition(diagnostic=ILAMBStandard(name='gpp-WECANN'), key='cmip6_historical', datasets=<climate_ref_core.datasets....
+    │         └ <function DiagnosticValidator.execute at 0x7643dc5fe340>
+    └ DiagnosticValidator(config=Config(log_level='INFO', log_format='<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{lev...
+
+  File "/home/bandela/src/Climate-REF/climate-ref/conftest.py", line 437, in execute
+    self.diagnostic.run(definition)
+    │    │              └ ExecutionDefinition(diagnostic=ILAMBStandard(name='gpp-WECANN'), key='cmip6_historical', datasets=<climate_ref_core.datasets....
+    │    └ <member 'diagnostic' of 'DiagnosticValidator' objects>
+    └ DiagnosticValidator(config=Config(log_level='INFO', log_format='<green>{time:YYYY-MM-DD HH:mm:ss.SSS Z}</green> | <level>{lev...
+
+  File "/home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-core/src/climate_ref_core/diagnostics.py", line 538, in run
+    self.execute(definition)
+    │    │       └ ExecutionDefinition(diagnostic=ILAMBStandard(name='gpp-WECANN'), key='cmip6_historical', datasets=<climate_ref_core.datasets....
+    │    └ <function ILAMBStandard.execute at 0x7643a1d66e80>
+    └ ILAMBStandard(name='gpp-WECANN')
+
+  File "/home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-ilamb/src/climate_ref_ilamb/standard.py", line 263, in execute
+    run.run_simple(
+    │   └ <function run_simple at 0x7643a1d66020>
+    └ <module 'ilamb3.run' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/run.py'>
+
+> File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/run.py", line 280, in run_simple
+    dfs, ds_ref, ds_com[source_name] = run_analyses(ref, com, analyses)
+    │    │       │      │              │            │    │    └ {'Bias': <ilamb3.analysis.bias.bias_analysis object at 0x76439a0dc190>, 'RMSE': <ilamb3.analysis.rmse.rmse_analysis object at...
+    │    │       │      │              │            │    └ <xarray.Dataset> Size: 1MB
+    │    │       │      │              │            │      Dimensions:    (time: 432, lat: 19, lon: 36, bnds: 2)
+    │    │       │      │              │            │      Coordinates:
+    │    │       │      │              │            │        * time       (time) object 3k...
+    │    │       │      │              │            └ <xarray.Dataset> Size: 140MB
+    │    │       │      │              │              Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+    │    │       │      │              │              Coordinates:
+    │    │       │      │              │                * time         (time) obj...
+    │    │       │      │              └ <function run_analyses at 0x7643a1d66160>
+    │    │       │      └ 'HadGEM3-GC31-LL-r1i1p1f3-gn'
+    │    │       └ {'ACCESS-ESM1-5-r1i1p1f1-gn': <xarray.Dataset> Size: 3MB
+    │    │         Dimensions:                            (lat: 182, lon: 361, lat_: 19...
+    │    └ <xarray.Dataset> Size: 1MB
+    │      Dimensions:                            (lat: 180, lon: 360, time: 96,
+    │                                  ...
+    └                        source    region  ...      units     value
+      0                   Reference    global  ...  g d-1 m-2  2....
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/run.py", line 419, in run_analyses
+    df, ds_ref, ds_com = a(ref, com)
+                         │ │    └ <xarray.Dataset> Size: 1MB
+                         │ │      Dimensions:    (time: 432, lat: 19, lon: 36, bnds: 2)
+                         │ │      Coordinates:
+                         │ │        * time       (time) object 3k...
+                         │ └ <xarray.Dataset> Size: 140MB
+                         │   Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+                         │   Coordinates:
+                         │     * time         (time) obj...
+                         └ <ilamb3.analysis.bias.bias_analysis object at 0x76439a0dc190>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/analysis/bias.py", line 147, in __call__
+    ref, com = cmp.make_comparable(ref, com, varname)
+    │          │   │               │    │    └ 'gpp'
+    │          │   │               │    └ <xarray.Dataset> Size: 1MB
+    │          │   │               │      Dimensions:    (time: 432, lat: 19, lon: 36, bnds: 2)
+    │          │   │               │      Coordinates:
+    │          │   │               │        * time       (time) object 3k...
+    │          │   │               └ <xarray.Dataset> Size: 140MB
+    │          │   │                 Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+    │          │   │                 Coordinates:
+    │          │   │                   * time         (time) obj...
+    │          │   └ <function make_comparable at 0x7643a4721f80>
+    │          └ <module 'ilamb3.compare' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/compare.py'>
+    └ <xarray.Dataset> Size: 140MB
+      Dimensions:      (time: 108, nb: 2, lat: 180, lon: 360)
+      Coordinates:
+        * time         (time) obj...
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/compare.py", line 309, in make_comparable
+    if dset.is_latlon2d(com[varname]):
+       │    │           │   └ 'gpp'
+       │    │           └ <xarray.Dataset> Size: 266kB
+       │    │             Dimensions:    (time: 96, lat: 19, lon: 36, bnds: 2)
+       │    │             Coordinates:
+       │    │               * time       (time) object 7...
+       │    └ <function is_latlon2d at 0x7643a4d293a0>
+       └ <module 'ilamb3.dataset' from '/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/ilamb3/dataset.py'>
+  File "/home/bandela/src/Climate-REF/climate-ref/.venv/lib/python3.11/site-packages/xarray/core/dataset.py", line 1265, in __getitem__
+    raise KeyError(message) from e
+                   └ "No variable named 'gpp'. Variables on the dataset include ['tas', 'time', 'height', 'lat', 'lon', 'lat_bnds', 'lon_bnds', 't...
+
+KeyError: "No variable named 'gpp'. Variables on the dataset include ['tas', 'time', 'height', 'lat', 'lon', 'lat_bnds', 'lon_bnds', 'time_bnds']"
+2025-08-27 13:03:36.592 | INFO     | conftest:check:363 - Regenerating regression output for ilamb/gpp-wecann

@@ -89,22 +89,22 @@
           "gn": {
             "global": {
               "Annual Cycle": {
-                "Phase Shift": 0.6776993265648045,
-                "Seasonal Cycle Score": 0.6936947494148712
+                "Phase Shift": 0.6776993265648048,
+                "Seasonal Cycle Score": 0.6936947494148715
               },
               "Bias": {
-                "Bias": 0.0567818184859414,
-                "Bias Score": 0.2835861917046112,
+                "Bias": 0.0567818184859415,
+                "Bias Score": 0.2835861917046113,
                 "Period Mean": 1.1128752579548051
               },
               "RMSE": {
-                "RMSE": 0.9921798685700074,
-                "RMSE Score": 0.3165454339954576
+                "RMSE": 0.992179868570008,
+                "RMSE Score": 0.3165454339954578
               },
               "Spatial Distribution": {
-                "Correlation": 0.6243689362875792,
+                "Correlation": 0.6243689362875772,
                 "Normalized Standard Deviation": 0.8661956266951206,
-                "Spatial Distribution Score": 0.7956539222914601
+                "Spatial Distribution Score": 0.7956539222914593
               }
             },
             "tropical": {
@@ -115,16 +115,16 @@
               "Bias": {
                 "Bias": -0.8682991185971106,
                 "Bias Score": 0.2287653906139261,
-                "Period Mean": 2.0024503048352513
+                "Period Mean": 2.0024503048352518
               },
               "RMSE": {
                 "RMSE": 1.6221843665470417,
-                "RMSE Score": 0.3065611741912775
+                "RMSE Score": 0.3065611741912774
               },
               "Spatial Distribution": {
-                "Correlation": 0.4860578378906291,
+                "Correlation": 0.4860578378906287,
                 "Normalized Standard Deviation": 0.7064525777839454,
-                "Spatial Distribution Score": 0.6600622141113922
+                "Spatial Distribution Score": 0.660062214111392
               }
             }
           }

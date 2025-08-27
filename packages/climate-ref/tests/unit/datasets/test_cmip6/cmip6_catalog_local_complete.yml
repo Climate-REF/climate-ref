@@ -375,6 +375,160 @@
   version: v20190815
   vertical_levels: 1
 - activity_id: CMIP
+  branch_method: Spin-up documentation
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 1223115.0
+  end_time: 2014-12-16 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
+    49 levels; top level 1 hPa
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
+  institution_id: CCCma
+  long_name: Near-Surface Air Temperature
+  member_id: r1i1p1f1
+  nominal_resolution: 500 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CanESM5
+  parent_time_units: days since 1850-01-01 0:0:0.0
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/Amon/tas/gn/v20190429/tas_Amon_CanESM5_historical_r1i1p1f1_gn_197901-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CanESM5
+  source_type: AOGCM
+  standard_name: air_temperature
+  start_time: 1979-01-16 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 1979-01-16 12:00:00-2014-12-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: Spin-up documentation
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 1223115.0
+  end_time: null
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: fx
+  grid: ORCA1 tripolar grid, 1 deg with refinement to 1/3 deg within 20 degrees of
+    the equator; 361 x 290 longitude/latitude; 45 vertical levels; top grid cell 0-6.19
+    m
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
+  institution_id: CCCma
+  long_name: Grid-Cell Area for Ocean Variables
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CanESM5
+  parent_time_units: days since 1850-01-01 0:0:0.0
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/Ofx/areacello/gn/v20190429/areacello_Ofx_CanESM5_historical_r1i1p1f1_gn.nc'
+  product: model-output
+  realm: ocean
+  source_id: CanESM5
+  source_type: AOGCM
+  standard_name: cell_area
+  start_time: null
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Ofx
+  time_range: null
+  units: m2
+  variable_id: areacello
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: Spin-up documentation
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 1223115.0
+  end_time: 2014-12-16 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: ORCA1 tripolar grid, 1 deg with refinement to 1/3 deg within 20 degrees of
+    the equator; 361 x 290 longitude/latitude; 45 vertical levels; top grid cell 0-6.19
+    m
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.SImon.siconc.gn.v20190429
+  institution_id: CCCma
+  long_name: Sea-ice Area Percentage (Ocean Grid)
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CanESM5
+  parent_time_units: days since 1850-01-01 0:0:0.0
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/SImon/siconc/gn/v20190429/siconc_SImon_CanESM5_historical_r1i1p1f1_gn_197901-201412.nc'
+  product: model-output
+  realm: seaIce
+  source_id: CanESM5
+  source_type: AOGCM
+  standard_name: sea_ice_area_fraction
+  start_time: 1979-01-16 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: SImon
+  time_range: 1979-01-16 12:00:00-2014-12-16 12:00:00
+  units: '%'
+  variable_id: siconc
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: Spin-up documentation
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 1223115.0
+  end_time: null
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: fx
+  grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
+    49 levels; top level 1 hPa
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
+  institution_id: CCCma
+  long_name: Grid-Cell Area for Atmospheric Grid Variables
+  member_id: r1i1p1f1
+  nominal_resolution: 500 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CanESM5
+  parent_time_units: days since 1850-01-01 0:0:0.0
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/fx/areacella/gn/v20190429/areacella_fx_CanESM5_historical_r1i1p1f1_gn.nc'
+  product: model-output
+  realm: atmos
+  source_id: CanESM5
+  source_type: AOGCM
+  standard_name: cell_area
+  start_time: null
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: fx
+  time_range: null
+  units: m2
+  variable_id: areacella
+  variant_label: r1i1p1f1
+  version: v20190429
+  vertical_levels: 1
+- activity_id: CMIP
   branch_method: standard
   branch_time_in_child: 0.0
   branch_time_in_parent: 0.0
@@ -644,6 +798,43 @@
   frequency: mon
   grid: native atmosphere N96 grid (145x192 latxlon)
   grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
+  institution_id: CSIRO
+  long_name: Specific Humidity
+  member_id: r1i1p1f1
+  nominal_resolution: 250 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: ACCESS-ESM1-5
+  parent_time_units: days since 0101-1-1
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/hus/gn/v20191115/hus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: ACCESS-ESM1-5
+  source_type: AOGCM
+  standard_name: specific_humidity
+  start_time: 1980-01-16 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 1980-01-16 12:00:00-2014-12-16 12:00:00
+  units: '1'
+  variable_id: hus
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: 19
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 21915.0
+  end_time: 2014-12-16 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native atmosphere N96 grid (145x192 latxlon)
+  grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
   institution_id: CSIRO
   long_name: Precipitation
@@ -691,17 +882,17 @@
   parent_source_id: ACCESS-ESM1-5
   parent_time_units: days since 0101-1-1
   parent_variant_label: r1i1p1f1
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/psl/gn/v20191115/psl_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/psl/gn/v20191115/psl_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc'
   product: model-output
   realm: atmos
   source_id: ACCESS-ESM1-5
   source_type: AOGCM
   standard_name: air_pressure_at_mean_sea_level
-  start_time: 2000-01-16 12:00:00
+  start_time: 1980-01-16 12:00:00
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
+  time_range: 1980-01-16 12:00:00-2014-12-16 12:00:00
   units: Pa
   variable_id: psl
   variant_label: r1i1p1f1
@@ -728,17 +919,17 @@
   parent_source_id: ACCESS-ESM1-5
   parent_time_units: days since 0101-1-1
   parent_variant_label: r1i1p1f1
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlut/gn/v20191115/rlut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlut/gn/v20191115/rlut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: model-output
   realm: atmos
   source_id: ACCESS-ESM1-5
   source_type: AOGCM
   standard_name: toa_outgoing_longwave_flux
-  start_time: 2000-01-16 12:00:00
+  start_time: 1996-01-16 12:00:00
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
+  time_range: 1996-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -765,17 +956,17 @@
   parent_source_id: ACCESS-ESM1-5
   parent_time_units: days since 0101-1-1
   parent_variant_label: r1i1p1f1
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlutcs/gn/v20191115/rlutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlutcs/gn/v20191115/rlutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: model-output
   realm: atmos
   source_id: ACCESS-ESM1-5
   source_type: AOGCM
   standard_name: toa_outgoing_longwave_flux_assuming_clear_sky
-  start_time: 2005-01-16 12:00:00
+  start_time: 1996-01-16 12:00:00
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2005-01-16 12:00:00-2014-12-16 12:00:00
+  time_range: 1996-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rlutcs
   variant_label: r1i1p1f1
@@ -839,17 +1030,17 @@
   parent_source_id: ACCESS-ESM1-5
   parent_time_units: days since 0101-1-1
   parent_variant_label: r1i1p1f1
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsut/gn/v20191115/rsut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsut/gn/v20191115/rsut_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: model-output
   realm: atmos
   source_id: ACCESS-ESM1-5
   source_type: AOGCM
   standard_name: toa_outgoing_shortwave_flux
-  start_time: 2000-01-16 12:00:00
+  start_time: 1996-01-16 12:00:00
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2000-01-16 12:00:00-2014-12-16 12:00:00
+  time_range: 1996-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -876,17 +1067,17 @@
   parent_source_id: ACCESS-ESM1-5
   parent_time_units: days since 0101-1-1
   parent_variant_label: r1i1p1f1
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsutcs/gn/v20191115/rsutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-201412.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsutcs/gn/v20191115/rsutcs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_199601-201412.nc'
   product: model-output
   realm: atmos
   source_id: ACCESS-ESM1-5
   source_type: AOGCM
   standard_name: toa_outgoing_shortwave_flux_assuming_clear_sky
-  start_time: 2005-01-16 12:00:00
+  start_time: 1996-01-16 12:00:00
   sub_experiment: none
   sub_experiment_id: none
   table_id: Amon
-  time_range: 2005-01-16 12:00:00-2014-12-16 12:00:00
+  time_range: 1996-01-16 12:00:00-2014-12-16 12:00:00
   units: W m-2
   variable_id: rsutcs
   variant_label: r1i1p1f1
@@ -1003,6 +1194,43 @@
   variant_label: r1i1p1f1
   version: v20191115
   vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 21915.0
+  end_time: 2014-12-16 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native atmosphere N96 grid (145x192 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
+  institution_id: CSIRO
+  long_name: Eastward Wind
+  member_id: r1i1p1f1
+  nominal_resolution: 250 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: ACCESS-ESM1-5
+  parent_time_units: days since 0101-1-1
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/ua/gn/v20191115/ua_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: ACCESS-ESM1-5
+  source_type: AOGCM
+  standard_name: eastward_wind
+  start_time: 1980-01-16 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 1980-01-16 12:00:00-2014-12-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: 19
 - activity_id: CMIP
   branch_method: standard
   branch_time_in_child: 0.0
@@ -1859,6 +2087,156 @@
 - activity_id: CMIP
   branch_method: standard
   branch_time_in_child: 0.0
+  branch_time_in_parent: 0.0
+  end_time: 2014-12-16 00:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: Native N96 grid; 192 x 144 longitude/latitude
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
+  institution_id: MOHC
+  long_name: Near-Surface Air Temperature
+  member_id: r1i1p1f3
+  nominal_resolution: 250 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: HadGEM3-GC31-LL
+  parent_time_units: days since 1850-01-01-00-00-00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/historical/r1i1p1f3/Amon/tas/gn/v20190624/tas_Amon_HadGEM3-GC31-LL_historical_r1i1p1f3_gn_197901-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: HadGEM3-GC31-LL
+  source_type: AOGCM AER
+  standard_name: air_temperature
+  start_time: 1979-01-16 00:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 1979-01-16 00:00:00-2014-12-16 00:00:00
+  units: K
+  variable_id: tas
+  variant_label: r1i1p1f3
+  version: v20190624
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 0.0
+  end_time: 2014-12-16 00:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: Native eORCA1 tripolar primarily 1 deg with meridional refinement down to
+    1/3 degree in the tropics; 360 x 330 longitude/latitude
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.SImon.siconc.gn.v20200330
+  institution_id: MOHC
+  long_name: Sea-ice Area Percentage (Ocean Grid)
+  member_id: r1i1p1f3
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: HadGEM3-GC31-LL
+  parent_time_units: days since 1850-01-01
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/historical/r1i1p1f3/SImon/siconc/gn/v20200330/siconc_SImon_HadGEM3-GC31-LL_historical_r1i1p1f3_gn_197901-201412.nc'
+  product: model-output
+  realm: seaIce
+  source_id: HadGEM3-GC31-LL
+  source_type: AOGCM AER
+  standard_name: sea_ice_area_fraction
+  start_time: 1979-01-16 00:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: SImon
+  time_range: 1979-01-16 00:00:00-2014-12-16 00:00:00
+  units: '%'
+  variable_id: siconc
+  variant_label: r1i1p1f3
+  version: v20200330
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 267840.0
+  end_time: null
+  experiment: pre-industrial control
+  experiment_id: piControl
+  finalised: true
+  frequency: fx
+  grid: Native eORCA1 tripolar primarily 1 deg with meridional refinement down to
+    1/3 degree in the tropics; 360 x 330 longitude/latitude
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Ofx.areacello.gn.v20190709
+  institution_id: MOHC
+  long_name: Grid-Cell Area for Ocean Variables
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl-spinup
+  parent_source_id: HadGEM3-GC31-LL
+  parent_time_units: days since 1850-01-01-00-00-00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/piControl/r1i1p1f1/Ofx/areacello/gn/v20190709/areacello_Ofx_HadGEM3-GC31-LL_piControl_r1i1p1f1_gn.nc'
+  product: model-output
+  realm: ocean
+  source_id: HadGEM3-GC31-LL
+  source_type: AOGCM AER
+  standard_name: cell_area
+  start_time: null
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Ofx
+  time_range: null
+  units: m2
+  variable_id: areacello
+  variant_label: r1i1p1f1
+  version: v20190709
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
+  branch_time_in_parent: 267840.0
+  end_time: null
+  experiment: pre-industrial control
+  experiment_id: piControl
+  finalised: true
+  frequency: fx
+  grid: Native N96 grid; 192 x 144 longitude/latitude
+  grid_label: gn
+  instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
+  institution_id: MOHC
+  long_name: Grid-Cell Area for Atmospheric Grid Variables
+  member_id: r1i1p1f1
+  nominal_resolution: 250 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl-spinup
+  parent_source_id: HadGEM3-GC31-LL
+  parent_time_units: days since 1850-01-01-00-00-00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/piControl/r1i1p1f1/fx/areacella/gn/v20190709/areacella_fx_HadGEM3-GC31-LL_piControl_r1i1p1f1_gn.nc'
+  product: model-output
+  realm: atmos
+  source_id: HadGEM3-GC31-LL
+  source_type: AOGCM AER
+  standard_name: cell_area
+  start_time: null
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: fx
+  time_range: null
+  units: m2
+  variable_id: areacella
+  variant_label: r1i1p1f1
+  version: v20190709
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 0.0
   branch_time_in_parent: 146097.0
   end_time: 1869-12-16 12:00:00
   experiment: pre-industrial control simulation with CO2 concentration calculated
@@ -2052,6 +2430,376 @@
   frequency: mon
   grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
   grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.cli.gn.v20190308
+  institution_id: NCAR
+  long_name: Mass Fraction of Cloud Ice
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/cli/gn/v20190308/cli_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: mass_fraction_of_cloud_ice_in_air
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: kg kg-1
+  variable_id: cli
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 32
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clivi.gn.v20190308
+  institution_id: NCAR
+  long_name: Ice Water Path
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clivi/gn/v20190308/clivi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: atmosphere_mass_content_of_cloud_ice
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: kg m-2
+  variable_id: clivi
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clt.gn.v20190308
+  institution_id: NCAR
+  long_name: Total Cloud Cover Percentage
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clt/gn/v20190308/clt_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: cloud_area_fraction
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: '%'
+  variable_id: clt
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clwvi.gn.v20190308
+  institution_id: NCAR
+  long_name: Condensed Water Path
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: atmosphere_mass_content_of_cloud_condensed_water
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: kg m-2
+  variable_id: clwvi
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20190401
+  institution_id: NCAR
+  long_name: Precipitation
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: precipitation_flux
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: kg m-2 s-1
+  variable_id: pr
+  variant_label: r1i1p1f1
+  version: v20190401
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rlut.gn.v20190308
+  institution_id: NCAR
+  long_name: TOA Outgoing Longwave Radiation
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rlut/gn/v20190308/rlut_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: toa_outgoing_longwave_flux
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: W m-2
+  variable_id: rlut
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rlutcs.gn.v20190308
+  institution_id: NCAR
+  long_name: TOA Outgoing Clear-Sky Longwave Radiation
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rlutcs/gn/v20190308/rlutcs_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: toa_outgoing_longwave_flux_assuming_clear_sky
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: W m-2
+  variable_id: rlutcs
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsut.gn.v20190308
+  institution_id: NCAR
+  long_name: TOA Outgoing Shortwave Radiation
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rsut/gn/v20190308/rsut_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: toa_outgoing_shortwave_flux
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: W m-2
+  variable_id: rsut
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsutcs.gn.v20190308
+  institution_id: NCAR
+  long_name: TOA Outgoing Clear-Sky Shortwave Radiation
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/rsutcs/gn/v20190308/rsutcs_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: toa_outgoing_shortwave_flux_assuming_clear_sky
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: W m-2
+  variable_id: rsutcs
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.ta.gn.v20190308
+  institution_id: NCAR
+  long_name: Air Temperature
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/ta/gn/v20190308/ta_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc'
+  product: model-output
+  realm: atmos
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: air_temperature
+  start_time: 2007-01-15 12:00:00
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: Amon
+  time_range: 2007-01-15 12:00:00-2014-12-15 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 19
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: 2014-12-15 12:00:00
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: mon
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonAnt.snc.gn.v20190308
   institution_id: NCAR
   long_name: Snow Area Percentage
@@ -2187,6 +2935,43 @@
   time_range: 2000-01-15 12:00:00-2014-12-15 12:00:00
   units: '%'
   variable_id: burntFractionAll
+  variant_label: r1i1p1f1
+  version: v20190308
+  vertical_levels: 1
+- activity_id: CMIP
+  branch_method: standard
+  branch_time_in_child: 674885.0
+  branch_time_in_parent: 219000.0
+  end_time: null
+  experiment: all-forcing simulation of the recent past
+  experiment_id: historical
+  finalised: true
+  frequency: fx
+  grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+  grid_label: gn
+  instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+  institution_id: NCAR
+  long_name: Grid-Cell Area for Atmospheric Grid Variables
+  member_id: r1i1p1f1
+  nominal_resolution: 100 km
+  parent_activity_id: CMIP
+  parent_experiment_id: piControl
+  parent_source_id: CESM2
+  parent_time_units: days since 0001-01-01 00:00:00
+  parent_variant_label: r1i1p1f1
+  path: '{esgf_data_dir}/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/fx/areacella/gn/v20190308/areacella_fx_CESM2_historical_r1i1p1f1_gn.nc'
+  product: model-output
+  realm: atmos land
+  source_id: CESM2
+  source_type: AOGCM BGC
+  standard_name: cell_area
+  start_time: null
+  sub_experiment: none
+  sub_experiment_id: none
+  table_id: fx
+  time_range: null
+  units: m2
+  variable_id: areacella
   variant_label: r1i1p1f1
   version: v20190308
   vertical_levels: 1

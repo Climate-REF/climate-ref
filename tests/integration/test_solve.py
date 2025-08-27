@@ -22,7 +22,7 @@ def config(config):
 
 def test_solve(sample_data_dir, cmip6_data_catalog, config, invoke_cli):
     num_expected_datasets = cmip6_data_catalog["instance_id"].nunique()
-    num_expected_metrics = 10
+    num_expected_metrics = 13
 
     db = Database.from_config(config)
     invoke_cli(["datasets", "ingest", "--source-type", "cmip6", str(sample_data_dir / "CMIP6")])

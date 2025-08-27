@@ -7,9 +7,9 @@
       "metric"
     ],
     "source_id": {
+      "HadGEM3-GC31-LL": {},
       "ACCESS-ESM1-5": {},
-      "CanESM5": {},
-      "HadGEM3-GC31-LL": {}
+      "CanESM5": {}
     },
     "region": {
       "antarctic": {},
@@ -28,6 +28,22 @@
   },
   "RESULTS": {
     "historical": {
+      "HadGEM3-GC31-LL": {
+        "antarctic": {
+          "direct_sensitivity_(notz-style)": -0.0240291003592504,
+          "annual_siconc_trend": -0.0010106442791242,
+          "annual_tas_trend": 0.038504358240076,
+          "direct_r_val": -0.9245224453912408,
+          "direct_p_val": 8.345568766166358e-16
+        },
+        "arctic": {
+          "direct_sensitivity_(notz-style)": -0.0182667687090698,
+          "annual_siconc_trend": -0.0007086997732451,
+          "annual_tas_trend": 0.038504358240076,
+          "direct_r_val": -0.9377936932511496,
+          "direct_p_val": 3.456803123954097e-17
+        }
+      },
       "ACCESS-ESM1-5": {
         "antarctic": {
           "direct_sensitivity_(notz-style)": -0.0093089389765667,
@@ -46,34 +62,18 @@
       },
       "CanESM5": {
         "antarctic": {
-          "direct_sensitivity_(notz-style)": -0.001262288391343,
+          "direct_sensitivity_(notz-style)": -0.0012511191937113,
           "annual_siconc_trend": 7.261761385609422e-6,
-          "annual_tas_trend": 0.0325509678903233,
-          "direct_r_val": -0.0859323266341288,
-          "direct_p_val": 0.6182576601557226
+          "annual_tas_trend": 0.0327313947248029,
+          "direct_r_val": -0.0856362852677212,
+          "direct_p_val": 0.6194724879437625
         },
         "arctic": {
-          "direct_sensitivity_(notz-style)": -0.0196841472286724,
+          "direct_sensitivity_(notz-style)": -0.0195835210216465,
           "annual_siconc_trend": -0.0007012069342604,
-          "annual_tas_trend": 0.0325509678903233,
-          "direct_r_val": -0.7949743656112556,
-          "direct_p_val": 7.008218341630712e-9
-        }
-      },
-      "HadGEM3-GC31-LL": {
-        "antarctic": {
-          "direct_sensitivity_(notz-style)": -0.0240608522772309,
-          "annual_siconc_trend": -0.0010106442791242,
-          "annual_tas_trend": 0.038400767361949,
-          "direct_r_val": -0.9238815860411153,
-          "direct_p_val": 9.587413509948313e-16
-        },
-        "arctic": {
-          "direct_sensitivity_(notz-style)": -0.0182986828946996,
-          "annual_siconc_trend": -0.0007086997732451,
-          "annual_tas_trend": 0.038400767361949,
-          "direct_r_val": -0.9375420714907108,
-          "direct_p_val": 3.695123061364841e-17
+          "annual_tas_trend": 0.0327313947248029,
+          "direct_r_val": -0.7952221159781833,
+          "direct_p_val": 6.87979369930241e-9
         }
       }
     }

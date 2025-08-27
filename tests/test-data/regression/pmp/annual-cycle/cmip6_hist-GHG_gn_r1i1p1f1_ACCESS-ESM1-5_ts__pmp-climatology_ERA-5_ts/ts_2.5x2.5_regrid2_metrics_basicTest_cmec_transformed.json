@@ -44,19 +44,19 @@
     },
     "provenance": {
         "platform": {
-            "OS": "Darwin",
-            "Version": "24.4.0",
-            "Name": "MacBookPro.localdomain"
+            "OS": "Linux",
+            "Version": "6.14.0-28-generic",
+            "Name": "laptop"
         },
-        "userId": "root",
+        "userId": "bandela",
         "osAccess": false,
-        "commandLine": "/Users/jared/code/Climate-REF/climate-ref/.ref/software/conda/pmp-6a8eb4990766c2f2f68ae41699f0f5025acc0eed/bin/mean_climate_driver.py -p /Users/jared/code/Climate-REF/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250522.nc --metrics_output_path <OUTPUT_DIR> --cmec",
-        "date": "2025-05-22 11:53:26",
+        "commandLine": "/home/bandela/climate_ref/software/conda/pmp-09fc79daa7e05ca0dfac8feba9246e4bb5045381/bin/mean_climate_driver.py -p /home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250827.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+        "date": "2025-08-27 14:07:25",
         "conda": {
-            "Version": "24.11.3",
-            "buildVersion": "not installed",
-            "PythonVersion": "3.12.8.final.0",
-            "Platform": "osx-arm64"
+            "Version": "25.1.1",
+            "buildVersion": "24.3.0",
+            "PythonVersion": "3.10.10.final.0",
+            "Platform": "linux-64"
         },
         "packages": {
             "python": "3.10.10",
@@ -65,20 +65,31 @@
             "cdp": "1.7.0",
             "cdtime": "3.1.4",
             "cdutil": "8.2.1",
-            "xarray": "2025.1.2",
-            "esmf": "0.8.8",
-            "esmpy": "8.8.0",
-            "matplotlib": "3.10.1",
-            "numpy": "2.1.3",
+            "xarray": "2025.4.0",
+            "esmf": "0.8.10",
+            "esmpy": "8.8.1",
+            "matplotlib": "3.10.3",
+            "numpy": "2.0.2",
             "scipy": "1.15.2",
             "xcdat": "0.8.0",
             "PMP": "3.9.1",
             "PMPObs": "See 'References' key below, for detailed obs provenance information."
         },
         "openGL": {
+            "vendor": "Intel",
+            "renderer": "Mesa Intel(R) Iris(R) Xe Graphics (ADL GT2)",
+            "version": "4.6 (Compatibility Profile) Mesa 25.0.7-0ubuntu0.25.04.1",
+            "shading language version": "4.60",
             "GLX": {
-                "server": {},
-                "client": {}
+                "server": {
+                    "vendor": "SGI",
+                    "version": "1.4"
+                },
+                "client": {
+                    "vendor": "Mesa Project and SGI",
+                    "version": "1.4"
+                },
+                "version": "1.4"
             }
         }
     },
@@ -87,7 +98,7 @@
     },
     "References": {
         "default": {
-            "template": "/Users/jared/Library/Caches/climate_ref/PMP_obs4MIPsClims/ts/gr/v20250224/ts_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc"
+            "template": "/home/bandela/.cache/climate_ref/PMP_obs4MIPsClims/ts/gr/v20250224/ts_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc"
         }
     },
     "json_version": 3.0,
@@ -437,7 +448,7 @@
             }
         },
         "attributes": {
-            "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250522.nc"
+            "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250827.nc"
         }
     }
 }

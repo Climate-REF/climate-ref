@@ -102,9 +102,9 @@
                 "RMSE Score": 0.4733365242375573
               },
               "Spatial Distribution": {
-                "Correlation": 0.4657813090598031,
+                "Correlation": 0.4657813090598032,
                 "Normalized Standard Deviation": 0.7954249815181031,
-                "Spatial Distribution Score": 0.6957999020358969
+                "Spatial Distribution Score": 0.695799902035897
               }
             },
             "tropical": {
@@ -122,9 +122,9 @@
                 "RMSE Score": 0.3549730360260335
               },
               "Spatial Distribution": {
-                "Correlation": -0.1781782415979246,
+                "Correlation": -0.1781782415979245,
                 "Normalized Standard Deviation": 0.988259346115719,
-                "Spatial Distribution Score": 0.4108535711221559
+                "Spatial Distribution Score": 0.410853571122156
               }
             }
           }

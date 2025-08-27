@@ -1,0 +1,103 @@
+INFO    [88760] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [88760] Package versions
+INFO    [88760] ----------------
+INFO    [88760] ESMValCore: 2.12.0
+INFO    [88760] ESMValTool: 2.13.0.dev120+g8f56863a7
+INFO    [88760] ----------------
+INFO    [88760] Reading configuration files from:
+/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/bandela/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [88760] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20250827_110150/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20250827_110150/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20250827_110150/run/cmor_log.txt
+WARNING [88760] /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+
+INFO    [88760] Starting the Earth System Model Evaluation Tool at time: 2025-08-27 11:01:50 UTC
+INFO    [88760] ----------------------------------------------------------------------
+INFO    [88760] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [88760] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20250827_110150/run
+INFO    [88760] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20250827_110150/work
+INFO    [88760] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20250827_110150/preproc
+INFO    [88760] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20250827_110150/plots
+INFO    [88760] ----------------------------------------------------------------------
+INFO    [88760] Running tasks using at most 1 processes
+INFO    [88760] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [88760] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [88760] Creating tasks from recipe
+INFO    [88760] Creating tasks for diagnostic zec
+INFO    [88760] Creating diagnostic task zec/zec
+INFO    [88760] Creating preprocessor task zec/tas_base
+INFO    [88760] Creating preprocessor 'anomaly_base' task for variable 'tas_base'
+INFO    [88760] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, CMIP, 1pctCO2, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [88760] PreprocessingTask zec/tas_base created.
+INFO    [88760] Creating preprocessor task zec/tas
+INFO    [88760] Creating preprocessor 'spatial_mean' task for variable 'tas'
+INFO    [88760] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, C4MIP CDRMIP, esm-1pct-brch-1000PgC, r1i1p1f1, gn, v20191206, supplementaries: areacella, fx
+INFO    [88760] PreprocessingTask zec/tas created.
+INFO    [88760] These tasks will be executed: zec/tas_base, zec/zec, zec/tas
+INFO    [88760] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250827_110150/run/recipe_filled.yml
+INFO    [88760] Using Dask threaded scheduler. The distributed scheduler is recommended, please read https://docs.esmvaltool.org/projects/ESMValCore/en/latest/quickstart/configure.html#dask-configuration how to use a distributed scheduler.
+INFO    [88760] Running 3 tasks sequentially
+INFO    [88760] Starting task zec/tas_base in process [88760]
+INFO    [88760] Computing and saving data for preprocessing task zec/tas_base
+INFO    [88760] Successfully completed task zec/tas_base (priority 1) in 0:00:00.226387
+INFO    [88760] Starting task zec/tas in process [88760]
+INFO    [88760] Computing and saving data for preprocessing task zec/tas
+INFO    [88760] Successfully completed task zec/tas (priority 2) in 0:00:00.346754
+INFO    [88760] Starting task zec/zec in process [88760]
+INFO    [88760] Running command ['/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/bin/python', '/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvaltool/diag_scripts/climate_metrics/zec.py', '<OUTPUT_DIR>/executions/recipe_20250827_110150/run/zec/zec/settings.yml']
+INFO    [88760] Writing output to <OUTPUT_DIR>/executions/recipe_20250827_110150/work/zec/zec
+INFO    [88760] Writing plots to <OUTPUT_DIR>/executions/recipe_20250827_110150/plots/zec/zec
+INFO    [88760] Writing log to <OUTPUT_DIR>/executions/recipe_20250827_110150/run/zec/zec/log.txt
+INFO    [88760] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250827_110150/run/zec/zec; MPLBACKEND="Agg" /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/bin/python /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvaltool/diag_scripts/climate_metrics/zec.py <OUTPUT_DIR>/executions/recipe_20250827_110150/run/zec/zec/settings.yml
+INFO    [88760] Maximum memory used (estimate): 0.4 GB
+INFO    [88760] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [88760] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.C4MIP CDRMIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC
+INFO    [88760] Successfully completed task zec/zec (priority 0) in 0:00:03.465970
+INFO    [88760] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250827_110150/run/recipe_filled.yml
+INFO    [88760] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20250827_110150/index.html
+INFO    [88760] Ending the Earth System Model Evaluation Tool at time: 2025-08-27 11:01:55 UTC
+INFO    [88760] Time for running the recipe was: 0:00:04.108246
+INFO    [88760] Maximum memory used (estimate): 0.9 GB
+INFO    [88760] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [88760] Removing `preproc` directory containing preprocessed data
+INFO    [88760] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [88760] Run was successful

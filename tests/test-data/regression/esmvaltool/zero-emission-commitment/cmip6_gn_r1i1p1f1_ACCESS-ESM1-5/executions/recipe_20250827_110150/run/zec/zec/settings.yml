@@ -1,0 +1,13 @@
+zec_year: 50
+recipe: recipe.yml
+version: 2.12.0
+script: zec
+run_dir: <OUTPUT_DIR>/executions/recipe_20250827_110150/run/zec/zec
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250827_110150/plots/zec/zec
+work_dir: <OUTPUT_DIR>/executions/recipe_20250827_110150/work/zec/zec
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250827_110150/preproc/zec/tas_base/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110150/preproc/zec/tas/metadata.yml

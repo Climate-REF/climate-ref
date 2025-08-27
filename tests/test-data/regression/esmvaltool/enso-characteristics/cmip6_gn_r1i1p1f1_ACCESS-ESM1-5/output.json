@@ -1,118 +1,118 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250526_193908/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20250827_110022/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250526_193908/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20250827_110022/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_09pattern.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_09pattern.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_09pattern.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_09pattern.nc",
       "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N).",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_10lifecycle.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_10lifecycle.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_10lifecycle.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_10lifecycle.nc",
       "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_12seasonality.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_12seasonality.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_12seasonality.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_12seasonality.nc",
       "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_13asymmetry.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_13asymmetry.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_13asymmetry.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_13asymmetry.nc",
       "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). ",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_14duration.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_14duration.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_14duration.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_14duration.nc",
       "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_15diversity.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_15diversity.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_15diversity.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_15diversity.nc",
       "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_09pattern.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_09pattern.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_09pattern.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_09pattern.nc",
       "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N).",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_10lifecycle.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_10lifecycle.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_10lifecycle.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_10lifecycle.nc",
       "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_12seasonality.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_12seasonality.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_12seasonality.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_12seasonality.nc",
       "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_13asymmetry.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_13asymmetry.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_13asymmetry.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_13asymmetry.nc",
       "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). ",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_14duration.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_14duration.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_14duration.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_14duration.nc",
       "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_15diversity.nc": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/TROPFLUX_15diversity.nc",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_15diversity.nc": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/TROPFLUX_15diversity.nc",
       "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/matrix.csv": {
-      "filename": "executions/recipe_20250526_193908/work/diagnostic_metrics/plot_script/matrix.csv",
+    "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/matrix.csv": {
+      "filename": "executions/recipe_20250827_110022/work/diagnostic_metrics/plot_script/matrix.csv",
       "long_name": "List of metric values.",
       "description": ""
     }
   },
   "plots": {
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png",
       "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N).",
       "description": ""
     },
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png",
       "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png",
       "long_name": "Standard deviation of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), representing the amplitude of variability.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png",
       "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png",
       "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). ",
       "description": ""
     },
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png",
       "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event.",
       "description": ""
     },
-    "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png": {
-      "filename": "executions/recipe_20250526_193908/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png",
+    "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png": {
+      "filename": "executions/recipe_20250827_110022/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png",
       "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events.",
       "description": ""
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250526_193908/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250526_193908/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20250827_110022/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250827_110022/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run."
     }

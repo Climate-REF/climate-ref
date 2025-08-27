@@ -89,22 +89,22 @@
           "gn": {
             "global": {
               "Annual Cycle": {
-                "Phase Shift": 0.2703245501089226,
-                "Seasonal Cycle Score": 0.6963783846126549
+                "Phase Shift": 0.270324550108923,
+                "Seasonal Cycle Score": 0.6963783846126557
               },
               "Bias": {
-                "Bias": 3.08188200765451e-8,
-                "Bias Score": 0.5069237546616158,
+                "Bias": 3.081882007654503e-8,
+                "Bias Score": 0.5069237546616162,
                 "Period Mean": 9.51656971117994e-6
               },
               "RMSE": {
-                "RMSE": 0.00001504276054065792,
-                "RMSE Score": 0.2412309769469663
+                "RMSE": 0.000015042760540657935,
+                "RMSE Score": 0.2412309769469665
               },
               "Spatial Distribution": {
-                "Correlation": 0.6402939068296997,
+                "Correlation": 0.6402939068297024,
                 "Normalized Standard Deviation": 0.8693147653802257,
-                "Spatial Distribution Score": 0.8042686192823941
+                "Spatial Distribution Score": 0.8042686192823956
               }
             },
             "tropical": {
@@ -113,7 +113,7 @@
                 "Seasonal Cycle Score": 0.760601098269735
               },
               "Bias": {
-                "Bias": 4.863620766352261e-7,
+                "Bias": 4.863620766352259e-7,
                 "Bias Score": 0.4459506304429574,
                 "Period Mean": 0.000022191610566573176
               },
@@ -122,9 +122,9 @@
                 "RMSE Score": 0.2094635260471339
               },
               "Spatial Distribution": {
-                "Correlation": 0.6112139143949029,
+                "Correlation": 0.6112139143949032,
                 "Normalized Standard Deviation": 1.1722347145529946,
-                "Spatial Distribution Score": 0.7856006216172268
+                "Spatial Distribution Score": 0.7856006216172269
               }
             }
           }

@@ -1,6 +1,6 @@
 source,region,analysis,name,type,units,value
 Reference,global,Bias,Period Mean [kg m-2],scalar,kg m-2,
-ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Period Mean [kg m-2],scalar,kg m-2,5.59181009852885
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Period Mean [kg m-2],scalar,kg m-2,5.591810098528851
 ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias [kg m-2],scalar,kg m-2,
 ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias Score [1],score,1,
 Reference,tropical,Bias,Period Mean [kg m-2],scalar,kg m-2,

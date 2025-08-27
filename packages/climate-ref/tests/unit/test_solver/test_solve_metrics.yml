@@ -22,6 +22,18 @@ cmip6_historical_ACCESS-ESM1-5_tas_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+cmip6_historical_CESM2_rsut_r1i1p1f1:
+  SourceDatasetType.CMIP6:
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsut.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+cmip6_historical_CanESM5_tas_r1i1p1f1:
+  SourceDatasetType.CMIP6:
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
+cmip6_historical_HadGEM3-GC31-LL_tas_r1i1p1f3:
+  SourceDatasetType.CMIP6:
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
 cmip6_piControl_ACCESS-ESM1-5_rsut_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsut.gn.v20210316

@@ -1,0 +1,13 @@
+calculate_mmm: false
+recipe: recipe.yml
+version: 2.12.0
+script: calculate
+run_dir: <OUTPUT_DIR>/executions/recipe_20250827_110053/run/ecs/calculate
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250827_110053/plots/ecs/calculate
+work_dir: <OUTPUT_DIR>/executions/recipe_20250827_110053/work/ecs/calculate
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250827_110053/preproc/ecs/tas/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_110053/preproc/ecs/rtnt/metadata.yml

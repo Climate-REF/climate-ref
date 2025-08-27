@@ -1,0 +1,27 @@
+plot_folder: '{plot_dir}'
+plot_filename: '{plot_type}_{real_name}_{dataset}_{mip}'
+plots:
+  variable_vs_lat:
+    legend_kwargs:
+      loc: upper right
+    plot_kwargs:
+      CERES-EBAF:
+        color: black
+      ESACCI-CLOUD:
+        color: black
+        linestyle: dashed
+      ISCCP-FH:
+        color: black
+        linestyle: dotted
+recipe: recipe.yml
+version: 2.12.0
+script: plot
+run_dir: <OUTPUT_DIR>/executions/recipe_20250827_105923/run/plot_profiles/plot
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250827_105923/plots/plot_profiles/plot
+work_dir: <OUTPUT_DIR>/executions/recipe_20250827_105923/work/plot_profiles/plot
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250827_105923/preproc/plot_profiles/lwcre/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250827_105923/preproc/plot_profiles/swcre/metadata.yml

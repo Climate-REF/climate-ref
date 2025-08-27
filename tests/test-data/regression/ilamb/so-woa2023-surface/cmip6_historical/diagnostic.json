@@ -75,18 +75,18 @@
           "gn": {
             "None": {
               "Annual Cycle": {
-                "Phase Shift": 0.2859178626189528,
-                "Seasonal Cycle Score": 0.6245779153766591
+                "Phase Shift": 0.2887661409935119,
+                "Seasonal Cycle Score": 0.6258453021674301
               },
               "Bias": {
-                "Bias": -0.085612417035509,
-                "Bias Score": 0.1897451003270103,
-                "Period Mean": 34.54742465888017
+                "Bias": -0.0887684238683904,
+                "Bias Score": 0.1894026403107017,
+                "Period Mean": 34.54013145125146
               },
               "Spatial Distribution": {
-                "Correlation": 0.8164567891800293,
-                "Normalized Standard Deviation": 1.115486782093798,
-                "Spatial Distribution Score": 0.8974658668249686
+                "Correlation": 0.8174238244180747,
+                "Normalized Standard Deviation": 1.1177985490283402,
+                "Spatial Distribution Score": 0.8975352121435951
               }
             }
           }

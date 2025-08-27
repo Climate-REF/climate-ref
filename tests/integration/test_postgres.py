@@ -85,7 +85,7 @@ def test_connect_and_migrations(config, cmip6_data_catalog):
 
     with database.session.begin():
         for instance_id, data_catalog_dataset in cmip6_data_catalog.groupby(adapter.slug_column):
-            adapter.register_dataset(config, database, data_catalog_dataset)
+            adapter.register_dataset(database, data_catalog_dataset)
 
 
 @pytest.mark.docker

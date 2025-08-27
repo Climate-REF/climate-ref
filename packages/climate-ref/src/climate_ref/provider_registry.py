@@ -31,10 +31,10 @@ def _register_provider(db: Database, provider: DiagnosticProvider) -> None:
     """
     from climate_ref.models import Diagnostic, Provider
 
-    provider_model, created = db.get_or_create(
+    provider_model, created = db.create_or_update(
         Provider,
         slug=provider.slug,
-        defaults={
+        values={
             "name": provider.name,
             # TODO: Handle if this changes
             "version": provider.version,
@@ -45,11 +45,11 @@ def _register_provider(db: Database, provider: DiagnosticProvider) -> None:
         db.session.flush()
 
     for diagnostic in provider.diagnostics():
-        diagnostic_model, created = db.get_or_create(
+        diagnostic_model, created = db.create_or_update(
             Diagnostic,
             slug=diagnostic.slug,
             provider_id=provider_model.id,
-            defaults={
+            values={
                 "name": diagnostic.name,
             },
         )

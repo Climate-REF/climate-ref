@@ -14,6 +14,7 @@ from attrs import define, frozen
 from loguru import logger
 
 from climate_ref.config import Config
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
@@ -111,16 +112,26 @@ class DiagnosticExecution:
 
 
 def extract_covered_datasets(
-    data_catalog: pd.DataFrame, requirement: DataRequirement
+    data_catalog: pd.DataFrame | DataCatalog, requirement: DataRequirement
 ) -> dict[Selector, pd.DataFrame]:
     """
     Determine the different diagnostic executions that should be performed with the current data catalog
     """
-    if len(data_catalog) == 0:
+    if isinstance(data_catalog, DataCatalog):
+        data_catalog_ds = data_catalog.to_frame()
+    else:
+        data_catalog_ds = data_catalog
+
+    if len(data_catalog_ds) == 0:
         logger.error(f"No datasets found in the data catalog: {requirement.source_type.value}")
         return {}
 
-    subset = requirement.apply_filters(data_catalog)
+    # Apply the filters directly to the DataFrame
+    subset = requirement.apply_filters(data_catalog_ds)
+
+    if isinstance(data_catalog, DataCatalog):
+        # If we have a DataCatalog, we need to finalise the datasets
+        subset = data_catalog.finalise(subset)
 
     if len(subset) == 0:
         logger.debug(f"No datasets found for requirement {requirement}")
@@ -140,7 +151,7 @@ def extract_covered_datasets(
             group_keys: Selector = ()
         else:
             group_keys = tuple(zip(requirement.group_by, name))
-        constrained_group = _process_group_constraints(data_catalog, group, requirement)
+        constrained_group = _process_group_constraints(data_catalog_ds, group, requirement)
 
         if constrained_group is not None:
             results[group_keys] = constrained_group
@@ -161,7 +172,9 @@ def _process_group_constraints(
 
 
 def solve_executions(
-    data_catalog: dict[SourceDatasetType, pd.DataFrame], diagnostic: Diagnostic, provider: DiagnosticProvider
+    data_catalog: dict[SourceDatasetType, pd.DataFrame | DataCatalog],
+    diagnostic: Diagnostic,
+    provider: DiagnosticProvider,
 ) -> typing.Generator["DiagnosticExecution", None, None]:
     """
     Calculate the diagnostic executions that need to be performed for a given diagnostic
@@ -200,14 +213,17 @@ def solve_executions(
             if not isinstance(requirement_collection, Sequence):
                 raise TypeError(f"Expected a sequence of DataRequirement, got {type(requirement_collection)}")
             yield from _solve_from_data_requirements(
-                data_catalog, diagnostic, requirement_collection, provider
+                data_catalog,
+                diagnostic,
+                requirement_collection,
+                provider,
             )
     else:
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")
 
 
 def _solve_from_data_requirements(
-    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+    data_catalog: dict[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
     data_requirements: Sequence[DataRequirement],
     provider: DiagnosticProvider,
@@ -303,7 +319,7 @@ class ExecutionSolver:
     """
 
     provider_registry: ProviderRegistry
-    data_catalog: dict[SourceDatasetType, pd.DataFrame]
+    data_catalog: dict[SourceDatasetType, pd.DataFrame | DataCatalog]
 
     @staticmethod
     def build_from_db(config: Config, db: Database) -> "ExecutionSolver":
@@ -312,6 +328,8 @@ class ExecutionSolver:
 
         Parameters
         ----------
+        config
+            Configuration to use for the solver, if None, the default configuration is used
         db
             Database instance
 
@@ -320,12 +338,16 @@ class ExecutionSolver:
         :
             A new ExecutionSolver instance
         """
+        dataset_adapters = {
+            SourceDatasetType.CMIP6: CMIP6DatasetAdapter(config=config),
+            SourceDatasetType.obs4MIPs: Obs4MIPsDatasetAdapter(),
+            SourceDatasetType.PMPClimatology: PMPClimatologyDatasetAdapter(),
+        }
         return ExecutionSolver(
             provider_registry=ProviderRegistry.build_from_config(config, db),
             data_catalog={
-                SourceDatasetType.CMIP6: CMIP6DatasetAdapter().load_catalog(db),
-                SourceDatasetType.obs4MIPs: Obs4MIPsDatasetAdapter().load_catalog(db),
-                SourceDatasetType.PMPClimatology: PMPClimatologyDatasetAdapter().load_catalog(db),
+                source_type: DataCatalog(database=db, adapter=adapter)
+                for source_type, adapter in dataset_adapters.items()
             },
         )
 

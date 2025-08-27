@@ -28,7 +28,7 @@ def test_update_recipe(metric_dataset):
     # Insert the following code in ZeroEmissionCommitment.update_recipe to
     # save an example input dataframe:
     # input_files.to_json(Path("input_files_zec.json"), indent=4, date_format="iso")
-    input_files = metric_dataset[SourceDatasetType.CMIP6].datasets
+    input_files = {k: v.datasets for k, v in metric_dataset.items()}
     recipe = load_recipe("recipe_zec.yml")
     ZeroEmissionCommitment().update_recipe(recipe, input_files)
     assert len(recipe["diagnostics"]) == 1

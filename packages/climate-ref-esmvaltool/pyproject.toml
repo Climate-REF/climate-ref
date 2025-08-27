@@ -23,8 +23,8 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
-    "pooch >= 1.8",
     "climate-ref-core",
+    "pooch >= 1.8",
     "pyyaml",
     "xarray >= 2023.3.0",
 ]

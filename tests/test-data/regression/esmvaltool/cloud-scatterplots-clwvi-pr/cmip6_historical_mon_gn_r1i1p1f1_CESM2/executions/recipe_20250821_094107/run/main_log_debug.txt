@@ -1,0 +1,944 @@
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:576 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:577 Package versions
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:578 ----------------
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:579 ESMValCore: 2.12.0
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:581 ESMValTool: 2.13.0.dev120+g8f56863a7
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:582 ----------------
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:583 Reading configuration files from:
+/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/bandela/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+2025-08-21 09:41:07,113 UTC [142684] INFO    esmvalcore._main:587 Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20250821_094107/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20250821_094107/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20250821_094107/run/cmor_log.txt
+2025-08-21 09:41:07,215 UTC [142684] WARNING py.warnings:109 /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:93 Starting the Earth System Model Evaluation Tool at time: 2025-08-21 09:41:07 UTC
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:98 ----------------------------------------------------------------------
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:99 RECIPE   = <OUTPUT_DIR>/recipe.yml
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:100 RUNDIR     = <OUTPUT_DIR>/executions/recipe_20250821_094107/run
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:101 WORKDIR    = <OUTPUT_DIR>/executions/recipe_20250821_094107/work
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:102 PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:103 PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20250821_094107/plots
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:104 ----------------------------------------------------------------------
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:107 Running tasks using at most 1 processes
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:109 If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+2025-08-21 09:41:07,243 UTC [142684] INFO    esmvalcore._main:113 If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+2025-08-21 09:41:07,243 UTC [142684] DEBUG   esmvalcore._recipe.check:67 Checking recipe against schema /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvalcore/_recipe/recipe_schema.yml
+2025-08-21 09:41:07,253 UTC [142684] DEBUG   esmvalcore._recipe.to_datasets:360 Populating list of datasets for variable clwvi in diagnostic plot_joint_clwvi_pr_model
+2025-08-21 09:41:07,253 UTC [142684] DEBUG   esmvalcore._recipe.to_datasets:386 Found Dataset: clwvi, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn
+2025-08-21 09:41:07,253 UTC [142684] DEBUG   esmvalcore._recipe.to_datasets:360 Populating list of datasets for variable pr in diagnostic plot_joint_clwvi_pr_model
+2025-08-21 09:41:07,253 UTC [142684] DEBUG   esmvalcore._recipe.to_datasets:386 Found Dataset: pr, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn
+2025-08-21 09:41:07,253 UTC [142684] DEBUG   esmvalcore._recipe.recipe:879 Retrieving diagnostics from recipe
+2025-08-21 09:41:07,253 UTC [142684] DEBUG   esmvalcore._recipe.recipe:909 Setting script for diagnostic plot_joint_clwvi_pr_model
+2025-08-21 09:41:07,253 UTC [142684] INFO    esmvalcore._recipe.recipe:1119 Creating tasks from recipe
+2025-08-21 09:41:07,254 UTC [142684] INFO    esmvalcore._recipe.recipe:1128 Creating tasks for diagnostic plot_joint_clwvi_pr_model
+2025-08-21 09:41:07,254 UTC [142684] INFO    esmvalcore._recipe.recipe:1041 Creating diagnostic task plot_joint_clwvi_pr_model/plot
+2025-08-21 09:41:07,254 UTC [142684] DEBUG   esmvalcore._task:397 No local diagnostic script found. Attempting to load the script from the base repository.
+2025-08-21 09:41:07,254 UTC [142684] INFO    esmvalcore._recipe.recipe:1103 Creating preprocessor task plot_joint_clwvi_pr_model/clwvi
+2025-08-21 09:41:07,254 UTC [142684] INFO    esmvalcore._recipe.recipe:739 Creating preprocessor 'common_grid_clivi_clwvi' task for variable 'clwvi'
+2025-08-21 09:41:07,254 UTC [142684] DEBUG   esmvalcore.local:445 Looking for files matching [PosixPath('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/*/clwvi_Amon_CESM2_historical_r1i1p1f1_gn*.nc')]
+2025-08-21 09:41:07,255 UTC [142684] DEBUG   esmvalcore._recipe.recipe:313 Using input files for variable clwvi of dataset CESM2:
+  <OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc
+2025-08-21 09:41:07,255 UTC [142684] INFO    esmvalcore._recipe.recipe:597 Found input files for Dataset: clwvi, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn, v20190308
+2025-08-21 09:41:07,255 UTC [142684] INFO    esmvalcore._recipe.recipe:766 PreprocessingTask plot_joint_clwvi_pr_model/clwvi created.
+2025-08-21 09:41:07,255 UTC [142684] DEBUG   esmvalcore._recipe.recipe:767 PreprocessingTask plot_joint_clwvi_pr_model/clwvi will create the files:
+<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clwvi_gn_20070115T120000-20141215T120000.nc
+2025-08-21 09:41:07,255 UTC [142684] INFO    esmvalcore._recipe.recipe:1103 Creating preprocessor task plot_joint_clwvi_pr_model/pr
+2025-08-21 09:41:07,255 UTC [142684] INFO    esmvalcore._recipe.recipe:739 Creating preprocessor 'common_grid_pr' task for variable 'pr'
+2025-08-21 09:41:07,255 UTC [142684] DEBUG   esmvalcore.local:445 Looking for files matching [PosixPath('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/*/pr_Amon_CESM2_historical_r1i1p1f1_gn*.nc')]
+2025-08-21 09:41:07,256 UTC [142684] DEBUG   esmvalcore._recipe.recipe:313 Using input files for variable pr of dataset CESM2:
+  <OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc
+2025-08-21 09:41:07,256 UTC [142684] INFO    esmvalcore._recipe.recipe:597 Found input files for Dataset: pr, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn, v20190401
+2025-08-21 09:41:07,256 UTC [142684] INFO    esmvalcore._recipe.recipe:766 PreprocessingTask plot_joint_clwvi_pr_model/pr created.
+2025-08-21 09:41:07,256 UTC [142684] DEBUG   esmvalcore._recipe.recipe:767 PreprocessingTask plot_joint_clwvi_pr_model/pr will create the files:
+<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_CESM2_Amon_historical_r1i1p1f1_pr_gn_20070115T120000-20141215T120000.nc
+2025-08-21 09:41:07,256 UTC [142684] DEBUG   esmvalcore._recipe.recipe:962 Linking tasks for diagnostic plot_joint_clwvi_pr_model script plot
+2025-08-21 09:41:07,256 UTC [142684] DEBUG   esmvalcore._recipe.recipe:975 Pattern plot_joint_clwvi_pr_model/clwvi matches ['plot_joint_clwvi_pr_model/clwvi']
+2025-08-21 09:41:07,256 UTC [142684] DEBUG   esmvalcore._recipe.recipe:975 Pattern plot_joint_clwvi_pr_model/pr matches ['plot_joint_clwvi_pr_model/pr']
+2025-08-21 09:41:07,256 UTC [142684] INFO    esmvalcore._recipe.recipe:1171 These tasks will be executed: plot_joint_clwvi_pr_model/pr, plot_joint_clwvi_pr_model/clwvi, plot_joint_clwvi_pr_model/plot
+2025-08-21 09:41:07,257 UTC [142684] DEBUG   esmvalcore._main:133 Recipe summary:
+DiagnosticTask: plot_joint_clwvi_pr_model/plot
+script: seaborn_jointplot_histogram.py
+settings:
+{'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+ 'bins': 20,
+ 'cbar': True,
+ 'cbar_kws': {'extend': 'max'},
+ 'joint_kws': {'cmap': 'YlGnBu', 'vmax': 0.03},
+ 'log_level': 'info',
+ 'marginal_kws': {'color': 'darkturquoise'},
+ 'output_file_type': 'png',
+ 'plot_dir': '<OUTPUT_DIR>/executions/recipe_20250821_094107/plots/plot_joint_clwvi_pr_model/plot',
+ 'plot_filename': 'jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000',
+ 'profile_diagnostic': False,
+ 'recipe': PosixPath('recipe.yml'),
+ 'run_dir': '<OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot',
+ 'script': 'plot',
+ 'seaborn_settings': {'rc': {'axes.titlepad': 15.0}, 'style': 'ticks'},
+ 'suptitle': 'CMIP6 CESM2 r1i1p1f1 gn 20070115T120000/20141215T120000',
+ 'version': '2.12.0',
+ 'work_dir': '<OUTPUT_DIR>/executions/recipe_20250821_094107/work/plot_joint_clwvi_pr_model/plot',
+ 'x': 'clwvi',
+ 'y': 'pr'}
+ancestors:
+  PreprocessingTask: plot_joint_clwvi_pr_model/clwvi
+  order: ['mask_outside_range', 'regrid', 'remove_supplementary_variables', 'save']
+  PreprocessorFile: <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clwvi_gn_20070115T120000-20141215T120000.nc
+  input files: [LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+  settings: {'mask_outside_range': {'maximum': 0.2, 'minimum': 0.01},
+   'regrid': {'scheme': {'reference': 'esmf_regrid.schemes:ESMFAreaWeighted'},
+              'target_grid': '1x1'},
+   'remove_supplementary_variables': {},
+   'save': {'compress': False,
+            'compute': False,
+            'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clwvi_gn_20070115T120000-20141215T120000.nc')}}
+  ancestors:
+  None
+
+  PreprocessingTask: plot_joint_clwvi_pr_model/pr
+  order: ['convert_units', 'mask_outside_range', 'regrid', 'remove_supplementary_variables', 'save']
+  PreprocessorFile: <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_CESM2_Amon_historical_r1i1p1f1_pr_gn_20070115T120000-20141215T120000.nc
+  input files: [LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+  settings: {'convert_units': {'units': 'mm day-1'},
+   'mask_outside_range': {'maximum': 4, 'minimum': 0.1},
+   'regrid': {'scheme': {'reference': 'esmf_regrid.schemes:ESMFAreaWeighted'},
+              'target_grid': '1x1'},
+   'remove_supplementary_variables': {},
+   'save': {'compress': False,
+            'compute': False,
+            'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_CESM2_Amon_historical_r1i1p1f1_pr_gn_20070115T120000-20141215T120000.nc')}}
+  ancestors:
+  None
+
+2025-08-21 09:41:07,260 UTC [142684] INFO    esmvalcore._recipe.recipe:1238 Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250821_094107/run/recipe_filled.yml
+2025-08-21 09:41:07,260 UTC [142684] DEBUG   esmvalcore.config._dask:170 Using Dask profile 'local_distributed'
+2025-08-21 09:41:07,260 UTC [142684] DEBUG   esmvalcore.config._dask:174 Using additional Dask settings {}
+2025-08-21 09:41:07,261 UTC [142684] DEBUG   asyncio:64 Using selector: EpollSelector
+2025-08-21 09:41:07,944 UTC [142684] DEBUG   esmvalcore.config._dask:192 Using Dask cluster LocalCluster(7834fd64, 'tcp://127.0.0.1:32991', workers=2, threads=4, memory=8.00 GiB)
+2025-08-21 09:41:07,945 UTC [142684] DEBUG   asyncio:64 Using selector: EpollSelector
+2025-08-21 09:41:07,948 UTC [142684] INFO    esmvalcore.config._dask:205 Using Dask distributed scheduler (address: tcp://127.0.0.1:32991, dashboard link: http://127.0.0.1:8787/status)
+2025-08-21 09:41:07,948 UTC [142684] INFO    esmvalcore._task:844 Running 3 tasks sequentially
+2025-08-21 09:41:07,948 UTC [142684] INFO    esmvalcore._task:289 Starting task plot_joint_clwvi_pr_model/clwvi in process [142684]
+2025-08-21 09:41:07,952 UTC [142684] DEBUG   esmvalcore.preprocessor:716 Running block ['mask_outside_range', 'regrid']
+2025-08-21 09:41:07,952 UTC [142684] DEBUG   esmvalcore.preprocessor:724 Applying single-model steps to PreprocessorFile: <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clwvi_gn_20070115T120000-20141215T120000.nc
+2025-08-21 09:41:07,953 UTC [142684] DEBUG   esmvalcore.esgf._download:560 All required data is available locally, not downloading anything.
+2025-08-21 09:41:07,953 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step fix_file
+2025-08-21 09:41:07,953 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'fix_file' on the data
+LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+output_dir = PosixPath('<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/fixed_files/clwvi_Amon_CMIP6_CESM2_CMIP_historical_r1i1p1f1_gn_v20190308_'),
+add_unique_suffix = True,
+session = Session({'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+         'check_level': <CheckLevels.DEFAULT: 3>,
+         'compress_netcdf': False,
+         'config_developer_file': PosixPath('/home/bandela/src/esmvalgroup/esmvaltool/config-developer.yml'),
+         'dask': {'profiles': {'debug': {'scheduler': 'synchronous'},
+                               'local_distributed': {'cluster': {'memory_limit': '4GiB',
+                                                                 'n_workers': 2,
+                                                                 'threads_per_worker': 2,
+                                                                 'type': 'distributed.LocalCluster'}},
+                               'local_threaded': {'scheduler': 'threads'},
+                               'threaded': {'num_workers': 4}},
+                  'use': 'local_distributed'},
+         'diagnostics': None,
+         'download_dir': PosixPath('/home/bandela/climate_data'),
+         'drs': {'CMIP3': 'ESGF',
+                 'CMIP5': 'ESGF',
+                 'CMIP6': 'ESGF',
+                 'CORDEX': 'ESGF',
+                 'OBS': 'default',
+                 'OBS6': 'default',
+                 'native6': 'default',
+                 'obs4MIPs': 'ESGF'},
+         'exit_on_warning': False,
+         'extra_facets_dir': [],
+         'log_level': 'info',
+         'logging': {'log_progress_interval': 0.0},
+         'max_datasets': None,
+         'max_parallel_tasks': 1,
+         'max_years': None,
+         'output_dir': PosixPath('<OUTPUT_DIR>/executions'),
+         'output_file_type': 'png',
+         'profile_diagnostic': False,
+         'remove_preproc_dir': True,
+         'resume_from': [],
+         'rootpath': {'CMIP6': [PosixPath('<OUTPUT_DIR>/climate_data')],
+                      'OBS': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'OBS6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'default': [PosixPath('/home/bandela/climate_data')],
+                      'native6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/RAWOBS')],
+                      'obs4MIPs': [PosixPath('<OUTPUT_DIR>/climate_data'),
+                                   PosixPath('/home/bandela/.cache/climate_ref/ESMValTool')]},
+         'run_diagnostic': True,
+         'save_intermediary_cubes': False,
+         'search_esgf': 'never',
+         'skip_nonexistent': False,
+         'write_ncl_interface': False}),
+exp = 'historical',
+mip = 'Amon',
+preprocessor = 'common_grid_clivi_clwvi',
+timerange = '20070115T120000/20141215T120000',
+activity = 'CMIP',
+dataset = 'CESM2',
+ensemble = 'r1i1p1f1',
+grid = 'gn',
+institute = 'NCAR',
+project = 'CMIP6',
+short_name = 'clwvi',
+variable_group = 'clwvi',
+diagnostic = 'plot_joint_clwvi_pr_model',
+recipe_dataset_index = 0,
+alias = 'CESM2',
+original_short_name = 'clwvi',
+standard_name = 'atmosphere_mass_content_of_cloud_condensed_water',
+long_name = 'Condensed Water Path',
+units = 'kg m-2',
+modeling_realm = ['atmos'],
+frequency = 'mon',
+version = 'v20190308'
+2025-08-21 09:41:07,954 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step load
+2025-08-21 09:41:07,954 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'load' on the data
+LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+ignore_warnings = None
+2025-08-21 09:41:07,954 UTC [142684] DEBUG   esmvalcore.preprocessor._io:103 Loading:
+<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc
+2025-08-21 09:41:07,965 UTC [142684] DEBUG   esmvalcore.preprocessor._io:151 Done with loading <OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc
+2025-08-21 09:41:07,965 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step fix_metadata
+2025-08-21 09:41:07,967 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'fix_metadata' on the data
+[<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>]
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+session = Session({'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+         'check_level': <CheckLevels.DEFAULT: 3>,
+         'compress_netcdf': False,
+         'config_developer_file': PosixPath('/home/bandela/src/esmvalgroup/esmvaltool/config-developer.yml'),
+         'dask': {'profiles': {'debug': {'scheduler': 'synchronous'},
+                               'local_distributed': {'cluster': {'memory_limit': '4GiB',
+                                                                 'n_workers': 2,
+                                                                 'threads_per_worker': 2,
+                                                                 'type': 'distributed.LocalCluster'}},
+                               'local_threaded': {'scheduler': 'threads'},
+                               'threaded': {'num_workers': 4}},
+                  'use': 'local_distributed'},
+         'diagnostics': None,
+         'download_dir': PosixPath('/home/bandela/climate_data'),
+         'drs': {'CMIP3': 'ESGF',
+                 'CMIP5': 'ESGF',
+                 'CMIP6': 'ESGF',
+                 'CORDEX': 'ESGF',
+                 'OBS': 'default',
+                 'OBS6': 'default',
+                 'native6': 'default',
+                 'obs4MIPs': 'ESGF'},
+         'exit_on_warning': False,
+         'extra_facets_dir': [],
+         'log_level': 'info',
+         'logging': {'log_progress_interval': 0.0},
+         'max_datasets': None,
+         'max_parallel_tasks': 1,
+         'max_years': None,
+         'output_dir': PosixPath('<OUTPUT_DIR>/executions'),
+         'output_file_type': 'png',
+         'profile_diagnostic': False,
+         'remove_preproc_dir': True,
+         'resume_from': [],
+         'rootpath': {'CMIP6': [PosixPath('<OUTPUT_DIR>/climate_data')],
+                      'OBS': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'OBS6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'default': [PosixPath('/home/bandela/climate_data')],
+                      'native6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/RAWOBS')],
+                      'obs4MIPs': [PosixPath('<OUTPUT_DIR>/climate_data'),
+                                   PosixPath('/home/bandela/.cache/climate_ref/ESMValTool')]},
+         'run_diagnostic': True,
+         'save_intermediary_cubes': False,
+         'search_esgf': 'never',
+         'skip_nonexistent': False,
+         'write_ncl_interface': False}),
+exp = 'historical',
+mip = 'Amon',
+preprocessor = 'common_grid_clivi_clwvi',
+timerange = '20070115T120000/20141215T120000',
+activity = 'CMIP',
+dataset = 'CESM2',
+ensemble = 'r1i1p1f1',
+grid = 'gn',
+institute = 'NCAR',
+project = 'CMIP6',
+short_name = 'clwvi',
+variable_group = 'clwvi',
+diagnostic = 'plot_joint_clwvi_pr_model',
+recipe_dataset_index = 0,
+alias = 'CESM2',
+original_short_name = 'clwvi',
+standard_name = 'atmosphere_mass_content_of_cloud_condensed_water',
+long_name = 'Condensed Water Path',
+units = 'kg m-2',
+modeling_realm = ['atmos'],
+frequency = 'mon',
+version = 'v20190308'
+2025-08-21 09:41:07,969 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step concatenate
+2025-08-21 09:41:07,970 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'concatenate' on the data
+[<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>]
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+check_level = <CheckLevels.DEFAULT: 3>
+2025-08-21 09:41:07,970 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step cmor_check_metadata
+2025-08-21 09:41:07,970 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'cmor_check_metadata' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+check_level = <CheckLevels.DEFAULT: 3>,
+cmor_table = 'CMIP6',
+mip = 'Amon',
+frequency = 'mon',
+short_name = 'clwvi'
+2025-08-21 09:41:07,971 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step clip_timerange
+2025-08-21 09:41:07,971 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'clip_timerange' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+timerange = '20070115T120000/20141215T120000'
+2025-08-21 09:41:07,974 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step fix_data
+2025-08-21 09:41:07,975 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'fix_data' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+session = Session({'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+         'check_level': <CheckLevels.DEFAULT: 3>,
+         'compress_netcdf': False,
+         'config_developer_file': PosixPath('/home/bandela/src/esmvalgroup/esmvaltool/config-developer.yml'),
+         'dask': {'profiles': {'debug': {'scheduler': 'synchronous'},
+                               'local_distributed': {'cluster': {'memory_limit': '4GiB',
+                                                                 'n_workers': 2,
+                                                                 'threads_per_worker': 2,
+                                                                 'type': 'distributed.LocalCluster'}},
+                               'local_threaded': {'scheduler': 'threads'},
+                               'threaded': {'num_workers': 4}},
+                  'use': 'local_distributed'},
+         'diagnostics': None,
+         'download_dir': PosixPath('/home/bandela/climate_data'),
+         'drs': {'CMIP3': 'ESGF',
+                 'CMIP5': 'ESGF',
+                 'CMIP6': 'ESGF',
+                 'CORDEX': 'ESGF',
+                 'OBS': 'default',
+                 'OBS6': 'default',
+                 'native6': 'default',
+                 'obs4MIPs': 'ESGF'},
+         'exit_on_warning': False,
+         'extra_facets_dir': [],
+         'log_level': 'info',
+         'logging': {'log_progress_interval': 0.0},
+         'max_datasets': None,
+         'max_parallel_tasks': 1,
+         'max_years': None,
+         'output_dir': PosixPath('<OUTPUT_DIR>/executions'),
+         'output_file_type': 'png',
+         'profile_diagnostic': False,
+         'remove_preproc_dir': True,
+         'resume_from': [],
+         'rootpath': {'CMIP6': [PosixPath('<OUTPUT_DIR>/climate_data')],
+                      'OBS': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'OBS6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'default': [PosixPath('/home/bandela/climate_data')],
+                      'native6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/RAWOBS')],
+                      'obs4MIPs': [PosixPath('<OUTPUT_DIR>/climate_data'),
+                                   PosixPath('/home/bandela/.cache/climate_ref/ESMValTool')]},
+         'run_diagnostic': True,
+         'save_intermediary_cubes': False,
+         'search_esgf': 'never',
+         'skip_nonexistent': False,
+         'write_ncl_interface': False}),
+exp = 'historical',
+mip = 'Amon',
+preprocessor = 'common_grid_clivi_clwvi',
+timerange = '20070115T120000/20141215T120000',
+activity = 'CMIP',
+dataset = 'CESM2',
+ensemble = 'r1i1p1f1',
+grid = 'gn',
+institute = 'NCAR',
+project = 'CMIP6',
+short_name = 'clwvi',
+variable_group = 'clwvi',
+diagnostic = 'plot_joint_clwvi_pr_model',
+recipe_dataset_index = 0,
+alias = 'CESM2',
+original_short_name = 'clwvi',
+standard_name = 'atmosphere_mass_content_of_cloud_condensed_water',
+long_name = 'Condensed Water Path',
+units = 'kg m-2',
+modeling_realm = ['atmos'],
+frequency = 'mon',
+version = 'v20190308'
+2025-08-21 09:41:07,975 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step cmor_check_data
+2025-08-21 09:41:07,976 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'cmor_check_data' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+check_level = <CheckLevels.DEFAULT: 3>,
+cmor_table = 'CMIP6',
+mip = 'Amon',
+frequency = 'mon',
+short_name = 'clwvi'
+2025-08-21 09:41:07,976 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step add_supplementary_variables
+2025-08-21 09:41:07,976 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'add_supplementary_variables' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+supplementary_cubes = []
+2025-08-21 09:41:07,976 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step mask_outside_range
+2025-08-21 09:41:07,977 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'mask_outside_range' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+maximum = 0.2,
+minimum = 0.01
+2025-08-21 09:41:07,977 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step regrid
+2025-08-21 09:41:07,978 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'regrid' on the data
+<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+scheme = {'reference': 'esmf_regrid.schemes:ESMFAreaWeighted'},
+target_grid = '1x1'
+2025-08-21 09:41:07,979 UTC [142684] DEBUG   esmvalcore.preprocessor._regrid:634 Loaded regridding scheme ESMFAreaWeighted(mdtol=0)
+2025-08-21 09:41:08,555 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step save
+2025-08-21 09:41:08,555 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'save' on the data
+[<iris 'Cube' of atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 180; longitude: 360)>]
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/clwvi/gn/v20190308/clwvi_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+compress = False,
+compute = False,
+filename = PosixPath('<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clwvi_gn_20070115T120000-20141215T120000.nc')
+2025-08-21 09:41:08,555 UTC [142684] DEBUG   esmvalcore.preprocessor._io:497 Saving cube:
+atmosphere_mass_content_of_cloud_condensed_water / (kg m-2) (time: 96; latitude: 180; longitude: 360)
+    Dimension coordinates:
+        time                                                     x             -               -
+        latitude                                                 -             x               -
+        longitude                                                -             -               x
+    Cell methods:
+        0                                                   area: time: mean
+    Attributes:
+        Conventions                                         'CF-1.7 CMIP-6.2'
+        activity_id                                         'CMIP'
+        branch_method                                       'standard'
+        branch_time_in_child                                np.int64(0)
+        branch_time_in_parent                               np.int64(-455885)
+        case_id                                             '15'
+        cesm_casename                                       'b.e21.BHIST.f09_g17.CMIP6-historical.001'
+        contact                                             'cesm_cmip6@ucar.edu'
+        data_specs_version                                  '01.00.29'
+        description                                         'mass of condensed (liquid + ice) water in the column divided by the area ...'
+        experiment                                          'all-forcing simulation of the recent past'
+        experiment_id                                       'historical'
+        external_variables                                  'areacella'
+        forcing_index                                       np.int64(1)
+        frequency                                           'mon'
+        further_info_url                                    'https://furtherinfo.es-doc.org/CMIP6.NCAR.CESM2.historical.none.r1i1p1 ...'
+        grid                                                'native 0.9x1.25 finite volume grid (192x288 latxlon)'
+        grid_label                                          'gn'
+        id                                                  'clwvi'
+        initialization_index                                np.int64(1)
+        institution                                         'National Center for Atmospheric Research, Climate and Global Dynamics Laboratory, ...'
+        institution_id                                      'NCAR'
+        license                                             'CMIP6 model data produced by <The National Center for Atmospheric Research> ...'
+        mipTable                                            'Amon'
+        mip_era                                             'CMIP6'
+        model_doi_url                                       'https://doi.org/10.5065/D67H1H0V'
+        nominal_resolution                                  '100 km'
+        out_name                                            'clwvi'
+        parent_activity_id                                  'CMIP'
+        parent_experiment_id                                'piControl'
+        parent_mip_era                                      'CMIP6'
+        parent_source_id                                    'CESM2'
+        parent_time_units                                   'days since 1850-1-1 00:00:00'
+        parent_variant_label                                'r1i1p1f1'
+        physics_index                                       np.int64(1)
+        product                                             'model-output'
+        prov                                                'Amon ((isd.003))'
+        realization_index                                   np.int64(1)
+        realm                                               'atmos'
+        source                                              'CESM2 (2017): atmosphere: CAM6 (0.9x1.25 finite volume grid; 288 x 192 ...'
+        source_id                                           'CESM2'
+        source_type                                         'AOGCM BGC'
+        sub_experiment                                      'none'
+        sub_experiment_id                                   'none'
+        table_id                                            'Amon'
+        time                                                'time'
+        time_label                                          'time-mean'
+        time_title                                          'Temporal mean'
+        title                                               'Condensed Water Path'
+        type                                                'real'
+        variable_id                                         'clwvi'
+        variant_info                                        'CMIP6 20th century experiments (1850-2014) with CAM6, interactive land ...'
+        variant_label                                       'r1i1p1f1'
+with lazy data to <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/clwvi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clwvi_gn_20070115T120000-20141215T120000.nc
+2025-08-21 09:41:08,586 UTC [142684] INFO    esmvalcore.preprocessor:747 Computing and saving data for preprocessing task plot_joint_clwvi_pr_model/clwvi
+2025-08-21 09:41:08,589 UTC [142684] DEBUG   asyncio:64 Using selector: EpollSelector
+2025-08-21 09:41:09,302 UTC [142684] INFO    esmvalcore._task:295 Successfully completed task plot_joint_clwvi_pr_model/clwvi (priority 1) in 0:00:01.353832
+2025-08-21 09:41:09,302 UTC [142684] INFO    esmvalcore._task:289 Starting task plot_joint_clwvi_pr_model/pr in process [142684]
+2025-08-21 09:41:09,305 UTC [142684] DEBUG   esmvalcore.preprocessor:716 Running block ['convert_units', 'mask_outside_range', 'regrid']
+2025-08-21 09:41:09,306 UTC [142684] DEBUG   esmvalcore.preprocessor:724 Applying single-model steps to PreprocessorFile: <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_CESM2_Amon_historical_r1i1p1f1_pr_gn_20070115T120000-20141215T120000.nc
+2025-08-21 09:41:09,306 UTC [142684] DEBUG   esmvalcore.esgf._download:560 All required data is available locally, not downloading anything.
+2025-08-21 09:41:09,306 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step fix_file
+2025-08-21 09:41:09,306 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'fix_file' on the data
+LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+output_dir = PosixPath('<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/fixed_files/pr_Amon_CMIP6_CESM2_CMIP_historical_r1i1p1f1_gn_v20190401_'),
+add_unique_suffix = True,
+session = Session({'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+         'check_level': <CheckLevels.DEFAULT: 3>,
+         'compress_netcdf': False,
+         'config_developer_file': PosixPath('/home/bandela/src/esmvalgroup/esmvaltool/config-developer.yml'),
+         'dask': {'profiles': {'debug': {'scheduler': 'synchronous'},
+                               'local_distributed': {'cluster': {'memory_limit': '4GiB',
+                                                                 'n_workers': 2,
+                                                                 'threads_per_worker': 2,
+                                                                 'type': 'distributed.LocalCluster'}},
+                               'local_threaded': {'scheduler': 'threads'},
+                               'threaded': {'num_workers': 4}},
+                  'use': 'local_distributed'},
+         'diagnostics': None,
+         'download_dir': PosixPath('/home/bandela/climate_data'),
+         'drs': {'CMIP3': 'ESGF',
+                 'CMIP5': 'ESGF',
+                 'CMIP6': 'ESGF',
+                 'CORDEX': 'ESGF',
+                 'OBS': 'default',
+                 'OBS6': 'default',
+                 'native6': 'default',
+                 'obs4MIPs': 'ESGF'},
+         'exit_on_warning': False,
+         'extra_facets_dir': [],
+         'log_level': 'info',
+         'logging': {'log_progress_interval': 0.0},
+         'max_datasets': None,
+         'max_parallel_tasks': 1,
+         'max_years': None,
+         'output_dir': PosixPath('<OUTPUT_DIR>/executions'),
+         'output_file_type': 'png',
+         'profile_diagnostic': False,
+         'remove_preproc_dir': True,
+         'resume_from': [],
+         'rootpath': {'CMIP6': [PosixPath('<OUTPUT_DIR>/climate_data')],
+                      'OBS': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'OBS6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'default': [PosixPath('/home/bandela/climate_data')],
+                      'native6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/RAWOBS')],
+                      'obs4MIPs': [PosixPath('<OUTPUT_DIR>/climate_data'),
+                                   PosixPath('/home/bandela/.cache/climate_ref/ESMValTool')]},
+         'run_diagnostic': True,
+         'save_intermediary_cubes': False,
+         'search_esgf': 'never',
+         'skip_nonexistent': False,
+         'write_ncl_interface': False}),
+exp = 'historical',
+mip = 'Amon',
+preprocessor = 'common_grid_pr',
+timerange = '20070115T120000/20141215T120000',
+activity = 'CMIP',
+dataset = 'CESM2',
+ensemble = 'r1i1p1f1',
+grid = 'gn',
+institute = 'NCAR',
+project = 'CMIP6',
+short_name = 'pr',
+variable_group = 'pr',
+diagnostic = 'plot_joint_clwvi_pr_model',
+recipe_dataset_index = 0,
+alias = 'CESM2',
+original_short_name = 'pr',
+standard_name = 'precipitation_flux',
+long_name = 'Precipitation',
+units = 'kg m-2 s-1',
+modeling_realm = ['atmos'],
+frequency = 'mon',
+version = 'v20190401'
+2025-08-21 09:41:09,306 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step load
+2025-08-21 09:41:09,307 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'load' on the data
+LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+ignore_warnings = None
+2025-08-21 09:41:09,307 UTC [142684] DEBUG   esmvalcore.preprocessor._io:103 Loading:
+<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc
+2025-08-21 09:41:09,315 UTC [142684] DEBUG   esmvalcore.preprocessor._io:151 Done with loading <OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc
+2025-08-21 09:41:09,315 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step fix_metadata
+2025-08-21 09:41:09,316 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'fix_metadata' on the data
+[<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>]
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+session = Session({'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+         'check_level': <CheckLevels.DEFAULT: 3>,
+         'compress_netcdf': False,
+         'config_developer_file': PosixPath('/home/bandela/src/esmvalgroup/esmvaltool/config-developer.yml'),
+         'dask': {'profiles': {'debug': {'scheduler': 'synchronous'},
+                               'local_distributed': {'cluster': {'memory_limit': '4GiB',
+                                                                 'n_workers': 2,
+                                                                 'threads_per_worker': 2,
+                                                                 'type': 'distributed.LocalCluster'}},
+                               'local_threaded': {'scheduler': 'threads'},
+                               'threaded': {'num_workers': 4}},
+                  'use': 'local_distributed'},
+         'diagnostics': None,
+         'download_dir': PosixPath('/home/bandela/climate_data'),
+         'drs': {'CMIP3': 'ESGF',
+                 'CMIP5': 'ESGF',
+                 'CMIP6': 'ESGF',
+                 'CORDEX': 'ESGF',
+                 'OBS': 'default',
+                 'OBS6': 'default',
+                 'native6': 'default',
+                 'obs4MIPs': 'ESGF'},
+         'exit_on_warning': False,
+         'extra_facets_dir': [],
+         'log_level': 'info',
+         'logging': {'log_progress_interval': 0.0},
+         'max_datasets': None,
+         'max_parallel_tasks': 1,
+         'max_years': None,
+         'output_dir': PosixPath('<OUTPUT_DIR>/executions'),
+         'output_file_type': 'png',
+         'profile_diagnostic': False,
+         'remove_preproc_dir': True,
+         'resume_from': [],
+         'rootpath': {'CMIP6': [PosixPath('<OUTPUT_DIR>/climate_data')],
+                      'OBS': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'OBS6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'default': [PosixPath('/home/bandela/climate_data')],
+                      'native6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/RAWOBS')],
+                      'obs4MIPs': [PosixPath('<OUTPUT_DIR>/climate_data'),
+                                   PosixPath('/home/bandela/.cache/climate_ref/ESMValTool')]},
+         'run_diagnostic': True,
+         'save_intermediary_cubes': False,
+         'search_esgf': 'never',
+         'skip_nonexistent': False,
+         'write_ncl_interface': False}),
+exp = 'historical',
+mip = 'Amon',
+preprocessor = 'common_grid_pr',
+timerange = '20070115T120000/20141215T120000',
+activity = 'CMIP',
+dataset = 'CESM2',
+ensemble = 'r1i1p1f1',
+grid = 'gn',
+institute = 'NCAR',
+project = 'CMIP6',
+short_name = 'pr',
+variable_group = 'pr',
+diagnostic = 'plot_joint_clwvi_pr_model',
+recipe_dataset_index = 0,
+alias = 'CESM2',
+original_short_name = 'pr',
+standard_name = 'precipitation_flux',
+long_name = 'Precipitation',
+units = 'kg m-2 s-1',
+modeling_realm = ['atmos'],
+frequency = 'mon',
+version = 'v20190401'
+2025-08-21 09:41:09,318 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step concatenate
+2025-08-21 09:41:09,319 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'concatenate' on the data
+[<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>]
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+check_level = <CheckLevels.DEFAULT: 3>
+2025-08-21 09:41:09,319 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step cmor_check_metadata
+2025-08-21 09:41:09,319 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'cmor_check_metadata' on the data
+<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+check_level = <CheckLevels.DEFAULT: 3>,
+cmor_table = 'CMIP6',
+mip = 'Amon',
+frequency = 'mon',
+short_name = 'pr'
+2025-08-21 09:41:09,320 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step clip_timerange
+2025-08-21 09:41:09,320 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'clip_timerange' on the data
+<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+timerange = '20070115T120000/20141215T120000'
+2025-08-21 09:41:09,322 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step fix_data
+2025-08-21 09:41:09,323 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'fix_data' on the data
+<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+session = Session({'auxiliary_data_dir': PosixPath('/home/bandela/auxiliary_data'),
+         'check_level': <CheckLevels.DEFAULT: 3>,
+         'compress_netcdf': False,
+         'config_developer_file': PosixPath('/home/bandela/src/esmvalgroup/esmvaltool/config-developer.yml'),
+         'dask': {'profiles': {'debug': {'scheduler': 'synchronous'},
+                               'local_distributed': {'cluster': {'memory_limit': '4GiB',
+                                                                 'n_workers': 2,
+                                                                 'threads_per_worker': 2,
+                                                                 'type': 'distributed.LocalCluster'}},
+                               'local_threaded': {'scheduler': 'threads'},
+                               'threaded': {'num_workers': 4}},
+                  'use': 'local_distributed'},
+         'diagnostics': None,
+         'download_dir': PosixPath('/home/bandela/climate_data'),
+         'drs': {'CMIP3': 'ESGF',
+                 'CMIP5': 'ESGF',
+                 'CMIP6': 'ESGF',
+                 'CORDEX': 'ESGF',
+                 'OBS': 'default',
+                 'OBS6': 'default',
+                 'native6': 'default',
+                 'obs4MIPs': 'ESGF'},
+         'exit_on_warning': False,
+         'extra_facets_dir': [],
+         'log_level': 'info',
+         'logging': {'log_progress_interval': 0.0},
+         'max_datasets': None,
+         'max_parallel_tasks': 1,
+         'max_years': None,
+         'output_dir': PosixPath('<OUTPUT_DIR>/executions'),
+         'output_file_type': 'png',
+         'profile_diagnostic': False,
+         'remove_preproc_dir': True,
+         'resume_from': [],
+         'rootpath': {'CMIP6': [PosixPath('<OUTPUT_DIR>/climate_data')],
+                      'OBS': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'OBS6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/OBS')],
+                      'default': [PosixPath('/home/bandela/climate_data')],
+                      'native6': [PosixPath('/home/bandela/.cache/climate_ref/ESMValTool/RAWOBS')],
+                      'obs4MIPs': [PosixPath('<OUTPUT_DIR>/climate_data'),
+                                   PosixPath('/home/bandela/.cache/climate_ref/ESMValTool')]},
+         'run_diagnostic': True,
+         'save_intermediary_cubes': False,
+         'search_esgf': 'never',
+         'skip_nonexistent': False,
+         'write_ncl_interface': False}),
+exp = 'historical',
+mip = 'Amon',
+preprocessor = 'common_grid_pr',
+timerange = '20070115T120000/20141215T120000',
+activity = 'CMIP',
+dataset = 'CESM2',
+ensemble = 'r1i1p1f1',
+grid = 'gn',
+institute = 'NCAR',
+project = 'CMIP6',
+short_name = 'pr',
+variable_group = 'pr',
+diagnostic = 'plot_joint_clwvi_pr_model',
+recipe_dataset_index = 0,
+alias = 'CESM2',
+original_short_name = 'pr',
+standard_name = 'precipitation_flux',
+long_name = 'Precipitation',
+units = 'kg m-2 s-1',
+modeling_realm = ['atmos'],
+frequency = 'mon',
+version = 'v20190401'
+2025-08-21 09:41:09,323 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step cmor_check_data
+2025-08-21 09:41:09,323 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'cmor_check_data' on the data
+<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+check_level = <CheckLevels.DEFAULT: 3>,
+cmor_table = 'CMIP6',
+mip = 'Amon',
+frequency = 'mon',
+short_name = 'pr'
+2025-08-21 09:41:09,323 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step add_supplementary_variables
+2025-08-21 09:41:09,324 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'add_supplementary_variables' on the data
+<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+supplementary_cubes = []
+2025-08-21 09:41:09,324 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step convert_units
+2025-08-21 09:41:09,324 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'convert_units' on the data
+<iris 'Cube' of precipitation_flux / (kg m-2 s-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+units = 'mm day-1'
+2025-08-21 09:41:09,325 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step mask_outside_range
+2025-08-21 09:41:09,325 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'mask_outside_range' on the data
+<iris 'Cube' of lwe_precipitation_rate / (mm day-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+maximum = 4,
+minimum = 0.1
+2025-08-21 09:41:09,326 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step regrid
+2025-08-21 09:41:09,326 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'regrid' on the data
+<iris 'Cube' of lwe_precipitation_rate / (mm day-1) (time: 96; latitude: 19; longitude: 36)>
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+scheme = {'reference': 'esmf_regrid.schemes:ESMFAreaWeighted'},
+target_grid = '1x1'
+2025-08-21 09:41:09,327 UTC [142684] DEBUG   esmvalcore.preprocessor._regrid:634 Loaded regridding scheme ESMFAreaWeighted(mdtol=0)
+2025-08-21 09:41:09,881 UTC [142684] DEBUG   esmvalcore.preprocessor:411 Running preprocessor step save
+2025-08-21 09:41:09,882 UTC [142684] DEBUG   esmvalcore.preprocessor:358 Running preprocessor function 'save' on the data
+[<iris 'Cube' of lwe_precipitation_rate / (mm day-1) (time: 96; latitude: 180; longitude: 360)>]
+loaded from original input file(s)
+[LocalFile('<OUTPUT_DIR>/climate_data/CMIP6/CMIP/NCAR/CESM2/historical/r1i1p1f1/Amon/pr/gn/v20190401/pr_Amon_CESM2_historical_r1i1p1f1_gn_200701-201412.nc')]
+with function argument(s)
+compress = False,
+compute = False,
+filename = PosixPath('<OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_CESM2_Amon_historical_r1i1p1f1_pr_gn_20070115T120000-20141215T120000.nc')
+2025-08-21 09:41:09,882 UTC [142684] DEBUG   esmvalcore.preprocessor._io:497 Saving cube:
+lwe_precipitation_rate / (mm day-1) (time: 96; latitude: 180; longitude: 360)
+    Dimension coordinates:
+        time                             x             -               -
+        latitude                         -             x               -
+        longitude                        -             -               x
+    Cell methods:
+        0                           area: time: mean
+    Attributes:
+        Conventions                 'CF-1.7 CMIP-6.2'
+        activity_id                 'CMIP'
+        branch_method               'standard'
+        branch_time_in_child        np.int64(0)
+        branch_time_in_parent       np.int64(-455885)
+        case_id                     '15'
+        cesm_casename               'b.e21.BHIST.f09_g17.CMIP6-historical.001'
+        contact                     'cesm_cmip6@ucar.edu'
+        data_specs_version          '01.00.29'
+        description                 'at surface; includes both liquid and solid phases from all types of clouds ...'
+        experiment                  'all-forcing simulation of the recent past'
+        experiment_id               'historical'
+        external_variables          'areacella'
+        forcing_index               np.int64(1)
+        frequency                   'mon'
+        further_info_url            'https://furtherinfo.es-doc.org/CMIP6.NCAR.CESM2.historical.none.r1i1p1 ...'
+        grid                        'native 0.9x1.25 finite volume grid (192x288 latxlon)'
+        grid_label                  'gn'
+        id                          'pr'
+        initialization_index        np.int64(1)
+        institution                 'National Center for Atmospheric Research, Climate and Global Dynamics Laboratory, ...'
+        institution_id              'NCAR'
+        license                     'CMIP6 model data produced by <The National Center for Atmospheric Research> ...'
+        mipTable                    'Amon'
+        mip_era                     'CMIP6'
+        model_doi_url               'https://doi.org/10.5065/D67H1H0V'
+        nominal_resolution          '100 km'
+        out_name                    'pr'
+        parent_activity_id          'CMIP'
+        parent_experiment_id        'piControl'
+        parent_mip_era              'CMIP6'
+        parent_source_id            'CESM2'
+        parent_time_units           'days since 1850-1-1 00:00:00'
+        parent_variant_label        'r1i1p1f1'
+        physics_index               np.int64(1)
+        product                     'model-output'
+        prov                        'Amon ((isd.003))'
+        realization_index           np.int64(1)
+        realm                       'atmos'
+        source                      'CESM2 (2017): atmosphere: CAM6 (0.9x1.25 finite volume grid; 288 x 192 ...'
+        source_id                   'CESM2'
+        source_type                 'AOGCM BGC'
+        sub_experiment              'none'
+        sub_experiment_id           'none'
+        table_id                    'Amon'
+        time                        'time'
+        time_label                  'time-mean'
+        time_title                  'Temporal mean'
+        title                       'Precipitation'
+        type                        'real'
+        variable_id                 'pr'
+        variant_info                'CMIP6 20th century experiments (1850-2014) with CAM6, interactive land ...'
+        variant_label               'r1i1p1f1'
+with lazy data to <OUTPUT_DIR>/executions/recipe_20250821_094107/preproc/plot_joint_clwvi_pr_model/pr/CMIP6_CESM2_Amon_historical_r1i1p1f1_pr_gn_20070115T120000-20141215T120000.nc
+2025-08-21 09:41:09,890 UTC [142684] INFO    esmvalcore.preprocessor:747 Computing and saving data for preprocessing task plot_joint_clwvi_pr_model/pr
+2025-08-21 09:41:09,892 UTC [142684] DEBUG   asyncio:64 Using selector: EpollSelector
+2025-08-21 09:41:10,102 UTC [142684] INFO    esmvalcore._task:295 Successfully completed task plot_joint_clwvi_pr_model/pr (priority 2) in 0:00:00.799495
+2025-08-21 09:41:10,102 UTC [142684] INFO    esmvalcore._task:289 Starting task plot_joint_clwvi_pr_model/plot in process [142684]
+2025-08-21 09:41:10,104 UTC [142684] INFO    esmvalcore._task:564 Running command ['/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/bin/python', '/home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot/settings.yml']
+2025-08-21 09:41:10,104 UTC [142684] DEBUG   esmvalcore._task:565 in environment
+{'MPLBACKEND': 'Agg'}
+2025-08-21 09:41:10,104 UTC [142684] DEBUG   esmvalcore._task:567 in current working directory: <OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot
+2025-08-21 09:41:10,104 UTC [142684] INFO    esmvalcore._task:568 Writing output to <OUTPUT_DIR>/executions/recipe_20250821_094107/work/plot_joint_clwvi_pr_model/plot
+2025-08-21 09:41:10,104 UTC [142684] INFO    esmvalcore._task:569 Writing plots to <OUTPUT_DIR>/executions/recipe_20250821_094107/plots/plot_joint_clwvi_pr_model/plot
+2025-08-21 09:41:10,105 UTC [142684] INFO    esmvalcore._task:570 Writing log to <OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot/log.txt
+2025-08-21 09:41:10,105 UTC [142684] INFO    esmvalcore._task:580 To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot; MPLBACKEND="Agg" /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/bin/python /home/bandela/climate_ref/software/conda/esmvaltool-f7abde84c4770f4c1d32f292e73d24022beaedb4/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot/settings.yml
+2025-08-21 09:41:14,146 UTC [142684] INFO    esmvalcore._task:141 Maximum memory used (estimate): 0.4 GB
+2025-08-21 09:41:14,147 UTC [142684] INFO    esmvalcore._task:144 Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+2025-08-21 09:41:14,148 UTC [142684] DEBUG   esmvalcore._task:657 Script seaborn_jointplot_histogram.py completed successfully
+2025-08-21 09:41:14,148 UTC [142684] DEBUG   esmvalcore._task:682 Collecting provenance from <OUTPUT_DIR>/executions/recipe_20250821_094107/run/plot_joint_clwvi_pr_model/plot/diagnostic_provenance.yml
+2025-08-21 09:41:14,162 UTC [142684] DEBUG   urllib3.connectionpool:1051 Starting new HTTPS connection (1): cera-www.dkrz.de:443
+2025-08-21 09:41:14,244 UTC [142684] DEBUG   urllib3.connectionpool:546 https://cera-www.dkrz.de:443 "GET /WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.CMIP.NCAR.CESM2.historical HTTP/11" 302 271
+2025-08-21 09:41:14,270 UTC [142684] DEBUG   urllib3.connectionpool:546 https://cera-www.dkrz.de:443 "GET /ui/cerarest/exportcmip6?input=CMIP6.CMIP.NCAR.CESM2.historical HTTP/11" 302 273
+2025-08-21 09:41:14,273 UTC [142684] DEBUG   urllib3.connectionpool:1051 Starting new HTTPS connection (1): www.wdc-climate.de:443
+2025-08-21 09:41:14,345 UTC [142684] DEBUG   urllib3.connectionpool:546 https://www.wdc-climate.de:443 "GET /ui/cerarest/exportcmip6?input=CMIP6.CMIP.NCAR.CESM2.historical HTTP/11" 200 9791
+2025-08-21 09:41:14,357 UTC [142684] DEBUG   PIL.PngImagePlugin:198 STREAM b'IHDR' 16 13
+2025-08-21 09:41:14,357 UTC [142684] DEBUG   PIL.PngImagePlugin:198 STREAM b'tEXt' 41 58
+2025-08-21 09:41:14,357 UTC [142684] DEBUG   PIL.PngImagePlugin:198 STREAM b'pHYs' 111 9
+2025-08-21 09:41:14,357 UTC [142684] DEBUG   PIL.PngImagePlugin:198 STREAM b'IDAT' 132 65536
+2025-08-21 09:41:14,468 UTC [142684] DEBUG   esmvalcore._task:770 Collecting provenance of task plot_joint_clwvi_pr_model/plot took 0.3 seconds
+2025-08-21 09:41:14,468 UTC [142684] INFO    esmvalcore._task:295 Successfully completed task plot_joint_clwvi_pr_model/plot (priority 0) in 0:00:04.366028
+2025-08-21 09:41:14,686 UTC [142684] INFO    esmvalcore._recipe.recipe:1201 Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250821_094107/run/recipe_filled.yml
+2025-08-21 09:41:14,721 UTC [142684] INFO    esmvalcore.experimental.recipe_output:280 Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20250821_094107/index.html
+2025-08-21 09:41:14,721 UTC [142684] INFO    esmvalcore._main:138 Ending the Earth System Model Evaluation Tool at time: 2025-08-21 09:41:14 UTC
+2025-08-21 09:41:14,721 UTC [142684] INFO    esmvalcore._main:142 Time for running the recipe was: 0:00:07.478384
+2025-08-21 09:41:15,167 UTC [142684] INFO    esmvalcore._task:141 Maximum memory used (estimate): 1.5 GB
+2025-08-21 09:41:15,167 UTC [142684] INFO    esmvalcore._task:144 Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+2025-08-21 09:41:15,168 UTC [142684] INFO    esmvalcore._main:518 Removing `preproc` directory containing preprocessed data
+2025-08-21 09:41:15,168 UTC [142684] INFO    esmvalcore._main:521 If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+2025-08-21 09:41:15,175 UTC [142684] INFO    esmvalcore._main:496 Run was successful

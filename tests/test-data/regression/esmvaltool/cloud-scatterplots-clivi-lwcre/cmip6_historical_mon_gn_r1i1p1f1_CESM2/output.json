@@ -1,0 +1,42 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe_20250821_093953/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe_20250821_093953/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20250821_093953/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000_clivi_histogram.nc": {
+      "filename": "executions/recipe_20250821_093953/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000_clivi_histogram.nc",
+      "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 20070115T120000/20141215T120000)",
+      "description": ""
+    },
+    "executions/recipe_20250821_093953/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000_clivi_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20250821_093953/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000_clivi_lwcre_histogram.nc",
+      "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 20070115T120000/20141215T120000)",
+      "description": ""
+    },
+    "executions/recipe_20250821_093953/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20250821_093953/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000_lwcre_histogram.nc",
+      "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 20070115T120000/20141215T120000)",
+      "description": ""
+    }
+  },
+  "plots": {
+    "executions/recipe_20250821_093953/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000.png": {
+      "filename": "executions/recipe_20250821_093953/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_20070115T120000-20141215T120000.png",
+      "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 20070115T120000/20141215T120000)",
+      "description": ""
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe_20250821_093953/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250821_093953/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run."
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

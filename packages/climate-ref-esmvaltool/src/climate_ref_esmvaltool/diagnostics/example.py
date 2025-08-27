@@ -41,7 +41,10 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
     facets = ()
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
         # Clear unwanted elements from the recipe.
         recipe["datasets"].clear()
@@ -50,7 +53,7 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
         variables.clear()
 
         # Prepare updated variables section in recipe.
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
         for variable in recipe_variables.values():
             variable["preprocessor"] = "annual_mean_global"

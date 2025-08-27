@@ -57,9 +57,12 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
     facets = ("experiment_id", "source_id", "region", "metric")
 
     @staticmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         datasets = recipe_variables["tas"]["additional_datasets"]
         for dataset in datasets:
             dataset.pop("mip")

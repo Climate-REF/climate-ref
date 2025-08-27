@@ -12,6 +12,7 @@ from climate_ref_esmvaltool.types import Recipe
 if TYPE_CHECKING:
     import pandas as pd
 
+
 FACETS = {
     "CMIP6": {
         "activity": "activity_id",
@@ -21,6 +22,13 @@ FACETS = {
         "exp": "experiment_id",
         "grid": "grid_label",
         "mip": "table_id",
+        "short_name": "variable_id",
+    },
+    "obs4MIPs": {
+        "dataset": "source_id",
+        "frequency": "frequency",
+        "grid": "grid_label",
+        "institute": "institution_id",
         "short_name": "variable_id",
     },
 }
@@ -90,7 +98,10 @@ def as_facets(
     return facets
 
 
-def dataframe_to_recipe(files: pd.DataFrame) -> dict[str, Any]:
+def dataframe_to_recipe(
+    files: pd.DataFrame,
+    equalize_timerange: bool = False,
+) -> dict[str, Any]:
     """Convert the datasets dataframe to a recipe "variables" section.
 
     Parameters
@@ -110,6 +121,22 @@ def dataframe_to_recipe(files: pd.DataFrame) -> dict[str, Any]:
         if short_name not in variables:
             variables[short_name] = {"additional_datasets": []}
         variables[short_name]["additional_datasets"].append(facets)
+
+    if equalize_timerange:
+        # Select a timerange covered by all datasets.
+        start_times, end_times = [], []
+        for variable in variables.values():
+            for dataset in variable["additional_datasets"]:
+                if "timerange" in dataset:
+                    start, end = dataset["timerange"].split("/")
+                    start_times.append(start)
+                    end_times.append(end)
+        timerange = f"{max(start_times)}/{min(end_times)}"
+        for variable in variables.values():
+            for dataset in variable["additional_datasets"]:
+                if "timerange" in dataset:
+                    dataset["timerange"] = timerange
+
     return variables
 
 
@@ -165,6 +192,12 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if not isinstance(row.path, str):  # pragma: no branch
             msg = f"Invalid path encountered in {row}"
             raise ValueError(msg)
-        tgt = climate_data_dir.joinpath(*row.instance_id.split(".")) / Path(row.path).name
+        project = row.instance_id.split(".")[0]
+        if project == "obs4MIPs":
+            version = row.instance_id.split(".")[-1]
+            tgt = climate_data_dir / project / row.source_id / version  # type: ignore[operator]
+        else:
+            tgt = climate_data_dir.joinpath(*row.instance_id.split("."))
+        tgt /= Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
         tgt.symlink_to(row.path)

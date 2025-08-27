@@ -30,7 +30,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
     @staticmethod
     @abstractmethod
-    def update_recipe(recipe: Recipe, input_files: pandas.DataFrame) -> None:
+    def update_recipe(
+        recipe: Recipe,
+        input_files: dict[SourceDatasetType, pandas.DataFrame],
+    ) -> None:
         """
         Update the base recipe for the run.
 
@@ -84,7 +87,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The result of running the diagnostic.
         """
-        input_files = definition.datasets[SourceDatasetType.CMIP6].datasets
+        input_files = {project: definition.datasets[project].datasets for project in definition.datasets}
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
 
@@ -94,10 +97,11 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
         climate_data = definition.to_output_path("climate_data")
 
-        prepare_climate_data(
-            definition.datasets[SourceDatasetType.CMIP6].datasets,
-            climate_data_dir=climate_data,
-        )
+        for metric_dataset in definition.datasets.values():
+            prepare_climate_data(
+                metric_dataset.datasets,
+                climate_data_dir=climate_data,
+            )
 
         config = {
             "drs": {
@@ -144,7 +148,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         config_dir = definition.to_output_path("config")
         config_dir.mkdir()
         with (config_dir / "config.yml").open("w", encoding="utf-8") as file:
-            yaml.dump(config, file)
+            yaml.safe_dump(config, file)
 
         return [
             "esmvaltool",

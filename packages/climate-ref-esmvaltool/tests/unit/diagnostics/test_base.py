@@ -62,7 +62,7 @@ def test_build_metric_result(metric_definition, mock_diagnostic):
         metadata_file = results_dir / "run" / subdir / "script1" / "diagnostic_provenance.yml"
         metadata_file.parent.mkdir(parents=True)
         with metadata_file.open("w", encoding="utf-8") as file:
-            yaml.dump(metadata, file)
+            yaml.safe_dump(metadata, file)
 
     execution_result = mock_diagnostic.build_execution_result(definition=metric_definition)
     metric_bundle = json.loads(

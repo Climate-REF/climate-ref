@@ -7,7 +7,7 @@ This was a deliberate decision to make it easy to make the framework easy to ins
 Some of the [diagnostic providers](nutshell.md) require additional dependencies in order to run an execution.
 For these providers, the REF can automatically create a new Conda environment and install the required dependencies in this standalone environment.
 Each of these provider-specific environments are decoupled to allow for potentially incompatible dependencies.
-This uses a bundled version of the [micromamba](https://github.com/mamba-org/micromamba-releases)
+This uses a bundled version of [micromamba](https://github.com/mamba-org/micromamba-releases)
 to create and manage the environments so no additional dependencies are required.
 
 /// admonition | HPC Users
@@ -65,7 +65,7 @@ The conda-forge packages are a work in progress and are not yet available.
 See [#80](https://github.com/Climate-REF/climate-ref/issues/80) for more information.
 ///
 
-We intend on providing a recipe on conda-force. Once complete you can install `climate-ref` using `mamba` or `conda`:
+We intend on providing a recipe on conda-forge. Once complete you can install `climate-ref` using `mamba` or `conda`:
 
 ```bash
 mamba install -c conda-forge climate-ref
@@ -96,7 +96,7 @@ If you want to use the latest development version, you can build the Docker imag
 ```bash
 git clone https://github.com/Climate-REF/climate-ref.git
 cd climate-ref
-docker-compose build
+docker build
 ```
 
 If you require the full-stack of services recommended for a production deployment, you can use the `docker-compose` file to start the services.
@@ -125,7 +125,7 @@ See the [development documentation](development.md) for more information on how 
 /// admonition | Windows support
     type: warning
 
-Window's doesn't support some of the packages required by the [diagnostic providers](nutshell.md),
+Windows doesn't support some of the packages required by the [diagnostic providers](nutshell.md),
 so we only support MacOS and Linux.
 Windows users are recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
 or a Linux VM if they wish to use the REF.

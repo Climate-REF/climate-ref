@@ -1,0 +1,144 @@
+documentation:
+  description: 'Recipe that plots diagnostics regarding climate drivers for fire.
+
+    The diagnostic uses code for the ConFire model from the following GitHub repository:
+
+    https://github.com/douglask3/Bayesian_fire_models/tree/AR7_REF'
+  title: Climate drivers for fire.
+  authors:
+  - lenhardt_julien
+  - kelley_douglas
+  maintainer:
+  - lenhardt_julien
+preprocessors:
+  preproc:
+    regrid:
+      target_grid: 2.5x2.5
+      scheme: nearest
+    mask_landsea:
+      mask_out: sea
+  preproc_fraction:
+    regrid:
+      target_grid: 2.5x2.5
+      scheme: nearest
+    mask_landsea:
+      mask_out: sea
+    convert_units:
+      units: 1
+  default: {}
+diagnostics:
+  fire_evaluation:
+    description: Climate drivers for fire
+    variables:
+      pr:
+        mip: Amon
+        preprocessor: preproc
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+      tasmax:
+        mip: Amon
+        preprocessor: preproc
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+      treeFrac:
+        mip: Lmon
+        preprocessor: preproc_fraction
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+      vegFrac:
+        mip: Emon
+        preprocessor: preproc_fraction
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+      cVeg:
+        mip: Lmon
+        preprocessor: preproc
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+      tas:
+        mip: Amon
+        preprocessor: preproc
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+      hurs:
+        mip: Amon
+        preprocessor: preproc
+        project: CMIP6
+        activity: CMIP
+        ensemble: r1i1p1f1
+        institute: CSIRO
+        exp: historical
+        grid: gn
+        timerange: 20130116T120000/20141216T120000
+        version: v20191115
+        supplementary_variables:
+        - mip: fx
+          short_name: sftlf
+    scripts:
+      fire_evaluation:
+        script: fire/fire_diagnostic.py
+        confire_param: https://zenodo.org/records/14917245
+        var_order:
+        - pr
+        - tasmax
+        - treeFrac
+        - vegFrac
+        - vpd
+        - cVeg
+        remove_confire_files: true
+datasets:
+- dataset: ACCESS-ESM1-5

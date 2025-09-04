@@ -1,0 +1,27 @@
+confire_param: https://zenodo.org/records/14917245
+var_order:
+- pr
+- tasmax
+- treeFrac
+- vegFrac
+- vpd
+- cVeg
+remove_confire_files: true
+recipe: recipe.yml
+version: 2.12.0
+script: fire_evaluation
+run_dir: <OUTPUT_DIR>/executions/recipe_20250904_145222/run/fire_evaluation/fire_evaluation
+plot_dir: <OUTPUT_DIR>/executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation
+work_dir: <OUTPUT_DIR>/executions/recipe_20250904_145222/work/fire_evaluation/fire_evaluation
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+scheduler_address: tcp://127.0.0.1:44557
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/pr/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/tasmax/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/treeFrac/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/vegFrac/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/cVeg/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/tas/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20250904_145222/preproc/fire_evaluation/hurs/metadata.yml

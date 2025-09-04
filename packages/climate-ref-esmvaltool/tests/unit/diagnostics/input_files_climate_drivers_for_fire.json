@@ -1,0 +1,362 @@
+{
+    "start_time":{
+        "83":"2013-01-16T12:00:00.000",
+        "84":"2013-01-16T12:00:00.000",
+        "85":"2013-01-16T12:00:00.000",
+        "86":"2013-01-16T12:00:00.000",
+        "87":"2013-01-16T12:00:00.000",
+        "17":"1850-01-16T12:00:00.000",
+        "24":"1850-01-16T12:00:00.000",
+        "41":null
+    },
+    "end_time":{
+        "83":"2014-12-16T12:00:00.000",
+        "84":"2014-12-16T12:00:00.000",
+        "85":"2014-12-16T12:00:00.000",
+        "86":"2014-12-16T12:00:00.000",
+        "87":"2014-12-16T12:00:00.000",
+        "17":"2014-12-16T12:00:00.000",
+        "24":"2014-12-16T12:00:00.000",
+        "41":null
+    },
+    "path":{
+        "83":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/hurs\/gn\/v20191115\/hurs_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201301-201412.nc",
+        "84":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/tasmax\/gn\/v20191115\/tasmax_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201301-201412.nc",
+        "85":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Emon\/vegFrac\/gn\/v20191115\/vegFrac_Emon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201301-201412.nc",
+        "86":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Lmon\/cVeg\/gn\/v20191115\/cVeg_Lmon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201301-201412.nc",
+        "87":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Lmon\/treeFrac\/gn\/v20191115\/treeFrac_Lmon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201301-201412.nc",
+        "17":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/pr\/gn\/v20191115\/pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+        "24":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/Amon\/tas\/gn\/v20191115\/tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+        "41":"\/home\/bandela\/src\/Climate-REF\/ref-sample-data\/data\/CMIP6\/CMIP\/CSIRO\/ACCESS-ESM1-5\/historical\/r1i1p1f1\/fx\/sftlf\/gn\/v20191115\/sftlf_fx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc"
+    },
+    "activity_id":{
+        "83":"CMIP",
+        "84":"CMIP",
+        "85":"CMIP",
+        "86":"CMIP",
+        "87":"CMIP",
+        "17":"CMIP",
+        "24":"CMIP",
+        "41":"CMIP"
+    },
+    "branch_method":{
+        "83":"standard",
+        "84":"standard",
+        "85":"standard",
+        "86":"standard",
+        "87":"standard",
+        "17":"standard",
+        "24":"standard",
+        "41":"standard"
+    },
+    "branch_time_in_child":{
+        "83":0.0,
+        "84":0.0,
+        "85":0.0,
+        "86":0.0,
+        "87":0.0,
+        "17":0.0,
+        "24":0.0,
+        "41":0.0
+    },
+    "branch_time_in_parent":{
+        "83":21915.0,
+        "84":21915.0,
+        "85":21915.0,
+        "86":21915.0,
+        "87":21915.0,
+        "17":21915.0,
+        "24":21915.0,
+        "41":21915.0
+    },
+    "experiment":{
+        "83":"all-forcing simulation of the recent past",
+        "84":"all-forcing simulation of the recent past",
+        "85":"all-forcing simulation of the recent past",
+        "86":"all-forcing simulation of the recent past",
+        "87":"all-forcing simulation of the recent past",
+        "17":"all-forcing simulation of the recent past",
+        "24":"all-forcing simulation of the recent past",
+        "41":"all-forcing simulation of the recent past"
+    },
+    "experiment_id":{
+        "83":"historical",
+        "84":"historical",
+        "85":"historical",
+        "86":"historical",
+        "87":"historical",
+        "17":"historical",
+        "24":"historical",
+        "41":"historical"
+    },
+    "frequency":{
+        "83":"mon",
+        "84":"mon",
+        "85":"mon",
+        "86":"mon",
+        "87":"mon",
+        "17":"mon",
+        "24":"mon",
+        "41":"fx"
+    },
+    "grid":{
+        "83":"native atmosphere N96 grid (145x192 latxlon)",
+        "84":"native atmosphere N96 grid (145x192 latxlon)",
+        "85":"native atmosphere N96 grid (145x192 latxlon)",
+        "86":"native atmosphere N96 grid (145x192 latxlon)",
+        "87":"native atmosphere N96 grid (145x192 latxlon)",
+        "17":"native atmosphere N96 grid (145x192 latxlon)",
+        "24":"native atmosphere N96 grid (145x192 latxlon)",
+        "41":"native atmosphere N96 grid (145x192 latxlon)"
+    },
+    "grid_label":{
+        "83":"gn",
+        "84":"gn",
+        "85":"gn",
+        "86":"gn",
+        "87":"gn",
+        "17":"gn",
+        "24":"gn",
+        "41":"gn"
+    },
+    "institution_id":{
+        "83":"CSIRO",
+        "84":"CSIRO",
+        "85":"CSIRO",
+        "86":"CSIRO",
+        "87":"CSIRO",
+        "17":"CSIRO",
+        "24":"CSIRO",
+        "41":"CSIRO"
+    },
+    "nominal_resolution":{
+        "83":"250 km",
+        "84":"250 km",
+        "85":"250 km",
+        "86":"250 km",
+        "87":"250 km",
+        "17":"250 km",
+        "24":"250 km",
+        "41":"250 km"
+    },
+    "parent_activity_id":{
+        "83":"CMIP",
+        "84":"CMIP",
+        "85":"CMIP",
+        "86":"CMIP",
+        "87":"CMIP",
+        "17":"CMIP",
+        "24":"CMIP",
+        "41":"CMIP"
+    },
+    "parent_experiment_id":{
+        "83":"piControl",
+        "84":"piControl",
+        "85":"piControl",
+        "86":"piControl",
+        "87":"piControl",
+        "17":"piControl",
+        "24":"piControl",
+        "41":"piControl"
+    },
+    "parent_source_id":{
+        "83":"ACCESS-ESM1-5",
+        "84":"ACCESS-ESM1-5",
+        "85":"ACCESS-ESM1-5",
+        "86":"ACCESS-ESM1-5",
+        "87":"ACCESS-ESM1-5",
+        "17":"ACCESS-ESM1-5",
+        "24":"ACCESS-ESM1-5",
+        "41":"ACCESS-ESM1-5"
+    },
+    "parent_time_units":{
+        "83":"days since 0101-1-1",
+        "84":"days since 0101-1-1",
+        "85":"days since 0101-1-1",
+        "86":"days since 0101-1-1",
+        "87":"days since 0101-1-1",
+        "17":"days since 0101-1-1",
+        "24":"days since 0101-1-1",
+        "41":"days since 0101-1-1"
+    },
+    "parent_variant_label":{
+        "83":"r1i1p1f1",
+        "84":"r1i1p1f1",
+        "85":"r1i1p1f1",
+        "86":"r1i1p1f1",
+        "87":"r1i1p1f1",
+        "17":"r1i1p1f1",
+        "24":"r1i1p1f1",
+        "41":"r1i1p1f1"
+    },
+    "product":{
+        "83":"model-output",
+        "84":"model-output",
+        "85":"model-output",
+        "86":"model-output",
+        "87":"model-output",
+        "17":"model-output",
+        "24":"model-output",
+        "41":"model-output"
+    },
+    "realm":{
+        "83":"atmos",
+        "84":"atmos",
+        "85":"land",
+        "86":"land",
+        "87":"land",
+        "17":"atmos",
+        "24":"atmos",
+        "41":"atmos"
+    },
+    "source_id":{
+        "83":"ACCESS-ESM1-5",
+        "84":"ACCESS-ESM1-5",
+        "85":"ACCESS-ESM1-5",
+        "86":"ACCESS-ESM1-5",
+        "87":"ACCESS-ESM1-5",
+        "17":"ACCESS-ESM1-5",
+        "24":"ACCESS-ESM1-5",
+        "41":"ACCESS-ESM1-5"
+    },
+    "source_type":{
+        "83":"AOGCM",
+        "84":"AOGCM",
+        "85":"AOGCM",
+        "86":"AOGCM",
+        "87":"AOGCM",
+        "17":"AOGCM",
+        "24":"AOGCM",
+        "41":"AOGCM"
+    },
+    "sub_experiment":{
+        "83":"none",
+        "84":"none",
+        "85":"none",
+        "86":"none",
+        "87":"none",
+        "17":"none",
+        "24":"none",
+        "41":"none"
+    },
+    "sub_experiment_id":{
+        "83":"none",
+        "84":"none",
+        "85":"none",
+        "86":"none",
+        "87":"none",
+        "17":"none",
+        "24":"none",
+        "41":"none"
+    },
+    "table_id":{
+        "83":"Amon",
+        "84":"Amon",
+        "85":"Emon",
+        "86":"Lmon",
+        "87":"Lmon",
+        "17":"Amon",
+        "24":"Amon",
+        "41":"fx"
+    },
+    "variable_id":{
+        "83":"hurs",
+        "84":"tasmax",
+        "85":"vegFrac",
+        "86":"cVeg",
+        "87":"treeFrac",
+        "17":"pr",
+        "24":"tas",
+        "41":"sftlf"
+    },
+    "variant_label":{
+        "83":"r1i1p1f1",
+        "84":"r1i1p1f1",
+        "85":"r1i1p1f1",
+        "86":"r1i1p1f1",
+        "87":"r1i1p1f1",
+        "17":"r1i1p1f1",
+        "24":"r1i1p1f1",
+        "41":"r1i1p1f1"
+    },
+    "member_id":{
+        "83":"r1i1p1f1",
+        "84":"r1i1p1f1",
+        "85":"r1i1p1f1",
+        "86":"r1i1p1f1",
+        "87":"r1i1p1f1",
+        "17":"r1i1p1f1",
+        "24":"r1i1p1f1",
+        "41":"r1i1p1f1"
+    },
+    "vertical_levels":{
+        "83":1,
+        "84":1,
+        "85":1,
+        "86":1,
+        "87":1,
+        "17":1,
+        "24":1,
+        "41":1
+    },
+    "version":{
+        "83":"v20191115",
+        "84":"v20191115",
+        "85":"v20191115",
+        "86":"v20191115",
+        "87":"v20191115",
+        "17":"v20191115",
+        "24":"v20191115",
+        "41":"v20191115"
+    },
+    "standard_name":{
+        "83":"relative_humidity",
+        "84":"air_temperature",
+        "85":"area_fraction",
+        "86":"vegetation_carbon_content",
+        "87":"area_fraction",
+        "17":"precipitation_flux",
+        "24":"air_temperature",
+        "41":"land_area_fraction"
+    },
+    "long_name":{
+        "83":"Near-Surface Relative Humidity",
+        "84":"Daily Maximum Near-Surface Air Temperature",
+        "85":"Total Vegetated Percentage Cover",
+        "86":"Carbon Mass in Vegetation",
+        "87":"Tree Cover Percentage",
+        "17":"Precipitation",
+        "24":"Near-Surface Air Temperature",
+        "41":"Percentage of the grid  cell occupied by land (including lakes)"
+    },
+    "units":{
+        "83":"%",
+        "84":"K",
+        "85":"%",
+        "86":"kg m-2",
+        "87":"%",
+        "17":"kg m-2 s-1",
+        "24":"K",
+        "41":"%"
+    },
+    "finalised":{
+        "83":true,
+        "84":true,
+        "85":true,
+        "86":true,
+        "87":true,
+        "17":true,
+        "24":true,
+        "41":true
+    },
+    "instance_id":{
+        "83":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hurs.gn.v20191115",
+        "84":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tasmax.gn.v20191115",
+        "85":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Emon.vegFrac.gn.v20191115",
+        "86":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.cVeg.gn.v20191115",
+        "87":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.treeFrac.gn.v20191115",
+        "17":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115",
+        "24":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115",
+        "41":"CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115"
+    }
+}

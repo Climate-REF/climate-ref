@@ -1,6 +1,7 @@
 """ESMValTool diagnostics."""
 
 from climate_ref_esmvaltool.diagnostics.climate_at_global_warming_levels import ClimateAtGlobalWarmingLevels
+from climate_ref_esmvaltool.diagnostics.climate_drivers_for_fire import ClimateDriversForFire
 from climate_ref_esmvaltool.diagnostics.cloud_radiative_effects import CloudRadiativeEffects
 from climate_ref_esmvaltool.diagnostics.cloud_scatterplots import (
     CloudScatterplotCliTa,
@@ -20,6 +21,7 @@ from climate_ref_esmvaltool.diagnostics.zec import ZeroEmissionCommitment
 
 __all__ = [
     "ClimateAtGlobalWarmingLevels",
+    "ClimateDriversForFire",
     "CloudRadiativeEffects",
     "CloudScatterplotCliTa",
     "CloudScatterplotCliviLwcre",

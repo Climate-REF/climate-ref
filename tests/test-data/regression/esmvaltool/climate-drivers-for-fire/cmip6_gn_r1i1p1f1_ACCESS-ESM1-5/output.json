@@ -1,0 +1,42 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe_20250904_145222/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe_20250904_145222/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20250904_145222/work/fire_evaluation/fire_evaluation/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_vpd_gn_20130116T120000-20141216T120000.nc": {
+      "filename": "executions/recipe_20250904_145222/work/fire_evaluation/fire_evaluation/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_vpd_gn_20130116T120000-20141216T120000.nc",
+      "long_name": "",
+      "description": ""
+    }
+  },
+  "plots": {
+    "executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation/burnt_fraction_ACCESS-ESM1-5_historical_2013_2014.png": {
+      "filename": "executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation/burnt_fraction_ACCESS-ESM1-5_historical_2013_2014.png",
+      "long_name": "Burnt area fraction for the ACCESS-ESM1-5 (CMIP6-historical) for the time period 20130116T120000/20141216T120000 as computed with the ConFire model (Jones et al., 2024).",
+      "description": ""
+    },
+    "executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation/fire_weather_control_ACCESS-ESM1-5_historical_2013_2014.png": {
+      "filename": "executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation/fire_weather_control_ACCESS-ESM1-5_historical_2013_2014.png",
+      "long_name": "Fire weather control for the ACCESS-ESM1-5 (CMIP6-historical) for the time period 20130116T120000/20141216T120000 as computed with the ConFire model (Jones et al., 2024).",
+      "description": ""
+    },
+    "executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_ACCESS-ESM1-5_historical_2013_2014.png": {
+      "filename": "executions/recipe_20250904_145222/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_ACCESS-ESM1-5_historical_2013_2014.png",
+      "long_name": "Fuel load continuity control for the ACCESS-ESM1-5 (CMIP6-historical) for the time period 20130116T120000/20141216T120000 as computed with the ConFire model (Jones et al., 2024).",
+      "description": ""
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe_20250904_145222/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20250904_145222/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run."
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

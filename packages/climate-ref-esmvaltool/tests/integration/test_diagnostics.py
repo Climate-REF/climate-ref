@@ -3,7 +3,22 @@ from climate_ref_esmvaltool import provider
 
 from climate_ref_core.diagnostics import Diagnostic
 
-diagnostics = [pytest.param(diagnostic, id=diagnostic.slug) for diagnostic in provider.diagnostics()]
+SKIP = {
+    "regional-historical-annual-cycle",
+    "regional-historical-timeseries",
+}
+
+diagnostics = [
+    pytest.param(
+        diagnostic,
+        id=diagnostic.slug,
+        marks=pytest.mark.skipif(
+            diagnostic.slug in SKIP,
+            reason="Output data too large to store in git",
+        ),
+    )
+    for diagnostic in provider.diagnostics()
+]
 
 
 @pytest.mark.slow

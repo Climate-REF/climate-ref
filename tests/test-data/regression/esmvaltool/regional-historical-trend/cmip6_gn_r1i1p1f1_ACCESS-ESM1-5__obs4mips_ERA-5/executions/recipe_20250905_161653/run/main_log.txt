@@ -1,0 +1,406 @@
+INFO    [673519] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [673519] Package versions
+INFO    [673519] ----------------
+INFO    [673519] ESMValCore: 2.12.0
+INFO    [673519] ESMValTool: 2.13.0.dev148+g2c438d0e0
+INFO    [673519] ----------------
+INFO    [673519] Reading configuration files from:
+/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [673519] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20250905_161653/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20250905_161653/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20250905_161653/run/cmor_log.txt
+WARNING [673519] /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmpy/interface/loadESMF.py:94: VersionWarning: ESMF installation version 8.8.0, ESMPy version 8.8.0b0
+  warnings.warn("ESMF installation version {}, ESMPy version {}".format(
+
+INFO    [673519] Starting the Earth System Model Evaluation Tool at time: 2025-09-05 16:17:08 UTC
+INFO    [673519] ----------------------------------------------------------------------
+INFO    [673519] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [673519] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20250905_161653/run
+INFO    [673519] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20250905_161653/work
+INFO    [673519] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20250905_161653/preproc
+INFO    [673519] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20250905_161653/plots
+INFO    [673519] ----------------------------------------------------------------------
+INFO    [673519] Running tasks using at most 10 processes
+INFO    [673519] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [673519] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [673519] For Dataset: tas, Amon, OBS, HadCRUT5, 5.0.1.0-analysis, supplementaries: areacella, *, *: ignoring supplementary variable 'areacella', unable to expand wildcards 'mip', 'version'.
+INFO    [673519] For Dataset: tas, Amon, obs4MIPs, ERA-5, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [673519] For Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [673519] For Dataset: pr, Amon, native6, ERA5, v1, supplementaries: areacella, *, *: ignoring supplementary variable 'areacella', unable to expand wildcards 'mip', 'version'.
+INFO    [673519] For Dataset: psl, Amon, obs4MIPs, ERA-5, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [673519] For Dataset: ua, Amon, obs4MIPs, ERA-5, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [673519] For Dataset: hus, Amon, native6, ERA5, v1, supplementaries: areacella, *, *: ignoring supplementary variable 'areacella', unable to expand wildcards 'mip', 'version'.
+INFO    [673519] Creating tasks from recipe
+INFO    [673519] Creating tasks for diagnostic tas_trends
+INFO    [673519] Creating diagnostic task tas_trends/plot
+INFO    [673519] Creating preprocessor task tas_trends/tas
+INFO    [673519] Creating preprocessor 'trend_tas' task for variable 'tas'
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'tas_trends',
+ 'variable_group': 'tas',
+ 'dataset': 'HadCRUT5',
+ 'project': 'OBS',
+ 'mip': 'Amon',
+ 'short_name': 'tas',
+ 'alias': 'OBS',
+ 'frequency': 'mon',
+ 'long_name': 'Near-Surface Air Temperature',
+ 'modeling_realm': ['atmos'],
+ 'original_short_name': 'tas',
+ 'preprocessor': 'trend_tas',
+ 'recipe_dataset_index': 0,
+ 'standard_name': 'air_temperature',
+ 'tier': 2,
+ 'timerange': '1980/2009',
+ 'type': 'ground',
+ 'units': 'K',
+ 'version': '5.0.1.0-analysis'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: tas, Amon, OBS, HadCRUT5, 5.0.1.0-analysis
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'tas_trends',
+ 'variable_group': 'tas',
+ 'dataset': 'ERA-5',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'tas',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Near-Surface Air Temperature',
+ 'modeling_realm': [],
+ 'original_short_name': 'tas',
+ 'preprocessor': 'trend_tas',
+ 'recipe_dataset_index': 1,
+ 'reference_for_metric': "true'",
+ 'standard_name': 'air_temperature',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'K'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: tas, Amon, obs4MIPs, ERA-5, v20250220
+INFO    [673519] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [673519] PreprocessingTask tas_trends/tas created.
+INFO    [673519] Creating tasks for diagnostic pr_trends
+INFO    [673519] Creating diagnostic task pr_trends/plot
+INFO    [673519] Creating preprocessor task pr_trends/pr
+INFO    [673519] Creating preprocessor 'trend_pr' task for variable 'pr'
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'pr_trends',
+ 'variable_group': 'pr',
+ 'dataset': 'GPCP-V2.3',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'pr',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'modeling_realm': [],
+ 'original_short_name': 'pr',
+ 'preprocessor': 'trend_pr',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': True,
+ 'standard_name': 'precipitation_flux',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'kg m-2 s-1'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'pr_trends',
+ 'variable_group': 'pr',
+ 'dataset': 'ERA5',
+ 'project': 'native6',
+ 'mip': 'Amon',
+ 'short_name': 'pr',
+ 'alias': 'native6',
+ 'automatic_regrid': True,
+ 'family': 'E5',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'modeling_realm': ['atmos'],
+ 'original_short_name': 'pr',
+ 'preprocessor': 'trend_pr',
+ 'recipe_dataset_index': 1,
+ 'reference_for_metric': True,
+ 'standard_name': 'precipitation_flux',
+ 'tier': 3,
+ 'timerange': '1980/2009',
+ 'tres': '1M',
+ 'type': 'reanaly',
+ 'typeid': '00',
+ 'units': 'kg m-2 s-1',
+ 'version': 'v1'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: pr, Amon, native6, ERA5, v1
+INFO    [673519] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [673519] PreprocessingTask pr_trends/pr created.
+INFO    [673519] Creating tasks for diagnostic psl_trends
+INFO    [673519] Creating diagnostic task psl_trends/plot
+INFO    [673519] Creating preprocessor task psl_trends/psl
+INFO    [673519] Creating preprocessor 'trend_psl' task for variable 'psl'
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'psl_trends',
+ 'variable_group': 'psl',
+ 'dataset': 'ERA-5',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'psl',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Level Pressure',
+ 'modeling_realm': [],
+ 'original_short_name': 'psl',
+ 'preprocessor': 'trend_psl',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': "true'",
+ 'standard_name': 'air_pressure_at_mean_sea_level',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'Pa'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: psl, Amon, obs4MIPs, ERA-5, v20250220
+INFO    [673519] Found input files for Dataset: psl, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [673519] PreprocessingTask psl_trends/psl created.
+INFO    [673519] Creating tasks for diagnostic ua200_trends
+INFO    [673519] Creating diagnostic task ua200_trends/plot
+INFO    [673519] Creating preprocessor task ua200_trends/ua
+INFO    [673519] Creating preprocessor 'trend_ua200' task for variable 'ua'
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'ua200_trends',
+ 'variable_group': 'ua',
+ 'dataset': 'ERA-5',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'ua',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Eastward Wind',
+ 'modeling_realm': [],
+ 'original_short_name': 'ua',
+ 'preprocessor': 'trend_ua200',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': "true'",
+ 'standard_name': 'eastward_wind',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'm s-1'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: ua, Amon, obs4MIPs, ERA-5, v20250220
+INFO    [673519] Found input files for Dataset: ua, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [673519] PreprocessingTask ua200_trends/ua created.
+INFO    [673519] Creating tasks for diagnostic hus200_trends
+INFO    [673519] Creating diagnostic task hus200_trends/plot
+INFO    [673519] Creating preprocessor task hus200_trends/hus
+INFO    [673519] Creating preprocessor 'trend_hus200' task for variable 'hus'
+WARNING [673519] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'hus200_trends',
+ 'variable_group': 'hus',
+ 'dataset': 'ERA5',
+ 'project': 'native6',
+ 'mip': 'Amon',
+ 'short_name': 'hus',
+ 'alias': 'native6',
+ 'automatic_regrid': True,
+ 'family': 'E5',
+ 'frequency': 'mon',
+ 'grib_id': '133',
+ 'level': 'pl',
+ 'long_name': 'Specific Humidity',
+ 'modeling_realm': ['atmos'],
+ 'original_short_name': 'hus',
+ 'preprocessor': 'trend_hus200',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': True,
+ 'standard_name': 'specific_humidity',
+ 'tier': 3,
+ 'timerange': '1980/2009',
+ 'tres': '1M',
+ 'type': 'reanaly',
+ 'typeid': '00',
+ 'units': '1',
+ 'version': 'v1'}
+session: 'recipe_20250905_161653'.
+INFO    [673519] Found input files for Dataset: hus, Amon, native6, ERA5, v1
+INFO    [673519] Found input files for Dataset: hus, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [673519] PreprocessingTask hus200_trends/hus created.
+INFO    [673519] These tasks will be executed: tas_trends/tas, hus200_trends/hus, psl_trends/psl, pr_trends/plot, ua200_trends/ua, tas_trends/plot, psl_trends/plot, pr_trends/pr, ua200_trends/plot, hus200_trends/plot
+INFO    [673519] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250905_161653/run/recipe_filled.yml
+INFO    [673519] Using Dask distributed scheduler (address: tcp://127.0.0.1:37413, dashboard link: http://127.0.0.1:8787/status)
+INFO    [673519] Running 10 tasks using 10 processes
+INFO    [673975] Starting task tas_trends/tas in process [673975]
+INFO    [673979] Starting task psl_trends/psl in process [673979]
+INFO    [673977] Starting task pr_trends/pr in process [673977]
+INFO    [673981] Starting task ua200_trends/ua in process [673981]
+INFO    [673983] Starting task hus200_trends/hus in process [673983]
+INFO    [673519] Progress: 5 tasks running, 5 tasks waiting for ancestors, 0/10 done
+INFO    [673981] Computing and saving data for preprocessing task ua200_trends/ua
+WARNING [673981] /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/distributed/client.py:3370: UserWarning: Sending large graph of size 54.39 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+
+INFO    [673981] ua200_trends/ua               [########################################] | 100% Completed | 5.40 s
+INFO    [673979] Computing and saving data for preprocessing task psl_trends/psl
+INFO    [673981] Successfully completed task ua200_trends/ua (priority 7) in 0:00:08.697849
+WARNING [673979] /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/distributed/client.py:3370: UserWarning: Sending large graph of size 54.39 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+
+INFO    [673519] Progress: 4 tasks running, 5 tasks waiting for ancestors, 1/10 done
+INFO    [673519] Progress: 5 tasks running, 4 tasks waiting for ancestors, 1/10 done
+INFO    [673985] Starting task ua200_trends/plot in process [673985]
+INFO    [673985] Running command ['/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python', '/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20250905_161653/run/ua200_trends/plot/settings.yml']
+INFO    [673985] Writing output to <OUTPUT_DIR>/executions/recipe_20250905_161653/work/ua200_trends/plot
+INFO    [673985] Writing plots to <OUTPUT_DIR>/executions/recipe_20250905_161653/plots/ua200_trends/plot
+INFO    [673985] Writing log to <OUTPUT_DIR>/executions/recipe_20250905_161653/run/ua200_trends/plot/log.txt
+INFO    [673985] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250905_161653/run/ua200_trends/plot; MPLBACKEND="Agg" /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20250905_161653/run/ua200_trends/plot/settings.yml
+INFO    [673979] psl_trends/psl                [########################################] | 100% Completed | 3.23 s
+INFO    [673975] Computing and saving data for preprocessing task tas_trends/tas
+INFO    [673979] Successfully completed task psl_trends/psl (priority 5) in 0:00:12.033648
+WARNING [673975] /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/distributed/client.py:3370: UserWarning: Sending large graph of size 54.65 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+
+INFO    [673519] Progress: 4 tasks running, 4 tasks waiting for ancestors, 2/10 done
+INFO    [673519] Progress: 5 tasks running, 3 tasks waiting for ancestors, 2/10 done
+INFO    [673987] Starting task psl_trends/plot in process [673987]
+INFO    [673987] Running command ['/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python', '/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20250905_161653/run/psl_trends/plot/settings.yml']
+INFO    [673987] Writing output to <OUTPUT_DIR>/executions/recipe_20250905_161653/work/psl_trends/plot
+INFO    [673987] Writing plots to <OUTPUT_DIR>/executions/recipe_20250905_161653/plots/psl_trends/plot
+INFO    [673987] Writing log to <OUTPUT_DIR>/executions/recipe_20250905_161653/run/psl_trends/plot/log.txt
+INFO    [673987] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250905_161653/run/psl_trends/plot; MPLBACKEND="Agg" /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20250905_161653/run/psl_trends/plot/settings.yml
+INFO    [673975] tas_trends/tas                [########################################] | 100% Completed | 4.41 s
+INFO    [673983] Computing and saving data for preprocessing task hus200_trends/hus
+INFO    [673975] Successfully completed task tas_trends/tas (priority 1) in 0:00:16.561848
+INFO    [673519] Progress: 4 tasks running, 3 tasks waiting for ancestors, 3/10 done
+INFO    [673989] Starting task tas_trends/plot in process [673989]
+INFO    [673989] Running command ['/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python', '/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20250905_161653/run/tas_trends/plot/settings.yml']
+INFO    [673989] Writing output to <OUTPUT_DIR>/executions/recipe_20250905_161653/work/tas_trends/plot
+INFO    [673989] Writing plots to <OUTPUT_DIR>/executions/recipe_20250905_161653/plots/tas_trends/plot
+INFO    [673989] Writing log to <OUTPUT_DIR>/executions/recipe_20250905_161653/run/tas_trends/plot/log.txt
+INFO    [673989] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250905_161653/run/tas_trends/plot; MPLBACKEND="Agg" /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20250905_161653/run/tas_trends/plot/settings.yml
+INFO    [673519] Progress: 5 tasks running, 2 tasks waiting for ancestors, 3/10 done
+WARNING [673983] /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/distributed/client.py:3370: UserWarning: Sending large graph of size 101.64 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+
+INFO    [673989] Maximum memory used (estimate): 0.4 GB
+INFO    [673989] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [673987] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+WARNING [673989] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+INFO    [673983] hus200_trends/hus             [###########                             ] |  29% Completed | 10.38 s
+INFO    [673985] Maximum memory used (estimate): 0.5 GB
+INFO    [673985] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [673985] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+INFO    [673987] Successfully completed task psl_trends/plot (priority 4) in 0:00:15.857407
+INFO    [673989] Successfully completed task tas_trends/plot (priority 0) in 0:00:11.902591
+INFO    [673519] Progress: 3 tasks running, 2 tasks waiting for ancestors, 5/10 done
+INFO    [673985] Successfully completed task ua200_trends/plot (priority 6) in 0:00:19.987894
+INFO    [673519] Progress: 2 tasks running, 2 tasks waiting for ancestors, 6/10 done
+INFO    [673983] hus200_trends/hus             [##########################              ] |  66% Completed | 20.54 s
+INFO    [673983] hus200_trends/hus             [####################################### ] |  99% Completed | 30.55 s
+INFO    [673983] hus200_trends/hus             [########################################] | 100% Completed | 31.55 s
+INFO    [673977] Computing and saving data for preprocessing task pr_trends/pr
+INFO    [673983] Successfully completed task hus200_trends/hus (priority 9) in 0:00:48.885247
+INFO    [673519] Progress: 1 tasks running, 2 tasks waiting for ancestors, 7/10 done
+INFO    [673991] Starting task hus200_trends/plot in process [673991]
+INFO    [673991] Running command ['/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python', '/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20250905_161653/run/hus200_trends/plot/settings.yml']
+INFO    [673991] Writing output to <OUTPUT_DIR>/executions/recipe_20250905_161653/work/hus200_trends/plot
+INFO    [673991] Writing plots to <OUTPUT_DIR>/executions/recipe_20250905_161653/plots/hus200_trends/plot
+INFO    [673991] Writing log to <OUTPUT_DIR>/executions/recipe_20250905_161653/run/hus200_trends/plot/log.txt
+INFO    [673991] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250905_161653/run/hus200_trends/plot; MPLBACKEND="Agg" /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20250905_161653/run/hus200_trends/plot/settings.yml
+INFO    [673519] Progress: 2 tasks running, 1 tasks waiting for ancestors, 7/10 done
+WARNING [673977] /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/distributed/client.py:3370: UserWarning: Sending large graph of size 102.23 MiB.
+This may cause some slowdown.
+Consider loading the data with Dask directly
+ or using futures or delayed objects to embed the data into the graph without repetition.
+See also https://docs.dask.org/en/stable/best-practices.html#load-data-with-dask for more information.
+  warnings.warn(
+
+INFO    [673977] pr_trends/pr                  [###############                         ] |  39% Completed | 10.56 s
+INFO    [673991] Maximum memory used (estimate): 0.5 GB
+INFO    [673991] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [673991] Successfully completed task hus200_trends/plot (priority 8) in 0:00:15.874362
+INFO    [673519] Progress: 1 tasks running, 1 tasks waiting for ancestors, 8/10 done
+INFO    [673977] pr_trends/pr                  [##################################      ] |  86% Completed | 21.35 s
+INFO    [673977] pr_trends/pr                  [########################################] | 100% Completed | 26.37 s
+INFO    [673977] Successfully completed task pr_trends/pr (priority 3) in 0:01:16.273505
+INFO    [673519] Progress: 0 tasks running, 1 tasks waiting for ancestors, 9/10 done
+INFO    [673993] Starting task pr_trends/plot in process [673993]
+INFO    [673993] Running command ['/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python', '/work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20250905_161653/run/pr_trends/plot/settings.yml']
+INFO    [673993] Writing output to <OUTPUT_DIR>/executions/recipe_20250905_161653/work/pr_trends/plot
+INFO    [673993] Writing plots to <OUTPUT_DIR>/executions/recipe_20250905_161653/plots/pr_trends/plot
+INFO    [673993] Writing log to <OUTPUT_DIR>/executions/recipe_20250905_161653/run/pr_trends/plot/log.txt
+INFO    [673993] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20250905_161653/run/pr_trends/plot; MPLBACKEND="Agg" /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/lib/python3.12/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20250905_161653/run/pr_trends/plot/settings.yml
+INFO    [673519] Progress: 1 tasks running, 0 tasks waiting for ancestors, 9/10 done
+INFO    [673993] Maximum memory used (estimate): 0.5 GB
+INFO    [673993] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [673993] Successfully completed task pr_trends/plot (priority 2) in 0:00:09.448707
+INFO    [673519] Progress: 0 tasks running, 0 tasks waiting for ancestors, 10/10 done
+INFO    [673519] Successfully completed all tasks.
+INFO    [673519] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20250905_161653/run/recipe_filled.yml
+INFO    [673519] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20250905_161653/index.html
+INFO    [673519] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.6 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /work/bk1088/b381141/climate_ref/software/conda/esmvaltool-197808f258098b81baadbfd8a852cc999f7b812b/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20250905_161653
+Then visit http://localhost:31415 in your browser
+INFO    [673519] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.6 with your SSH server name
+INFO    [673519] Ending the Earth System Model Evaluation Tool at time: 2025-09-05 16:18:52 UTC
+INFO    [673519] Time for running the recipe was: 0:01:43.790843
+INFO    [673519] Maximum memory used (estimate): 104.7 GB
+INFO    [673519] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [673519] Removing `preproc` directory containing preprocessed data
+INFO    [673519] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [673519] Run was successful

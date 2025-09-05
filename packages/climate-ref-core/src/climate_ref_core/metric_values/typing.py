@@ -1,7 +1,7 @@
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Self
+from typing import Any, Self
 
 from pydantic import BaseModel, model_validator
 
@@ -15,6 +15,9 @@ class SeriesDefinition(BaseModel):
 
     file_pattern: str
     """A glob pattern to match files that contain the series values."""
+
+    sel: dict[str, Any] | None = None
+    """A dictionary of selection criteria to apply with :meth:`xarray.Dataset.sel` after loading the file."""
 
     dimensions: dict[str, str]
     """Key, value pairs that identify the dimensions of the metric."""

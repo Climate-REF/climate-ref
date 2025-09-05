@@ -147,6 +147,741 @@
   variant_label: PCMDI
   vertical_levels: 1
 - activity_id: obs4MIPs
+  end_time: 1980-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198001-198012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1980-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1981-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198101-198112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1981-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1982-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198201-198212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1982-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1983-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198301-198312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1983-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1984-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198401-198412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1984-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1985-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198501-198512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1985-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1986-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198601-198612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1986-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1987-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198701-198712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1987-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1988-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198801-198812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1988-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1989-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_198901-198912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1989-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1990-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199001-199012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1990-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1991-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199101-199112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1991-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1992-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199201-199212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1992-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1993-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199301-199312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1993-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1994-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199401-199412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1994-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1995-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199501-199512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1995-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1996-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199601-199612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1996-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1997-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199701-199712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1997-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1998-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199801-199812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1998-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1999-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_199901-199912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1999-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2000-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200001-200012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2000-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2001-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200101-200112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2001-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2002-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200201-200212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2002-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2003-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200301-200312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2003-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2004-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200401-200412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2004-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2005-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200501-200512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2005-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2006-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200601-200612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2006-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2007-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200701-200712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2007-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2008-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200801-200812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2008-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2009-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_200901-200912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2009-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2010-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_201001-201012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2010-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2011-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_201101-201112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2011-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2012-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_201201-201212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2012-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2013-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_201301-201312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2013-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2014-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.psl.gn.v20250220
+  institution_id: ECMWF
+  long_name: Sea Level Pressure
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/psl/gn/v20250220/psl_ERA-5_gn_201401-201412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2014-01-16 12:00:00
+  units: Pa
+  variable_id: psl
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
   end_time: 2007-12-16 12:00:00
   finalised: true
   frequency: mon
@@ -157,6 +892,27 @@
   long_name: Air Temperature
   nominal_resolution: 25 km
   path: '{esgf_data_dir}/obs4REF/obs4REF/ECMWF/ERA-5/mon/ta/gn/v20250220/ta_mon_ERA-5_PCMDI_gn_200701-200712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2007-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2007-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_200701-200712.nc'
   product: reanalysis
   realm: atmos
   source_id: ERA-5
@@ -189,6 +945,27 @@
   variant_label: PCMDI
   vertical_levels: 37
 - activity_id: obs4MIPs
+  end_time: 2008-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_200801-200812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2008-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
   end_time: 2009-12-16 12:00:00
   finalised: true
   frequency: mon
@@ -199,6 +976,27 @@
   long_name: Air Temperature
   nominal_resolution: 25 km
   path: '{esgf_data_dir}/obs4REF/obs4REF/ECMWF/ERA-5/mon/ta/gn/v20250220/ta_mon_ERA-5_PCMDI_gn_200901-200912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2009-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2009-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_200901-200912.nc'
   product: reanalysis
   realm: atmos
   source_id: ERA-5
@@ -231,6 +1029,27 @@
   variant_label: PCMDI
   vertical_levels: 37
 - activity_id: obs4MIPs
+  end_time: 2010-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_201001-201012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2010-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
   end_time: 2011-12-16 12:00:00
   finalised: true
   frequency: mon
@@ -241,6 +1060,27 @@
   long_name: Air Temperature
   nominal_resolution: 25 km
   path: '{esgf_data_dir}/obs4REF/obs4REF/ECMWF/ERA-5/mon/ta/gn/v20250220/ta_mon_ERA-5_PCMDI_gn_201101-201112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2011-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2011-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_201101-201112.nc'
   product: reanalysis
   realm: atmos
   source_id: ERA-5
@@ -273,6 +1113,27 @@
   variant_label: PCMDI
   vertical_levels: 37
 - activity_id: obs4MIPs
+  end_time: 2012-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_201201-201212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2012-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
   end_time: 2013-12-16 12:00:00
   finalised: true
   frequency: mon
@@ -283,6 +1144,27 @@
   long_name: Air Temperature
   nominal_resolution: 25 km
   path: '{esgf_data_dir}/obs4REF/obs4REF/ECMWF/ERA-5/mon/ta/gn/v20250220/ta_mon_ERA-5_PCMDI_gn_201301-201312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2013-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2013-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_201301-201312.nc'
   product: reanalysis
   realm: atmos
   source_id: ERA-5
@@ -315,6 +1197,27 @@
   variant_label: PCMDI
   vertical_levels: 37
 - activity_id: obs4MIPs
+  end_time: 2014-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_201401-201412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2014-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
   end_time: 2015-12-16 12:00:00
   finalised: true
   frequency: mon
@@ -333,6 +1236,1497 @@
   start_time: 2015-01-16 12:00:00
   units: K
   variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2015-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ta.gn.v20250220
+  institution_id: ECMWF
+  long_name: Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ta/gn/v20250220/ta_ERA-5_gn_201501-201512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2015-01-16 12:00:00
+  units: K
+  variable_id: ta
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1980-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198001-198012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1980-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1981-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198101-198112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1981-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1982-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198201-198212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1982-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1983-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198301-198312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1983-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1984-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198401-198412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1984-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1985-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198501-198512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1985-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1986-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198601-198612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1986-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1987-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198701-198712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1987-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1988-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198801-198812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1988-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1989-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_198901-198912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1989-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1990-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199001-199012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1990-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1991-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199101-199112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1991-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1992-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199201-199212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1992-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1993-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199301-199312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1993-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1994-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199401-199412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1994-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1995-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199501-199512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1995-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1996-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199601-199612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1996-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1997-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199701-199712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1997-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1998-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199801-199812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1998-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1999-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_199901-199912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1999-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2000-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200001-200012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2000-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2001-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200101-200112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2001-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2002-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200201-200212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2002-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2003-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200301-200312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2003-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2004-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200401-200412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2004-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2005-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200501-200512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2005-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2006-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200601-200612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2006-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2007-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200701-200712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2007-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2008-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200801-200812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2008-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2009-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_200901-200912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2009-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2010-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_201001-201012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2010-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2011-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_201101-201112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2011-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2012-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_201201-201212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2012-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2013-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_201301-201312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2013-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 2014-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.tas.gn.v20250220
+  institution_id: ECMWF
+  long_name: Near-Surface Air Temperature
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/tas/gn/v20250220/tas_ERA-5_gn_201401-201412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2014-01-16 12:00:00
+  units: K
+  variable_id: tas
+  variant_label: PCMDI
+  vertical_levels: 1
+- activity_id: obs4MIPs
+  end_time: 1980-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198001-198012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1980-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1981-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198101-198112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1981-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1982-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198201-198212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1982-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1983-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198301-198312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1983-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1984-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198401-198412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1984-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1985-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198501-198512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1985-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1986-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198601-198612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1986-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1987-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198701-198712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1987-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1988-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198801-198812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1988-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1989-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_198901-198912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1989-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1990-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199001-199012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1990-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1991-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199101-199112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1991-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1992-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199201-199212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1992-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1993-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199301-199312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1993-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1994-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199401-199412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1994-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1995-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199501-199512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1995-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1996-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199601-199612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1996-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1997-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199701-199712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1997-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1998-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199801-199812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1998-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 1999-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_199901-199912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 1999-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2000-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200001-200012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2000-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2001-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200101-200112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2001-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2002-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200201-200212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2002-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2003-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200301-200312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2003-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2004-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200401-200412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2004-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2005-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200501-200512.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2005-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2006-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200601-200612.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2006-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2007-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200701-200712.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2007-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2008-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200801-200812.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2008-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2009-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_200901-200912.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2009-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2010-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_201001-201012.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2010-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2011-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_201101-201112.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2011-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2012-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_201201-201212.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2012-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2013-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_201301-201312.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2013-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
+  variant_label: PCMDI
+  vertical_levels: 37
+- activity_id: obs4MIPs
+  end_time: 2014-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: 0.25x 0.25 degree latitude x longitude
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.ua.gn.v20250220
+  institution_id: ECMWF
+  long_name: Eastward Wind
+  nominal_resolution: 25 km
+  path: '{esgf_data_dir}/obs4MIPs/ECMWF/ERA-5/ua/gn/v20250220/ua_ERA-5_gn_201401-201412.nc'
+  product: reanalysis
+  realm: atmos
+  source_id: ERA-5
+  source_type: reanalysis
+  source_version_number: v20250220
+  start_time: 2014-01-16 12:00:00
+  units: m s-1
+  variable_id: ua
   variant_label: PCMDI
   vertical_levels: 37
 - activity_id: obs4MIPs

@@ -140,8 +140,8 @@ def dataframe_to_recipe(
     return variables
 
 
-_ESMVALTOOL_COMMIT = "8f56863a70ba4df76ec501ba0372c571a0af6cf9"
-_ESMVALTOOL_VERSION = f"2.13.0.dev120+g{_ESMVALTOOL_COMMIT[:9]}"
+_ESMVALTOOL_COMMIT = "2c438d0e0cc8904790294c72450eb7f06552c52a"
+_ESMVALTOOL_VERSION = f"2.13.0.dev148+g{_ESMVALTOOL_COMMIT[:9]}"
 
 _RECIPES = pooch.create(
     path=pooch.os_cache("climate_ref_esmvaltool"),
@@ -169,7 +169,16 @@ def load_recipe(recipe: str) -> Recipe:
         The loaded recipe.
     """
     filename = _RECIPES.fetch(recipe)
-    return yaml.safe_load(Path(filename).read_text(encoding="utf-8"))  # type: ignore[no-any-return]
+
+    def normalize(obj: Any) -> Any:
+        # Ensure objects in the recipe are not shared.
+        if isinstance(obj, dict):
+            return {k: normalize(v) for k, v in obj.items()}
+        if isinstance(obj, list):
+            return [normalize(item) for item in obj]
+        return obj
+
+    return normalize(yaml.safe_load(Path(filename).read_text(encoding="utf-8")))  # type: ignore[no-any-return]
 
 
 def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None:
@@ -192,12 +201,11 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if not isinstance(row.path, str):  # pragma: no branch
             msg = f"Invalid path encountered in {row}"
             raise ValueError(msg)
-        project = row.instance_id.split(".")[0]
-        if project == "obs4MIPs":
+        if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
-            tgt = climate_data_dir / project / row.source_id / version  # type: ignore[operator]
+            subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
         else:
-            tgt = climate_data_dir.joinpath(*row.instance_id.split("."))
-        tgt /= Path(row.path).name
+            subdirs = row.instance_id.split(".")
+        tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
         tgt.symlink_to(row.path)

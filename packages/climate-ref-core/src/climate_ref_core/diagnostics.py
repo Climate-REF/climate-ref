@@ -508,9 +508,10 @@ class Diagnostic(AbstractDiagnostic):
     See (climate_ref_example.example.ExampleDiagnostic)[] for an example implementation.
     """
 
+    series: Sequence[SeriesDefinition] = tuple()
+
     def __init__(self) -> None:
         super().__init__()
-        self.series = tuple()
         self._provider: DiagnosticProvider | None = None
 
     def __repr__(self) -> str:

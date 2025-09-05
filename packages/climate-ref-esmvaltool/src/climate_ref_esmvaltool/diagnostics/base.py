@@ -87,7 +87,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The result of running the diagnostic.
         """
-        input_files = {project: definition.datasets[project].datasets for project in definition.datasets}
+        input_files = {
+            project: dataset_collection.datasets
+            for project, dataset_collection in definition.datasets.items()
+        }
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
 
@@ -137,7 +140,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 {
                     "OBS": str(data_dir / "OBS"),
                     "OBS6": str(data_dir / "OBS"),
-                    "native6": str(data_dir / "RAWOBS"),
+                    "native6": str(data_dir / "native6"),
                 }
             )
             config["rootpath"]["obs4MIPs"] = [  # type: ignore[index]
@@ -180,7 +183,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         output_args = CMECOutput.create_template()
 
         # Add the plots and data files
-        default_series_attributes = (
+        variable_attributes = (
             "long_name",
             "standard_name",
             "units",
@@ -203,19 +206,29 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 }
                 for series_def in definition.diagnostic.series:
                     if fnmatch.fnmatch(str(relative_path), f"executions/*/{series_def.file_pattern}"):
-                        dataset = xr.open_dataset(filename)
+                        dataset = xr.open_dataset(
+                            filename, decode_times=xr.coders.CFDatetimeCoder(use_cftime=True)
+                        )
+                        dataset = dataset.sel(series_def.sel)
                         attributes = {
                             attr: dataset.attrs[attr]
-                            for attr in (tuple(series_def.attributes) + default_series_attributes)
+                            for attr in series_def.attributes
                             if attr in dataset.attrs
                         }
                         attributes["caption"] = caption
+                        attributes["values_name"] = series_def.values_name
+                        attributes["index_name"] = series_def.index_name
+                        for attr in variable_attributes:
+                            if attr in dataset[series_def.values_name].attrs:
+                                attributes[f"value_{attr}"] = dataset[series_def.values_name].attrs[attr]
+                            if attr in dataset[series_def.index_name].attrs:
+                                attributes[f"index_{attr}"] = dataset[series_def.index_name].attrs[attr]
                         index = dataset[series_def.index_name].values.tolist()
+                        if hasattr(index[0], "calendar"):
+                            attributes["calendar"] = index[0].calendar
                         if hasattr(index[0], "isoformat"):
                             # Convert time objects to strings.
                             index = [v.isoformat() for v in index]
-                        if hasattr(index[0], "calendar"):
-                            attributes["calendar"] = index[0].calendar
 
                         series.append(
                             SeriesMetricValue(

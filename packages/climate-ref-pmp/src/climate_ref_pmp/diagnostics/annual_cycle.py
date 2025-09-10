@@ -5,57 +5,14 @@ from typing import Any
 
 from loguru import logger
 
-from climate_ref_core.datasets import FacetFilter, SourceDatasetType
+from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
-    DataRequirement,
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
-
-# =================================================================
-# PMP diagnostics support functions for the annual cycle diagnostic
-# =================================================================
-
-
-def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequirement, DataRequirement]:
-    """
-    Create a data requirement for the annual cycle diagnostic.
-
-    Parameters
-    ----------
-    variable_id : str
-        The variable ID to filter the data requirement.
-    obs_source : str
-        The observation source ID to filter the data requirement.
-
-    Returns
-    -------
-    DataRequirement
-        A DataRequirement object containing the necessary filters and groupings.
-    """
-    return (
-        DataRequirement(
-            source_type=SourceDatasetType.PMPClimatology,
-            filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
-            group_by=("variable_id", "source_id"),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "frequency": "mon",
-                        "experiment_id": ("amip", "historical", "hist-GHG", "piControl"),
-                        "variable_id": (variable_id,),
-                    }
-                ),
-            ),
-            group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
-        ),
-    )
+from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
 
 
 def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
@@ -572,8 +529,7 @@ class AnnualCycle(CommandLineDiagnostic):
         logger.debug(f"data_directory: {data_directory}")
 
         # Find the CMEC JSON file(s)
-        results_files = transform_results_files(list(results_directory.glob("*_cmec.json")))
-
+        results_files = list(results_directory.glob("*_cmec.json"))
         if len(results_files) == 1:
             # If only one file, use it directly
             results_file = results_files[0]
@@ -585,6 +541,23 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
+        # Rewrite the CMEC JSON file for compatibility
+        with open(results_file) as f:
+            results = json.load(f)
+            results_transformed = transform_results(results)
+
+        # Get the stem (filename without extension)
+        stem = results_file.stem
+
+        # Create the new filename
+        results_file_transformed = results_file.with_name(f"{stem}_transformed.json")
+
+        with open(results_file_transformed, "w") as f:
+            # Write the transformed executions back to the file
+            json.dump(results_transformed, f, indent=4)
+            logger.debug(f"Transformed executions written to {results_file_transformed}")
+
+        # Find the other outputs: PNG and NetCDF files
         # Find the other outputs: PNG and NetCDF files
         png_files = list(png_directory.glob("*.png"))
         data_files = list(data_directory.glob("*.nc"))

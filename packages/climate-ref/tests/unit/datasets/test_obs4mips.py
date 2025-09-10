@@ -44,12 +44,13 @@ def test_empty_dir():
                 "realm": "atmos",
                 "source_id": "HadISST-1-1",
                 "source_type": "satellite_blended",
-                "source_version_number": "v20210727",
+                "source_version_number": "1-1",
                 "start_time": "1870-01-16 11:59:59.464417",
                 "time_range": "1870-01-16 11:59:59.464417-2019-07-16 12:00:00",
                 "units": "K",
                 "variable_id": "ts",
                 "variant_label": "PCMDI",
+                "version": "v20210727",
                 "vertical_levels": 1,
                 "path": str(
                     TEST_DATA_DIR

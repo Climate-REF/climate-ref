@@ -6,20 +6,54 @@ from typing import Any
 from loguru import logger
 
 from climate_ref_core.datasets import SourceDatasetType
-<<<<<<< HEAD
-from climate_ref_core.datasets import SourceDatasetType
-=======
->>>>>>> 97497197 (update)
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
     ExecutionDefinition,
     ExecutionResult,
 )
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
-from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
-<<<<<<< HEAD
-from climate_ref_pmp.pmp_support import combine_results_files, make_data_requirement, transform_results
-=======
+
+# =================================================================
+# PMP diagnostics support functions for the annual cycle diagnostic
+# =================================================================
+
+
+def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequirement, DataRequirement]:
+    """
+    Create a data requirement for the annual cycle diagnostic.
+
+    Parameters
+    ----------
+    variable_id : str
+        The variable ID to filter the data requirement.
+    obs_source : str
+        The observation source ID to filter the data requirement.
+
+    Returns
+    -------
+    DataRequirement
+        A DataRequirement object containing the necessary filters and groupings.
+    """
+    return (
+        DataRequirement(
+            source_type=SourceDatasetType.PMPClimatology,
+            filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
+            group_by=("variable_id", "source_id"),
+        ),
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "frequency": "mon",
+                        "experiment_id": ("amip", "historical", "hist-GHG", "piControl"),
+                        "variable_id": (variable_id,),
+                    }
+                ),
+            ),
+            group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
+        ),
+    )
 
 
 def _transform_results(data: dict[str, Any]) -> dict[str, Any]:
@@ -545,10 +579,6 @@ class AnnualCycle(CommandLineDiagnostic):
 
         # Find the CMEC JSON file(s)
         results_files = list(results_directory.glob("*_cmec.json"))
-<<<<<<< HEAD
-        results_files = list(results_directory.glob("*_cmec.json"))
-=======
->>>>>>> 97497197 (update)
         if len(results_files) == 1:
             # If only one file, use it directly
             results_file = results_files[0]
@@ -576,7 +606,6 @@ class AnnualCycle(CommandLineDiagnostic):
             json.dump(results_transformed, f, indent=4)
             logger.debug(f"Transformed executions written to {results_file_transformed}")
 
-        # Find the other outputs: PNG and NetCDF files
         # Find the other outputs: PNG and NetCDF files
         png_files = list(png_directory.glob("*.png"))
         data_files = list(data_directory.glob("*.nc"))

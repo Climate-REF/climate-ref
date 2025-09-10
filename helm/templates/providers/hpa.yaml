@@ -1,0 +1,32 @@
+{{- range $provider, $spec := (omit .Values.providers "defaults") -}}
+{{- $spec := merge (deepCopy $.Values.defaults) $spec -}}
+{{- if and $spec.autoscaling $spec.autoscaling.enabled }}
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: {{ include "ref.fullname" $ }}-{{ $provider }}
+  labels:
+    app.kubernetes.io/component: {{ $provider }}
+    {{- include "ref.labels" $ | nindent 4 }}
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: {{ include "ref.fullname" $ }}-{{ $provider }}
+  minReplicas: {{ $spec.autoscaling.minReplicas }}
+  maxReplicas: {{ $spec.autoscaling.maxReplicas }}
+  metrics:
+  - type: Object
+    object:
+      metric:
+        name: flower_task_prefetch_time_seconds
+      describedObject:
+        apiVersion: v1
+        kind: Service
+        name: celery-metrics-service # Service exposing Celery metrics
+      target:
+        type: Value
+        value: "50" # Scale up if queue length exceeds 50
+{{- end }}
+---
+{{- end }}

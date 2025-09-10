@@ -59,7 +59,7 @@ def create_env(
     Create a conda environment containing the provider software.
 
     If no provider is specified, all providers will be installed.
-    If the provider is up to date or does not use a virtual environment, it will be skipped.
+    If the provider is up to date or does not use a conda environment, it will be skipped.
     """
     config = ctx.obj.config
     db = ctx.obj.database
@@ -74,12 +74,12 @@ def create_env(
             raise typer.Exit(code=1)
 
     for provider_ in providers:
-        txt = f"virtual environment for provider {provider_.slug}"
+        txt = f"conda environment for provider {provider_.slug}"
         if isinstance(provider_, CondaDiagnosticProvider):
             logger.info(f"Creating {txt} in {provider_.env_path}")
             provider_.create_env()
             logger.info(f"Finished creating {txt}")
         else:
-            logger.info(f"Skipping creating {txt} because it does use virtual environments.")
+            logger.info(f"Skipping creating {txt} because it does not use conda environments.")
 
     list_(ctx)

@@ -169,7 +169,9 @@ def build_pmp_command(
     # Loop through additional arguments if they exist
     if kwargs:  # pragma: no cover
         for key, value in kwargs.items():
-            if value:
+            if isinstance(value, list):
+                cmd.extend([f"--{key}"] + [str(v) for v in value])
+            elif value:
                 cmd.extend([f"--{key}", str(value)])
             else:
                 cmd.extend([f"--{key}"])

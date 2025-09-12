@@ -5,8 +5,9 @@ import pandas as pd
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
-    RequireContiguousTimerange,
+    PartialDateTime,
     RequireFacets,
+    RequireTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -46,7 +47,11 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
             constraints=(
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
-                RequireContiguousTimerange(group_by=("instance_id",)),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1979, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
                 RequireFacets("variable_id", variables),
                 # TODO: Add a constraint to ensure that tas, siconc and areacello
                 # are available for each model or alternatively filter out

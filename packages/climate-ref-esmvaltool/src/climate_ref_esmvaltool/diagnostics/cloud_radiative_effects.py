@@ -2,9 +2,10 @@ import pandas
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
-    RequireContiguousTimerange,
+    PartialDateTime,
     RequireFacets,
     RequireOverlappingTimerange,
+    RequireTimerange,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -44,7 +45,11 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
                 RequireFacets("variable_id", variables),
-                RequireContiguousTimerange(group_by=("instance_id",)),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1996, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
                 RequireOverlappingTimerange(group_by=("instance_id",)),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
@@ -58,19 +63,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
         recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
 
-        # Select a timerange covered by all datasets.
-        start_times, end_times = [], []
-        for variable in recipe_variables.values():
-            for dataset in variable["additional_datasets"]:
-                start, end = dataset["timerange"].split("/")
-                start_times.append(start)
-                end_times.append(end)
-        start_time = max(start_times)
-        start_time = max(start_time, "20010101T000000")  # Earliest observational dataset availability
-        timerange = f"{start_time}/{min(end_times)}"
-
         datasets = recipe_variables["rsut"]["additional_datasets"]
         for dataset in datasets:
             dataset.pop("timerange")
         recipe["datasets"] = datasets
-        recipe["timerange_for_models"] = timerange

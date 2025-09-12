@@ -7,8 +7,9 @@ import xarray
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
-    RequireContiguousTimerange,
+    PartialDateTime,
     RequireFacets,
+    RequireTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -130,7 +131,11 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
                 RequireFacets("variable_id", variables),
-                RequireContiguousTimerange(group_by=("instance_id",)),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1980, 1),
+                    end=PartialDateTime(2009, 12),
+                ),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
@@ -149,7 +154,13 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                 ),
             ),
             group_by=("source_id",),
-            constraints=(RequireContiguousTimerange(group_by=("instance_id",)),),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1980, 1),
+                    end=PartialDateTime(2009, 12),
+                ),
+            ),
             # TODO: Add obs4MIPs datasets once available and working:
             #
             # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):
@@ -211,6 +222,15 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
     name = "Regional historical mean and anomaly of climate variables"
     slug = "regional-historical-timeseries"
     base_recipe = "ref/recipe_ref_timeseries_region.yml"
+
+    variables = (
+        "hus",
+        "pr",
+        "psl",
+        "tas",
+        "ua",
+    )
+
     series = tuple(
         SeriesDefinition(
             file_pattern=f"{diagnostic}-{region}/allplots/*_{var_name}_*.nc",
@@ -220,9 +240,65 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
             index_name="time",
             attributes=[],
         )
-        for var_name in RegionalHistoricalAnnualCycle.variables
+        for var_name in variables
         for region in REGIONS
         for diagnostic in ["timeseries_abs", "timeseries"]
+    )
+
+    data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "variable_id": variables,
+                        "experiment_id": "historical",
+                        "frequency": "mon",
+                    },
+                ),
+            ),
+            group_by=("source_id", "member_id", "grid_label"),
+            constraints=(
+                RequireFacets("variable_id", variables),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1980, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+            ),
+        ),
+        DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "variable_id": (
+                            "psl",
+                            "ua",
+                        ),
+                        "source_id": "ERA-5",
+                        "frequency": "mon",
+                    },
+                ),
+            ),
+            group_by=("source_id",),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1980, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
+            ),
+            # TODO: Add obs4MIPs datasets once available and working:
+            #
+            # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):
+            # - GPCP-V2.3: pr
+            #
+            # Not yet available on obs4MIPs:
+            # - ERA5: hus
+            # - HadCRUT5_ground_5.0.1.0-analysis: tas
+        ),
     )
 
 
@@ -255,7 +331,11 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1980, 1),
+                    end=PartialDateTime(2009, 12),
+                ),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
@@ -275,7 +355,13 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                 ),
             ),
             group_by=("source_id",),
-            constraints=(RequireContiguousTimerange(group_by=("instance_id",)),),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1980, 1),
+                    end=PartialDateTime(2009, 12),
+                ),
+            ),
             # TODO: Add obs4MIPs datasets once available and working:
             #
             # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):

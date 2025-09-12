@@ -128,7 +128,7 @@ diagnostics:
       exp: historical
       grid: gn
       mip: Amon
-      timerange: 19960115T120000/20141215T120000
+      timerange: 1996/2014
     scripts:
       plot:
         script: seaborn_jointplot_histogram.py
@@ -147,5 +147,5 @@ diagnostics:
           style: ticks
           rc:
             axes.titlepad: 15.0
-        suptitle: CMIP6 CESM2 r1i1p1f1 gn 19960115T120000/20141215T120000
-        plot_filename: jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_19960115T120000-20141215T120000
+        suptitle: CMIP6 CESM2 r1i1p1f1 gn 1996/2014
+        plot_filename: jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014

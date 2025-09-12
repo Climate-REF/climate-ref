@@ -1,3 +1,5 @@
+import operator
+from collections.abc import Callable
 from datetime import datetime
 
 import pandas as pd
@@ -7,9 +9,11 @@ from climate_ref_core.constraints import (
     AddSupplementaryDataset,
     GroupOperation,
     GroupValidator,
+    PartialDateTime,
     RequireContiguousTimerange,
     RequireFacets,
     RequireOverlappingTimerange,
+    RequireTimerange,
     SelectParentExperiment,
     apply_constraint,
 )
@@ -142,6 +146,272 @@ class TestAddSupplementaryDataset:
         result = self.constraint.apply(group=group, data_catalog=data_catalog)
         expected = data_catalog.loc[expected_rows]
         assert (result == expected).all().all()
+
+
+class TestPartialDateTime:
+    @pytest.mark.parametrize(
+        "pdt, dt, expected",
+        [
+            (PartialDateTime(year=2000), datetime(2000, 1, 1), True),
+            (PartialDateTime(year=2000), datetime(1999, 12, 31), False),
+            (PartialDateTime(year=2000, month=6), datetime(2000, 6, 15), True),
+            (PartialDateTime(year=2000, month=6), datetime(2000, 5, 31), False),
+            (PartialDateTime(year=2000, month=6, day=15), datetime(2000, 6, 15), True),
+            (PartialDateTime(year=2000, month=6, day=15), datetime(2000, 6, 14), False),
+            (PartialDateTime(year=2000, month=6, day=15, hour=12), datetime(2000, 6, 15, 12), True),
+            (PartialDateTime(year=2000, month=6, day=15, hour=12), datetime(2000, 6, 15, 11), False),
+        ],
+    )
+    def test_eq(self, pdt: PartialDateTime, dt: datetime, expected: bool) -> None:
+        assert (pdt == dt) == expected
+
+    @pytest.mark.parametrize(
+        "pdt, dt, expected",
+        [
+            (PartialDateTime(year=2000), datetime(1999, 1, 1), False),
+            (PartialDateTime(year=2000), datetime(2000, 12, 1), False),
+            (PartialDateTime(year=2000), datetime(2001, 12, 31), True),
+            (PartialDateTime(year=2000, month=6), datetime(2000, 6, 15), False),
+            (PartialDateTime(year=2000, month=6), datetime(1999, 7, 15), False),
+            (PartialDateTime(year=2000, month=6), datetime(2000, 7, 31), True),
+            (PartialDateTime(year=2000, month=6, day=15), datetime(2000, 6, 14), False),
+            (PartialDateTime(year=2000, month=6, day=15), datetime(2000, 6, 16), True),
+            (PartialDateTime(year=2000, month=6, day=15, hour=12), datetime(2000, 6, 15, 12), False),
+            (PartialDateTime(year=2000, month=6, day=15, hour=12), datetime(2000, 6, 15, 13), True),
+        ],
+    )
+    def test_lt(self, pdt: PartialDateTime, dt: datetime, expected: bool) -> None:
+        assert (pdt < dt) == expected
+
+    def test_gt(self):
+        assert (PartialDateTime(year=2000, month=2) > datetime(2000, 1, 1)) == True  # noqa: E712
+
+    @pytest.mark.parametrize("op", [operator.eq, operator.lt, operator.gt])
+    def test_not_implemented(self, op: Callable) -> None:
+        with pytest.raises(TypeError):
+            assert op(PartialDateTime(year=2000), object())
+
+
+class TestRequireTimerange:
+    @pytest.mark.parametrize(
+        "data, start, end, expected",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": [],
+                        "start_time": [],
+                        "end_time": [],
+                        "path": [],
+                    }
+                ),
+                PartialDateTime(year=2000),
+                PartialDateTime(year=2001),
+                True,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                PartialDateTime(year=2000, month=12),
+                True,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                None,
+                True,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                        ],
+                    }
+                ),
+                None,
+                PartialDateTime(year=2000, month=5),
+                True,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "start_time": [
+                            datetime(2000, 2, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                None,
+                False,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                        ],
+                    }
+                ),
+                None,
+                PartialDateTime(year=2001, month=1),
+                False,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "tas", "tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                            datetime(2001, 1, 16, 12),
+                            datetime(2003, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                            datetime(2001, 12, 16, 12),
+                            datetime(2003, 12, 16, 12),
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200112.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200112.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200301-200312.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                PartialDateTime(year=2003, month=12),
+                False,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "tas", "areacella"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                            datetime(2001, 1, 16, 12),
+                            None,
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                            datetime(2001, 12, 16, 12),
+                            None,
+                        ],
+                        "path": [
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200112.nc",
+                            "areacella_fx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                PartialDateTime(year=2001, month=12),
+                True,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["pr", "tas", "tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                            datetime(2000, 1, 16, 12),
+                            datetime(2001, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2001, 12, 16, 12),
+                            datetime(2000, 12, 16, 12),
+                            datetime(2001, 12, 16, 12),
+                        ],
+                        "path": [
+                            "pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200112.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200112.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                PartialDateTime(year=2001, month=12),
+                True,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["pr", "tas"],
+                        "start_time": [
+                            datetime(2000, 1, 16, 12),
+                            datetime(2000, 1, 16, 12),
+                        ],
+                        "end_time": [
+                            datetime(2000, 12, 16, 12),
+                            datetime(2002, 12, 16, 12),
+                        ],
+                        "path": [
+                            "pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200012.nc",
+                            "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200101-200212.nc",
+                        ],
+                    }
+                ),
+                PartialDateTime(year=2000, month=1),
+                PartialDateTime(year=2001, month=12),
+                False,
+            ),
+        ],
+    )
+    def test_validate(
+        self,
+        data: pd.DataFrame,
+        start: PartialDateTime,
+        end: PartialDateTime,
+        expected: bool,
+    ) -> None:
+        constraint = RequireTimerange(group_by=["variable_id"], start=start, end=end)
+        assert constraint.validate(data) == expected
 
 
 class TestContiguousTimerange:

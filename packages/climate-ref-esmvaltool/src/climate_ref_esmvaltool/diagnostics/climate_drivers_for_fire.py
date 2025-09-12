@@ -2,8 +2,9 @@ import pandas
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
+    PartialDateTime,
     RequireFacets,
-    RequireOverlappingTimerange,
+    RequireTimerange,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -45,7 +46,11 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
                 RequireFacets("variable_id", variables),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(2013, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
                 AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
             ),
         ),

@@ -4,9 +4,9 @@ import pandas
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
-    RequireContiguousTimerange,
+    PartialDateTime,
     RequireFacets,
-    RequireOverlappingTimerange,
+    RequireTimerange,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -31,9 +31,11 @@ def get_cmip6_data_requirements(variables: tuple[str, ...]) -> tuple[DataRequire
             group_by=("source_id", "experiment_id", "member_id", "frequency", "grid_label"),
             constraints=(
                 RequireFacets("variable_id", variables),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                # TODO: Add a RequireTimeRange constraint to match reference datasets?
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1996, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
@@ -47,13 +49,15 @@ def update_recipe(
     var_y: str,
 ) -> None:
     """Update the recipe."""
-    recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6], equalize_timerange=True)
+    recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
     diagnostics = recipe["diagnostics"]
     diagnostic_name = f"plot_joint_{var_x}_{var_y}_model"
     diagnostic = diagnostics.pop(diagnostic_name)
     diagnostics.clear()
     diagnostics[diagnostic_name] = diagnostic
     datasets = next(iter(recipe_variables.values()))["additional_datasets"]
+    for dataset in datasets:
+        dataset["timerange"] = "1996/2014"
     diagnostic["additional_datasets"] = datasets
     suptitle = "CMIP6 {dataset} {ensemble} {grid} {timerange}".format(**datasets[0])
     diagnostic["scripts"]["plot"]["suptitle"] = suptitle
@@ -135,7 +139,13 @@ class CloudScatterplotsReference(ESMValToolDiagnostic):
                 ),
             ),
             group_by=("instance_id",),
-            constraints=(RequireContiguousTimerange(group_by=("instance_id",)),),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(2007, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
+            ),
             # TODO: Add obs4MIPs datasets once available and working:
             #
             # obs4MIPs datasets with issues:

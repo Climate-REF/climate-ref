@@ -2,7 +2,8 @@ import pandas
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
-    RequireContiguousTimerange,
+    PartialDateTime,
+    RequireTimerange,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -33,7 +34,11 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
             ),
             group_by=("instance_id",),
             constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1979, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
                 AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
             ),
         ),

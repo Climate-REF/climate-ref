@@ -6,6 +6,8 @@ import sys
 import warnings
 from collections import defaultdict
 from collections.abc import Mapping
+from datetime import datetime
+from functools import total_ordering
 from typing import Literal, Protocol, runtime_checkable
 
 if sys.version_info < (3, 11):
@@ -271,6 +273,123 @@ class AddSupplementaryDataset:
 
         supplementary_facets = {variable_facet[source_type]: variable}
         return cls(supplementary_facets, **kwargs[source_type])
+
+
+@frozen
+@total_ordering
+class PartialDateTime:
+    """
+    A partial datetime object that can be used to compare datetimes.
+
+    Only the specified fields are used for comparison.
+    """
+
+    year: int | None = None
+    month: int | None = None
+    day: int | None = None
+    hour: int | None = None
+    minute: int | None = None
+    second: int | None = None
+
+    @property
+    def _attrs(self) -> dict[str, int]:
+        """The attributes that are set."""
+        return {
+            a: v
+            for a in self.__slots__  # type: ignore[attr-defined]
+            if not a.startswith("_") and (v := getattr(self, a)) is not None
+        }
+
+    def __repr__(self) -> str:
+        return f"{self.__class__.__name__}({', '.join(f'{a}={v}' for a, v in self._attrs.items())})"
+
+    def __eq__(self, other: object) -> bool:
+        if not isinstance(other, datetime):
+            msg = (
+                f"Can only compare PartialDateTime with `datetime.datetime` "
+                f"objects, got object {other} of type {type(other)}"
+            )
+            raise TypeError(msg)
+
+        for attr, value in self._attrs.items():
+            other_value = getattr(other, attr)
+            if value != other_value:
+                return False
+        return True
+
+    def __lt__(self, other: object) -> bool:
+        if not isinstance(other, datetime):
+            msg = (
+                f"Can only compare PartialDateTime with `datetime.datetime` "
+                f"objects, got object {other} of type {type(other)}"
+            )
+            raise TypeError(msg)
+
+        for attr, value in self._attrs.items():
+            other_value = getattr(other, attr)
+            if value != other_value:
+                return value < other_value  # type: ignore[no-any-return]
+        return False
+
+
+@frozen
+class RequireTimerange:
+    """
+    A constraint that requires datasets to have a specific timerange.
+
+    Specify the start and/or end of the required timerange using a precision
+    that matches the frequency of the datasets.
+
+    For example, to ensure that datasets at monthly frequency cover the period
+    from 2000 to 2010, use start=PartialDateTime(year=2000, month=1) and
+    end=PartialDateTime(year=2010, month=12).
+    """
+
+    group_by: tuple[str, ...]
+    """
+    The fields to group the datasets by. Each group must cover the timerange
+    to fulfill the constraint.
+    """
+
+    start: PartialDateTime | None = None
+    """
+    The start time of the required timerange. If None, no start time is required.
+    """
+
+    end: PartialDateTime | None = None
+    """
+    The end time of the required timerange. If None, no end time is required.
+    """
+
+    def validate(self, group: pd.DataFrame) -> bool:
+        """
+        Check that all subgroups of the group have a contiguous timerange.
+        """
+        group = group.dropna(subset=["start_time", "end_time"])
+        for _, subgroup in group.groupby(list(self.group_by)):
+            start = subgroup["start_time"].min()
+            end = subgroup["end_time"].max()
+            result = True
+            if self.start is not None and start > self.start:
+                logger.debug(
+                    f"Constraint {self.__class__.__name__} not satisfied "
+                    f"because start time {start} is after required start time "
+                    f"{self.start} for {', '.join(subgroup['path'])}"
+                )
+                result = False
+            if self.end is not None and end < self.end:
+                logger.debug(
+                    f"Constraint {self.__class__.__name__} not satisfied "
+                    f"because end time {end} is before required end time "
+                    f"{self.end} for {', '.join(subgroup['path'])}"
+                )
+                result = False
+            if result:
+                result = RequireContiguousTimerange(group_by=self.group_by).validate(subgroup)
+            if not result:
+                return False
+
+        return True
 
 
 @frozen

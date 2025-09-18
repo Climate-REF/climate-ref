@@ -27,38 +27,29 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     slug = "transient-climate-response-emissions"
     base_recipe = "recipe_tcre.yml"
 
-    experiments = (
-        "esm-1pctCO2",
-        "esm-piControl",
-    )
-    variables = (
-        "tas",
-        "fco2antt",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": variables,
-                        "experiment_id": experiments,
+                        "variable_id": ("tas", "fco2antt"),
+                        "experiment_id": "esm-1pctCO2",
                         "table_id": "Amon",
                     },
-                ),
-                FacetFilter(
+                )
+                | FacetFilter(
                     facets={
-                        "variable_id": "fco2antt",
+                        "variable_id": "tas",
                         "experiment_id": "esm-piControl",
                         "table_id": "Amon",
                     },
-                    keep=False,
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireFacets("experiment_id", experiments),
-                RequireFacets("variable_id", variables),
+                RequireFacets("experiment_id", ("esm-1pctCO2", "esm-piControl")),
+                RequireFacets("variable_id", ("tas", "fco2antt")),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireOverlappingTimerange(group_by=("instance_id",)),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),

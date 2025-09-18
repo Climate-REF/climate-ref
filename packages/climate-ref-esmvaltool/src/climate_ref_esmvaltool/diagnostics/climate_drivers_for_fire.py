@@ -22,30 +22,46 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
     slug = "climate-drivers-for-fire"
     base_recipe = "ref/recipe_ref_fire.yml"
 
-    variables = (
-        "cVeg",
-        "hurs",
-        "pr",
-        "tas",
-        "tasmax",
-        "treeFrac",
-        "vegFrac",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
-                    facets={
-                        "variable_id": variables,
+                    {
+                        "variable_id": ("hurs", "pr", "tas", "tasmax"),
                         "experiment_id": "historical",
-                        "table_id": ("Amon", "Emon", "Lmon"),
+                        "table_id": "Amon",
+                    }
+                )
+                | FacetFilter(
+                    {
+                        "variable_id": ("cVeg", "treeFrac"),
+                        "experiment_id": "historical",
+                        "table_id": "Lmon",
+                    }
+                )
+                | FacetFilter(
+                    {
+                        "variable_id": "vegFrac",
+                        "experiment_id": "historical",
+                        "table_id": "Emon",
                     }
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireFacets("variable_id", variables),
+                RequireFacets(
+                    "variable_id",
+                    (
+                        "cVeg",
+                        "hurs",
+                        "pr",
+                        "tas",
+                        "tasmax",
+                        "treeFrac",
+                        "vegFrac",
+                    ),
+                ),
                 RequireTimerange(
                     group_by=("instance_id",),
                     start=PartialDateTime(2013, 1),

@@ -27,26 +27,35 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     slug = "enso-basic-climatology"
     base_recipe = "ref/recipe_enso_basicclimatology.yml"
 
-    variables = (
-        "pr",
-        "tos",
-        "tauu",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": variables,
+                        "variable_id": ("pr", "tauu"),
                         "experiment_id": "historical",
-                        "table_id": ("Amon", "Omon"),
+                        "table_id": "Amon",
+                    },
+                )
+                | FacetFilter(
+                    facets={
+                        "variable_id": "tos",
+                        "experiment_id": "historical",
+                        "table_id": "Omon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireFacets("variable_id", variables),
+                RequireFacets(
+                    "variable_id",
+                    (
+                        "pr",
+                        "tos",
+                        "tauu",
+                    ),
+                ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireOverlappingTimerange(group_by=("instance_id",)),
             ),

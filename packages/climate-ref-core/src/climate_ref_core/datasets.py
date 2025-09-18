@@ -2,11 +2,13 @@
 Dataset management and filtering
 """
 
+from __future__ import annotations
+
 import enum
 import functools
 import hashlib
 from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import pandas as pd
 from attrs import field, frozen
@@ -82,6 +84,96 @@ class FacetFilter:
 
     If true (default), datasets that match the filter will be kept else they will be removed.
     """
+
+    prev_filter: tuple[Literal["and", "or"], FacetFilter] | None = None
+    """
+    Previous filter to apply to the data catalog.
+
+    If provided, this filter will be applied before this filter. This is a tuple
+    of the operation to apply ("and" or "or") and the filter to apply.
+    """
+
+    next_filter: tuple[Literal["and", "or"], FacetFilter] | None = None
+    """
+    Next filter to apply to the data catalog.
+
+    If provided, this filter will be applied after this filter. This is a tuple
+    of the operation to apply ("and" or "or") and the filter to apply.
+    """
+
+    def _apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        for facet in self.facets:
+            if facet not in df.columns:
+                raise KeyError(f"Facet {facet!r} not in data catalog columns: {df.columns.to_list()}")
+
+        mask = df[list(self.facets)].isin(self.facets).all(axis="columns")
+        if not self.keep:
+            mask = ~mask
+        return df[mask]
+
+    def apply(self, df: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply the filter to a dataframe of datasets.
+
+        This applies all operations in sequence.
+
+        Parameters
+        ----------
+        df
+            Dataframe of datasets to filter
+
+        Returns
+        -------
+        :
+            Filtered dataframe of datasets
+        """
+        for facet in self.facets:
+            if facet not in df.columns:
+                raise KeyError(f"Facet {facet!r} not in data catalog columns: {df.columns.to_list()}")
+
+        if self.prev_filter:
+            op, prev_filt = self.prev_filter
+            if op == "and":
+                result = self._apply(prev_filt.apply(df))
+            elif op == "or":
+                result = pd.concat([self._apply(df), prev_filt.apply(df)]).sort_index().drop_duplicates()
+            else:
+                raise ValueError(f'Unknown operation "{op}"')
+        else:
+            result = self._apply(df)
+
+        # print(self.facets)
+        # print("\n".join(p for p in result.path))
+        if self.next_filter:
+            op, next_filt = self.next_filter
+            if op == "and":
+                result = next_filt.apply(result)
+            elif op == "or":
+                result = pd.concat([result, next_filt.apply(df)]).sort_index().drop_duplicates()
+            else:
+                raise ValueError(f'Unknown operation "{op}"')
+        return result
+
+    def _combine(self, other: object, op: Literal["and", "or"]) -> Self:
+        if not isinstance(other, self.__class__):
+            raise TypeError(f'Cannot combine {self.__class__.__name__} with "{type(other).__name__}"')
+        if other.prev_filter:
+            prev_op, prev_filt = other.prev_filter
+            prev_filter = (prev_op, prev_filt._combine(self, op))
+        else:
+            prev_filter = (op, self)
+        return self.__class__(
+            facets=dict(other.facets.items()),
+            keep=other.keep,
+            prev_filter=prev_filter,
+            next_filter=other.next_filter,
+        )
+
+    def __and__(self, other: object) -> Self:
+        return self._combine(other, "and")
+
+    def __or__(self, other: object) -> Self:
+        return self._combine(other, "or")
 
 
 def sort_selector(inp: Selector) -> Selector:

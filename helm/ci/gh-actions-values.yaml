@@ -1,0 +1,18 @@
+ingress:
+  host: Climate-ref.test
+
+service:
+  type: NodePort
+
+flower:
+  podSecurityContext:
+    runAsUser: 1000
+
+defaults:
+  podSecurityContext:
+    runAsUser: 1000
+
+dragonfly:
+  extraArgs:
+  - --proactor_threads=1
+  - --maxmemory=256mb

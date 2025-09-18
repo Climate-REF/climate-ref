@@ -386,6 +386,89 @@ def test_apply_filters_dont_keep_multifacet(apply_data_catalog):
     )
 
 
+def test_apply_filters_and(apply_data_catalog: pd.DataFrame) -> None:
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(FacetFilter({"variable": "tas"}) & FacetFilter({"source_id": "ACCESS"}),),
+        group_by=None,
+    )
+
+    filtered = requirement.apply_filters(apply_data_catalog)
+
+    pd.testing.assert_frame_equal(
+        filtered,
+        pd.DataFrame(
+            {
+                "variable": ["tas"],
+                "source_id": ["ACCESS"],
+            },
+            index=[3],
+        ),
+    )
+
+
+def test_apply_filters_or(apply_data_catalog: pd.DataFrame) -> None:
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(FacetFilter({"variable": "tas"}) | FacetFilter({"variable": "pr"}),),
+        group_by=None,
+    )
+
+    filtered = requirement.apply_filters(apply_data_catalog)
+
+    pd.testing.assert_frame_equal(
+        filtered,
+        pd.DataFrame(
+            {"variable": ["tas", "pr", "tas", "tas"], "source_id": ["CESM2", "CESM2", "ACCESS", "CAS"]},
+            index=[0, 1, 3, 4],
+        ),
+    )
+
+
+def test_apply_filters_nested(apply_data_catalog: pd.DataFrame) -> None:
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(
+            (
+                FacetFilter({"variable": "tas"})
+                | FacetFilter({"variable": "pr"})
+                | FacetFilter({"variable": "rsut"})
+            )
+            & FacetFilter({"source_id": "CESM2"}),
+        ),
+        group_by=None,
+    )
+
+    filtered = requirement.apply_filters(apply_data_catalog)
+    pd.testing.assert_frame_equal(
+        filtered,
+        pd.DataFrame(
+            {"variable": ["tas", "pr", "rsut"], "source_id": ["CESM2", "CESM2", "CESM2"]},
+            index=[0, 1, 2],
+        ),
+    )
+
+
+def test_apply_filters_nested2(apply_data_catalog: pd.DataFrame) -> None:
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(
+            FacetFilter({"source_id": "CESM2"})
+            & (FacetFilter({"variable": "tas"}) | FacetFilter({"variable": "pr"})),
+        ),
+        group_by=None,
+    )
+
+    filtered = requirement.apply_filters(apply_data_catalog)
+    pd.testing.assert_frame_equal(
+        filtered,
+        pd.DataFrame(
+            {"variable": ["tas", "pr"], "source_id": ["CESM2", "CESM2"]},
+            index=[0, 1],
+        ),
+    )
+
+
 def test_apply_filters_missing(apply_data_catalog):
     requirement = DataRequirement(
         source_type=SourceDatasetType.CMIP6,
@@ -398,6 +481,24 @@ def test_apply_filters_missing(apply_data_catalog):
         match=re.escape("Facet 'missing' not in data catalog columns: ['variable', 'source_id']"),
     ):
         requirement.apply_filters(apply_data_catalog)
+
+
+def test_facet_filter_unknown_op(apply_data_catalog: pd.DataFrame) -> None:
+    filt = FacetFilter(
+        {"variable": "tas"},
+        next_filter=("x", FacetFilter({"source_id": "ACCESS"})),
+    )
+    with pytest.raises(ValueError, match='Unknown operation "x"'):
+        filt.apply(apply_data_catalog)
+
+
+def test_facet_filter_combine_type_error() -> None:
+    filter1 = FacetFilter({"variable": "tas"})
+    with pytest.raises(
+        TypeError,
+        match='Cannot combine FacetFilter with "int"',
+    ):
+        filter1 & 5
 
 
 @pytest.mark.parametrize(

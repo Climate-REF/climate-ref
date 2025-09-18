@@ -362,20 +362,7 @@ class DataRequirement:
             Filtered data catalog
         """
         for facet_filter in self.filters:
-            values = {}
-            for facet, value in facet_filter.facets.items():
-                clean_value = value if isinstance(value, tuple) else (value,)
-
-                if facet not in data_catalog.columns:
-                    raise KeyError(
-                        f"Facet {facet!r} not in data catalog columns: {data_catalog.columns.to_list()}"
-                    )
-                values[facet] = clean_value
-
-            mask = data_catalog[list(values)].isin(values).all(axis="columns")
-            if not facet_filter.keep:
-                mask = ~mask
-            data_catalog = data_catalog[mask]
+            data_catalog = facet_filter.apply(data_catalog)
         return data_catalog
 
 

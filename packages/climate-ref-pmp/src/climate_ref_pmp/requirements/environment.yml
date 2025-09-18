@@ -3,5 +3,6 @@ channels:
     - nodefaults
 dependencies:
     - python=3.10.10
-    - pcmdi_metrics>=3.9.1
+    - pcmdi_metrics=3.9.2
+    - enso_metrics=1.1.5
     - numpy>=2.0.0,<2.1.0

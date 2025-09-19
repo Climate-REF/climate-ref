@@ -280,6 +280,13 @@ class TestMetricSolver:
     ],
 )
 def test_data_coverage(requirement, data_catalog, expected):
+    def add_path(df: pd.DataFrame) -> pd.DataFrame:
+        """Insert a path column into the DataFrame."""
+        df["path"] = df.apply(lambda r: "_".join(map(str, r.tolist())) + ".nc", axis=1)
+
+    add_path(data_catalog)
+    for expected_value in expected.values():
+        add_path(expected_value)
     result = extract_covered_datasets(data_catalog, requirement)
 
     for key, expected_value in expected.items():

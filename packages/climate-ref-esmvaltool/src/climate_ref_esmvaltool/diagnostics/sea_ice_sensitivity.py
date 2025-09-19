@@ -46,14 +46,23 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
             ),
             group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
             constraints=(
+                RequireFacets(
+                    "variable_id",
+                    required_facets=variables,
+                    group_by=("source_id", "member_id", "grid_label"),
+                ),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
+                RequireFacets(
+                    "variable_id",
+                    required_facets=("areacello",),
+                    group_by=("source_id", "grid_label"),
+                ),
                 RequireTimerange(
                     group_by=("instance_id",),
                     start=PartialDateTime(1979, 1),
                     end=PartialDateTime(2014, 12),
                 ),
-                RequireFacets("variable_id", ("areacello", *variables)),
             ),
         ),
     )

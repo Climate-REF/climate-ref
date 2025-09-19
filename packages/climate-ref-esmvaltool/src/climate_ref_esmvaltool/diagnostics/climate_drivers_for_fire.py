@@ -46,12 +46,13 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
                 RequireFacets("variable_id", variables),
+                AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
+                RequireFacets("variable_id", ("sftlf",)),
                 RequireTimerange(
                     group_by=("instance_id",),
                     start=PartialDateTime(2013, 1),
                     end=PartialDateTime(2014, 12),
                 ),
-                AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
             ),
         ),
     )

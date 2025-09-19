@@ -54,13 +54,21 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             ),
             group_by=("experiment_id",),
             constraints=(
-                RequireFacets("variable_id", variables),
                 AddSupplementaryDataset(
                     supplementary_facets={"experiment_id": "historical"},
                     matching_facets=matching_facets,
                     optional_matching_facets=tuple(),
                 ),
-                RequireFacets("experiment_id", ("historical",)),
+                RequireFacets(
+                    "experiment_id",
+                    required_facets=("historical",),
+                    group_by=matching_facets,
+                ),
+                RequireFacets(
+                    "variable_id",
+                    required_facets=variables,
+                    group_by=("experiment_id", "source_id", "member_id", "grid_label", "table_id"),
+                ),
                 RequireTimerange(
                     group_by=matching_facets,
                     start=PartialDateTime(year=1850, month=1),

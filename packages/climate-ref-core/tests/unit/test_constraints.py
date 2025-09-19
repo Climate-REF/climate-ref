@@ -32,15 +32,57 @@ class TestRequireFacets:
         "data, expected",
         [
             (pd.DataFrame({}), False),
-            (pd.DataFrame({"invalid": ["tas", "pr"]}), False),
-            (pd.DataFrame({"variable_id": ["tas", "pr"]}), True),
-            (pd.DataFrame({"variable_id": ["tas", "pr"], "extra": ["a", "b"]}), True),
-            (pd.DataFrame({"variable_id": ["tas"]}), False),
-            (pd.DataFrame({"variable_id": ["tas"], "extra": ["a"]}), False),
+            (pd.DataFrame({"invalid": ["tas", "pr"], "path": ["tas.nc", "pr.nc"]}), False),
+            (pd.DataFrame({"variable_id": ["tas", "pr"], "path": ["tas.nc", "pr.nc"]}), True),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "pr"],
+                        "extra": ["a", "b"],
+                        "path": ["tas.nc", "pr.nc"],
+                    }
+                ),
+                True,
+            ),
+            (pd.DataFrame({"variable_id": ["tas"], "path": ["tas.nc"]}), False),
+            (pd.DataFrame({"variable_id": ["tas"], "extra": ["a"], "path": ["tas.nc"]}), False),
         ],
     )
     def test_validate(self, data, expected):
         assert self.constraint.validate(data) == expected
+
+    @pytest.mark.parametrize(
+        "data, expected",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "pr", "tas"],
+                        "experiment_id": ["historical", "ssp585", "ssp585"],
+                        "path": ["tas_historical.nc", "pr_ssp585.nc", "tas_ssp585.nc"],
+                    }
+                ),
+                False,
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "pr", "tas", "pr"],
+                        "experiment_id": ["historical", "historical", "ssp585", "ssp585"],
+                        "path": ["tas_historical.nc", "pr_historical.nc", "tas_ssp585.nc", "pr_ssp585.nc"],
+                    }
+                ),
+                True,
+            ),
+        ],
+    )
+    def test_validate_with_groupby(self, data, expected):
+        constraint = RequireFacets(
+            dimension="variable_id",
+            required_facets=["tas", "pr"],
+            group_by=("experiment_id",),
+        )
+        assert constraint.validate(data) == expected
 
 
 class TestAddSupplementaryDataset:
@@ -614,6 +656,7 @@ def data_catalog():
         {
             "variable": ["tas", "pr", "rsut", "tas", "tas"],
             "source_id": ["CESM2", "CESM2", "CESM2", "ACCESS", "CAS"],
+            "path": ["tas_CESM2.nc", "pr_CESM2.nc", "rsut_CESM2.nc", "tas_ACCESS.nc", "tas_CAS.nc"],
         }
     )
 
@@ -636,6 +679,7 @@ def test_apply_constraint_operation(data_catalog):
             {
                 "variable": ["tas", "tas", "tas", "rsut"],
                 "source_id": ["CESM2", "ACCESS", "CAS", "CESM2"],
+                "path": ["tas_CESM2.nc", "tas_ACCESS.nc", "tas_CAS.nc", "rsut_CESM2.nc"],
             },
             index=[0, 3, 4, 2],
         ),

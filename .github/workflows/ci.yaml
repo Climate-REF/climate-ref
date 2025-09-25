@@ -38,9 +38,18 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}
+      - name: Fetch test data
+        run: make fetch-test-data
       - name: Run tests
         run: |
-          make fetch-test-data
+          patch <<EOF
+          --- a/pyproject.toml
+          +++ b/pyproject.toml
+          @@ -132,2 +132,3 @@ formats = "ipynb,py:percent"
+           addopts = [
+          +    "-n=4",
+               "--import-mode=importlib",
+          EOF
           make test
           uv run coverage xml
       - name: Upload coverage reports to Codecov with GitHub Action

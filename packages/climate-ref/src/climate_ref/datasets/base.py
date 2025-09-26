@@ -2,14 +2,34 @@ from pathlib import Path
 from typing import Any, Protocol, cast
 
 import pandas as pd
+from attrs import define
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.config import Config
-from climate_ref.database import Database
+from climate_ref.database import Database, ModelState
 from climate_ref.datasets.utils import validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
+
+
+@define
+class DatasetRegistrationResult:
+    """
+    Result of registering a dataset, containing information about file changes
+    """
+
+    dataset: Dataset
+    dataset_state: ModelState | None
+    files_added: list[str]
+    files_updated: list[str]
+    files_removed: list[str]
+    files_unchanged: list[str]
+
+    @property
+    def total_changes(self) -> int:
+        """Total number of file changes (added + updated + removed)"""
+        return len(self.files_added) + len(self.files_updated) + len(self.files_removed)
 
 
 def _log_duplicate_metadata(
@@ -26,7 +46,8 @@ def _log_duplicate_metadata(
         invalid_dataset_columns = invalid_dataset_nunique[invalid_dataset_nunique.gt(1)].index.tolist()
 
         # Include time_range in the list of invalid columns to make debugging easier
-        invalid_dataset_columns.append("time_range")
+        if "time_range" in data_catalog.columns and "time_range" not in invalid_dataset_columns:
+            invalid_dataset_columns.append("time_range")
 
         data_catalog_subset = data_catalog[data_catalog[slug_column] == instance_id]
 
@@ -169,9 +190,9 @@ class DatasetAdapter(Protocol):
 
         return data_catalog
 
-    def register_dataset(
+    def register_dataset(  # noqa: PLR0915
         self, config: Config, db: Database, data_catalog_dataset: pd.DataFrame
-    ) -> Dataset | None:
+    ) -> DatasetRegistrationResult:
         """
         Register a dataset in the database using the data catalog
 
@@ -187,7 +208,7 @@ class DatasetAdapter(Protocol):
         Returns
         -------
         :
-            Registered dataset if successful, else None
+            Registration result with dataset and file change information
         """
         DatasetModel = self.dataset_cls
 
@@ -197,24 +218,104 @@ class DatasetAdapter(Protocol):
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")
         slug = unique_slugs[0]
 
+        # Upsert the dataset (create a new dataset or update the metadata)
         dataset_metadata = data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
-        dataset, created = db.get_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
-        if not created:
-            logger.warning(f"{dataset} already exists in the database. Skipping")
-            return None
+        dataset, dataset_state = db.update_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
+        if dataset_state == ModelState.CREATED:
+            logger.info(f"Created new dataset: {dataset}")
+        elif dataset_state == ModelState.UPDATED:
+            logger.info(f"Updating existing dataset: {dataset}")
         db.session.flush()
-        for dataset_file in data_catalog_dataset.to_dict(orient="records"):
-            path = validate_path(dataset_file.pop("path"))
 
-            db.session.add(
-                DatasetFile(
-                    path=str(path),
-                    dataset_id=dataset.id,
-                    start_time=dataset_file.pop("start_time"),
-                    end_time=dataset_file.pop("end_time"),
+        # Initialize result tracking
+        files_added = []
+        files_updated = []
+        files_removed = []
+        files_unchanged = []
+
+        # Get current files for this dataset
+        current_files = db.session.query(DatasetFile).filter_by(dataset_id=dataset.id).all()
+        current_file_paths = {f.path: f for f in current_files}
+
+        # Get new file data from data catalog
+        new_file_data = data_catalog_dataset.to_dict(orient="records")
+        new_file_lookup = {}
+        for dataset_file in new_file_data:
+            file_path = str(validate_path(dataset_file["path"]))
+            new_file_lookup[file_path] = {
+                "start_time": dataset_file["start_time"],
+                "end_time": dataset_file["end_time"],
+            }
+
+        new_file_paths = set(new_file_lookup.keys())
+        existing_file_paths = set(current_file_paths.keys())
+
+        # TODO: support removing files that are no longer present
+        # We want to keep a record of the dataset if it was used by a diagnostic in the past
+        files_to_remove = existing_file_paths - new_file_paths
+        if files_to_remove:
+            files_removed = list(files_to_remove)
+            logger.warning(f"Files to remove: {files_removed}")
+            raise NotImplementedError("Removing files is not yet supported")
+
+        # Update existing files if start/end times have changed
+        for file_path, existing_file in current_file_paths.items():
+            if file_path in new_file_lookup:
+                new_times = new_file_lookup[file_path]
+                if (
+                    existing_file.start_time != new_times["start_time"]
+                    or existing_file.end_time != new_times["end_time"]
+                ):
+                    logger.warning(f"Updating file times for {file_path}")
+                    existing_file.start_time = new_times["start_time"]
+                    existing_file.end_time = new_times["end_time"]
+                    files_updated.append(file_path)
+                else:
+                    files_unchanged.append(file_path)
+
+        # Add new files (batch operation)
+        files_to_add = new_file_paths - existing_file_paths
+        if files_to_add:
+            files_added = list(files_to_add)
+            new_dataset_files = []
+            for file_path in files_to_add:
+                file_times = new_file_lookup[file_path]
+                new_dataset_files.append(
+                    DatasetFile(
+                        path=file_path,
+                        dataset_id=dataset.id,
+                        start_time=file_times["start_time"],
+                        end_time=file_times["end_time"],
+                    )
                 )
-            )
-        return dataset
+            db.session.add_all(new_dataset_files)
+
+        # Determine final dataset state
+        # If dataset metadata changed, use that state
+        # If no metadata changed but files changed, consider it updated
+        # If nothing changed, keep the original state (None for existing, CREATED for new)
+        final_dataset_state = dataset_state
+        if dataset_state is None and (files_added or files_updated or files_removed):
+            final_dataset_state = ModelState.UPDATED
+
+        result = DatasetRegistrationResult(
+            dataset=dataset,
+            dataset_state=final_dataset_state,
+            files_added=files_added,
+            files_updated=files_updated,
+            files_removed=files_removed,
+            files_unchanged=files_unchanged,
+        )
+        change_message = f": ({final_dataset_state.name})" if final_dataset_state else ""
+        logger.debug(
+            f"Dataset registration complete for {dataset.slug}{change_message} "
+            f"{len(files_added)} files added, "
+            f"{len(files_updated)} files updated, "
+            f"{len(files_removed)} files removed, "
+            f"{len(files_unchanged)} files unchanged"
+        )
+
+        return result
 
     def _get_dataset_files(self, db: Database, limit: int | None = None) -> pd.DataFrame:
         dataset_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]

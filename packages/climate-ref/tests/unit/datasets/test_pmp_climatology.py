@@ -23,6 +23,7 @@ class TestPMPClimatologyAdapter:
 
     def test_load_local_datasets(self, sample_data_dir, catalog_regression):
         adapter = PMPClimatologyDatasetAdapter()
+        # TODO: ingest pmp data instead of obs4REF
         data_catalog = adapter.find_local_datasets(str(sample_data_dir / "obs4REF"))
 
         # TODO: add time_range to the db?

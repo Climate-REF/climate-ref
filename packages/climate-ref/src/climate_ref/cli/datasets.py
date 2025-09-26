@@ -18,6 +18,7 @@ from loguru import logger
 from rich.console import Console
 
 from climate_ref.cli._utils import pretty_print_df
+from climate_ref.database import ModelState
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models import Dataset
 from climate_ref.provider_registry import ProviderRegistry
@@ -97,7 +98,7 @@ def list_columns(
 
 
 @app.command()
-def ingest(  # noqa: PLR0913
+def ingest(  # noqa
     ctx: typer.Context,
     file_or_directory: list[Path],
     source_type: Annotated[SourceDatasetType, typer.Option(help="Type of source dataset")],
@@ -153,6 +154,15 @@ def ingest(  # noqa: PLR0913
         )
         pretty_print_df(adapter.pretty_subset(data_catalog), console=console)
 
+        # track stats for a given directory
+        num_created_datasets = 0
+        num_updated_datasets = 0
+        num_unchanged_datasets = 0
+        num_created_files = 0
+        num_updated_files = 0
+        num_removed_files = 0
+        num_unchanged_files = 0
+
         for instance_id, data_catalog_dataset in data_catalog.groupby(adapter.slug_column):
             logger.debug(f"Processing dataset {instance_id}")
             with db.session.begin():
@@ -164,9 +174,29 @@ def ingest(  # noqa: PLR0913
                     )
                     if not dataset:
                         logger.info(f"Would save dataset {instance_id} to the database")
-                        continue
                 else:
-                    adapter.register_dataset(config, db, data_catalog_dataset)
+                    results = adapter.register_dataset(config, db, data_catalog_dataset)
+
+                    if results.dataset_state == ModelState.CREATED:
+                        num_created_datasets += 1
+                    elif results.dataset_state == ModelState.UPDATED:
+                        num_updated_datasets += 1
+                    else:
+                        num_unchanged_datasets += 1
+                    num_created_files += len(results.files_added)
+                    num_updated_files += len(results.files_updated)
+                    num_removed_files += len(results.files_removed)
+                    num_unchanged_files += len(results.files_unchanged)
+
+        if not dry_run:
+            ingestion_msg = (
+                f"Datasets: {num_created_datasets}/{num_updated_datasets}/{num_unchanged_datasets}"
+                " (created/updated/unchanged), "
+                f"Files: "
+                f"{num_created_files}/{num_updated_files}/{num_removed_files}/{num_unchanged_files}"
+                " (created/updated/removed/unchanged)"
+            )
+            logger.info(ingestion_msg)
 
     if solve:
         solve_required_executions(

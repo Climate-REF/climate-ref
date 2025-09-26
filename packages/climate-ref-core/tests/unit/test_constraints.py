@@ -6,6 +6,7 @@ import pandas as pd
 import pytest
 
 from climate_ref_core.constraints import (
+    AddParentExperiment,
     AddSupplementaryDataset,
     GroupOperation,
     GroupValidator,
@@ -14,7 +15,6 @@ from climate_ref_core.constraints import (
     RequireFacets,
     RequireOverlappingTimerange,
     RequireTimerange,
-    SelectParentExperiment,
     apply_constraint,
 )
 from climate_ref_core.datasets import SourceDatasetType
@@ -642,9 +642,9 @@ class TestOverlappingTimerange:
         assert self.constraint.validate(data) == expected
 
 
-class TestSelectParentExperiment:
+class TestAddParentExperiment:
     def test_is_group_constraint(self):
-        constraint = SelectParentExperiment()
+        constraint = AddParentExperiment()
 
         assert isinstance(constraint, GroupOperation)
         assert not isinstance(constraint, GroupValidator)

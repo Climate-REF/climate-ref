@@ -1,13 +1,13 @@
 from pathlib import Path
 
+import cftime
 import pandas
 import xarray
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
-    RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -28,10 +28,6 @@ class TransientClimateResponse(ESMValToolDiagnostic):
     slug = "transient-climate-response"
     base_recipe = "recipe_tcr.yml"
 
-    experiments = (
-        "1pctCO2",
-        "piControl",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
@@ -39,17 +35,16 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 FacetFilter(
                     facets={
                         "variable_id": ("tas",),
-                        "experiment_id": experiments,
+                        "experiment_id": "1pctCO2",
                         "table_id": "Amon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                RequireFacets("experiment_id", experiments),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
+                AddParentDataset(),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                RequireContiguousTimerange(group_by=("instance_id",)),
             ),
         ),
     )
@@ -93,10 +88,19 @@ class TransientClimateResponse(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "1pctCO2" and one for the "piControl"
         # experiment.
-        recipe_variables = dataframe_to_recipe(
-            input_files[SourceDatasetType.CMIP6],
-            equalize_timerange=True,
-        )
+        # TODO: replace equalize_timerange by a function that takes the offset
+        # of the parent experiment into account
+        df = input_files[SourceDatasetType.CMIP6]
+        parents = df[df.experiment_id != "1pctCO2"]
+        children = df[df.experiment_id == "1pctCO2"]
+        child_start = children.start_time.dropna().min()
+        branch_time_in_parent = children.branch_time_in_parent.dropna().min()
+        branch_time_in_child = children.branch_time_in_parent.dropna().min()
+        parent_calendar = parents.calendar.dropna().iloc[0]
+        child_calendar = children.calendar.dropna().iloc[0]
+        breakpoint()
+        child_start_in_parent = cftime.num2date(branch_time_in_parent, calendar=parent_calendar)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe["datasets"] = recipe_variables["tas"]["additional_datasets"]
 
         # Remove keys from the recipe that are only used for YAML anchors

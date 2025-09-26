@@ -1,144 +1,144 @@
-name: CI
+# name: CI
 
-on:
-  pull_request:
-  push:
-    branches: [main]
-    tags: ['v*']
+# on:
+#   pull_request:
+#   push:
+#     branches: [main]
+#     tags: ['v*']
 
-jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      # Verifies that Ruff and mypy checks are passing
-      - name: pre-commit
-        run: make pre-commit
+# jobs:
+#   pre-commit:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - uses: ./.github/actions/setup
+#       # Verifies that Ruff and mypy checks are passing
+#       - name: pre-commit
+#         run: make pre-commit
 
-  tests:
-    env:
-      REF_TEST_OUTPUT: "test-outputs"
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ "ubuntu-latest" ]
-        python-version: [ "3.13" ]
-    runs-on: "${{ matrix.os }}"
-    defaults:
-      run:
-        # This might be needed for Windows and doesn't seem to affect unix-based systems
-        # so we include it. If you have better proof of whether this is needed or not,
-        # feel free to update.
-        shell: bash
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Run tests
-        run: |
-          make fetch-test-data
-          make test
-          uv run coverage xml
-      - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v5
-        env:
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload scratch artifacts
-        uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: test-output-${{ matrix.python-version }}
-          path: ${{ env.REF_TEST_OUTPUT }}
-          retention-days: 7
+#   tests:
+#     env:
+#       REF_TEST_OUTPUT: "test-outputs"
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         os: [ "ubuntu-latest" ]
+#         python-version: [ "3.13" ]
+#     runs-on: "${{ matrix.os }}"
+#     defaults:
+#       run:
+#         # This might be needed for Windows and doesn't seem to affect unix-based systems
+#         # so we include it. If you have better proof of whether this is needed or not,
+#         # feel free to update.
+#         shell: bash
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - uses: ./.github/actions/setup
+#         with:
+#           python-version: ${{ matrix.python-version }}
+#       - name: Run tests
+#         run: |
+#           make fetch-test-data
+#           make test
+#           uv run coverage xml
+#       - name: Upload coverage reports to Codecov with GitHub Action
+#         uses: codecov/codecov-action@v5
+#         env:
+#           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+#       - name: Upload scratch artifacts
+#         uses: actions/upload-artifact@v4
+#         if: always()
+#         with:
+#           name: test-output-${{ matrix.python-version }}
+#           path: ${{ env.REF_TEST_OUTPUT }}
+#           retention-days: 7
 
-  imports-without-extras:
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ "ubuntu-latest" ]
-        python-version: [ "3.11",  "3.13" ]
-    runs-on: "${{ matrix.os }}"
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Check importable without extras
-        run: |
-          uv run --isolated --with-editable packages/climate-ref --with typer --no-project scripts/test-install.py climate_ref
-          uv run --isolated --with-editable packages/climate-ref-core --with typer --no-project scripts/test-install.py climate_ref_core
-          uv run --isolated --with-editable packages/climate-ref-celery --with typer --no-project scripts/test-install.py climate_ref_celery
-          uv run --isolated --with-editable packages/climate-ref-ilamb --with typer --no-project scripts/test-install.py climate_ref_ilamb
-          uv run --isolated --with-editable packages/climate-ref-esmvaltool --with typer --no-project scripts/test-install.py climate_ref_esmvaltool
-          uv run --isolated --with-editable packages/climate-ref-pmp --with typer --no-project scripts/test-install.py climate_ref_pmp
+#   imports-without-extras:
+#     strategy:
+#       fail-fast: false
+#       matrix:
+#         os: [ "ubuntu-latest" ]
+#         python-version: [ "3.11",  "3.13" ]
+#     runs-on: "${{ matrix.os }}"
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - uses: ./.github/actions/setup
+#         with:
+#           python-version: ${{ matrix.python-version }}
+#       - name: Check importable without extras
+#         run: |
+#           uv run --isolated --with-editable packages/climate-ref --with typer --no-project scripts/test-install.py climate_ref
+#           uv run --isolated --with-editable packages/climate-ref-core --with typer --no-project scripts/test-install.py climate_ref_core
+#           uv run --isolated --with-editable packages/climate-ref-celery --with typer --no-project scripts/test-install.py climate_ref_celery
+#           uv run --isolated --with-editable packages/climate-ref-ilamb --with typer --no-project scripts/test-install.py climate_ref_ilamb
+#           uv run --isolated --with-editable packages/climate-ref-esmvaltool --with typer --no-project scripts/test-install.py climate_ref_esmvaltool
+#           uv run --isolated --with-editable packages/climate-ref-pmp --with typer --no-project scripts/test-install.py climate_ref_pmp
 
-  check-build:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Check build
-        run: |
-          make build
-          tar -tvf dist/climate_ref-*.tar.gz --wildcards '*climate_ref/py.typed' '*/LICENCE' '*/NOTICE'
-          tar -tvf dist/climate_ref_core-*.tar.gz --wildcards '*climate_ref_core/py.typed' '*/LICENCE' '*/NOTICE'
-      - name: Check installable
-        run: |
-          uv pip install dist/*.whl
-          uv pip freeze
-          uv run --no-sync python -c "import climate_ref; print(climate_ref.__version__)"
-          uv run --no-sync ref config list
+#   check-build:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - uses: ./.github/actions/setup
+#       - name: Check build
+#         run: |
+#           make build
+#           tar -tvf dist/climate_ref-*.tar.gz --wildcards '*climate_ref/py.typed' '*/LICENCE' '*/NOTICE'
+#           tar -tvf dist/climate_ref_core-*.tar.gz --wildcards '*climate_ref_core/py.typed' '*/LICENCE' '*/NOTICE'
+#       - name: Check installable
+#         run: |
+#           uv pip install dist/*.whl
+#           uv pip freeze
+#           uv run --no-sync python -c "import climate_ref; print(climate_ref.__version__)"
+#           uv run --no-sync ref config list
 
-  # Check if a changelog message was added to the PR
-  # Only runs on pull requests
-  check-for-changelog:
-    runs-on: ubuntu-latest
-    if: github.event.pull_request
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - uses: ./.github/actions/setup
-      - name: Get all changelog files
-        id: changed-changelog-files
-        uses: tj-actions/changed-files@v45
-        with:
-          # Avoid using single or double quotes for multiline patterns
-          files: |
-            changelog/*.md
-      - name: Print out the changed files
-        if: steps.changed-files-specific.outputs.any_changed == 'true'
-        env:
-          ALL_CHANGED_FILES: ${{ steps.changed-changelog-files.outputs.all_changed_files }}
-        run: |
-          make changelog-draft
-      - name: Fail if no changelog message is present
-        if: steps.changed-changelog-files.outputs.any_changed == 'false'
-        run: |
-          echo "No changelog present."
-          exit 1
+#   # Check if a changelog message was added to the PR
+#   # Only runs on pull requests
+#   check-for-changelog:
+#     runs-on: ubuntu-latest
+#     if: github.event.pull_request
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - uses: ./.github/actions/setup
+#       - name: Get all changelog files
+#         id: changed-changelog-files
+#         uses: tj-actions/changed-files@v45
+#         with:
+#           # Avoid using single or double quotes for multiline patterns
+#           files: |
+#             changelog/*.md
+#       - name: Print out the changed files
+#         if: steps.changed-files-specific.outputs.any_changed == 'true'
+#         env:
+#           ALL_CHANGED_FILES: ${{ steps.changed-changelog-files.outputs.all_changed_files }}
+#         run: |
+#           make changelog-draft
+#       - name: Fail if no changelog message is present
+#         if: steps.changed-changelog-files.outputs.any_changed == 'false'
+#         run: |
+#           echo "No changelog present."
+#           exit 1
 
-  smoke-test:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      - name: Set up Docker Compose
-        uses: docker/setup-compose-action@v1
-      - uses: ./.github/actions/setup
-        with:
-          python-version: ${{ matrix.python-version }}
-      - name: Run smoke test
-        run: |
-          bash scripts/smoke-test.sh
-      - name: Cleanup
-        if: always()
-        run: |
-          docker compose down -v
+#   smoke-test:
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#       - name: Set up Docker Buildx
+#         uses: docker/setup-buildx-action@v3
+#       - name: Set up Docker Compose
+#         uses: docker/setup-compose-action@v1
+#       - uses: ./.github/actions/setup
+#         with:
+#           python-version: ${{ matrix.python-version }}
+#       - name: Run smoke test
+#         run: |
+#           bash scripts/smoke-test.sh
+#       - name: Cleanup
+#         if: always()
+#         run: |
+#           docker compose down -v

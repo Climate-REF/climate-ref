@@ -551,4 +551,4 @@ class AddParentDataset:
             parent_dataset = parent_dataset[parent_dataset["version"] == parent_dataset["version"].max()]
             parent_datasets.append(parent_dataset)
 
-        return pd.concat([group, *parent_datasets]).drop_duplicates()
+        return pd.concat([group, *parent_datasets]).drop_duplicates().sort_index()

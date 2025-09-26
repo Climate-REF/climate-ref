@@ -117,7 +117,7 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
 
             try:
                 start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
-                info["calendar"] = ds.cf["T"].attrs["calendar"]
+                info["calendar"] = ds.cf["T"][0].values.item().calendar
             except (KeyError, AttributeError, ValueError):
                 ...
             if info.get("sub_experiment_id"):  # pragma: no branch

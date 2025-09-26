@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import cftime
 import pandas
 import xarray
 
@@ -43,7 +44,6 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 AddParentDataset(),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 RequireContiguousTimerange(group_by=("instance_id",)),
-                # RequireParentDataset(),  # TODO: implement
             ),
         ),
     )
@@ -78,10 +78,17 @@ class TransientClimateResponse(ESMValToolDiagnostic):
         # experiment.
         # TODO: replace equalize_timerange by a function that takes the offset
         # of the parent experiment into account
-        recipe_variables = dataframe_to_recipe(
-            input_files[SourceDatasetType.CMIP6],
-            equalize_timerange=True,
-        )
+        df = input_files[SourceDatasetType.CMIP6]
+        parents = df[df.experiment_id != "1pctCO2"]
+        children = df[df.experiment_id == "1pctCO2"]
+        child_start = children.start_time.dropna().min()
+        branch_time_in_parent = children.branch_time_in_parent.dropna().min()
+        branch_time_in_child = children.branch_time_in_parent.dropna().min()
+        parent_calendar = parents.calendar.dropna().iloc[0]
+        child_calendar = children.calendar.dropna().iloc[0]
+        breakpoint()
+        child_start_in_parent = cftime.num2date(branch_time_in_parent, calendar=parent_calendar)
+        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
         recipe["datasets"] = recipe_variables["tas"]["additional_datasets"]
 
         # Remove keys from the recipe that are only used for YAML anchors

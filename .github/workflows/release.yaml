@@ -1,48 +1,48 @@
-# Generate a draft release on GitHub when a new tag is pushed
-# The draft release will contain draft release notes and some built wheels
+# # Generate a draft release on GitHub when a new tag is pushed
+# # The draft release will contain draft release notes and some built wheels
 
-name: Release
+# name: Release
 
-on:
-  push:
-    tags: ['v*']
+# on:
+#   push:
+#     tags: ['v*']
 
-defaults:
-  run:
-    shell: bash
+# defaults:
+#   run:
+#     shell: bash
 
-jobs:
-  draft-release:
-    name: Create draft release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-      - name: Add version to environment
-        run: |
-          PROJECT_VERSION=`sed -ne 's/^version = "\([0-9\.abrc]*\)"/\1/p' pyproject.toml`
-          echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
-      - name: Build package for PyPI
-        run: make build
-      - name: Generate Release Notes
-        run: |
-          echo "" >> ".github/release_template.md"
-          echo "## Changelog" >> ".github/release_template.md"
-          echo "" >> ".github/release_template.md"
-          uv run python scripts/changelog-to-release-template.py >> ".github/release_template.md"
-          echo "" >> ".github/release_template.md"
-          echo "## Changes" >> ".github/release_template.md"
-          echo "" >> ".github/release_template.md"
-          git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges >> ".github/release_template.md"
-          echo .github/release_template.md
-      - name: Create Release Draft
-        uses: softprops/action-gh-release@v2
-        with:
-          body_path: ".github/release_template.md"
-          token: "${{ secrets.PAT }}"
-          draft: true
-          files: |
-            dist/*
+# jobs:
+#   draft-release:
+#     name: Create draft release
+#     runs-on: ubuntu-latest
+#     steps:
+#       - name: Check out repository
+#         uses: actions/checkout@v4
+#         with:
+#           fetch-depth: 0
+#       - uses: ./.github/actions/setup
+#       - name: Add version to environment
+#         run: |
+#           PROJECT_VERSION=`sed -ne 's/^version = "\([0-9\.abrc]*\)"/\1/p' pyproject.toml`
+#           echo "PROJECT_VERSION=$PROJECT_VERSION" >> $GITHUB_ENV
+#       - name: Build package for PyPI
+#         run: make build
+#       - name: Generate Release Notes
+#         run: |
+#           echo "" >> ".github/release_template.md"
+#           echo "## Changelog" >> ".github/release_template.md"
+#           echo "" >> ".github/release_template.md"
+#           uv run python scripts/changelog-to-release-template.py >> ".github/release_template.md"
+#           echo "" >> ".github/release_template.md"
+#           echo "## Changes" >> ".github/release_template.md"
+#           echo "" >> ".github/release_template.md"
+#           git log $(git describe --tags --abbrev=0 HEAD^)..HEAD --pretty='format:* %h %s' --no-merges >> ".github/release_template.md"
+#           echo .github/release_template.md
+#       - name: Create Release Draft
+#         uses: softprops/action-gh-release@v2
+#         with:
+#           body_path: ".github/release_template.md"
+#           token: "${{ secrets.PAT }}"
+#           draft: true
+#           files: |
+#             dist/*

@@ -14,7 +14,7 @@ from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
-from climate_ref_esmvaltool.recipe import dataframe_to_recipe
+from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -68,24 +68,25 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Prepare updated datasets section in recipe. It contains two
-        # datasets, one for the "esm-1pct-brch-1000PgC" and one for the "piControl"
+        # datasets, one for the "esm-1pct-brch-1000PgC" and one for the "1pctCO2"
         # experiment.
-        datasets = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])["tas"]["additional_datasets"]
-        base_dataset = next(ds for ds in datasets if ds["exp"] == "1pctCO2")
-        dataset = next(ds for ds in datasets if ds["exp"] == "esm-1pct-brch-1000PgC")
-        start = dataset["timerange"].split("/")[0]
-        base_start = f"{int(start[:4]) - 10:04d}{start[4:]}"
-        base_end = f"{int(start[:4]) + 10:04d}{start[4:]}"
-        base_dataset["timerange"] = f"{base_start}/{base_end}"
+        df = input_files[SourceDatasetType.CMIP6]
+        child_dataset, parent_dataset = get_child_and_parent_dataset(
+            df[df.variable_id == "tas"],
+            parent_experiment="1pctCO2",
+            child_duration_in_years=100,
+            parent_offset_in_years=-10,
+            parent_duration_in_years=20,
+        )
         variables = recipe["diagnostics"]["zec"]["variables"]
         variables["tas_base"] = {
             "short_name": "tas",
             "preprocessor": "anomaly_base",
-            "additional_datasets": [base_dataset],
+            "additional_datasets": [parent_dataset],
         }
         variables["tas"] = {
             "preprocessor": "spatial_mean",
-            "additional_datasets": [dataset],
+            "additional_datasets": [child_dataset],
         }
 
     @classmethod

@@ -4,7 +4,10 @@ import importlib.resources
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
+import cftime  # type: ignore[import-untyped]
+import pandas as pd
 import pooch
+import xarray as xr
 import yaml
 
 from climate_ref_esmvaltool.types import Recipe
@@ -144,8 +147,55 @@ def dataframe_to_recipe(
     return variables
 
 
-_ESMVALTOOL_COMMIT = "f5214c9242725fe9a4c3628f304917c7434b361d"
-_ESMVALTOOL_VERSION = f"2.13.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
+def get_child_and_parent_dataset(
+    df: pd.DataFrame,
+    parent_experiment: str,
+    child_duration_in_years: int,
+    parent_offset_in_years: int,
+    parent_duration_in_years: int,
+) -> list[dict[str, str | list[str]]]:
+    """Retrieve the child and parent dataset in recipe format from a dataframe."""
+    parent_df = df[(df.experiment_id == parent_experiment)]
+    child_df = df[(df.experiment_id != parent_experiment)]
+
+    # Compute the start time of the child and parent datasets using the
+    # branch_time_in_parent and branch_time_in_child attributes to compute the offset.
+    # This ensures that the datasets are aligned correctly in time.
+    parent_path = parent_df.path.min()
+    child_path = child_df.path.min()
+    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+    parent_ds = xr.open_dataset(parent_path, decode_times=time_coder)
+    child_ds = xr.open_dataset(child_path, decode_times=time_coder)
+    branch_time_in_parent = cftime.num2date(
+        child_ds.attrs["branch_time_in_parent"],
+        units=parent_ds.time.encoding["units"],
+        calendar=parent_ds.time.encoding.get("calendar", "standard"),
+    )
+    branch_time_in_child = cftime.num2date(
+        child_ds.attrs["branch_time_in_child"],
+        units=child_ds.time.encoding["units"],
+        calendar=child_ds.time.encoding.get("calendar", "standard"),
+    )
+    child_start = child_ds.time.values[0]
+    parent_start = branch_time_in_parent - branch_time_in_child + child_start
+
+    # Create the datasets for use in the recipe.
+    var_name = child_df.variable_id.iloc[0]
+    child_dataset = dataframe_to_recipe(child_df)[var_name]["additional_datasets"][0]
+    # The end year of the timerange is inclusive, so subtract 1.
+    child_end_year = child_start.year + child_duration_in_years - 1
+    child_dataset["timerange"] = f"{child_start.year:04d}/{child_end_year:04d}"
+
+    parent_dataset = dataframe_to_recipe(parent_df)[var_name]["additional_datasets"][0]
+    parent_start_year = parent_start.year + parent_offset_in_years
+    parent_end_year = parent_start_year + parent_duration_in_years - 1
+    parent_dataset["timerange"] = f"{parent_start_year:04d}/{parent_end_year:04d}"
+
+    return [child_dataset, parent_dataset]
+
+
+_ESMVALTOOL_COMMIT = "2c438d0e0cc8904790294c72450eb7f06552c52a"
+_ESMVALTOOL_VERSION = f"2.13.0.dev148+g{_ESMVALTOOL_COMMIT[:9]}"
 
 _RECIPES = pooch.create(
     path=pooch.os_cache("climate_ref_esmvaltool"),

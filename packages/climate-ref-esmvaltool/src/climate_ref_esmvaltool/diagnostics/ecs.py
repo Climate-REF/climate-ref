@@ -16,7 +16,7 @@ from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
-from climate_ref_esmvaltool.recipe import dataframe_to_recipe
+from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -106,11 +106,14 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "abrupt-4xCO2" and one for the "piControl"
         # experiment.
-        recipe_variables = dataframe_to_recipe(
-            input_files[SourceDatasetType.CMIP6],
-            equalize_timerange=True,
+        df = input_files[SourceDatasetType.CMIP6]
+        recipe["datasets"] = get_child_and_parent_dataset(
+            df[df.variable_id == "tas"],
+            parent_experiment="piControl",
+            child_duration_in_years=150,
+            parent_offset_in_years=0,
+            parent_duration_in_years=150,
         )
-        recipe["datasets"] = recipe_variables["tas"]["additional_datasets"]
 
         # Remove keys from the recipe that are only used for YAML anchors
         keys_to_remove = [

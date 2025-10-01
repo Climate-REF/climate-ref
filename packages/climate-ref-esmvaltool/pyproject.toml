@@ -23,6 +23,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
+    "cftime>=1.6.4.post1",
     "climate-ref-core",
     "pooch >= 1.8",
     "pyyaml",

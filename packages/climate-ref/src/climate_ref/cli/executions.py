@@ -6,6 +6,7 @@ import json
 import pathlib
 import shutil
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Annotated
 from urllib.parse import quote
 
@@ -21,8 +22,11 @@ from rich.tree import Tree
 
 from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
 from climate_ref.config import Config
+from climate_ref.executor.result_handling import handle_execution_result
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
+from climate_ref_core.datasets import ExecutionDatasetCollection
+from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 app = typer.Typer(help=__doc__)
@@ -536,3 +540,132 @@ def flag_dirty(ctx: typer.Context, execution_id: int) -> None:
         execution_group.dirty = True
 
         console.print(_execution_panel(execution_group))
+
+
+@app.command()
+def regenerate(  # noqa: PLR0915
+    ctx: typer.Context,
+    execution_group_id: int,
+    scratch_directory: Annotated[
+        pathlib.Path,
+        typer.Argument(help="Path to the scratch directory containing execution results"),
+    ],
+) -> None:
+    """
+    Regenerate execution results from a scratch directory.
+
+    This command reprocesses execution results that were previously generated in a scratch directory.
+    It creates a new execution in the database to avoid conflicts with existing executions,
+    then calls the result handling pipeline to process and copy the results to the results directory.
+
+    The scratch directory should contain:
+    - diagnostic.json (metric bundle)
+    - output.json (output bundle, optional)
+    - series.json (series values, optional)
+    - out.log (execution log)
+    """
+    config: Config = ctx.obj.config
+    database = ctx.obj.database
+    session = database.session
+    console = ctx.obj.console
+
+    # Validate scratch directory exists
+    if not scratch_directory.exists():
+        logger.error(f"Scratch directory does not exist: {scratch_directory}")
+        raise typer.Exit(code=1)
+
+    if not scratch_directory.is_dir():
+        logger.error(f"Path is not a directory: {scratch_directory}")
+        raise typer.Exit(code=1)
+
+    # Load the execution group
+    execution_group = session.get(ExecutionGroup, execution_group_id)
+    if not execution_group:
+        logger.error(f"Execution group not found: {execution_group_id}")
+        raise typer.Exit(code=1)
+
+    # Check required files exist
+    metric_bundle_file = scratch_directory / "diagnostic.json"
+    if not metric_bundle_file.exists():
+        logger.error(f"Required file not found: {metric_bundle_file}")
+        raise typer.Exit(code=1)
+
+    log_file = scratch_directory / EXECUTION_LOG_FILENAME
+    if not log_file.exists():
+        logger.warning(f"Log file not found: {log_file}. Creating empty log file.")
+        log_file.touch()
+
+    # Optional files
+    output_bundle_file = scratch_directory / "output.json"
+    series_file = scratch_directory / "series.json"
+
+    console.print(f"[bold]Regenerating execution from scratch directory:[/bold] {scratch_directory}")
+    console.print(_execution_panel(execution_group))
+
+    # Determine output fragment for new execution
+    # Use a unique timestamp-based fragment to avoid conflicts
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    output_fragment = f"{execution_group.diagnostic.slug}/{execution_group.key}/regenerated_{timestamp}"
+
+    # Create a minimal ExecutionDatasetCollection for the ExecutionDefinition
+    # This is a placeholder since we're regenerating from existing results
+    empty_datasets_collection = ExecutionDatasetCollection({})
+
+    # Create a dummy ExecutionDefinition for building the result
+    # We only need this to satisfy the ExecutionResult interface
+    execution_definition = ExecutionDefinition(  # type: ignore
+        diagnostic=execution_group.diagnostic,
+        key=execution_group.key,
+        datasets=empty_datasets_collection,
+        output_directory=config.paths.scratch / output_fragment,
+        _root_directory=config.paths.scratch,
+    )
+
+    # Build ExecutionResult from the scratch directory
+    try:
+        result = ExecutionResult(
+            definition=execution_definition,
+            metric_bundle_filename=pathlib.Path("diagnostic.json"),
+            output_bundle_filename=pathlib.Path("output.json") if output_bundle_file.exists() else None,
+            series_filename=pathlib.Path("series.json") if series_file.exists() else None,
+            successful=True,
+        )
+    except Exception as e:
+        logger.error(f"Failed to build execution result: {e}")
+        raise typer.Exit(code=1)
+
+    # Create a new execution in the database
+    with session.begin():
+        # Create new execution with unique output fragment
+        new_execution = Execution(
+            execution_group_id=execution_group.id,
+            dataset_hash="regenerated",  # Mark as regenerated
+            output_fragment=output_fragment,
+        )
+        session.add(new_execution)
+        session.flush()
+
+        console.print(f"[green]Created new execution with ID: {new_execution.id}[/green]")
+
+        # Clone the entire scratch directory to the expected scratch location
+        expected_scratch_dir = config.paths.scratch / output_fragment
+
+        try:
+            # Use copytree to clone the entire directory including all figures and outputs
+            shutil.copytree(scratch_directory, expected_scratch_dir, dirs_exist_ok=False)
+            console.print(f"[green]Cloned scratch directory to: {expected_scratch_dir}[/green]")
+        except Exception as e:
+            logger.error(f"Failed to clone scratch directory: {e}")
+            session.rollback()
+            raise typer.Exit(code=1)
+
+        # Now process the result using handle_execution_result
+        try:
+            handle_execution_result(config, database, new_execution, result)
+            console.print("[green]Successfully regenerated execution results![/green]")
+            console.print(f"Results directory: {config.paths.results / output_fragment}")
+        except Exception as e:
+            logger.exception(f"Failed to handle execution result: {e}")
+            session.rollback()
+            raise typer.Exit(code=1)

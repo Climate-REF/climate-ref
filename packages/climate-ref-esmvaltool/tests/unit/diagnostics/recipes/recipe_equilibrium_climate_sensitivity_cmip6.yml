@@ -40,7 +40,7 @@ datasets:
   exp: abrupt-4xCO2
   grid: gn
   mip: Amon
-  timerange: 01010116T120000/01251216T120000
+  timerange: 0101/0250
 - project: CMIP6
   activity: CMIP
   dataset: ACCESS-ESM1-5
@@ -49,4 +49,4 @@ datasets:
   exp: piControl
   grid: gn
   mip: Amon
-  timerange: 01010116T120000/01251216T120000
+  timerange: 0101/0250

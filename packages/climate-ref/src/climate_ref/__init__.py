@@ -8,7 +8,7 @@ __version__ = importlib.metadata.version("climate-ref")
 
 # Version of sample data used for testing - defined here to avoid importing
 # the heavy climate_ref.testing module (which pulls in pandas, xarray, etc.)
-SAMPLE_DATA_VERSION = "v0.7.4"
+SAMPLE_DATA_VERSION = "v0.7.7"
 
 from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager  # noqa: E402
 

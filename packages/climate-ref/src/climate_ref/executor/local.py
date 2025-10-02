@@ -88,8 +88,7 @@ def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionRe
     except Exception:  # pragma: no cover
         # This isn't expected but if it happens we want to log the error before the process exits
         logger.exception("Error running diagnostic")
-        # This will kill the process pool
-        raise
+        return ExecutionResult.build_from_failure(definition)
 
 
 class LocalExecutor:

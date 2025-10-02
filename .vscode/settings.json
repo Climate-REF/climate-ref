@@ -11,5 +11,6 @@
         "editor.codeActionsOnSave": {
             "source.fixAll": "explicit"
         }
-    }
+    },
+    "ruff.configuration": "${workspaceFolder}/ruff.toml"
 }

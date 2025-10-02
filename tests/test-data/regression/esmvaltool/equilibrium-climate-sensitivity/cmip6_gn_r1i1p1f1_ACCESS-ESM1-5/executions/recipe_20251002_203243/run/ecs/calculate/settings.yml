@@ -1,0 +1,14 @@
+calculate_mmm: false
+recipe: recipe.yml
+version: 2.12.0
+script: calculate
+run_dir: <OUTPUT_DIR>/executions/recipe_20251002_203243/run/ecs/calculate
+plot_dir: <OUTPUT_DIR>/executions/recipe_20251002_203243/plots/ecs/calculate
+work_dir: <OUTPUT_DIR>/executions/recipe_20251002_203243/work/ecs/calculate
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+scheduler_address: tcp://127.0.0.1:35003
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20251002_203243/preproc/ecs/tas/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20251002_203243/preproc/ecs/rtnt/metadata.yml

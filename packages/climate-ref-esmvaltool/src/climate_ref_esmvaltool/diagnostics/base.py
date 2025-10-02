@@ -218,6 +218,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             for filename in metadata:
                 caption = metadata[filename].get("caption", "")
                 relative_path = definition.as_relative_path(filename)
+                for file_def in (*definition.diagnostic.files, *definition.diagnostic.series):
+                    if fnmatch.fnmatch(
+                        str(relative_path),
+                        f"executions/*/{file_def.file_pattern.format(**input_selectors)}",
+                    ):
+                        dimensions = file_def.dimensions
+                        break
+                else:
+                    dimensions = {}
                 if relative_path.suffix in plot_suffixes:
                     key = OutputCV.PLOTS.value
                 else:
@@ -226,10 +235,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     OutputCV.FILENAME.value: f"{relative_path}",
                     OutputCV.LONG_NAME.value: caption,
                     OutputCV.DESCRIPTION.value: "",
+                    OutputCV.DIMENSIONS.value: dimensions,
                 }
                 series.extend(
                     self._extract_series_from_file(
-                        definition, filename, relative_path, caption=caption, input_selectors=input_selectors
+                        definition,
+                        filename,
+                        relative_path,
+                        caption=caption,
+                        input_selectors=input_selectors,
                     )
                 )
 

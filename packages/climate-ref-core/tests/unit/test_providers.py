@@ -1,6 +1,7 @@
 import datetime
 import logging
 import subprocess
+import textwrap
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -8,12 +9,13 @@ from pathlib import Path
 import pytest
 
 import climate_ref_core.providers
+from climate_ref_core.constraints import IgnoreFacets
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
 from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider, import_provider
 
 
-class TestMetricsProvider:
+class TestDiagnosticProvider:
     def test_provider(self):
         provider = DiagnosticProvider("provider_name", "v0.23")
 
@@ -50,6 +52,23 @@ class TestMetricsProvider:
 
         result = provider.get("mock")
         assert isinstance(result, Diagnostic)
+
+    def test_configure(self, tmp_path, provider, config):
+        config.ignore_datasets_file = tmp_path / "ignore_datasets.yaml"
+        config.ignore_datasets_file.write_text(
+            textwrap.dedent(
+                """
+                mock_provider:
+                  mock:
+                    cmip6:
+                      - source_id: A
+                """
+            ),
+            encoding="utf-8",
+        )
+        provider.configure(config)
+        expected_constraint = IgnoreFacets(facets={"source_id": ("A",)})
+        assert provider.diagnostics()[0].data_requirements[0][0].constraints[0] == expected_constraint
 
 
 @pytest.mark.parametrize("fqn", ["climate_ref_esmvaltool:provider", "climate_ref_esmvaltool"])

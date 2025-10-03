@@ -27,7 +27,7 @@ diagnostics:
         institute: CSIRO
         grid: gn
         mip: Amon
-        timerange: 01010116T120000/01251216T120000
+        timerange: 0101/0250
         supplementary_variables:
         - mip: fx
           short_name: areacella
@@ -40,7 +40,7 @@ diagnostics:
         institute: CSIRO
         grid: gn
         mip: Amon
-        timerange: 01010116T120000/01251216T120000
+        timerange: 0101/0250
         supplementary_variables:
         - mip: fx
           short_name: areacella

@@ -1,0 +1,10 @@
+esmvaltool:
+  sea-ice-sensitivity:
+      cmip6:
+        - experiment_id: historical
+          grid_label: gn
+          member_id: r1i1p1f1
+          source_id: CAS-ESM2-0
+          table_id: SImon
+          variable_id: siconc
+          version: v20201225

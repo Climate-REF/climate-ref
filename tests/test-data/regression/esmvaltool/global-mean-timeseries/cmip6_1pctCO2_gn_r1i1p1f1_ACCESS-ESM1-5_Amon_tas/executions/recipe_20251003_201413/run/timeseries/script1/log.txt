@@ -1,7 +1,7 @@
 INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script script1 with configuration:
 auxiliary_data_dir: /home/bandela/auxiliary_data
 input_data:
-  ? <OUTPUT_DIR>/executions/recipe_20251001_073453/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+  ? <OUTPUT_DIR>/executions/recipe_20251003_201413/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
   : activity: CMIP
     alias: ACCESS-ESM1-5
     caption: Annual global mean {long_name} according to {dataset}.
@@ -10,7 +10,7 @@ input_data:
     end_year: 250
     ensemble: r1i1p1f1
     exp: 1pctCO2
-    filename: <OUTPUT_DIR>/executions/recipe_20251001_073453/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+    filename: <OUTPUT_DIR>/executions/recipe_20251003_201413/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
     frequency: mon
     grid: gn
     institute: CSIRO
@@ -29,25 +29,25 @@ input_data:
     variable_group: tas
     version: v20191115
 input_files:
-- <OUTPUT_DIR>/executions/recipe_20251001_073453/preproc/timeseries/tas/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20251003_201413/preproc/timeseries/tas/metadata.yml
 log_level: info
 output_file_type: png
-plot_dir: <OUTPUT_DIR>/executions/recipe_20251001_073453/plots/timeseries/script1
+plot_dir: <OUTPUT_DIR>/executions/recipe_20251003_201413/plots/timeseries/script1
 quickplot:
   plot_type: plot
 realms:
 - atmos
 recipe: recipe.yml
-run_dir: <OUTPUT_DIR>/executions/recipe_20251001_073453/run/timeseries/script1
-scheduler_address: tcp://127.0.0.1:40311
+run_dir: <OUTPUT_DIR>/executions/recipe_20251003_201413/run/timeseries/script1
+scheduler_address: tcp://127.0.0.1:37975
 script: script1
 themes:
 - phys
 version: 2.12.0
-work_dir: <OUTPUT_DIR>/executions/recipe_20251001_073453/work/timeseries/script1
+work_dir: <OUTPUT_DIR>/executions/recipe_20251003_201413/work/timeseries/script1
 
-INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20251001_073453/work/timeseries/script1
-INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20251001_073453/plots/timeseries/script1
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20251003_201413/work/timeseries/script1
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20251003_201413/plots/timeseries/script1
 INFO:diagnostic:Example of how to select only CMIP5 temperature data:
 []
 INFO:diagnostic:Example of how to sort this selection by dataset:
@@ -61,7 +61,7 @@ INFO:diagnostic:Example of how to group and sort input data by variable groups f
           'end_year': 250,
           'ensemble': 'r1i1p1f1',
           'exp': '1pctCO2',
-          'filename': '<OUTPUT_DIR>/executions/recipe_20251001_073453/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc',
+          'filename': '<OUTPUT_DIR>/executions/recipe_20251003_201413/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc',
           'frequency': 'mon',
           'grid': 'gn',
           'institute': 'CSIRO',
@@ -80,6 +80,6 @@ INFO:diagnostic:Example of how to group and sort input data by variable groups f
           'version': 'v20191115'}]}
 INFO:diagnostic:Processing variable tas
 INFO:diagnostic:Processing dataset ACCESS-ESM1-5
-INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20251001_073453/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
-INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20251001_073453/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20251003_201413/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20251003_201413/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png
 INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

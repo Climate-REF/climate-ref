@@ -1,0 +1,18 @@
+quickplot:
+  plot_type: plot
+recipe: recipe.yml
+version: 2.12.0
+script: script1
+run_dir: <OUTPUT_DIR>/executions/recipe_20251003_201413/run/timeseries/script1
+plot_dir: <OUTPUT_DIR>/executions/recipe_20251003_201413/plots/timeseries/script1
+work_dir: <OUTPUT_DIR>/executions/recipe_20251003_201413/work/timeseries/script1
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/bandela/auxiliary_data
+themes:
+- phys
+realms:
+- atmos
+scheduler_address: tcp://127.0.0.1:37975
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20251003_201413/preproc/timeseries/tas/metadata.yml

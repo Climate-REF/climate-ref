@@ -267,7 +267,7 @@ class TestAddSupplementaryDataset:
             ),
         ],
     )
-    def test_apply(self, data_catalog, expected_rows):
+    def test_add_cell_area(self, data_catalog, expected_rows):
         group = data_catalog[data_catalog["variable_id"] == "tas"]
         result = self.constraint.apply(group=group, data_catalog=data_catalog)
         expected = data_catalog.loc[expected_rows]
@@ -368,6 +368,47 @@ class TestAddSupplementaryDataset:
             supplementary_facets={"experiment_id": "ssp585"},
             matching_facets=("source_id", "member_id", "variable_id", "grid_label"),
             optional_matching_facets=(),
+        )
+        group = data_catalog.loc[group_index]
+        result = constraint.apply(group=group, data_catalog=data_catalog)
+        expected = data_catalog.iloc[expected_rows]
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "data_catalog, group_index, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"] * 5,
+                        "source_id": ["A"] * 5,
+                        "experiment_id": ["historical"] + ["ssp585"] * 4,
+                        "member_id": ["r1i1p1f1", "r2i1p1f1", "r2i1p1f1", "r3i1p1f1", "r3i1p1f1"],
+                        "version": ["v20210316"] * 5,
+                        "path": [
+                            "tas_historical_ri1ip1f1_2000-2014.nc",
+                            "tas_ssp585_r2i1p1f1_2014-2020.nc",
+                            "tas_ssp585_r2i1p1f1_2020-2030.nc",
+                            "tas_ssp585_r3i1p1f1_2014-2020.nc",
+                            "tas_ssp585_r3i1p1f1_2020-2030.nc",
+                        ],
+                    },
+                    index=[0, 1, 2, 3, 4],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+        ],
+    )
+    def test_multiple_matches(self, data_catalog, group_index, expected_rows):
+        """Test that only one dataset is added when there are multiple equally good matches."""
+        constraint = AddSupplementaryDataset(
+            supplementary_facets={"experiment_id": "ssp585"},
+            matching_facets=(
+                "source_id",
+                "variable_id",
+            ),
+            optional_matching_facets=("member_id",),
         )
         group = data_catalog.loc[group_index]
         result = constraint.apply(group=group, data_catalog=data_catalog)

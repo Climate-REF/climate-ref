@@ -64,7 +64,7 @@
         "userId": "lee1043",
         "osAccess": false,
         "commandLine": "/pscratch/sd/l/lee1043/git/climate-ref/.ref/software/conda/pmp-a0cd98ec96f7c858f788439a4f0b4951fe2d7a55/bin/mean_climate_driver.py -p /pscratch/sd/l/lee1043/git/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20251003.nc --metrics_output_path <OUTPUT_DIR> --cmec",
-        "date": "2025-10-03 22:48:22",
+        "date": "2025-10-03 23:02:08",
         "conda": {
             "Platform": "linux-64"
         },

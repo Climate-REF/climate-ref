@@ -2,51 +2,34 @@
     "provenance": {
         "platform": {
             "OS": "Linux",
-            "Version": "6.14.0-28-generic",
-            "Name": "laptop"
+            "Version": "5.14.21-150500.55.97_13.0.78-cray_shasta_c",
+            "Name": "login29"
         },
-        "userId": "bandela",
+        "userId": "lee1043",
         "osAccess": false,
-        "commandLine": "/home/bandela/climate_ref/software/conda/pmp-09fc79daa7e05ca0dfac8feba9246e4bb5045381/bin/mean_climate_driver.py -p /home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250827.nc --metrics_output_path <OUTPUT_DIR> --cmec",
-        "date": "2025-08-27 14:07:25",
+        "commandLine": "/pscratch/sd/l/lee1043/git/climate-ref/.ref/software/conda/pmp-a0cd98ec96f7c858f788439a4f0b4951fe2d7a55/bin/mean_climate_driver.py -p /pscratch/sd/l/lee1043/git/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20251003.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+        "date": "2025-10-03 23:03:45",
         "conda": {
-            "Version": "25.1.1",
-            "buildVersion": "24.3.0",
-            "PythonVersion": "3.10.10.final.0",
             "Platform": "linux-64"
         },
         "packages": {
             "python": "3.10.10",
             "cdat_info": "8.2.1",
-            "cdms": "3.1.5",
             "cdp": "1.7.0",
-            "cdtime": "3.1.4",
-            "cdutil": "8.2.1",
-            "xarray": "2025.4.0",
+            "xarray": "2025.6.1",
             "esmf": "0.8.10",
-            "esmpy": "8.8.1",
-            "matplotlib": "3.10.3",
+            "esmpy": "8.9.0",
+            "matplotlib": "3.10.6",
             "numpy": "2.0.2",
             "scipy": "1.15.2",
-            "xcdat": "0.8.0",
-            "PMP": "3.9.1",
+            "xcdat": "0.10.0",
+            "PMP": "3.9.2",
             "PMPObs": "See 'References' key below, for detailed obs provenance information."
         },
         "openGL": {
-            "vendor": "Intel",
-            "renderer": "Mesa Intel(R) Iris(R) Xe Graphics (ADL GT2)",
-            "version": "4.6 (Compatibility Profile) Mesa 25.0.7-0ubuntu0.25.04.1",
-            "shading language version": "4.60",
             "GLX": {
-                "server": {
-                    "vendor": "SGI",
-                    "version": "1.4"
-                },
-                "client": {
-                    "vendor": "Mesa Project and SGI",
-                    "version": "1.4"
-                },
-                "version": "1.4"
+                "server": {},
+                "client": {}
             }
         }
     },
@@ -55,7 +38,7 @@
     },
     "References": {
         "default": {
-            "template": "/home/bandela/.cache/climate_ref/PMP_obs4MIPsClims/ts/gr/v20250224/ts_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc"
+            "template": "/global/homes/l/lee1043/.cache/climate_ref/PMP_obs4MIPsClims/ts/gr/v20250224/ts_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc"
         }
     },
     "RESULTS": {
@@ -63,7 +46,7 @@
             "default": {
                 "source": "ERA-5",
                 "r1i1p1f1": {
-                    "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250827.nc",
+                    "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20251003.nc",
                     "global": {
                         "bias_xy": {
                             "ann": "1.55238e+00",
@@ -76,7 +59,7 @@
                                 "1.62649e+00",
                                 "1.54286e+00",
                                 "1.40157e+00",
-                                "1.48475e+00",
+                                "1.48476e+00",
                                 "1.55714e+00",
                                 "1.48418e+00",
                                 "1.36947e+00",
@@ -117,7 +100,7 @@
                                 "3.05137e+00",
                                 "2.96676e+00",
                                 "2.86474e+00",
-                                "2.73964e+00",
+                                "2.73965e+00",
                                 "2.70103e+00",
                                 "2.85352e+00",
                                 "2.87045e+00",
@@ -178,7 +161,7 @@
                             "djf": "4.43753e+00",
                             "mam": "4.06961e+00",
                             "jja": "4.11347e+00",
-                            "son": "3.97480e+00",
+                            "son": "3.97481e+00",
                             "CalendarMonths": [
                                 "4.60988e+00",
                                 "4.45971e+00",
@@ -263,7 +246,7 @@
                                 "1.54610e+01",
                                 "1.57896e+01",
                                 "1.58921e+01",
-                                "1.56473e+01",
+                                "1.56474e+01",
                                 "1.53886e+01",
                                 "1.53705e+01",
                                 "1.60661e+01"
@@ -278,9 +261,9 @@
                     },
                     "NHEX": {
                         "bias_xy": {
-                            "ann": "2.46266e+00",
+                            "ann": "2.46267e+00",
                             "djf": "2.76947e+00",
-                            "mam": "2.18278e+00",
+                            "mam": "2.18279e+00",
                             "jja": "2.33128e+00",
                             "son": "2.56336e+00",
                             "CalendarMonths": [
@@ -293,7 +276,7 @@
                                 "2.40390e+00",
                                 "1.95538e+00",
                                 "1.91263e+00",
-                                "2.52346e+00",
+                                "2.52347e+00",
                                 "3.25271e+00",
                                 "3.07317e+00"
                             ]
@@ -332,7 +315,7 @@
                                 "3.64853e+00",
                                 "3.55237e+00",
                                 "3.98578e+00",
-                                "4.04699e+00",
+                                "4.04700e+00",
                                 "3.47139e+00",
                                 "3.16643e+00",
                                 "3.73115e+00",
@@ -389,13 +372,13 @@
                             "ann": "4.73270e+00",
                             "djf": "6.52825e+00",
                             "mam": "4.85960e+00",
-                            "jja": "5.04329e+00",
+                            "jja": "5.04330e+00",
                             "son": "5.02044e+00",
                             "CalendarMonths": [
-                                "6.97986e+00",
+                                "6.97987e+00",
                                 "6.25461e+00",
                                 "5.52973e+00",
-                                "4.91887e+00",
+                                "4.91888e+00",
                                 "4.85623e+00",
                                 "5.30456e+00",
                                 "5.43648e+00",
@@ -407,7 +390,7 @@
                             ]
                         },
                         "rms_xyt": {
-                            "ann": "5.57430e+00"
+                            "ann": "5.57431e+00"
                         },
                         "rms_y": {
                             "ann": "3.40635e+00"
@@ -419,13 +402,13 @@
                             "jja": "4.47213e+00",
                             "son": "4.31671e+00",
                             "CalendarMonths": [
-                                "6.38901e+00",
+                                "6.38902e+00",
                                 "5.76137e+00",
                                 "5.11880e+00",
                                 "4.48923e+00",
                                 "4.19497e+00",
                                 "4.60272e+00",
-                                "4.87612e+00",
+                                "4.87613e+00",
                                 "4.34053e+00",
                                 "3.83848e+00",
                                 "4.43948e+00",
@@ -493,19 +476,19 @@
                             "ann": "1.12253e+00",
                             "djf": "1.45550e+00",
                             "mam": "1.32943e+00",
-                            "jja": "7.31451e-01",
-                            "son": "9.70165e-01",
+                            "jja": "7.31454e-01",
+                            "son": "9.70167e-01",
                             "CalendarMonths": [
                                 "1.50094e+00",
                                 "1.59076e+00",
                                 "1.63202e+00",
                                 "1.33470e+00",
                                 "1.03905e+00",
-                                "8.18463e-01",
-                                "7.39899e-01",
-                                "6.36266e-01",
-                                "7.96901e-01",
-                                "9.40310e-01",
+                                "8.18465e-01",
+                                "7.39903e-01",
+                                "6.36267e-01",
+                                "7.96902e-01",
+                                "9.40314e-01",
                                 "1.17232e+00",
                                 "1.26878e+00"
                             ]
@@ -599,12 +582,12 @@
                         },
                         "rms_xy": {
                             "ann": "4.67855e+00",
-                            "djf": "4.36496e+00",
+                            "djf": "4.36497e+00",
                             "mam": "5.28337e+00",
                             "jja": "5.19772e+00",
                             "son": "4.64309e+00",
                             "CalendarMonths": [
-                                "4.27804e+00",
+                                "4.27805e+00",
                                 "4.90114e+00",
                                 "5.29453e+00",
                                 "5.50187e+00",
@@ -704,15 +687,15 @@
                         "bias_xy": {
                             "ann": "1.31216e+00",
                             "djf": "1.22630e+00",
-                            "mam": "1.19239e+00",
+                            "mam": "1.19240e+00",
                             "jja": "1.40886e+00",
                             "son": "1.41967e+00",
                             "CalendarMonths": [
-                                "1.18038e+00",
+                                "1.18039e+00",
                                 "1.24034e+00",
                                 "1.22379e+00",
-                                "1.13053e+00",
-                                "1.22675e+00",
+                                "1.13054e+00",
+                                "1.22676e+00",
                                 "1.38659e+00",
                                 "1.39646e+00",
                                 "1.44312e+00",
@@ -730,7 +713,7 @@
                             "son": "7.65506e-01",
                             "CalendarMonths": [
                                 "8.53434e-01",
-                                "8.32806e-01",
+                                "8.32807e-01",
                                 "7.81513e-01",
                                 "7.53002e-01",
                                 "8.00778e-01",
@@ -760,8 +743,8 @@
                                 "1.94872e+00",
                                 "1.98949e+00",
                                 "2.05763e+00",
-                                "2.10814e+00",
-                                "2.07110e+00"
+                                "2.10815e+00",
+                                "2.07111e+00"
                             ]
                         },
                         "mean-obs_xy": {
@@ -811,7 +794,7 @@
                         },
                         "rms_xy": {
                             "ann": "2.60664e+00",
-                            "djf": "2.92367e+00",
+                            "djf": "2.92368e+00",
                             "mam": "2.71269e+00",
                             "jja": "2.75965e+00",
                             "son": "2.86646e+00",
@@ -820,8 +803,8 @@
                                 "2.86484e+00",
                                 "2.81357e+00",
                                 "2.77317e+00",
-                                "2.79451e+00",
-                                "2.85740e+00",
+                                "2.79452e+00",
+                                "2.85739e+00",
                                 "2.80388e+00",
                                 "2.74625e+00",
                                 "2.79688e+00",
@@ -834,7 +817,7 @@
                             "ann": "2.87675e+00"
                         },
                         "rms_y": {
-                            "ann": "1.65036e+00"
+                            "ann": "1.65037e+00"
                         },
                         "rmsc_xy": {
                             "ann": "2.25229e+00",
@@ -886,7 +869,7 @@
                         },
                         "std_xy": {
                             "ann": "3.42360e+00",
-                            "djf": "4.97927e+00",
+                            "djf": "4.97926e+00",
                             "mam": "3.66810e+00",
                             "jja": "4.52455e+00",
                             "son": "3.80991e+00",
@@ -917,7 +900,6 @@
             "units": ""
         }
     },
-    "json_version": 3.0,
     "json_structure": [
         "model",
         "reference",

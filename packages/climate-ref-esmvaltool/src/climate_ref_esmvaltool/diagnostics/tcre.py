@@ -41,7 +41,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                AddParentDataset(),
+                AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
                 AddSupplementaryDataset(
                     supplementary_facets={
                         "variable_id": "fco2antt",

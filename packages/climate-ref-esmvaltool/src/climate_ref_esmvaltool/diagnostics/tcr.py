@@ -41,7 +41,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
-                AddParentDataset(),
+                AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),

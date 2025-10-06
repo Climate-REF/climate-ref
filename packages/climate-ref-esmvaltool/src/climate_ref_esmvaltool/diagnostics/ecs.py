@@ -51,7 +51,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
                 RequireOverlappingTimerange(group_by=("instance_id",)),
-                AddParentDataset(),
+                AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
                 RequireContiguousTimerange(group_by=("instance_id",)),
                 RequireFacets(
                     "variable_id",

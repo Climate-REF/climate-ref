@@ -57,105 +57,125 @@
   },
   "data": {},
   "plots": {
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_MAM_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_MAM_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_AC_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_AC_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_JJA_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_JJA_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_DJF_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_DJF_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_MAM_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_MAM_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
     "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_AC_basicTest.png": {
       "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_AC_basicTest.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_SON_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_SON_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_DJF_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_DJF_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_DJF_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_DJF_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_JJA_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_JJA_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
     "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_AC_basicTest.png": {
       "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_AC_basicTest.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_SON_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_SON_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_SON_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_SON_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
     "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
       "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_JJA_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_JJA_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_MAM_basicTest.png": {
-      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_MAM_basicTest.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
     "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
       "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_DJF_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_DJF_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_SON_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_SON_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_AC_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_AC_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_MAM_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_MAM_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_MAM_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_MAM_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_JJA_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_JJA_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_MAM_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_NHEX_MAM_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_JJA_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_JJA_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_JJA_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_JJA_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_SON_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_SON_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_DJF_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_TROPICS_DJF_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_DJF_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_DJF_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_SON_basicTest.png": {
+      "filename": "<OUTPUT_DIR>/ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_SHEX_SON_basicTest.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     }
   },
   "html": {},

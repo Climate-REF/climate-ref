@@ -45,157 +45,187 @@
     "userId": "jared"
   },
   "data": {
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew.nc": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew.nc",
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse.nc": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse.nc": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality.nc": {
       "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux.nc": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux.nc",
-      "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc": {
       "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse.nc": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse.nc",
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse.nc": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew.nc": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse.nc": {
       "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux.nc": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux.nc",
+      "long_name": "Output data",
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     }
   },
   "plots": {
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown03.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown03.png",
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown01.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown02.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown02.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown01.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown04.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown04.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown03.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown03.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown02.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown02.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown01.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown02.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown02.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown02.png": {
       "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown02.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
-    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown01.png": {
-      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse_diagnostic_divedown01.png",
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown04.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown04.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown02.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown02.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown03.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown03.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoFbSstTaux_diagnostic_divedown01.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown03.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown03.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown02.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown02.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown02.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown02.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasTauxLonRmse_diagnostic_divedown01.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown01.png": {
+      "filename": "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstSkew_diagnostic_divedown01.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     }
   },
   "html": {},

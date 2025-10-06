@@ -227,7 +227,9 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         # Add the plots and data files
         series = []
         plot_suffixes = {".png", ".jpg", ".pdf", ".ps"}
-        for metadata_file in result_dir.glob("run/*/*/diagnostic_provenance.yml"):
+        # Sort metadata files for stable processing
+        metadata_files = sorted(result_dir.glob("run/*/*/diagnostic_provenance.yml"))
+        for metadata_file in metadata_files:
             metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
             for filename in metadata:
                 caption = metadata[filename].get("caption", "")

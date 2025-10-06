@@ -10,59 +10,70 @@
     "NPGO_ts_EOF1_monthly_obs_1900-2005.nc": {
       "filename": "NPGO_ts_EOF1_monthly_obs_1900-2005.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     },
     "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc": {
       "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     },
     "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc": {
       "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.nc",
       "long_name": "Output data",
-      "description": "Data produced by the diagnostic"
+      "description": "Data produced by the diagnostic",
+      "dimensions": null
     }
   },
   "plots": {
-    "NPGO_ts_EOF1_monthly_obs_1900-2005_teleconnection.png": {
-      "filename": "NPGO_ts_EOF1_monthly_obs_1900-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPGO_ts_EOF1_monthly_obs_1900-2005.png": {
-      "filename": "NPGO_ts_EOF1_monthly_obs_1900-2005.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
-      "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
     "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png": {
       "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_teleconnection.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
-    "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
-      "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+    "NPGO_ts_EOF1_monthly_obs_1900-2005_teleconnection.png": {
+      "filename": "NPGO_ts_EOF1_monthly_obs_1900-2005_teleconnection.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
-    },
-    "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
-      "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
-      "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
     "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png": {
       "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png": {
+      "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     },
     "EG_Spec_North_test_NPGO_monthly_HadISST-1-1_1900-2005.png": {
       "filename": "EG_Spec_North_test_NPGO_monthly_HadISST-1-1_1900-2005.png",
       "long_name": "Plot",
-      "description": "Plot produced by the diagnostic"
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "NPGO_ts_EOF1_monthly_obs_1900-2005.png": {
+      "filename": "NPGO_ts_EOF1_monthly_obs_1900-2005.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png": {
+      "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_teleconnection.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
+    },
+    "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png": {
+      "filename": "NPGO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_mo_atm_2000-2005_cbf_compare_obs.png",
+      "long_name": "Plot",
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null
     }
   },
   "html": {},

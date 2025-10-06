@@ -111,6 +111,30 @@
     }
   },
   "plots": {
+    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png": {
+      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png",
+      "long_name": "Time-mean precipitation bias in the equatorial Pacific, primarily highlighting the double intertropical convergence zone (ITCZ) bias.",
+      "description": "",
+      "dimensions": null
+    },
+    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_sea_cyclel2.png": {
+      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_sea_cyclel2.png",
+      "long_name": "Bias in the amplitude of the mean seasonal cycle of precipitation in the equatorial Pacific.",
+      "description": "",
+      "dimensions": null
+    },
+    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tauu_map_bias_level2.png": {
+      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tauu_map_bias_level2.png",
+      "long_name": "Time-mean zonal wind stress bias in the equatorial Pacific.",
+      "description": "",
+      "dimensions": null
+    },
+    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tos_map_bias_level2.png": {
+      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tos_map_bias_level2.png",
+      "long_name": "Time-mean sea surface temperature bias in the equatorial Pacific.",
+      "description": "",
+      "dimensions": null
+    },
     "executions/recipe_20250922_115056/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_pr_bias.png": {
       "filename": "executions/recipe_20250922_115056/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_pr_bias.png",
       "long_name": "Zonal bias in the time-mean precipitation structure across the equatorial Pacific (averaged between 5°S-5°N), illustrating the increased precipitation in the eastern Pacific and decreased precipitation in the western Pacific.",
@@ -156,30 +180,6 @@
     "executions/recipe_20250922_115056/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_pr_double_seacycle.png": {
       "filename": "executions/recipe_20250922_115056/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_pr_double_seacycle.png",
       "long_name": "Meridional bias in the amplitude of the mean seasonal precipitation cycle in the eastern Pacific (averaged between 150-90°W). ",
-      "description": "",
-      "dimensions": null
-    },
-    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png": {
-      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png",
-      "long_name": "Time-mean precipitation bias in the equatorial Pacific, primarily highlighting the double intertropical convergence zone (ITCZ) bias.",
-      "description": "",
-      "dimensions": null
-    },
-    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_sea_cyclel2.png": {
-      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_sea_cyclel2.png",
-      "long_name": "Bias in the amplitude of the mean seasonal cycle of precipitation in the equatorial Pacific.",
-      "description": "",
-      "dimensions": null
-    },
-    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tauu_map_bias_level2.png": {
-      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tauu_map_bias_level2.png",
-      "long_name": "Time-mean zonal wind stress bias in the equatorial Pacific.",
-      "description": "",
-      "dimensions": null
-    },
-    "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tos_map_bias_level2.png": {
-      "filename": "executions/recipe_20250922_115056/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_tos_map_bias_level2.png",
-      "long_name": "Time-mean sea surface temperature bias in the equatorial Pacific.",
       "description": "",
       "dimensions": null
     }

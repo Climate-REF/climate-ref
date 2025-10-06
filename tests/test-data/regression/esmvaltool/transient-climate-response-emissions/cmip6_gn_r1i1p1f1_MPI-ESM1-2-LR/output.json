@@ -10,21 +10,24 @@
     "executions/recipe_20250922_121112/work/tcre/calculate_tcre/tcre.nc": {
       "filename": "executions/recipe_20250922_121112/work/tcre/calculate_tcre/tcre.nc",
       "long_name": "Transient Climate Response to Cumulative CO2 Emissions (TCRE) for multiple datasets.",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "plots": {
     "executions/recipe_20250922_121112/plots/tcre/calculate_tcre/tcre.png": {
       "filename": "executions/recipe_20250922_121112/plots/tcre/calculate_tcre/tcre.png",
       "long_name": "Global annual mean near-surface air temperature anomaly ΔT vs.\nglobal annual cumulative CO2 emissions E of the emission-driven 1%\nCO2 increase per year experiment for model MPI-ESM1-2-LR (ensemble\nmember r1i1p1f1). The transient climate response to cumulative CO2\nEmissions (TCRE) is defined as the 20-year average ΔT centered at\nthe time where cumulative CO2 emissions E reach 1000 PgC.\n",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "html": {
     "<OUTPUT_DIR>/executions/recipe_20250922_121112/index.html": {
       "filename": "<OUTPUT_DIR>/executions/recipe_20250922_121112/index.html",
       "long_name": "Results page",
-      "description": "Page showing the executions of the ESMValTool run."
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
     }
   },
   "metrics": null,

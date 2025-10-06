@@ -10,41 +10,48 @@
     "executions/recipe_20250917_084319/work/arctic/sea_ice_sensitivity_script/plotted_values.csv": {
       "filename": "executions/recipe_20250917_084319/work/arctic/sea_ice_sensitivity_script/plotted_values.csv",
       "long_name": "Annual (not decadal) figures",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250917_084319/work/antarctic/sea_ice_sensitivity_script/plotted_values.csv": {
       "filename": "executions/recipe_20250917_084319/work/antarctic/sea_ice_sensitivity_script/plotted_values.csv",
       "long_name": "Annual (not decadal) figures",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "plots": {
     "executions/recipe_20250917_084319/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice sensitivity.png": {
       "filename": "executions/recipe_20250917_084319/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice sensitivity.png",
       "long_name": "Sensitivity of sea ice area to annual mean global warming.Mean (dashed), standard deviation (shaded) and plausible values from 1979-2014.",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250917_084319/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice trends.png": {
       "filename": "executions/recipe_20250917_084319/plots/arctic/sea_ice_sensitivity_script/png/September Arctic sea ice trends.png",
       "long_name": "Decadal trends of sea ice area and global mean temperature.",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250917_084319/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice sensitivity.png": {
       "filename": "executions/recipe_20250917_084319/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice sensitivity.png",
       "long_name": "Sensitivity of sea ice area to annual mean global warming.",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250917_084319/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice trends.png": {
       "filename": "executions/recipe_20250917_084319/plots/antarctic/sea_ice_sensitivity_script/png/Annual Antarctic sea ice trends.png",
       "long_name": "Decadal trends of sea ice area and global mean temperature.",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "html": {
     "<OUTPUT_DIR>/executions/recipe_20250917_084319/index.html": {
       "filename": "<OUTPUT_DIR>/executions/recipe_20250917_084319/index.html",
       "long_name": "Results page",
-      "description": "Page showing the executions of the ESMValTool run."
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
     }
   },
   "metrics": null,

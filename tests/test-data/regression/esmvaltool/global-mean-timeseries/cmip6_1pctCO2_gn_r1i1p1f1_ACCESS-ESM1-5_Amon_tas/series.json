@@ -7,7 +7,8 @@
       "source_id": "ACCESS-ESM1-5",
       "table_id": "Amon",
       "variable_id": "tas",
-      "statistic": "tas annual global mean"
+      "statistic": "annual mean",
+      "region": "global"
     },
     "values": [
       14.334039688110352,

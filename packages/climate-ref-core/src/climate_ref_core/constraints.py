@@ -527,31 +527,17 @@ class AddParentDataset:
     Include a dataset's parent in the selection.
     """
 
+    parent_facet_map: dict[str, str]
+    """
+    Mapping from child to parent facets.
+    """
+
     def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
         Include a dataset's parent in the selection.
 
         """
-        parent_facet_options = [
-            {
-                "source_id": "parent_source_id",
-                "experiment_id": "parent_experiment_id",
-                "variant_label": "parent_variant_label",
-                "table_id": "table_id",
-                "variable_id": "variable_id",
-                "grid_label": "grid_label",
-            },
-            # TODO: update for CMIP7
-        ]
-        for parent_facet_map in parent_facet_options:
-            # We do not have access to the SourceDatasetType so we need to
-            # figure out which parent_facets to use.
-            all_parent_facets = sorted({*parent_facet_map.keys(), *parent_facet_map.values()})
-            if set(all_parent_facets).issubset(data_catalog.keys()):
-                break
-        else:
-            msg = "Missing facets in data catalog to determine parent dataset"
-            raise ValueError(msg)
+        all_parent_facets = sorted({*self.parent_facet_map.keys(), *self.parent_facet_map.values()})
 
         # Remove datasets that do not have all parent facets set.
         valid_group = group[all_parent_facets].dropna(axis="columns")
@@ -559,22 +545,58 @@ class AddParentDataset:
         # Add the parent datasets from the data catalog.
         select = pd.Series(False, index=data_catalog.index)
         select.loc[valid_group.index] = True
-        for dataset in valid_group[list(all_parent_facets)].drop_duplicates().to_dict(orient="records"):
-            parent_facets = {k: (dataset[v],) for k, v in parent_facet_map.items()}
-            parent_select = data_catalog[list(parent_facets)].isin(parent_facets).all(axis="columns")
-            if parent_select.any():
-                # Add the latest version of the dataset to the selection.
-                parent_dataset = data_catalog[parent_select]
-                parent_dataset = parent_dataset[parent_dataset["version"] == parent_dataset["version"].max()]
-                select.loc[parent_dataset.index] = True
-            else:
+        for _, child_dataset in valid_group.groupby(all_parent_facets):
+            child_facets = {facet: child_dataset[facet].unique().tolist() for facet in all_parent_facets}
+            parent_facets = {
+                parent_facet: child_facets[child_facet]
+                for parent_facet, child_facet in self.parent_facet_map.items()
+            }
+            parent_dataset = data_catalog[
+                data_catalog[list(parent_facets)].isin(parent_facets).all(axis="columns")
+            ]
+            if parent_dataset.empty:
                 # Drop the child dataset if no parent dataset is found.
                 logger.debug(
                     f"Constraint {self} not satisfied because no parent dataset found for "
-                    f"{', '.join(f'{k}={v}' for k, v in dataset.items())}"
+                    f"{', '.join(f'{k}={v}' for k, v in child_facets.items())}"
                 )
-                child_facets = {k: (dataset[k],) for k in dataset}
-                child_select = valid_group[list(child_facets)].isin(child_facets).all(axis="columns")
-                select.loc[child_select[child_select].index] = False
+                select.loc[child_dataset.index] = False
+            else:
+                # Add the latest version of the dataset to the selection.
+                parent_dataset = parent_dataset[parent_dataset["version"] == parent_dataset["version"].max()]
+                select.loc[parent_dataset.index] = True
 
         return data_catalog[select]
+
+    @classmethod
+    def from_defaults(
+        cls,
+        source_type: SourceDatasetType,
+    ) -> Self:
+        """
+        Include a dataset's parent in the selection.
+
+        The constraint is created using the defaults for the source_type.
+
+        Parameters
+        ----------
+        source_type:
+            The source_type of the variable to add.
+
+        Returns
+        -------
+        :
+            A constraint to include a dataset's parent in the selection.
+
+        """
+        parent_facet_options = {
+            SourceDatasetType.CMIP6: {
+                "source_id": "parent_source_id",
+                "experiment_id": "parent_experiment_id",
+                "variant_label": "parent_variant_label",
+                "table_id": "table_id",
+                "variable_id": "variable_id",
+                "grid_label": "grid_label",
+            },
+        }
+        return cls(parent_facet_map=parent_facet_options[source_type])

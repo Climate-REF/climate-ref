@@ -893,7 +893,7 @@ class TestOverlappingTimerange:
 
 
 class TestAddParent:
-    constraint = AddParentDataset()
+    constraint = AddParentDataset.from_defaults(SourceDatasetType.CMIP6)
 
     @pytest.mark.parametrize(
         "data, group_rows, expected_rows",
@@ -1090,24 +1090,6 @@ class TestAddParent:
         result = self.constraint.apply(group=group, data_catalog=data_catalog)
         expected = data_catalog.iloc[expected_rows]
         assert_frame_equal(result, expected)
-
-    def test_missing_column(self):
-        data = pd.DataFrame(
-            {
-                "experiment_id": ["esm-1pct-brch-1000PgC"],
-                "grid_label": ["gn"],
-                "parent_experiment_id": ["1pctCO2"],
-                "parent_source_id": ["A"],
-                "source_id": ["A"],
-                "table_id": ["Amon"],
-                "variable_id": ["tas"],
-                "variant_label": ["r1i1p2f1"],
-                "version": ["v20210101"],
-            }
-        )
-        msg = "Missing facets in data catalog to determine parent dataset"
-        with pytest.raises(ValueError, match=msg):
-            self.constraint.apply(data, data)
 
 
 @pytest.fixture

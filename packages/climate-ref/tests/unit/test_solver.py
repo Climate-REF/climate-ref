@@ -190,7 +190,7 @@ class TestMetricSolver:
             DataRequirement(
                 source_type=SourceDatasetType.CMIP6,
                 filters=(FacetFilter(facets={"variable_id": ("tas", "pr")}),),
-                constraints=(AddParentDataset(),),
+                constraints=(AddParentDataset.from_defaults(SourceDatasetType.CMIP6),),
                 group_by=("variable_id", "experiment_id"),
             ),
             pd.DataFrame(

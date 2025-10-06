@@ -16,7 +16,7 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -425,7 +425,9 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
             variable_id = next(iter(ds.data_vars.keys()))
             metric_args[MetricCV.DIMENSIONS.value]["variable_id"][variable_id] = {}
             metric_args[MetricCV.RESULTS.value][variable_id] = {}
-            for region_value, trend_value in zip(ds.shape_id.astype(str).values, ds[variable_id].values):
+            for region_value, trend_value in zip(
+                ds.shape_id.astype(str).values, fillvalues_to_nan(ds[variable_id].values)
+            ):
                 region = region_value.strip()
                 trend = float(trend_value)
                 if region not in metric_args[MetricCV.DIMENSIONS.value]["region"]:

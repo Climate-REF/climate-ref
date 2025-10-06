@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -621,6 +622,7 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "typer", specifier = ">=0.12.5" },
 ]
+provides-extras = ["postgres", "celery", "aft-providers", "providers"]
 
 [package.metadata.requires-dev]
 dev = []
@@ -713,6 +715,7 @@ version = "0.7.0"
 source = { editable = "packages/climate-ref-esmvaltool" }
 dependencies = [
     { name = "climate-ref-core" },
+    { name = "netcdf4" },
     { name = "pooch" },
     { name = "pyyaml" },
     { name = "xarray" },
@@ -721,6 +724,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },
+    { name = "netcdf4", specifier = ">=1.7.2" },
     { name = "pooch", specifier = ">=1.8" },
     { name = "pyyaml" },
     { name = "xarray", specifier = ">=2023.3.0" },

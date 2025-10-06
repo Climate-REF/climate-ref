@@ -14,7 +14,7 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -139,9 +139,9 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
     ) -> tuple[CMECMetric, CMECOutput]:
         """Format the result."""
         ecs_ds = xarray.open_dataset(result_dir / "work" / "ecs" / "calculate" / "ecs.nc")
-        ecs = float(ecs_ds["ecs"].values[0])
+        ecs = float(fillvalues_to_nan(ecs_ds["ecs"].values)[0])
         lambda_ds = xarray.open_dataset(result_dir / "work" / "ecs" / "calculate" / "lambda.nc")
-        lambda_ = float(lambda_ds["lambda"].values[0])
+        lambda_ = float(fillvalues_to_nan(lambda_ds["lambda"].values)[0])
 
         # Update the diagnostic bundle arguments with the computed diagnostics.
         metric_args[MetricCV.DIMENSIONS.value] = {

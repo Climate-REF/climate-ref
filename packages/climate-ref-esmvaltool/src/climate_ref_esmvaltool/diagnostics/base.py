@@ -4,6 +4,8 @@ from collections.abc import Iterable
 from pathlib import Path
 from typing import ClassVar
 
+import netCDF4
+import numpy as np
 import pandas
 import xarray as xr
 import yaml
@@ -21,6 +23,18 @@ from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_esmvaltool.recipe import load_recipe, prepare_climate_data
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
+
+
+def mask_fillvalues(array: np.ndarray) -> np.ma.MaskedArray:  # type: ignore[type-arg]
+    """Convert netCDF4 fill values in an array to a mask."""
+    # Workaround for https://github.com/pydata/xarray/issues/2742
+    defaults = {np.dtype(k): v for k, v in netCDF4.default_fillvals.items()}
+    return np.ma.masked_equal(array, defaults[array.dtype])  # type: ignore[no-untyped-call,no-any-return]
+
+
+def fillvalues_to_nan(array: np.ndarray) -> np.ndarray:  # type: ignore[type-arg]
+    """Convert netCDF4 fill values in an array to NaN."""
+    return mask_fillvalues(array).filled(np.nan)  # type: ignore[no-untyped-call,no-any-return]
 
 
 class ESMValToolDiagnostic(CommandLineDiagnostic):
@@ -300,6 +314,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                         attributes[f"value_{attr}"] = dataset[series_def.values_name].attrs[attr]
                     if attr in dataset[series_def.index_name].attrs:
                         attributes[f"index_{attr}"] = dataset[series_def.index_name].attrs[attr]
+                # TODO: Handle masked values in the index
                 index = dataset[series_def.index_name].values.tolist()
                 if hasattr(index[0], "calendar"):
                     attributes["calendar"] = index[0].calendar
@@ -310,7 +325,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 series.append(
                     SeriesMetricValue(
                         dimensions={**input_selectors, **series_def.dimensions},
-                        values=dataset[series_def.values_name].values.tolist(),
+                        values=fillvalues_to_nan(dataset[series_def.values_name].values).tolist(),
                         index=index,
                         index_name=series_def.index_name,
                         attributes=attributes,

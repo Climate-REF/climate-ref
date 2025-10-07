@@ -1,5 +1,11 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
     "json_structure": [
       "experiment_id",
       "source_id",
@@ -9,44 +15,38 @@
       "metric",
       "statistic"
     ],
-    "experiment_id": {
-      "historical": {}
-    },
-    "source_id": {
-      "ACCESS-ESM1-5": {}
-    },
     "member_id": {
       "r1i1p1f1": {}
-    },
-    "grid_label": {
-      "gn": {}
-    },
-    "region": {
-      "None": {
-        "LongName": "None",
-        "Description": "Reference data extents",
-        "Generator": "N/A"
-      }
     },
     "metric": {
       "timeseries": {}
     },
+    "region": {
+      "None": {
+        "Description": "Reference data extents",
+        "Generator": "N/A",
+        "LongName": "None"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
     "statistic": {
-      "Period Mean": {
-        "type": "scalar",
-        "units": "Sv"
-      },
       "Bias Score": {
         "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
         "units": "1"
       },
       "Normalized Standard Deviation": {
         "type": "scalar",
         "units": "1"
       },
-      "Correlation": {
+      "Period Mean": {
         "type": "scalar",
-        "units": "1"
+        "units": "Sv"
       },
       "Taylor Score": {
         "type": "score",
@@ -54,6 +54,9 @@
       }
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
   "RESULTS": {
     "historical": {
       "ACCESS-ESM1-5": {
@@ -72,8 +75,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": null,
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

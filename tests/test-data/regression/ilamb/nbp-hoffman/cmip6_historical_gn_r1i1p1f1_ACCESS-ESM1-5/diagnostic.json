@@ -1,5 +1,11 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
     "json_structure": [
       "experiment_id",
       "source_id",
@@ -9,37 +15,23 @@
       "metric",
       "statistic"
     ],
-    "experiment_id": {
-      "historical": {}
-    },
-    "source_id": {
-      "ACCESS-ESM1-5": {}
-    },
     "member_id": {
       "r1i1p1f1": {}
-    },
-    "grid_label": {
-      "gn": {}
-    },
-    "region": {
-      "None": {
-        "LongName": "None",
-        "Description": "Reference data extents",
-        "Generator": "N/A"
-      }
     },
     "metric": {
       "nbp": {}
     },
+    "region": {
+      "None": {
+        "Description": "Reference data extents",
+        "Generator": "N/A",
+        "LongName": "None"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
     "statistic": {
-      "nbp(2010)": {
-        "type": "scalar",
-        "units": "Pg"
-      },
-      "diff(2010)": {
-        "type": "scalar",
-        "units": "Pg"
-      },
       "Difference Score": {
         "type": "score",
         "units": "1"
@@ -47,9 +39,20 @@
       "Trajectory Score": {
         "type": "score",
         "units": "1"
+      },
+      "diff(2010)": {
+        "type": "scalar",
+        "units": "Pg"
+      },
+      "nbp(2010)": {
+        "type": "scalar",
+        "units": "Pg"
       }
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
   "RESULTS": {
     "historical": {
       "ACCESS-ESM1-5": {
@@ -67,8 +70,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": null,
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

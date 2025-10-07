@@ -153,7 +153,7 @@ class MetricResults(RootModel[Any]):
     CMEC diagnostic bundle RESULTS object
     """
 
-    model_config = ConfigDict(strict=True)
+    model_config = ConfigDict(strict=True, allow_inf_nan=False)
     root: dict[str, dict[Any, Any]]
 
     @classmethod
@@ -284,7 +284,7 @@ class CMECMetric(BaseModel):
     Contains the diagnostics calculated during a diagnostic execution, in a standardised format.
     """
 
-    model_config = ConfigDict(strict=True, extra="allow")
+    model_config = ConfigDict(strict=True, extra="allow", allow_inf_nan=False)
 
     DIMENSIONS: MetricDimensions
     """
@@ -342,7 +342,15 @@ class CMECMetric(BaseModel):
         :
             None
         """
-        pathlib.Path(json_file).write_text(self.model_dump_json(indent=2))
+        pathlib.Path(json_file).write_text(
+            json.dumps(
+                self.model_dump(mode="json"),
+                indent=2,
+                allow_nan=False,
+                sort_keys=True,
+            ),
+            encoding="utf-8",
+        )
 
     @classmethod
     @validate_call
@@ -360,7 +368,7 @@ class CMECMetric(BaseModel):
         :
             CMEC Diagnostic object if the file is CMEC-compatible
         """
-        json_str = pathlib.Path(json_file).read_text()
+        json_str = pathlib.Path(json_file).read_text(encoding="utf-8")
         metric_obj = cls.model_validate_json(json_str)
 
         return metric_obj

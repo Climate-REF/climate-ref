@@ -6,8 +6,6 @@ which executions are required for a given diagnostic without having to re-parse 
 
 """
 
-import errno
-import os
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
@@ -133,7 +131,7 @@ def ingest(  # noqa
 
         if not _dir.exists():
             logger.error(f"File or directory {_dir} does not exist")
-            raise FileNotFoundError(errno.ENOENT, os.strerror(errno.ENOENT), _dir)
+            continue
 
         # TODO: This assumes that all datasets are nc files.
         # THis is true for CMIP6 and obs4MIPs but may not be true for other dataset types in the future.

@@ -1,5 +1,8 @@
 {
   "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
     "json_structure": [
       "grid_label",
       "member_id",
@@ -7,22 +10,22 @@
       "region",
       "metric"
     ],
-    "region": {
-      "global": {}
+    "member_id": {
+      "r1i1p1f1": {}
     },
     "metric": {
       "zec": {}
     },
-    "grid_label": {
-      "gn": {}
-    },
-    "member_id": {
-      "r1i1p1f1": {}
+    "region": {
+      "global": {}
     },
     "source_id": {
       "ACCESS-ESM1-5": {}
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
   "RESULTS": {
     "gn": {
       "r1i1p1f1": {
@@ -33,8 +36,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": null,
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

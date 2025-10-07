@@ -1,5 +1,11 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
     "json_structure": [
       "experiment_id",
       "source_id",
@@ -9,41 +15,31 @@
       "metric",
       "statistic"
     ],
-    "experiment_id": {
-      "historical": {}
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "Annual Cycle": {},
+      "Bias": {},
+      "RMSE": {},
+      "Spatial Distribution": {}
+    },
+    "region": {
+      "global": {
+        "Description": "Global - Land",
+        "Generator": "GlobalLand.nc",
+        "LongName": "Global - Land"
+      },
+      "tropical": {
+        "Description": "Tropical climates",
+        "Generator": "Koppen_coarse.nc",
+        "LongName": "Tropical climates"
+      }
     },
     "source_id": {
       "ACCESS-ESM1-5": {}
     },
-    "member_id": {
-      "r1i1p1f1": {}
-    },
-    "grid_label": {
-      "gn": {}
-    },
-    "region": {
-      "global": {
-        "LongName": "Global - Land",
-        "Description": "Global - Land",
-        "Generator": "GlobalLand.nc"
-      },
-      "tropical": {
-        "LongName": "Tropical climates",
-        "Description": "Tropical climates",
-        "Generator": "Koppen_coarse.nc"
-      }
-    },
-    "metric": {
-      "Bias": {},
-      "RMSE": {},
-      "Annual Cycle": {},
-      "Spatial Distribution": {}
-    },
     "statistic": {
-      "Period Mean": {
-        "type": "scalar",
-        "units": "1"
-      },
       "Bias": {
         "type": "scalar",
         "units": "1"
@@ -51,6 +47,22 @@
       "Bias Score": {
         "type": "score",
         "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Phase Shift": {
+        "type": "scalar",
+        "units": "month"
       },
       "RMSE": {
         "type": "scalar",
@@ -60,20 +72,8 @@
         "type": "score",
         "units": "1"
       },
-      "Phase Shift": {
-        "type": "scalar",
-        "units": "month"
-      },
       "Seasonal Cycle Score": {
         "type": "score",
-        "units": "1"
-      },
-      "Normalized Standard Deviation": {
-        "type": "scalar",
-        "units": "1"
-      },
-      "Correlation": {
-        "type": "scalar",
         "units": "1"
       },
       "Spatial Distribution Score": {
@@ -82,6 +82,9 @@
       }
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
   "RESULTS": {
     "historical": {
       "ACCESS-ESM1-5": {
@@ -131,8 +134,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": null,
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

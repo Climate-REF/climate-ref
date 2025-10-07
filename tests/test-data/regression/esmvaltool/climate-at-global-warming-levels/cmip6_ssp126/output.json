@@ -7,6 +7,12 @@
     "log": "<OUTPUT_DIR>/executions/recipe_20250917_081732/run/main_log_debug.txt"
   },
   "data": {
+    "executions/recipe_20250917_081732/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv": {
+      "filename": "executions/recipe_20250917_081732/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv",
+      "long_name": "CSV file of Global Warming level Exceedances",
+      "description": "",
+      "dimensions": null
+    },
     "executions/recipe_20250917_081732/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
       "filename": "executions/recipe_20250917_081732/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.nc",
       "long_name": "Multimodel mean of Precipitation at 1.5 $^\\circ$ C",
@@ -28,12 +34,6 @@
     "executions/recipe_20250917_081732/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
       "filename": "executions/recipe_20250917_081732/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.nc",
       "long_name": "Multimodel mean of Temperature at 2.0 $^\\circ$ C",
-      "description": "",
-      "dimensions": null
-    },
-    "executions/recipe_20250917_081732/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv": {
-      "filename": "executions/recipe_20250917_081732/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv",
-      "long_name": "CSV file of Global Warming level Exceedances",
       "description": "",
       "dimensions": null
     }

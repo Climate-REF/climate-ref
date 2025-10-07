@@ -3,7 +3,8 @@ from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Self
 
-from pydantic import BaseModel, model_validator
+import numpy as np
+from pydantic import BaseModel, field_validator, model_validator
 
 Value = float | int
 
@@ -64,19 +65,34 @@ class SeriesMetricValue(BaseModel):
     This is used for presentation purposes and is not used in the controlled vocabulary.
     """
 
-    attributes: dict[str, str | Value] | None = None
+    attributes: dict[str, str | Value | None] | None = None
     """
     Additional unstructured attributes associated with the metric value
     """
 
     @model_validator(mode="after")
-    def validate_index_length(self) -> Self:
-        """Validate that index has the same length as values"""
+    def validate_index(self) -> Self:
+        """Validate that index has the same length as values and contains no NaNs"""
         if len(self.index) != len(self.values):
             raise ValueError(
                 f"Index length ({len(self.index)}) must match values length ({len(self.values)})"
             )
+        for v in self.index:
+            if isinstance(v, float) and not np.isfinite(v):
+                raise ValueError("NaN or Inf values are not allowed in the index")
         return self
+
+    @field_validator("values", mode="before")
+    @classmethod
+    def validate_values(cls, value: Any) -> Any:
+        """
+        Transform None values to NaN in the values field
+        """
+        if not isinstance(value, (list, tuple)):
+            raise ValueError("`values` must be a list or tuple.")
+
+        # Transform None values to NaN
+        return [float("nan") if v is None else v for v in value]
 
     @classmethod
     def dump_to_json(cls, path: Path, series: Sequence["SeriesMetricValue"]) -> None:
@@ -94,7 +110,13 @@ class SeriesMetricValue(BaseModel):
             The series values to dump.
         """
         with open(path, "w") as f:
-            json.dump([s.model_dump() for s in series], f, indent=2)
+            json.dump(
+                [s.model_dump(mode="json") for s in series],
+                f,
+                indent=2,
+                allow_nan=False,
+                sort_keys=True,
+            )
 
     @classmethod
     def load_from_json(
@@ -102,7 +124,7 @@ class SeriesMetricValue(BaseModel):
         path: Path,
     ) -> list["SeriesMetricValue"]:
         """
-        Dump a sequence of SeriesMetricValue to a JSON file.
+        Load a sequence of SeriesMetricValue from a JSON file.
 
         Parameters
         ----------
@@ -115,7 +137,7 @@ class SeriesMetricValue(BaseModel):
         if not isinstance(data, list):
             raise ValueError(f"Expected a list of series values, got {type(data)}")
 
-        return [cls.model_validate(s) for s in data]
+        return [cls.model_validate(s, strict=True) for s in data]
 
 
 class ScalarMetricValue(BaseModel):

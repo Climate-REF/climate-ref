@@ -1,5 +1,8 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "hist-GHG": {}
+    },
     "json_structure": [
       "source_id",
       "member_id",
@@ -10,15 +13,24 @@
       "method",
       "statistic"
     ],
-    "mode": {
-      "PDO": {}
-    },
-    "season": {
-      "monthly": {}
+    "member_id": {
+      "r1i1p1f1": {}
     },
     "method": {
       "cbf": {},
       "eof1": {}
+    },
+    "mode": {
+      "PDO": {}
+    },
+    "reference_source_id": {
+      "HadISST-1-1": {}
+    },
+    "season": {
+      "monthly": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
     },
     "statistic": {
       "bias": {},
@@ -35,27 +47,27 @@
       "rmsc_glo": {},
       "stdv_pc": {},
       "stdv_pc_ratio_to_obs": {}
-    },
-    "source_id": {
-      "ACCESS-ESM1-5": {}
-    },
-    "member_id": {
-      "r1i1p1f1": {}
-    },
-    "experiment_id": {
-      "hist-GHG": {}
-    },
-    "reference_source_id": {
-      "HadISST-1-1": {}
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {},
   "RESULTS": {
     "ACCESS-ESM1-5": {
       "r1i1p1f1": {
         "hist-GHG": {
           "HadISST-1-1": {
             "PDO": {
+              "attributes": {
+                "target_model_eofs": 1
+              },
               "monthly": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "2000-2005"
+                },
                 "cbf": {
                   "bias": -0.005244825146225395,
                   "bias_glo": -0.011027069172027957,
@@ -86,24 +98,12 @@
                   "rmsc_glo": 1.067238427788611,
                   "stdv_pc": 0.22235014222791238,
                   "stdv_pc_ratio_to_obs": 1.028823772637133
-                },
-                "attributes": {
-                  "best_matching_model_eofs__cor": 1,
-                  "best_matching_model_eofs__rms": 1,
-                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                  "period": "2000-2005"
                 }
-              },
-              "attributes": {
-                "target_model_eofs": 1
               }
             }
           }
         }
       }
     }
-  },
-  "PROVENANCE": {},
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

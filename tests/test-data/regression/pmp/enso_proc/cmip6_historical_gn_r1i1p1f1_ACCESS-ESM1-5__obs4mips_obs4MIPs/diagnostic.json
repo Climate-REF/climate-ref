@@ -1,5 +1,11 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
     "json_structure": [
       "source_id",
       "member_id",
@@ -8,6 +14,9 @@
       "metric",
       "reference_datasets"
     ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
     "metric": {
       "BiasSstLonRmse": {},
       "BiasTauxLonRmse": {},
@@ -25,54 +34,10 @@
     },
     "source_id": {
       "ACCESS-ESM1-5": {}
-    },
-    "member_id": {
-      "r1i1p1f1": {}
-    },
-    "grid_label": {
-      "gn": {}
-    },
-    "experiment_id": {
-      "historical": {}
     }
   },
-  "RESULTS": {
-    "ACCESS-ESM1-5": {
-      "r1i1p1f1": {
-        "gn": {
-          "historical": {
-            "BiasSstLonRmse": {
-              "HadISST": 0.5024880791625204,
-              "Tropflux": 0.5861183101896779
-            },
-            "BiasTauxLonRmse": {
-              "Tropflux": 7.546285050061319
-            },
-            "EnsoAmpl": {
-              "HadISST": 4.523475733392167,
-              "Tropflux": 11.961194358918856
-            },
-            "EnsoFbSstTaux": {
-              "HadISST_Tropflux": 72.75427243964744,
-              "Tropflux_Tropflux": 71.91334351778657
-            },
-            "EnsoSeasonality": {
-              "HadISST": 32.72830910647274,
-              "Tropflux": 45.59915341621491
-            },
-            "EnsoSstLonRmse": {
-              "HadISST": 0.2041642820108239,
-              "Tropflux": 0.205325818092343
-            },
-            "EnsoSstSkew": {
-              "HadISST": 217.13237922904426,
-              "Tropflux": 223.02739863473244
-            }
-          }
-        }
-      }
-    }
-  },
+  "DISCLAIMER": null,
+  "NOTES": null,
   "PROVENANCE": {
     "commandLine": "/Users/jared/code/Climate-REF/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_proc --experiment_id historical --input_json_path /Users/jared/code/Climate-REF/climate-ref/.ref/scratch/pmp/enso_proc/d133cc23930efabf042b727845bd0b6a6b650319/input_ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory /Users/jared/code/Climate-REF/climate-ref/.ref/scratch/pmp/enso_proc/d133cc23930efabf042b727845bd0b6a6b650319",
     "conda": {
@@ -113,6 +78,41 @@
     },
     "userId": "jared"
   },
-  "DISCLAIMER": null,
-  "NOTES": null
+  "RESULTS": {
+    "ACCESS-ESM1-5": {
+      "r1i1p1f1": {
+        "gn": {
+          "historical": {
+            "BiasSstLonRmse": {
+              "HadISST": 0.5024880791625204,
+              "Tropflux": 0.5861183101896779
+            },
+            "BiasTauxLonRmse": {
+              "Tropflux": 7.546285050061319
+            },
+            "EnsoAmpl": {
+              "HadISST": 4.523475733392167,
+              "Tropflux": 11.961194358918856
+            },
+            "EnsoFbSstTaux": {
+              "HadISST_Tropflux": 72.75427243964744,
+              "Tropflux_Tropflux": 71.91334351778657
+            },
+            "EnsoSeasonality": {
+              "HadISST": 32.72830910647274,
+              "Tropflux": 45.59915341621491
+            },
+            "EnsoSstLonRmse": {
+              "HadISST": 0.2041642820108239,
+              "Tropflux": 0.205325818092343
+            },
+            "EnsoSstSkew": {
+              "HadISST": 217.13237922904426,
+              "Tropflux": 223.02739863473244
+            }
+          }
+        }
+      }
+    }
+  }
 }

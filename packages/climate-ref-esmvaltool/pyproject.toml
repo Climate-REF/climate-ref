@@ -25,6 +25,7 @@ classifiers = [
 dependencies = [
     "cftime>=1.6.4.post1",
     "climate-ref-core",
+    "netcdf4>=1.7.2",
     "pooch >= 1.8",
     "pyyaml",
     "xarray >= 2023.3.0",

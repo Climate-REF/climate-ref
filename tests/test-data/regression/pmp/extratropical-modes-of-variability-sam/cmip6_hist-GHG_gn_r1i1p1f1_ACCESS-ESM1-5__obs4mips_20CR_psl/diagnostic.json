@@ -1,5 +1,8 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "hist-GHG": {}
+    },
     "json_structure": [
       "source_id",
       "member_id",
@@ -10,8 +13,18 @@
       "method",
       "statistic"
     ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "method": {
+      "cbf": {},
+      "eof1": {}
+    },
     "mode": {
       "SAM": {}
+    },
+    "reference_source_id": {
+      "20CR": {}
     },
     "season": {
       "DJF": {},
@@ -19,9 +32,8 @@
       "MAM": {},
       "SON": {}
     },
-    "method": {
-      "cbf": {},
-      "eof1": {}
+    "source_id": {
+      "ACCESS-ESM1-5": {}
     },
     "statistic": {
       "bias": {},
@@ -38,20 +50,11 @@
       "rmsc_glo": {},
       "stdv_pc": {},
       "stdv_pc_ratio_to_obs": {}
-    },
-    "source_id": {
-      "ACCESS-ESM1-5": {}
-    },
-    "member_id": {
-      "r1i1p1f1": {}
-    },
-    "experiment_id": {
-      "hist-GHG": {}
-    },
-    "reference_source_id": {
-      "20CR": {}
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {},
   "RESULTS": {
     "ACCESS-ESM1-5": {
       "r1i1p1f1": {
@@ -59,8 +62,14 @@
           "20CR": {
             "SAM": {
               "DJF": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "2000-2005"
+                },
                 "cbf": {
-                  "bias": -1.4153597569995609e-9,
+                  "bias": -1.4153597569995609e-09,
                   "bias_glo": -0.1573102297565833,
                   "cor": 0.7451727827664749,
                   "cor_glo": 0.4893973097783264,
@@ -76,7 +85,7 @@
                   "stdv_pc_ratio_to_obs": 0.7974346296903788
                 },
                 "eof1": {
-                  "bias": -2.113284752123213e-9,
+                  "bias": -2.113284752123213e-09,
                   "bias_glo": -0.23981172110761825,
                   "cor": 0.6809594784891289,
                   "cor_glo": 0.45186007437011927,
@@ -89,15 +98,15 @@
                   "rmsc_glo": 1.0470338513104072,
                   "stdv_pc": 1.364890051552389,
                   "stdv_pc_ratio_to_obs": 1.116491734513134
-                },
+                }
+              },
+              "JJA": {
                 "attributes": {
                   "best_matching_model_eofs__cor": 1,
                   "best_matching_model_eofs__rms": 1,
                   "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
                   "period": "2000-2005"
-                }
-              },
-              "JJA": {
+                },
                 "cbf": {
                   "bias": 6.633385871534711e-11,
                   "bias_glo": 0.45962519839870036,
@@ -115,7 +124,7 @@
                   "stdv_pc_ratio_to_obs": 0.30239806976767497
                 },
                 "eof1": {
-                  "bias": 3.053133610465157e-9,
+                  "bias": 3.053133610465157e-09,
                   "bias_glo": 0.3995772665794591,
                   "cor": 0.0029919763430704457,
                   "cor_glo": 0.0026389193407597785,
@@ -128,15 +137,15 @@
                   "rmsc_glo": 1.4123463149205833,
                   "stdv_pc": 1.3325535416189784,
                   "stdv_pc_ratio_to_obs": 0.9275242327364924
-                },
+                }
+              },
+              "MAM": {
                 "attributes": {
                   "best_matching_model_eofs__cor": 1,
                   "best_matching_model_eofs__rms": 1,
                   "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
                   "period": "2000-2005"
-                }
-              },
-              "MAM": {
+                },
                 "cbf": {
                   "bias": -3.811307123084781e-10,
                   "bias_glo": 0.03165501783386632,
@@ -154,7 +163,7 @@
                   "stdv_pc_ratio_to_obs": 1.0858935480423515
                 },
                 "eof1": {
-                  "bias": 1.2564337290536769e-9,
+                  "bias": 1.2564337290536769e-09,
                   "bias_glo": 0.038650856887524954,
                   "cor": 0.8389885721652912,
                   "cor_glo": 0.669960610708707,
@@ -167,15 +176,15 @@
                   "rmsc_glo": 0.8124523314329553,
                   "stdv_pc": 1.444540438535549,
                   "stdv_pc_ratio_to_obs": 1.2859112027906343
-                },
+                }
+              },
+              "SON": {
                 "attributes": {
                   "best_matching_model_eofs__cor": 1,
                   "best_matching_model_eofs__rms": 1,
                   "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
                   "period": "2000-2005"
-                }
-              },
-              "SON": {
+                },
                 "cbf": {
                   "bias": -4.10095141149995e-10,
                   "bias_glo": 0.16954502561996357,
@@ -193,7 +202,7 @@
                   "stdv_pc_ratio_to_obs": 1.4385970731386235
                 },
                 "eof1": {
-                  "bias": -2.711366934522695e-9,
+                  "bias": -2.711366934522695e-09,
                   "bias_glo": 0.16432414404644963,
                   "cor": 0.8215979493823378,
                   "cor_glo": 0.7271905152974414,
@@ -206,12 +215,6 @@
                   "rmsc_glo": 0.7386602517350895,
                   "stdv_pc": 1.9630816738295709,
                   "stdv_pc_ratio_to_obs": 1.747354584701924
-                },
-                "attributes": {
-                  "best_matching_model_eofs__cor": 1,
-                  "best_matching_model_eofs__rms": 1,
-                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                  "period": "2000-2005"
                 }
               },
               "attributes": {
@@ -222,8 +225,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": {},
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

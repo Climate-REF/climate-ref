@@ -1,5 +1,8 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "hist-GHG": {}
+    },
     "json_structure": [
       "source_id",
       "member_id",
@@ -10,8 +13,18 @@
       "method",
       "statistic"
     ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "method": {
+      "cbf": {},
+      "eof1": {}
+    },
     "mode": {
       "NAM": {}
+    },
+    "reference_source_id": {
+      "20CR": {}
     },
     "season": {
       "DJF": {},
@@ -19,9 +32,8 @@
       "MAM": {},
       "SON": {}
     },
-    "method": {
-      "cbf": {},
-      "eof1": {}
+    "source_id": {
+      "ACCESS-ESM1-5": {}
     },
     "statistic": {
       "bias": {},
@@ -38,20 +50,11 @@
       "rmsc_glo": {},
       "stdv_pc": {},
       "stdv_pc_ratio_to_obs": {}
-    },
-    "source_id": {
-      "ACCESS-ESM1-5": {}
-    },
-    "member_id": {
-      "r1i1p1f1": {}
-    },
-    "experiment_id": {
-      "hist-GHG": {}
-    },
-    "reference_source_id": {
-      "20CR": {}
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {},
   "RESULTS": {
     "ACCESS-ESM1-5": {
       "r1i1p1f1": {
@@ -59,8 +62,14 @@
           "20CR": {
             "NAM": {
               "DJF": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "2000-2005"
+                },
                 "cbf": {
-                  "bias": 1.7066393563431874e-9,
+                  "bias": 1.7066393563431874e-09,
                   "bias_glo": -0.11924401901515025,
                   "cor": 0.7446236783000673,
                   "cor_glo": 0.7067772965810069,
@@ -76,7 +85,7 @@
                   "stdv_pc_ratio_to_obs": 1.186909111206186
                 },
                 "eof1": {
-                  "bias": -2.79308386583173e-9,
+                  "bias": -2.79308386583173e-09,
                   "bias_glo": -0.10576255697988352,
                   "cor": 0.7059633816681825,
                   "cor_glo": 0.6654302512379117,
@@ -89,15 +98,15 @@
                   "rmsc_glo": 0.8180094689372435,
                   "stdv_pc": 2.3537709459800076,
                   "stdv_pc_ratio_to_obs": 1.6113050415759977
-                },
+                }
+              },
+              "JJA": {
                 "attributes": {
                   "best_matching_model_eofs__cor": 1,
                   "best_matching_model_eofs__rms": 1,
                   "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
                   "period": "2000-2005"
-                }
-              },
-              "JJA": {
+                },
                 "cbf": {
                   "bias": 9.996292774361825e-10,
                   "bias_glo": 0.08001653070282785,
@@ -128,15 +137,15 @@
                   "rmsc_glo": 1.135547793990239,
                   "stdv_pc": 0.9304410300887569,
                   "stdv_pc_ratio_to_obs": 1.6622996824261493
-                },
+                }
+              },
+              "MAM": {
                 "attributes": {
                   "best_matching_model_eofs__cor": 1,
                   "best_matching_model_eofs__rms": 1,
                   "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
                   "period": "2000-2005"
-                }
-              },
-              "MAM": {
+                },
                 "cbf": {
                   "bias": 9.708056459771348e-10,
                   "bias_glo": -0.005056909124569589,
@@ -167,15 +176,15 @@
                   "rmsc_glo": 1.3637189139590082,
                   "stdv_pc": 1.347500237688143,
                   "stdv_pc_ratio_to_obs": 1.4606160035839706
-                },
+                }
+              },
+              "SON": {
                 "attributes": {
                   "best_matching_model_eofs__cor": 1,
                   "best_matching_model_eofs__rms": 1,
                   "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
                   "period": "2000-2005"
-                }
-              },
-              "SON": {
+                },
                 "cbf": {
                   "bias": -1.7693139202766211e-10,
                   "bias_glo": 0.08402552169334435,
@@ -206,12 +215,6 @@
                   "rmsc_glo": 1.2899947374619396,
                   "stdv_pc": 1.30471235619646,
                   "stdv_pc_ratio_to_obs": 1.871727340203285
-                },
-                "attributes": {
-                  "best_matching_model_eofs__cor": 1,
-                  "best_matching_model_eofs__rms": 1,
-                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                  "period": "2000-2005"
                 }
               },
               "attributes": {
@@ -222,8 +225,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": {},
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

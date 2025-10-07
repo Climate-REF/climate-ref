@@ -1,5 +1,11 @@
 {
   "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
     "json_structure": [
       "experiment_id",
       "source_id",
@@ -9,39 +15,29 @@
       "metric",
       "statistic"
     ],
-    "experiment_id": {
-      "historical": {}
-    },
-    "source_id": {
-      "ACCESS-ESM1-5": {}
-    },
     "member_id": {
       "r1i1p1f1": {}
-    },
-    "grid_label": {
-      "gn": {}
-    },
-    "region": {
-      "global": {
-        "LongName": "Global - Land",
-        "Description": "Global - Land",
-        "Generator": "GlobalLand.nc"
-      },
-      "tropical": {
-        "LongName": "Tropical climates",
-        "Description": "Tropical climates",
-        "Generator": "Koppen_coarse.nc"
-      }
     },
     "metric": {
       "Bias": {},
       "Spatial Distribution": {}
     },
-    "statistic": {
-      "Period Mean": {
-        "type": "scalar",
-        "units": "kg m-2"
+    "region": {
+      "global": {
+        "Description": "Global - Land",
+        "Generator": "GlobalLand.nc",
+        "LongName": "Global - Land"
       },
+      "tropical": {
+        "Description": "Tropical climates",
+        "Generator": "Koppen_coarse.nc",
+        "LongName": "Tropical climates"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
       "Bias": {
         "type": "scalar",
         "units": "kg m-2"
@@ -50,13 +46,17 @@
         "type": "score",
         "units": "1"
       },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
       "Normalized Standard Deviation": {
         "type": "scalar",
         "units": "1"
       },
-      "Correlation": {
+      "Period Mean": {
         "type": "scalar",
-        "units": "1"
+        "units": "kg m-2"
       },
       "Spatial Distribution Score": {
         "type": "score",
@@ -64,6 +64,9 @@
       }
     }
   },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
   "RESULTS": {
     "historical": {
       "ACCESS-ESM1-5": {
@@ -97,8 +100,5 @@
         }
       }
     }
-  },
-  "PROVENANCE": null,
-  "DISCLAIMER": null,
-  "NOTES": null
+  }
 }

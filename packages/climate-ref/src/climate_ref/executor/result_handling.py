@@ -197,12 +197,19 @@ def handle_execution_result(
         The result of the diagnostic execution, either successful or failed
     """
     # Always copy log data to the results directory
-    _copy_file_to_results(
-        config.paths.scratch,
-        config.paths.results,
-        execution.output_fragment,
-        EXECUTION_LOG_FILENAME,
-    )
+    try:
+        _copy_file_to_results(
+            config.paths.scratch,
+            config.paths.results,
+            execution.output_fragment,
+            EXECUTION_LOG_FILENAME,
+        )
+    except FileNotFoundError:
+        logger.error(
+            f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}"
+        )
+        execution.mark_failed()
+        return
 
     if not result.successful or result.metric_bundle_filename is None:
         logger.error(f"{execution} failed")

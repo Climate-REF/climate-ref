@@ -716,6 +716,7 @@ source = { editable = "packages/climate-ref-esmvaltool" }
 dependencies = [
     { name = "cftime" },
     { name = "climate-ref-core" },
+    { name = "netcdf4" },
     { name = "pooch" },
     { name = "pyyaml" },
     { name = "xarray" },
@@ -725,6 +726,7 @@ dependencies = [
 requires-dist = [
     { name = "cftime", specifier = ">=1.6.4.post1" },
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },
+    { name = "netcdf4", specifier = ">=1.7.2" },
     { name = "pooch", specifier = ">=1.8" },
     { name = "pyyaml" },
     { name = "xarray", specifier = ">=2023.3.0" },

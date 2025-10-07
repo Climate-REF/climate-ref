@@ -13,11 +13,6 @@
       "long_name": "",
       "description": "",
       "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "ACCESS-ESM1-5",
-        "reference_source_id": "Hoffman",
         "region": "None"
       }
     }

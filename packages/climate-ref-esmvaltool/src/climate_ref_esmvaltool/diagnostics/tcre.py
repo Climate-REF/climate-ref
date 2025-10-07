@@ -4,17 +4,17 @@ import pandas
 import xarray
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
     RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
-from climate_ref_esmvaltool.recipe import dataframe_to_recipe
+from climate_ref_esmvaltool.recipe import dataframe_to_recipe, get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -27,35 +27,36 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     slug = "transient-climate-response-emissions"
     base_recipe = "recipe_tcre.yml"
 
-    variables = (
-        "tas",
-        "fco2antt",
-    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": variables,
-                        "experiment_id": "esm-1pctCO2",
-                        "table_id": "Amon",
-                    },
-                ),
-                FacetFilter(
-                    facets={
                         "variable_id": "tas",
-                        "experiment_id": "esm-piControl",
+                        "experiment_id": "esm-1pctCO2",
                         "table_id": "Amon",
                     },
                 ),
             ),
             group_by=("source_id", "member_id", "grid_label"),
             constraints=(
+                AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
+                AddSupplementaryDataset(
+                    supplementary_facets={
+                        "variable_id": "fco2antt",
+                        "experiment_id": "esm-1pctCO2",
+                    },
+                    matching_facets=(
+                        "source_id",
+                        "member_id",
+                        "table_id",
+                        "grid_label",
+                    ),
+                    optional_matching_facets=("version",),
+                ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets("experiment_id", ("esm-1pctCO2", "esm-piControl")),
-                RequireFacets("variable_id", variables),
+                RequireFacets("variable_id", ("tas", "fco2antt")),
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
@@ -73,17 +74,19 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains three
         # datasets, "tas" and "fco2antt" for the "esm-1pctCO2" and just "tas"
         # for the "esm-piControl" experiment.
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
-        tas_esm_1pctCO2 = next(
-            ds for ds in recipe_variables["tas"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
+        df = input_files[SourceDatasetType.CMIP6]
+        tas_esm_1pctCO2, tas_esm_piControl = get_child_and_parent_dataset(
+            df[df.variable_id == "tas"],
+            parent_experiment="esm-piControl",
+            child_duration_in_years=65,
+            parent_offset_in_years=0,
+            parent_duration_in_years=65,
         )
+        recipe_variables = dataframe_to_recipe(df[df.variable_id == "fco2antt"])
         fco2antt_esm_1pctCO2 = next(
             ds for ds in recipe_variables["fco2antt"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
         )
-        tas_esm_piControl = next(
-            ds for ds in recipe_variables["tas"]["additional_datasets"] if ds["exp"] == "esm-piControl"
-        )
-        tas_esm_piControl["timerange"] = tas_esm_1pctCO2["timerange"]
+        fco2antt_esm_1pctCO2["timerange"] = tas_esm_1pctCO2["timerange"]
 
         recipe["diagnostics"]["tcre"]["variables"] = {
             "tas_esm-1pctCO2": {

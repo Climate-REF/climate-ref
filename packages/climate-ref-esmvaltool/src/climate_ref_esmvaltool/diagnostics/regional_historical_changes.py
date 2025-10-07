@@ -87,6 +87,15 @@ def normalize_region(region: str) -> str:
     return region.replace("&", "-and-").replace("/", "-and-")
 
 
+REFERENCE_DATASETS = {
+    "hus": "ERA-5",
+    "pr": "GPCP-V2.3",
+    "psl": "ERA-5",
+    "tas": "HadCRUT5-5.0.1.0-analysis",
+    "ua": "ERA-5",
+}
+
+
 class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     """
     Plot regional historical annual cycle of climate variables.
@@ -166,13 +175,21 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         SeriesDefinition(
             file_pattern=f"anncyc-{region}/allplots/*_{var_name}_*.nc",
             sel={"dim0": 0},  # Select the model and not the observation.
-            dimensions={"region": region, "statistic": f"{var_name} regional mean"},
+            dimensions=(
+                {
+                    "region": region,
+                    "variable_id": var_name,
+                    "statistic": "mean",
+                }
+                | ({} if i == 0 else {"reference_source_id": REFERENCE_DATASETS[var_name]})
+            ),
             values_name=var_name,
             index_name="month_number",
             attributes=[],
         )
         for var_name in variables
         for region in REGIONS
+        for i in range(2)
     )
 
     @staticmethod
@@ -292,15 +309,15 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"{diagnostic}-{region}/allplots/*_{var_name}_*.nc",
-            sel={"dim0": 0},  # Select the model and not the observation.
-            dimensions={
-                "region": region,
-                "statistic": (
-                    f"{var_name} regional mean"
-                    if diagnostic == "timeseries_abs"
-                    else f"{var_name} regional mean anomaly"
-                ),
-            },
+            sel={"dim0": i},
+            dimensions=(
+                {
+                    "region": region,
+                    "variable_id": var_name,
+                    "statistic": ("mean" if diagnostic == "timeseries_abs" else "mean anomaly"),
+                }
+                | ({} if i == 0 else {"reference_source_id": REFERENCE_DATASETS[var_name]})
+            ),
             values_name=var_name,
             index_name="time",
             attributes=[],
@@ -308,6 +325,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         for var_name in variables
         for region in REGIONS
         for diagnostic in ["timeseries_abs", "timeseries"]
+        for i in range(2)
     )
 
 

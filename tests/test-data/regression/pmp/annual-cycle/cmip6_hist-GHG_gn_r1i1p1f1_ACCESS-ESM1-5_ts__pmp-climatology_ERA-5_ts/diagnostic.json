@@ -107,7 +107,7 @@
                   "djf": 4.43753,
                   "mam": 4.06961,
                   "jja": 4.11347,
-                  "son": 3.9748
+                  "son": 3.97481
                 },
                 "rms_xyt": {
                   "ann": 4.26745
@@ -151,9 +151,9 @@
               },
               "NHEX": {
                 "bias_xy": {
-                  "ann": 2.46266,
+                  "ann": 2.46267,
                   "djf": 2.76947,
-                  "mam": 2.18278,
+                  "mam": 2.18279,
                   "jja": 2.33128,
                   "son": 2.56336
                 },
@@ -192,11 +192,11 @@
                   "ann": 4.7327,
                   "djf": 6.52825,
                   "mam": 4.8596,
-                  "jja": 5.04329,
+                  "jja": 5.0433,
                   "son": 5.02044
                 },
                 "rms_xyt": {
-                  "ann": 5.5743
+                  "ann": 5.57431
                 },
                 "rms_y": {
                   "ann": 3.40635
@@ -240,8 +240,8 @@
                   "ann": 1.12253,
                   "djf": 1.4555,
                   "mam": 1.32943,
-                  "jja": 0.731451,
-                  "son": 0.970165
+                  "jja": 0.731454,
+                  "son": 0.970167
                 },
                 "cor_xy": {
                   "ann": 0.966365,
@@ -276,7 +276,7 @@
                 },
                 "rms_xy": {
                   "ann": 4.67855,
-                  "djf": 4.36496,
+                  "djf": 4.36497,
                   "mam": 5.28337,
                   "jja": 5.19772,
                   "son": 4.64309
@@ -325,7 +325,7 @@
                 "bias_xy": {
                   "ann": 1.31216,
                   "djf": 1.2263,
-                  "mam": 1.19239,
+                  "mam": 1.1924,
                   "jja": 1.40886,
                   "son": 1.41967
                 },
@@ -362,7 +362,7 @@
                 },
                 "rms_xy": {
                   "ann": 2.60664,
-                  "djf": 2.92367,
+                  "djf": 2.92368,
                   "mam": 2.71269,
                   "jja": 2.75965,
                   "son": 2.86646
@@ -371,7 +371,7 @@
                   "ann": 2.87675
                 },
                 "rms_y": {
-                  "ann": 1.65036
+                  "ann": 1.65037
                 },
                 "rmsc_xy": {
                   "ann": 2.25229,
@@ -395,7 +395,7 @@
                 },
                 "std_xy": {
                   "ann": 3.4236,
-                  "djf": 4.97927,
+                  "djf": 4.97926,
                   "mam": 3.6681,
                   "jja": 4.52455,
                   "son": 3.80991
@@ -408,7 +408,7 @@
                 }
               },
               "attributes": {
-                "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250827.nc"
+                "InputClimatologyFileName": "ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20251003.nc"
               }
             }
           }
@@ -419,51 +419,34 @@
   "PROVENANCE": {
     "platform": {
       "OS": "Linux",
-      "Version": "6.14.0-28-generic",
-      "Name": "laptop"
+      "Version": "5.14.21-150500.55.97_13.0.78-cray_shasta_c",
+      "Name": "login29"
     },
-    "userId": "bandela",
+    "userId": "lee1043",
     "osAccess": false,
-    "commandLine": "/home/bandela/climate_ref/software/conda/pmp-09fc79daa7e05ca0dfac8feba9246e4bb5045381/bin/mean_climate_driver.py -p /home/bandela/src/Climate-REF/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template ts_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20250827.nc --metrics_output_path <OUTPUT_DIR> --cmec",
-    "date": "2025-08-27 14:07:25",
+    "commandLine": "/pscratch/sd/l/lee1043/git/climate-ref/.ref/software/conda/pmp-a0cd98ec96f7c858f788439a4f0b4951fe2d7a55/bin/mean_climate_driver.py -p /pscratch/sd/l/lee1043/git/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_hist-GHG_r1i1p1f1_clims.198101-200512.AC.v20251003.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+    "date": "2025-10-03 23:03:45",
     "conda": {
-      "Version": "25.1.1",
-      "buildVersion": "24.3.0",
-      "PythonVersion": "3.10.10.final.0",
       "Platform": "linux-64"
     },
     "packages": {
       "python": "3.10.10",
       "cdat_info": "8.2.1",
-      "cdms": "3.1.5",
       "cdp": "1.7.0",
-      "cdtime": "3.1.4",
-      "cdutil": "8.2.1",
-      "xarray": "2025.4.0",
+      "xarray": "2025.6.1",
       "esmf": "0.8.10",
-      "esmpy": "8.8.1",
-      "matplotlib": "3.10.3",
+      "esmpy": "8.9.0",
+      "matplotlib": "3.10.6",
       "numpy": "2.0.2",
       "scipy": "1.15.2",
-      "xcdat": "0.8.0",
-      "PMP": "3.9.1",
+      "xcdat": "0.10.0",
+      "PMP": "3.9.2",
       "PMPObs": "See 'References' key below, for detailed obs provenance information."
     },
     "openGL": {
-      "vendor": "Intel",
-      "renderer": "Mesa Intel(R) Iris(R) Xe Graphics (ADL GT2)",
-      "version": "4.6 (Compatibility Profile) Mesa 25.0.7-0ubuntu0.25.04.1",
-      "shading language version": "4.60",
       "GLX": {
-        "server": {
-          "vendor": "SGI",
-          "version": "1.4"
-        },
-        "client": {
-          "vendor": "Mesa Project and SGI",
-          "version": "1.4"
-        },
-        "version": "1.4"
+        "server": {},
+        "client": {}
       }
     }
   },

@@ -19,8 +19,9 @@ except ImportError:  # pragma: no cover
     )
 
 import os
+import re
 import time
-from typing import Any
+from typing import Annotated, Any, Literal
 
 import parsl
 from loguru import logger
@@ -29,6 +30,7 @@ from parsl.config import Config as ParslConfig
 from parsl.executors import HighThroughputExecutor
 from parsl.launchers import SimpleLauncher, SrunLauncher
 from parsl.providers import SlurmProvider
+from pydantic import BaseModel, Field, StrictBool, field_validator, model_validator
 from tqdm import tqdm
 
 from climate_ref.config import Config
@@ -41,6 +43,72 @@ from climate_ref_core.executor import execute_locally
 
 from .local import ExecutionFuture, process_result
 from .pbs_scheduler import SmartPBSProvider
+
+
+class SlurmConfig(BaseModel):
+    """Slurm Configurations"""
+
+    scheduler: Literal["slurm"]
+    account: str
+    username: str
+    partition: str | None = None
+    log_dir: str = "runinfo"
+    qos: str | None = None
+    req_nodes: Annotated[int, Field(strict=True, ge=1, le=1000)] = 1
+    cores_per_worker: Annotated[int, Field(strict=True, ge=1, le=1000)] = 1
+    mem_per_worker: Annotated[float, Field(strict=True, gt=0, lt=1000.0)] | None = None
+    max_workers_per_node: Annotated[int, Field(strict=True, ge=1, le=1000)] = 16
+    validation: StrictBool = False
+    walltime: str = "00:30:00"
+    scheduler_options: str = ""
+    retries: Annotated[int, Field(strict=True, ge=1, le=3)] = 2
+    max_blocks: Annotated[int, Field(strict=True, ge=1)] = 1  # one block mean one job?
+    worker_init: str = ""
+    overrides: str = ""
+    cmd_timeout: Annotated[int, Field(strict=True, ge=0)] = 120
+    cpu_affinity: str = "none"
+
+    @model_validator(mode="before")
+    def _check_parition_qos(cls, data: Any) -> Any:
+        if not ("partition" in data or "qos" in data):
+            raise ValueError("partition or qos is needed")
+        return data
+
+    @field_validator("scheduler_options")
+    def _validate_sbatch_syntax(cls, v: str | None) -> Any:
+        if not v:
+            return v
+
+        sbatch_pattern = re.compile(
+            r"^\s*#SBATCH\s+"  # Start with #SBATCH
+            r"(?:-\w+\s+[^\s]+"  # Option-value pairs
+            r"(?:\s+-\w+\s+[^\s]+)*)"  # Additional options
+            r"\s*$",
+            re.IGNORECASE | re.MULTILINE,
+        )
+
+        invalid_lines = [
+            line
+            for line in v.split("\n")
+            if not (line.strip().upper().startswith("#SBATCH") and sbatch_pattern.match(line.strip()))
+        ]
+
+        if invalid_lines:
+            error_msg = (
+                "Invalid SBATCH directives:\n"
+                + "\n".join(invalid_lines)
+                + "\n"
+                + "Expected format: '#SBATCH -option value [-option value ...]'"
+            )
+            raise ValueError(error_msg)
+        return v
+
+    @field_validator("walltime")
+    def _validate_walltime(cls, v: str) -> str:
+        pattern = r"^(\d+-)?\d{1,5}:[0-5][0-9]:[0-5][0-9]$"
+        if not re.match(pattern, v):
+            raise ValueError("Walltime must be in `D-HH:MM:SS/HH:MM:SS` format")
+        return v
 
 
 @python_app
@@ -112,12 +180,17 @@ class HPCExecutor:
         self.cores_per_worker = _to_int(executor_config.get("cores_per_worker"))
         self.mem_per_worker = _to_float(executor_config.get("mem_per_worker"))
 
-        hours, minutes, seconds = map(int, self.walltime.split(":"))
+        if self.scheduler == "slurm":
+            self.slurm_config = SlurmConfig.model_validate(executor_config)
+            hours, minutes, seconds = map(int, self.slurm_config.walltime.split(":"))
+
+            if self.slurm_config.validation and HAS_REAL_SLURM:
+                self._validate_slurm_params()
+        else:
+            hours, minutes, seconds = map(int, self.walltime.split(":"))
+
         total_minutes = hours * 60 + minutes + seconds / 60
         self.total_minutes = total_minutes
-
-        if executor_config.get("validation") and HAS_REAL_SLURM:
-            self._validate_slurm_params()
 
         self._initialize_parsl()
 
@@ -131,45 +204,52 @@ class HPCExecutor:
             ValueError: If account, partition or QOS are invalid or inaccessible.
         """
         slurm_checker = SlurmChecker()
-        if self.account and not slurm_checker.get_account_info(self.account):
-            raise ValueError(f"Account: {self.account} not valid")
+        if self.slurm_config.account and not slurm_checker.get_account_info(self.slurm_config.account):
+            raise ValueError(f"Account: {self.slurm_config.account} not valid")
 
         partition_limits = None
         node_info = None
 
-        if self.partition:
-            if not slurm_checker.get_partition_info(self.partition):
-                raise ValueError(f"Partition: {self.partition} not valid")
+        if self.slurm_config.partition:
+            if not slurm_checker.get_partition_info(self.slurm_config.partition):
+                raise ValueError(f"Partition: {self.slurm_config.partition} not valid")
 
-            if not slurm_checker.can_account_use_partition(self.account, self.partition):
-                raise ValueError(f"Account: {self.account} cannot access partiton: {self.partition}")
+            if not slurm_checker.can_account_use_partition(
+                self.slurm_config.account, self.slurm_config.partition
+            ):
+                raise ValueError(
+                    f"Account: {self.slurm_config.account}"
+                    f" cannot access partiton: {self.slurm_config.partition}"
+                )
 
-            partition_limits = slurm_checker.get_partition_limits(self.partition)
-            node_info = slurm_checker.get_node_from_partition(self.partition)
+            partition_limits = slurm_checker.get_partition_limits(self.slurm_config.partition)
+            node_info = slurm_checker.get_node_from_partition(self.slurm_config.partition)
 
         qos_limits = None
-        if self.qos:
-            if not slurm_checker.get_qos_info(self.qos):
-                raise ValueError(f"QOS: {self.qos} not valid")
+        if self.slurm_config.qos:
+            if not slurm_checker.get_qos_info(self.slurm_config.qos):
+                raise ValueError(f"QOS: {self.slurm_config.qos} not valid")
 
-            if not slurm_checker.can_account_use_qos(self.account, self.qos):
-                raise ValueError(f"Account: {self.account} cannot access qos: {self.qos}")
+            if not slurm_checker.can_account_use_qos(self.slurm_config.account, self.slurm_config.qos):
+                raise ValueError(
+                    f"Account: {self.slurm_config.account} cannot access qos: {self.slurm_config.qos}"
+                )
 
-            qos_limits = slurm_checker.get_qos_limits(self.qos)
+            qos_limits = slurm_checker.get_qos_limits(self.slurm_config.qos)
 
         max_cores_per_node = int(node_info["cpus"]) if node_info else None
-        if max_cores_per_node and self.cores_per_worker:
-            if self.cores_per_worker > max_cores_per_node:
+        if max_cores_per_node and self.slurm_config.cores_per_worker:
+            if self.slurm_config.cores_per_worker > max_cores_per_node:
                 raise ValueError(
-                    f"cores_per_work:{self.cores_per_worker}"
+                    f"cores_per_work:{self.slurm_config.cores_per_worker}"
                     f"larger than the maximum in a node {max_cores_per_node}"
                 )
 
         max_mem_per_node = float(node_info["real_memory"]) if node_info else None
-        if max_mem_per_node and self.mem_per_worker:
-            if self.mem_per_worker > max_mem_per_node:
+        if max_mem_per_node and self.slurm_config.mem_per_worker:
+            if self.slurm_config.mem_per_worker > max_mem_per_node:
                 raise ValueError(
-                    f"mem_per_work:{self.mem_per_worker}"
+                    f"mem_per_work:{self.slurm_config.mem_per_worker}"
                     f"larger than the maximum mem in a node {max_mem_per_node}"
                 )
 
@@ -182,8 +262,8 @@ class HPCExecutor:
 
         if self.total_minutes > float(max_walltime_minutes):
             raise ValueError(
-                f"Walltime: {self.walltime} exceed the maximum time "
-                f"{max_walltime_minutes} allowed by {self.partition} and {self.qos}"
+                f"Walltime: {self.slurm_config.walltime} exceed the maximum time "
+                f"{max_walltime_minutes} allowed by {self.slurm_config.partition} and {self.slurm_config.qos}"
             )
 
     def _initialize_parsl(self) -> None:
@@ -192,19 +272,34 @@ class HPCExecutor:
         provider: SlurmProvider | SmartPBSProvider
         if self.scheduler == "slurm":
             provider = SlurmProvider(
-                account=self.account,
-                partition=self.partition,
-                qos=self.qos,
-                nodes_per_block=self.req_nodes,
-                max_blocks=int(executor_config.get("max_blocks", 1)),
-                scheduler_options=executor_config.get("scheduler_options", "#SBATCH -C cpu"),
-                worker_init=executor_config.get("worker_init", "source .venv/bin/activate"),
+                account=self.slurm_config.account,
+                partition=self.slurm_config.partition,
+                qos=self.slurm_config.qos,
+                nodes_per_block=self.slurm_config.req_nodes,
+                max_blocks=self.slurm_config.max_blocks,
+                scheduler_options=self.slurm_config.scheduler_options,
+                worker_init=self.slurm_config.worker_init,
                 launcher=SrunLauncher(
                     debug=True,
-                    overrides=executor_config.get("overrides", ""),
+                    overrides=self.slurm_config.overrides,
                 ),
-                walltime=self.walltime,
-                cmd_timeout=int(executor_config.get("cmd_timeout", 120)),
+                walltime=self.slurm_config.walltime,
+                cmd_timeout=self.slurm_config.cmd_timeout,
+            )
+
+            executor = HighThroughputExecutor(
+                label="ref_hpc_executor",
+                cores_per_worker=self.slurm_config.cores_per_worker,
+                mem_per_worker=self.slurm_config.mem_per_worker,
+                max_workers_per_node=self.slurm_config.max_workers_per_node,
+                cpu_affinity=self.slurm_config.cpu_affinity,
+                provider=provider,
+            )
+
+            hpc_config = ParslConfig(
+                run_dir=self.slurm_config.log_dir,
+                executors=[executor],
+                retries=self.slurm_config.retries,
             )
 
         elif self.scheduler == "pbs":
@@ -227,23 +322,24 @@ class HPCExecutor:
                 walltime=self.walltime,
                 cmd_timeout=int(executor_config.get("cmd_timeout", 120)),
             )
+
+            executor = HighThroughputExecutor(
+                label="ref_hpc_executor",
+                cores_per_worker=self.cores_per_worker if self.cores_per_worker else 1,
+                mem_per_worker=self.mem_per_worker,
+                max_workers_per_node=_to_int(executor_config.get("max_workers_per_node", 16)),
+                cpu_affinity=str(executor_config.get("cpu_affinity")),
+                provider=provider,
+            )
+
+            hpc_config = ParslConfig(
+                run_dir=self.log_dir,
+                executors=[executor],
+                retries=int(executor_config.get("retries", 2)),
+            )
+
         else:
             raise ValueError(f"Unsupported scheduler: {self.scheduler}")
-
-        executor = HighThroughputExecutor(
-            label="ref_hpc_executor",
-            cores_per_worker=self.cores_per_worker if self.cores_per_worker else 1,
-            mem_per_worker=self.mem_per_worker,
-            max_workers_per_node=_to_int(executor_config.get("max_workers_per_node", 16)),
-            cpu_affinity=str(executor_config.get("cpu_affinity")),
-            provider=provider,
-        )
-
-        hpc_config = ParslConfig(
-            run_dir=self.log_dir,
-            executors=[executor],
-            retries=int(executor_config.get("retries", 2)),
-        )
 
         parsl.load(hpc_config)
 

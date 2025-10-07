@@ -4,8 +4,9 @@ from unittest.mock import MagicMock, patch
 import parsl
 import pytest
 from parsl.dataflow import futures
+from pydantic import ValidationError
 
-from climate_ref.executor.hpc import HPCExecutor, execute_locally
+from climate_ref.executor.hpc import HPCExecutor, SlurmConfig, execute_locally
 from climate_ref.executor.local import ExecutionFuture
 from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.exceptions import DiagnosticError
@@ -27,14 +28,26 @@ def test_execute_locally_failed(definition_factory, mock_diagnostic):
 
 
 class TestHPCExecutor:
-    def test_is_executor(self, tmp_path):
-        executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
+    @pytest.fixture
+    def base_config(self, tmp_path):
+        """Shared config dictionary for all tests in this class."""
+        return {
+            "scheduler": "slurm",
+            "account": "myaccount",
+            "username": "myname",
+            "qos": "myqos",
+            "partition": "mypartition",
+            "log_dir": str(tmp_path / "parsl_runinfo"),
+        }
+
+    def test_is_executor(self, base_config):
+        executor = HPCExecutor(**base_config)
 
         assert executor.name == "hpc"
         assert isinstance(executor, Executor)
         parsl.dfk().cleanup()
 
-    def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog, tmp_path):
+    def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog, base_config):
         with patch.object(HPCExecutor, "run", autospec=True) as mock_run:
             # Configure the mock to behave similarly to the original
             mock_run.side_effect = lambda self, definition, execution=None: (
@@ -47,7 +60,7 @@ class TestHPCExecutor:
                 )
             )
 
-            executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
+            executor = HPCExecutor(**base_config)
 
             # shall have the SerializationError, but not raised
             executor.run(metric_definition, None)
@@ -57,8 +70,8 @@ class TestHPCExecutor:
 
         parsl.dfk().cleanup()
 
-    def test_join(self, metric_definition, tmp_path):
-        executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
+    def test_join(self, metric_definition, base_config):
+        executor = HPCExecutor(**base_config)
         future = futures.AppFuture(1)
         executor.parsl_results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
@@ -74,8 +87,8 @@ class TestHPCExecutor:
 
         assert len(executor.parsl_results) == 0
 
-    def test_join_diagnostic_exception(self, metric_definition, tmp_path):
-        executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
+    def test_join_diagnostic_exception(self, metric_definition, base_config):
+        executor = HPCExecutor(**base_config)
         future = futures.AppFuture(1)
         executor.parsl_results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
@@ -99,8 +112,8 @@ class TestHPCExecutor:
         )
         assert len(executor.parsl_results) == 0
 
-    def test_join_other_exception(self, metric_definition, tmp_path):
-        executor = HPCExecutor(log_dir=tmp_path / "parsl_runinfo")
+    def test_join_other_exception(self, metric_definition, base_config):
+        executor = HPCExecutor(**base_config)
         future = futures.AppFuture(1)
         executor.parsl_results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
@@ -108,3 +121,55 @@ class TestHPCExecutor:
 
         with pytest.raises(AssertionError, match=re.escape("Execution result should not be None")):
             executor.join(0.1)
+
+    @pytest.mark.parametrize(
+        "field_name, invalid_value",
+        [
+            ("scheduler", "pbs"),
+            ("account", 1234),
+            ("username", 0.001),
+            ("log_dir", True),
+            ("qos", 1234),
+            ("req_nodes", 1001),
+            ("cores_per_worker", 1001),
+            ("mem_per_worker", -1),
+            ("max_workers_per_node", 1001),
+            ("validation", "true"),
+            ("walltime", "3"),
+            ("scheduler_options", 10),
+            ("scheduler_options", "#SABTCH -C cpu\n$LLLL -C"),
+            ("retries", "2"),
+            ("max_blocks", "1"),
+            ("worker_init", 1),
+            ("overrides", 0),
+            ("cmd_timeout", -1),
+            ("cpu_affinity", 1),
+        ],
+    )
+    def test_hpc_slurm_error_config(self, field_name, invalid_value):
+        slurm_cfg_dict = {
+            "scheduler": "slurm",
+            "qos": "myqos",
+            "account": "myaccount",
+            "username": "myname",
+            "req_nodes": 3,
+            "scheduler_options": "#SBATCH -C cpu",
+        }
+        slurm_cfg_dict[field_name] = invalid_value
+        with pytest.raises(ValidationError):
+            SlurmConfig.model_validate(slurm_cfg_dict)
+
+    @pytest.mark.parametrize(
+        "missing_config",
+        [
+            ["scheduler"],
+            ["account"],
+            ["username"],
+            ["partition", "qos"],
+        ],
+    )
+    def test_hpc_slurm_missing_required_config(self, missing_config, base_config):
+        slurm_cfg_dict = base_config
+        [slurm_cfg_dict.pop(m) for m in missing_config]
+        with pytest.raises(ValidationError):
+            SlurmConfig.model_validate(slurm_cfg_dict)

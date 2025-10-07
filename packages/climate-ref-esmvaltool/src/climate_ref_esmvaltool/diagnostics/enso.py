@@ -67,55 +67,75 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     series = (
         tuple(
             SeriesDefinition(
-                file_pattern=f"diagnostic_metrics/plot_script/{{source_id}}_eq_{var_name}_bias.nc",
-                dimensions={
-                    "statistic": (
-                        f"zonal bias in the time-mean {var_name} structure across the equatorial Pacific"
-                    ),
-                },
+                file_pattern=f"diagnostic_metrics/plot_script/{source_id}_eq_{var_name}_bias.nc",
+                dimensions=(
+                    {
+                        "statistic": (
+                            f"zonal bias in the time-mean {var_name} structure across the equatorial Pacific"
+                        ),
+                    }
+                    | ({} if source_id == "{source_id}" else {"reference_source_id": source_id})
+                ),
                 values_name="tos" if var_name == "sst" else var_name,
                 index_name="lon",
                 attributes=[],
             )
-            for var_name in ["pr", "sst", "tauu"]
+            for var_name in ("pr", "sst", "tauu")
+            for source_id in ("{source_id}", "GPCP-V2.3", "TROPFLUX")
         )
         + tuple(
             SeriesDefinition(
                 file_pattern=f"diagnostic_metrics/plot_script/{{source_id}}_eq_{var_name}_seacycle.nc",
-                dimensions={
-                    "statistic": (
-                        "zonal bias in the amplitude of the mean seasonal cycle of "
-                        f"{var_name} in the equatorial Pacific"
-                    ),
-                },
+                dimensions=(
+                    {
+                        "statistic": (
+                            "zonal bias in the amplitude of the mean seasonal cycle of "
+                            f"{var_name} in the equatorial Pacific"
+                        ),
+                    }
+                    | ({} if source_id == "{source_id}" else {"reference_source_id": source_id})
+                ),
                 values_name="tos" if var_name == "sst" else var_name,
                 index_name="lon",
                 attributes=[],
             )
-            for var_name in ["pr", "sst", "tauu"]
+            for var_name in ("pr", "sst", "tauu")
+            for source_id in ("{source_id}", "GPCP-V2.3", "TROPFLUX")
         )
-        + (
+        + tuple(
             SeriesDefinition(
                 file_pattern="diagnostic_metrics/plot_script/{source_id}_pr_double.nc",
-                dimensions={
-                    "statistic": ("meridional bias in the time-mean pr structure across the eastern Pacific"),
-                },
+                dimensions=(
+                    {
+                        "statistic": (
+                            "meridional bias in the time-mean pr structure across the eastern Pacific"
+                        ),
+                    }
+                    | ({} if source_id == "{source_id}" else {"reference_source_id": source_id})
+                ),
                 values_name="pr",
                 index_name="lat",
                 attributes=[],
-            ),
+            )
+            for source_id in ("{source_id}", "GPCP-V2.3")
+        )
+        + tuple(
             SeriesDefinition(
                 file_pattern="diagnostic_metrics/plot_script/*_pr_double_seacycle.nc",
-                dimensions={
-                    "statistic": (
-                        "meridional bias in the amplitude of the mean seasonal "
-                        "pr cycle in the eastern Pacific"
-                    ),
-                },
+                dimensions=(
+                    {
+                        "statistic": (
+                            "meridional bias in the amplitude of the mean seasonal "
+                            "pr cycle in the eastern Pacific"
+                        ),
+                    }
+                    | ({} if source_id == "{source_id}" else {"reference_source_id": source_id})
+                ),
                 values_name="pr",
                 index_name="lat",
                 attributes=[],
-            ),
+            )
+            for source_id in ("{source_id}", "GPCP-V2.3")
         )
     )
 

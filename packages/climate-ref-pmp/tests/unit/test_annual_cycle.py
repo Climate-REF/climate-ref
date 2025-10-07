@@ -173,7 +173,7 @@ def test_annual_cycle_diagnostic(
         "--realization",
         member_id,
         "--filename_template",
-        f"{variable_id}_{source_id}_historical_{member_id}_clims.198101-200512.AC.v{datecode}.nc",
+        f"%(variable)_{source_id}_historical_{member_id}_clims.198101-200512.AC.v{datecode}.nc",
         "--metrics_output_path",
         str(output_dir),
         "--cmec",

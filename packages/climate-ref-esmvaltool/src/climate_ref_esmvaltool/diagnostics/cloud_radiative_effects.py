@@ -61,13 +61,26 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     series = tuple(
         SeriesDefinition(
             file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
-            sel={"dim0": 0},  # Select the model and not the observations.
-            dimensions={"statistic": f"{var_name} zonal mean"},
+            sel={"dim0": 0},  # Select the model.
+            dimensions={"variable_id": var_name, "statistic": "zonal mean"},
             values_name=var_name,
             index_name="lat",
             attributes=[],
         )
         for var_name in ["lwcre", "swcre"]
+    ) + tuple(
+        SeriesDefinition(
+            file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
+            sel={"dim0": i},  # Select the observation.
+            dimensions={"variable_id": var_name, "statistic": "zonal mean", "reference_source_id": source_id},
+            values_name=var_name,
+            index_name="lat",
+            attributes=[],
+        )
+        for var_name in ["lwcre", "swcre"]
+        for i, source_id in enumerate(
+            ["CERES-EBAF-Ed4.2", "ESACCI-CLOUD-AVHRR-AMPM-fv3.0", "ISCCP-FH"], start=1
+        )
     )
 
     @staticmethod

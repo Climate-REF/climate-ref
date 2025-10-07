@@ -13,6 +13,16 @@ from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
+REGIONS = {
+    "nh": "Northern Hemisphere",
+    "sh": "Southern Hemisphere",
+}
+
+MONTHS = {
+    "nh": "September",
+    "sh": "February",
+}
+
 
 class SeaIceAreaBasic(ESMValToolDiagnostic):
     """
@@ -49,51 +59,40 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
         # TODO: Use OSI-450-nh and OSI-450-sh from obs4MIPs once available.
     )
     facets = ()
-    series = (
+    series = tuple(
         SeriesDefinition(
-            file_pattern="siarea_min/allplots/timeseries_sea_ice_area_nh_*.nc",
-            sel={"dim0": 0},  # Select the model and not the observations.
-            dimensions={
-                "region": "Northern Hemisphere",
-                "statistic": "September sea ice area",
-            },
+            file_pattern=f"siarea_min/allplots/timeseries_sea_ice_area_{region}_*.nc",
+            sel={"dim0": i},
+            dimensions=(
+                {
+                    "region": REGIONS[region],
+                    "statistic": f"{MONTHS[region]} sea ice area",
+                }
+                | ({} if i == 0 else {"reference_source_id": f"OSI-450-{region}"})
+            ),
             values_name="siconc",
             index_name="time",
             attributes=[],
-        ),
+        )
+        for region in REGIONS
+        for i in range(2)
+    ) + tuple(
         SeriesDefinition(
-            file_pattern="siarea_min/allplots/timeseries_sea_ice_area_sh_*.nc",
-            sel={"dim0": 0},  # Select the model and not the observations.
-            dimensions={
-                "region": "Southern Hemisphere",
-                "statistic": "February sea ice area",
-            },
-            values_name="siconc",
-            index_name="time",
-            attributes=[],
-        ),
-        SeriesDefinition(
-            file_pattern="siarea_seas/allplots/annual_cycle_sea_ice_area_nh_*.nc",
-            sel={"dim0": 0},  # Select the model and not the observations.
-            dimensions={
-                "region": "Northern Hemisphere",
-                "statistic": "20-year average seasonal cycle of the sea ice area",
-            },
+            file_pattern=f"siarea_seas/allplots/annual_cycle_sea_ice_area_{region}_*.nc",
+            sel={"dim0": i},
+            dimensions=(
+                {
+                    "region": REGIONS[region],
+                    "statistic": "20-year average seasonal cycle of the sea ice area",
+                }
+                | ({} if i == 0 else {"reference_source_id": f"OSI-450-{region}"})
+            ),
             values_name="siconc",
             index_name="month_number",
             attributes=[],
-        ),
-        SeriesDefinition(
-            file_pattern="siarea_seas/allplots/annual_cycle_sea_ice_area_sh_*.nc",
-            sel={"dim0": 0},  # Select the model and not the observations.
-            dimensions={
-                "region": "Southern Hemisphere",
-                "statistic": "20-year average seasonal cycle of the sea ice area,",
-            },
-            values_name="siconc",
-            index_name="month_number",
-            attributes=[],
-        ),
+        )
+        for region in REGIONS
+        for i in range(2)
     )
 
     @staticmethod

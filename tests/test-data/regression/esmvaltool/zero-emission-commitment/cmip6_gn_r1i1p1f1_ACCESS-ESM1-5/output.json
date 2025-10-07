@@ -10,31 +10,36 @@
     "executions/recipe_20250922_113903/work/zec/zec/zec.nc": {
       "filename": "executions/recipe_20250922_113903/work/zec/zec/zec.nc",
       "long_name": "",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_113903/work/zec/zec/zec_50.nc": {
       "filename": "executions/recipe_20250922_113903/work/zec/zec/zec_50.nc",
       "long_name": "",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "plots": {
     "executions/recipe_20250922_113903/plots/zec/zec/zec_50_barplot.png": {
       "filename": "executions/recipe_20250922_113903/plots/zec/zec/zec_50_barplot.png",
       "long_name": "Barplot of ZEC_50",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_113903/plots/zec/zec/zec_timeseries_all_models.png": {
       "filename": "executions/recipe_20250922_113903/plots/zec/zec/zec_timeseries_all_models.png",
       "long_name": "ZEC timeseries",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "html": {
     "<OUTPUT_DIR>/executions/recipe_20250922_113903/index.html": {
       "filename": "<OUTPUT_DIR>/executions/recipe_20250922_113903/index.html",
       "long_name": "Results page",
-      "description": "Page showing the executions of the ESMValTool run."
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
     }
   },
   "metrics": null,

@@ -149,6 +149,11 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             params["osyear"] = 1950
             params["oeyear"] = 2005
 
+        if self.mode_id in ["NPO", "NPGO"]:
+            params["eofn_obs"] = 2
+            params["eofn_mod"] = 2
+            params["eofn_mod_max"] = 2
+
         # Pass the parameters using **kwargs
         return build_pmp_command(
             driver_file="variability_modes_driver.py",

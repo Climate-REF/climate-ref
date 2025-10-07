@@ -69,6 +69,31 @@ There are other configurations available, for example:
 - `max_workers_per_node` to set the maximum worker in a node;
 - `overriders`to add additional options for `srun`
 
+The configurations of the __HPCExecutor__ for the slurm scheduler are validated now. They include:
+
+- `scheduler: str`, the HPC job scheduler name, either `slurm` or `pbs`
+- `account: str`, the account name to be charged
+- `username: str`, the name of the user to run the REF
+- `partition: str`, the slurm partition name
+- `qos: str`, the slurm quality of service
+- `req_nodes: int`, requested node for the REF run
+- `validation: boolean`, true to validate the above options with pyslurm
+
+The following __HPCExecutor__ options are directly from parsl. Please refer to [link](https://parsl.readthedocs.io/en/stable/stubs/parsl.providers.SlurmProvider.html)
+
+- `log_dir: str`, default="run_info"
+- `cores_per_worker: int`, default=1
+- `mem_per_worker: float`
+- `max_workers_per_node: int`, default=16
+- `walltime: str`, default="00:30:00"
+- `scheduler_options: str`
+- `retries: int`, default=2
+- `max_blocks: int`, default=1
+- `worker_init: str`
+- `overrides: str`
+- `cmd_timeout: int`, default=120
+- `cpu_affinity: str`, default="none"
+
 ///
 
 ## Performance benchmarking

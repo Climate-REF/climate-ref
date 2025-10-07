@@ -1,47 +1,47 @@
 EOF1: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(27.69474121)
+array(27.69474139)
 Coordinates:
     mode     int64 8B 0, <xarray.DataArray 'typical_errors' ()> Size: 8B
-array(1.09816792)
+array(1.09816793)
 Coordinates:
     mode     int64 8B 0
 EOF2: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(12.21676623)
+array(12.21676631)
 Coordinates:
     mode     int64 8B 1, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.48442629)
 Coordinates:
     mode     int64 8B 1
 EOF3: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(11.2656699)
+array(11.26567)
 Coordinates:
     mode     int64 8B 2, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.44671287)
 Coordinates:
     mode     int64 8B 2
 EOF4: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(8.44978069)
+array(8.44978077)
 Coordinates:
     mode     int64 8B 3, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.3350556)
 Coordinates:
     mode     int64 8B 3
 EOF5: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(6.54640177)
+array(6.5464018)
 Coordinates:
     mode     int64 8B 4, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.25958172)
 Coordinates:
     mode     int64 8B 4
 EOF6: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(4.92432666)
+array(4.92432664)
 Coordinates:
     mode     int64 8B 5, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.19526225)
 Coordinates:
     mode     int64 8B 5
 EOF7: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(4.34218902)
+array(4.342189)
 Coordinates:
     mode     int64 8B 6, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.17217899)
@@ -62,7 +62,7 @@ array(0.10614806)
 Coordinates:
     mode     int64 8B 8
 EOF10: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
-array(2.4484121)
+array(2.44841209)
 Coordinates:
     mode     int64 8B 9, <xarray.DataArray 'typical_errors' ()> Size: 8B
 array(0.09708585)

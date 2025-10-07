@@ -10,61 +10,72 @@
     "executions/recipe_20250922_121414/work/psl_trends/plot/seaborn_barplot.nc": {
       "filename": "executions/recipe_20250922_121414/work/psl_trends/plot/seaborn_barplot.nc",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/work/ua200_trends/plot/seaborn_barplot.nc": {
       "filename": "executions/recipe_20250922_121414/work/ua200_trends/plot/seaborn_barplot.nc",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/work/pr_trends/plot/seaborn_barplot.nc": {
       "filename": "executions/recipe_20250922_121414/work/pr_trends/plot/seaborn_barplot.nc",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/work/hus200_trends/plot/seaborn_barplot.nc": {
       "filename": "executions/recipe_20250922_121414/work/hus200_trends/plot/seaborn_barplot.nc",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/work/tas_trends/plot/seaborn_barplot.nc": {
       "filename": "executions/recipe_20250922_121414/work/tas_trends/plot/seaborn_barplot.nc",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "plots": {
     "executions/recipe_20250922_121414/plots/psl_trends/plot/seaborn_barplot.png": {
       "filename": "executions/recipe_20250922_121414/plots/psl_trends/plot/seaborn_barplot.png",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/plots/ua200_trends/plot/seaborn_barplot.png": {
       "filename": "executions/recipe_20250922_121414/plots/ua200_trends/plot/seaborn_barplot.png",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/plots/pr_trends/plot/seaborn_barplot.png": {
       "filename": "executions/recipe_20250922_121414/plots/pr_trends/plot/seaborn_barplot.png",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/plots/hus200_trends/plot/seaborn_barplot.png": {
       "filename": "executions/recipe_20250922_121414/plots/hus200_trends/plot/seaborn_barplot.png",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     },
     "executions/recipe_20250922_121414/plots/tas_trends/plot/seaborn_barplot.png": {
       "filename": "executions/recipe_20250922_121414/plots/tas_trends/plot/seaborn_barplot.png",
       "long_name": "Seaborn barplot for one or more dataset(s)",
-      "description": ""
+      "description": "",
+      "dimensions": null
     }
   },
   "html": {
     "<OUTPUT_DIR>/executions/recipe_20250922_121414/index.html": {
       "filename": "<OUTPUT_DIR>/executions/recipe_20250922_121414/index.html",
       "long_name": "Results page",
-      "description": "Page showing the executions of the ESMValTool run."
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
     }
   },
   "metrics": null,

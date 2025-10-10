@@ -87,15 +87,6 @@ def normalize_region(region: str) -> str:
     return region.replace("&", "-and-").replace("/", "-and-")
 
 
-REFERENCE_DATASETS = {
-    "hus": "ERA-5",
-    "pr": "GPCP-V2.3",
-    "psl": "ERA-5",
-    "tas": "HadCRUT5-5.0.1.0-analysis",
-    "ua": "ERA-5",
-}
-
-
 class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     """
     Plot regional historical annual cycle of climate variables.
@@ -114,59 +105,61 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     )
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": "historical",
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "historical",
+                            "table_id": "Amon",
+                        },
+                    ),
                 ),
-            ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1980, 1),
-                    end=PartialDateTime(2009, 12),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2009, 12),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
-                RequireFacets("variable_id", variables),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
-        DataRequirement(
-            source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": (
-                            "psl",
-                            "ua",
-                        ),
-                        "source_id": "ERA-5",
-                        "frequency": "mon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": (
+                                "psl",
+                                "ua",
+                            ),
+                            "source_id": "ERA-5",
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-            ),
-            group_by=("source_id",),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1980, 1),
-                    end=PartialDateTime(2009, 12),
+                group_by=("source_id",),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2009, 12),
+                    ),
                 ),
-                RequireFacets("variable_id", ("psl", "ua")),
+                # TODO: Add obs4MIPs datasets once available and working:
+                #
+                # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):
+                # - GPCP-V2.3: pr
+                #
+                # Not yet available on obs4MIPs:
+                # - ERA5: hus
+                # - HadCRUT5_ground_5.0.1.0-analysis: tas
             ),
-            # TODO: Add obs4MIPs datasets once available and working:
-            #
-            # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):
-            # - GPCP-V2.3: pr
-            #
-            # Not yet available on obs4MIPs:
-            # - ERA5: hus
-            # - HadCRUT5_ground_5.0.1.0-analysis: tas
         ),
     )
 
@@ -181,7 +174,6 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                     "variable_id": var_name,
                     "statistic": "mean",
                 }
-                | ({} if i == 0 else {"reference_source_id": REFERENCE_DATASETS[var_name]})
             ),
             values_name=var_name,
             index_name="month_number",
@@ -189,7 +181,6 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         )
         for var_name in variables
         for region in REGIONS
-        for i in range(2)
     )
 
     @staticmethod
@@ -199,12 +190,10 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Update the dataset.
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
-        dataset = recipe_variables["hus"]["additional_datasets"][0]
-        dataset.pop("timerange")
-        dataset["benchmark_dataset"] = True
-        dataset["plot_label"] = "{dataset}.{ensemble}.{grid}".format(**dataset)
-        recipe["datasets"] = [dataset]
+        recipe_variables = dataframe_to_recipe(next(iter(input_files.values())))
+        source_type = next(iter(input_files.keys()))
+        project = str(source_type).split(".")[1]
+        recipe.pop("datasets")
 
         # Generate diagnostics for each region.
         diagnostics = {}
@@ -215,10 +204,32 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                 normalized_region = normalize_region(region)
                 diagnostics[f"{diagnostic_name}-{normalized_region}"] = diagnostic
 
-                for variable in diagnostic["variables"].values():
-                    # Remove unwanted facets that are part of the dataset.
-                    for facet in ("project", "exp", "ensemble", "grid"):
-                        variable.pop(facet, None)
+                for variable_group, variable in dict(diagnostic["variables"]).items():
+                    # Remove unwanted facets.
+                    for facet in ("project", "exp", "ensemble", "grid", "reference_dataset"):
+                        variable.pop(facet)
+                    # Add short_name if missing.
+                    if "short_name" not in variable:
+                        variable["short_name"] = variable_group
+                    short_name = variable["short_name"]
+                    if short_name not in recipe_variables:
+                        # If a variable is missing, skip it.
+                        if project != "obs4MIPs":
+                            # Some variables are not yet available through obs4MIPs,
+                            # keep the recipe as is for those.
+                            diagnostic["variables"].pop(variable_group)
+                        continue
+                    else:
+                        # Update the dataset
+                        dataset = copy.deepcopy(recipe_variables[short_name]["additional_datasets"][0])
+                        dataset.pop("timerange")
+                        dataset["project"] = project
+                        if project == "obs4MIPs":
+                            plot_label_template = "{dataset}"
+                        else:
+                            plot_label_template = "{dataset}.{ensemble}.{grid}"
+                        dataset["plot_label"] = plot_label_template.format(**dataset)
+                        variable["additional_datasets"] = [dataset]
                     # Update the preprocessor so it extracts the region.
                     preprocessor_name = variable["preprocessor"]
                     preprocessor = copy.deepcopy(recipe["preprocessors"][preprocessor_name])
@@ -228,6 +239,10 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
 
                 # Update plot titles with region name.
                 for script in diagnostic["scripts"].values():
+                    script["plot_filename"] = (
+                        "{plot_type}_{real_name}_"
+                        f"{plot_label_template.replace('.', '_')}_{normalized_region}"
+                    )
                     for plot in script["plots"].values():
                         plot["pyplot_kwargs"] = {"title": f"{{long_name}} {region}"}
         recipe["diagnostics"] = diagnostics
@@ -251,72 +266,75 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
     )
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": "historical",
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "historical",
+                            "table_id": "Amon",
+                        },
+                    ),
                 ),
-            ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1980, 1),
-                    end=PartialDateTime(2014, 12),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireFacets("variable_id", variables),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
-                RequireFacets("variable_id", variables),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
-        DataRequirement(
-            source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": (
-                            "psl",
-                            "ua",
-                        ),
-                        "source_id": "ERA-5",
-                        "frequency": "mon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": (
+                                "psl",
+                                "ua",
+                            ),
+                            "source_id": "ERA-5",
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-            ),
-            group_by=("source_id",),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1980, 1),
-                    end=PartialDateTime(2014, 12),
+                group_by=("source_id",),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
                 ),
+                # TODO: Add obs4MIPs datasets once available and working:
+                #
+                # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):
+                # - GPCP-V2.3: pr
+                #
+                # Not yet available on obs4MIPs:
+                # - ERA5: hus
+                # - HadCRUT5_ground_5.0.1.0-analysis: tas
             ),
-            # TODO: Add obs4MIPs datasets once available and working:
-            #
-            # obs4MIPs dataset that cannot be ingested (https://github.com/Climate-REF/climate-ref/issues/260):
-            # - GPCP-V2.3: pr
-            #
-            # Not yet available on obs4MIPs:
-            # - ERA5: hus
-            # - HadCRUT5_ground_5.0.1.0-analysis: tas
         ),
     )
 
     series = tuple(
         SeriesDefinition(
             file_pattern=f"{diagnostic}-{region}/allplots/*_{var_name}_*.nc",
-            sel={"dim0": i},
+            sel={"dim0": 0},
             dimensions=(
                 {
                     "region": region,
                     "variable_id": var_name,
                     "statistic": ("mean" if diagnostic == "timeseries_abs" else "mean anomaly"),
                 }
-                | ({} if i == 0 else {"reference_source_id": REFERENCE_DATASETS[var_name]})
             ),
             values_name=var_name,
             index_name="time",
@@ -325,7 +343,6 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         for var_name in variables
         for region in REGIONS
         for diagnostic in ["timeseries_abs", "timeseries"]
-        for i in range(2)
     )
 
 

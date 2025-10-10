@@ -21,19 +21,32 @@ def test_write_recipe(
     data_catalog: dict[SourceDatasetType, pd.DataFrame],
     diagnostic: ESMValToolDiagnostic,
 ):
-    execution = next(
+    executions = list(
         solve_executions(
             data_catalog=data_catalog,
             diagnostic=diagnostic,
             provider=diagnostic.provider,
         )
     )
-    definition = execution.build_execution_definition(output_root=tmp_path)
-    definition.output_directory.mkdir(parents=True, exist_ok=True)
-    recipe_path = diagnostic.write_recipe(definition=definition)
-    encoding = "utf-8"
-    file_regression.check(
-        recipe_path.read_text(encoding),
-        encoding=encoding,
-        fullpath=Path(__file__).parent / "recipes" / f"recipe-{diagnostic.slug}.yml".replace("-", "_"),
-    )
+
+    def get_source_types(execution):
+        return tuple(sorted(k.value for k in execution.datasets.keys()))
+
+    seen = set()
+    for execution in executions:
+        if (source_types := get_source_types(execution)) not in seen:
+            seen.add(source_types)
+            definition = execution.build_execution_definition(output_root=tmp_path)
+            definition.output_directory.mkdir(parents=True, exist_ok=True)
+            tmp_recipe = diagnostic.write_recipe(definition=definition)
+            reference_recipe = (
+                Path(__file__).parent
+                / "recipes"
+                / f"recipe-{diagnostic.slug}-{'-'.join(source_types)}.yml".replace("-", "_")
+            )
+            encoding = "utf-8"
+            file_regression.check(
+                tmp_recipe.read_text(encoding),
+                encoding=encoding,
+                fullpath=reference_recipe,
+            )

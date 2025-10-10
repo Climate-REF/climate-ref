@@ -1,0 +1,30 @@
+# This file is used to specify datasets that should be ignored by default.
+#
+# It can be used to ignore datasets that are known to have issues and keep
+# diagnostics that use multiple datasets from running.
+#
+# The format used in this configuration file is:
+# provider:
+#   diagnostic:
+#     source_type:
+#       - facet: value
+#       - other_facet: [other_value1, other_value2]
+#
+# The facets listed here will be used to create `climate_ref_core.constraints.IgnoreFacets`
+# instances that will be prepended to the constraints of the data requirements
+# of the diagnostics that the facets are listed under.
+#
+# If no `ignore_datasets_file` is specified in the REF configuration, this file
+# will be downloaded from GitHub and used. If the local copy of this file is
+# older than 6 hours, it will be updated.
+#
+esmvaltool:
+  sea-ice-sensitivity:
+      cmip6:
+        - experiment_id: historical
+          grid_label: gn
+          member_id: r1i1p1f1
+          source_id: CAS-ESM2-0
+          table_id: SImon
+          variable_id: siconc
+          version: v20201225

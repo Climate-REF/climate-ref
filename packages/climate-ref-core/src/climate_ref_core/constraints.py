@@ -100,13 +100,20 @@ def apply_constraint(
 
 def _to_tuple(value: None | str | tuple[str, ...]) -> tuple[str, ...]:
     """
-    Clean the value of group_by to a tuple of strings
+    Normalize value to a tuple of strings.
     """
     if value is None:
         return ()
     if isinstance(value, str):
         return (value,)
     return tuple(value)
+
+
+def _to_tuple_dict(value: dict[str, str | tuple[str, ...]]) -> dict[str, tuple[str, ...]]:
+    """
+    Normalize value to a dict of tuples of strings.
+    """
+    return {k: _to_tuple(v) for k, v in value.items()}
 
 
 @frozen
@@ -151,6 +158,27 @@ class RequireFacets:
                 )
                 select.loc[subgroup.index] = False
         return group[select]
+
+
+@frozen
+class IgnoreFacets:
+    """
+    A constraint that ignores certain facet values.
+
+    Datasets with these facet values are removed from the selection.
+    """
+
+    facets: dict[str, str | tuple[str, ...]] = field(converter=_to_tuple_dict)
+    """The facet values to ignore."""
+
+    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Filter out datasets with the ignored facets.
+        """
+        mask = group[list(self.facets)].isin(self.facets).all(axis="columns")
+        if mask.any():
+            logger.debug(f"Ignoring files {', '.join(group.loc[mask, 'path'])} becauseof {self}")
+        return group[~mask]
 
 
 @frozen

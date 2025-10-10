@@ -1,13 +1,23 @@
 import importlib.metadata
 import logging
 import sys
+from datetime import timedelta
 from pathlib import Path
 
+import platformdirs
 import pytest
+import requests
 from attr import evolve
 from cattrs import IterableValidationError
 
-from climate_ref.config import DEFAULT_LOG_FORMAT, Config, PathConfig, transform_error
+import climate_ref.config
+from climate_ref.config import (
+    DEFAULT_LOG_FORMAT,
+    Config,
+    PathConfig,
+    _get_default_ignore_datasets_file,
+    transform_error,
+)
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.executor import Executor
 
@@ -141,6 +151,9 @@ filename = "sqlite://climate_ref.db"
         without_defaults = cfg.dump(defaults=False)
 
         assert without_defaults == {
+            "ignore_datasets_file": str(
+                platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
+            ),
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -149,6 +162,9 @@ filename = "sqlite://climate_ref.db"
             ],
         }
         assert with_defaults == {
+            "ignore_datasets_file": str(
+                platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
+            ),
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -245,3 +261,38 @@ def test_transform_error():
 
     err = IterableValidationError("Validation error", [ValueError("Test error"), KeyError()], Config)
     assert transform_error(err, "test") == ["invalid value @ test", "required field missing @ test"]
+
+
+@pytest.mark.parametrize("status", ["fresh", "stale", "missing"])
+def test_get_default_ignore_datasets_file(mocker, tmp_path, status):
+    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+    mocker.patch.object(
+        climate_ref.config.requests,
+        "get",
+        return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
+    )
+    expected_path = tmp_path / "default_ignore_datasets.yaml"
+    if status != "missing":
+        expected_path.write_text("existing", encoding="utf-8")
+    if status == "stale":
+        mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
+
+    path = climate_ref.config._get_default_ignore_datasets_file()
+
+    assert path == tmp_path / "default_ignore_datasets.yaml"
+    if status == "fresh":
+        assert path.read_text(encoding="utf-8") == "existing"
+    else:
+        assert path.read_text(encoding="utf-8") == "downloaded"
+
+
+def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
+    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+    result = mocker.MagicMock(status_code=404, content=b"{}")
+    result.raise_for_status.side_effect = requests.RequestException
+    mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
+
+    path = _get_default_ignore_datasets_file()
+    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert path.parent.exists()
+    assert path.read_text(encoding="utf-8") == ""

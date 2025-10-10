@@ -1,6 +1,7 @@
 import datetime
 import logging
 import subprocess
+import textwrap
 import time
 from contextlib import contextmanager
 from pathlib import Path
@@ -8,12 +9,23 @@ from pathlib import Path
 import pytest
 
 import climate_ref_core.providers
+from climate_ref_core.constraints import IgnoreFacets
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
 from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider, import_provider
 
 
-class TestMetricsProvider:
+@pytest.fixture
+def mock_config(tmp_path, mocker):
+    """Use a mock config to avoid depending on `climate_ref.config.Config`."""
+    config = mocker.Mock()
+    config.paths.software = tmp_path / "software"
+    config.ignore_datasets_file = tmp_path / "ignore_datasets.yaml"
+    config.ignore_datasets_file.touch()
+    return config
+
+
+class TestDiagnosticProvider:
     def test_provider(self):
         provider = DiagnosticProvider("provider_name", "v0.23")
 
@@ -50,6 +62,62 @@ class TestMetricsProvider:
 
         result = provider.get("mock")
         assert isinstance(result, Diagnostic)
+
+    def test_configure(self, provider, mock_config):
+        mock_config.ignore_datasets_file.write_text(
+            textwrap.dedent(
+                """
+                mock_provider:
+                  mock:
+                    cmip6:
+                      - source_id: A
+                """
+            ),
+            encoding="utf-8",
+        )
+        provider.configure(mock_config)
+        expected_constraint = IgnoreFacets(facets={"source_id": ("A",)})
+        assert provider.diagnostics()[0].data_requirements[0][0].constraints[0] == expected_constraint
+
+    def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
+        mock_config.ignore_datasets_file.write_text(
+            textwrap.dedent(
+                """
+                mock_provider:
+                  invalid_diagnostic:
+                    cmip6:
+                      - source_id: A
+                """
+            ),
+            encoding="utf-8",
+        )
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+        expected_msg = (
+            f"Unknown diagnostics found in {mock_config.ignore_datasets_file} "
+            "for provider mock_provider: invalid_diagnostic"
+        )
+        assert expected_msg in caplog.text
+
+    def test_configure_unknown_source_type(self, provider, mock_config, caplog):
+        mock_config.ignore_datasets_file.write_text(
+            textwrap.dedent(
+                """
+                mock_provider:
+                  mock:
+                    invalid_source_type:
+                      - source_id: A
+                """
+            ),
+            encoding="utf-8",
+        )
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+        expected_msg = (
+            f"Unknown source types found in {mock_config.ignore_datasets_file} "
+            "for diagnostic 'mock' by provider mock_provider: invalid_source_type"
+        )
+        assert expected_msg in caplog.text
 
 
 @pytest.mark.parametrize("fqn", ["climate_ref_esmvaltool:provider", "climate_ref_esmvaltool"])
@@ -104,7 +172,7 @@ def test_get_micromamba_url(mocker, sysname, machine):
         assert "{" not in result
 
 
-class TestCondaMetricsProvider:
+class TestCondaDiagnosticProvider:
     @pytest.fixture
     def provider(self, tmp_path):
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
@@ -117,9 +185,9 @@ class TestCondaMetricsProvider:
         with pytest.raises(ValueError, match=r"No prefix for conda environments configured.*"):
             provider.prefix
 
-    def test_configure(self, config):
+    def test_configure(self, mock_config):
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
-        provider.configure(config)
+        provider.configure(mock_config)
 
         assert isinstance(provider.prefix, Path)
 

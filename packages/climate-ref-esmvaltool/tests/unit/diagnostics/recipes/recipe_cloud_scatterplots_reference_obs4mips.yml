@@ -1,0 +1,309 @@
+documentation:
+  title: Model evaluation with focus on clouds.
+  description: 'Plot 2D histograms using the Seaborn diagnostic in ESMValTool.
+
+    '
+  authors:
+  - bock_lisa
+  - lauer_axel
+  - andela_bouwe
+  maintainer:
+  - bock_lisa
+timerange_for_data:
+  timerange: 1996/2014
+regridding:
+  regrid:
+    target_grid: 1x1
+    scheme:
+      reference: esmf_regrid.schemes:ESMFAreaWeighted
+levels_for_3d_vars:
+  extract_levels:
+    levels:
+      cmor_table: CMIP6
+      coordinate: plev27
+    coordinate: air_pressure
+    scheme: linear
+preprocessors:
+  common_grid_clt:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 1.0
+      maximum: 100.0
+  common_grid_clivi_clwvi:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 0.01
+      maximum: 0.2
+  common_grid_lwcre:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 1.0
+      maximum: 100.0
+  common_grid_swcre:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: -200.0
+      maximum: -1.0
+  common_grid_pr:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    convert_units:
+      units: mm day-1
+    mask_outside_range:
+      minimum: 0.1
+      maximum: 4
+  common_grid_levels_ta:
+    extract_levels:
+      levels:
+        cmor_table: CMIP6
+        coordinate: plev27
+      coordinate: air_pressure
+      scheme: linear
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 200
+      maximum: 280
+  common_grid_levels_cli:
+    extract_levels:
+      levels:
+        cmor_table: CMIP6
+        coordinate: plev27
+      coordinate: air_pressure
+      scheme: linear
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    convert_units:
+      units: g kg-1
+    mask_outside_range:
+      minimum: 0.0001
+      maximum: 0.005
+diagnostics:
+  plot_joint_clt_swcre_ref:
+    description: Scatterplot clt vs swcre.
+    variables:
+      clt:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_clt
+        additional_datasets:
+        - dataset: ESACCI-CLOUD
+          project: OBS
+          type: sat
+          version: AVHRR-AMPM-fv3.0
+          tier: 2
+          alias: ESACCI-CLOUD
+          start_year: 2001
+          end_year: 2016
+      swcre:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_swcre
+        derive: true
+        force_derivation: false
+        additional_datasets:
+        - dataset: CERES-EBAF
+          project: OBS
+          type: sat
+          version: Ed4.2
+          tier: 2
+          alias: CERES-EBAF
+          start_year: 2001
+          end_year: 2016
+    scripts:
+      plot:
+        script: seaborn_jointplot_histogram.py
+        x: clt
+        y: swcre
+        bins: 20
+        joint_kws:
+          vmax: 0.015
+          cmap: YlGnBu
+        cbar: true
+        cbar_kws:
+          extend: max
+        marginal_kws:
+          color: darkturquoise
+        seaborn_settings:
+          style: ticks
+          rc:
+            axes.titlepad: 15.0
+        suptitle: ESACCI-CLOUD / CERES-EBAF
+        plot_filename: jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF
+  plot_joint_clwvi_pr_ref:
+    description: Scatterplot clwvi vs pr.
+    variables:
+      clwvi:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_clivi_clwvi
+        additional_datasets:
+        - dataset: ESACCI-CLOUD
+          project: OBS
+          type: sat
+          version: AVHRR-AMPM-fv3.0
+          tier: 2
+          alias: ESACCI-CLOUD
+          start_year: 1992
+          end_year: 2016
+      pr:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_pr
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          alias: GPCP-SG
+          timerange: 1992/2016
+    scripts:
+      plot:
+        script: seaborn_jointplot_histogram.py
+        x: clwvi
+        y: pr
+        bins: 20
+        joint_kws:
+          vmax: 0.03
+          cmap: YlGnBu
+        cbar: true
+        cbar_kws:
+          extend: max
+        marginal_kws:
+          color: darkturquoise
+        seaborn_settings:
+          style: ticks
+          rc:
+            axes.titlepad: 15.0
+        suptitle: ESACCI-CLOUD / GPCP-SG
+        plot_filename: jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG
+  plot_joint_clivi_lwcre_ref:
+    description: Scatterplot clt vs lwcre.
+    variables:
+      clivi:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_clivi_clwvi
+        additional_datasets:
+        - dataset: ESACCI-CLOUD
+          project: OBS
+          type: sat
+          version: AVHRR-AMPM-fv3.0
+          tier: 2
+          alias: ESACCI-CLOUD
+          start_year: 2001
+          end_year: 2016
+      lwcre:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_lwcre
+        derive: true
+        force_derivation: false
+        additional_datasets:
+        - dataset: CERES-EBAF
+          project: OBS
+          type: sat
+          version: Ed4.2
+          tier: 2
+          alias: CERES-EBAF
+          start_year: 2001
+          end_year: 2016
+    scripts:
+      plot:
+        script: seaborn_jointplot_histogram.py
+        x: clivi
+        y: lwcre
+        bins: 20
+        joint_kws:
+          vmax: 0.03
+          cmap: YlGnBu
+        cbar: true
+        cbar_kws:
+          extend: max
+        marginal_kws:
+          color: darkturquoise
+        seaborn_settings:
+          style: ticks
+          rc:
+            axes.titlepad: 15.0
+        suptitle: ESACCI-CLOUD / CERES-EBAF
+        plot_filename: jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF
+  plot_joint_cli_ta_ref:
+    description: Scatterplot clt vs lwcre.
+    variables:
+      cli:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_levels_cli
+        additional_datasets:
+        - dataset: CALIPSO-ICECLOUD
+          project: OBS
+          type: sat
+          version: 1-00
+          tier: 3
+          alias: CALIPSO-ICECLOUD
+          start_year: 2007
+          end_year: 2015
+      ta:
+        timerange: 1996/2014
+        mip: Amon
+        exp: historical
+        preprocessor: common_grid_levels_ta
+        additional_datasets:
+        - project: obs4MIPs
+          dataset: ERA-5
+          frequency: mon
+          grid: gn
+          institute: ECMWF
+          timerange: 2007/2015
+          alias: ERA-5
+    scripts:
+      plot:
+        script: seaborn_jointplot_histogram.py
+        x: cli
+        y: ta
+        bins: 20
+        joint_kws:
+          vmax: 0.02
+          cmap: YlGnBu
+        cbar: true
+        cbar_kws:
+          extend: max
+        marginal_kws:
+          color: darkturquoise
+        seaborn_settings:
+          style: ticks
+          rc:
+            axes.titlepad: 15.0
+        suptitle: CALIPSO-ICECLOUD / ERA-5 2007/2015
+        plot_filename: jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015

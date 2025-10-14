@@ -48,7 +48,7 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
                 FacetFilter(
                     facets={
                         "frequency": "mon",
-                        "experiment_id": ("amip", "historical", "hist-GHG", "piControl"),
+                        "experiment_id": ("amip", "historical", "hist-GHG"),
                         "variable_id": (variable_id,),
                     }
                 ),

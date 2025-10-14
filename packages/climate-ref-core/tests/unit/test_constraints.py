@@ -9,6 +9,7 @@ from pandas.testing import assert_frame_equal
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
     GroupConstraint,
+    IgnoreFacets,
     PartialDateTime,
     RequireContiguousTimerange,
     RequireFacets,
@@ -94,6 +95,58 @@ class TestRequireFacets:
         )
         result = constraint.apply(group=data, data_catalog=data)
         expected = data.loc[expected_rows]
+        assert_frame_equal(result, expected)
+
+
+class TestIgnoreFacets:
+    @pytest.mark.parametrize(
+        "data, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": [],
+                        "path": [],
+                    }
+                ),
+                [],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "pr", "tas", "rsut"],
+                        "path": ["tas.nc", "pr.nc", "tas2.nc", "rsut.nc"],
+                    }
+                ),
+                [1, 3],
+            ),
+        ],
+    )
+    def test_apply_single(self, data, expected_rows):
+        constraint = IgnoreFacets(facets={"variable_id": "tas"})
+        result = constraint.apply(group=data, data_catalog=data.loc[[]])
+        expected = data.iloc[expected_rows]
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "data, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas", "pr", "tas", "rsut"],
+                        "source_id": ["A", "B", "C", "C"],
+                        "path": ["A_tas.nc", "B_pr.nc", "C_tas.nc", "C_rsut.nc"],
+                    }
+                ),
+                [0, 1, 3],
+            ),
+        ],
+    )
+    def test_apply_multiple(self, data, expected_rows):
+        constraint = IgnoreFacets(facets={"variable_id": ("tas", "pr"), "source_id": "C"})
+        result = constraint.apply(group=data, data_catalog=data.loc[[]])
+        expected = data.iloc[expected_rows]
         assert_frame_equal(result, expected)
 
 

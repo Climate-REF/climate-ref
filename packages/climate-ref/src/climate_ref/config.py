@@ -14,11 +14,14 @@ which always take precedence over any other configuration values.
 # `esgpull` configuration management system with some of the extra complexity removed.
 # https://github.com/ESGF/esgf-download/blob/main/esgpull/config.py
 
+import datetime
 import importlib.resources
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
+import platformdirs
+import requests
 import tomlkit
 from attr import Factory
 from attrs import define, field
@@ -334,6 +337,46 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
     return _converter_defaults_relaxed.structure(doc, Config)
 
 
+DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
+DEFAULT_IGNORE_DATASETS_URL = (
+    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/default_ignore_datasets.yaml"
+)
+
+
+def _get_default_ignore_datasets_file() -> Path:
+    """
+    Get the path to the ignore datasets file
+    """
+    cache_dir = platformdirs.user_cache_path("climate_ref")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    ignore_datasets_file = cache_dir / "default_ignore_datasets.yaml"
+
+    download = True
+    if ignore_datasets_file.exists():
+        # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
+        modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
+        age = datetime.datetime.now() - modification_time
+        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+            download = False
+
+    if download:
+        logger.info(
+            f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
+            f"to {ignore_datasets_file}"
+        )
+        response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
+        try:
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.warning(f"Failed to download default ignore datasets file: {exc}")
+            ignore_datasets_file.touch(exist_ok=True)
+        else:
+            with ignore_datasets_file.open(mode="wb") as file:
+                file.write(response.content)
+
+    return ignore_datasets_file
+
+
 @define(auto_attribs=True)
 class Config:
     """
@@ -362,6 +405,26 @@ class Config:
 
     - `drs`: Use the DRS parser, which parses the dataset based on the DRS naming conventions.
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
+    """
+
+    ignore_datasets_file: Path = field(factory=_get_default_ignore_datasets_file)
+    """
+    Path to the file containing the ignore datasets
+
+    This file is a YAML file that contains a list of facets to ignore per diagnostic.
+
+    The format is:
+    ```yaml
+    provider:
+      diagnostic:
+        source_type:
+          - facet: value
+          - another_facet: [another_value1, another_value2]
+    ```
+
+    If this is not specified, a default ignore datasets file will be used.
+    The default file is downloaded from the Climate-REF GitHub repository
+    if it does not exist or is older than 6 hours.
     """
 
     paths: PathConfig = Factory(PathConfig)

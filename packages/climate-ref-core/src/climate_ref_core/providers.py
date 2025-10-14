@@ -16,14 +16,18 @@ import os
 import stat
 import subprocess
 from abc import abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from pathlib import Path
 from typing import TYPE_CHECKING
 
 import requests
+import yaml
+from attrs import evolve
 from loguru import logger
 
+from climate_ref_core.constraints import IgnoreFacets
+from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
 
@@ -74,6 +78,51 @@ class DiagnosticProvider:
         config :
             A configuration.
         """
+        logger.debug(
+            f"Configuring provider {self.slug} using ignore_datasets_file {config.ignore_datasets_file}"
+        )
+        # The format of the configuration file is:
+        # provider:
+        #   diagnostic:
+        #     source_type:
+        #       - facet: value
+        #       - other_facet: [other_value1, other_value2]
+        ignore_datasets_all = yaml.safe_load(config.ignore_datasets_file.read_text(encoding="utf-8")) or {}
+        ignore_datasets = ignore_datasets_all.get(self.slug, {})
+        if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:
+            logger.warning(
+                f"Unknown diagnostics found in {config.ignore_datasets_file} "
+                f"for provider {self.slug}: {', '.join(sorted(unknown_slugs))}"
+            )
+
+        known_source_types = {s.value for s in iter(SourceDatasetType)}
+        for diagnostic in self.diagnostics():
+            if diagnostic.slug in ignore_datasets:
+                if unknown_source_types := set(ignore_datasets[diagnostic.slug]) - known_source_types:
+                    logger.warning(
+                        f"Unknown source types found in {config.ignore_datasets_file} for "
+                        f"diagnostic '{diagnostic.slug}' by provider {self.slug}: "
+                        f"{', '.join(sorted(unknown_source_types))}"
+                    )
+                data_requirements = (
+                    r if isinstance(r, Sequence) else (r,) for r in diagnostic.data_requirements
+                )
+                diagnostic.data_requirements = tuple(
+                    tuple(
+                        evolve(
+                            data_requirement,
+                            constraints=tuple(
+                                IgnoreFacets(facets)
+                                for facets in ignore_datasets[diagnostic.slug].get(
+                                    data_requirement.source_type.value, []
+                                )
+                            )
+                            + data_requirement.constraints,
+                        )
+                        for data_requirement in requirement_collection
+                    )
+                    for requirement_collection in data_requirements
+                )
 
     def diagnostics(self) -> list[Diagnostic]:
         """
@@ -287,6 +336,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
 
     def configure(self, config: Config) -> None:
         """Configure the provider."""
+        super().configure(config)
         self.prefix = config.paths.software / "conda"
 
     def _install_conda(self, update: bool) -> Path:

@@ -91,14 +91,22 @@ for diagnostic in sorted(diagnostics, key=lambda diagnostic: diagnostic.name):
 Markdown(txt)
 
 # %% [markdown]
-# # Metric Values
+# ## Metrics
 #
 # Many of the diagnostics provide "metric" values, single values that describe some property of a model. Here we show how to access these values and create a plot.
 
 # %%
 # Select the "Atlantic Meridional Overturning Circulation (RAPID)" diagnostic as an example
 diagnostic = next(d for d in diagnostics if d.name == "Atlantic Meridional Overturning Circulation (RAPID)")
-# Read the metric values into a Pandas DataFrame
+# Inspect an example value
+diagnostics_list_metric_values.sync(
+    diagnostic.provider.slug, diagnostic.slug, value_type=MetricValueType.SCALAR, client=client
+).data[0]
+
+# %% [markdown]
+# Read the metric values into a Pandas DataFrame:
+
+# %%
 df = (
     pd.DataFrame(
         metric.dimensions.additional_properties | {"value": metric.value}
@@ -116,12 +124,12 @@ df.set_index([c for c in df.columns if c != "value"], inplace=True)
 df
 
 # %% [markdown]
-# Next, we create a portrait diagram:
+# and create a portrait diagram:
 
 # %%
-# Use the median ensemble member for models with multiple ensemble members to keep the figure readable
+# Use the median metric value for models with multiple ensemble members to keep the figure readable
 df = df.groupby(level=["source_id", "grid_label", "statistic"]).median()
-# Convert df to a 2D dataframe for use with seaborn
+# Convert df to a "2D" dataframe for use with the seaborn heatmap plot
 df_2D = (
     formatlevel(df, model="{source_id}.{grid_label}", drop=True)
     .reset_index()
@@ -138,21 +146,62 @@ sns.heatmap(
 )
 
 # %% [markdown]
-# ## Downloading and processing files created by the REF
+# ## Series
 #
-# We will look at the global warming levels diagnostic and create our own figure using the available data. Each diagnostic can be run (executed) multiple times with different input data. The global warmings levels diagnostic has been executed several times, leading to multiple "execution groups":
+# Many of the diagnostics provide "series" values, a range of values along with an index that describe some property of a model. Here we show how to access these values and create a plot.
 
 # %%
-global_warming_levels = next(
-    diagnostic for diagnostic in diagnostics if diagnostic.name == "Climate at Global Warming Levels"
+# Select the "Sea Ice Area Basic Metrics" diagnostic as an example
+diagnostic = next(d for d in diagnostics if d.name == "Sea Ice Area Basic Metrics")
+# Inspect an example series value:
+diagnostics_list_metric_values.sync(
+    diagnostic.provider.slug, diagnostic.slug, value_type=MetricValueType.SERIES, client=client
+).data[0]
+
+# %% [markdown]
+# Read the metric values into a Pandas DataFrame:
+
+# %%
+df = pd.DataFrame(
+    metric.dimensions.additional_properties | {"sea ice area (1e6 km2)": value, "month": int(month)}
+    for metric in diagnostics_list_metric_values.sync(
+        diagnostic.provider.slug, diagnostic.slug, value_type=MetricValueType.SERIES, client=client
+    ).data
+    if metric.dimensions.additional_properties["statistic"].startswith("20-year average seasonal cycle")
+    for value, month in zip(metric.values, metric.index)
+    if value < 1e10  # Ignore some invalid values
 )
-[executions_get.sync(group, client=client).key for group in global_warming_levels.execution_groups]
+df
+
+# %% [markdown]
+# and create a plot:
+
+# %%
+sns.relplot(
+    data=df,
+    x="month",
+    y="sea ice area (1e6 km2)",
+    col="region",
+    hue="source_id",
+    kind="line",
+)
+
+# %% [markdown]
+# ## Downloading and processing files created by the REF
+#
+# Many of the diagnostics produce NetCDF files that can be used for further analysis or custom plotting. We will look at the global warming levels diagnostic and create our own figure using the available data.
+#
+# Each diagnostic can be run (executed) multiple times with different input data. The global warmings levels diagnostic has been executed several times, leading to multiple "execution groups":
+
+# %%
+diagnostic = next(d for d in diagnostics if d.name == "Climate at Global Warming Levels")
+[executions_get.sync(group, client=client).key for group in diagnostic.execution_groups]
 
 # %% [markdown]
 # Let's select the "ssp585" scenario and look at the output files that were produced:
 
 # %%
-for group in global_warming_levels.execution_groups:
+for group in diagnostic.execution_groups:
     execution = executions_get.sync(group, client=client)
     if execution.key.endswith("ssp585"):
         ssp585_outputs = execution.latest_execution.outputs
@@ -163,7 +212,7 @@ else:
 [o.filename for o in ssp585_outputs]
 
 # %% [markdown]
-# Let's select one of the output files, download it and create our own plot:
+# Select one of the output files and inspect it:
 
 # %%
 file = next(
@@ -184,40 +233,18 @@ ds
 # Create our own plot:
 
 # %%
-plot = ds.tas.plot(
-    cmap="viridis",
+plot = ds.tas.plot.contourf(
+    # cmap="viridis",
+    vmin=-30,
+    vmax=30,
+    levels=11,
     figsize=(12, 5),
     transform=cartopy.crs.PlateCarree(),
     subplot_kws={
-        "projection": cartopy.crs.Robinson(),
+        "projection": cartopy.crs.Orthographic(
+            central_longitude=-100,
+            central_latitude=40,
+        ),
     },
 )
 plot.axes.coastlines()
-
-# %% [markdown]
-# ## Sea ice area - create series plots
-
-# %%
-sea_ice_area = next(
-    diagnostic for diagnostic in diagnostics if diagnostic.name == "Sea Ice Area Basic Metrics"
-)
-len(sea_ice_area.execution_groups)
-
-# %%
-from climate_rapid_evaluation_framework_client.api.diagnostics import diagnostics_list_metric_values
-from climate_rapid_evaluation_framework_client.models.metric_value_type import MetricValueType
-
-series = diagnostics_list_metric_values.sync(
-    sea_ice_area.provider.slug, sea_ice_area.slug, value_type=MetricValueType.SERIES, client=client
-).data
-series[0]
-
-# %%
-execution = executions_get.sync(sea_ice_area.execution_groups[0], client=client)
-print(execution.key, execution.latest_execution.successful)
-[o.filename for o in execution.latest_execution.outputs]
-
-# %%
-execution
-
-# %%

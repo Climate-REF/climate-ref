@@ -18,7 +18,7 @@
 # This Jupyter notebook shows how to use the OpenAPI described at https://api.climate-ref.org/docs to download CMIP7 Assessment Fast Track Rapid Evaluation Framework results and use those to do your own analyses.
 
 # %% [markdown]
-# ## Installation
+# ## Generate and install
 #
 # We start by generating and installing a Python package for interacting with the API:
 

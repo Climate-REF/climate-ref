@@ -42,6 +42,7 @@ ignore = [
 "docs/*" = [
     "D",
     "E402",  # Module level import not at top of file
+    "E501",  # Line too long
     "PLR2004",  # Magic value used in comparison.
 ]
 "*/migrations/versions/*" = [

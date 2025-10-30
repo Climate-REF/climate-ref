@@ -5,7 +5,6 @@
 # Required
 version: 2
 
-
 # Set the version of Python and other tools you might need
 build:
   os: ubuntu-24.04
@@ -20,4 +19,4 @@ build:
     - make fetch-test-data
     - uv run ref datasets ingest --source-type cmip6 $READTHEDOCS_REPOSITORY_PATH/tests/test-data/sample-data/CMIP6
     # Run a strict build
-    - NO_COLOR=1 uv run mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html
+    - FORCE_COLOR=1 uv run mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html

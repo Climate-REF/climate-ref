@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.16.4
+#       jupytext_version: 1.17.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -121,7 +121,7 @@ def display_groups(frames):
 
 
 # %% [markdown]
-
+#
 # ### Facet filters
 # The simplest data request is a `FacetFilter`.
 # This filters the data catalog to include only the data required for a given diagnostic run.
@@ -141,7 +141,7 @@ groups = extract_covered_datasets(data_catalog, data_requirement)
 display_groups(groups)
 
 # %% [markdown]
-
+#
 # ### Group by
 # The `group_by` field can be used to split the filtered data into multiple groups,
 # each of which has a unique set of values in the specified facets.
@@ -166,15 +166,13 @@ display_groups(groups)
 
 
 # %% [markdown]
-
+#
 # ### Constraints
 # A data requirement can optionally specify `Constraint`s.
 # These constraints are applied to each group independently to modify a group or ignore it.
-# All constraints must hold for a group to be executed.
+# A group must not be empty after modification for it to be executed.
 #
-# One type of constraint is a `GroupOperation`.
-# This constraint allows for the manipulation of a given group.
-# This can be used to remove datasets or include additional datasets from the catalog,
+# Constraints can be used to remove datasets or include additional datasets from the catalog,
 # which is useful to select common datasets for all groups (e.g. cell areas).
 #
 # Below, an `IncludeTas` GroupOperation is included which adds the corresponding `tas` dataset to each group.
@@ -187,6 +185,8 @@ class IncludeTas:
         tas = data_catalog[
             (data_catalog["variable_id"] == "tas")
             & data_catalog["source_id"].isin(group["source_id"].unique())
+            & data_catalog["experiment_id"].isin(group["experiment_id"].unique())
+            & data_catalog["member_id"].isin(group["member_id"].unique())
         ]
 
         return pd.concat([group, tas])
@@ -195,7 +195,7 @@ class IncludeTas:
 data_requirement = DataRequirement(
     source_type=SourceDatasetType.CMIP6,
     filters=(FacetFilter(facets={"frequency": "mon"}),),
-    group_by=("variable_id", "source_id", "member_id"),
+    group_by=("variable_id", "source_id", "member_id", "experiment_id"),
     constraints=(IncludeTas(),),
 )
 
@@ -205,26 +205,26 @@ display_groups(groups)
 
 
 # %% [markdown]
-# In addition to operations, a `GroupValidator` constraint can be specified.
-# This validator is used to determine if a group is valid or not.
-# If the validator does not return True, then the group is excluded from the list of groups for execution.
+# In addition to operations adding datasets, it is also possible to remove datasets.
 
 
 # %%
 class AtLeast2:
-    def validate(self, group: pd.DataFrame) -> bool:
-        return len(group["instance_id"].drop_duplicates()) >= 2
+    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+        if len(group["variable_id"].drop_duplicates()) >= 2:
+            return group
+        return group.loc[[]]
 
 
 # %% [markdown]
 # Here we add a simple validator which ensures that at least 2 unique datasets are present.
-# This removes the tas-only group from above.
+# This removes the groups from above where tas was not available.
 
 # %%
 data_requirement = DataRequirement(
     source_type=SourceDatasetType.CMIP6,
     filters=(FacetFilter(facets={"frequency": "mon"}),),
-    group_by=("variable_id", "source_id", "member_id"),
+    group_by=("variable_id", "source_id", "member_id", "experiment_id"),
     constraints=(IncludeTas(), AtLeast2()),
 )
 

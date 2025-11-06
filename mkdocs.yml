@@ -10,28 +10,29 @@ nav:
   - Rapid Evaluation Framework: index.md
   - Installation: installation.md
   - Getting Started:
-    - Configure: getting-started/01-configure.md
-    - Download Datasets: getting-started/02-download-datasets.md
-    - Ingest: getting-started/03-ingest.md
-    - Solve: getting-started/04-solve.md
-    - Visualise: getting-started/05-visualise.md
+      - Configure: getting-started/01-configure.md
+      - Download Datasets: getting-started/02-download-datasets.md
+      - Ingest: getting-started/03-ingest.md
+      - Solve: getting-started/04-solve.md
+      - Visualise: getting-started/05-visualise.md
   - Configuration: configuration.md
   - Roadmap: roadmap.md
   - How-to guides:
-    - how-to-guides/index.md
-    - how-to-guides/executors.md
-    - how-to-guides/hpc_executor.md
-    - how-to-guides/dataset-selection.py
-    - how-to-guides/ingest-datasets.md
-    - how-to-guides/running-diagnostics-locally.py
-    - how-to-guides/adding_custom_diagnostics.md
-    - how-to-guides/docker_deployment.md
+      - how-to-guides/index.md
+      - how-to-guides/using-pre-computed-results.py
+      - how-to-guides/executors.md
+      - how-to-guides/hpc_executor.md
+      - how-to-guides/dataset-selection.py
+      - how-to-guides/ingest-datasets.md
+      - how-to-guides/running-diagnostics-locally.py
+      - how-to-guides/adding_custom_diagnostics.md
+      - how-to-guides/docker_deployment.md
   - Tutorials: tutorials.md
   - Further background:
-    - Basic Concepts: background/basic-concepts.md
-    - Architecture: background/architecture.md
-    - Explanation: background/explanation.md
-    - Datasets: background/datasets.md
+      - Basic Concepts: background/basic-concepts.md
+      - Architecture: background/architecture.md
+      - Explanation: background/explanation.md
+      - Datasets: background/datasets.md
   - CLI: cli.md
   - API: api/
   - Development: development.md
@@ -87,7 +88,7 @@ plugins:
       # Use filenames for titles
       ignore_h1_titles: True
       include: ["*.py"]
-      execute: false
+      execute: true
       # Toggle off for faster builds
       # execute: false
       allow_errors: false
@@ -140,7 +141,6 @@ plugins:
   - panzoom:
       full_screen: true
 
-
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown/#attribute-lists
   - attr_list
@@ -179,8 +179,11 @@ markdown_extensions:
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_code_format # yamllint disable-line
-  # https://github.com/mkdocs/mkdocs-click
+          format: !!python/name:pymdownx.superfences.fence_code_format
+            # yamllint disable-line
+            # https://github.com/mkdocs/mkdocs-click
+
+
   - mkdocs-typer:
 
 watch:

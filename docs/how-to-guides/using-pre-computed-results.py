@@ -16,8 +16,9 @@
 # # Using pre-computed results
 #
 # Results computed by the CMIP7 Assessment Fast Track Rapid Evaluation Framework are available from
-# the website https://dashboard.climate-ref.org. The results shown on this website, can also be
-# accessed using an [OpenAPI](https://www.openapis.org) described at https://api.climate-ref.org/docs.
+# the website: https://dashboard.climate-ref.org and the associated API: https://api.climate-ref.org.
+# This API provides an [OpenAPI](https://www.openapis.org) schema that documents what queries are available.
+# The API documentation can be viewed at: https://api.climate-ref.org/docs.
 #
 # This Jupyter notebook shows how to use this API to download pre-computed results and use those to do
 # your own analyses.
@@ -25,7 +26,8 @@
 # %% [markdown]
 # ## Generate and install
 #
-# We start by generating and installing a Python package for interacting with the API:
+# We start by generating and installing a Python package for interacting with the API 
+# from the OpenAPI-compatible [schema](https://api.climate-ref.org/api/v1/openapi.json).
 
 # %%
 # !uvx --quiet --from openapi-python-client openapi-python-client generate --url https://api.climate-ref.org/api/v1/openapi.json --meta setup --output-path climate_ref_client --overwrite

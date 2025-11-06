@@ -26,7 +26,7 @@
 # %% [markdown]
 # ## Generate and install
 #
-# We start by generating and installing a Python package for interacting with the API 
+# We start by generating and installing a Python package for interacting with the API
 # from the OpenAPI-compatible [schema](https://api.climate-ref.org/api/v1/openapi.json).
 
 # %%

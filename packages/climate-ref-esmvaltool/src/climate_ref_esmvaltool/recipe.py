@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import pooch
 import yaml
+from loguru import logger
 
 from climate_ref_esmvaltool.types import Recipe
 
@@ -160,19 +161,30 @@ with importlib.resources.files("climate_ref_esmvaltool").joinpath("recipes.txt")
     _RECIPES.load_registry(_buffer)
 
 
-def load_recipe(recipe: str) -> Recipe:
+def load_recipe(recipe: str, path: Path | None) -> Recipe:
     """Load a recipe.
 
     Parameters
     ----------
     recipe
         The name of an ESMValTool recipe.
+    path:
+        The path where the ESMValTool recipes are located. If None, use the
+        default path for the recipe registry.
 
     Returns
     -------
         The loaded recipe.
     """
+    if path is not None:
+        # Override default registry path.
+        previous_path = _RECIPES.path  # type: ignore[attr-defined]
+        _RECIPES.path = path  # type: ignore[attr-defined]
     filename = _RECIPES.fetch(recipe)
+    if path is not None:
+        # Restore previous registry path.
+        _RECIPES.path = previous_path  # type: ignore[attr-defined]
+    logger.info(f"Updating recipe from {filename}")
 
     def normalize(obj: Any) -> Any:
         # Ensure objects in the recipe are not shared.

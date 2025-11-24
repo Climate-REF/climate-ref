@@ -33,7 +33,7 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-sh-oct"
-    base_recipe = "ref/recipe_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone.yml"
 
 
 class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
@@ -43,7 +43,7 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-nh-mar"
-    base_recipe = "ref/recipe_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone.yml"
 
 
 class O3ZonalMeanProfiles(ESMValToolDiagnostic):
@@ -63,7 +63,7 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-annual-cycle"
-    base_recipe = "ref/recipe_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone.yml"
 
     data_requirements = (
         DataRequirement(

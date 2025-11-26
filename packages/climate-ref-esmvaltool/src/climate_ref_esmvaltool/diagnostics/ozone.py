@@ -3,8 +3,6 @@ import pandas
 from climate_ref_core.constraints import (
     PartialDateTime,
     RequireContiguousTimerange,
-    RequireFacets,
-    RequireOverlappingTimerange,
     RequireTimerange,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
@@ -71,7 +69,7 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
             filters=(
                 FacetFilter(
                     facets={
-                        "variable_id": ("o3", "ps"),
+                        "variable_id": "toz",
                         "experiment_id": "historical",
                         "table_id": "AERmon",
                     },
@@ -85,38 +83,30 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
                     end=PartialDateTime(2014, 12),
                 ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets(
-                    "variable_id",
-                    (
-                        "o3",
-                        "ps",
-                    ),
+            ),
+        ),
+        DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "variable_id": "toz",
+                        "source_id": "C3S-GTO-ECV-9-0",
+                        "frequency": "mon",
+                    },
+                ),
+            ),
+            group_by=("source_id",),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1996, 1),
+                    end=PartialDateTime(2014, 12),
                 ),
             ),
         ),
     )
     facets = ()
-
-    #    series = (
-    #        tuple(
-    #            SeriesDefinition(
-    #                file_pattern=f"lat_month_mapplot/plot/*.nc",
-    #                dimensions=(
-    #                    {
-    #                        "statistic": (
-    #                            f"Hovmoeller plot of the annual cycle of total "
-    #                            f"column ozone (month vs latitude)"
-    #                        ),
-    #                    }
-    #                    | ({} if source_id == "{source_id}" else {"reference_source_id": source_id})
-    #                ),
-    #                values_name="toz",
-    #                index_name="lat",
-    #                attributes=[],
-    #            )
-    #        )
-    #    )
 
     @staticmethod
     def update_recipe(
@@ -125,14 +115,8 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
-        #        breakpoint()
-        recipe.pop("datasets")
-        recipe["diagnostics"].pop("polar_cap_time_series_SH")
-        recipe["diagnostics"].pop("polar_cap_time_series_NH")
-        recipe["diagnostics"].pop("lat_time_mapplot")
-        recipe["diagnostics"].pop("zonal_mean_profiles")
-        for diagnostic in recipe["diagnostics"].values():
-            for variable in diagnostic["variables"].values():
-                variable["additional_datasets"].extend(
-                    recipe_variables[variable["short_name"]]["additional_datasets"]
-                )
+        dataset = recipe_variables["toz"]["additional_datasets"][0]
+        recipe["datasets"] = [dataset]
+        diagnostic = "lat_month_mapplot"
+        recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
+        recipe["diagnostics"][diagnostic]["variables"]["toz"]["timerange"] = "1996/2014"

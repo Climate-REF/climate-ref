@@ -15,10 +15,10 @@ from climate_ref_esmvaltool.diagnostics.enso import ENSOBasicClimatology, ENSOCh
 from climate_ref_esmvaltool.diagnostics.example import GlobalMeanTimeseries
 from climate_ref_esmvaltool.diagnostics.ozone import (
     O3LatMonthMapplot,
-    #    O3LatTimeMapplot,
-    #    O3PolarCapTimeseriesNH,
-    #    O3PolarCapTimeseriesSH,
-    #    O3ZonalMeanProfiles,
+    O3LatTimeMapplot,
+    O3PolarCapTimeseriesNH,
+    O3PolarCapTimeseriesSH,
+    O3ZonalMeanProfiles,
 )
 from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
     RegionalHistoricalAnnualCycle,
@@ -45,10 +45,10 @@ __all__ = [
     "EquilibriumClimateSensitivity",
     "GlobalMeanTimeseries",
     "O3LatMonthMapplot",
-    #    "O3LatTimeMapplot",
-    #    "O3PolarCapTimeseriesSH",
-    #    "O3PolarCapTimeseriesNH",
-    #    "O3ZonalMeanProfiles",
+    "O3LatTimeMapplot",
+    "O3PolarCapTimeseriesSH",
+    "O3PolarCapTimeseriesNH",
+    "O3ZonalMeanProfiles",
     "RegionalHistoricalAnnualCycle",
     "RegionalHistoricalTimeSeries",
     "RegionalHistoricalTrend",

@@ -10,6 +10,7 @@ ref/recipe_enso_characteristics.yml         34c2518b138068ac96d212910b979d54a8fc
 ref/recipe_ref_annual_cycle_region.yml      64ebc687789dad6c45a2361b45218cb5a0ad0e38c516840c65fc7e8bf7b5ace7
 ref/recipe_ref_cre.yml                      4375f262479c3b3e1b348b71080a6d758e195bda76516a591182045a3a29aa32
 ref/recipe_ref_fire.yml                     2ad82effaca4e742d8abe6a0aa07bb46e1e92ef0d2d240760f7623b0ba045926
+ref/recipe_ref_ozone.yml                    388aaf01721c0856ab7143b47b9d2f1efeaaae4ef57e11572c1e133b49aad0a6
 ref/recipe_ref_sea_ice_area_basic.yml       7d01a8527880663ca28284772f83a8356d9972fb4f022a4000e50a56ce044b09
 ref/recipe_ref_scatterplot.yml              b99d1736e16256d161847b025811d7088ad9f892d4887fb009fa99c4079135a0
 ref/recipe_ref_timeseries_region.yml        86f36e442021caba201601d8cf4624f8ce6715ce421670a467c792db2910db22

@@ -224,7 +224,9 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         recipe["datasets"] = [dataset]
         diagnostic = "polar_cap_time_series_NH"
         # adjust plot title to reflect bug fix regarding northern boundary (see above)
-        recipe["diagnostics"][diagnostic]["scripts"]["plot"]["plots"]["timeseries"]["pyplot_kwargs"]["title"] = "Total Column Ozone, 60-80N, March"
+        recipe["diagnostics"][diagnostic]["scripts"]["plot"]["plots"]["timeseries"]["pyplot_kwargs"][
+            "title"
+        ] = "Total Column Ozone, 60-80N, March"
         recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
 
 
@@ -245,7 +247,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                     facets={
                         "variable_id": "o3",
                         "experiment_id": "historical",
-                        "table_id": "AERmon",
+                        "table_id": "Amon",
                     },
                 ),
             ),
@@ -259,26 +261,26 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 RequireContiguousTimerange(group_by=("instance_id",)),
             ),
         ),
-#        DataRequirement(
-#            source_type=SourceDatasetType.obs4REF,
-#            filters=(
-#                FacetFilter(
-#                    facets={
-#                        "variable_id": "o3",
-#                        "source_id": "ESACCI-OZONE",
-#                        "frequency": "mon",
-#                    },
-#                ),
-#            ),
-#            group_by=("source_id",),
-#            constraints=(
-#                RequireTimerange(
-#                    group_by=("instance_id",),
-#                    start=PartialDateTime(2005, 1),
-#                    end=PartialDateTime(2014, 12),
-#                ),
-#            ),
-#        ),
+        #        DataRequirement(
+        #            source_type=SourceDatasetType.obs4REF,
+        #            filters=(
+        #                FacetFilter(
+        #                    facets={
+        #                        "variable_id": "o3",
+        #                        "source_id": "ESACCI-OZONE",
+        #                        "frequency": "mon",
+        #                    },
+        #                ),
+        #            ),
+        #            group_by=("source_id",),
+        #            constraints=(
+        #                RequireTimerange(
+        #                    group_by=("instance_id",),
+        #                    start=PartialDateTime(2005, 1),
+        #                    end=PartialDateTime(2014, 12),
+        #                ),
+        #            ),
+        #        ),
     )
     facets = ()
 
@@ -295,7 +297,9 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
         recipe["datasets"] = [dataset]
         diagnostic = "zonal_mean_profiles"
         # adjust plot title to actual time range
-        recipe["diagnostics"][diagnostic]["scripts"]["plot"]["plots"]["zonal_mean_profile"]["pyplot_kwargs"]["suptitle"] = "{long_name} (2005-2014 mean)"
+        recipe["diagnostics"][diagnostic]["scripts"]["plot"]["plots"]["zonal_mean_profile"]["pyplot_kwargs"][
+            "suptitle"
+        ] = "{long_name} (2005-2014 mean)"
         recipe["diagnostics"] = {diagnostic: recipe["diagnostics"][diagnostic]}
         recipe["diagnostics"][diagnostic]["variables"]["o3"]["timerange"] = "2005/2014"
 

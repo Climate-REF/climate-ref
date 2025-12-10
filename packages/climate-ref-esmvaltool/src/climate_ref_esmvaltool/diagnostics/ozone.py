@@ -261,26 +261,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                 RequireContiguousTimerange(group_by=("instance_id",)),
             ),
         ),
-        #        DataRequirement(
-        #            source_type=SourceDatasetType.obs4REF,
-        #            filters=(
-        #                FacetFilter(
-        #                    facets={
-        #                        "variable_id": "o3",
-        #                        "source_id": "ESACCI-OZONE",
-        #                        "frequency": "mon",
-        #                    },
-        #                ),
-        #            ),
-        #            group_by=("source_id",),
-        #            constraints=(
-        #                RequireTimerange(
-        #                    group_by=("instance_id",),
-        #                    start=PartialDateTime(2005, 1),
-        #                    end=PartialDateTime(2014, 12),
-        #                ),
-        #            ),
-        #        ),
+        # TODO: Use ESACCI-OZONE (SAGE-OMPS, variable o3) from obs4MIPs once available.
     )
     facets = ()
 

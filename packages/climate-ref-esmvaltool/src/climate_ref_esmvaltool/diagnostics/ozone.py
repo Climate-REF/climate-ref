@@ -155,7 +155,7 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
 
 class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     """
-    Calculate the ozone diagnostics - March NH polar mean (60N-85N) time series.
+    Calculate the ozone diagnostics - March NH polar mean (60N-80N) time series.
     """
 
     name = "Ozone Diagnostics"

@@ -21,6 +21,32 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.8.0 (2026-01-05)
+
+### Features
+
+- Enable spatial 3-d variables that has levels for PMP annual cycle. ([#411](https://github.com/Climate-REF/climate-ref/pull/411))
+- Added ignore datasets constraint and configuration file.
+
+  If no path is configured for the `ignore_datasets_file` in the configuration file,
+  the default ignore datasets file is downloaded from the Climate-REF GitHub repository
+  if it does not exist or is older than 6 hours. ([#447](https://github.com/Climate-REF/climate-ref/pull/447))
+
+### Improvements
+
+- Validated the slurm configurations of the HPCExecutor using pydantic ([#375](https://github.com/Climate-REF/climate-ref/pull/375))
+- Added reference values to ESMValTool series output. ([#452](https://github.com/Climate-REF/climate-ref/pull/452))
+
+### Bug Fixes
+
+- General fixes found when rerunning, including handling an edge case where no log output is written,
+  ignoring empty input directories and increased logging of the number of executions. ([#444](https://github.com/Climate-REF/climate-ref/pull/444))
+
+### Improved Documentation
+
+- Add a Jupyter notebook showing how to use the CMIP7 Assessment Fast Track website OpenAPI. ([#466](https://github.com/Climate-REF/climate-ref/pull/466))
+
+
 ## climate-ref 0.7.0 (2025-10-01)
 
 ### Breaking Changes

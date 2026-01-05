@@ -1,5 +1,4 @@
 version = 1
-revision = 1
 requires-python = ">=3.11"
 resolution-markers = [
     "python_full_version >= '3.12'",
@@ -560,7 +559,7 @@ wheels = [
 
 [[package]]
 name = "climate-ref"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref" }
 dependencies = [
     { name = "alembic" },
@@ -622,14 +621,13 @@ requires-dist = [
     { name = "tqdm", specifier = ">=4.67.1" },
     { name = "typer", specifier = ">=0.12.5" },
 ]
-provides-extras = ["postgres", "celery", "aft-providers", "providers"]
 
 [package.metadata.requires-dev]
 dev = []
 
 [[package]]
 name = "climate-ref-celery"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref-celery" }
 dependencies = [
     { name = "celery", extra = ["redis"] },
@@ -666,7 +664,7 @@ dev = [
 
 [[package]]
 name = "climate-ref-core"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref-core" }
 dependencies = [
     { name = "attrs" },
@@ -711,7 +709,7 @@ dev = [{ name = "types-requests" }]
 
 [[package]]
 name = "climate-ref-esmvaltool"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref-esmvaltool" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -732,7 +730,7 @@ requires-dist = [
 
 [[package]]
 name = "climate-ref-example"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref-example" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -754,7 +752,7 @@ dev = []
 
 [[package]]
 name = "climate-ref-ilamb"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref-ilamb" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -779,7 +777,7 @@ dev = [{ name = "types-pyyaml", specifier = ">=6.0.12" }]
 
 [[package]]
 name = "climate-ref-pmp"
-version = "0.7.0"
+version = "0.8.0"
 source = { editable = "packages/climate-ref-pmp" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -793,7 +791,7 @@ dev = []
 
 [[package]]
 name = "climate-ref-root"
-version = "0.7.0"
+version = "0.8.0"
 source = { virtual = "." }
 dependencies = [
     { name = "climate-ref", extra = ["postgres"] },

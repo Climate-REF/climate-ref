@@ -14,10 +14,11 @@ def escape_ansi(line):
 
 
 def test_without_subcommand(invoke_cli):
-    result = invoke_cli([])
-    assert "Usage:" in result.stdout
-    assert "ref [OPTIONS] COMMAND [ARGS]" in result.stdout
-    assert "A CLI for the Assessment Fast Track Rapid Evaluation Framework" in result.stdout
+    # Typer returns exit code 2 when showing help with no subcommand
+    result = invoke_cli([], expected_exit_code=2)
+    assert "Usage:" in result.output
+    assert "ref [OPTIONS] COMMAND [ARGS]" in result.output
+    assert "A CLI for the Assessment Fast Track Rapid Evaluation Framework" in result.output
 
 
 def test_version(invoke_cli):
@@ -96,7 +97,7 @@ def test_config_directory_append(config, invoke_cli):
 
 @pytest.fixture()
 def expected_groups() -> set[str]:
-    return {"config", "datasets", "executions", "providers", "celery"}
+    return {"config", "datasets", "executions", "providers", "celery", "testing"}
 
 
 def test_build_app(expected_groups):

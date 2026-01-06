@@ -7,7 +7,7 @@ a source checkout of the project with test data directories available.
 
 import shutil
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import pandas as pd
 import typer
@@ -187,8 +187,26 @@ def list_cases(
     console.print(table)
 
 
-def _build_esgf_data_catalog() -> dict[SourceDatasetType, pd.DataFrame]:
-    """Build data catalog from local ESGF test data."""
+def _build_esgf_data_catalog(
+    requests: tuple[Any, ...] | None,
+) -> dict[SourceDatasetType, pd.DataFrame]:
+    """
+    Build data catalog from local ESGF test data, filtered by test case requests.
+
+    Only includes datasets that match the facets specified in the test case requests.
+    This ensures test repeatability by using only the specified datasets.
+
+    Parameters
+    ----------
+    requests
+        ESGF requests from the test case. Only datasets matching these requests
+        will be included in the catalog.
+
+    Returns
+    -------
+    dict[SourceDatasetType, pd.DataFrame]
+        Filtered data catalog containing only datasets matching the requests.
+    """
     from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter  # noqa: PLC0415
     from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter  # noqa: PLC0415
     from climate_ref.testing import TEST_DATA_DIR  # noqa: PLC0415
@@ -198,25 +216,84 @@ def _build_esgf_data_catalog() -> dict[SourceDatasetType, pd.DataFrame]:
     if TEST_DATA_DIR is None:
         return data_catalog
 
+    if requests is None:
+        return data_catalog
+
     esgf_data_dir = TEST_DATA_DIR / "esgf-data"
 
+    # Group requests by source type
+    cmip6_requests = [r for r in requests if r.source_type == "CMIP6"]
+    obs_requests = [r for r in requests if r.source_type == "obs4MIPs"]
+
+    # Load and filter CMIP6 data
     cmip6_dir = esgf_data_dir / "CMIP6"
-    if cmip6_dir.exists():
+    if cmip6_dir.exists() and cmip6_requests:
         cmip6_adapter = CMIP6DatasetAdapter()
         try:
-            data_catalog[SourceDatasetType.CMIP6] = cmip6_adapter.find_local_datasets(cmip6_dir)
+            full_catalog = cmip6_adapter.find_local_datasets(cmip6_dir)
+            filtered = _filter_catalog_by_requests(full_catalog, cmip6_requests)
+            if not filtered.empty:
+                data_catalog[SourceDatasetType.CMIP6] = filtered
         except Exception as e:
             logger.warning(f"Could not load CMIP6 data: {e}")
 
+    # Load and filter obs4MIPs data
     obs_dir = esgf_data_dir / "obs4MIPs"
-    if obs_dir.exists():
+    if obs_dir.exists() and obs_requests:
         obs_adapter = Obs4MIPsDatasetAdapter()
         try:
-            data_catalog[SourceDatasetType.obs4MIPs] = obs_adapter.find_local_datasets(obs_dir)
+            full_catalog = obs_adapter.find_local_datasets(obs_dir)
+            filtered = _filter_catalog_by_requests(full_catalog, obs_requests)
+            if not filtered.empty:
+                data_catalog[SourceDatasetType.obs4MIPs] = filtered
         except Exception as e:
             logger.warning(f"Could not load obs4MIPs data: {e}")
 
     return data_catalog
+
+
+def _filter_catalog_by_requests(
+    catalog: pd.DataFrame,
+    requests: list[Any],
+) -> pd.DataFrame:
+    """
+    Filter a data catalog to only include datasets matching the given requests.
+
+    Parameters
+    ----------
+    catalog
+        Full data catalog
+    requests
+        List of ESGF requests with facets to filter by
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered catalog containing only matching datasets
+    """
+    if catalog.empty or not requests:
+        return catalog
+
+    # Build a mask that selects rows matching any request
+    combined_mask = pd.Series([False] * len(catalog), index=catalog.index)
+
+    for request in requests:
+        # Each request has facets that must all match
+        request_mask = pd.Series([True] * len(catalog), index=catalog.index)
+
+        for facet_key, facet_value in request.facets.items():
+            if facet_key not in catalog.columns:
+                continue
+
+            # Handle both single values and tuples of values
+            if isinstance(facet_value, tuple):
+                request_mask &= catalog[facet_key].isin(facet_value)
+            else:
+                request_mask &= catalog[facet_key] == facet_value
+
+        combined_mask |= request_mask
+
+    return catalog[combined_mask].copy()
 
 
 def _find_diagnostic(
@@ -232,7 +309,7 @@ def _find_diagnostic(
 
 
 @app.command(name="run")
-def run_test_case(  # noqa: PLR0912
+def run_test_case(  # noqa: PLR0912, PLR0915
     ctx: typer.Context,
     provider: Annotated[
         str,
@@ -281,8 +358,20 @@ def run_test_case(  # noqa: PLR0912
         logger.error(f"Diagnostic {provider}/{diagnostic} not found")
         raise typer.Exit(code=1)
 
-    # Build data catalog from ESGF test data
-    data_catalog = _build_esgf_data_catalog()
+    # Verify test_data_spec exists and get the test case
+    if diag.test_data_spec is None:
+        logger.error(f"Diagnostic {provider}/{diagnostic} has no test_data_spec")
+        raise typer.Exit(code=1)
+
+    if not diag.test_data_spec.has_case(test_case):
+        logger.error(f"Test case {test_case!r} not found for {provider}/{diagnostic}")
+        logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
+        raise typer.Exit(code=1)
+
+    tc = diag.test_data_spec.get_case(test_case)
+
+    # Build data catalog from ESGF test data, filtered by test case requests
+    data_catalog = _build_esgf_data_catalog(tc.requests)
 
     # Create runner and execute
     runner = TestCaseRunner(config=config, data_catalog=data_catalog if data_catalog else None)

@@ -41,6 +41,10 @@ from the examples given in that link.
 
 - General fixes found when rerunning, including handling an edge case where no log output is written,
   ignoring empty input directories and increased logging of the number of executions. ([#444](https://github.com/Climate-REF/climate-ref/pull/444))
+- Worked around [pydata/xarray#2742](https://github.com/pydata/xarray/issues/2742)
+  by always replacing the default fillvalue for the data type with NaN in arrays
+  read with Xarray. ([#454](https://github.com/Climate-REF/climate-ref/pull/454))
+- Excluded piControl from PMP annual cycle and variability metrics owing to non-overlapping periods with observations. ([#463](https://github.com/Climate-REF/climate-ref/pull/463))
 
 ### Improved Documentation
 

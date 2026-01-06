@@ -672,7 +672,7 @@ dependencies = [
     { name = "attrs" },
     { name = "cattrs" },
     { name = "environs" },
-    { name = "ipython" },
+    { name = "fastprogress" },
     { name = "loguru" },
     { name = "numpy" },
     { name = "pandas" },
@@ -695,7 +695,7 @@ requires-dist = [
     { name = "attrs", specifier = ">=23.2.0" },
     { name = "cattrs", specifier = ">=24.1" },
     { name = "environs", specifier = ">=11" },
-    { name = "ipython" },
+    { name = "fastprogress", specifier = "==1.0.5" },
     { name = "loguru", specifier = ">=0.7.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pandas", specifier = ">=2.1.0" },
@@ -1380,11 +1380,11 @@ wheels = [
 
 [[package]]
 name = "fastprogress"
-version = "1.0.3"
+version = "1.0.5"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/95/52/77c827febdf8aac3b0840ce0edb7c34cbd330fab9bbe032c2a79ec8f2d51/fastprogress-1.0.3.tar.gz", hash = "sha256:7a17d2b438890f838c048eefce32c4ded47197ecc8ea042cecc33d3deb8022f5", size = 14920, upload-time = "2022-07-22T07:02:14.983Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/d8/f0/e9410610562ab95517230c2438cc80bbc97227b3930c02501d06323a533b/fastprogress-1.0.5.tar.gz", hash = "sha256:58ca16a981f0292804d905f2e0042ad608d788bf6cbe6ab96b71ec4b20453aef", size = 16385, upload-time = "2025-12-27T00:00:43.662Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a7/8f/213223fdee199c55db81e2d0c669f30e8285c5be2526c4ed924de39247da/fastprogress-1.0.3-py3-none-any.whl", hash = "sha256:6dfea88f7a4717b0a8d6ee2048beae5dbed369f932a368c5dd9caff34796f7c5", size = 12744, upload-time = "2022-07-22T07:02:12.547Z" },
+    { url = "https://files.pythonhosted.org/packages/42/9e/2feab862288930fd5e2ced90c3ef3d8e422d228601f2045f0e3a17e4b366/fastprogress-1.0.5-py3-none-any.whl", hash = "sha256:a96b027a832dcf64036d2bd1576a6cbf4bcaf484579253dcb8f3379702c4363c", size = 13891, upload-time = "2025-12-27T00:00:42.355Z" },
 ]
 
 [[package]]

@@ -47,9 +47,9 @@ dependencies = [
     "pandas>=2.1.0",
     "numpy>=2.0.0",
 
-    # Temporarily add IPython dependency due to bug in recent version of fastprogress
+    # Temporarily pin fastprogress dependency (from intake-esm) due to bug in recent version
     # https://github.com/AnswerDotAI/fastprogress/issues/117
-    "ipython"
+    "fastprogress==1.0.5"
 ]
 
 [dependency-groups]

@@ -41,11 +41,15 @@ dependencies = [
     # Not used directly, but required to support some installations
     "setuptools<81",
 
+    # ESGF data fetching
+    "intake-esgf>=2025.7.16",
+    "pyarrow>=17.0.0",
+
     # SPEC 0000 constraints
     # We follow [SPEC-0000](https://scientific-python.org/specs/spec-0000/)
     # which defines a 2-year support window for key libraries and 3-year window for Python versions
     "pandas>=2.1.0",
-    "numpy>=1.25.0"
+    "numpy>=2.0.0"
 ]
 
 [dependency-groups]

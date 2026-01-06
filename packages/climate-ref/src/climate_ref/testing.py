@@ -5,6 +5,8 @@ Testing utilities
 import shutil
 from pathlib import Path
 
+import pandas as pd
+from attrs import define
 from loguru import logger
 
 from climate_ref.config import Config
@@ -12,8 +14,10 @@ from climate_ref.database import Database
 from climate_ref.executor import handle_execution_result
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
-from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
+from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
+from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -114,3 +118,94 @@ def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionRes
 
     # This checks if the bundles are valid
     handle_execution_result(config, database=database, execution=execution, result=result)
+
+
+@define
+class TestCaseRunner:
+    """
+    Helper class for running diagnostic test cases.
+
+    This runner handles:
+    - Resolving test case datasets (from explicit datasets, YAML file, or solving)
+    - Setting up the execution definition
+    - Running the diagnostic
+    """
+
+    config: Config
+    data_catalog: dict[SourceDatasetType, pd.DataFrame] | None = None
+
+    def run(
+        self,
+        diagnostic: Diagnostic,
+        test_case_name: str = "default",
+        output_dir: Path | None = None,
+    ) -> ExecutionResult:
+        """
+        Run a specific test case for a diagnostic.
+
+        Parameters
+        ----------
+        diagnostic
+            The diagnostic to run
+        test_case_name
+            Name of the test case to run (default: "default")
+        output_dir
+            Optional output directory for results
+
+        Returns
+        -------
+        ExecutionResult
+            The result of running the diagnostic
+
+        Raises
+        ------
+        NoTestDataSpecError
+            If the diagnostic has no test_data_spec
+        TestCaseNotFoundError
+            If the test case doesn't exist
+        DatasetResolutionError
+            If datasets cannot be resolved
+        """
+        if diagnostic.test_data_spec is None:
+            raise NoTestDataSpecError(f"Diagnostic {diagnostic.slug} has no test_data_spec")
+
+        if not diagnostic.test_data_spec.has_case(test_case_name):
+            raise TestCaseNotFoundError(
+                f"Test case {test_case_name!r} not found. Available: {diagnostic.test_data_spec.case_names}"
+            )
+
+        test_case = diagnostic.test_data_spec.get_case(test_case_name)
+
+        # Try to resolve datasets
+        try:
+            datasets = test_case.resolve_datasets(
+                data_catalog=self.data_catalog,
+                diagnostic=diagnostic,
+                package_dir=None,
+            )
+        except ValueError as e:
+            raise DatasetResolutionError(f"Could not resolve datasets: {e}") from e
+
+        # Determine output directory
+        if output_dir is None:
+            output_dir = (
+                self.config.paths.results
+                / "test-cases"
+                / diagnostic.provider.slug
+                / diagnostic.slug
+                / test_case_name
+            )
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create execution definition
+        definition = ExecutionDefinition(
+            diagnostic=diagnostic,
+            key=f"test-{test_case_name}",
+            datasets=datasets,
+            output_directory=output_dir,
+            root_directory=output_dir.parent,
+        )
+
+        # Run the diagnostic
+        return diagnostic.run(definition)

@@ -217,6 +217,7 @@ def _fetch_sample_data(
     This operation may fail if the test data directory does not exist,
     as is the case for non-source-based installations.
     """
+    # TODO: Remove
     fetch_sample_data(force_cleanup=force_cleanup, symlink=symlink)
 
 

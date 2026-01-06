@@ -26,14 +26,15 @@ from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models import Execution
 from climate_ref.solver import solve_executions
-from climate_ref.testing import TEST_DATA_DIR, fetch_sample_data, validate_result
-from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
-from climate_ref_core.diagnostics import (
-    DataRequirement,
-    Diagnostic,
-    ExecutionDefinition,
-    ExecutionResult,
+from climate_ref.testing import (
+    TEST_DATA_DIR,
+    TestCaseRunner,
+    fetch_sample_data,
+    validate_result,
 )
+from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
+from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
+from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
 
@@ -149,6 +150,39 @@ def esgf_solve_catalog(test_data_dir) -> dict[SourceDatasetType, pd.DataFrame] |
     return result if result else None
 
 
+@pytest.fixture
+def run_test_case(
+    config: Config,
+    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+):
+    """
+    Fixture for running diagnostic test cases.
+
+    Returns a TestCaseRunner that can execute test cases for diagnostics.
+    Uses pytest.skip for missing data instead of raising errors.
+
+    Example
+    -------
+    ```python
+    def test_diagnostic(run_test_case, my_diagnostic):
+        result = run_test_case.run(my_diagnostic, "default")
+        assert result.successful
+    ```
+    """
+
+    runner = TestCaseRunner(config=config, data_catalog=data_catalog)
+
+    # Wrap the runner to convert exceptions to pytest.skip
+    class PytestTestCaseRunner:
+        def run(self, diagnostic, test_case_name="default", output_dir=None):
+            try:
+                return runner.run(diagnostic, test_case_name, output_dir)
+            except TestCaseError as e:
+                pytest.skip(str(e))
+
+    return PytestTestCaseRunner()
+
+
 @pytest.fixture(autouse=True, scope="session")
 def sample_data() -> None:
     if os.environ.get("REF_TEST_DATA_DIR"):
@@ -218,11 +252,7 @@ def invoke_cli(monkeypatch):
     """
     Invoke the CLI with the given arguments and verify the exit code
     """
-
-    # We want to split stderr and stdout
-    # stderr == logging
-    # stdout == output from commands
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
 
     def _invoke_cli(args: list[str], expected_exit_code: int = 0, always_log: bool = False) -> Result:
         # Disable color output for testing
@@ -241,10 +271,8 @@ def invoke_cli(monkeypatch):
         if always_log or result.exit_code != expected_exit_code:
             print("## Command: ", " ".join(args))
             print("Exit code: ", result.exit_code)
-            print("Command stdout")
-            print(result.stdout)
-            print("Command stderr")
-            print(result.stderr)
+            print("Command output")
+            print(result.output)
             print("## Command end")
 
         if result.exit_code != expected_exit_code:

@@ -29,7 +29,7 @@ jobs:
     steps:
     - name: Set up Python "${{ matrix.python-version }}"
       id: setup-python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "${{ matrix.python-version }}"
     - name: Install
@@ -58,7 +58,7 @@ jobs:
       run: |
         echo "${{ env.INSTALLED_VERSION }}"
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ env.INSTALLED_VERSION }}
         # Windows can't clone the entire directory due to filename length
@@ -81,7 +81,7 @@ jobs:
     steps:
     - name: Set up Python "${{ matrix.python-version }}"
       id: setup-python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v6
       with:
         python-version: "${{ matrix.python-version }}"
     - name: Install
@@ -112,7 +112,7 @@ jobs:
       run: |
         echo "${{ env.INSTALLED_VERSION }}"
     - name: Checkout repository
-      uses: actions/checkout@v4
+      uses: actions/checkout@v6
       with:
         ref: ${{ env.INSTALLED_VERSION }}
         sparse-checkout: |

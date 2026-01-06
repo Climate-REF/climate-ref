@@ -145,6 +145,9 @@ filterwarnings = [
     # Need to update ecgtools/intake_esm to remove this warning
     'ignore:The `validate_arguments` method is deprecated:pydantic.warnings.PydanticDeprecatedSince20',
     "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+    # TestCase and TestDataSpecification are domain classes, not test classes
+    "ignore:cannot collect test class 'TestCase':pytest.PytestCollectionWarning",
+    "ignore:cannot collect test class 'TestDataSpecification':pytest.PytestCollectionWarning",
 ]
 markers = ["slow"]
 

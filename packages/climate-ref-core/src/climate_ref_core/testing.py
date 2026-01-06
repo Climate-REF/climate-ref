@@ -5,6 +5,8 @@ This module provides classes for specifying test data requirements
 and test cases for diagnostics.
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 

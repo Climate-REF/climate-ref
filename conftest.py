@@ -43,6 +43,7 @@ pytest_plugins = ("celery.contrib.pytest",)
 def pytest_configure(config):
     config.addinivalue_line("markers", "slow: mark test as slow to run")
     config.addinivalue_line("markers", "docker: mark test requires docker to run")
+    config.addinivalue_line("markers", "requires_esgf_data: mark test requires ESGF test data")
 
 
 def pytest_addoption(parser):
@@ -106,6 +107,46 @@ def sample_data_dir(test_data_dir) -> Path:
 @pytest.fixture(scope="session")
 def regression_data_dir(test_data_dir) -> Path:
     return test_data_dir / "regression"
+
+
+@pytest.fixture(scope="session")
+def esgf_test_data_dir(test_data_dir: Path) -> Path | None:
+    """
+    Path to ESGF test data directory.
+
+    Returns None if the directory doesn't exist (data not yet fetched).
+    """
+    esgf_dir = test_data_dir / "esgf-data"
+    if not esgf_dir.exists():
+        return None
+    return esgf_dir
+
+
+@pytest.fixture(scope="session")
+def esgf_solve_catalog(test_data_dir) -> dict[SourceDatasetType, pd.DataFrame] | None:
+    """
+    Load ESGF metadata catalog for solve tests.
+
+    These catalogs contain ESGF dataset metadata without actual data files,
+    used to test the solver without downloading data.
+
+    Returns None if the catalog doesn't exist yet.
+    """
+    catalog_dir = test_data_dir / "esgf-catalog"
+    if not catalog_dir.exists():
+        return None
+
+    result: dict[SourceDatasetType, pd.DataFrame] = {}
+
+    cmip6_path = catalog_dir / "cmip6_catalog.parquet"
+    if cmip6_path.exists():
+        result[SourceDatasetType.CMIP6] = pd.read_parquet(cmip6_path)
+
+    obs4mips_path = catalog_dir / "obs4mips_catalog.parquet"
+    if obs4mips_path.exists():
+        result[SourceDatasetType.obs4MIPs] = pd.read_parquet(obs4mips_path)
+
+    return result if result else None
 
 
 @pytest.fixture(autouse=True, scope="session")

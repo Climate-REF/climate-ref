@@ -11,8 +11,10 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.testing import TestCase, TestDataSpecification
 
 
 def calculate_annual_mean_timeseries(input_files: list[Path]) -> xr.Dataset:
@@ -147,6 +149,38 @@ class GlobalMeanTimeseries(Diagnostic):
         ),
     )
     facets = ("source_id", "variable_id", "experiment_id", "variant_label", "region", "metric", "statistic")
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Historical tas from ACCESS-ESM1-5 with cell areas",
+                requests=(
+                    CMIP6Request(
+                        slug="example-tas",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "tas",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="example-areacella",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "areacella",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
     def execute(self, definition: ExecutionDefinition) -> None:
         """

@@ -843,6 +843,7 @@ dependencies = [
     { name = "cattrs" },
     { name = "environs" },
     { name = "intake-esgf" },
+    { name = "ipython" },
     { name = "loguru" },
     { name = "numpy" },
     { name = "pandas" },
@@ -867,6 +868,7 @@ requires-dist = [
     { name = "cattrs", specifier = ">=24.1" },
     { name = "environs", specifier = ">=11" },
     { name = "intake-esgf", specifier = ">=2025.7.16" },
+    { name = "ipython", specifier = ">=9.0.0" },
     { name = "loguru", specifier = ">=0.7.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pandas", specifier = ">=2.1.0" },
@@ -3740,16 +3742,16 @@ name = "parsl"
 version = "2026.1.5"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "dill" },
-    { name = "filelock" },
-    { name = "psutil" },
-    { name = "pyzmq" },
-    { name = "requests" },
-    { name = "setproctitle" },
-    { name = "sortedcontainers" },
-    { name = "tblib" },
-    { name = "typeguard" },
-    { name = "typing-extensions" },
+    { name = "dill", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "filelock", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "psutil", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "pyzmq", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "requests", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "setproctitle", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "sortedcontainers", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "tblib", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typeguard", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/19/d7/7f8cc847bedde25f7f1e749d96c26e8808c3943a549f453591d5ae832c7e/parsl-2026.1.5.tar.gz", hash = "sha256:19ee5e0214a823c00e99e7499e48a38d88983782c8b92e0822657a8eda666eef", size = 374874, upload-time = "2026-01-05T22:46:12.447Z" }
 wheels = [
@@ -5614,7 +5616,7 @@ name = "typeguard"
 version = "4.4.4"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions" },
+    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/c7/68/71c1a15b5f65f40e91b65da23b8224dad41349894535a97f63a52e462196/typeguard-4.4.4.tar.gz", hash = "sha256:3a7fd2dffb705d4d0efaed4306a704c89b9dee850b688f060a8b1615a79e5f74", size = 75203, upload-time = "2025-06-18T09:56:07.624Z" }
 wheels = [

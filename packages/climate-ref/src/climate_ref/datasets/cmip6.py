@@ -53,7 +53,7 @@ def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
     if "parent_variant_label" in data_catalog:
         data_catalog = (
             data_catalog.groupby("instance_id")
-            .apply(_fix_parent_variant_label, include_groups=False)
+            .apply(_fix_parent_variant_label, include_groups=False)  # type: ignore
             .reset_index(level="instance_id")
         )
 

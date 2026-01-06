@@ -21,6 +21,17 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.8.1 (2026-01-06)
+
+### Bug Fixes
+
+- Add a pin for fastprogress (dependency of intake-esm) to work around bug in newer versions ([#476](https://github.com/Climate-REF/climate-ref/pull/476))
+
+### Trivial/Internal Changes
+
+- [#477](https://github.com/Climate-REF/climate-ref/pull/477)
+
+
 ## climate-ref 0.8.0 (2026-01-05)
 
 ### Features

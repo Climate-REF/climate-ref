@@ -8,6 +8,11 @@ from climate_ref.cli.testing import (
     _find_diagnostic,
 )
 from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.exceptions import (
+    DatasetResolutionError,
+    NoTestDataSpecError,
+    TestCaseNotFoundError,
+)
 
 
 class TestFilterCatalogByRequests:
@@ -96,7 +101,7 @@ class TestBuildEsgfDataCatalog:
         assert result == {}
 
     def test_no_test_data_dir(self):
-        with patch("climate_ref.cli.testing.TEST_DATA_DIR", None):
+        with patch("climate_ref.testing.TEST_DATA_DIR", None):
             result = _build_esgf_data_catalog(tuple())
         assert result == {}
 
@@ -118,8 +123,8 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.facets = {"source_id": "ACCESS-ESM1-5"}
 
         with (
-            patch("climate_ref.cli.testing.TEST_DATA_DIR", test_data_dir),
-            patch("climate_ref.cli.testing.CMIP6DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((cmip6_request,))
 
@@ -143,8 +148,8 @@ class TestBuildEsgfDataCatalog:
         obs_request.facets = {"source_id": "GPCP-SG"}
 
         with (
-            patch("climate_ref.cli.testing.TEST_DATA_DIR", test_data_dir),
-            patch("climate_ref.cli.testing.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((obs_request,))
 
@@ -160,7 +165,7 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.source_type = "CMIP6"
         cmip6_request.facets = {}
 
-        with patch("climate_ref.cli.testing.TEST_DATA_DIR", test_data_dir):
+        with patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir):
             result = _build_esgf_data_catalog((cmip6_request,))
         assert SourceDatasetType.CMIP6 not in result
 
@@ -179,8 +184,8 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.facets = {}
 
         with (
-            patch("climate_ref.cli.testing.TEST_DATA_DIR", test_data_dir),
-            patch("climate_ref.cli.testing.CMIP6DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((cmip6_request,))
 
@@ -204,12 +209,87 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.facets = {"source_id": "NONEXISTENT"}
 
         with (
-            patch("climate_ref.cli.testing.TEST_DATA_DIR", test_data_dir),
-            patch("climate_ref.cli.testing.CMIP6DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((cmip6_request,))
 
         assert SourceDatasetType.CMIP6 not in result
+
+    def test_obs4mips_dir_not_exists(self, tmp_path):
+        """Test when obs4MIPs directory doesn't exist."""
+        test_data_dir = tmp_path / "test-data"
+        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir.mkdir(parents=True)
+
+        obs_request = MagicMock()
+        obs_request.source_type = "obs4MIPs"
+        obs_request.facets = {}
+
+        with patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir):
+            result = _build_esgf_data_catalog((obs_request,))
+        assert SourceDatasetType.obs4MIPs not in result
+
+    def test_obs4mips_adapter_exception_handled(self, tmp_path):
+        """Test that exceptions from obs4MIPs adapter are handled gracefully."""
+        test_data_dir = tmp_path / "test-data"
+        esgf_data_dir = test_data_dir / "esgf-data"
+        obs_dir = esgf_data_dir / "obs4MIPs"
+        obs_dir.mkdir(parents=True)
+
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.side_effect = Exception("Failed to load obs4MIPs")
+
+        obs_request = MagicMock()
+        obs_request.source_type = "obs4MIPs"
+        obs_request.facets = {}
+
+        with (
+            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
+        ):
+            result = _build_esgf_data_catalog((obs_request,))
+
+        assert SourceDatasetType.obs4MIPs not in result
+
+    def test_mixed_requests_both_types(self, tmp_path):
+        """Test loading both CMIP6 and obs4MIPs data with matching requests."""
+        test_data_dir = tmp_path / "test-data"
+        esgf_data_dir = test_data_dir / "esgf-data"
+        cmip6_dir = esgf_data_dir / "CMIP6"
+        obs_dir = esgf_data_dir / "obs4MIPs"
+        cmip6_dir.mkdir(parents=True)
+        obs_dir.mkdir(parents=True)
+
+        mock_cmip6_adapter = MagicMock()
+        mock_cmip6_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {"source_id": ["ACCESS-ESM1-5"], "variable_id": ["tas"]}
+        )
+
+        mock_obs_adapter = MagicMock()
+        mock_obs_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {"source_id": ["GPCP-SG"], "variable_id": ["pr"]}
+        )
+
+        cmip6_request = MagicMock()
+        cmip6_request.source_type = "CMIP6"
+        cmip6_request.facets = {"source_id": "ACCESS-ESM1-5"}
+
+        obs_request = MagicMock()
+        obs_request.source_type = "obs4MIPs"
+        obs_request.facets = {"source_id": "GPCP-SG"}
+
+        with (
+            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_cmip6_adapter),
+            patch("climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter", return_value=mock_obs_adapter),
+        ):
+            result = _build_esgf_data_catalog((cmip6_request, obs_request))
+
+        assert SourceDatasetType.CMIP6 in result
+        assert SourceDatasetType.obs4MIPs in result
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        assert len(result[SourceDatasetType.obs4MIPs]) == 1
 
 
 class TestFindDiagnostic:
@@ -299,6 +379,89 @@ class TestFetchTestDataCommand:
         result = invoke_cli(["testing", "fetch", "--provider", "example", "--dry-run"])
         assert result.exit_code == 0
 
+    def test_fetch_with_diagnostic_filter(self, invoke_cli):
+        """Test fetch command with diagnostic filter."""
+        result = invoke_cli(["testing", "fetch", "--diagnostic", "nonexistent-diagnostic", "--dry-run"])
+        # Should complete since no matching diagnostics will be found
+        assert result.exit_code == 0
+
+    def test_fetch_with_test_case_filter(self, invoke_cli, mocker, tmp_path):
+        """Test fetch command with test case filter in dry run."""
+        test_data_dir = tmp_path / "test-data"
+        test_data_dir.mkdir()
+
+        # Create a mock diagnostic with test_data_spec
+        mock_request = MagicMock()
+        mock_request.slug = "test-request"
+        mock_request.source_type = "CMIP6"
+
+        mock_test_case = MagicMock()
+        mock_test_case.name = "specific-case"
+        mock_test_case.description = "A specific test case"
+        mock_test_case.requests = [mock_request]
+
+        mock_spec = MagicMock()
+        mock_spec.test_cases = [mock_test_case]
+
+        mock_diag = MagicMock()
+        mock_diag.slug = "test-diag"
+        mock_diag.test_data_spec = mock_spec
+        mock_diag.provider = MagicMock(slug="test-provider")
+
+        mock_provider = MagicMock()
+        mock_provider.slug = "test-provider"
+        mock_provider.diagnostics.return_value = [mock_diag]
+
+        mock_registry = MagicMock()
+        mock_registry.providers = [mock_provider]
+
+        mocker.patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir)
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        result = invoke_cli(["testing", "fetch", "--test-case", "specific-case", "--dry-run"])
+        assert result.exit_code == 0
+
+    def test_fetch_with_custom_output_directory(self, invoke_cli, tmp_path, mocker):
+        """Test fetch command with custom output directory."""
+        output_dir = tmp_path / "custom-output"
+
+        mock_fetcher = MagicMock()
+
+        mock_request = MagicMock()
+        mock_request.slug = "test-request"
+
+        mock_test_case = MagicMock()
+        mock_test_case.name = "default"
+        mock_test_case.requests = [mock_request]
+
+        mock_spec = MagicMock()
+        mock_spec.test_cases = [mock_test_case]
+
+        mock_diag = MagicMock()
+        mock_diag.slug = "test-diag"
+        mock_diag.test_data_spec = mock_spec
+        mock_diag.provider = MagicMock(slug="test-provider")
+
+        mock_provider = MagicMock()
+        mock_provider.slug = "test-provider"
+        mock_provider.diagnostics.return_value = [mock_diag]
+
+        mock_registry = MagicMock()
+        mock_registry.providers = [mock_provider]
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher)
+
+        result = invoke_cli(["testing", "fetch", f"--output-directory={output_dir}"])
+        assert result.exit_code == 0
+        mock_fetcher.fetch_request.assert_called()
+
 
 class TestListCasesCommand:
     def test_list_help(self, invoke_cli):
@@ -362,3 +525,193 @@ class TestRunTestCaseCommand:
             ],
             expected_exit_code=1,
         )
+
+    def test_run_dataset_resolution_error(self, invoke_cli, mocker):
+        """Test run command handles DatasetResolutionError."""
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_runner = MagicMock()
+        mock_runner.run.side_effect = DatasetResolutionError("No datasets found for requirement")
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+
+        invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            expected_exit_code=1,
+        )
+
+    def test_run_no_test_data_spec_error(self, invoke_cli, mocker):
+        """Test run command handles NoTestDataSpecError from runner."""
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_runner = MagicMock()
+        mock_runner.run.side_effect = NoTestDataSpecError("No test data spec")
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+
+        invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            expected_exit_code=1,
+        )
+
+    def test_run_test_case_not_found_error(self, invoke_cli, mocker):
+        """Test run command handles TestCaseNotFoundError from runner."""
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+        mock_diag.test_data_spec.case_names = ["default", "other"]
+
+        mock_runner = MagicMock()
+        mock_runner.run.side_effect = TestCaseNotFoundError("Test case not found")
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+
+        invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            expected_exit_code=1,
+        )
+
+    def test_run_general_exception(self, invoke_cli, mocker):
+        """Test run command handles general Exception from runner."""
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_runner = MagicMock()
+        mock_runner.run.side_effect = Exception("Unexpected error")
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+
+        invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            expected_exit_code=1,
+        )
+
+    def test_run_successful_execution(self, invoke_cli, mocker, tmp_path):
+        """Test run command with successful execution."""
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_result = MagicMock()
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = "metrics.json"
+        mock_result.output_bundle_filename = "output.json"
+        mock_result.to_output_path.side_effect = lambda x: tmp_path / x
+
+        mock_runner = MagicMock()
+        mock_runner.run.return_value = mock_result
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref.testing.TEST_DATA_DIR", None)
+
+        result = invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+        )
+        assert result.exit_code == 0
+
+    def test_run_unsuccessful_execution(self, invoke_cli, mocker):
+        """Test run command with unsuccessful execution result."""
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_result = MagicMock()
+        mock_result.successful = False
+
+        mock_runner = MagicMock()
+        mock_runner.run.return_value = mock_result
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+
+        invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            expected_exit_code=1,
+        )
+
+    def test_run_with_force_regen(self, invoke_cli, mocker, tmp_path):
+        """Test run command with force_regen regenerates baseline."""
+        test_data_dir = tmp_path / "test-data"
+        test_data_dir.mkdir()
+
+        # Create a mock metric file
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        metrics_file = output_dir / "metrics.json"
+        metrics_file.write_text('{"test": "data"}')
+
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_result = MagicMock()
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = "metrics.json"
+        mock_result.output_bundle_filename = None
+        mock_result.to_output_path.return_value = metrics_file
+
+        mock_runner = MagicMock()
+        mock_runner.run.return_value = mock_result
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir)
+
+        result = invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test", "--force-regen"],
+        )
+        assert result.exit_code == 0
+
+        # Check that regression baseline was created
+        baseline_file = test_data_dir / "regression" / "example" / "test" / "default_metric.json"
+        assert baseline_file.exists()
+
+    def test_run_with_existing_baseline(self, invoke_cli, mocker, tmp_path):
+        """Test run command logs when baseline exists."""
+        test_data_dir = tmp_path / "test-data"
+        regression_dir = test_data_dir / "regression" / "example" / "test"
+        regression_dir.mkdir(parents=True)
+        baseline_file = regression_dir / "default_metric.json"
+        baseline_file.write_text('{"existing": "baseline"}')
+
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = MagicMock()
+        mock_diag.test_data_spec.has_case.return_value = True
+        mock_diag.test_data_spec.get_case.return_value = MagicMock(requests=None)
+
+        mock_result = MagicMock()
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = "metrics.json"
+        mock_result.output_bundle_filename = None
+        mock_result.to_output_path.return_value = tmp_path / "metrics.json"
+
+        mock_runner = MagicMock()
+        mock_runner.run.return_value = mock_result
+
+        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir)
+
+        result = invoke_cli(
+            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+        )
+        assert result.exit_code == 0
+        # Baseline should not be modified
+        assert baseline_file.read_text() == '{"existing": "baseline"}'

@@ -64,11 +64,11 @@ class TestCMIP6Adapter:
         adapter = CMIP6DatasetAdapter()
         data_catalog = adapter.load_catalog(db_seeded)
         target_ds = "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115"
-        target_metadata = data_catalog[data_catalog["instance_id"] == target_ds]
+        target_metadata = data_catalog[data_catalog["instance_id"] == target_ds].copy()
 
         # Make an old version
-        target_metadata.version = "v20000101"
-        target_metadata.instance_id = target_ds.replace("v20191115", "v20000101")
+        target_metadata.loc[:, "version"] = "v20000101"
+        target_metadata.loc[:, "instance_id"] = target_ds.replace("v20191115", "v20000101")
         with db_seeded.session.begin():
             adapter.register_dataset(config, db_seeded, target_metadata)
 
@@ -79,9 +79,9 @@ class TestCMIP6Adapter:
         )
 
         # Make a new version
-        target_metadata.version = "v20230101"
+        target_metadata.loc[:, "version"] = "v20230101"
         new_instance_id = target_ds.replace("v20191115", "v20230101")
-        target_metadata.instance_id = new_instance_id
+        target_metadata.loc[:, "instance_id"] = new_instance_id
         with db_seeded.session.begin():
             adapter.register_dataset(config, db_seeded, target_metadata)
 
@@ -116,9 +116,15 @@ class TestCMIP6Adapter:
                 .reset_index(drop=True)
             )
 
+            # Normalize null values - convert None to np.nan for consistent comparison
+            # Opt into future pandas behavior to avoid deprecation warnings
+            with pd.option_context("future.no_silent_downcasting", True):
+                local_normalized = local_data_catalog.fillna(np.nan).infer_objects(copy=False)
+                db_normalized = db_data_catalog.fillna(np.nan).infer_objects(copy=False)
+
             pd.testing.assert_frame_equal(
-                local_data_catalog.infer_objects(),
-                db_data_catalog.replace({None: np.nan}).infer_objects(),
+                local_normalized,
+                db_normalized,
                 check_like=True,
             )
 

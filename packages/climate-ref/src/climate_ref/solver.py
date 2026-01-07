@@ -130,7 +130,7 @@ def extract_covered_datasets(
         # Use a single group
         groups = [((), subset)]
     else:
-        groups = list(subset.groupby(list(requirement.group_by)))
+        groups = list(subset.groupby(list(requirement.group_by)))  # type: ignore[arg-type]
 
     results = {}
 

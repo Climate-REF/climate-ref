@@ -254,7 +254,11 @@ def invoke_cli(monkeypatch):
     """
     Invoke the CLI with the given arguments and verify the exit code
     """
-    runner = CliRunner()
+
+    # We want to split stderr and stdout
+    # stderr == logging
+    # stdout == output from commands
+    runner = CliRunner(mix_stderr=False)
 
     def _invoke_cli(args: list[str], expected_exit_code: int = 0, always_log: bool = False) -> Result:
         # Disable color output for testing
@@ -273,8 +277,10 @@ def invoke_cli(monkeypatch):
         if always_log or result.exit_code != expected_exit_code:
             print("## Command: ", " ".join(args))
             print("Exit code: ", result.exit_code)
-            print("Command output")
-            print(result.output)
+            print("Command stdout")
+            print(result.stdout)
+            print("Command stderr")
+            print(result.stderr)
             print("## Command end")
 
         if result.exit_code != expected_exit_code:

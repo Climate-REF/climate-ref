@@ -119,8 +119,8 @@ class TestCMIP6Adapter:
             # Normalize null values - convert None to np.nan for consistent comparison
             # Opt into future pandas behavior to avoid deprecation warnings
             with pd.option_context("future.no_silent_downcasting", True):
-                local_normalized = local_data_catalog.fillna(np.nan).infer_objects(copy=False)
-                db_normalized = db_data_catalog.fillna(np.nan).infer_objects(copy=False)
+                local_normalized = local_data_catalog.fillna(np.nan).infer_objects()
+                db_normalized = db_data_catalog.fillna(np.nan).infer_objects()
 
             pd.testing.assert_frame_equal(
                 local_normalized,

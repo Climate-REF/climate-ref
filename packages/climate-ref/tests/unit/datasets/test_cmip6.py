@@ -95,30 +95,32 @@ class TestCMIP6Adapter:
     def test_round_trip(self, cmip6_parser, config, sample_data_dir):
         config.cmip6_parser = cmip6_parser
 
-        database = Database.from_config(config, run_migrations=True)
-        catalog = CMIP6DatasetAdapter(config=config).find_local_datasets(sample_data_dir / "CMIP6")
+        with Database.from_config(config, run_migrations=True) as database:
+            catalog = CMIP6DatasetAdapter(config=config).find_local_datasets(sample_data_dir / "CMIP6")
 
-        # Indexes and ordering may be different
-        adapter = CMIP6DatasetAdapter()
-        with database.session.begin():
-            for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
-                adapter.register_dataset(config, database, data_catalog_dataset)
+            # Indexes and ordering may be different
+            adapter = CMIP6DatasetAdapter()
+            with database.session.begin():
+                for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
+                    adapter.register_dataset(config, database, data_catalog_dataset)
 
-        local_data_catalog = (
-            catalog.drop(columns=["time_range"])
-            .sort_values(["instance_id", "start_time"])
-            .reset_index(drop=True)
-        )
+            local_data_catalog = (
+                catalog.drop(columns=["time_range"])
+                .sort_values(["instance_id", "start_time"])
+                .reset_index(drop=True)
+            )
 
-        db_data_catalog = (
-            adapter.load_catalog(database).sort_values(["instance_id", "start_time"]).reset_index(drop=True)
-        )
+            db_data_catalog = (
+                adapter.load_catalog(database)
+                .sort_values(["instance_id", "start_time"])
+                .reset_index(drop=True)
+            )
 
-        pd.testing.assert_frame_equal(
-            local_data_catalog.infer_objects(),
-            db_data_catalog.replace({None: np.nan}).infer_objects(),
-            check_like=True,
-        )
+            pd.testing.assert_frame_equal(
+                local_data_catalog.infer_objects(),
+                db_data_catalog.replace({None: np.nan}).infer_objects(),
+                check_like=True,
+            )
 
     @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
     def test_load_local_datasets(self, config, cmip6_parser, sample_data_dir, catalog_regression):

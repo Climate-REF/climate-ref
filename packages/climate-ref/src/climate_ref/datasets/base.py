@@ -219,7 +219,9 @@ class DatasetAdapter(Protocol):
         slug = unique_slugs[0]
 
         # Upsert the dataset (create a new dataset or update the metadata)
-        dataset_metadata = data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
+        dataset_metadata = cast(
+            dict[str, Any], data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
+        )
         dataset, dataset_state = db.update_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
         if dataset_state == ModelState.CREATED:
             logger.info(f"Created new dataset: {dataset}")

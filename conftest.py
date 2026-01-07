@@ -179,6 +179,8 @@ def run_test_case(
                 return runner.run(diagnostic, test_case_name, output_dir)
             except TestCaseError as e:
                 pytest.skip(str(e))
+                # Explicitly indicate that this code path does not return
+                raise
 
     return PytestTestCaseRunner()
 

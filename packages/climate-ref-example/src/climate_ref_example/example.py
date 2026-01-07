@@ -168,9 +168,11 @@ class GlobalMeanTimeseries(Diagnostic):
 
         input_datasets = definition.datasets[SourceDatasetType.CMIP6]
 
-        calculate_annual_mean_timeseries(input_files=input_datasets.path.to_list()).to_netcdf(
-            definition.output_directory / "annual_mean_global_mean_timeseries.nc"
-        )
+        result = calculate_annual_mean_timeseries(input_files=input_datasets.path.to_list())
+        # Drop time_bnds to avoid xarray cftime bounds encoding regression (xarray >= 2025.11.0)
+        if "time_bnds" in result:
+            result = result.drop_vars("time_bnds")
+        result.to_netcdf(definition.output_directory / "annual_mean_global_mean_timeseries.nc")
 
     def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:
         """

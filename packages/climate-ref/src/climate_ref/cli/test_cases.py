@@ -331,6 +331,10 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         bool,
         typer.Option(help="Force regeneration of regression baselines"),
     ] = False,
+    fetch: Annotated[
+        bool,
+        typer.Option(help="Fetch test data from ESGF before running"),
+    ] = False,
 ) -> None:
     """
     Run a specific test case for a diagnostic.
@@ -340,7 +344,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
 
     Example:
         ref test-cases run --provider example --diagnostic global-mean-timeseries
-        ref test-cases run --provider ilamb --diagnostic bias --test-case custom
+        ref test-cases run --provider ilamb --diagnostic lai-avh15c1 --fetch
     """
     from climate_ref.testing import (  # noqa: PLC0415
         TEST_DATA_DIR,
@@ -369,6 +373,22 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         raise typer.Exit(code=1)
 
     tc = diag.test_data_spec.get_case(test_case)
+
+    # Fetch test data if requested
+    if fetch:
+        from climate_ref_core.esgf import ESGFFetcher  # noqa: PLC0415
+
+        if TEST_DATA_DIR is None:
+            logger.error("Test data directory not found. Cannot fetch data.")
+            raise typer.Exit(code=1)
+
+        fetch_output_dir = TEST_DATA_DIR / "esgf-data"
+        fetcher = ESGFFetcher(output_dir=fetch_output_dir)
+
+        logger.info(f"Fetching test data for {provider}/{diagnostic}")
+        if tc.requests:
+            for req in tc.requests:
+                fetcher.fetch_request(req, symlink=True)
 
     # Build data catalog from ESGF test data, filtered by test case requests
     data_catalog = _build_esgf_data_catalog(tc.requests)

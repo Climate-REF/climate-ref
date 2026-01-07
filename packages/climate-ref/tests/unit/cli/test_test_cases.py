@@ -2,7 +2,7 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 
-from climate_ref.cli.testing import (
+from climate_ref.cli.test_cases import (
     _build_esgf_data_catalog,
     _filter_catalog_by_requests,
     _find_diagnostic,
@@ -360,28 +360,28 @@ class TestFindDiagnostic:
 class TestFetchTestDataCommand:
     def test_fetch_help(self, invoke_cli):
         """Test fetch command help."""
-        result = invoke_cli(["testing", "fetch", "--help"])
+        result = invoke_cli(["test-cases", "fetch", "--help"])
         assert "Fetch test data from ESGF" in result.stdout
 
     def test_fetch_dry_run(self, invoke_cli):
         """Test fetch command with dry run."""
-        result = invoke_cli(["testing", "fetch", "--dry-run"])
+        result = invoke_cli(["test-cases", "fetch", "--dry-run"])
         # Should complete successfully even if no diagnostics have test_data_spec
         assert result.exit_code == 0
 
     def test_fetch_no_test_data_dir(self, invoke_cli, mocker):
         """Test fetch command when TEST_DATA_DIR is not available."""
         mocker.patch("climate_ref.testing.TEST_DATA_DIR", None)
-        invoke_cli(["testing", "fetch"], expected_exit_code=1)
+        invoke_cli(["test-cases", "fetch"], expected_exit_code=1)
 
     def test_fetch_with_provider_filter(self, invoke_cli):
         """Test fetch command with provider filter."""
-        result = invoke_cli(["testing", "fetch", "--provider", "example", "--dry-run"])
+        result = invoke_cli(["test-cases", "fetch", "--provider", "example", "--dry-run"])
         assert result.exit_code == 0
 
     def test_fetch_with_diagnostic_filter(self, invoke_cli):
         """Test fetch command with diagnostic filter."""
-        result = invoke_cli(["testing", "fetch", "--diagnostic", "nonexistent-diagnostic", "--dry-run"])
+        result = invoke_cli(["test-cases", "fetch", "--diagnostic", "nonexistent-diagnostic", "--dry-run"])
         # Should complete since no matching diagnostics will be found
         assert result.exit_code == 0
 
@@ -421,7 +421,7 @@ class TestFetchTestDataCommand:
             return_value=mock_registry,
         )
 
-        result = invoke_cli(["testing", "fetch", "--test-case", "specific-case", "--dry-run"])
+        result = invoke_cli(["test-cases", "fetch", "--test-case", "specific-case", "--dry-run"])
         assert result.exit_code == 0
 
     def test_fetch_with_custom_output_directory(self, invoke_cli, tmp_path, mocker):
@@ -458,7 +458,7 @@ class TestFetchTestDataCommand:
         )
         mocker.patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher)
 
-        result = invoke_cli(["testing", "fetch", f"--output-directory={output_dir}"])
+        result = invoke_cli(["test-cases", "fetch", f"--output-directory={output_dir}"])
         assert result.exit_code == 0
         mock_fetcher.fetch_request.assert_called()
 
@@ -466,32 +466,32 @@ class TestFetchTestDataCommand:
 class TestListCasesCommand:
     def test_list_help(self, invoke_cli):
         """Test list command help."""
-        result = invoke_cli(["testing", "list", "--help"])
+        result = invoke_cli(["test-cases", "list", "--help"])
         assert "List test cases" in result.stdout
 
     def test_list_all(self, invoke_cli):
         """Test listing all test cases."""
-        result = invoke_cli(["testing", "list"])
+        result = invoke_cli(["test-cases", "list"])
         assert result.exit_code == 0
         assert "Provider" in result.stdout
         assert "Diagnostic" in result.stdout
 
     def test_list_with_provider_filter(self, invoke_cli):
         """Test listing test cases with provider filter."""
-        result = invoke_cli(["testing", "list", "--provider", "example"])
+        result = invoke_cli(["test-cases", "list", "--provider", "example"])
         assert result.exit_code == 0
 
 
 class TestRunTestCaseCommand:
     def test_run_help(self, invoke_cli):
         """Test run command help."""
-        result = invoke_cli(["testing", "run", "--help"])
+        result = invoke_cli(["test-cases", "run", "--help"])
         assert "Run a specific test case" in result.stdout
 
     def test_run_nonexistent_diagnostic(self, invoke_cli):
         """Test running non-existent diagnostic."""
         invoke_cli(
-            ["testing", "run", "--provider", "nonexistent", "--diagnostic", "fake"],
+            ["test-cases", "run", "--provider", "nonexistent", "--diagnostic", "fake"],
             expected_exit_code=1,
         )
 
@@ -499,7 +499,7 @@ class TestRunTestCaseCommand:
         """Test running diagnostic without test_data_spec."""
         # The example provider's diagnostics may not have test_data_spec
         invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "global-mean-timeseries"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "global-mean-timeseries"],
             expected_exit_code=1,
         )
 
@@ -510,11 +510,11 @@ class TestRunTestCaseCommand:
         mock_diag.test_data_spec.has_case.return_value = False
         mock_diag.test_data_spec.case_names = ["default"]
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
 
         invoke_cli(
             [
-                "testing",
+                "test-cases",
                 "run",
                 "--provider",
                 "example",
@@ -536,11 +536,11 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.side_effect = DatasetResolutionError("No datasets found for requirement")
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
             expected_exit_code=1,
         )
 
@@ -554,11 +554,11 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.side_effect = NoTestDataSpecError("No test data spec")
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
             expected_exit_code=1,
         )
 
@@ -573,11 +573,11 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.side_effect = TestCaseNotFoundError("Test case not found")
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
             expected_exit_code=1,
         )
 
@@ -591,11 +591,11 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.side_effect = Exception("Unexpected error")
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
             expected_exit_code=1,
         )
 
@@ -615,12 +615,12 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.return_value = mock_result
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
         mocker.patch("climate_ref.testing.TEST_DATA_DIR", None)
 
         result = invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
         )
         assert result.exit_code == 0
 
@@ -637,11 +637,11 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.return_value = mock_result
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
             expected_exit_code=1,
         )
 
@@ -670,12 +670,12 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.return_value = mock_result
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
         mocker.patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir)
 
         result = invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test", "--force-regen"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test", "--force-regen"],
         )
         assert result.exit_code == 0
 
@@ -705,12 +705,12 @@ class TestRunTestCaseCommand:
         mock_runner = MagicMock()
         mock_runner.run.return_value = mock_result
 
-        mocker.patch("climate_ref.cli.testing._find_diagnostic", return_value=mock_diag)
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
         mocker.patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir)
 
         result = invoke_cli(
-            ["testing", "run", "--provider", "example", "--diagnostic", "test"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
         )
         assert result.exit_code == 0
         # Baseline should not be modified

@@ -62,9 +62,9 @@ def fetch_test_data(  # noqa: PLR0912
 
     Examples
     --------
-        ref testing fetch                   # Fetch all test data
-        ref testing fetch --provider ilamb  # Fetch ILAMB test data only
-        ref testing fetch --diagnostic ecs  # Fetch ECS diagnostic data
+        ref test-cases fetch                   # Fetch all test data
+        ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
+        ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
     """
     from climate_ref.testing import TEST_DATA_DIR  # noqa: PLC0415
     from climate_ref_core.esgf import ESGFFetcher  # noqa: PLC0415
@@ -339,8 +339,8 @@ def run_test_case(  # noqa: PLR0912, PLR0915
     and optionally compares against regression baselines.
 
     Example:
-        ref testing run --provider example --diagnostic global-mean-timeseries
-        ref testing run --provider ilamb --diagnostic bias --test-case custom
+        ref test-cases run --provider example --diagnostic global-mean-timeseries
+        ref test-cases run --provider ilamb --diagnostic bias --test-case custom
     """
     from climate_ref.testing import (  # noqa: PLC0415
         TEST_DATA_DIR,
@@ -390,7 +390,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         raise typer.Exit(code=1)
     except DatasetResolutionError as e:
         logger.error(str(e))
-        logger.error("Have you run 'ref testing fetch' first?")
+        logger.error("Have you run 'ref test-cases fetch' first?")
         raise typer.Exit(code=1)
     except Exception as e:
         logger.error(f"Diagnostic execution failed: {e}")

@@ -225,8 +225,8 @@ Obs4MIPsRequest(
 View all available test cases:
 
 ```bash
-ref testing list
-ref testing list --provider ilamb
+ref test-cases list
+ref test-cases list --provider ilamb
 ```
 
 ### Fetching Test Data
@@ -235,19 +235,19 @@ Download ESGF data for your test cases:
 
 ```bash
 # Fetch all test data
-ref testing fetch
+ref test-cases fetch
 
 # Fetch for a specific provider
-ref testing fetch --provider my-provider
+ref test-cases fetch --provider my-provider
 
 # Fetch for a specific diagnostic
-ref testing fetch --provider my-provider --diagnostic my-diagnostic
+ref test-cases fetch --provider my-provider --diagnostic my-diagnostic
 
 # Dry run (show what would be fetched)
-ref testing fetch --dry-run
+ref test-cases fetch --dry-run
 
 # Specify custom output directory
-ref testing fetch --output-directory /path/to/esgf-data
+ref test-cases fetch --output-directory /path/to/esgf-data
 ```
 
 Data is downloaded to `tests/test-data/esgf-data/` following the DRS structure:
@@ -263,7 +263,7 @@ tests/test-data/esgf-data/
 
 #### Data Caching
 
-The `ref testing fetch` command uses [intake-esgf](https://github.com/esgf2-us/intake-esgf)
+The `ref test-cases fetch` command uses [intake-esgf](https://github.com/esgf2-us/intake-esgf)
 to download datasets. Downloaded files are cached by intake-esgf (default: `~/.esgf/`)
 and then organized into the test data directory.
 
@@ -287,16 +287,16 @@ Execute a test case:
 
 ```bash
 # Run the default test case
-ref testing run --provider my-provider --diagnostic my-diagnostic
+ref test-cases run --provider my-provider --diagnostic my-diagnostic
 
 # Run a specific test case
-ref testing run --provider my-provider --diagnostic my-diagnostic --test-case edge-case
+ref test-cases run --provider my-provider --diagnostic my-diagnostic --test-case edge-case
 
 # Specify output directory
-ref testing run --provider my-provider --diagnostic my-diagnostic --output-directory ./output
+ref test-cases run --provider my-provider --diagnostic my-diagnostic --output-directory ./output
 
 # Regenerate regression baseline
-ref testing run --provider my-provider --diagnostic my-diagnostic --force-regen
+ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
 ```
 
 ## Writing Pytest Tests
@@ -368,7 +368,7 @@ If a new diagnostic is added or updated,
 the regression baseline should be regenerated.
 
 ```bash
-ref testing run --provider my-provider --diagnostic my-diagnostic --force-regen
+ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
 ```
 
 This can produce large files some of which may be added to the `.gitignore` file if needed.
@@ -487,7 +487,7 @@ class TemperatureBias(Diagnostic):
 | ------------------------ | ---------------------------------- | --------------------------------- |
 | `NoTestDataSpecError`    | Diagnostic has no `test_data_spec` | Add `test_data_spec` attribute    |
 | `TestCaseNotFoundError`  | Invalid test case name             | Check `test_data_spec.case_names` |
-| `DatasetResolutionError` | Missing test data                  | Run `ref testing fetch`           |
+| `DatasetResolutionError` | Missing test data                  | Run `ref test-cases fetch`           |
 | `No datasets found`      | ESGF query returned empty          | Check facets are correct          |
 
 ### Debugging Tips
@@ -495,7 +495,7 @@ class TemperatureBias(Diagnostic):
 1. **List available test cases**:
 
    ```bash
-   ref testing list --provider my-provider
+   ref test-cases list --provider my-provider
    ```
 
 2. **Check fetched data**:

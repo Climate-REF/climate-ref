@@ -11,7 +11,7 @@ from loguru import logger
 from rich.console import Console
 
 from climate_ref import __version__
-from climate_ref.cli import config, datasets, executions, providers, solve, testing
+from climate_ref.cli import config, datasets, executions, providers, solve, test_cases
 from climate_ref.config import Config
 from climate_ref.constants import CONFIG_FILENAME
 from climate_ref.database import Database
@@ -104,7 +104,7 @@ def build_app() -> typer.Typer:
     app.add_typer(datasets.app, name="datasets")
     app.add_typer(executions.app, name="executions")
     app.add_typer(providers.app, name="providers")
-    app.add_typer(testing.app, name="testing")
+    app.add_typer(test_cases.app, name="test-cases")
 
     try:
         celery_app = importlib.import_module("climate_ref_celery.cli").app

@@ -11,9 +11,11 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
@@ -64,6 +66,48 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
             values_name="zec",
             index_name="time",
             attributes=[],
+        ),
+    )
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="ZEC from ACCESS-ESM1-5 1pctCO2 and esm-1pct-brch-1000PgC",
+                requests=(
+                    CMIP6Request(
+                        slug="1pctco2",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "1pctCO2",
+                            "variable_id": "tas",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("0101-01", "0300-12"),
+                    ),
+                    CMIP6Request(
+                        slug="esm-1pct-brch-1000pgc",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "esm-1pct-brch-1000PgC",
+                            "variable_id": "tas",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("0158-01", "0300-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacella",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "1pctCO2",
+                            "variable_id": "areacella",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
         ),
     )
 

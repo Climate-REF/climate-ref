@@ -8,17 +8,72 @@ gpp-WECANN:
     pr: ilamb/pr/GPCPv2.3/pr.nc
     tas: ilamb/tas/CRU4.02/tas.nc
   variable_cmap: Greens
+  test_cases:
+    - name: default
+      description: "Historical GPP from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/gpp/WECANN/gpp.nc, ilamb/pr/GPCPv2.3/pr.nc, ilamb/tas/CRU4.02/tas.nc
+      cmip6_requests:
+        - slug: gpp
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: gpp
+          member_id: r1i1p1f1
+          table_id: Lmon
+        - slug: relationships
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [pr, tas]
+          member_id: r1i1p1f1
+          table_id: Amon
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [areacella, sftlf]
+          table_id: fx
+
 
 gpp-FLUXNET2015:
   sources:
     gpp: ilamb/gpp/FLUXNET2015/gpp.nc
   variable_cmap: Greens
+  test_cases:
+    - name: default
+      description: "Historical GPP from ACCESS-ESM1-5 using FLUXNET2015"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/gpp/FLUXNET2015/gpp.nc
+      cmip6_requests:
+        - slug: gpp
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: gpp
+          member_id: r1i1p1f1
+          table_id: Lmon
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [areacella, sftlf]
+          table_id: fx
 
 mrro-LORA:
   sources:
     # TODO: Update to use the obs4REF equiv
     mrro: ilamb/mrro/LORA/LORA.nc
   variable_cmap: Blues
+  test_cases:
+    - name: default
+      description: "Historical runoff from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/mrro/LORA/LORA.nc
+      cmip6_requests:
+        - slug: mrro
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: mrro
+          member_id: r1i1p1f1
+          table_id: Lmon
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [areacella, sftlf]
+          table_id: fx
 
 mrsos-WangMao:
   sources:
@@ -30,16 +85,65 @@ mrsos-WangMao:
       value: 0
   - soil_moisture_to_vol_fraction
   variable_cmap: Blues
+  test_cases:
+    - name: default
+      description: "Historical soil moisture from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/mrsol/WangMao/mrsol_olc.nc
+      cmip6_requests:
+        - slug: mrsos
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: mrsos
+          member_id: r1i1p1f1
+          table_id: Lmon
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [areacella, sftlf]
+          table_id: fx
 
 cSoil-HWSD2:
   sources:
     cSoil: ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc
   variable_cmap: viridis
+  test_cases:
+    - name: default
+      description: "Historical soil carbon from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc
+      cmip6_requests:
+        - slug: csoil
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: cSoil
+          member_id: r1i1p1f1
+          table_id: Emon
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [areacella, sftlf]
+          table_id: fx
 
 lai-AVH15C1:
   sources:
     lai: ilamb/lai/AVH15C1/lai.nc
   variable_cmap: Greens
+  test_cases:
+    - name: default
+      description: "Historical LAI from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/lai/AVH15C1/lai.nc
+      cmip6_requests:
+        - slug: lai
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: lai
+          member_id: r1i1p1f1
+          table_id: Lmon
+        - slug: supplementary
+          experiment_id: historical
+          source_id: ACCESS-ESM1-5
+          variable_id: [sftlf, areacella]
+          member_id: r1i1p1f1
+          table_id: fx
 
 nbp-Hoffman:
   analyses:
@@ -47,13 +151,62 @@ nbp-Hoffman:
   sources:
     # TODO: Update to use the obs4REF equiv
     nbp: ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
+  test_cases:
+    - name: default
+      description: "Historical NBP from ACCESS-ESM1-5 (long time series)"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
+      cmip6_requests:
+        - slug: nbp
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: nbp
+          member_id: r1i1p1f1
+          table_id: Lmon
+          time_span: ["1850-01", "2014-12"]
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [areacella, sftlf]
+          table_id: fx
 
 snc-ESACCI:
   sources:
     snc: ilamb/snc/Snow-cci/snc_mon_Snow-cci_BE_gn_198201-201906.nc
+  test_cases:
+    - name: default
+      description: "Historical snow cover from CESM2"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/snc/Snow-cci/snc_mon_Snow-cci_BE_gn_198201-201906.nc
+      cmip6_requests:
+        - slug: snc
+          source_id: CESM2
+          experiment_id: historical
+          variable_id: snc
+          member_id: r1i1p1f1
+          table_id: LImon
+        - slug: supplementary
+          source_id: CESM2
+          experiment_id: historical
+          variable_id: areacella
+          table_id: fx
 
 burntFractionAll-GFED:
   sources:
     burntArea: ilamb/burntFractionAll/GFED/burntArea.nc
   alternate_vars:
   - burntFractionAll
+  test_cases:
+    - name: default
+      description: "Historical burnt fraction from CESM2"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/burntFractionAll/GFED/burntArea.nc
+      cmip6_requests:
+        - slug: burnt
+          source_id: CESM2
+          experiment_id: historical
+          variable_id: burntFractionAll
+          member_id: r1i1p1f1
+          table_id: Lmon
+        - slug: supplementary
+          source_id: CESM2
+          experiment_id: historical
+          variable_id: areacella
+          table_id: fx

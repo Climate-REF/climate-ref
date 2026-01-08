@@ -8,6 +8,8 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -73,6 +75,59 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
         ),
     )
     facets = ()
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Climate drivers for fire from ACCESS-ESM1-5 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="atmos",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": ("hurs", "pr", "tas", "tasmax"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2013-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="land",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": ("cVeg", "treeFrac"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Lmon",
+                        },
+                        time_span=("2013-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="vegfrac",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "vegFrac",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Emon",
+                        },
+                        time_span=("2013-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="sftlf",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "sftlf",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
     @staticmethod
     def update_recipe(

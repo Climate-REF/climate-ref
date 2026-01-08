@@ -12,7 +12,9 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.pycmec.metric import remove_dimensions
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
 
 # =================================================================
@@ -249,6 +251,30 @@ class AnnualCycle(CommandLineDiagnostic):
         make_data_requirement("rsdt", "CERES-EBAF-4-2"),
         make_data_requirement("rsus", "CERES-EBAF-4-2"),
         make_data_requirement("rsut", "CERES-EBAF-4-2"),
+    )
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Annual cycle from ACCESS-ESM1-5 with ERA-5 reference",
+                requests=(
+                    CMIP6Request(
+                        slug="cmip6",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "psl",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                    # Note: PMPClimatology reference data (ERA-5 psl) must be fetched separately
+                    # as it is not available via ESGF.
+                ),
+            ),
+        ),
     )
 
     def __init__(self) -> None:

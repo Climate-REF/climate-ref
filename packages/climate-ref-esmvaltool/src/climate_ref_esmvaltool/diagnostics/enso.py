@@ -11,9 +11,11 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
@@ -63,6 +65,39 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
         ),
     )
     facets = ()
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="ENSO Basic Climatology from ACCESS-ESM1-5 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="atmos",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": ("pr", "tauu"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1850-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="ocean",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "tos",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Omon",
+                        },
+                        time_span=("1850-01", "2014-12"),
+                    ),
+                ),
+            ),
+        ),
+    )
 
     series = (
         tuple(
@@ -188,6 +223,37 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     # ENSO pattern and lifecycle are series, but the ESMValTool diagnostic
     # script does not save the values used in the figure.
     series = tuple()
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="ENSO Characteristics from ACCESS-ESM1-5 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="tos",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "tos",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Omon",
+                        },
+                        time_span=("1850-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacello",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "areacello",
+                            "table_id": "Ofx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
     @staticmethod
     def update_recipe(

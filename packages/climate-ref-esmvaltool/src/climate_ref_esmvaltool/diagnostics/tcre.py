@@ -11,8 +11,10 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
@@ -63,6 +65,48 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     facets = ("grid_label", "member_id", "source_id", "region", "metric")
     # TODO: the ESMValTool diagnostic script does not save the data for the timeseries.
     series = tuple()
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="TCRE from MPI-ESM1-2-LR esm-1pctCO2 and esm-piControl",
+                requests=(
+                    CMIP6Request(
+                        slug="esm-1pctco2",
+                        facets={
+                            "source_id": "MPI-ESM1-2-LR",
+                            "experiment_id": "esm-1pctCO2",
+                            "variable_id": ("tas", "fco2antt"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1850-01", "1990-12"),
+                    ),
+                    CMIP6Request(
+                        slug="esm-picontrol",
+                        facets={
+                            "source_id": "MPI-ESM1-2-LR",
+                            "experiment_id": "esm-piControl",
+                            "variable_id": "tas",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1850-01", "1990-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacella",
+                        facets={
+                            "source_id": "MPI-ESM1-2-LR",
+                            "experiment_id": "esm-piControl",
+                            "variable_id": "areacella",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
     @staticmethod
     def update_recipe(

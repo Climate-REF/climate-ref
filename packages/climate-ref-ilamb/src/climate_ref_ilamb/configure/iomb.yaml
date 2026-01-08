@@ -10,6 +10,23 @@ thetao-WOA2023-surface:
       value: 0
   alternate_vars:
   - tos
+  test_cases:
+    - name: default
+      description: "Historical ocean temperature from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/WOA/thetao_mon_WOA_A5B4_gn_200501-201412.nc
+      cmip6_requests:
+        - slug: thetao
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: thetao
+          member_id: r1i1p1f1
+          table_id: Omon
+          time_span: ["2005-01", "2014-12"]
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [volcello, sftof]
+          table_id: Ofx
 
 so-WOA2023-surface:
   sources:
@@ -21,6 +38,23 @@ so-WOA2023-surface:
   variable_cmap: YlGn
   alternate_vars:
   - sos
+  test_cases:
+    - name: default
+      description: "Historical sea surface salinity from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/WOA/so_mon_WOA_A5B4_gn_200501-201412.nc
+      cmip6_requests:
+        - slug: sos
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: sos
+          member_id: r1i1p1f1
+          table_id: Omon
+          time_span: ["2005-01", "2014-12"]
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: [volcello, sftof]
+          table_id: Ofx
 
 amoc-RAPID:
   analyses:
@@ -32,6 +66,23 @@ amoc-RAPID:
   sources:
     # TODO: Update to use the obs4REF equiv
     amoc: ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc
+  test_cases:
+    - name: default
+      description: "Historical AMOC from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc
+      cmip6_requests:
+        - slug: msftmz
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: msftmz
+          member_id: r1i1p1f1
+          table_id: Omon
+          time_span: ["2005-01", "2014-12"]
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: volcello
+          table_id: Ofx
 
 ohc-NOAA:
   sources:
@@ -47,3 +98,20 @@ ohc-NOAA:
       reference_year: 2005
   analyses:
   - accumulate
+  test_cases:
+    - name: default
+      description: "Historical ocean heat content from ACCESS-ESM1-5"
+      # TODO: Obs4REF data required (no fetcher yet): ilamb/NOAA/ohc_yr_OHC_BE_gm_200506-202406.nc
+      cmip6_requests:
+        - slug: thetao
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: thetao
+          member_id: r1i1p1f1
+          table_id: Omon
+          time_span: ["2005-01", "2014-12"]
+        - slug: supplementary
+          source_id: ACCESS-ESM1-5
+          experiment_id: historical
+          variable_id: volcello
+          table_id: Ofx

@@ -18,12 +18,68 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_ilamb.datasets import (
     registry_to_collection,
 )
+
+
+def _parse_test_cases_from_config(
+    test_cases_config: list[dict[str, Any]] | None,
+) -> TestDataSpecification | None:
+    """
+    Parse test cases configuration from YAML into a TestDataSpecification.
+
+    Parameters
+    ----------
+    test_cases_config
+        List of test case configurations from YAML, or None if not specified
+
+    Returns
+    -------
+        TestDataSpecification with parsed test cases, or None if no test cases specified
+    """
+    if not test_cases_config:
+        return None
+
+    parsed_cases: list[TestCase] = []
+    for tc_config in test_cases_config:
+        # Parse CMIP6 requests
+        requests: list[CMIP6Request] = []
+        for req_config in tc_config.get("cmip6_requests", []):
+            time_span = req_config.get("time_span")
+            if time_span is not None:
+                time_span = tuple(time_span)
+
+            # Convert list values to tuples for consistency
+            facets = {}
+            for k, v in req_config.items():
+                if k in ("slug", "time_span"):
+                    continue
+                facets[k] = tuple(v) if isinstance(v, list) else v
+
+            requests.append(
+                CMIP6Request(
+                    slug=req_config["slug"],
+                    facets=facets,
+                    time_span=time_span,
+                )
+            )
+
+        parsed_cases.append(
+            TestCase(
+                name=tc_config["name"],
+                description=tc_config.get("description", ""),
+                requests=tuple(requests) if requests else None,
+                datasets_file=tc_config.get("datasets_file"),
+            )
+        )
+
+    return TestDataSpecification(test_cases=tuple(parsed_cases))
 
 
 def format_cmec_output_bundle(
@@ -189,6 +245,11 @@ class ILAMBStandard(Diagnostic):
             ilamb_kwargs["sources"] = sources
         if "relationships" not in ilamb_kwargs:
             ilamb_kwargs["relationships"] = {}
+
+        # Extract and parse test_cases before passing to ilamb_kwargs
+        test_cases_config = ilamb_kwargs.pop("test_cases", None)
+        self.test_data_spec = _parse_test_cases_from_config(test_cases_config)
+
         self.ilamb_kwargs = ilamb_kwargs
 
         # REF stuff

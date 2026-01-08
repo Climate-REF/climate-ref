@@ -12,6 +12,8 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_pmp_command, process_json_result
 
 
@@ -74,9 +76,65 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         if self.mode_id in self.ts_modes:
             self.parameter_file = "pmp_param_MoV-ts.py"
             self.data_requirements = _get_data_requirements("HadISST-1-1", "ts", "ts")
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="default",
+                        description=f"{self.mode_id} mode with ACCESS-ESM1-5 ts data",
+                        requests=(
+                            CMIP6Request(
+                                slug=f"{self.mode_id.lower()}-ts",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "ts",
+                                    "member_id": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                            Obs4MIPsRequest(
+                                slug=f"{self.mode_id.lower()}-hadisst",
+                                facets={
+                                    "source_id": "HadISST-1-1",
+                                    "variable_id": "ts",
+                                },
+                            ),
+                        ),
+                    ),
+                ),
+            )
         elif self.mode_id in self.psl_modes:
             self.parameter_file = "pmp_param_MoV-psl.py"
             self.data_requirements = _get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="default",
+                        description=f"{self.mode_id} mode with ACCESS-ESM1-5 psl data",
+                        requests=(
+                            CMIP6Request(
+                                slug=f"{self.mode_id.lower()}-psl",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "psl",
+                                    "member_id": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                            Obs4MIPsRequest(
+                                slug=f"{self.mode_id.lower()}-20cr",
+                                facets={
+                                    "source_id": "20CR",
+                                    "variable_id": "psl",
+                                },
+                            ),
+                        ),
+                    ),
+                ),
+            )
         else:
             raise ValueError(
                 f"Unknown mode_id '{self.mode_id}'. Must be one of {self.ts_modes + self.psl_modes}"

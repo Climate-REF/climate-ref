@@ -13,6 +13,8 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import _get_resource, process_json_result
 
 
@@ -52,6 +54,109 @@ class ENSO(CommandLineDiagnostic):
             )
 
         self.data_requirements = self._get_data_requirements(experiments)
+
+        # Set test data specification based on metrics collection
+        if metrics_collection == "ENSO_tel":
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="default",
+                        description="ENSO teleconnections from ACCESS-ESM1-5 historical",
+                        requests=(
+                            CMIP6Request(
+                                slug="cmip6",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": ("pr", "ts"),
+                                    "member_id": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                            CMIP6Request(
+                                slug="supplementary",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": ("areacella", "sftlf"),
+                                    "table_id": "fx",
+                                },
+                            ),
+                            Obs4MIPsRequest(
+                                slug="obs4mips",
+                                facets={
+                                    "source_id": ("GPCP-Monthly-3-2", "HadISST-1-1"),
+                                    "variable_id": ("pr", "ts"),
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
+        elif metrics_collection == "ENSO_proc":
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="default",
+                        description="ENSO processes from ACCESS-ESM1-5 historical",
+                        requests=(
+                            CMIP6Request(
+                                slug="cmip6",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": (
+                                        "ts",
+                                        "tauu",
+                                        "hfls",
+                                        "hfss",
+                                        "rlds",
+                                        "rlus",
+                                        "rsds",
+                                        "rsus",
+                                    ),
+                                    "member_id": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                            CMIP6Request(
+                                slug="supplementary",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": ("areacella", "sftlf"),
+                                    "table_id": "fx",
+                                },
+                            ),
+                            Obs4MIPsRequest(
+                                slug="obs4mips",
+                                facets={
+                                    "source_id": (
+                                        "GPCP-Monthly-3-2",
+                                        "TropFlux-1-0",
+                                        "HadISST-1-1",
+                                        "CERES-EBAF-4-2",
+                                    ),
+                                    "variable_id": (
+                                        "ts",
+                                        "tauu",
+                                        "hfls",
+                                        "hfss",
+                                        "rlds",
+                                        "rlus",
+                                        "rsds",
+                                        "rsus",
+                                    ),
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
 
     def _get_data_requirements(
         self,

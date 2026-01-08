@@ -10,6 +10,8 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -80,6 +82,37 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
     data_requirements = get_cmip6_data_requirements(("clt", "rsut", "rsutcs"))
     update_recipe = partial(update_recipe, var_x="clt", var_y="swcre")
 
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Cloud scatterplot clt vs swcre from CESM2 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="cloud",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": ("clt", "rsut", "rsutcs"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1996-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacella",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": "areacella",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
+
 
 class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     """
@@ -92,6 +125,37 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip6_data_requirements(("clwvi", "pr"))
     update_recipe = partial(update_recipe, var_x="clwvi", var_y="pr")
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Cloud scatterplot clwvi vs pr from CESM2 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="cloud",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": ("clwvi", "pr"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1996-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacella",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": "areacella",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
 
 class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
@@ -106,6 +170,37 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
     data_requirements = get_cmip6_data_requirements(("clivi", "rlut", "rlutcs"))
     update_recipe = partial(update_recipe, var_x="clivi", var_y="lwcre")
 
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Cloud scatterplot clivi vs lwcre from CESM2 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="cloud",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": ("clivi", "rlut", "rlutcs"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1996-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacella",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": "areacella",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
+
 
 class CloudScatterplotCliTa(ESMValToolDiagnostic):
     """
@@ -118,6 +213,37 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip6_data_requirements(("cli", "ta"))
     update_recipe = partial(update_recipe, var_x="cli", var_y="ta")
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Cloud scatterplot cli vs ta from CESM2 historical",
+                requests=(
+                    CMIP6Request(
+                        slug="cloud",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": ("cli", "ta"),
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("1996-01", "2014-12"),
+                    ),
+                    CMIP6Request(
+                        slug="areacella",
+                        facets={
+                            "source_id": "CESM2",
+                            "experiment_id": "historical",
+                            "variable_id": "areacella",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
 
 class CloudScatterplotsReference(ESMValToolDiagnostic):
@@ -164,6 +290,25 @@ class CloudScatterplotsReference(ESMValToolDiagnostic):
             # - https://github.com/esMValGroup/esMValCore/issues/2712
             # - https://github.com/esMValGroup/esMValCore/issues/2711
             # - https://github.com/sciTools/iris/issues/6411
+        ),
+    )
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Cloud scatterplot reference from ERA-5 obs4MIPs",
+                requests=(
+                    Obs4MIPsRequest(
+                        slug="era5-ta",
+                        facets={
+                            "source_id": "ERA-5",
+                            "variable_id": "ta",
+                        },
+                        time_span=("2007-01", "2015-12"),
+                    ),
+                ),
+            ),
         ),
     )
 

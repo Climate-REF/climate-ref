@@ -8,7 +8,9 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -32,6 +34,36 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     name = "Sea ice area basic"
     slug = "sea-ice-area-basic"
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="default",
+                description="Historical sea ice area from ACCESS-ESM1-5 (matches ref-sample-data)",
+                requests=(
+                    CMIP6Request(
+                        slug="siconc",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "siconc",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "SImon",
+                        },
+                    ),
+                    CMIP6Request(
+                        slug="areacello",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "areacello",
+                            "table_id": "Ofx",
+                        },
+                    ),
+                ),
+            ),
+        ),
+    )
 
     data_requirements = (
         DataRequirement(

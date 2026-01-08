@@ -4,7 +4,7 @@ This guide explains how to set up reproducible tests for your diagnostic provide
 The testing infrastructure allows you to define `test cases`.
 
 Each `test case` describes an execution of a diagnostic with specific datasets.
-The test infrastructure takes case of fetching data from ESGF, running the diagnotic execution and,
+The test infrastructure takes care of fetching data from ESGF, running the diagnostic execution and,
 tracking the outputs as regression tests.
 
 ## Overview
@@ -23,7 +23,7 @@ the testing infrastructure allows:
 - **Selective fetching**: Developers only need to download test data for the diagnostics they're working on, not the entire test suite.
     This saves disk space and download time.
 
-- **Independent testing**: Updates to a diagnostics data requirements doesn't impact other diagnostics results.
+- **Independent testing**: Updates to a diagnostic's data requirements don't impact other diagnostics results.
     This makes it easier to contribute new diagnostics.
 
 - **Reproducible results**: By pinning specific ESGF datasets (source, experiment, time range),

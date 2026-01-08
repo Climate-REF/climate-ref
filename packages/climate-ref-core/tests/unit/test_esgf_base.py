@@ -223,3 +223,33 @@ class TestIntakeESGFMixin:
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
             with pytest.raises(ValueError, match="No datasets found"):
                 request.fetch_datasets()
+
+    def test_fetch_datasets_converts_tuples_to_lists(self):
+        """Test that tuple facet values are converted to lists for intake-esgf compatibility."""
+        request = CMIP6Request(
+            slug="test",
+            facets={
+                "source_id": "ACCESS-ESM1-5",
+                "variable_id": ("sftlf", "areacella"),  # Tuple should be converted to list
+            },
+        )
+
+        mock_cat = MagicMock()
+        mock_cat.df = pd.DataFrame(
+            {
+                "key": ["ds1", "ds2"],
+                "source_id": ["ACCESS-ESM1-5", "ACCESS-ESM1-5"],
+            }
+        )
+        mock_cat.to_path_dict.return_value = {
+            "ds1": ["/path/to/sftlf.nc"],
+            "ds2": ["/path/to/areacella.nc"],
+        }
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
+            request.fetch_datasets()
+
+        # Verify the tuple was converted to a list before being passed to search
+        call_kwargs = mock_cat.search.call_args.kwargs
+        assert call_kwargs["variable_id"] == ["sftlf", "areacella"]
+        assert isinstance(call_kwargs["variable_id"], list)

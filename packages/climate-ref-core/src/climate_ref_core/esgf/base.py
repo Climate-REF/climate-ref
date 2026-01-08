@@ -99,6 +99,11 @@ class IntakeESGFMixin:
             facets["file_start"] = self.time_span[0]
             facets["file_end"] = self.time_span[1]
 
+        # Convert tuples to lists for intake-esgf compatibility
+        for key, value in facets.items():
+            if isinstance(value, tuple):
+                facets[key] = list(value)
+
         cat = ESGFCatalog()  # type: ignore[no-untyped-call]
         cat.search(**facets)
 

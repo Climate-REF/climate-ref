@@ -157,9 +157,6 @@ def run_test_case(
     """
     Fixture for running diagnostic test cases.
 
-    Note: Tests should provide explicit datasets via test_data_spec.datasets
-    or use catalog YAML files created by `ref test-cases fetch`.
-
     Example
     -------
     ```python

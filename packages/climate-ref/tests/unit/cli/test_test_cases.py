@@ -1,9 +1,11 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
 
 from climate_ref.cli.test_cases import (
+    _build_catalog,
     _fetch_and_build_catalog,
     _find_diagnostic,
 )
@@ -66,6 +68,36 @@ def mock_test_case():
     return tc
 
 
+class TestBuildCatalog:
+    """Tests for _build_catalog function."""
+
+    def test_empty_df_after_filtering(self, caplog):
+        """Test warning when no matching files found after filtering."""
+        mock_adapter = MagicMock()
+        # Adapter returns df but none match the fetched files
+        mock_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {"path": ["/other/file.nc"], "variable_id": ["tas"]}
+        )
+
+        file_paths = [Path("/path/to/fetched.nc")]
+        result = _build_catalog(mock_adapter, file_paths)
+
+        assert len(result) == 0
+        assert "No matching files found" in caplog.text
+
+    def test_adapter_exception_logged(self, caplog):
+        """Test exception from adapter is logged as warning and concat fails."""
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.side_effect = Exception("Parse error")
+
+        file_paths = [Path("/path/to/file.nc")]
+        # When all directories fail, pd.concat([]) raises ValueError
+        with pytest.raises(ValueError, match="No objects to concatenate"):
+            _build_catalog(mock_adapter, file_paths)
+
+        assert "Failed to parse" in caplog.text
+
+
 class TestFetchAndBuildCatalog:
     """Tests for _fetch_and_build_catalog function."""
 
@@ -107,6 +139,53 @@ class TestFetchAndBuildCatalog:
             _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
         mock_save.assert_called_once_with(mock_datasets, catalog_path)
+
+    def test_obs4mips_data_returned(self, mock_diagnostic, mock_test_case):
+        """Test with obs4MIPs data returns properly grouped catalog."""
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame(
+            {
+                "source_type": ["obs4MIPs"],
+                "source_id": ["GPCP-SG"],
+                "variable_id": ["pr"],
+                "path": ["/path/to/pr.nc"],
+            }
+        )
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "instance_id": ["obs4MIPs.test.pr"],
+                "source_id": ["GPCP-SG"],
+                "variable_id": ["pr"],
+                "path": ["/path/to/pr.nc"],
+            }
+        )
+        mock_datasets = MagicMock()
+
+        with (
+            patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.cli.test_cases.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.cli.test_cases.solve_test_case", return_value=mock_datasets),
+            patch("climate_ref.cli.test_cases.get_catalog_path", return_value=None),
+        ):
+            result = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
+
+        assert result is mock_datasets
+
+    def test_empty_data_catalog_raises_error(self, mock_diagnostic, mock_test_case):
+        """Test error when data catalog is empty after building."""
+        mock_fetcher = MagicMock()
+        # Return data with unknown source type that won't be processed
+        mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame(
+            {
+                "source_type": ["unknown"],
+                "path": ["/path/to/file.nc"],
+            }
+        )
+
+        with patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher):
+            with pytest.raises(DatasetResolutionError, match="No datasets found"):
+                _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
 
 class TestFindDiagnostic:
@@ -204,6 +283,45 @@ class TestListCasesCommand:
         result = invoke_cli(["test-cases", "list", "--provider", "example"])
         assert result.exit_code == 0
 
+    def test_list_shows_no_test_data_spec(self, invoke_cli, mocker):
+        """Test that list shows diagnostics without test_data_spec."""
+        mock_diag = MagicMock(slug="no-spec-diag", test_data_spec=None)
+        mock_provider = MagicMock(slug="test-provider")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        result = invoke_cli(["test-cases", "list"])
+        assert result.exit_code == 0
+        assert "no test_data_spec" in result.stdout
+
+    def test_list_filters_by_provider(self, invoke_cli, mocker):
+        """Test that list command filters providers correctly."""
+        mock_diag1 = MagicMock(slug="diag1", test_data_spec=None)
+        mock_diag2 = MagicMock(slug="diag2", test_data_spec=None)
+
+        mock_provider1 = MagicMock(slug="provider1")
+        mock_provider1.diagnostics.return_value = [mock_diag1]
+        mock_provider2 = MagicMock(slug="provider2")
+        mock_provider2.diagnostics.return_value = [mock_diag2]
+
+        mock_registry = MagicMock(providers=[mock_provider1, mock_provider2])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        result = invoke_cli(["test-cases", "list", "--provider", "provider1"])
+        assert result.exit_code == 0
+        assert "provider1" in result.stdout
+        # provider2 should be filtered out
+        assert "provider2" not in result.stdout
+
 
 class TestRunTestCaseCommand:
     """Tests for run test case CLI command."""
@@ -274,6 +392,19 @@ class TestRunTestCaseCommand:
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test", "--fetch"],
         )
         assert result.exit_code == 0
+
+    def test_run_with_fetch_flag_raises_error(self, invoke_cli, mocker, mock_diagnostic):
+        """Test run command with --fetch flag handles DatasetResolutionError."""
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
+        mocker.patch(
+            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            side_effect=DatasetResolutionError("No datasets found"),
+        )
+
+        invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test", "--fetch"],
+            expected_exit_code=1,
+        )
 
     @pytest.mark.parametrize(
         "exception_cls,exception_msg",

@@ -1,0 +1,102 @@
+INFO    [68436] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [68436] Package versions
+INFO    [68436] ----------------
+INFO    [68436] ESMValCore: 2.12.0
+INFO    [68436] ESMValTool: 2.13.0.dev148+g2c438d0e0
+INFO    [68436] ----------------
+INFO    [68436] Reading configuration files from:
+/home/bandela/climate_ref/software/conda/esmvaltool-1b3bf252de04f119f83bfe65fac5aa040d9d97b4/lib/python3.12/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/bandela/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [68436] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20251002_203243/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20251002_203243/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20251002_203243/run/cmor_log.txt
+INFO    [68436] Starting the Earth System Model Evaluation Tool at time: 2025-10-02 20:32:43 UTC
+INFO    [68436] ----------------------------------------------------------------------
+INFO    [68436] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [68436] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20251002_203243/run
+INFO    [68436] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20251002_203243/work
+INFO    [68436] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20251002_203243/preproc
+INFO    [68436] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20251002_203243/plots
+INFO    [68436] ----------------------------------------------------------------------
+INFO    [68436] Running tasks using at most 1 processes
+INFO    [68436] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [68436] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [68436] Creating tasks from recipe
+INFO    [68436] Creating tasks for diagnostic ecs
+INFO    [68436] Creating diagnostic task ecs/calculate
+INFO    [68436] Creating preprocessor task ecs/tas
+INFO    [68436] Creating preprocessor 'spatial_mean' task for variable 'tas'
+INFO    [68436] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, CMIP, abrupt-4xCO2, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [68436] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, CMIP, piControl, r1i1p1f1, gn, v20210316, supplementaries: areacella, fx
+INFO    [68436] PreprocessingTask ecs/tas created.
+INFO    [68436] Creating preprocessor task ecs/rtnt
+INFO    [68436] Creating preprocessor 'spatial_mean' task for variable 'rtnt'
+INFO    [68436] Found input files for Dataset: rtnt, Amon, CMIP6, ACCESS-ESM1-5, CMIP, abrupt-4xCO2, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [68436] Found input files for Dataset: rtnt, Amon, CMIP6, ACCESS-ESM1-5, CMIP, piControl, r1i1p1f1, gn, v20210316, supplementaries: areacella, fx
+INFO    [68436] PreprocessingTask ecs/rtnt created.
+INFO    [68436] These tasks will be executed: ecs/tas, ecs/rtnt, ecs/calculate
+INFO    [68436] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20251002_203243/run/recipe_filled.yml
+INFO    [68436] Using Dask distributed scheduler (address: tcp://127.0.0.1:35003, dashboard link: http://127.0.0.1:8787/status)
+INFO    [68436] Running 3 tasks sequentially
+INFO    [68436] Starting task ecs/tas in process [68436]
+INFO    [68436] Computing and saving data for preprocessing task ecs/tas
+INFO    [68436] Successfully completed task ecs/tas (priority 1) in 0:00:02.232204
+INFO    [68436] Starting task ecs/rtnt in process [68436]
+INFO    [68436] Computing and saving data for preprocessing task ecs/rtnt
+INFO    [68436] Successfully completed task ecs/rtnt (priority 2) in 0:00:01.209634
+INFO    [68436] Starting task ecs/calculate in process [68436]
+INFO    [68436] Running command ['/home/bandela/climate_ref/software/conda/esmvaltool-1b3bf252de04f119f83bfe65fac5aa040d9d97b4/bin/python', '/home/bandela/climate_ref/software/conda/esmvaltool-1b3bf252de04f119f83bfe65fac5aa040d9d97b4/lib/python3.12/site-packages/esmvaltool/diag_scripts/climate_metrics/ecs.py', '<OUTPUT_DIR>/executions/recipe_20251002_203243/run/ecs/calculate/settings.yml']
+INFO    [68436] Writing output to <OUTPUT_DIR>/executions/recipe_20251002_203243/work/ecs/calculate
+INFO    [68436] Writing plots to <OUTPUT_DIR>/executions/recipe_20251002_203243/plots/ecs/calculate
+INFO    [68436] Writing log to <OUTPUT_DIR>/executions/recipe_20251002_203243/run/ecs/calculate/log.txt
+INFO    [68436] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20251002_203243/run/ecs/calculate; MPLBACKEND="Agg" /home/bandela/climate_ref/software/conda/esmvaltool-1b3bf252de04f119f83bfe65fac5aa040d9d97b4/bin/python /home/bandela/climate_ref/software/conda/esmvaltool-1b3bf252de04f119f83bfe65fac5aa040d9d97b4/lib/python3.12/site-packages/esmvaltool/diag_scripts/climate_metrics/ecs.py <OUTPUT_DIR>/executions/recipe_20251002_203243/run/ecs/calculate/settings.yml
+INFO    [68436] Maximum memory used (estimate): 0.5 GB
+INFO    [68436] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [68436] Successfully completed task ecs/calculate (priority 0) in 0:00:10.994423
+INFO    [68436] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20251002_203243/run/recipe_filled.yml
+INFO    [68436] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20251002_203243/index.html
+INFO    [68436] Ending the Earth System Model Evaluation Tool at time: 2025-10-02 20:33:00 UTC
+INFO    [68436] Time for running the recipe was: 0:00:16.298496
+INFO    [68436] Maximum memory used (estimate): 1.5 GB
+INFO    [68436] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [68436] Removing `preproc` directory containing preprocessed data
+INFO    [68436] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+WARNING [68436] Input data is not (fully) CMOR-compliant, see <OUTPUT_DIR>/executions/recipe_20251002_203243/run/cmor_log.txt for details
+INFO    [68436] Run was successful

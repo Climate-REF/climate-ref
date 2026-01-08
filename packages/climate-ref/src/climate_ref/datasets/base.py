@@ -383,23 +383,15 @@ class DatasetAdapter(Protocol):
             else:
                 catalog = self._get_datasets(db, limit)
 
-        def _get_latest_version(dataset_catalog: pd.DataFrame) -> pd.DataFrame:
-            """
-            Get the latest version of each dataset based on the version metadata.
-
-            This assumes that the version can be sorted lexicographically.
-            """
-            latest_version = dataset_catalog[self.version_metadata].max()
-
-            return cast(
-                pd.DataFrame, dataset_catalog[dataset_catalog[self.version_metadata] == latest_version]
-            )
-
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:
             return pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
 
-        # Group by the dataset ID and get the latest version for each dataset
-        return catalog.groupby(
-            list(self.dataset_id_metadata), group_keys=False, as_index=False, sort=False
-        ).apply(_get_latest_version)
+        # Get the latest version for each dataset group
+        # Uses transform to compute max version per group, then filters rows matching the max
+        # This assumes version can be sorted lexicographically
+        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
+            self.version_metadata
+        ].transform("max")
+
+        return catalog[catalog[self.version_metadata] == max_version_per_group]

@@ -141,18 +141,17 @@ def test_database_cvs(config, mocker):
     mock_register_cv = mocker.patch.object(MetricValue, "register_cv_dimensions")
     mock_cv = mocker.patch.object(CV, "load_from_file", return_value=cv)
 
-    db = Database.from_config(config, run_migrations=True)
+    with Database.from_config(config, run_migrations=True) as db:
+        # CV is loaded once during a migration and once with each call to _add_dimension_columns
+        assert mock_cv.call_count == 3
+        mock_cv.assert_called_with(config.paths.dimensions_cv)
+        mock_register_cv.assert_called_once_with(mock_cv.return_value)
 
-    # CV is loaded once during a migration and once with each call to _add_dimension_columns
-    assert mock_cv.call_count == 3
-    mock_cv.assert_called_with(config.paths.dimensions_cv)
-    mock_register_cv.assert_called_once_with(mock_cv.return_value)
-
-    # Verify that the dimensions have automatically been created
-    inspector = inspect(db._engine)
-    existing_columns = [c["name"] for c in inspector.get_columns("metric_value")]
-    for dimension in cv.dimensions:
-        assert dimension.name in existing_columns
+        # Verify that the dimensions have automatically been created
+        inspector = inspect(db._engine)
+        existing_columns = [c["name"] for c in inspector.get_columns("metric_value")]
+        for dimension in cv.dimensions:
+            assert dimension.name in existing_columns
 
 
 def test_create_backup(tmp_path):
@@ -224,7 +223,8 @@ def test_migrate_creates_backup(tmp_path, config):
     config.db.max_backups = 2
 
     # Create database instance and run migrations
-    Database.from_config(config, run_migrations=True)
+    db = Database.from_config(config, run_migrations=True)
+    db.close()
 
     # Verify backup was created
     backup_dir = db_path.parent / "backups"
@@ -238,7 +238,8 @@ def test_migrate_no_backup_for_memory_db(config):
     config.db.database_url = "sqlite:///:memory:"
 
     # Create database instance and run migrations
-    Database.from_config(config, run_migrations=True)
+    db = Database.from_config(config, run_migrations=True)
+    db.close()
 
     # Verify no backup directory was created
     assert not (Path("backups")).exists()

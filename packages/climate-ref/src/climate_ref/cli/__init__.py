@@ -164,7 +164,9 @@ def main(  # noqa: PLR0913
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
 
-    ctx.obj = CLIContext(config=config, database=Database.from_config(config), console=_create_console())
+    # Use ctx.with_resource to ensure the database connection is closed when the CLI exits
+    database = ctx.with_resource(Database.from_config(config))
+    ctx.obj = CLIContext(config=config, database=database, console=_create_console())
 
 
 if __name__ == "__main__":

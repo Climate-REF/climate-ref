@@ -37,6 +37,7 @@ def mock_definition(mocker, definition_factory):
     return definition
 
 
+@pytest.mark.filterwarnings("ignore:Unknown dimension values.*CalendarMonths.*:UserWarning")
 def test_handle_execution_result_successful(
     db, config, mock_execution_result, mocker, mock_definition, test_data_dir
 ):
@@ -74,6 +75,7 @@ def test_handle_execution_result_successful(
     assert scalars[0].type == MetricValueType.SCALAR
 
 
+@pytest.mark.filterwarnings("ignore:Unknown dimension values.*CalendarMonths.*:UserWarning")
 def test_handle_execution_result_with_series(
     db, config, mock_execution_result, mocker, mock_definition, test_data_dir
 ):

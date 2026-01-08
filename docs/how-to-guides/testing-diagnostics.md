@@ -254,20 +254,23 @@ ref test-cases fetch --provider my-provider --diagnostic my-diagnostic
 # Dry run (show what would be fetched)
 ref test-cases fetch --dry-run
 
-# Specify custom output directory
-ref test-cases fetch --output-directory /path/to/esgf-data
+# Fetch and run a test case in one step
+ref test-cases run --provider my-provider --diagnostic my-diagnostic --fetch
 ```
 
-Data is downloaded to `tests/test-data/esgf-data/` following the DRS structure:
+When data is fetched, it is stored in intake-esgf's cache directory and a catalog YAML file
+is saved to track the resolved datasets:
 
 ```raw
-tests/test-data/esgf-data/
-├── CMIP6/
-│   └── CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/tas/gn/v20191115/
-│       └── tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-201412.nc
-└── obs4MIPs/
-    └── ...
+tests/test-data/esgf-data/.catalogs/
+├── my-provider/
+│   └── my-diagnostic/
+│       └── default.yaml      # Catalog with dataset metadata and paths
+└── ...
 ```
+
+The catalog YAML contains all the metadata needed to run the test case,
+including paths to the local datasets.
 
 #### Data Caching
 
@@ -278,7 +281,8 @@ to download datasets from ESGF if they cannot be found locally.
 - **`esg_dataroot`**: Paths checked FIRST for existing data (read-only). Ideal for institutional ESGF mirrors or shared drives.
 - **`local_cache`**: Where new downloads are stored if not found in `esg_dataroot`.
 
-Once `intake-esgf` either finds a dataset locally, or downloads a new file, it is symlinked into the test data directory (`tests/test-data/esgf-data/`).
+The fetch command saves a catalog YAML file that records the paths to these files,
+so subsequent test runs can locate the data without re-scanning directories.
 
 /// Note | Using Shared ESGF Data (HPC/Shared Drives)
 
@@ -523,10 +527,11 @@ class TemperatureBias(Diagnostic):
    ref test-cases list --provider my-provider
    ```
 
-2. **Check fetched data**:
+2. **Check fetched data catalogs**:
 
    ```bash
-   ls tests/test-data/esgf-data/CMIP6/
+   ls tests/test-data/esgf-data/.catalogs/
+   cat tests/test-data/esgf-data/.catalogs/my-provider/my-diagnostic/default.yaml
    ```
 
 3. **Run with verbose logging**:

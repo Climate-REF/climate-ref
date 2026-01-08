@@ -5,7 +5,6 @@ Testing utilities
 import shutil
 from pathlib import Path
 
-import pandas as pd
 from attrs import define
 from loguru import logger
 
@@ -14,7 +13,7 @@ from climate_ref.database import Database
 from climate_ref.executor import handle_execution_result
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
@@ -31,8 +30,33 @@ def _determine_test_directory() -> Path | None:
 
 
 TEST_DATA_DIR = _determine_test_directory()
+"""Path to the test data directory, or None if it doesn't exist."""
 ESGF_DATA_DIR = TEST_DATA_DIR / "esgf-data" if TEST_DATA_DIR else None
+"""Path to the ESGF test data directory, or None if TEST_DATA_DIR doesn't exist."""
 SAMPLE_DATA_VERSION = "v0.7.4"
+
+
+def get_catalog_path(provider: str, diagnostic: str, test_case: str) -> Path | None:
+    """
+    Get path to pre-built catalog file for a test case.
+
+    Parameters
+    ----------
+    provider
+        Provider slug (e.g., 'esmvaltool', 'ilamb')
+    diagnostic
+        Diagnostic slug (e.g., 'ecs', 'gpp-fluxcom')
+    test_case
+        Test case name (e.g., 'default')
+
+    Returns
+    -------
+    Path | None
+        Path to the catalog YAML file, or None if ESGF_DATA_DIR is not set
+    """
+    if ESGF_DATA_DIR is None:
+        return None
+    return ESGF_DATA_DIR / ".catalogs" / provider / diagnostic / f"{test_case}.yaml"
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:
@@ -127,13 +151,12 @@ class TestCaseRunner:
     Helper class for running diagnostic test cases.
 
     This runner handles:
-    - Resolving test case datasets (from explicit datasets, YAML file, or solving)
+    - Running the diagnostic with pre-resolved datasets
     - Setting up the execution definition
-    - Running the diagnostic
     """
 
     config: Config
-    data_catalog: dict[SourceDatasetType, pd.DataFrame] | None = None
+    datasets: ExecutionDatasetCollection | None = None
 
     def run(
         self,
@@ -175,17 +198,10 @@ class TestCaseRunner:
                 f"Test case {test_case_name!r} not found. Available: {diagnostic.test_data_spec.case_names}"
             )
 
-        test_case = diagnostic.test_data_spec.get_case(test_case_name)
-
-        # Try to resolve datasets
-        try:
-            datasets = test_case.resolve_datasets(
-                data_catalog=self.data_catalog,
-                diagnostic=diagnostic,
-                package_dir=None,
+        if self.datasets is None:
+            raise DatasetResolutionError(
+                "No datasets provided. Run 'ref test-cases fetch' first to build the catalog."
             )
-        except ValueError as e:
-            raise DatasetResolutionError(f"Could not resolve datasets: {e}") from e
 
         # Determine output directory
         if output_dir is None:
@@ -203,7 +219,7 @@ class TestCaseRunner:
         definition = ExecutionDefinition(
             diagnostic=diagnostic,
             key=f"test-{test_case_name}",
-            datasets=datasets,
+            datasets=self.datasets,
             output_directory=output_dir,
             root_directory=output_dir.parent,
         )

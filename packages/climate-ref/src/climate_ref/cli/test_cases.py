@@ -7,23 +7,127 @@ a source checkout of the project with test data directories available.
 
 import shutil
 from pathlib import Path
-from typing import Annotated, Any
+from typing import Annotated
 
 import pandas as pd
 import typer
 from loguru import logger
+from rich.table import Table
 
 from climate_ref.config import Config
+from climate_ref.datasets import CMIP6DatasetAdapter, DatasetAdapter, Obs4MIPsDatasetAdapter
 from climate_ref.provider_registry import ProviderRegistry
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref.testing import TEST_DATA_DIR, TestCaseRunner, get_catalog_path
+from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
+from climate_ref_core.esgf import ESGFFetcher
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
+from climate_ref_core.testing import TestCase, load_datasets_from_yaml, save_datasets_to_yaml, solve_test_case
 
 app = typer.Typer(help=__doc__)
+
+
+def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> pd.DataFrame:
+    """
+    Parses a list of datasets using a dataset adapter
+
+    Parameters
+    ----------
+    file_paths
+        List of files to build a catalog from
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame catalog of datasets with metadata and paths
+    """
+    # Collect unique parent directories since the adapter scans directories
+    parent_dirs = list({fp.parent for fp in file_paths})
+
+    catalog_dfs = []
+    for parent_dir in parent_dirs:
+        try:
+            df = dataset_adapter.find_local_datasets(parent_dir)
+
+            # Filter to only include the files we fetched
+            fetched_files = {str(fp) for fp in file_paths}
+            df = df[df["path"].isin(fetched_files)]
+            if df.empty:
+                logger.warning(f"No matching files found in catalog for {parent_dir}")
+            catalog_dfs.append(df)
+        except Exception as e:
+            logger.warning(f"Failed to parse {parent_dir}: {e}")
+
+    return pd.concat(catalog_dfs, ignore_index=True)
+
+
+def _fetch_and_build_catalog(
+    diag: Diagnostic,
+    tc: TestCase,
+) -> ExecutionDatasetCollection:
+    """
+    Fetch test data and build catalog.
+
+    This function:
+    1. Fetches ESGF data using ESGFFetcher (files stored in intake-esgf cache)
+    2. Uses CMIP6DatasetAdapter to create a data catalog
+    3. Solves for datasets using the diagnostic's data requirements
+    4. Writes catalog YAML to .catalogs/{provider}/{diagnostic}/{test_case}.yaml
+    5. Returns the solved datasets
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to fetch data for
+    tc
+        The test case to fetch data for
+
+    Returns
+    -------
+    ExecutionDatasetCollection
+        The solved datasets for this test case
+    """
+    fetcher = ESGFFetcher()
+
+    # Fetch all requests - returns DataFrame with metadata + paths
+    combined = fetcher.fetch_for_test_case(tc.requests)
+
+    if combined.empty:
+        raise DatasetResolutionError(
+            f"No datasets found for {diag.provider.slug}/{diag.slug} test case '{tc.name}'"
+        )
+
+    # Group paths by source type and use adapters to build proper catalog
+    data_catalog: dict[SourceDatasetType, pd.DataFrame] = {}
+
+    for source_type, group_df in combined.groupby("source_type"):
+        file_paths = [Path(p) for p in group_df["path"].unique().tolist()]
+
+        if source_type == "CMIP6":
+            data_catalog[SourceDatasetType.CMIP6] = _build_catalog(CMIP6DatasetAdapter(), file_paths)
+
+        elif source_type == "obs4MIPs":
+            data_catalog[SourceDatasetType.obs4MIPs] = _build_catalog(Obs4MIPsDatasetAdapter(), file_paths)
+
+    if not data_catalog:
+        raise DatasetResolutionError(
+            f"No datasets found for {diag.provider.slug}/{diag.slug} test case '{tc.name}'"
+        )
+
+    # Solve for datasets
+    datasets = solve_test_case(diag, data_catalog)
+
+    # Write catalog YAML
+    catalog_path = get_catalog_path(diag.provider.slug, diag.slug, tc.name)
+    if catalog_path:
+        save_datasets_to_yaml(datasets, catalog_path)
+        logger.info(f"Saved catalog to {catalog_path}")
+
+    return datasets
 
 
 @app.command(name="fetch")
@@ -41,18 +145,10 @@ def fetch_test_data(  # noqa: PLR0912
         str | None,
         typer.Option(help="Specific test case name to fetch data for"),
     ] = None,
-    output_directory: Annotated[
-        Path | None,
-        typer.Option(help="Output directory for test data"),
-    ] = None,
     dry_run: Annotated[
         bool,
         typer.Option(help="Show what would be fetched without downloading"),
     ] = False,
-    symlink: Annotated[
-        bool,
-        typer.Option(help="Symlink files instead of copying (default: True)"),
-    ] = True,
 ) -> None:
     """
     Fetch test data from ESGF for running diagnostic tests.
@@ -66,18 +162,8 @@ def fetch_test_data(  # noqa: PLR0912
         ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
         ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
     """
-    from climate_ref.testing import ESGF_DATA_DIR  # noqa: PLC0415
-    from climate_ref_core.esgf import ESGFFetcher  # noqa: PLC0415
-
     config = ctx.obj.config
     db = ctx.obj.database
-
-    # Determine output directory
-    if output_directory is None:
-        if ESGF_DATA_DIR is None:
-            logger.error("Test data directory not found. Please specify --output-directory")
-            raise typer.Exit(code=1)
-        output_directory = ESGF_DATA_DIR
 
     # Build provider registry to access diagnostics
     registry = ProviderRegistry.build_from_config(config, db)
@@ -115,9 +201,7 @@ def fetch_test_data(  # noqa: PLR0912
                             logger.info(f"    Request: {req.slug} ({req.source_type})")
         return
 
-    # Create fetcher and process requests
-    fetcher = ESGFFetcher(output_dir=output_directory)
-
+    # Process each diagnostic test case
     for diag in diagnostics_to_process:
         logger.info(f"Fetching data for: {diag.provider.slug}/{diag.slug}")
         if diag.test_data_spec:
@@ -126,8 +210,10 @@ def fetch_test_data(  # noqa: PLR0912
                     continue
                 if tc.requests:
                     logger.info(f"  Processing test case: {tc.name}")
-                    for req in tc.requests:
-                        fetcher.fetch_request(req, symlink=symlink)
+                    try:
+                        _fetch_and_build_catalog(diag, tc)
+                    except DatasetResolutionError as e:
+                        logger.warning(f"  Could not build catalog for {tc.name}: {e}")
 
 
 @app.command(name="list")
@@ -149,8 +235,6 @@ def list_cases(
 
     # Build provider registry to access diagnostics
     registry = ProviderRegistry.build_from_config(config, db)
-
-    from rich.table import Table  # noqa: PLC0415
 
     table = Table(title="Test Data Specifications")
     table.add_column("Provider", style="cyan")
@@ -185,115 +269,6 @@ def list_cases(
                 )
 
     console.print(table)
-
-
-def _build_esgf_data_catalog(
-    requests: tuple[Any, ...] | None,
-) -> dict[SourceDatasetType, pd.DataFrame]:
-    """
-    Build data catalog from local ESGF test data, filtered by test case requests.
-
-    Only includes datasets that match the facets specified in the test case requests.
-    This ensures test repeatability by using only the specified datasets.
-
-    Parameters
-    ----------
-    requests
-        ESGF requests from the test case. Only datasets matching these requests
-        will be included in the catalog.
-
-    Returns
-    -------
-    dict[SourceDatasetType, pd.DataFrame]
-        Filtered data catalog containing only datasets matching the requests.
-    """
-    from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter  # noqa: PLC0415
-    from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter  # noqa: PLC0415
-    from climate_ref.testing import ESGF_DATA_DIR  # noqa: PLC0415
-
-    data_catalog: dict[SourceDatasetType, pd.DataFrame] = {}
-
-    if ESGF_DATA_DIR is None:
-        return data_catalog
-
-    if requests is None:
-        return data_catalog
-
-    esgf_data_dir = ESGF_DATA_DIR
-
-    # Group requests by source type
-    cmip6_requests = [r for r in requests if r.source_type == "CMIP6"]
-    obs_requests = [r for r in requests if r.source_type == "obs4MIPs"]
-
-    # Load and filter CMIP6 data
-    cmip6_dir = esgf_data_dir / "CMIP6"
-    if cmip6_dir.exists() and cmip6_requests:
-        cmip6_adapter = CMIP6DatasetAdapter()
-        try:
-            full_catalog = cmip6_adapter.find_local_datasets(cmip6_dir)
-            filtered = _filter_catalog_by_requests(full_catalog, cmip6_requests)
-            if not filtered.empty:
-                data_catalog[SourceDatasetType.CMIP6] = filtered
-        except Exception as e:
-            logger.warning(f"Could not load CMIP6 data: {e}")
-
-    # Load and filter obs4MIPs data
-    obs_dir = esgf_data_dir / "obs4MIPs"
-    if obs_dir.exists() and obs_requests:
-        obs_adapter = Obs4MIPsDatasetAdapter()
-        try:
-            full_catalog = obs_adapter.find_local_datasets(obs_dir)
-            filtered = _filter_catalog_by_requests(full_catalog, obs_requests)
-            if not filtered.empty:
-                data_catalog[SourceDatasetType.obs4MIPs] = filtered
-        except Exception as e:
-            logger.warning(f"Could not load obs4MIPs data: {e}")
-
-    return data_catalog
-
-
-def _filter_catalog_by_requests(
-    catalog: pd.DataFrame,
-    requests: list[Any],
-) -> pd.DataFrame:
-    """
-    Filter a data catalog to only include datasets matching the given requests.
-
-    Parameters
-    ----------
-    catalog
-        Full data catalog
-    requests
-        List of ESGF requests with facets to filter by
-
-    Returns
-    -------
-    pd.DataFrame
-        Filtered catalog containing only matching datasets
-    """
-    if catalog.empty or not requests:
-        return catalog
-
-    # Build a mask that selects rows matching any request
-    combined_mask = pd.Series([False] * len(catalog), index=catalog.index)
-
-    for request in requests:
-        # Each request has facets that must all match
-        request_mask = pd.Series([True] * len(catalog), index=catalog.index)
-
-        for facet_key, facet_value in request.facets.items():
-            if facet_key not in catalog.columns:
-                continue
-
-            # Handle both single values and tuples of values
-            if isinstance(facet_value, tuple):
-                request_mask &= catalog[facet_key].isin(facet_value)
-            else:
-                request_mask &= catalog[facet_key] == facet_value
-
-        combined_mask |= request_mask
-
-    return catalog[combined_mask].copy()
 
 
 def _find_diagnostic(
@@ -346,12 +321,6 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         ref test-cases run --provider example --diagnostic global-mean-timeseries
         ref test-cases run --provider ilamb --diagnostic lai-avh15c1 --fetch
     """
-    from climate_ref.testing import (  # noqa: PLC0415
-        ESGF_DATA_DIR,
-        TEST_DATA_DIR,
-        TestCaseRunner,
-    )
-
     config: Config = ctx.obj.config
     db = ctx.obj.database
 
@@ -375,26 +344,26 @@ def run_test_case(  # noqa: PLR0912, PLR0915
 
     tc = diag.test_data_spec.get_case(test_case)
 
-    # Fetch test data if requested
+    # Resolve datasets: either fetch from ESGF or load from pre-built catalog
     if fetch:
-        from climate_ref_core.esgf import ESGFFetcher  # noqa: PLC0415
-
-        if ESGF_DATA_DIR is None:
-            logger.error("Test data directory not found. Cannot fetch data.")
+        logger.info(f"Fetching test data for {provider}/{diagnostic}")
+        try:
+            datasets = _fetch_and_build_catalog(diag, tc)
+        except DatasetResolutionError as e:
+            logger.error(str(e))
+            raise typer.Exit(code=1)
+    else:
+        catalog_path = get_catalog_path(provider, diagnostic, test_case)
+        if catalog_path is None or not catalog_path.exists():
+            logger.error(f"No catalog file found for {provider}/{diagnostic}/{test_case}")
+            logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
             raise typer.Exit(code=1)
 
-        fetcher = ESGFFetcher(output_dir=ESGF_DATA_DIR)
-
-        logger.info(f"Fetching test data for {provider}/{diagnostic}")
-        if tc.requests:
-            for req in tc.requests:
-                fetcher.fetch_request(req, symlink=True)
-
-    # Build data catalog from ESGF test data, filtered by test case requests
-    data_catalog = _build_esgf_data_catalog(tc.requests)
+        logger.info(f"Loading catalog from {catalog_path}")
+        datasets = load_datasets_from_yaml(catalog_path)
 
     # Create runner and execute
-    runner = TestCaseRunner(config=config, data_catalog=data_catalog if data_catalog else None)
+    runner = TestCaseRunner(config=config, datasets=datasets)
 
     logger.info(f"Running test case {test_case!r} for {provider}/{diagnostic}")
 

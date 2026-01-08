@@ -20,7 +20,7 @@ class TestTestCaseRunnerClass:
 
     def test_run_no_test_data_spec(self, config):
         """Test that run raises NoTestDataSpecError when diagnostic has no test_data_spec."""
-        runner = TestCaseRunner(config=config, data_catalog=None)
+        runner = TestCaseRunner(config=config, datasets=None)
 
         mock_diagnostic = MagicMock()
         mock_diagnostic.test_data_spec = None
@@ -31,7 +31,7 @@ class TestTestCaseRunnerClass:
 
     def test_run_test_case_not_found(self, config):
         """Test error when test case doesn't exist."""
-        runner = TestCaseRunner(config=config, data_catalog=None)
+        runner = TestCaseRunner(config=config, datasets=None)
 
         mock_diagnostic = MagicMock()
         mock_diagnostic.test_data_spec = TestDataSpecification(
@@ -43,10 +43,8 @@ class TestTestCaseRunnerClass:
 
     def test_run_with_explicit_datasets(self, config, tmp_path):
         """Test running with explicit datasets in test case."""
-        runner = TestCaseRunner(config=config, data_catalog=None)
-
-        # Create mock datasets
         mock_datasets = MagicMock(spec=ExecutionDatasetCollection)
+        runner = TestCaseRunner(config=config, datasets=mock_datasets)
 
         # Create mock diagnostic with test case that has explicit datasets
         mock_diagnostic = MagicMock()

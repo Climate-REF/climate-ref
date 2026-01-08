@@ -4,11 +4,10 @@ ESGF dataset fetcher for downloading test data.
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import xarray as xr
+import pandas as pd
 from loguru import logger
 
 from climate_ref_core.esgf.base import ESGFRequest
@@ -19,33 +18,13 @@ if TYPE_CHECKING:
 
 class ESGFFetcher:
     """
-    Fetches and manages ESGF datasets for testing.
+    Fetches datasets from ESGF and returns metadata with file paths.
 
-    This class handles downloading datasets from ESGF based on request
-    specifications and organizing them in a local directory structure.
+    Uses intake-esgf to search and download datasets.
+    Files that cannot be found locally are stored in intake-esgf's cache directory.
     """
 
-    def __init__(self, output_dir: Path, cache_dir: Path | None = None):
-        """
-        Initialize the ESGF fetcher.
-
-        Parameters
-        ----------
-        output_dir
-            Directory where datasets will be stored
-        cache_dir
-            Optional cache directory for raw downloads.
-            If None, uses the default pooch cache.
-        """
-        self.output_dir = output_dir
-        self.cache_dir = cache_dir
-        self.output_dir.mkdir(parents=True, exist_ok=True)
-
-    def fetch_request(
-        self,
-        request: ESGFRequest,
-        symlink: bool = False,
-    ) -> list[Path]:
+    def fetch_request(self, request: ESGFRequest) -> pd.DataFrame:
         """
         Fetch datasets for a single ESGF request.
 
@@ -53,13 +32,15 @@ class ESGFFetcher:
         ----------
         request
             The ESGF request specifying what to fetch
-        symlink
-            If True, create symlinks to cached files instead of copying
 
         Returns
         -------
-        list[Path]
-            List of paths to the fetched dataset files
+        pd.DataFrame
+            DataFrame containing dataset metadata and file paths.
+            Each row represents one file, with a 'path' column pointing
+            to the file (either in intake-esgf's cache or one of the root data locations).
+
+            This format is not identical to the DataCatalog, but it is broadly compatible.
         """
         logger.info(f"Fetching datasets for request: {request.slug}")
 
@@ -68,95 +49,67 @@ class ESGFFetcher:
 
         if datasets_df.empty:
             logger.warning(f"No datasets found for request: {request.slug}")
-            return []
+            return pd.DataFrame()
 
         logger.info(f"Found {len(datasets_df)} datasets for request: {request.slug}")
 
-        fetched_paths: list[Path] = []
-
+        # Expand files column - each file becomes a row with a 'path' column
+        rows = []
         for _, row in datasets_df.iterrows():
-            files = row["files"]
+            files = row.get("files", [])
             if not files:
                 logger.warning(f"No files for dataset: {row.get('key', 'unknown')}")
                 continue
 
-            for _file_path in files:
-                file_path = Path(_file_path)
-
-                if not file_path.exists():
+            for file_path in files:
+                if not Path(file_path).exists():
                     logger.warning(f"File not found (may need to download from ESGF): {file_path}")
                     continue
 
-                # Load dataset to generate output path
-                try:
-                    ds = xr.open_dataset(file_path)
-                    output_path = request.generate_output_path(row, ds, file_path)
-                    ds.close()
-                except Exception as e:
-                    logger.error(f"Error loading dataset {file_path}: {e}")
-                    continue
+                row_copy = row.to_dict()
+                row_copy["path"] = str(file_path)
+                rows.append(row_copy)
 
-                # Create output directory and copy/symlink file
-                full_output_path = self.output_dir / output_path
-                full_output_path.parent.mkdir(parents=True, exist_ok=True)
+        if not rows:
+            logger.warning(f"No files found for request: {request.slug}")
+            return pd.DataFrame()
 
-                if full_output_path.exists():
-                    logger.debug(f"File already exists: {full_output_path}")
-                    fetched_paths.append(full_output_path)
-                    continue
+        result = pd.DataFrame(rows)
+        result["source_type"] = request.source_type
 
-                if symlink:
-                    full_output_path.symlink_to(file_path)
-                    logger.debug(f"Symlinked {file_path} -> {full_output_path}")
-                else:
-                    shutil.copy2(file_path, full_output_path)
-                    logger.debug(f"Copied {file_path} -> {full_output_path}")
+        logger.info(f"Fetched {len(result)} files for request: {request.slug}")
+        return result
 
-                fetched_paths.append(full_output_path)
-
-        logger.info(f"Fetched {len(fetched_paths)} files for request: {request.slug}")
-        return fetched_paths
-
-    def fetch_for_diagnostic(
+    def fetch_for_test_case(
         self,
-        diagnostic: Diagnostic,
-        test_case_name: str = "default",
-        symlink: bool = False,
-    ) -> dict[str, list[Path]]:
+        requests: tuple[ESGFRequest, ...] | None,
+    ) -> pd.DataFrame:
         """
-        Fetch all test data for a diagnostic's test case.
+        Fetch all data for a test case's requests.
 
         Parameters
         ----------
-        diagnostic
-            The diagnostic to fetch data for
-        test_case_name
-            Name of the test case to fetch data for
-        symlink
-            If True, create symlinks instead of copying
+        requests
+            The ESGF requests from the test case
 
         Returns
         -------
-        dict[str, list[Path]]
-            Mapping from request ID to list of fetched file paths
+        pd.DataFrame
+            Combined DataFrame with all datasets, grouped by source_type
         """
-        if diagnostic.test_data_spec is None:
-            logger.warning(f"Diagnostic {diagnostic.slug} has no test_data_spec")
-            return {}
+        if not requests:
+            return pd.DataFrame()
 
-        test_case = diagnostic.test_data_spec.get_case(test_case_name)
+        dfs = []
+        for request in requests:
+            df = self.fetch_request(request)
+            if not df.empty:
+                dfs.append(df)
 
-        if test_case.requests is None:
-            logger.warning(f"Test case {test_case_name} has no ESGF requests")
-            return {}
+        if not dfs:
+            return pd.DataFrame()
 
-        results: dict[str, list[Path]] = {}
-
-        for request in test_case.requests:
-            paths = self.fetch_request(request, symlink=symlink)
-            results[request.slug] = paths
-
-        return results
+        return pd.concat(dfs, ignore_index=True)
 
     def list_requests_for_diagnostic(self, diagnostic: Diagnostic) -> list[tuple[str, ESGFRequest]]:
         """

@@ -153,13 +153,12 @@ def esgf_solve_catalog(test_data_dir) -> dict[SourceDatasetType, pd.DataFrame] |
 @pytest.fixture
 def run_test_case(
     config: Config,
-    data_catalog: dict[SourceDatasetType, pd.DataFrame],
 ):
     """
     Fixture for running diagnostic test cases.
 
-    Returns a TestCaseRunner that can execute test cases for diagnostics.
-    Uses pytest.skip for missing data instead of raising errors.
+    Note: Tests should provide explicit datasets via test_data_spec.datasets
+    or use catalog YAML files created by `ref test-cases fetch`.
 
     Example
     -------
@@ -170,7 +169,7 @@ def run_test_case(
     ```
     """
 
-    runner = TestCaseRunner(config=config, data_catalog=data_catalog)
+    runner = TestCaseRunner(config=config, datasets=None)
 
     # Wrap the runner to convert exceptions to pytest.skip
     class PytestTestCaseRunner:
@@ -179,6 +178,7 @@ def run_test_case(
                 return runner.run(diagnostic, test_case_name, output_dir)
             except TestCaseError as e:
                 pytest.skip(str(e))
+
                 # Explicitly indicate that this code path does not return
                 raise
 

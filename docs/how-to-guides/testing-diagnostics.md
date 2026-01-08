@@ -1,8 +1,11 @@
 # Testing Diagnostics
 
 This guide explains how to set up reproducible tests for your diagnostic provider package.
-The testing infrastructure allows you to define test cases with specific datasets,
-fetch data from ESGF, run diagnostics locally, and compare results against regression baselines.
+The testing infrastructure allows you to define `test cases`.
+
+Each `test case` describes an execution of a diagnostic with specific datasets.
+The test infrastructure takes case of fetching data from ESGF, running the diagnotic execution and,
+tracking the outputs as regression tests.
 
 ## Overview
 
@@ -17,10 +20,10 @@ the testing infrastructure allows:
     Each diagnostic declares exactly which datasets it needs for testing via `test_data_spec`.
     This keeps test data minimal and focused.
 
-- **Selective fetching**: Developers only need to download test data for the diagnostics they're working on,
-    not the entire test suite. This saves disk space and download time.
+- **Selective fetching**: Developers only need to download test data for the diagnostics they're working on, not the entire test suite.
+    This saves disk space and download time.
 
-- **Independent testing**: Updates to other diagnostics data requirements don't impact other diagnostics.
+- **Independent testing**: Updates to a diagnostics data requirements doesn't impact other diagnostics results.
     This makes it easier to contribute new diagnostics.
 
 - **Reproducible results**: By pinning specific ESGF datasets (source, experiment, time range),
@@ -28,8 +31,7 @@ the testing infrastructure allows:
 
 /// note
 The [ref-sample-data](https://github.com/Climate-REF/ref-sample-data) repository
-represents the original monolithic approach—a centrally managed collection of decimated
-test datasets for all diagnostics.
+represents the original monolithic approach - a centrally managed collection of decimated test datasets for all diagnostics.
 While this worked for the first round of diagnostics,
 it requires coordination to add new test data and updating the sample data often lead to impacts for other diagnostics.
 
@@ -56,11 +58,13 @@ flowchart LR
 
 ## Defining Test Data Specifications
 
-Each diagnostic defines a `test_data_spec` attribute that declares exactly which datasets
-it needs for testing.
-When a test runs, only those specific datasets are used -
+Each diagnostic defines a `test_data_spec` attribute that declares exactly which datasets it needs for testing.
+The specification contains one or more independent test cases.
+Each test case represents the data needed for a single execution.
+
+When a test case runs, only those specific datasets are used -
 the test infrastructure filters out any other data that may be present.
-This ensures reproduciblet est execution regardless of what other data exists locally.
+This ensures reproducible test execution regardless of what other data exists locally.
 
 ### Basic Structure
 
@@ -89,7 +93,6 @@ class MyDiagnostic(Diagnostic):
                             "member_id": "r1i1p1f1",
                             "table_id": "Amon",
                         },
-                        time_span=("2000-01", "2014-12"),
                     ),
                 ),
             ),
@@ -106,6 +109,65 @@ class MyDiagnostic(Diagnostic):
 | `requests`      | `tuple[ESGFRequest, ...]`    | ESGF requests to fetch the required datasets for the test case |
 | `datasets`      | `ExecutionDatasetCollection` | Explicit datasets (highest priority)                           |
 | `datasets_file` | `str`                        | Path to YAML file with datasets (relative to package)          |
+
+### ESGF Requests
+
+Each test case declares the set of data that is required from ESGF.
+Only datasets resolved by these requests will be available when using the test case.
+
+ESGF's [Metagrid](https://esgf-node.ornl.gov/) can be used to explore the results from applying different facet filters.
+
+#### CMIP6Request
+
+For CMIP6 model output:
+
+```python
+from climate_ref_core.esgf import CMIP6Request
+
+CMIP6Request(
+    slug="unique-identifier",
+    facets={
+        "source_id": "ACCESS-ESM1-5",      # Model name
+        "experiment_id": "historical",      # Experiment
+        "variable_id": "tas",               # Variable
+        "member_id": "r1i1p1f1",           # Ensemble member
+        "table_id": "Amon",                # MIP table (frequency)
+        "grid_label": "gn",                # Optional: grid type
+    },
+    time_span=("2000-01", "2014-12"),  # Optional: YYYY-MM format
+    remove_ensembles=False,             # Keep all ensemble members
+)
+```
+
+#### Obs4MIPsRequest
+
+For observational datasets:
+
+```python
+from climate_ref_core.esgf import Obs4MIPsRequest
+
+Obs4MIPsRequest(
+    slug="obs-tas",
+    facets={
+        "source_id": "ERA5",
+        "variable_id": "tas",
+        "frequency": "mon",
+    },
+)
+```
+
+### Common CMIP6 Facets
+
+| Facet            | Description     | Example                    |
+| ---------------- | --------------- | -------------------------- |
+| `source_id`      | Model name      | `"ACCESS-ESM1-5"`          |
+| `experiment_id`  | Experiment      | `"historical"`, `"ssp585"` |
+| `variable_id`    | Variable        | `"tas"`, `"pr"`            |
+| `member_id`      | Ensemble member | `"r1i1p1f1"`               |
+| `table_id`       | MIP table       | `"Amon"`, `"fx"`  |
+| `grid_label`     | Grid type       | `"gn"`, `"gr"`             |
+| `institution_id` | Institution     | `"CSIRO"`                  |
+| `activity_drs`   | Activity        | `"CMIP"`, `"ScenarioMIP"`  |
 
 ### Dataset Resolution Priority
 
@@ -162,61 +224,7 @@ This approach is useful when:
 
 - You have pre-existing test data in specific locations
 - You need to test against local modifications of datasets
-- You want to avoid ESGF fetching during development
-
-## ESGF Requests
-
-### CMIP6Request
-
-For CMIP6 model output:
-
-```python
-from climate_ref_core.esgf import CMIP6Request
-
-CMIP6Request(
-    slug="unique-identifier",
-    facets={
-        "source_id": "ACCESS-ESM1-5",      # Model name
-        "experiment_id": "historical",      # Experiment
-        "variable_id": "tas",               # Variable
-        "member_id": "r1i1p1f1",           # Ensemble member
-        "table_id": "Amon",                # MIP table (frequency)
-        "grid_label": "gn",                # Optional: grid type
-    },
-    time_span=("2000-01", "2014-12"),  # Optional: YYYY-MM format
-    remove_ensembles=False,             # Keep all ensemble members
-)
-```
-
-### Obs4MIPsRequest
-
-For observational datasets:
-
-```python
-from climate_ref_core.esgf import Obs4MIPsRequest
-
-Obs4MIPsRequest(
-    slug="obs-tas",
-    facets={
-        "source_id": "ERA5",
-        "variable_id": "tas",
-        "frequency": "mon",
-    },
-)
-```
-
-### Available CMIP6 Facets
-
-| Facet            | Description     | Example                    |
-| ---------------- | --------------- | -------------------------- |
-| `source_id`      | Model name      | `"ACCESS-ESM1-5"`          |
-| `experiment_id`  | Experiment      | `"historical"`, `"ssp585"` |
-| `variable_id`    | Variable        | `"tas"`, `"pr"`            |
-| `member_id`      | Ensemble member | `"r1i1p1f1"`               |
-| `table_id`       | MIP table       | `"Amon"`, `"day"`, `"fx"`  |
-| `grid_label`     | Grid type       | `"gn"`, `"gr"`             |
-| `institution_id` | Institution     | `"CSIRO"`                  |
-| `activity_drs`   | Activity        | `"CMIP"`, `"ScenarioMIP"`  |
+- You want to test a specific edgecase
 
 ## CLI Commands
 
@@ -264,22 +272,45 @@ tests/test-data/esgf-data/
 #### Data Caching
 
 The `ref test-cases fetch` command uses [intake-esgf](https://github.com/esgf2-us/intake-esgf)
-to download datasets. Downloaded files are cached by intake-esgf (default: `~/.esgf/`)
-and then organized into the test data directory.
+to download datasets from ESGF if they cannot be found locally.
+`intake-esgf` supports a two-tier cache system configured via `~/.config/intake-esgf/conf.yaml`:
 
-To configure the intake-esgf cache location, create `~/.config/intake-esgf/conf.yaml`:
+- **`esg_dataroot`**: Paths checked FIRST for existing data (read-only). Ideal for institutional ESGF mirrors or shared drives.
+- **`local_cache`**: Where new downloads are stored if not found in `esg_dataroot`.
+
+Once `intake-esgf` either finds a dataset locally, or downloads a new file, it is symlinked into the test data directory (`tests/test-data/esgf-data/`).
+
+/// Note | Using Shared ESGF Data (HPC/Shared Drives)
+
+If your institution has a local ESGF data archive, configure `esg_dataroot` to avoid redundant downloads:
 
 ```yaml
+# ~/.config/intake-esgf/conf.yaml
+esg_dataroot:
+  - /shared/cmip6/data      # Institutional ESGF mirror (read-only)
+  - /group/climate/esgf     # Group shared cache
+local_cache:
+  - /scratch/$USER/.esgf    # Personal downloads go here
+```
+
+With this configuration, intake-esgf will:
+
+1. Check each `esg_dataroot` path for existing files
+2. Only download to `local_cache` if the file isn't found
+
+This is particularly useful on HPC systems where CMIP6 data may already be available on shared filesystems.
+
+For personal workstations without shared data,
+you only need to set `local_cache`:
+
+```yaml
+# ~/.config/intake-esgf/conf.yaml
 local_cache:
   - /path/to/esgf/cache
 ```
 
-Or set it programmatically:
-
-```python
-import intake_esgf
-intake_esgf.conf.set(local_cache=["/path/to/esgf/cache"])
-```
+See the [intake-esgf documentation](https://github.com/esgf2-us/intake-esgf) for more configuration options.
+///
 
 ### Running Test Cases
 
@@ -300,6 +331,9 @@ ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-reg
 ```
 
 ## Writing Pytest Tests
+
+The CLI provides a standard harness for running simple test cases.
+Sometimes additional custom tests maybe required which require writing tests via `pytest`.
 
 ### Using the `run_test_case` Fixture
 
@@ -438,16 +472,6 @@ class TemperatureBias(Diagnostic):
                             "table_id": "Amon",
                         },
                     ),
-                    CMIP6Request(
-                        slug="areacella",
-                        facets={
-                            "source_id": "ACCESS-ESM1-5",
-                            "experiment_id": "historical",
-                            "variable_id": "areacella",
-                            "member_id": "r1i1p1f1",
-                            "table_id": "fx",
-                        },
-                    ),
                 ),
             ),
             TestCase(
@@ -463,6 +487,7 @@ class TemperatureBias(Diagnostic):
                             "member_id": "r1i1p1f1",
                             "table_id": "Amon",
                         },
+                        # TODO: this doesn't actually clip the dataset yet
                         time_span=("2014-01", "2014-12"),
                     ),
                 ),
@@ -487,7 +512,7 @@ class TemperatureBias(Diagnostic):
 | ------------------------ | ---------------------------------- | --------------------------------- |
 | `NoTestDataSpecError`    | Diagnostic has no `test_data_spec` | Add `test_data_spec` attribute    |
 | `TestCaseNotFoundError`  | Invalid test case name             | Check `test_data_spec.case_names` |
-| `DatasetResolutionError` | Missing test data                  | Run `ref test-cases fetch`           |
+| `DatasetResolutionError` | Missing test data                  | Run `ref test-cases fetch`        |
 | `No datasets found`      | ESGF query returned empty          | Check facets are correct          |
 
 ### Debugging Tips

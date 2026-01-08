@@ -3,3 +3,6 @@ sample-data
 
 # Local location for obs4REF datasets
 obs4ref
+
+# Local location for ESGF data
+esgf-data

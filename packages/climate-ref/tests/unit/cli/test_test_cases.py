@@ -101,15 +101,14 @@ class TestBuildEsgfDataCatalog:
         assert result == {}
 
     def test_no_test_data_dir(self):
-        with patch("climate_ref.testing.TEST_DATA_DIR", None):
+        with patch("climate_ref.testing.ESGF_DATA_DIR", None):
             result = _build_esgf_data_catalog(tuple())
         assert result == {}
 
     def test_cmip6_requests_with_data(self, tmp_path):
         """Test loading CMIP6 data with matching requests."""
-        # Setup mock TEST_DATA_DIR
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        # Setup mock ESGF_DATA_DIR
+        esgf_data_dir = tmp_path / "esgf-data"
         cmip6_dir = esgf_data_dir / "CMIP6"
         cmip6_dir.mkdir(parents=True)
 
@@ -123,7 +122,7 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.facets = {"source_id": "ACCESS-ESM1-5"}
 
         with (
-            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir),
             patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((cmip6_request,))
@@ -133,8 +132,7 @@ class TestBuildEsgfDataCatalog:
 
     def test_obs4mips_requests_with_data(self, tmp_path):
         """Test loading obs4MIPs data with matching requests."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         obs_dir = esgf_data_dir / "obs4MIPs"
         obs_dir.mkdir(parents=True)
 
@@ -148,7 +146,7 @@ class TestBuildEsgfDataCatalog:
         obs_request.facets = {"source_id": "GPCP-SG"}
 
         with (
-            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir),
             patch("climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((obs_request,))
@@ -157,22 +155,20 @@ class TestBuildEsgfDataCatalog:
 
     def test_cmip6_dir_not_exists(self, tmp_path):
         """Test when CMIP6 directory doesn't exist."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         esgf_data_dir.mkdir(parents=True)
 
         cmip6_request = MagicMock()
         cmip6_request.source_type = "CMIP6"
         cmip6_request.facets = {}
 
-        with patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir):
+        with patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir):
             result = _build_esgf_data_catalog((cmip6_request,))
         assert SourceDatasetType.CMIP6 not in result
 
     def test_adapter_exception_handled(self, tmp_path):
         """Test that exceptions from adapter are handled gracefully."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         cmip6_dir = esgf_data_dir / "CMIP6"
         cmip6_dir.mkdir(parents=True)
 
@@ -184,7 +180,7 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.facets = {}
 
         with (
-            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir),
             patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((cmip6_request,))
@@ -193,8 +189,7 @@ class TestBuildEsgfDataCatalog:
 
     def test_empty_filtered_result_not_added(self, tmp_path):
         """Test that empty filtered results are not added to catalog."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         cmip6_dir = esgf_data_dir / "CMIP6"
         cmip6_dir.mkdir(parents=True)
 
@@ -209,7 +204,7 @@ class TestBuildEsgfDataCatalog:
         cmip6_request.facets = {"source_id": "NONEXISTENT"}
 
         with (
-            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir),
             patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((cmip6_request,))
@@ -218,22 +213,20 @@ class TestBuildEsgfDataCatalog:
 
     def test_obs4mips_dir_not_exists(self, tmp_path):
         """Test when obs4MIPs directory doesn't exist."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         esgf_data_dir.mkdir(parents=True)
 
         obs_request = MagicMock()
         obs_request.source_type = "obs4MIPs"
         obs_request.facets = {}
 
-        with patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir):
+        with patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir):
             result = _build_esgf_data_catalog((obs_request,))
         assert SourceDatasetType.obs4MIPs not in result
 
     def test_obs4mips_adapter_exception_handled(self, tmp_path):
         """Test that exceptions from obs4MIPs adapter are handled gracefully."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         obs_dir = esgf_data_dir / "obs4MIPs"
         obs_dir.mkdir(parents=True)
 
@@ -245,7 +238,7 @@ class TestBuildEsgfDataCatalog:
         obs_request.facets = {}
 
         with (
-            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir),
             patch("climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
         ):
             result = _build_esgf_data_catalog((obs_request,))
@@ -254,8 +247,7 @@ class TestBuildEsgfDataCatalog:
 
     def test_mixed_requests_both_types(self, tmp_path):
         """Test loading both CMIP6 and obs4MIPs data with matching requests."""
-        test_data_dir = tmp_path / "test-data"
-        esgf_data_dir = test_data_dir / "esgf-data"
+        esgf_data_dir = tmp_path / "esgf-data"
         cmip6_dir = esgf_data_dir / "CMIP6"
         obs_dir = esgf_data_dir / "obs4MIPs"
         cmip6_dir.mkdir(parents=True)
@@ -280,7 +272,7 @@ class TestBuildEsgfDataCatalog:
         obs_request.facets = {"source_id": "GPCP-SG"}
 
         with (
-            patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir),
+            patch("climate_ref.testing.ESGF_DATA_DIR", esgf_data_dir),
             patch("climate_ref.datasets.cmip6.CMIP6DatasetAdapter", return_value=mock_cmip6_adapter),
             patch("climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter", return_value=mock_obs_adapter),
         ):
@@ -370,8 +362,8 @@ class TestFetchTestDataCommand:
         assert result.exit_code == 0
 
     def test_fetch_no_test_data_dir(self, invoke_cli, mocker):
-        """Test fetch command when TEST_DATA_DIR is not available."""
-        mocker.patch("climate_ref.testing.TEST_DATA_DIR", None)
+        """Test fetch command when ESGF_DATA_DIR is not available."""
+        mocker.patch("climate_ref.testing.ESGF_DATA_DIR", None)
         invoke_cli(["test-cases", "fetch"], expected_exit_code=1)
 
     def test_fetch_with_provider_filter(self, invoke_cli):
@@ -415,7 +407,7 @@ class TestFetchTestDataCommand:
         mock_registry = MagicMock()
         mock_registry.providers = [mock_provider]
 
-        mocker.patch("climate_ref.testing.TEST_DATA_DIR", test_data_dir)
+        mocker.patch("climate_ref.testing.ESGF_DATA_DIR", test_data_dir / "esgf-data")
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
@@ -495,11 +487,15 @@ class TestRunTestCaseCommand:
             expected_exit_code=1,
         )
 
-    def test_run_diagnostic_no_test_data_spec(self, invoke_cli):
+    def test_run_diagnostic_no_test_data_spec(self, invoke_cli, mocker):
         """Test running diagnostic without test_data_spec."""
-        # The example provider's diagnostics may not have test_data_spec
+        mock_diag = MagicMock()
+        mock_diag.test_data_spec = None
+
+        mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diag)
+
         invoke_cli(
-            ["test-cases", "run", "--provider", "example", "--diagnostic", "global-mean-timeseries"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
             expected_exit_code=1,
         )
 

@@ -66,7 +66,7 @@ def fetch_test_data(  # noqa: PLR0912
         ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
         ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
     """
-    from climate_ref.testing import TEST_DATA_DIR  # noqa: PLC0415
+    from climate_ref.testing import ESGF_DATA_DIR  # noqa: PLC0415
     from climate_ref_core.esgf import ESGFFetcher  # noqa: PLC0415
 
     config = ctx.obj.config
@@ -74,10 +74,10 @@ def fetch_test_data(  # noqa: PLR0912
 
     # Determine output directory
     if output_directory is None:
-        if TEST_DATA_DIR is None:
+        if ESGF_DATA_DIR is None:
             logger.error("Test data directory not found. Please specify --output-directory")
             raise typer.Exit(code=1)
-        output_directory = TEST_DATA_DIR / "esgf-data"
+        output_directory = ESGF_DATA_DIR
 
     # Build provider registry to access diagnostics
     registry = ProviderRegistry.build_from_config(config, db)
@@ -209,17 +209,17 @@ def _build_esgf_data_catalog(
     """
     from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter  # noqa: PLC0415
     from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter  # noqa: PLC0415
-    from climate_ref.testing import TEST_DATA_DIR  # noqa: PLC0415
+    from climate_ref.testing import ESGF_DATA_DIR  # noqa: PLC0415
 
     data_catalog: dict[SourceDatasetType, pd.DataFrame] = {}
 
-    if TEST_DATA_DIR is None:
+    if ESGF_DATA_DIR is None:
         return data_catalog
 
     if requests is None:
         return data_catalog
 
-    esgf_data_dir = TEST_DATA_DIR / "esgf-data"
+    esgf_data_dir = ESGF_DATA_DIR
 
     # Group requests by source type
     cmip6_requests = [r for r in requests if r.source_type == "CMIP6"]
@@ -347,6 +347,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         ref test-cases run --provider ilamb --diagnostic lai-avh15c1 --fetch
     """
     from climate_ref.testing import (  # noqa: PLC0415
+        ESGF_DATA_DIR,
         TEST_DATA_DIR,
         TestCaseRunner,
     )
@@ -378,12 +379,11 @@ def run_test_case(  # noqa: PLR0912, PLR0915
     if fetch:
         from climate_ref_core.esgf import ESGFFetcher  # noqa: PLC0415
 
-        if TEST_DATA_DIR is None:
+        if ESGF_DATA_DIR is None:
             logger.error("Test data directory not found. Cannot fetch data.")
             raise typer.Exit(code=1)
 
-        fetch_output_dir = TEST_DATA_DIR / "esgf-data"
-        fetcher = ESGFFetcher(output_dir=fetch_output_dir)
+        fetcher = ESGFFetcher(output_dir=ESGF_DATA_DIR)
 
         logger.info(f"Fetching test data for {provider}/{diagnostic}")
         if tc.requests:

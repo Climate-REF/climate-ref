@@ -31,6 +31,7 @@ def _determine_test_directory() -> Path | None:
 
 
 TEST_DATA_DIR = _determine_test_directory()
+ESGF_DATA_DIR = TEST_DATA_DIR / "esgf-data" if TEST_DATA_DIR else None
 SAMPLE_DATA_VERSION = "v0.7.4"
 
 

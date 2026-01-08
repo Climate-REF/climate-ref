@@ -1,9 +1,7 @@
 """Tests for climate_ref_core.esgf.cmip6 module."""
 
-from pathlib import Path
 from unittest.mock import MagicMock
 
-import pandas as pd
 import pytest
 
 from climate_ref_core.esgf import CMIP6Request, ESGFRequest
@@ -113,77 +111,3 @@ class TestPrefixToFilename:
 
         result = prefix_to_filename(mock_ds, "areacella_fx_ACCESS-ESM1-5")
         assert result == "areacella_fx_ACCESS-ESM1-5.nc"
-
-
-class TestCMIP6RequestGenerateOutputPath:
-    """Tests for CMIP6Request.generate_output_path method."""
-
-    def test_generate_output_path_with_time(self):
-        """Test output path generation for dataset with time."""
-        request = CMIP6Request(
-            slug="test-cmip6",
-            facets={"source_id": "ACCESS-ESM1-5", "variable_id": "tas"},
-        )
-
-        metadata = pd.Series(
-            {
-                "mip_era": "CMIP6",
-                "activity_drs": "CMIP",
-                "institution_id": "CSIRO",
-                "source_id": "ACCESS-ESM1-5",
-                "experiment_id": "historical",
-                "member_id": "r1i1p1f1",
-                "table_id": "Amon",
-                "variable_id": "tas",
-                "grid_label": "gn",
-                "version": "20200101",
-            }
-        )
-
-        mock_ds = MagicMock()
-        mock_ds.dims = {"time": 100}
-        mock_time = MagicMock()
-        mock_time.min.return_value.dt.strftime.return_value.item.return_value = "200001"
-        mock_time.max.return_value.dt.strftime.return_value.item.return_value = "201012"
-        mock_ds.time = mock_time
-
-        result = request.generate_output_path(metadata, mock_ds, Path("original.nc"))
-
-        assert "CMIP6" in str(result)
-        assert "ACCESS-ESM1-5" in str(result)
-        assert "v20200101" in str(result)
-        assert result.suffix == ".nc"
-
-    def test_generate_output_path_without_time(self):
-        """Test output path generation for dataset without time."""
-        request = CMIP6Request(
-            slug="test-cmip6-fx",
-            facets={"source_id": "ACCESS-ESM1-5", "variable_id": "areacella"},
-        )
-
-        metadata = pd.Series(
-            {
-                "mip_era": "CMIP6",
-                "activity_drs": "CMIP",
-                "institution_id": "CSIRO",
-                "source_id": "ACCESS-ESM1-5",
-                "experiment_id": "historical",
-                "member_id": "r1i1p1f1",
-                "table_id": "fx",
-                "variable_id": "areacella",
-                "grid_label": "gn",
-                "version": "20200101",
-            }
-        )
-
-        mock_ds = MagicMock()
-        mock_ds.dims = {"lat": 180, "lon": 360}
-
-        result = request.generate_output_path(metadata, mock_ds, Path("original.nc"))
-
-        assert "CMIP6" in str(result)
-        assert "v20200101" in str(result)
-        assert result.suffix == ".nc"
-        # Filename should not have time range suffix (YYYYMM-YYYYMM)
-        # Model names and member_ids can contain hyphens, but time range is not present
-        assert not result.name.endswith("nc") or "_" in result.stem

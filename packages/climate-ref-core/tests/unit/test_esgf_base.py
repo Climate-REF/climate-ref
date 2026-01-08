@@ -35,7 +35,6 @@ class TestESGFRequestProtocol:
         assert hasattr(request, "source_type")
         assert hasattr(request, "time_span")
         assert hasattr(request, "fetch_datasets")
-        assert hasattr(request, "generate_output_path")
 
 
 class TestDeduplicateDatasets:

@@ -4,12 +4,7 @@ CMIP6 dataset request implementation.
 
 from __future__ import annotations
 
-import os.path
-import pathlib
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
-
-import pandas as pd
 
 from climate_ref_core.esgf.base import IntakeESGFMixin
 
@@ -119,34 +114,6 @@ class CMIP6Request(IntakeESGFMixin):
         for key in self.cmip6_filename_paths:
             if key not in self.available_facets:
                 raise ValueError(f"Filename path {key!r} not in available facets")
-
-    def generate_output_path(
-        self, metadata: pd.Series[Any], ds: xr.Dataset, ds_filename: pathlib.Path
-    ) -> Path:
-        """
-        Create the output path for the dataset following CMIP6 DRS.
-
-        Parameters
-        ----------
-        metadata
-            Row from the DataFrame returned by fetch_datasets
-        ds
-            Loaded xarray dataset
-        ds_filename
-            Original filename of the dataset (unused for CMIP6)
-
-        Returns
-        -------
-        Path
-            Relative path where the dataset should be stored
-        """
-        output_path = (
-            Path(os.path.join(*[metadata[item] for item in self.cmip6_path_items]))
-            / f"v{metadata['version']}"
-        )
-        filename_prefix = "_".join([metadata[item] for item in self.cmip6_filename_paths])
-
-        return output_path / prefix_to_filename(ds, filename_prefix)
 
     def __repr__(self) -> str:
         return f"CMIP6Request(slug={self.slug!r}, facets={self.facets!r})"

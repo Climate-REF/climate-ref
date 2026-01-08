@@ -4,18 +4,12 @@ Obs4MIPs dataset request implementation.
 
 from __future__ import annotations
 
-import os.path
-import pathlib
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import pandas as pd
-
 from climate_ref_core.esgf.base import IntakeESGFMixin
-from climate_ref_core.esgf.cmip6 import prefix_to_filename
 
 if TYPE_CHECKING:
-    import xarray as xr
+    pass
 
 
 class Obs4MIPsRequest(IntakeESGFMixin):
@@ -84,42 +78,6 @@ class Obs4MIPsRequest(IntakeESGFMixin):
         for key in self.obs4mips_filename_paths:
             if key not in self.avail_facets:
                 raise ValueError(f"Filename path {key!r} not in available facets")
-
-    def generate_output_path(
-        self, metadata: pd.Series[Any], ds: xr.Dataset, ds_filename: pathlib.Path
-    ) -> Path:
-        """
-        Create the output path for the dataset following Obs4MIPs DRS.
-
-        Parameters
-        ----------
-        metadata
-            Row from the DataFrame returned by fetch_datasets
-        ds
-            Loaded xarray dataset
-        ds_filename
-            Original filename of the dataset
-
-        Returns
-        -------
-        Path
-            Relative path where the dataset should be stored
-        """
-        output_path = (
-            Path(os.path.join(*[metadata[item] for item in self.obs4mips_path_items]))
-            / f"v{metadata['version']}"
-        )
-
-        # Handle case where filename prefix doesn't match variable_id
-        if ds_filename.name.split("_")[0] == ds.variable_id:
-            filename_prefix = "_".join([metadata[item] for item in self.obs4mips_filename_paths])
-        else:
-            filename_prefix = ds_filename.name.split("_")[0] + "_"
-            filename_prefix += "_".join(
-                [metadata[item] for item in self.obs4mips_filename_paths if item != "variable_id"]
-            )
-
-        return output_path / prefix_to_filename(ds, filename_prefix)
 
     def __repr__(self) -> str:
         return f"Obs4MIPsRequest(slug={self.slug!r}, facets={self.facets!r})"

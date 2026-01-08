@@ -5,16 +5,10 @@ This module provides the infrastructure for fetching datasets from ESGF
 using the intake-esgf package.
 """
 
-from __future__ import annotations
-
-import pathlib
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 import pandas as pd
 from intake_esgf import ESGFCatalog
-
-if TYPE_CHECKING:
-    import xarray as xr
 
 
 @runtime_checkable
@@ -46,28 +40,6 @@ class ESGFRequest(Protocol):
             Must contain at minimum:
             - key: A unique identifier for the dataset
             - files: A list of files for the dataset
-        """
-        ...
-
-    def generate_output_path(
-        self, metadata: pd.Series[Any], ds: xr.Dataset, ds_filename: pathlib.Path
-    ) -> pathlib.Path:
-        """
-        Generate the local output path for a dataset.
-
-        Parameters
-        ----------
-        metadata
-            Row from the DataFrame returned by fetch_datasets
-        ds
-            Loaded xarray dataset
-        ds_filename
-            Original filename of the dataset
-
-        Returns
-        -------
-        pathlib.Path
-            Relative path where the dataset should be stored
         """
         ...
 

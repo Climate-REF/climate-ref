@@ -137,7 +137,8 @@ def test_db(monkeypatch):
     config = Config.default()
     db = Database("sqlite:///:memory:")
     db.migrate(config)
-    return adapter, config, db
+    yield adapter, config, db
+    db.close()
 
 
 def _mk_df(instance_id="CESM2.tas.gn", rows=None):

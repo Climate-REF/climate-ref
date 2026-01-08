@@ -13,6 +13,7 @@ import importlib.resources
 import shutil
 from datetime import datetime
 from pathlib import Path
+from types import TracebackType
 from typing import TYPE_CHECKING, Any
 from urllib import parse as urlparse
 
@@ -160,6 +161,28 @@ class Database:
         self._engine = sqlalchemy.create_engine(self.url)
         # TODO: Set autobegin=False
         self.session = Session(self._engine)
+
+    def __enter__(self) -> "Database":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """
+        Close the database connection
+
+        This closes the session and disposes of the engine, releasing all connections.
+        """
+        try:
+            self.session.close()
+        finally:
+            self._engine.dispose()
 
     def alembic_config(self, config: "Config") -> AlembicConfig:
         """

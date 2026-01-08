@@ -24,7 +24,6 @@ class TestTestCase:
         assert test_case.name == "default"
         assert test_case.description == "Default test case"
         assert test_case.requests is None
-        assert test_case.datasets is None
         assert test_case.datasets_file is None
 
     def test_init_with_requests(self):
@@ -37,16 +36,6 @@ class TestTestCase:
         )
         assert test_case.requests == (mock_request,)
 
-    def test_init_with_datasets(self):
-        """Test initialization with explicit datasets."""
-        mock_datasets = MagicMock(spec=ExecutionDatasetCollection)
-        test_case = TestCase(
-            name="default",
-            description="Test with datasets",
-            datasets=mock_datasets,
-        )
-        assert test_case.datasets == mock_datasets
-
     def test_init_with_datasets_file(self):
         """Test initialization with datasets file path."""
         test_case = TestCase(
@@ -55,45 +44,6 @@ class TestTestCase:
             datasets_file="tests/data/datasets.yaml",
         )
         assert test_case.datasets_file == "tests/data/datasets.yaml"
-
-    def test_resolve_datasets_explicit(self):
-        """Test resolving datasets when explicit datasets are provided."""
-        mock_datasets = MagicMock(spec=ExecutionDatasetCollection)
-        mock_diagnostic = MagicMock()
-
-        test_case = TestCase(
-            name="default",
-            description="Test with datasets",
-            datasets=mock_datasets,
-        )
-
-        result = test_case.resolve_datasets(None, mock_diagnostic)
-        assert result == mock_datasets
-
-    def test_resolve_datasets_file_missing_package_dir(self):
-        """Test error when datasets_file is used without package_dir."""
-        mock_diagnostic = MagicMock()
-
-        test_case = TestCase(
-            name="default",
-            description="Test with file",
-            datasets_file="tests/data/datasets.yaml",
-        )
-
-        with pytest.raises(ValueError, match="package_dir required"):
-            test_case.resolve_datasets(None, mock_diagnostic)
-
-    def test_resolve_datasets_no_catalog(self):
-        """Test error when no datasets, file, or catalog provided."""
-        mock_diagnostic = MagicMock()
-
-        test_case = TestCase(
-            name="default",
-            description="Test without data",
-        )
-
-        with pytest.raises(ValueError, match="Cannot resolve datasets"):
-            test_case.resolve_datasets(None, mock_diagnostic)
 
 
 class TestTestDataSpecification:

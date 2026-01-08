@@ -34,6 +34,10 @@ class TestCase:
 
     Test cases define specific scenarios for testing a diagnostic,
     including what datasets to use and optionally how to fetch them.
+
+    Datasets can be resolved using:
+    1. `requests` - ESGF requests to fetch data (use `ref test-cases fetch`)
+    2. `datasets_file` - Path to a pre-built catalog YAML file
     """
 
     name: str
@@ -45,53 +49,8 @@ class TestCase:
     requests: tuple[ESGFRequest, ...] | None = None
     """Optional ESGF requests to fetch data for this test case."""
 
-    datasets: ExecutionDatasetCollection | None = None
-    """Explicit datasets to use (optional, takes precedence over datasets_file)."""
-
     datasets_file: str | None = None
     """Path to YAML file with dataset specification (relative to package)."""
-
-    def resolve_datasets(
-        self,
-        data_catalog: dict[SourceDatasetType, pd.DataFrame] | None,
-        diagnostic: Diagnostic,
-        package_dir: Path | None = None,
-    ) -> ExecutionDatasetCollection:
-        """
-        Resolve datasets from file, inline, or by solving.
-
-        Parameters
-        ----------
-        data_catalog
-            Data catalog to use for solving (if needed)
-        diagnostic
-            The diagnostic this test case is for
-        package_dir
-            Base directory for resolving relative dataset file paths
-
-        Returns
-        -------
-        ExecutionDatasetCollection
-            The resolved datasets for this test case
-        """
-        # 1. Explicit datasets take precedence
-        if self.datasets is not None:
-            return self.datasets
-
-        # 2. Load from YAML file
-        if self.datasets_file is not None:
-            if package_dir is None:
-                raise ValueError("package_dir required when using datasets_file")
-            return load_datasets_from_yaml(package_dir / self.datasets_file)
-
-        # 3. Fall back to solving
-        if data_catalog is None:
-            raise ValueError(
-                f"Cannot resolve datasets for test case {self.name!r}: "
-                "no explicit datasets, no datasets_file, and no data_catalog provided"
-            )
-
-        return solve_test_case(diagnostic, data_catalog)
 
 
 @frozen

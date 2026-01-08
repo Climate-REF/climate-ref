@@ -26,6 +26,7 @@ nav:
       - how-to-guides/ingest-datasets.md
       - how-to-guides/running-diagnostics-locally.py
       - how-to-guides/adding_custom_diagnostics.md
+      - how-to-guides/testing-diagnostics.md
       - how-to-guides/docker_deployment.md
   - Tutorials: tutorials.md
   - Further background:

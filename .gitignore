@@ -158,3 +158,6 @@ packages/*/NOTICE
 
 # Local directory for data
 /data
+
+# Generated SDK
+/climate_ref_client

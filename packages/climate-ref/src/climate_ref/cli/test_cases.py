@@ -1,0 +1,415 @@
+"""
+Test data management commands for diagnostic development.
+
+These commands are intended for developers working on diagnostics and require
+a source checkout of the project with test data directories available.
+"""
+
+import shutil
+from pathlib import Path
+from typing import Annotated
+
+import pandas as pd
+import typer
+from loguru import logger
+from rich.table import Table
+
+from climate_ref.config import Config
+from climate_ref.datasets import CMIP6DatasetAdapter, DatasetAdapter, Obs4MIPsDatasetAdapter
+from climate_ref.provider_registry import ProviderRegistry
+from climate_ref.testing import TEST_DATA_DIR, TestCaseRunner, get_catalog_path
+from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
+from climate_ref_core.diagnostics import Diagnostic
+from climate_ref_core.esgf import ESGFFetcher
+from climate_ref_core.exceptions import (
+    DatasetResolutionError,
+    NoTestDataSpecError,
+    TestCaseNotFoundError,
+)
+from climate_ref_core.testing import TestCase, load_datasets_from_yaml, save_datasets_to_yaml, solve_test_case
+
+app = typer.Typer(help=__doc__)
+
+
+def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> pd.DataFrame:
+    """
+    Parses a list of datasets using a dataset adapter
+
+    Parameters
+    ----------
+    file_paths
+        List of files to build a catalog from
+
+    Returns
+    -------
+    pd.DataFrame
+        DataFrame catalog of datasets with metadata and paths
+    """
+    # Collect unique parent directories since the adapter scans directories
+    parent_dirs = list({fp.parent for fp in file_paths})
+
+    catalog_dfs = []
+    for parent_dir in parent_dirs:
+        try:
+            df = dataset_adapter.find_local_datasets(parent_dir)
+
+            # Filter to only include the files we fetched
+            fetched_files = {str(fp) for fp in file_paths}
+            df = df[df["path"].isin(fetched_files)]
+            if df.empty:
+                logger.warning(f"No matching files found in catalog for {parent_dir}")
+            catalog_dfs.append(df)
+        except Exception as e:
+            logger.warning(f"Failed to parse {parent_dir}: {e}")
+
+    return pd.concat(catalog_dfs, ignore_index=True)
+
+
+def _fetch_and_build_catalog(
+    diag: Diagnostic,
+    tc: TestCase,
+) -> ExecutionDatasetCollection:
+    """
+    Fetch test data and build catalog.
+
+    This function:
+    1. Fetches ESGF data using ESGFFetcher (files stored in intake-esgf cache)
+    2. Uses CMIP6DatasetAdapter to create a data catalog
+    3. Solves for datasets using the diagnostic's data requirements
+    4. Writes catalog YAML to .catalogs/{provider}/{diagnostic}/{test_case}.yaml
+    5. Returns the solved datasets
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to fetch data for
+    tc
+        The test case to fetch data for
+
+    Returns
+    -------
+    ExecutionDatasetCollection
+        The solved datasets for this test case
+    """
+    fetcher = ESGFFetcher()
+
+    # Fetch all requests - returns DataFrame with metadata + paths
+    combined = fetcher.fetch_for_test_case(tc.requests)
+
+    if combined.empty:
+        raise DatasetResolutionError(
+            f"No datasets found for {diag.provider.slug}/{diag.slug} test case '{tc.name}'"
+        )
+
+    # Group paths by source type and use adapters to build proper catalog
+    data_catalog: dict[SourceDatasetType, pd.DataFrame] = {}
+
+    for source_type, group_df in combined.groupby("source_type"):
+        file_paths = [Path(p) for p in group_df["path"].unique().tolist()]
+
+        if source_type == "CMIP6":
+            data_catalog[SourceDatasetType.CMIP6] = _build_catalog(CMIP6DatasetAdapter(), file_paths)
+
+        elif source_type == "obs4MIPs":
+            data_catalog[SourceDatasetType.obs4MIPs] = _build_catalog(Obs4MIPsDatasetAdapter(), file_paths)
+
+    if not data_catalog:
+        raise DatasetResolutionError(
+            f"No datasets found for {diag.provider.slug}/{diag.slug} test case '{tc.name}'"
+        )
+
+    # Solve for datasets
+    datasets = solve_test_case(diag, data_catalog)
+
+    # Write catalog YAML
+    catalog_path = get_catalog_path(diag.provider.slug, diag.slug, tc.name)
+    if catalog_path:
+        save_datasets_to_yaml(datasets, catalog_path)
+        logger.info(f"Saved catalog to {catalog_path}")
+
+    return datasets
+
+
+@app.command(name="fetch")
+def fetch_test_data(  # noqa: PLR0912
+    ctx: typer.Context,
+    provider: Annotated[
+        str | None,
+        typer.Option(help="Specific provider to fetch data for (e.g., 'esmvaltool', 'ilamb')"),
+    ] = None,
+    diagnostic: Annotated[
+        str | None,
+        typer.Option(help="Specific diagnostic slug to fetch data for"),
+    ] = None,
+    test_case: Annotated[
+        str | None,
+        typer.Option(help="Specific test case name to fetch data for"),
+    ] = None,
+    dry_run: Annotated[
+        bool,
+        typer.Option(help="Show what would be fetched without downloading"),
+    ] = False,
+) -> None:
+    """
+    Fetch test data from ESGF for running diagnostic tests.
+
+    Downloads full-resolution ESGF data based on diagnostic test_data_spec.
+    Use --provider or --diagnostic to limit scope.
+
+    Examples
+    --------
+        ref test-cases fetch                   # Fetch all test data
+        ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
+        ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
+    """
+    config = ctx.obj.config
+    db = ctx.obj.database
+
+    # Build provider registry to access diagnostics
+    registry = ProviderRegistry.build_from_config(config, db)
+
+    # Collect diagnostics to process
+    diagnostics_to_process: list[Diagnostic] = []
+
+    for provider_instance in registry.providers:
+        if provider and provider_instance.slug != provider:
+            continue
+
+        for diag in provider_instance.diagnostics():
+            if diagnostic and diag.slug != diagnostic:
+                continue
+            if diag.test_data_spec is None:
+                continue
+            diagnostics_to_process.append(diag)
+
+    if not diagnostics_to_process:
+        logger.warning("No diagnostics with test_data_spec found")
+        raise typer.Exit(code=0)
+
+    logger.info(f"Found {len(diagnostics_to_process)} diagnostics with test data specifications")
+
+    if dry_run:
+        for diag in diagnostics_to_process:
+            logger.info(f"Would fetch data for: {diag.provider.slug}/{diag.slug}")
+            if diag.test_data_spec:
+                for tc in diag.test_data_spec.test_cases:
+                    if test_case and tc.name != test_case:
+                        continue
+                    logger.info(f"  Test case: {tc.name} - {tc.description}")
+                    if tc.requests:
+                        for req in tc.requests:
+                            logger.info(f"    Request: {req.slug} ({req.source_type})")
+        return
+
+    # Process each diagnostic test case
+    for diag in diagnostics_to_process:
+        logger.info(f"Fetching data for: {diag.provider.slug}/{diag.slug}")
+        if diag.test_data_spec:
+            for tc in diag.test_data_spec.test_cases:
+                if test_case and tc.name != test_case:
+                    continue
+                if tc.requests:
+                    logger.info(f"  Processing test case: {tc.name}")
+                    try:
+                        _fetch_and_build_catalog(diag, tc)
+                    except DatasetResolutionError as e:
+                        logger.warning(f"  Could not build catalog for {tc.name}: {e}")
+
+
+@app.command(name="list")
+def list_cases(
+    ctx: typer.Context,
+    provider: Annotated[
+        str | None,
+        typer.Option(help="Filter by provider"),
+    ] = None,
+) -> None:
+    """
+    List test cases for all diagnostics.
+
+    Shows which test cases are defined for each diagnostic and their descriptions.
+    """
+    config = ctx.obj.config
+    db = ctx.obj.database
+    console = ctx.obj.console
+
+    # Build provider registry to access diagnostics
+    registry = ProviderRegistry.build_from_config(config, db)
+
+    table = Table(title="Test Data Specifications")
+    table.add_column("Provider", style="cyan")
+    table.add_column("Diagnostic", style="green")
+    table.add_column("Test Case", style="yellow")
+    table.add_column("Description")
+    table.add_column("Requests", justify="right")
+
+    for provider_instance in registry.providers:
+        if provider and provider_instance.slug != provider:
+            continue
+
+        for diag in provider_instance.diagnostics():
+            if diag.test_data_spec is None:
+                table.add_row(
+                    provider_instance.slug,
+                    diag.slug,
+                    "-",
+                    "(no test_data_spec)",
+                    "0",
+                )
+                continue
+
+            for tc in diag.test_data_spec.test_cases:
+                num_requests = len(tc.requests) if tc.requests else 0
+                table.add_row(
+                    provider_instance.slug,
+                    diag.slug,
+                    tc.name,
+                    tc.description,
+                    str(num_requests),
+                )
+
+    console.print(table)
+
+
+def _find_diagnostic(
+    registry: ProviderRegistry, provider_slug: str, diagnostic_slug: str
+) -> Diagnostic | None:
+    """Find a diagnostic by provider and diagnostic slugs."""
+    for provider_instance in registry.providers:
+        if provider_instance.slug == provider_slug:
+            for d in provider_instance.diagnostics():
+                if d.slug == diagnostic_slug:
+                    return d
+    return None
+
+
+@app.command(name="run")
+def run_test_case(  # noqa: PLR0912, PLR0915
+    ctx: typer.Context,
+    provider: Annotated[
+        str,
+        typer.Option(help="Provider slug (e.g., 'example', 'ilamb')"),
+    ],
+    diagnostic: Annotated[
+        str,
+        typer.Option(help="Diagnostic slug (e.g., 'global-mean-timeseries')"),
+    ],
+    test_case: Annotated[
+        str,
+        typer.Option(help="Test case name (e.g., 'default')"),
+    ] = "default",
+    output_directory: Annotated[
+        Path | None,
+        typer.Option(help="Output directory for execution results"),
+    ] = None,
+    force_regen: Annotated[
+        bool,
+        typer.Option(help="Force regeneration of regression baselines"),
+    ] = False,
+    fetch: Annotated[
+        bool,
+        typer.Option(help="Fetch test data from ESGF before running"),
+    ] = False,
+) -> None:
+    """
+    Run a specific test case for a diagnostic.
+
+    Executes the diagnostic using pre-defined datasets from the test_data_spec
+    and optionally compares against regression baselines.
+
+    Example:
+        ref test-cases run --provider example --diagnostic global-mean-timeseries
+        ref test-cases run --provider ilamb --diagnostic lai-avh15c1 --fetch
+    """
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+
+    # Build provider registry and find the diagnostic
+    registry = ProviderRegistry.build_from_config(config, db)
+    diag = _find_diagnostic(registry, provider, diagnostic)
+
+    if diag is None:
+        logger.error(f"Diagnostic {provider}/{diagnostic} not found")
+        raise typer.Exit(code=1)
+
+    # Verify test_data_spec exists and get the test case
+    if diag.test_data_spec is None:
+        logger.error(f"Diagnostic {provider}/{diagnostic} has no test_data_spec")
+        raise typer.Exit(code=1)
+
+    if not diag.test_data_spec.has_case(test_case):
+        logger.error(f"Test case {test_case!r} not found for {provider}/{diagnostic}")
+        logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
+        raise typer.Exit(code=1)
+
+    tc = diag.test_data_spec.get_case(test_case)
+
+    # Resolve datasets: either fetch from ESGF or load from pre-built catalog
+    if fetch:
+        logger.info(f"Fetching test data for {provider}/{diagnostic}")
+        try:
+            datasets = _fetch_and_build_catalog(diag, tc)
+        except DatasetResolutionError as e:
+            logger.error(str(e))
+            raise typer.Exit(code=1)
+    else:
+        catalog_path = get_catalog_path(provider, diagnostic, test_case)
+        if catalog_path is None or not catalog_path.exists():
+            logger.error(f"No catalog file found for {provider}/{diagnostic}/{test_case}")
+            logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
+            raise typer.Exit(code=1)
+
+        logger.info(f"Loading catalog from {catalog_path}")
+        datasets = load_datasets_from_yaml(catalog_path)
+
+    # Create runner and execute
+    runner = TestCaseRunner(config=config, datasets=datasets)
+
+    logger.info(f"Running test case {test_case!r} for {provider}/{diagnostic}")
+
+    try:
+        result = runner.run(diag, test_case, output_directory)
+    except NoTestDataSpecError:
+        logger.error(f"Diagnostic {provider}/{diagnostic} has no test_data_spec")
+        raise typer.Exit(code=1)
+    except TestCaseNotFoundError:
+        logger.error(f"Test case {test_case!r} not found for {provider}/{diagnostic}")
+        if diag.test_data_spec:
+            logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
+        raise typer.Exit(code=1)
+    except DatasetResolutionError as e:
+        logger.error(str(e))
+        logger.error("Have you run 'ref test-cases fetch' first?")
+        raise typer.Exit(code=1)
+    except Exception as e:
+        logger.error(f"Diagnostic execution failed: {e}")
+        raise typer.Exit(code=1)
+
+    if result.successful:
+        logger.info("Diagnostic execution completed successfully")
+        if result.metric_bundle_filename:
+            logger.info(f"Metric bundle: {result.to_output_path(result.metric_bundle_filename)}")
+        if result.output_bundle_filename:
+            logger.info(f"Output bundle: {result.to_output_path(result.output_bundle_filename)}")
+    else:
+        logger.error("Diagnostic execution failed")
+        raise typer.Exit(code=1)
+
+    # Handle regression baseline comparison/regeneration
+    if TEST_DATA_DIR is None:
+        return
+
+    regression_dir = TEST_DATA_DIR / "regression" / provider / diagnostic
+    baseline_file = regression_dir / f"{test_case}_metric.json"
+
+    if force_regen:
+        if result.metric_bundle_filename:
+            regression_dir.mkdir(parents=True, exist_ok=True)
+            shutil.copy(
+                result.to_output_path(result.metric_bundle_filename),
+                baseline_file,
+            )
+            logger.info(f"Updated regression baseline: {baseline_file}")
+    elif baseline_file.exists():
+        logger.info(f"Regression baseline exists at: {baseline_file}")
+        logger.info("Use --force-regen to update the baseline")

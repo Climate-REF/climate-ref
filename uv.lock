@@ -674,10 +674,12 @@ dependencies = [
     { name = "cattrs" },
     { name = "environs" },
     { name = "fastprogress" },
+    { name = "intake-esgf" },
     { name = "loguru" },
     { name = "numpy" },
     { name = "pandas" },
     { name = "pooch" },
+    { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pyyaml" },
     { name = "requests" },
@@ -697,10 +699,12 @@ requires-dist = [
     { name = "cattrs", specifier = ">=24.1" },
     { name = "environs", specifier = ">=11" },
     { name = "fastprogress", specifier = "==1.0.5" },
+    { name = "intake-esgf", specifier = ">=2025.7.16" },
     { name = "loguru", specifier = ">=0.7.0" },
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pandas", specifier = ">=2.1.0" },
     { name = "pooch", specifier = ">=1.8.0,<2" },
+    { name = "pyarrow", specifier = ">=17.0.0" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests" },
@@ -1712,7 +1716,7 @@ wheels = [
 
 [[package]]
 name = "intake-esgf"
-version = "2025.7.16"
+version = "2025.10.22"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "dask" },
@@ -1726,9 +1730,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/5f/37/46a0f5b60c5c1ffd68aa5c2e80e31060b98d1868dc47435e23a9671459d1/intake_esgf-2025.7.16.tar.gz", hash = "sha256:6b362d38b5a488283db76caea7c1c8af941d4c2e1eb07bb1de1ec372c28bd225", size = 86136, upload-time = "2025-07-16T20:14:17.531Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/5d/31/22fdaecbac3e8830d3ecf47fb3516ff940ccb160447e6376e42c49d91a82/intake_esgf-2025.10.22.tar.gz", hash = "sha256:dcbb091612b1cd9168ae93b6ce6ab585cf3e1b9eefd47fe9d36954ced856311d", size = 97011, upload-time = "2025-10-22T17:58:04.992Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/82/ea/581668e5ba34985d63c3073344fe9c68efaac12bc92fa20b862e846e34e1/intake_esgf-2025.7.16-py3-none-any.whl", hash = "sha256:f7f4168205fe1d69a80c2086e8ef4b00111faa057146961ac39ca6f4f54499d5", size = 47841, upload-time = "2025-07-16T20:14:16.639Z" },
+    { url = "https://files.pythonhosted.org/packages/ff/f7/cd2a02950236c9527abaf08de03dbea67f82f3d0c9d595a92a58964c19bb/intake_esgf-2025.10.22-py3-none-any.whl", hash = "sha256:98a166416756a466099d37a09f68b110deff877d6676e76bfb55b0972fa08e53", size = 61879, upload-time = "2025-10-22T17:58:04.016Z" },
 ]
 
 [[package]]

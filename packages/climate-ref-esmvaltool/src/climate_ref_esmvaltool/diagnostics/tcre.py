@@ -101,6 +101,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                             "experiment_id": "esm-piControl",
                             "variable_id": "areacella",
                             "table_id": "fx",
+                            "member_id": "r1i1p1f1",
                         },
                     ),
                 ),

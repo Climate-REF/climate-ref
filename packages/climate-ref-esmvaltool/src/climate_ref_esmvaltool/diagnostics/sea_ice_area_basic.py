@@ -58,6 +58,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "variable_id": "areacello",
                             "table_id": "Ofx",
+                            "member_id": "r1i1p1f1",
                         },
                     ),
                 ),

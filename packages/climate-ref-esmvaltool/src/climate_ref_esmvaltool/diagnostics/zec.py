@@ -104,6 +104,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                             "experiment_id": "1pctCO2",
                             "variable_id": "areacella",
                             "table_id": "fx",
+                            "member_id": "r1i1p1f1",
                         },
                     ),
                 ),

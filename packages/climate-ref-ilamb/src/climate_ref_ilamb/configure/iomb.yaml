@@ -26,6 +26,7 @@ thetao-WOA2023-surface:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [volcello, sftof]
+          member_id: r1i1p1f1
           table_id: Ofx
 
 so-WOA2023-surface:
@@ -54,6 +55,7 @@ so-WOA2023-surface:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [volcello, sftof]
+          member_id: r1i1p1f1
           table_id: Ofx
 
 amoc-RAPID:
@@ -82,6 +84,7 @@ amoc-RAPID:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: volcello
+          member_id: r1i1p1f1
           table_id: Ofx
 
 ohc-NOAA:
@@ -114,4 +117,5 @@ ohc-NOAA:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: volcello
+          member_id: r1i1p1f1
           table_id: Ofx

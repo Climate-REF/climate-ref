@@ -29,6 +29,7 @@ gpp-WECANN:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [areacella, sftlf]
+          member_id: r1i1p1f1
           table_id: fx
 
 
@@ -51,6 +52,7 @@ gpp-FLUXNET2015:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [areacella, sftlf]
+          member_id: r1i1p1f1
           table_id: fx
 
 mrro-LORA:
@@ -73,6 +75,7 @@ mrro-LORA:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [areacella, sftlf]
+          member_id: r1i1p1f1
           table_id: fx
 
 mrsos-WangMao:
@@ -100,6 +103,7 @@ mrsos-WangMao:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [areacella, sftlf]
+          member_id: r1i1p1f1
           table_id: fx
 
 cSoil-HWSD2:
@@ -121,6 +125,7 @@ cSoil-HWSD2:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [areacella, sftlf]
+          member_id: r1i1p1f1
           table_id: fx
 
 lai-AVH15C1:
@@ -167,6 +172,7 @@ nbp-Hoffman:
           source_id: ACCESS-ESM1-5
           experiment_id: historical
           variable_id: [areacella, sftlf]
+          member_id: r1i1p1f1
           table_id: fx
 
 snc-ESACCI:
@@ -187,6 +193,7 @@ snc-ESACCI:
           source_id: CESM2
           experiment_id: historical
           variable_id: areacella
+          member_id: r1i1p1f1
           table_id: fx
 
 burntFractionAll-GFED:
@@ -209,4 +216,5 @@ burntFractionAll-GFED:
           source_id: CESM2
           experiment_id: historical
           variable_id: areacella
+          member_id: r1i1p1f1
           table_id: fx

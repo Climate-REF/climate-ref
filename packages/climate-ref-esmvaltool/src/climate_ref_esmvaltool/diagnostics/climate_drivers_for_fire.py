@@ -122,6 +122,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "variable_id": "sftlf",
                             "table_id": "fx",
+                            "member_id": "r1i1p1f1",
                         },
                     ),
                 ),

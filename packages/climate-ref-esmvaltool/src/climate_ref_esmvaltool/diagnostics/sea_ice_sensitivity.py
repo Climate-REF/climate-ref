@@ -107,6 +107,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "variable_id": "areacella",
                             "table_id": "fx",
+                            "member_id": "r1i1p1f1",
                         },
                     ),
                     CMIP6Request(
@@ -116,6 +117,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "variable_id": "areacello",
                             "table_id": "Ofx",
+                            "member_id": "r1i1p1f1",
                         },
                     ),
                 ),

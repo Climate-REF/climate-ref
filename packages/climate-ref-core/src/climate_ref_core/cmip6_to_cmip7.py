@@ -374,17 +374,6 @@ def convert_cmip6_dataset(
     -------
     xr.Dataset
         The converted CMIP7-style dataset
-
-    Examples
-    --------
-    >>> import xarray as xr
-    >>> from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset
-    >>> ds = xr.open_dataset("tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc")
-    >>> ds_cmip7 = convert_cmip6_dataset(ds)
-    >>> print(ds_cmip7.attrs["mip_era"])
-    CMIP7
-    >>> print(list(ds_cmip7.data_vars))
-    ['tas_tavg-h2m-hxy-u']
     """
     if not inplace:
         ds = ds.copy(deep=False)

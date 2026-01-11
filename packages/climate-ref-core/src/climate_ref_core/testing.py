@@ -209,13 +209,10 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
     with open(path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-    if paths_map:
-        paths_file = _get_paths_file(path)
-        with open(paths_file, "w") as f:
-            yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
-        logger.info(f"Saved catalog to {path} (paths: {paths_file})")
-    else:
-        logger.info(f"Saved catalog to {path}")
+    paths_file = _get_paths_file(path)
+    with open(paths_file, "w") as f:
+        yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
+    logger.info(f"Saved catalog to {path} (paths: {paths_file})")
 
 
 def get_test_case_regression_path(

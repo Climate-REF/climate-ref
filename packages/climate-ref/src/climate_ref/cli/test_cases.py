@@ -143,11 +143,10 @@ def _fetch_and_build_catalog(
     datasets = _solve_test_case(diag, data_catalog)
 
     # Write catalog YAML to package-local directory
-    catalog_path = get_provider_catalog_path(diag, tc.name)
+    catalog_path = get_provider_catalog_path(diag, tc.name, create=True)
     if catalog_path:
         catalog_path.parent.mkdir(parents=True, exist_ok=True)
         save_datasets_to_yaml(datasets, catalog_path)
-        logger.info(f"Saved catalog to {catalog_path}")
 
     return datasets
 
@@ -542,7 +541,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         raise typer.Exit(code=1)
 
     # Handle regression baseline comparison/regeneration
-    regression_dir = get_provider_regression_path(diag, test_case)
+    regression_dir = get_provider_regression_path(diag, test_case, create=force_regen)
 
     if regression_dir is None:
         logger.warning("Could not determine regression path for provider package")

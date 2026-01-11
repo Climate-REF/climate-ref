@@ -41,56 +41,110 @@ TEST_DATA_DIR = _determine_test_directory()
 SAMPLE_DATA_VERSION = "v0.7.4"
 
 
-def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
+def _get_provider_test_data_dir(diag: Diagnostic, create: bool = False) -> Path | None:
     """
     Get the test-data directory for a provider's package.
 
     Returns packages/climate-ref-{provider}/tests/test-data/ or None if unavailable.
+    This will only work if working in a development checkout of the package.
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to get the test data dir for
+    create
+        If True, create the test-data directory if it doesn't exist
     """
     provider_module_name = diag.provider.__class__.__module__.split(".")[0]
+    logger.debug(f"Looking up test data dir for provider module: {provider_module_name}")
 
     if provider_module_name not in sys.modules:
+        logger.debug(f"Module {provider_module_name} not in sys.modules")
         return None
 
     provider_module = sys.modules[provider_module_name]
     if not hasattr(provider_module, "__file__") or provider_module.__file__ is None:
+        logger.debug(f"Module {provider_module_name} has no __file__ attribute")
         return None
 
     # Module: packages/climate-ref-{slug}/src/climate_ref_{slug}/__init__.py
     # Target: packages/climate-ref-{slug}/tests/test-data/
     module_path = Path(provider_module.__file__)
     package_root = module_path.parent.parent.parent  # src -> climate-ref-{slug}
-    return package_root / "tests" / "test-data"
+    tests_dir = package_root / "tests"
+
+    # Only return path if tests/ exists (dev checkout)
+    if not tests_dir.exists():
+        logger.debug(f"Tests dir does not exist (not a dev checkout): {tests_dir}")
+        return None
+
+    test_data_dir = tests_dir / "test-data"
+    logger.debug(f"Provider module path: {module_path}")
+    logger.debug(f"Derived test data dir: {test_data_dir} (exists: {test_data_dir.exists()})")
+
+    if create and not test_data_dir.exists():
+        test_data_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Created test data dir: {test_data_dir}")
+
+    return test_data_dir
 
 
-def get_provider_catalog_path(diag: Diagnostic, test_case: str) -> Path | None:
+def get_provider_catalog_path(diag: Diagnostic, test_case: str, create: bool = False) -> Path | None:
     """
     Get path to catalog file for a test case in the provider's package.
 
     Path: packages/climate-ref-{provider}/tests/test-data/catalogs/{diagnostic}/{test_case}.yaml
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to get the catalog path for
+    test_case
+        Test case name (e.g., 'default')
+    create
+        If True, create the catalogs directory if it doesn't exist
     """
-    test_data_dir = _get_provider_test_data_dir(diag)
+    test_data_dir = _get_provider_test_data_dir(diag, create=create)
     if test_data_dir is None:
+        logger.debug("Could not determine provider test data dir")
         return None
 
     catalog_dir = test_data_dir / "catalogs"
-    if not catalog_dir.exists():
+
+    if create and not catalog_dir.exists():
+        catalog_dir.mkdir(parents=True, exist_ok=True)
+        logger.debug(f"Created catalog dir: {catalog_dir}")
+    elif not catalog_dir.exists():
+        logger.debug(f"Catalog dir does not exist: {catalog_dir}")
         return None
 
-    return catalog_dir / diag.slug / f"{test_case}.yaml"
+    catalog_path = catalog_dir / diag.slug / f"{test_case}.yaml"
+    logger.debug(f"Resolved catalog path: {catalog_path}")
+    return catalog_path
 
 
-def get_provider_regression_path(diag: Diagnostic, test_case: str) -> Path | None:
+def get_provider_regression_path(diag: Diagnostic, test_case: str, create: bool = False) -> Path | None:
     """
     Get path to regression data for a test case in the provider's package.
 
     Path: packages/climate-ref-{provider}/tests/test-data/regression/{provider}/{diagnostic}/{test_case}/
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to get the regression path for
+    test_case
+        Test case name (e.g., 'default')
+    create
+        If True, create the regression directory structure if it doesn't exist
     """
-    test_data_dir = _get_provider_test_data_dir(diag)
+    test_data_dir = _get_provider_test_data_dir(diag, create=create)
     if test_data_dir is None:
         return None
 
-    return test_data_dir / "regression" / diag.provider.slug / diag.slug / test_case
+    regression_path = test_data_dir / "regression" / diag.provider.slug / diag.slug / test_case
+    logger.debug(f"Resolved regression path: {regression_path}")
+    return regression_path
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:

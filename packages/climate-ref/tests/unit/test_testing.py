@@ -68,10 +68,46 @@ class TestGetProviderPaths:
         mock_diag.provider.slug = "my-provider"
         mock_diag.slug = "my-diag"
 
+        # Create tests directory (indicates dev checkout)
+        tests_dir = tmp_path / "tests"
+        tests_dir.mkdir(parents=True)
+
         with patch.dict("sys.modules", {"test_provider": mock_module}):
             result = get_provider_regression_path(mock_diag, "default")
             expected = tmp_path / "tests" / "test-data" / "regression" / "my-provider" / "my-diag" / "default"
             assert result == expected
+
+    def test_returns_none_when_tests_dir_missing(self, tmp_path):
+        """Test returns None when tests/ directory doesn't exist (not a dev checkout)."""
+        mock_module = MagicMock()
+        mock_module.__file__ = str(tmp_path / "src" / "test_provider" / "__init__.py")
+
+        mock_diag = MagicMock()
+        mock_diag.provider.__class__.__module__ = "test_provider.provider"
+        mock_diag.slug = "my-diag"
+
+        # Don't create tests/ directory
+        with patch.dict("sys.modules", {"test_provider": mock_module}):
+            assert get_provider_catalog_path(mock_diag, "default") is None
+            assert get_provider_regression_path(mock_diag, "default") is None
+
+    def test_catalog_path_creates_dirs_when_create_true(self, tmp_path):
+        """Test that create=True creates the catalogs directory."""
+        mock_module = MagicMock()
+        mock_module.__file__ = str(tmp_path / "src" / "test_provider" / "__init__.py")
+
+        mock_diag = MagicMock()
+        mock_diag.provider.__class__.__module__ = "test_provider.provider"
+        mock_diag.slug = "my-diag"
+
+        # Create tests/ but not test-data/catalogs
+        tests_dir = tmp_path / "tests"
+        tests_dir.mkdir(parents=True)
+
+        with patch.dict("sys.modules", {"test_provider": mock_module}):
+            result = get_provider_catalog_path(mock_diag, "default", create=True)
+            assert result is not None
+            assert (tmp_path / "tests" / "test-data" / "catalogs").exists()
 
 
 class TestTestCaseRunnerClass:

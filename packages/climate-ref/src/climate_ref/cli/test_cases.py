@@ -547,7 +547,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         logger.warning("Could not determine regression path for provider package")
         return
 
-    if force_regen:
+    if force_regen or not regression_dir.exists():
         # Save full output directory as regression data
         if regression_dir.exists():
             shutil.rmtree(regression_dir)

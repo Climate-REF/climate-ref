@@ -463,6 +463,16 @@ def execution_regression(
 
 @define
 class DiagnosticValidator:
+    """
+    Validator for running diagnostics with sample data.
+
+    .. deprecated::
+        Use RegressionValidator from climate_ref_core.testing for test case-based
+        validation, or TestCaseRunner for running test cases.
+
+        This class will be removed in a future release.
+    """
+
     config: Config
     diagnostic: Diagnostic
     data_catalog: dict[SourceDatasetType, pd.DataFrame]

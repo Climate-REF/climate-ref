@@ -24,8 +24,7 @@ from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
-from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.testing import validate_cmec_bundles
 
 
 def _determine_test_directory() -> Path | None:
@@ -218,18 +217,14 @@ def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionRes
 
     assert result.successful
 
-    # Validate bundles
-    metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-    CMECMetric.model_validate(metric_bundle)
-    bundle_dimensions = tuple(metric_bundle.DIMENSIONS.root["json_structure"])
-    assert diagnostic.facets == bundle_dimensions
-    CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+    # Validate CMEC bundles
+    validate_cmec_bundles(diagnostic, result)
 
     # Create a fake log file if one doesn't exist
     if not result.to_output_path("out.log").exists():
         result.to_output_path("out.log").touch()
 
-    # This checks if the bundles are valid
+    # Process and store the result
     handle_execution_result(config, database=database, execution=execution, result=result)
 
 

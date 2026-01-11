@@ -12,7 +12,7 @@ from __future__ import annotations
 
 import shutil
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal
 
 import pandas as pd
 import yaml
@@ -223,6 +223,17 @@ def get_test_case_regression_path(
 ) -> Path:
     """Get path to regression data for a test case."""
     return regression_data_dir / provider_slug / diagnostic_slug / test_case_name
+
+
+def get_test_case_path(
+    test_data_dir: Path,
+    type: Literal["regression", "catalogs"],  # noqa: A002
+    provider_slug: str,
+    diagnostic_slug: str,
+    test_case_name: str,
+) -> Path:
+    """Get path to regression data for a test case."""
+    return test_data_dir / str(type) / provider_slug / diagnostic_slug / test_case_name
 
 
 def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> None:

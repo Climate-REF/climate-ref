@@ -65,25 +65,6 @@ class TestTestDataSpecification:
         assert len(spec.test_cases) == 2
         assert spec.case_names == ["default", "edge-case"]
 
-    def test_default_property(self):
-        """Test getting the default test case."""
-        case1 = TestCase(name="default", description="Default")
-        case2 = TestCase(name="other", description="Other")
-
-        spec = TestDataSpecification(test_cases=(case1, case2))
-
-        assert spec.default == case1
-        assert spec.default.name == "default"
-
-    def test_default_property_missing(self):
-        """Test error when no default test case exists."""
-        case1 = TestCase(name="not-default", description="Not default")
-
-        spec = TestDataSpecification(test_cases=(case1,))
-
-        with pytest.raises(StopIteration):
-            _ = spec.default
-
     def test_get_case(self):
         """Test getting a test case by name."""
         case1 = TestCase(name="default", description="Default")

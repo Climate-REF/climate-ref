@@ -1,8 +1,15 @@
 """
-Testing utilities
+Testing utilities for running and validating diagnostic test cases.
+
+This module provides:
+- Path resolution for package-local test data (catalogs, regression data)
+- Sample data fetching utilities
+- TestCaseRunner for executing diagnostics with test data
+- Result validation helpers
 """
 
 import shutil
+import sys
 from pathlib import Path
 
 from attrs import define
@@ -30,33 +37,60 @@ def _determine_test_directory() -> Path | None:
 
 
 TEST_DATA_DIR = _determine_test_directory()
-"""Path to the test data directory, or None if it doesn't exist."""
-ESGF_DATA_DIR = TEST_DATA_DIR / "esgf-data" if TEST_DATA_DIR else None
-"""Path to the ESGF test data directory, or None if TEST_DATA_DIR doesn't exist."""
+"""Path to the centralised test data directory (for sample data)."""
 SAMPLE_DATA_VERSION = "v0.7.4"
 
 
-def get_catalog_path(provider: str, diagnostic: str, test_case: str) -> Path | None:
+def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
     """
-    Get path to pre-built catalog file for a test case.
+    Get the test-data directory for a provider's package.
 
-    Parameters
-    ----------
-    provider
-        Provider slug (e.g., 'esmvaltool', 'ilamb')
-    diagnostic
-        Diagnostic slug (e.g., 'ecs', 'gpp-fluxcom')
-    test_case
-        Test case name (e.g., 'default')
-
-    Returns
-    -------
-    Path | None
-        Path to the catalog YAML file, or None if ESGF_DATA_DIR is not set
+    Returns packages/climate-ref-{provider}/tests/test-data/ or None if unavailable.
     """
-    if ESGF_DATA_DIR is None:
+    provider_module_name = diag.provider.__class__.__module__.split(".")[0]
+
+    if provider_module_name not in sys.modules:
         return None
-    return ESGF_DATA_DIR / ".catalogs" / provider / diagnostic / f"{test_case}.yaml"
+
+    provider_module = sys.modules[provider_module_name]
+    if not hasattr(provider_module, "__file__") or provider_module.__file__ is None:
+        return None
+
+    # Module: packages/climate-ref-{slug}/src/climate_ref_{slug}/__init__.py
+    # Target: packages/climate-ref-{slug}/tests/test-data/
+    module_path = Path(provider_module.__file__)
+    package_root = module_path.parent.parent.parent  # src -> climate-ref-{slug}
+    return package_root / "tests" / "test-data"
+
+
+def get_provider_catalog_path(diag: Diagnostic, test_case: str) -> Path | None:
+    """
+    Get path to catalog file for a test case in the provider's package.
+
+    Path: packages/climate-ref-{provider}/tests/test-data/catalogs/{diagnostic}/{test_case}.yaml
+    """
+    test_data_dir = _get_provider_test_data_dir(diag)
+    if test_data_dir is None:
+        return None
+
+    catalog_dir = test_data_dir / "catalogs"
+    if not catalog_dir.exists():
+        return None
+
+    return catalog_dir / diag.slug / f"{test_case}.yaml"
+
+
+def get_provider_regression_path(diag: Diagnostic, test_case: str) -> Path | None:
+    """
+    Get path to regression data for a test case in the provider's package.
+
+    Path: packages/climate-ref-{provider}/tests/test-data/regression/{provider}/{diagnostic}/{test_case}/
+    """
+    test_data_dir = _get_provider_test_data_dir(diag)
+    if test_data_dir is None:
+        return None
+
+    return test_data_dir / "regression" / diag.provider.slug / diag.slug / test_case
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:

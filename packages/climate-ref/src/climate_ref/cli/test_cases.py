@@ -11,13 +11,16 @@ from typing import Annotated
 
 import pandas as pd
 import typer
+from git import InvalidGitRepositoryError, Repo
 from loguru import logger
+from rich.console import Console
 from rich.table import Table
 
 from climate_ref.config import Config
 from climate_ref.datasets import CMIP6DatasetAdapter, DatasetAdapter, Obs4MIPsDatasetAdapter
 from climate_ref.provider_registry import ProviderRegistry
-from climate_ref.testing import TEST_DATA_DIR, TestCaseRunner, get_catalog_path
+from climate_ref.solver import solve_executions
+from climate_ref.testing import TestCaseRunner, get_provider_catalog_path, get_provider_regression_path
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.esgf import ESGFFetcher
@@ -26,7 +29,7 @@ from climate_ref_core.exceptions import (
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
-from climate_ref_core.testing import TestCase, load_datasets_from_yaml, save_datasets_to_yaml, solve_test_case
+from climate_ref_core.testing import TestCase, load_datasets_from_yaml, save_datasets_to_yaml
 
 app = typer.Typer(help=__doc__)
 
@@ -63,6 +66,24 @@ def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> p
             logger.warning(f"Failed to parse {parent_dir}: {e}")
 
     return pd.concat(catalog_dfs, ignore_index=True)
+
+
+def _solve_test_case(
+    diagnostic: Diagnostic,
+    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+) -> ExecutionDatasetCollection:
+    """
+    Solve for test case datasets by applying the diagnostic's data requirements.
+
+    Runs the solver to determine which datasets from the catalog
+    satisfy the diagnostic's requirements.
+    """
+    executions = list(solve_executions(data_catalog, diagnostic, diagnostic.provider))
+
+    if not executions:
+        raise ValueError(f"No valid executions found for diagnostic {diagnostic.slug}")
+
+    return executions[0].datasets
 
 
 def _fetch_and_build_catalog(
@@ -119,11 +140,12 @@ def _fetch_and_build_catalog(
         )
 
     # Solve for datasets
-    datasets = solve_test_case(diag, data_catalog)
+    datasets = _solve_test_case(diag, data_catalog)
 
-    # Write catalog YAML
-    catalog_path = get_catalog_path(diag.provider.slug, diag.slug, tc.name)
+    # Write catalog YAML to package-local directory
+    catalog_path = get_provider_catalog_path(diag, tc.name)
     if catalog_path:
+        catalog_path.parent.mkdir(parents=True, exist_ok=True)
         save_datasets_to_yaml(datasets, catalog_path)
         logger.info(f"Saved catalog to {catalog_path}")
 
@@ -283,6 +305,125 @@ def _find_diagnostic(
     return None
 
 
+def _format_size(size_bytes: int | float) -> str:
+    """Format file size in human-readable form."""
+    size = float(size_bytes)
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < 1024:
+            return f"{size:.1f} {unit}"
+        size /= 1024
+    return f"{size:.1f} TB"
+
+
+def _get_git_status(file_path: Path, repo: Repo) -> str:
+    """Get git status for a file using GitPython."""
+    try:
+        rel_path = str(file_path.relative_to(repo.working_dir))
+
+        # Check if untracked
+        if rel_path in repo.untracked_files:
+            return "new"
+
+        # Check staged changes (index vs HEAD)
+        staged_files = {item.a_path for item in repo.index.diff("HEAD")}
+        if rel_path in staged_files:
+            return "staged"
+
+        # Check unstaged changes (working tree vs index)
+        unstaged_files = {item.a_path for item in repo.index.diff(None)}
+        if rel_path in unstaged_files:
+            return "modified"
+
+        # Check if file is tracked
+        try:
+            repo.git.ls_files("--error-unmatch", rel_path)
+            return "tracked"
+        except Exception:
+            return "untracked"
+    except Exception:
+        return "unknown"
+
+
+def _print_regression_summary(
+    console: Console,
+    regression_dir: Path,
+    size_threshold_mb: float = 1.0,
+) -> None:
+    """
+    Print a summary of the regression directory with file sizes and git status.
+
+    Parameters
+    ----------
+    console
+        Rich console for output
+    regression_dir
+        Path to the regression data directory
+    size_threshold_mb
+        Files larger than this (in MB) will be flagged
+    """
+    # Try to get git repo
+    try:
+        repo = Repo(regression_dir, search_parent_directories=True)
+        repo_root = Path(repo.working_dir)
+    except InvalidGitRepositoryError:
+        repo = None
+        repo_root = regression_dir
+
+    # Collect file info
+    files = sorted(regression_dir.rglob("*"))
+    files = [f for f in files if f.is_file()]
+
+    if not files:
+        console.print("[yellow]No files in regression directory[/yellow]")
+        return
+
+    threshold_bytes = int(size_threshold_mb * 1024 * 1024)
+    total_size = 0
+    large_files = 0
+
+    table = Table(title=f"Regression Data: {regression_dir.relative_to(repo_root)}")
+    table.add_column("File", style="cyan", no_wrap=False)
+    table.add_column("Size", justify="right")
+    table.add_column("Git Status", justify="center")
+
+    for file_path in files:
+        size = file_path.stat().st_size
+        total_size += size
+        is_large = size > threshold_bytes
+
+        # Format relative path
+        rel_path = str(file_path.relative_to(regression_dir))
+
+        # Format size with color
+        size_str = _format_size(size)
+        if is_large:
+            size_str = f"[bold red]{size_str}[/bold red]"
+            large_files += 1
+
+        # Get git status with color
+        git_status = _get_git_status(file_path, repo) if repo else "unknown"
+        status_colors = {
+            "new": "[green]new[/green]",
+            "staged": "[green]staged[/green]",
+            "modified": "[yellow]modified[/yellow]",
+            "tracked": "[dim]tracked[/dim]",
+            "untracked": "[red]untracked[/red]",
+            "deleted": "[red]deleted[/red]",
+            "unknown": "[dim]?[/dim]",
+        }
+        git_status_str = status_colors.get(git_status, f"[dim]{git_status}[/dim]")
+
+        table.add_row(rel_path, size_str, git_status_str)
+
+    console.print(table)
+
+    # Summary line
+    summary = f"\n[bold]Total:[/bold] {len(files)} files, {_format_size(total_size)}"
+    if large_files > 0:
+        summary += f" ([red]{large_files} files > {size_threshold_mb} MB[/red])"
+    console.print(summary)
+
+
 @app.command(name="run")
 def run_test_case(  # noqa: PLR0912, PLR0915
     ctx: typer.Context,
@@ -310,6 +451,10 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         bool,
         typer.Option(help="Fetch test data from ESGF before running"),
     ] = False,
+    size_threshold: Annotated[
+        float,
+        typer.Option(help="Flag files larger than this size in MB (default: 1.0)"),
+    ] = 1.0,
 ) -> None:
     """
     Run a specific test case for a diagnostic.
@@ -323,6 +468,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
     """
     config: Config = ctx.obj.config
     db = ctx.obj.database
+    console: Console = ctx.obj.console
 
     # Build provider registry and find the diagnostic
     registry = ProviderRegistry.build_from_config(config, db)
@@ -353,7 +499,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
             logger.error(str(e))
             raise typer.Exit(code=1)
     else:
-        catalog_path = get_catalog_path(provider, diagnostic, test_case)
+        catalog_path = get_provider_catalog_path(diag, test_case)
         if catalog_path is None or not catalog_path.exists():
             logger.error(f"No catalog file found for {provider}/{diagnostic}/{test_case}")
             logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
@@ -396,20 +542,32 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         raise typer.Exit(code=1)
 
     # Handle regression baseline comparison/regeneration
-    if TEST_DATA_DIR is None:
+    regression_dir = get_provider_regression_path(diag, test_case)
+
+    if regression_dir is None:
+        logger.warning("Could not determine regression path for provider package")
         return
 
-    regression_dir = TEST_DATA_DIR / "regression" / provider / diagnostic
-    baseline_file = regression_dir / f"{test_case}_metric.json"
-
     if force_regen:
-        if result.metric_bundle_filename:
-            regression_dir.mkdir(parents=True, exist_ok=True)
-            shutil.copy(
-                result.to_output_path(result.metric_bundle_filename),
-                baseline_file,
-            )
-            logger.info(f"Updated regression baseline: {baseline_file}")
-    elif baseline_file.exists():
-        logger.info(f"Regression baseline exists at: {baseline_file}")
+        # Save full output directory as regression data
+        if regression_dir.exists():
+            shutil.rmtree(regression_dir)
+        regression_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(result.definition.output_directory, regression_dir)
+
+        # Replace absolute paths with placeholders for portability
+        # We don't touch binary files, only text-based ones
+        # TODO: Symlink regression datasets instead of any paths on users' systems
+        test_data_dir = regression_dir.parent.parent.parent  # regression/{provider}/{diag}/ -> test-data/
+        for glob_pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
+            for file in regression_dir.rglob(glob_pattern):
+                content = file.read_text()
+                content = content.replace(str(result.definition.output_directory), "<OUTPUT_DIR>")
+                content = content.replace(str(test_data_dir), "<TEST_DATA_DIR>")
+                file.write_text(content)
+
+        logger.info(f"Updated regression data: {regression_dir}")
+        _print_regression_summary(console, regression_dir, size_threshold)
+    elif regression_dir.exists():
+        logger.info(f"Regression data exists at: {regression_dir}")
         logger.info("Use --force-regen to update the baseline")

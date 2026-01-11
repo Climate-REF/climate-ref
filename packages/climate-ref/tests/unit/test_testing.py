@@ -7,30 +7,71 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from climate_ref.testing import (
+    TestCaseRunner,
+    get_provider_catalog_path,
+    get_provider_regression_path,
+)
+from climate_ref_core.datasets import ExecutionDatasetCollection
+from climate_ref_core.exceptions import (
     DatasetResolutionError,
     NoTestDataSpecError,
     TestCaseNotFoundError,
-    TestCaseRunner,
-    get_catalog_path,
 )
-from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.testing import TestCase, TestDataSpecification
 
 
-class TestGetCatalogPath:
-    """Tests for get_catalog_path function."""
+class TestGetProviderPaths:
+    """Tests for provider path resolution functions."""
 
-    def test_returns_none_when_esgf_data_dir_is_none(self):
-        """Test that get_catalog_path returns None when ESGF_DATA_DIR is None."""
-        with patch("climate_ref.testing.ESGF_DATA_DIR", None):
-            result = get_catalog_path("provider", "diagnostic", "test_case")
-            assert result is None
+    def test_catalog_path_returns_none_when_module_not_loaded(self):
+        """Test returns None when provider module is not in sys.modules."""
+        mock_diag = MagicMock()
+        mock_diag.provider.__class__.__module__ = "nonexistent_module"
 
-    def test_returns_path_when_esgf_data_dir_exists(self, tmp_path):
-        """Test that get_catalog_path returns correct path."""
-        with patch("climate_ref.testing.ESGF_DATA_DIR", tmp_path):
-            result = get_catalog_path("my-provider", "my-diag", "default")
-            assert result == tmp_path / ".catalogs" / "my-provider" / "my-diag" / "default.yaml"
+        result = get_provider_catalog_path(mock_diag, "default")
+        assert result is None
+
+    def test_regression_path_returns_none_when_module_not_loaded(self):
+        """Test returns None when provider module is not in sys.modules."""
+        mock_diag = MagicMock()
+        mock_diag.provider.__class__.__module__ = "nonexistent_module"
+
+        result = get_provider_regression_path(mock_diag, "default")
+        assert result is None
+
+    def test_catalog_path_returns_correct_path(self, tmp_path):
+        """Test returns correct catalog path for loaded provider."""
+        # Create mock module structure
+        mock_module = MagicMock()
+        mock_module.__file__ = str(tmp_path / "src" / "test_provider" / "__init__.py")
+
+        mock_diag = MagicMock()
+        mock_diag.provider.__class__.__module__ = "test_provider.provider"
+        mock_diag.slug = "my-diag"
+
+        # Create the catalog directory
+        catalog_dir = tmp_path / "tests" / "test-data" / "catalogs"
+        catalog_dir.mkdir(parents=True)
+
+        with patch.dict("sys.modules", {"test_provider": mock_module}):
+            result = get_provider_catalog_path(mock_diag, "default")
+            assert result == catalog_dir / "my-diag" / "default.yaml"
+
+    def test_regression_path_returns_correct_path(self, tmp_path):
+        """Test returns correct regression path for loaded provider."""
+        # Create mock module structure
+        mock_module = MagicMock()
+        mock_module.__file__ = str(tmp_path / "src" / "test_provider" / "__init__.py")
+
+        mock_diag = MagicMock()
+        mock_diag.provider.__class__.__module__ = "test_provider.provider"
+        mock_diag.provider.slug = "my-provider"
+        mock_diag.slug = "my-diag"
+
+        with patch.dict("sys.modules", {"test_provider": mock_module}):
+            result = get_provider_regression_path(mock_diag, "default")
+            expected = tmp_path / "tests" / "test-data" / "regression" / "my-provider" / "my-diag" / "default"
+            assert result == expected
 
 
 class TestTestCaseRunnerClass:

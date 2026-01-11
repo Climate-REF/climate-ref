@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import pytest
-from climate_ref_esmvaltool import provider
+from climate_ref_example import provider
 
 from climate_ref.testing import TestCaseRunner, validate_result
 from climate_ref_core.diagnostics import Diagnostic
@@ -11,37 +11,23 @@ from climate_ref_core.testing import (
     load_datasets_from_yaml,
 )
 
-SKIP = {
-    "regional-historical-annual-cycle",
-    "regional-historical-timeseries",
-}
-
-diagnostics = [
-    pytest.param(
-        diagnostic,
-        id=diagnostic.slug,
-        marks=pytest.mark.skipif(
-            diagnostic.slug in SKIP,
-            reason="Output data too large to store in git",
-        ),
-    )
-    for diagnostic in provider.diagnostics()
-]
+# Standard parametrized tests using sample data
+diagnostics = [pytest.param(diagnostic, id=diagnostic.slug) for diagnostic in provider.diagnostics()]
 
 
 @pytest.mark.slow
 @pytest.mark.parametrize("diagnostic", diagnostics)
 def test_diagnostics(diagnostic: Diagnostic, diagnostic_validation):
+    """Run diagnostic end-to-end with sample data."""
     validator = diagnostic_validation(diagnostic)
-
     definition = validator.get_definition()
     validator.execute(definition)
 
 
 @pytest.mark.parametrize("diagnostic", diagnostics)
 def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
+    """Validate regression outputs can be built from sample data."""
     validator = diagnostic_validation(diagnostic)
-
     definition = validator.get_regression_definition()
     validator.validate(definition)
     validator.execution_regression.check(definition.key, definition.output_directory)
@@ -57,6 +43,7 @@ def test_validate_test_case_regression(
     """
     Validate pre-stored test case regression outputs as CMEC bundles.
 
+    Uses pytest 9 subtests to iterate over all diagnostics with test_data_spec.
     Each diagnostic/test_case is reported as a separate subtest.
     """
     for diagnostic in provider.diagnostics():
@@ -99,9 +86,10 @@ def test_run_test_cases(
     """
     Run diagnostic test cases end-to-end with ESGF data.
 
+    Uses pytest 9 subtests to iterate over all diagnostics with test_data_spec.
     Each diagnostic/test_case is reported as a separate subtest.
 
-    Requires: `ref test-cases fetch --provider esmvaltool` to have been run first.
+    Requires: `ref test-cases fetch --provider example` to have been run first.
     """
     for diagnostic in provider.diagnostics():
         if diagnostic.test_data_spec is None:

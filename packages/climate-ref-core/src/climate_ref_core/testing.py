@@ -215,21 +215,24 @@ def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
     diag
         The diagnostic to get the test data dir for
     """
-    provider_module_name = diag.provider.__class__.__module__.split(".")[0]
-    logger.debug(f"Looking up test data dir for provider module: {provider_module_name}")
+    # TODO: Simplify once providers are in their own packages
 
-    if provider_module_name not in sys.modules:
-        logger.debug(f"Module {provider_module_name} not in sys.modules")
+    # Use the diagnostic's module to determine the provider package
+    diagnostic_module_name = diag.__class__.__module__.split(".")[0]
+    logger.debug(f"Looking up test data dir for diagnostic module: {diagnostic_module_name}")
+
+    if diagnostic_module_name not in sys.modules:
+        logger.debug(f"Module {diagnostic_module_name} not in sys.modules")
         return None
 
-    provider_module = sys.modules[provider_module_name]
-    if not hasattr(provider_module, "__file__") or provider_module.__file__ is None:
-        logger.debug(f"Module {provider_module_name} has no __file__ attribute")
+    diagnostic_module = sys.modules[diagnostic_module_name]
+    if not hasattr(diagnostic_module, "__file__") or diagnostic_module.__file__ is None:
+        logger.debug(f"Module {diagnostic_module_name} has no __file__ attribute")
         return None
 
     # Module: packages/climate-ref-{slug}/src/climate_ref_{slug}/__init__.py
     # Target: packages/climate-ref-{slug}/tests/test-data/
-    module_path = Path(provider_module.__file__)
+    module_path = Path(diagnostic_module.__file__)
     package_root = module_path.parent.parent.parent  # src -> climate-ref-{slug}
     tests_dir = package_root / "tests"
 
@@ -239,7 +242,7 @@ def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
         return None
 
     test_data_dir = tests_dir / "test-data"
-    logger.debug(f"Provider module path: {module_path}")
+    logger.debug(f"Diagnostic module path: {module_path}")
     logger.debug(f"Derived test data dir: {test_data_dir} (exists: {test_data_dir.exists()})")
 
     return test_data_dir

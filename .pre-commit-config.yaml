@@ -8,7 +8,7 @@ ci:
 # See https://pre-commit.com/#regular-expressions
 exclude: |
     (?x)^(
-        .*/test-data/regression/.*
+        .*/regression/.*
     )$
 
 # See https://pre-commit.com/hooks.html for more hooks

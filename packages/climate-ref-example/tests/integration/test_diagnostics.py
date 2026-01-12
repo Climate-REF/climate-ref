@@ -83,14 +83,13 @@ def test_validate_test_case_regression(
 @pytest.mark.test_cases
 def test_run_test_cases(
     subtests: pytest.Subtests,
-    test_data_dir: Path,
+    provider_test_data_dir: Path,
     config,
     tmp_path: Path,
 ):
     """
     Run diagnostic test cases end-to-end with ESGF data.
 
-    Uses pytest 9 subtests to iterate over all diagnostics with test_data_spec.
     Each diagnostic/test_case is reported as a separate subtest.
 
     Requires: `ref test-cases fetch --provider example` to have been run first.

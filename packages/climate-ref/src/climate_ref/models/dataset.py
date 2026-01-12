@@ -148,6 +148,61 @@ class CMIP6Dataset(Dataset):
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore
 
 
+class CMIP7Dataset(Dataset):
+    """
+    Represents a CMIP7 dataset
+
+    CMIP7 datasets have additional metadata compared to CMIP6,
+    including branding suffix components and DRS version information.
+    """
+
+    __tablename__ = "cmip7_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    # Core identification (similar to CMIP6)
+    activity_id: Mapped[str] = mapped_column()
+    institution_id: Mapped[str] = mapped_column()
+    source_id: Mapped[str] = mapped_column(index=True)
+    experiment_id: Mapped[str] = mapped_column(index=True)
+    variant_label: Mapped[str] = mapped_column()
+    member_id: Mapped[str] = mapped_column(index=True)
+    variable_id: Mapped[str] = mapped_column()
+    grid_label: Mapped[str] = mapped_column()
+    version: Mapped[str] = mapped_column()
+
+    # CMIP7-specific fields
+    mip_era: Mapped[str] = mapped_column(default="CMIP7")
+    region: Mapped[str] = mapped_column(default="GLB")
+    frequency: Mapped[str] = mapped_column()
+    branding_suffix: Mapped[str] = mapped_column()
+
+    # Branding suffix components
+    temporal_label: Mapped[str] = mapped_column(nullable=True)
+    vertical_label: Mapped[str] = mapped_column(nullable=True)
+    horizontal_label: Mapped[str] = mapped_column(nullable=True)
+    area_label: Mapped[str] = mapped_column(nullable=True)
+
+    # DRS and archive info
+    archive_id: Mapped[str] = mapped_column(nullable=True)
+    host_collection: Mapped[str] = mapped_column(nullable=True)
+    drs_specs: Mapped[str] = mapped_column(nullable=True)
+    cv_version: Mapped[str] = mapped_column(nullable=True)
+
+    # Optional metadata (similar to CMIP6)
+    realm: Mapped[str] = mapped_column(nullable=True)
+    table_id: Mapped[str] = mapped_column(nullable=True)
+    standard_name: Mapped[str] = mapped_column(nullable=True)
+    long_name: Mapped[str] = mapped_column(nullable=True)
+    units: Mapped[str] = mapped_column(nullable=True)
+
+    instance_id: Mapped[str] = mapped_column(index=True)
+    """
+    Unique identifier for the dataset (CMIP7 DRS format).
+    """
+
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP7}  # type: ignore
+
+
 class Obs4MIPsDataset(Dataset):
     """
     Represents a obs4mips dataset

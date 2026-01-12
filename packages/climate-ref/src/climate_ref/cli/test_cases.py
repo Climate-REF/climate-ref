@@ -15,7 +15,12 @@ from loguru import logger
 from rich.table import Table
 
 from climate_ref.config import Config
-from climate_ref.datasets import CMIP6DatasetAdapter, DatasetAdapter, Obs4MIPsDatasetAdapter
+from climate_ref.datasets import (
+    CMIP6DatasetAdapter,
+    CMIP7DatasetAdapter,
+    DatasetAdapter,
+    Obs4MIPsDatasetAdapter,
+)
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.testing import TEST_DATA_DIR, TestCaseRunner, get_catalog_path
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
@@ -110,8 +115,13 @@ def _fetch_and_build_catalog(
         if source_type == "CMIP6":
             data_catalog[SourceDatasetType.CMIP6] = _build_catalog(CMIP6DatasetAdapter(), file_paths)
 
+        elif source_type == "CMIP7":
+            data_catalog[SourceDatasetType.CMIP7] = _build_catalog(CMIP7DatasetAdapter(), file_paths)
+
         elif source_type == "obs4MIPs":
             data_catalog[SourceDatasetType.obs4MIPs] = _build_catalog(Obs4MIPsDatasetAdapter(), file_paths)
+        else:
+            logger.warning(f"Unsupported source type for test case: {source_type}")
 
     if not data_catalog:
         raise DatasetResolutionError(

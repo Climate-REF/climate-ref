@@ -8,6 +8,7 @@ from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.testing import (
     RegressionValidator,
     TestCasePaths,
+    collect_test_case_params,
     load_datasets_from_yaml,
 )
 
@@ -35,6 +36,9 @@ diagnostics = [
     for diagnostic in provider.diagnostics()
 ]
 
+# Test case params for parameterized test_case tests
+test_case_params = collect_test_case_params(provider)
+
 
 @pytest.mark.slow
 @pytest.mark.parametrize("diagnostic", diagnostics)
@@ -54,8 +58,10 @@ def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
     validator.execution_regression.check(definition.key, definition.output_directory)
 
 
+@pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
 def test_validate_test_case_regression(
-    subtests: pytest.Subtests,
+    diagnostic: Diagnostic,
+    test_case_name: str,
     provider_test_data_dir: Path,
     config,
     tmp_path: Path,
@@ -63,39 +69,37 @@ def test_validate_test_case_regression(
     """
     Validate pre-stored test case regression outputs as CMEC bundles.
 
-    Each diagnostic/test_case is reported as a separate subtest.
+    Each diagnostic/test_case is a separate parameterized test.
     """
-    for diagnostic in provider.diagnostics():
-        if diagnostic.test_data_spec is None:
-            continue
+    diagnostic.provider.configure(config)
 
-        diagnostic.provider.configure(config)
+    paths = TestCasePaths.from_test_data_dir(
+        provider_test_data_dir,
+        diagnostic.slug,
+        test_case_name,
+    )
 
-        for test_case in diagnostic.test_data_spec.test_cases:
-            with subtests.test(msg=f"{diagnostic.slug}/{test_case.name}"):
-                paths = TestCasePaths.from_test_data_dir(
-                    provider_test_data_dir,
-                    diagnostic.slug,
-                    test_case.name,
-                )
+    if not paths.catalog.exists():
+        pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
+    if not paths.regression.exists():
+        pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
 
-                if not paths.regression.exists():
-                    pytest.skip(f"No regression data for {diagnostic.slug}/{test_case.name}")
+    validator = RegressionValidator(
+        diagnostic=diagnostic,
+        test_case_name=test_case_name,
+        test_data_dir=provider_test_data_dir,
+    )
 
-                validator = RegressionValidator(
-                    diagnostic=diagnostic,
-                    test_case_name=test_case.name,
-                    test_data_dir=provider_test_data_dir,
-                )
-
-                definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case.name)
-                validator.validate(definition)
+    definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
+    validator.validate(definition)
 
 
 @pytest.mark.slow
 @pytest.mark.test_cases
+@pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
 def test_run_test_cases(
-    subtests: pytest.Subtests,
+    diagnostic: Diagnostic,
+    test_case_name: str,
     provider_test_data_dir: Path,
     config,
     tmp_path: Path,
@@ -103,33 +107,25 @@ def test_run_test_cases(
     """
     Run diagnostic test cases end-to-end with ESGF data.
 
-    Each diagnostic/test_case is reported as a separate subtest.
-
     Requires: `ref test-cases fetch --provider esmvaltool` to have been run first.
     """
-    for diagnostic in provider.diagnostics():
-        if diagnostic.test_data_spec is None:
-            continue
+    diagnostic.provider.configure(config)
 
-        diagnostic.provider.configure(config)
+    paths = TestCasePaths.from_test_data_dir(
+        provider_test_data_dir,
+        diagnostic.slug,
+        test_case_name,
+    )
 
-        for test_case in diagnostic.test_data_spec.test_cases:
-            with subtests.test(msg=f"{diagnostic.slug}/{test_case.name}"):
-                paths = TestCasePaths.from_test_data_dir(
-                    provider_test_data_dir,
-                    diagnostic.slug,
-                    test_case.name,
-                )
+    if not paths.catalog.exists():
+        pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
 
-                if not paths.catalog.exists():
-                    pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case.name}")
+    datasets = load_datasets_from_yaml(paths.catalog)
 
-                datasets = load_datasets_from_yaml(paths.catalog)
+    runner = TestCaseRunner(config=config, datasets=datasets)
+    output_dir = tmp_path / diagnostic.slug / test_case_name
 
-                runner = TestCaseRunner(config=config, datasets=datasets)
-                output_dir = tmp_path / diagnostic.slug / test_case.name
+    result = runner.run(diagnostic, test_case_name, output_dir)
 
-                result = runner.run(diagnostic, test_case.name, output_dir)
-
-                assert result.successful, f"Diagnostic {diagnostic.slug} failed"
-                validate_result(diagnostic, config, result)
+    assert result.successful, f"Diagnostic {diagnostic.slug} failed"
+    validate_result(diagnostic, config, result)

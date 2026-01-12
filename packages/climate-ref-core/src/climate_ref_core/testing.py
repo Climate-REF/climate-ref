@@ -32,7 +32,10 @@ from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
+    from _pytest.mark.structures import ParameterSet
+
     from climate_ref_core.diagnostics import Diagnostic
+    from climate_ref_core.providers import DiagnosticProvider
 
 
 @frozen
@@ -412,6 +415,12 @@ class RegressionValidator:
         Copies regression data to tmp_dir and replaces path placeholders.
         """
         regression_path = self.paths.regression
+        catalog_path = self.paths.catalog
+
+        if not catalog_path.exists():
+            raise FileNotFoundError(
+                f"No catalog file at {catalog_path} for test case datasets. Run `ref test-cases fetch` first."
+            )
         if not regression_path.exists():
             raise FileNotFoundError(
                 f"No regression data at {regression_path}. Run 'ref test-cases run --force-regen' first."
@@ -429,10 +438,13 @@ class RegressionValidator:
                 content = content.replace("<TEST_DATA_DIR>", str(self.test_data_dir))
                 file.write_text(content)
 
+        # Load datasets from catalog
+        datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
+
         return ExecutionDefinition(
             diagnostic=self.diagnostic,
             key=f"test-{self.test_case_name}",
-            datasets=ExecutionDatasetCollection({}),
+            datasets=datasets,
             output_directory=output_dir,
             root_directory=tmp_dir,
         )
@@ -442,3 +454,50 @@ class RegressionValidator:
         result = self.diagnostic.build_execution_result(definition)
         result.to_output_path("out.log").touch()  # Log file not tracked in regression
         validate_cmec_bundles(self.diagnostic, result)
+
+
+def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:
+    """
+    Collect all diagnostic/test_case pairs from a provider for parameterized testing.
+
+    Returns a list of pytest.param objects with (diagnostic, test_case_name) tuples,
+    each with an id of "{diagnostic.slug}/{test_case.name}".
+
+    Parameters
+    ----------
+    provider
+        The diagnostic provider to collect test cases from
+
+    Returns
+    -------
+    :
+        List of pytest.param objects for use with @pytest.mark.parametrize
+
+    Example
+    -------
+    ```python
+    from climate_ref_core.testing import collect_test_case_params
+    from my_provider import provider
+
+    test_case_params = collect_test_case_params(provider)
+
+
+    @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
+    def test_my_test(diagnostic, test_case_name): ...
+    ```
+    """
+    import pytest  # noqa: PLC0415
+
+    params: list[ParameterSet] = []
+    for diagnostic in provider.diagnostics():
+        if diagnostic.test_data_spec is None:
+            continue
+        for test_case in diagnostic.test_data_spec.test_cases:
+            params.append(
+                pytest.param(
+                    diagnostic,
+                    test_case.name,
+                    id=f"{diagnostic.slug}/{test_case.name}",
+                )
+            )
+    return params

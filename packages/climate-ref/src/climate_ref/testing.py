@@ -87,13 +87,16 @@ def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> Non
         fh.write(SAMPLE_DATA_VERSION)
 
 
-def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionResult) -> None:
+def validate_result(
+    diagnostic: Diagnostic, config: Config, result: ExecutionResult
+) -> None:  # pragma: no cover
     """
     Asserts the correctness of the result of a diagnostic execution
 
     This should only be used by the test suite as it will create a fake
     database entry for the diagnostic execution result.
     """
+    # TODO: Remove this function once we have moved to using RegressionValidator
     # Add a fake execution/execution group in the Database
     database = Database.from_config(config)
     execution_group = ExecutionGroup(
@@ -120,6 +123,7 @@ def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionRes
         result.to_output_path("out.log").touch()
 
     # Process and store the result
+    # TODO: This is missing from RegressionValidator
     handle_execution_result(config, database=database, execution=execution, result=result)
 
 

@@ -332,7 +332,7 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
         # Extract paths to separate map
         for record in datasets_records:
             instance_id = record.get(slug_column)
-            if instance_id and "path" in record:
+            if instance_id and "path" in record:  # pragma: no branch
                 paths_map[instance_id] = record.pop("path")
 
         data[source_type.value] = {

@@ -28,7 +28,7 @@ class TestTestCasePathsFromDiagnostic:
     def test_returns_none_when_module_not_loaded(self):
         """Test returns None when provider module is not in sys.modules."""
         mock_diag = MagicMock()
-        mock_diag.provider.__class__.__module__ = "nonexistent_module"
+        mock_diag.__class__.__module__ = "nonexistent_module.diagnostics"
 
         result = TestCasePaths.from_diagnostic(mock_diag, "default")
         assert result is None
@@ -40,7 +40,7 @@ class TestTestCasePathsFromDiagnostic:
         mock_module.__file__ = str(tmp_path / "src" / "test_provider" / "__init__.py")
 
         mock_diag = MagicMock()
-        mock_diag.provider.__class__.__module__ = "test_provider.provider"
+        mock_diag.__class__.__module__ = "test_provider.diagnostics"
         mock_diag.slug = "my-diag"
 
         # Create tests directory (indicates dev checkout)
@@ -60,7 +60,7 @@ class TestTestCasePathsFromDiagnostic:
         mock_module.__file__ = str(tmp_path / "src" / "test_provider" / "__init__.py")
 
         mock_diag = MagicMock()
-        mock_diag.provider.__class__.__module__ = "test_provider.provider"
+        mock_diag.__class__.__module__ = "test_provider.diagnostics"
         mock_diag.slug = "my-diag"
 
         # Don't create tests/ directory

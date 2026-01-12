@@ -11,6 +11,9 @@ on:
   schedule:
     - cron: '2 15 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   tests-slow:
     if: github.repository == 'Climate-REF/climate-ref'

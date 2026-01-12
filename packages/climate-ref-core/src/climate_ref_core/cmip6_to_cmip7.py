@@ -250,7 +250,7 @@ class CMIP7Metadata:
 
     # Required new attributes
     mip_era: str = "CMIP7"
-    region: str = "GLB"
+    region: str = "glb"
     archive_id: str = "WCRP"
     host_collection: str = "CMIP7"
     drs_specs: str = "MIP-DRS7"

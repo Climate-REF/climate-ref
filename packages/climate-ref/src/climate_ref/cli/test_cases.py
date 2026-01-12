@@ -20,7 +20,7 @@ from climate_ref.config import Config
 from climate_ref.datasets import CMIP6DatasetAdapter, DatasetAdapter, Obs4MIPsDatasetAdapter
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.solver import solve_executions
-from climate_ref.testing import TestCaseRunner, get_provider_catalog_path, get_provider_regression_path
+from climate_ref.testing import TestCaseRunner
 from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.esgf import ESGFFetcher
@@ -29,7 +29,12 @@ from climate_ref_core.exceptions import (
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
-from climate_ref_core.testing import TestCase, load_datasets_from_yaml, save_datasets_to_yaml
+from climate_ref_core.testing import (
+    TestCase,
+    TestCasePaths,
+    load_datasets_from_yaml,
+    save_datasets_to_yaml,
+)
 
 app = typer.Typer(help=__doc__)
 
@@ -142,11 +147,11 @@ def _fetch_and_build_catalog(
     # Solve for datasets
     datasets = _solve_test_case(diag, data_catalog)
 
-    # Write catalog YAML to package-local directory
-    catalog_path = get_provider_catalog_path(diag, tc.name, create=True)
-    if catalog_path:
-        catalog_path.parent.mkdir(parents=True, exist_ok=True)
-        save_datasets_to_yaml(datasets, catalog_path)
+    # Write catalog YAML to package-local test case directory
+    paths = TestCasePaths.from_diagnostic(diag, tc.name)
+    if paths:
+        paths.create()
+        save_datasets_to_yaml(datasets, paths.catalog)
 
     return datasets
 
@@ -498,14 +503,18 @@ def run_test_case(  # noqa: PLR0912, PLR0915
             logger.error(str(e))
             raise typer.Exit(code=1)
     else:
-        catalog_path = get_provider_catalog_path(diag, test_case)
-        if catalog_path is None or not catalog_path.exists():
+        paths = TestCasePaths.from_diagnostic(diag, test_case)
+        if paths is None:
+            logger.error(f"Could not determine test data directory for {provider}/{diagnostic}")
+            raise typer.Exit(code=1)
+
+        if not paths.catalog.exists():
             logger.error(f"No catalog file found for {provider}/{diagnostic}/{test_case}")
             logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
             raise typer.Exit(code=1)
 
-        logger.info(f"Loading catalog from {catalog_path}")
-        datasets = load_datasets_from_yaml(catalog_path)
+        logger.info(f"Loading catalog from {paths.catalog}")
+        datasets = load_datasets_from_yaml(paths.catalog)
 
     # Create runner and execute
     runner = TestCaseRunner(config=config, datasets=datasets)
@@ -541,32 +550,34 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         raise typer.Exit(code=1)
 
     # Handle regression baseline comparison/regeneration
-    regression_dir = get_provider_regression_path(diag, test_case, create=force_regen)
+    paths = TestCasePaths.from_diagnostic(diag, test_case)
 
-    if regression_dir is None:
-        logger.warning("Could not determine regression path for provider package")
+    if paths is None:
+        logger.warning("Could not determine test case directory for provider package")
         return
 
-    if force_regen or not regression_dir.exists():
+    if force_regen:
+        paths.create()
+
+    if force_regen or not paths.regression.exists():
         # Save full output directory as regression data
-        if regression_dir.exists():
-            shutil.rmtree(regression_dir)
-        regression_dir.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(result.definition.output_directory, regression_dir)
+        if paths.regression.exists():
+            shutil.rmtree(paths.regression)
+        paths.regression.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(result.definition.output_directory, paths.regression, dirs_exist_ok=True)
 
         # Replace absolute paths with placeholders for portability
         # We don't touch binary files, only text-based ones
         # TODO: Symlink regression datasets instead of any paths on users' systems
-        test_data_dir = regression_dir.parent.parent.parent  # regression/{provider}/{diag}/ -> test-data/
         for glob_pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
-            for file in regression_dir.rglob(glob_pattern):
+            for file in paths.regression.rglob(glob_pattern):
                 content = file.read_text()
                 content = content.replace(str(result.definition.output_directory), "<OUTPUT_DIR>")
-                content = content.replace(str(test_data_dir), "<TEST_DATA_DIR>")
+                content = content.replace(str(paths.test_data_dir), "<TEST_DATA_DIR>")
                 file.write_text(content)
 
-        logger.info(f"Updated regression data: {regression_dir}")
-        _print_regression_summary(console, regression_dir, size_threshold)
-    elif regression_dir.exists():
-        logger.info(f"Regression data exists at: {regression_dir}")
+        logger.info(f"Updated regression data: {paths.regression}")
+        _print_regression_summary(console, paths.regression, size_threshold)
+    elif paths.regression.exists():
+        logger.info(f"Regression data exists at: {paths.regression}")
         logger.info("Use --force-regen to update the baseline")

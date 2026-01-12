@@ -6,6 +6,7 @@ import pytest
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.testing import (
     TestCase,
+    TestCasePaths,
     TestDataSpecification,
     load_datasets_from_yaml,
     save_datasets_to_yaml,
@@ -102,6 +103,47 @@ class TestTestDataSpecification:
         spec = TestDataSpecification(test_cases=(case1, case2, case3))
 
         assert spec.case_names == ["default", "edge-case", "minimal"]
+
+
+class TestTestCasePaths:
+    """Tests for TestCasePaths class."""
+
+    def test_from_test_data_dir(self, tmp_path):
+        """Test creating from explicit test data dir."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+
+        assert paths.root == tmp_path / "my-diag" / "default"
+        assert paths.catalog == tmp_path / "my-diag" / "default" / "catalog.yaml"
+        assert paths.catalog_paths == tmp_path / "my-diag" / "default" / "catalog.paths.yaml"
+        assert paths.regression == tmp_path / "my-diag" / "default" / "regression"
+
+    def test_test_data_dir_property(self, tmp_path):
+        """Test that test_data_dir returns the base directory."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        assert paths.test_data_dir == tmp_path
+
+    def test_exists_false_when_not_created(self, tmp_path):
+        """Test exists returns False when directory doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        assert not paths.exists()
+
+    def test_create_makes_directory(self, tmp_path):
+        """Test create makes the test case directory."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        assert not paths.root.exists()
+
+        paths.create()
+
+        assert paths.root.exists()
+        assert paths.root.is_dir()
+
+    def test_different_test_cases(self, tmp_path):
+        """Test different test case names produce different paths."""
+        default = TestCasePaths.from_test_data_dir(tmp_path, "diag", "default")
+        custom = TestCasePaths.from_test_data_dir(tmp_path, "diag", "custom")
+
+        assert default.root != custom.root
+        assert default.regression != custom.regression
 
 
 class TestYamlSerialization:

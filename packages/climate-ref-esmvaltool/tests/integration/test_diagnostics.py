@@ -7,9 +7,16 @@ from climate_ref.testing import TestCaseRunner, validate_result
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.testing import (
     RegressionValidator,
-    get_test_case_regression_path,
+    TestCasePaths,
     load_datasets_from_yaml,
 )
+
+
+@pytest.fixture(scope="session")
+def provider_test_data_dir() -> Path:
+    """Path to the package-local test data directory."""
+    return Path(__file__).parent.parent / "test-data"
+
 
 SKIP = {
     "regional-historical-annual-cycle",
@@ -49,8 +56,7 @@ def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
 
 def test_validate_test_case_regression(
     subtests: pytest.Subtests,
-    regression_dir: Path,
-    test_data_dir: Path,
+    provider_test_data_dir: Path,
     config,
     tmp_path: Path,
 ):
@@ -67,21 +73,19 @@ def test_validate_test_case_regression(
 
         for test_case in diagnostic.test_data_spec.test_cases:
             with subtests.test(msg=f"{diagnostic.slug}/{test_case.name}"):
-                regression_path = get_test_case_regression_path(
-                    regression_dir,
-                    provider.slug,
+                paths = TestCasePaths.from_test_data_dir(
+                    provider_test_data_dir,
                     diagnostic.slug,
                     test_case.name,
                 )
 
-                if not regression_path.exists():
+                if not paths.regression.exists():
                     pytest.skip(f"No regression data for {diagnostic.slug}/{test_case.name}")
 
                 validator = RegressionValidator(
                     diagnostic=diagnostic,
                     test_case_name=test_case.name,
-                    regression_data_dir=regression_dir,
-                    test_data_dir=test_data_dir,
+                    test_data_dir=provider_test_data_dir,
                 )
 
                 definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case.name)
@@ -92,7 +96,7 @@ def test_validate_test_case_regression(
 @pytest.mark.test_cases
 def test_run_test_cases(
     subtests: pytest.Subtests,
-    catalog_dir: Path,
+    provider_test_data_dir: Path,
     config,
     tmp_path: Path,
 ):
@@ -111,12 +115,16 @@ def test_run_test_cases(
 
         for test_case in diagnostic.test_data_spec.test_cases:
             with subtests.test(msg=f"{diagnostic.slug}/{test_case.name}"):
-                catalog_path = catalog_dir / diagnostic.slug / f"{test_case.name}.yaml"
+                paths = TestCasePaths.from_test_data_dir(
+                    provider_test_data_dir,
+                    diagnostic.slug,
+                    test_case.name,
+                )
 
-                if not catalog_path.exists():
+                if not paths.catalog.exists():
                     pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case.name}")
 
-                datasets = load_datasets_from_yaml(catalog_path)
+                datasets = load_datasets_from_yaml(paths.catalog)
 
                 runner = TestCaseRunner(config=config, datasets=datasets)
                 output_dir = tmp_path / diagnostic.slug / test_case.name

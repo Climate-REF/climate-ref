@@ -11,8 +11,9 @@ This module provides:
 from __future__ import annotations
 
 import shutil
+import sys
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 import yaml
@@ -109,6 +110,139 @@ class TestDataSpecification:
     def case_names(self) -> list[str]:
         """Get names of all test cases."""
         return [tc.name for tc in self.test_cases]
+
+
+@frozen
+class TestCasePaths:
+    """
+    Path resolver for test case data.
+
+    Provides access to all paths within a test case directory:
+    - catalog.yaml: Dataset metadata (tracked in git)
+    - catalog.paths.yaml: Local file paths (gitignored)
+    - regression/: Regression outputs (tracked in git)
+
+    Can be constructed from:
+    - A diagnostic + test case name (auto-resolves provider's test-data dir)
+    - An explicit test_data_dir + diagnostic slug + test case name
+    """
+
+    root: Path
+    """The test case directory (test_data_dir / diagnostic_slug / test_case_name)."""
+
+    @classmethod
+    def from_diagnostic(cls, diagnostic: Diagnostic, test_case: str) -> TestCasePaths | None:
+        """
+        Create from a diagnostic, auto-resolving the provider's test-data directory.
+
+        Returns None if the provider's test-data directory cannot be determined
+        (e.g., not a development checkout).
+
+        Parameters
+        ----------
+        diagnostic
+            The diagnostic to get paths for
+        test_case
+            Test case name (e.g., 'default')
+        """
+        test_data_dir = _get_provider_test_data_dir(diagnostic)
+        if test_data_dir is None:
+            return None
+        return cls(root=test_data_dir / diagnostic.slug / test_case)
+
+    @classmethod
+    def from_test_data_dir(
+        cls,
+        test_data_dir: Path,
+        diagnostic_slug: str,
+        test_case: str,
+    ) -> TestCasePaths:
+        """
+        Create from an explicit test data directory.
+
+        Use this when you have a test_data_dir fixture (in tests) or
+        know the base path explicitly.
+
+        Parameters
+        ----------
+        test_data_dir
+            Base test data directory (e.g., from test fixture)
+        diagnostic_slug
+            The diagnostic slug
+        test_case
+            Test case name (e.g., 'default')
+        """
+        return cls(root=test_data_dir / diagnostic_slug / test_case)
+
+    @property
+    def catalog(self) -> Path:
+        """Path to catalog.yaml."""
+        return self.root / "catalog.yaml"
+
+    @property
+    def catalog_paths(self) -> Path:
+        """Path to catalog.paths.yaml (gitignored, contains local file paths)."""
+        return self.root / "catalog.paths.yaml"
+
+    @property
+    def regression(self) -> Path:
+        """Path to regression/ directory."""
+        return self.root / "regression"
+
+    @property
+    def test_data_dir(self) -> Path:
+        """Path to the test-data directory (parent of diagnostic slug dir)."""
+        return self.root.parent.parent
+
+    def exists(self) -> bool:
+        """Check if the test case directory exists."""
+        return self.root.exists()
+
+    def create(self) -> None:
+        """Create the test case directory if it doesn't exist."""
+        self.root.mkdir(parents=True, exist_ok=True)
+
+
+def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
+    """
+    Get the test-data directory for a provider's package.
+
+    Returns packages/climate-ref-{provider}/tests/test-data/ or None if unavailable.
+    This will only work if working in a development checkout of the package.
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to get the test data dir for
+    """
+    provider_module_name = diag.provider.__class__.__module__.split(".")[0]
+    logger.debug(f"Looking up test data dir for provider module: {provider_module_name}")
+
+    if provider_module_name not in sys.modules:
+        logger.debug(f"Module {provider_module_name} not in sys.modules")
+        return None
+
+    provider_module = sys.modules[provider_module_name]
+    if not hasattr(provider_module, "__file__") or provider_module.__file__ is None:
+        logger.debug(f"Module {provider_module_name} has no __file__ attribute")
+        return None
+
+    # Module: packages/climate-ref-{slug}/src/climate_ref_{slug}/__init__.py
+    # Target: packages/climate-ref-{slug}/tests/test-data/
+    module_path = Path(provider_module.__file__)
+    package_root = module_path.parent.parent.parent  # src -> climate-ref-{slug}
+    tests_dir = package_root / "tests"
+
+    # Only return path if tests/ exists (dev checkout)
+    if not tests_dir.exists():
+        logger.debug(f"Tests dir does not exist (not a dev checkout): {tests_dir}")
+        return None
+
+    test_data_dir = tests_dir / "test-data"
+    logger.debug(f"Provider module path: {module_path}")
+    logger.debug(f"Derived test data dir: {test_data_dir} (exists: {test_data_dir.exists()})")
+
+    return test_data_dir
 
 
 def _get_paths_file(catalog_path: Path) -> Path:
@@ -215,27 +349,6 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
 
 
-def get_test_case_regression_path(
-    regression_data_dir: Path,
-    provider_slug: str,
-    diagnostic_slug: str,
-    test_case_name: str,
-) -> Path:
-    """Get path to regression data for a test case."""
-    return regression_data_dir / provider_slug / diagnostic_slug / test_case_name
-
-
-def get_test_case_path(
-    test_data_dir: Path,
-    type: Literal["regression", "catalogs"],  # noqa: A002
-    provider_slug: str,
-    diagnostic_slug: str,
-    test_case_name: str,
-) -> Path:
-    """Get path to regression data for a test case."""
-    return test_data_dir / str(type) / provider_slug / diagnostic_slug / test_case_name
-
-
 def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> None:
     """
     Validate CMEC bundles in an execution result.
@@ -270,26 +383,24 @@ class RegressionValidator:
 
     Loads regression outputs and validates CMEC bundles without
     running the diagnostic. Suitable for fast CI validation.
+
+    The regression data is expected at:
+    test_data_dir/{diagnostic}/{test_case}/regression/
     """
 
     diagnostic: Diagnostic
     test_case_name: str
-    regression_data_dir: Path
-    test_data_dir: Path | None = None
+    test_data_dir: Path
 
-    def regression_path(self) -> Path:
-        """Get path to regression data for this test case."""
-        return get_test_case_regression_path(
-            self.regression_data_dir,
-            self.diagnostic.provider.slug,
-            self.diagnostic.slug,
-            self.test_case_name,
-        )
+    @property
+    def paths(self) -> TestCasePaths:
+        """Get paths for this test case."""
+        return TestCasePaths.from_test_data_dir(self.test_data_dir, self.diagnostic.slug, self.test_case_name)
 
     def has_regression_data(self) -> bool:
         """Check if regression data exists for this test case."""
-        path = self.regression_path()
-        return path.exists() and (path / "diagnostic.json").exists()
+        regression_path = self.paths.regression
+        return regression_path.exists() and (regression_path / "diagnostic.json").exists()
 
     def load_regression_definition(self, tmp_dir: Path) -> ExecutionDefinition:
         """
@@ -297,7 +408,7 @@ class RegressionValidator:
 
         Copies regression data to tmp_dir and replaces path placeholders.
         """
-        regression_path = self.regression_path()
+        regression_path = self.paths.regression
         if not regression_path.exists():
             raise FileNotFoundError(
                 f"No regression data at {regression_path}. Run 'ref test-cases run --force-regen' first."
@@ -308,12 +419,11 @@ class RegressionValidator:
         shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
 
         # Replace placeholders with actual paths
-        test_data_dir_str = str(self.test_data_dir) if self.test_data_dir else ""
         for pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
             for file in output_dir.rglob(pattern):
                 content = file.read_text()
                 content = content.replace("<OUTPUT_DIR>", str(output_dir))
-                content = content.replace("<TEST_DATA_DIR>", test_data_dir_str)
+                content = content.replace("<TEST_DATA_DIR>", str(self.test_data_dir))
                 file.write_text(content)
 
         return ExecutionDefinition(

@@ -259,18 +259,26 @@ ref test-cases run --provider my-provider --diagnostic my-diagnostic --fetch
 ```
 
 When data is fetched, it is stored in intake-esgf's cache directory and a catalog YAML file
-is saved to track the resolved datasets:
+is saved to track the resolved datasets.
+Test data is stored within each provider package using a diagnostic-first structure:
 
 ```raw
-tests/test-data/esgf-data/.catalogs/
-├── my-provider/
-│   └── my-diagnostic/
-│       └── default.yaml      # Catalog with dataset metadata and paths
-└── ...
+packages/climate-ref-{provider}/tests/test-data/
+└── {diagnostic}/
+    └── {test_case}/
+        ├── catalog.yaml           # Dataset metadata (tracked in git)
+        ├── catalog.paths.yaml     # Local file paths (gitignored)
+        └── regression/            # Regression outputs (tracked in git)
 ```
 
-The catalog YAML contains all the metadata needed to run the test case,
-including paths to the local datasets.
+The catalog is split into two files:
+
+- **`catalog.yaml`**: Contains dataset metadata (instance IDs, facets, selectors).
+This file is version-controlled and portable across machines.
+- **`catalog.paths.yaml`**: Contains the local file paths for each dataset.
+This file is gitignored since paths are machine-specific.
+
+This separation allows the catalog metadata to be shared via git while each developer's local paths remain independent.
 
 #### Data Caching
 
@@ -391,13 +399,32 @@ Often the diagnostics may take a significant period of time to run,
 so it isn't desireable to run a large number of them on every Pull Request.
 The regression outputs provide useful insights into what figures and data an execution produces.
 
-Regression baselines are stored in `tests/test-data/regression/`:
+Regression baselines are stored within each provider package, alongside the catalog:
 
 ```raw
-tests/test-data/regression/
-└── my-provider/
-    └── my-diagnostic/
-        └── default_metric.json
+packages/climate-ref-{provider}/tests/test-data/
+└── {diagnostic}/
+    └── {test_case}/
+        ├── catalog.yaml       # Dataset metadata
+        ├── catalog.paths.yaml # Local file paths (gitignored)
+        └── regression/        # Regression outputs
+            ├── diagnostic.json    # Execution result
+            ├── output.json        # CMEC output bundle
+            └── ...                # Other output files
+```
+
+For example, the ILAMB provider's `gpp-fluxcom` diagnostic with the `default` test case:
+
+```
+packages/climate-ref-ilamb/tests/test-data/
+└── gpp-fluxcom/
+    └── default/
+        ├── catalog.yaml
+        ├── catalog.paths.yaml
+        └── regression/
+            ├── diagnostic.json
+            ├── output.json
+            └── ...
 ```
 
 ### Creating a Baseline
@@ -530,15 +557,35 @@ class TemperatureBias(Diagnostic):
 2. **Check fetched data catalogs**:
 
    ```bash
-   ls tests/test-data/esgf-data/.catalogs/
-   cat tests/test-data/esgf-data/.catalogs/my-provider/my-diagnostic/default.yaml
+   # List test case directories for a provider
+   ls packages/climate-ref-my-provider/tests/test-data/
+
+   # View catalog metadata for a test case
+   cat packages/climate-ref-my-provider/tests/test-data/my-diagnostic/default/catalog.yaml
+
+   # View local paths (if exists)
+   cat packages/climate-ref-my-provider/tests/test-data/my-diagnostic/default/catalog.paths.yaml
    ```
 
 3. **Run with verbose logging**:
 
    ```bash
-   ref --verbose testing run --provider my-provider --diagnostic my-diagnostic
+   ref --verbose test-cases run --provider my-provider --diagnostic my-diagnostic
    ```
+
+4. **Debug path resolution**:
+
+   If catalogs aren't being written, enable debug logging to see how paths are resolved:
+
+   ```bash
+   LOGURU_LEVEL=DEBUG ref test-cases fetch --provider my-provider --diagnostic my-diagnostic
+   ```
+
+   The logs will show:
+   - Which provider module is being looked up
+   - Whether the `tests/` directory exists (required for dev checkout detection)
+   - The derived test data directory path
+   - Whether catalogs/regression directories are being created
 
 ## Other useful links
 

@@ -39,7 +39,7 @@ jobs:
           uv run ref datasets fetch-data --registry iomb --symlink
           uv run ref datasets fetch-data --registry esmvaltool --symlink
           uv run ref providers create-env
-          uv run pytest packages tests --slow --no-docker -r a -v
+          uv run pytest packages tests --slow --no-docker -m "not test_cases" -r a -v
       # Upload the scratch and executions directories as artifacts
       - name: Upload scratch artifacts
         uses: actions/upload-artifact@v6
@@ -52,7 +52,6 @@ jobs:
   test-cases:
     if: github.repository == 'Climate-REF/climate-ref'
     runs-on: "self-hosted"
-    needs: tests-slow
     defaults:
       run:
         shell: bash

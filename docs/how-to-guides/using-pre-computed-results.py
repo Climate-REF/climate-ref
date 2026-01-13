@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.17.1
+#       jupytext_version: 1.18.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -259,7 +259,7 @@ file
 # Download the file and open it with `xarray`:
 
 # %%
-local_file = Path(Path(file.filename).name)
+local_file = Path("/tmp") / Path(file.filename).name  # noqa: S108
 local_file.write_bytes(requests.get(file.url, timeout=120).content)
 ds = xr.open_dataset(local_file).drop_vars("cube_label")
 ds

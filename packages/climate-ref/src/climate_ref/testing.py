@@ -1,5 +1,11 @@
 """
-Testing utilities
+Testing utilities for running and validating diagnostic test cases.
+
+This module provides:
+- Path resolution for package-local test data (catalogs, regression data)
+- Sample data fetching utilities
+- TestCaseRunner for executing diagnostics with test data
+- Result validation helpers
 """
 
 import shutil
@@ -17,8 +23,9 @@ from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
-from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.testing import (
+    validate_cmec_bundles,
+)
 
 
 def _determine_test_directory() -> Path | None:
@@ -30,33 +37,8 @@ def _determine_test_directory() -> Path | None:
 
 
 TEST_DATA_DIR = _determine_test_directory()
-"""Path to the test data directory, or None if it doesn't exist."""
-ESGF_DATA_DIR = TEST_DATA_DIR / "esgf-data" if TEST_DATA_DIR else None
-"""Path to the ESGF test data directory, or None if TEST_DATA_DIR doesn't exist."""
+"""Path to the centralised test data directory (for sample data)."""
 SAMPLE_DATA_VERSION = "v0.7.4"
-
-
-def get_catalog_path(provider: str, diagnostic: str, test_case: str) -> Path | None:
-    """
-    Get path to pre-built catalog file for a test case.
-
-    Parameters
-    ----------
-    provider
-        Provider slug (e.g., 'esmvaltool', 'ilamb')
-    diagnostic
-        Diagnostic slug (e.g., 'ecs', 'gpp-fluxcom')
-    test_case
-        Test case name (e.g., 'default')
-
-    Returns
-    -------
-    Path | None
-        Path to the catalog YAML file, or None if ESGF_DATA_DIR is not set
-    """
-    if ESGF_DATA_DIR is None:
-        return None
-    return ESGF_DATA_DIR / ".catalogs" / provider / diagnostic / f"{test_case}.yaml"
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:
@@ -105,13 +87,16 @@ def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> Non
         fh.write(SAMPLE_DATA_VERSION)
 
 
-def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionResult) -> None:
+def validate_result(
+    diagnostic: Diagnostic, config: Config, result: ExecutionResult
+) -> None:  # pragma: no cover
     """
     Asserts the correctness of the result of a diagnostic execution
 
     This should only be used by the test suite as it will create a fake
     database entry for the diagnostic execution result.
     """
+    # TODO: Remove this function once we have moved to using RegressionValidator
     # Add a fake execution/execution group in the Database
     database = Database.from_config(config)
     execution_group = ExecutionGroup(
@@ -130,18 +115,15 @@ def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionRes
 
     assert result.successful
 
-    # Validate bundles
-    metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-    CMECMetric.model_validate(metric_bundle)
-    bundle_dimensions = tuple(metric_bundle.DIMENSIONS.root["json_structure"])
-    assert diagnostic.facets == bundle_dimensions
-    CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+    # Validate CMEC bundles
+    validate_cmec_bundles(diagnostic, result)
 
     # Create a fake log file if one doesn't exist
     if not result.to_output_path("out.log").exists():
         result.to_output_path("out.log").touch()
 
-    # This checks if the bundles are valid
+    # Process and store the result
+    # TODO: This is missing from RegressionValidator
     handle_execution_result(config, database=database, execution=execution, result=result)
 
 

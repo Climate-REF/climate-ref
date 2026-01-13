@@ -27,7 +27,6 @@ from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models import Execution
 from climate_ref.solver import solve_executions
 from climate_ref.testing import (
-    ESGF_DATA_DIR,
     TEST_DATA_DIR,
     TestCaseRunner,
     fetch_sample_data,
@@ -109,18 +108,6 @@ def sample_data_dir(test_data_dir) -> Path:
 @pytest.fixture(scope="session")
 def regression_data_dir(test_data_dir) -> Path:
     return test_data_dir / "regression"
-
-
-@pytest.fixture(scope="session")
-def esgf_test_data_dir() -> Path | None:
-    """
-    Path to ESGF test data directory.
-
-    Returns None if the directory doesn't exist (data not yet fetched).
-    """
-    if ESGF_DATA_DIR is None or not ESGF_DATA_DIR.exists():
-        return None
-    return ESGF_DATA_DIR
 
 
 @pytest.fixture(scope="session")
@@ -476,6 +463,16 @@ def execution_regression(
 
 @define
 class DiagnosticValidator:
+    """
+    Validator for running diagnostics with sample data.
+
+    .. deprecated::
+        Use RegressionValidator from climate_ref_core.testing for test case-based
+        validation, or TestCaseRunner for running test cases.
+
+        This class will be removed in a future release.
+    """
+
     config: Config
     diagnostic: Diagnostic
     data_catalog: dict[SourceDatasetType, pd.DataFrame]

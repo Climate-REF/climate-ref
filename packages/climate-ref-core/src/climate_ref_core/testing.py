@@ -1,12 +1,17 @@
 """
-Test infrastructure classes for diagnostic testing.
+Test infrastructure for diagnostic testing.
 
-This module provides classes for specifying test data requirements
-and test cases for diagnostics.
+This module provides:
+- TestCase and TestDataSpecification for defining test scenarios
+- YAML serialization for dataset catalogs (with paths stored separately)
+- RegressionValidator for validating pre-stored outputs
+- Utilities for CMEC bundle validation
 """
 
 from __future__ import annotations
 
+import shutil
+import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -21,10 +26,16 @@ from climate_ref_core.datasets import (
     Selector,
     SourceDatasetType,
 )
+from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
+from climate_ref_core.pycmec.metric import CMECMetric
+from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
+    from _pytest.mark.structures import ParameterSet
+
     from climate_ref_core.diagnostics import Diagnostic
+    from climate_ref_core.providers import DiagnosticProvider
 
 
 @frozen
@@ -32,16 +43,13 @@ class TestCase:
     """
     A single test case for a diagnostic.
 
-    Test cases define specific scenarios for testing a diagnostic,
-    including what datasets to use and optionally how to fetch them.
-
-    Datasets can be resolved using:
-    1. `requests` - ESGF requests to fetch data (use `ref test-cases fetch`)
-    2. `datasets_file` - Path to a pre-built catalog YAML file
+    Test cases define scenarios for testing, with data resolved via:
+    - `requests`: ESGF requests to fetch data (use `ref test-cases fetch`)
+    - `datasets_file`: Path to a pre-built catalog YAML file
     """
 
     name: str
-    """Name of the test case (e.g., 'default', 'edge-case-short-timeseries')."""
+    """Name of the test case (e.g., 'default', 'short-timeseries')."""
 
     description: str
     """Human-readable description of what this test case covers."""
@@ -58,29 +66,11 @@ class TestDataSpecification:
     """
     Test data specification for a diagnostic.
 
-    Contains multiple named test cases that can be used to test
-    different scenarios for the diagnostic.
+    Contains multiple named test cases for testing different input datasets.
     """
 
     test_cases: tuple[TestCase, ...] = field(factory=tuple)
     """Collection of test cases for this diagnostic."""
-
-    @property
-    def default(self) -> TestCase:
-        """
-        Get the default test case.
-
-        Returns
-        -------
-        TestCase
-            The test case named 'default'
-
-        Raises
-        ------
-        StopIteration
-            If no default test case exists
-        """
-        return next(tc for tc in self.test_cases if tc.name == "default")
 
     def get_case(self, name: str) -> TestCase:
         """
@@ -125,55 +115,195 @@ class TestDataSpecification:
         return [tc.name for tc in self.test_cases]
 
 
+@frozen
+class TestCasePaths:
+    """
+    Path resolver for test case data.
+
+    Provides access to all paths within a test case directory:
+    - catalog.yaml: Dataset metadata (tracked in git)
+    - catalog.paths.yaml: Local file paths (gitignored)
+    - regression/: Regression outputs (tracked in git)
+
+    Can be constructed from:
+    - A diagnostic + test case name (auto-resolves provider's test-data dir)
+    - An explicit test_data_dir + diagnostic slug + test case name
+    """
+
+    root: Path
+    """The test case directory (test_data_dir / diagnostic_slug / test_case_name)."""
+
+    @classmethod
+    def from_diagnostic(cls, diagnostic: Diagnostic, test_case: str) -> TestCasePaths | None:
+        """
+        Create from a diagnostic, auto-resolving the provider's test-data directory.
+
+        Returns None if the provider's test-data directory cannot be determined
+        (e.g., not a development checkout).
+
+        Parameters
+        ----------
+        diagnostic
+            The diagnostic to get paths for
+        test_case
+            Test case name (e.g., 'default')
+        """
+        test_data_dir = _get_provider_test_data_dir(diagnostic)
+        if test_data_dir is None:
+            return None
+        return cls(root=test_data_dir / diagnostic.slug / test_case)
+
+    @classmethod
+    def from_test_data_dir(
+        cls,
+        test_data_dir: Path,
+        diagnostic_slug: str,
+        test_case: str,
+    ) -> TestCasePaths:
+        """
+        Create from an explicit test data directory.
+
+        Use this when you have a test_data_dir fixture (in tests) or
+        know the base path explicitly.
+
+        Parameters
+        ----------
+        test_data_dir
+            Base test data directory (e.g., from test fixture)
+        diagnostic_slug
+            The diagnostic slug
+        test_case
+            Test case name (e.g., 'default')
+        """
+        return cls(root=test_data_dir / diagnostic_slug / test_case)
+
+    @property
+    def catalog(self) -> Path:
+        """Path to catalog.yaml."""
+        return self.root / "catalog.yaml"
+
+    @property
+    def catalog_paths(self) -> Path:
+        """Path to catalog.paths.yaml (gitignored, contains local file paths)."""
+        return self.root / "catalog.paths.yaml"
+
+    @property
+    def regression(self) -> Path:
+        """Path to regression/ directory."""
+        return self.root / "regression"
+
+    @property
+    def test_data_dir(self) -> Path:
+        """Path to the test-data directory (parent of diagnostic slug dir)."""
+        return self.root.parent.parent
+
+    def exists(self) -> bool:
+        """Check if the test case directory exists."""
+        return self.root.exists()
+
+    def create(self) -> None:
+        """Create the test case directory if it doesn't exist."""
+        self.root.mkdir(parents=True, exist_ok=True)
+
+
+def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
+    """
+    Get the test-data directory for a provider's package.
+
+    Returns packages/climate-ref-{provider}/tests/test-data/ or None if unavailable.
+    This will only work if working in a development checkout of the package.
+
+    Parameters
+    ----------
+    diag
+        The diagnostic to get the test data dir for
+    """
+    # TODO: Simplify once providers are in their own packages
+
+    # Use the diagnostic's module to determine the provider package
+    diagnostic_module_name = diag.__class__.__module__.split(".")[0]
+    logger.debug(f"Looking up test data dir for diagnostic module: {diagnostic_module_name}")
+
+    if diagnostic_module_name not in sys.modules:
+        logger.debug(f"Module {diagnostic_module_name} not in sys.modules")
+        return None
+
+    diagnostic_module = sys.modules[diagnostic_module_name]
+    if not hasattr(diagnostic_module, "__file__") or diagnostic_module.__file__ is None:
+        logger.debug(f"Module {diagnostic_module_name} has no __file__ attribute")
+        return None
+
+    # Module: packages/climate-ref-{slug}/src/climate_ref_{slug}/__init__.py
+    # Target: packages/climate-ref-{slug}/tests/test-data/
+    module_path = Path(diagnostic_module.__file__)
+    package_root = module_path.parent.parent.parent  # src -> climate-ref-{slug}
+    tests_dir = package_root / "tests"
+
+    # Only return path if tests/ exists (dev checkout)
+    if not tests_dir.exists():
+        logger.debug(f"Tests dir does not exist (not a dev checkout): {tests_dir}")
+        return None
+
+    test_data_dir = tests_dir / "test-data"
+    logger.debug(f"Diagnostic module path: {module_path}")
+    logger.debug(f"Derived test data dir: {test_data_dir} (exists: {test_data_dir.exists()})")
+
+    return test_data_dir
+
+
+def _get_paths_file(catalog_path: Path) -> Path:
+    """Get the paths file path for a catalog file."""
+    return catalog_path.with_suffix(".paths.yaml")
+
+
 def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
     """
     Load ExecutionDatasetCollection from a YAML file.
 
-    The YAML file should have the following structure:
+    The YAML file structure:
 
     ```yaml
-    cmip6:  # or obs4mips, etc.
+    cmip6:
       slug_column: instance_id
       selector:
         source_id: ACCESS-ESM1-5
-        member_id: r1i1p1f1
       datasets:
-        - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
-          path: /path/to/file.nc
+        - instance_id: CMIP6.CMIP...
           variable_id: tas
           # ... other metadata
     ```
 
-    Parameters
-    ----------
-    path
-        Path to the YAML file
-
-    Returns
-    -------
-    ExecutionDatasetCollection
-        The loaded datasets
+    Paths are loaded from a separate `.paths.yaml` file if it exists,
+    allowing the main catalog to be version-controlled while paths
+    remain user-specific.
     """
     with open(path) as f:
         data = yaml.safe_load(f)
+
+    # Load paths from separate file if it exists
+    paths_file = _get_paths_file(path)
+    paths_map: dict[str, str] = {}
+    if paths_file.exists():
+        with open(paths_file) as f:
+            paths_map = yaml.safe_load(f) or {}
 
     collections: dict[SourceDatasetType | str, DatasetCollection] = {}
 
     for source_type_str, source_data in data.items():
         source_type = SourceDatasetType(source_type_str)
-
-        # Convert selector dict to tuple of tuples
         selector_dict = source_data.get("selector", {})
         selector: Selector = tuple(sorted(selector_dict.items()))
-
-        # Convert datasets list to DataFrame
         datasets_list = source_data.get("datasets", [])
-        datasets_df = pd.DataFrame(datasets_list)
-
         slug_column = source_data.get("slug_column", "instance_id")
 
+        # Merge paths from paths file
+        for dataset in datasets_list:
+            instance_id = dataset.get(slug_column)
+            if instance_id and instance_id in paths_map:
+                dataset["path"] = paths_map[instance_id]
+
         collections[source_type] = DatasetCollection(
-            datasets=datasets_df,
+            datasets=pd.DataFrame(datasets_list),
             slug_column=slug_column,
             selector=selector,
         )
@@ -185,6 +315,9 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
     """
     Save ExecutionDatasetCollection to a YAML file.
 
+    Paths are saved to a separate `.paths.yaml` file to allow the main
+    catalog to be version-controlled while paths remain user-specific.
+
     Parameters
     ----------
     datasets
@@ -193,64 +326,178 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
         Path to write the YAML file
     """
     data: dict[str, Any] = {}
+    paths_map: dict[str, str] = {}
 
     for source_type, collection in datasets.items():
-        source_data: dict[str, Any] = {
-            "slug_column": collection.slug_column,
+        slug_column = collection.slug_column
+        datasets_records = collection.datasets.to_dict(orient="records")
+
+        # Extract paths to separate map
+        for record in datasets_records:
+            instance_id = record.get(slug_column)
+            if instance_id and "path" in record:  # pragma: no branch
+                paths_map[instance_id] = record.pop("path")
+
+        data[source_type.value] = {
+            "slug_column": slug_column,
             "selector": dict(collection.selector),
-            "datasets": collection.datasets.to_dict(orient="records"),
+            "datasets": datasets_records,
         }
-        data[source_type.value] = source_data
 
     path.parent.mkdir(parents=True, exist_ok=True)
 
     with open(path, "w") as f:
         yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-    logger.info(f"Saved datasets to {path}")
+    paths_file = _get_paths_file(path)
+    with open(paths_file, "w") as f:
+        yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
+    logger.info(f"Saved catalog to {path} (paths: {paths_file})")
 
 
-def solve_test_case(
-    diagnostic: Diagnostic,
-    data_catalog: dict[SourceDatasetType, pd.DataFrame],
-) -> ExecutionDatasetCollection:
+def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> None:
     """
-    Solve for test case datasets by applying the diagnostic's data requirements.
+    Validate CMEC bundles in an execution result.
 
-    This function runs the solver to determine which datasets from the catalog
-    satisfy the diagnostic's requirements.
-
-    Parameters
-    ----------
-    diagnostic
-        The diagnostic to solve for
-    data_catalog
-        Data catalog mapping source types to DataFrames
-
-    Returns
-    -------
-    ExecutionDatasetCollection
-        The solved datasets
+    Performs structural validation of the metric and output bundles.
 
     Raises
     ------
-    ValueError
-        If no valid execution can be found
+    AssertionError
+        If the result is not successful or bundles are invalid
     """
-    # Import here to avoid circular dependency
-    # The solver lives in climate-ref, not climate-ref-core
-    # This function may need to be moved or the import resolved differently
-    try:
-        from climate_ref.solver import solve_executions  # noqa: PLC0415
-    except ImportError:
-        raise ImportError(
-            "solve_test_case requires climate-ref package. Use explicit datasets or datasets_file instead."
+    assert result.successful, f"Execution failed: {result}"
+
+    # Validate metric bundle
+    metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
+    CMECMetric.model_validate(metric_bundle)
+
+    # Check dimensions match diagnostic facets
+    bundle_dimensions = tuple(metric_bundle.DIMENSIONS.root["json_structure"])
+    assert diagnostic.facets == bundle_dimensions, (
+        f"Bundle dimensions {bundle_dimensions} don't match diagnostic facets {diagnostic.facets}"
+    )
+
+    # Validate output bundle
+    CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+
+
+@frozen
+class RegressionValidator:
+    """
+    Validate diagnostic outputs from pre-stored regression data.
+
+    Loads regression outputs and validates CMEC bundles without
+    running the diagnostic. Suitable for fast CI validation.
+
+    The regression data is expected at:
+    test_data_dir/{diagnostic}/{test_case}/regression/
+    """
+
+    diagnostic: Diagnostic
+    test_case_name: str
+    test_data_dir: Path
+
+    @property
+    def paths(self) -> TestCasePaths:
+        """Get paths for this test case."""
+        return TestCasePaths.from_test_data_dir(self.test_data_dir, self.diagnostic.slug, self.test_case_name)
+
+    def has_regression_data(self) -> bool:
+        """Check if regression data exists for this test case."""
+        regression_path = self.paths.regression
+        return regression_path.exists() and (regression_path / "diagnostic.json").exists()
+
+    def load_regression_definition(self, tmp_dir: Path) -> ExecutionDefinition:
+        """
+        Load regression data and create an ExecutionDefinition.
+
+        Copies regression data to tmp_dir and replaces path placeholders.
+        """
+        regression_path = self.paths.regression
+        catalog_path = self.paths.catalog
+
+        if not catalog_path.exists():
+            raise FileNotFoundError(
+                f"No catalog file at {catalog_path} for test case datasets. Run `ref test-cases fetch` first."
+            )
+        if not regression_path.exists():
+            raise FileNotFoundError(
+                f"No regression data at {regression_path}. Run 'ref test-cases run --force-regen' first."
+            )
+
+        output_dir = tmp_dir / "output"
+        output_dir.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
+
+        # Replace placeholders with actual paths
+        for pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
+            for file in output_dir.rglob(pattern):
+                content = file.read_text()
+                content = content.replace("<OUTPUT_DIR>", str(output_dir))
+                content = content.replace("<TEST_DATA_DIR>", str(self.test_data_dir))
+                file.write_text(content)
+
+        # Load datasets from catalog
+        datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
+
+        return ExecutionDefinition(
+            diagnostic=self.diagnostic,
+            key=f"test-{self.test_case_name}",
+            datasets=datasets,
+            output_directory=output_dir,
+            root_directory=tmp_dir,
         )
 
-    executions = list(solve_executions(data_catalog, diagnostic, diagnostic.provider))
+    def validate(self, definition: ExecutionDefinition) -> None:
+        """Validate CMEC bundles in the regression output."""
+        result = self.diagnostic.build_execution_result(definition)
+        result.to_output_path("out.log").touch()  # Log file not tracked in regression
+        validate_cmec_bundles(self.diagnostic, result)
 
-    if not executions:
-        raise ValueError(f"No valid executions found for diagnostic {diagnostic.slug}")
 
-    # Return the first execution's datasets
-    return executions[0].datasets
+def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:
+    """
+    Collect all diagnostic/test_case pairs from a provider for parameterized testing.
+
+    Returns a list of pytest.param objects with (diagnostic, test_case_name) tuples,
+    each with an id of "{diagnostic.slug}/{test_case.name}".
+
+    Parameters
+    ----------
+    provider
+        The diagnostic provider to collect test cases from
+
+    Returns
+    -------
+    :
+        List of pytest.param objects for use with @pytest.mark.parametrize
+
+    Example
+    -------
+    ```python
+    from climate_ref_core.testing import collect_test_case_params
+    from my_provider import provider
+
+    test_case_params = collect_test_case_params(provider)
+
+
+    @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
+    def test_my_test(diagnostic, test_case_name): ...
+    ```
+    """
+    import pytest  # noqa: PLC0415
+
+    params: list[ParameterSet] = []
+    for diagnostic in provider.diagnostics():
+        if diagnostic.test_data_spec is None:
+            continue
+        for test_case in diagnostic.test_data_spec.test_cases:
+            params.append(
+                pytest.param(
+                    diagnostic,
+                    test_case.name,
+                    id=f"{diagnostic.slug}/{test_case.name}",
+                )
+            )
+    return params

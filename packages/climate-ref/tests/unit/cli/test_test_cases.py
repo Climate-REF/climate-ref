@@ -117,8 +117,8 @@ class TestFetchAndBuildCatalog:
         with (
             patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.cli.test_cases.CMIP6DatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases.solve_test_case", return_value=mock_datasets),
-            patch("climate_ref.cli.test_cases.get_catalog_path", return_value=None),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None),
         ):
             result = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -127,18 +127,22 @@ class TestFetchAndBuildCatalog:
     def test_saves_catalog_yaml(self, tmp_path, mock_diagnostic, mock_test_case, mock_fetcher, mock_adapter):
         """Test that catalog YAML is saved when path is available."""
         mock_datasets = MagicMock()
-        catalog_path = tmp_path / "catalog.yaml"
+        test_case_dir = tmp_path / "test-diag" / "default"
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = test_case_dir / "catalog.yaml"
 
         with (
             patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.cli.test_cases.CMIP6DatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases.solve_test_case", return_value=mock_datasets),
-            patch("climate_ref.cli.test_cases.get_catalog_path", return_value=catalog_path),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths),
             patch("climate_ref.cli.test_cases.save_datasets_to_yaml") as mock_save,
         ):
             _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
-        mock_save.assert_called_once_with(mock_datasets, catalog_path)
+        # Catalog is saved to paths.catalog
+        mock_save.assert_called_once_with(mock_datasets, test_case_dir / "catalog.yaml")
 
     def test_obs4mips_data_returned(self, mock_diagnostic, mock_test_case):
         """Test with obs4MIPs data returns properly grouped catalog."""
@@ -165,8 +169,8 @@ class TestFetchAndBuildCatalog:
         with (
             patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.cli.test_cases.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases.solve_test_case", return_value=mock_datasets),
-            patch("climate_ref.cli.test_cases.get_catalog_path", return_value=None),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None),
         ):
             result = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -367,10 +371,10 @@ class TestRunTestCaseCommand:
             expected_exit_code=1,
         )
 
-    def test_run_no_catalog_file(self, invoke_cli, mocker, mock_diagnostic):
-        """Test run command when catalog file doesn't exist."""
+    def test_run_no_test_case_dir(self, invoke_cli, mocker, mock_diagnostic):
+        """Test run command when test case directory can't be resolved."""
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_path", return_value=None)
+        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None)
 
         invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
@@ -386,7 +390,7 @@ class TestRunTestCaseCommand:
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
         mocker.patch("climate_ref.cli.test_cases._fetch_and_build_catalog", return_value=MagicMock())
         mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref.cli.test_cases.TEST_DATA_DIR", None)
+        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test", "--fetch"],
@@ -419,14 +423,19 @@ class TestRunTestCaseCommand:
         self, invoke_cli, mocker, tmp_path, mock_diagnostic, exception_cls, exception_msg
     ):
         """Test run command handles various exceptions from runner."""
-        catalog_path = tmp_path / "catalog.yaml"
+        test_case_dir = tmp_path / "test-diag" / "default"
+        test_case_dir.mkdir(parents=True)
+        catalog_path = test_case_dir / "catalog.yaml"
         catalog_path.touch()
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = catalog_path
 
         mock_runner = MagicMock()
         mock_runner.run.side_effect = exception_cls(exception_msg)
 
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_path", return_value=catalog_path)
+        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
         mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
 
@@ -437,8 +446,14 @@ class TestRunTestCaseCommand:
 
     def test_run_successful_execution(self, invoke_cli, mocker, tmp_path, mock_diagnostic):
         """Test run command with successful execution."""
-        catalog_path = tmp_path / "catalog.yaml"
+        test_case_dir = tmp_path / "test-diag" / "default"
+        test_case_dir.mkdir(parents=True)
+        catalog_path = test_case_dir / "catalog.yaml"
         catalog_path.touch()
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = catalog_path
+        mock_paths.regression = test_case_dir / "regression"
 
         mock_result = MagicMock(
             successful=True, metric_bundle_filename="metrics.json", output_bundle_filename="output.json"
@@ -448,10 +463,12 @@ class TestRunTestCaseCommand:
         mock_runner.run.return_value = mock_result
 
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_path", return_value=catalog_path)
+        # First call (loading catalog), second call (regression) - both return mock_paths, then None
+        mocker.patch(
+            "climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", side_effect=[mock_paths, None]
+        )
         mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref.cli.test_cases.TEST_DATA_DIR", None)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
@@ -460,14 +477,19 @@ class TestRunTestCaseCommand:
 
     def test_run_unsuccessful_execution(self, invoke_cli, mocker, tmp_path, mock_diagnostic):
         """Test run command with unsuccessful execution result."""
-        catalog_path = tmp_path / "catalog.yaml"
+        test_case_dir = tmp_path / "test-diag" / "default"
+        test_case_dir.mkdir(parents=True)
+        catalog_path = test_case_dir / "catalog.yaml"
         catalog_path.touch()
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = catalog_path
 
         mock_runner = MagicMock()
         mock_runner.run.return_value = MagicMock(successful=False)
 
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_path", return_value=catalog_path)
+        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
         mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
 
@@ -478,44 +500,69 @@ class TestRunTestCaseCommand:
 
     def test_run_with_force_regen(self, invoke_cli, mocker, tmp_path, mock_diagnostic):
         """Test run command with force_regen regenerates baseline."""
-        test_data_dir = tmp_path / "test-data"
-        test_data_dir.mkdir()
-        catalog_path = tmp_path / "catalog.yaml"
+        # Set up test case directory structure
+        test_case_dir = tmp_path / "test-diag" / "default"
+        test_case_dir.mkdir(parents=True)
+        catalog_path = test_case_dir / "catalog.yaml"
         catalog_path.touch()
 
-        metrics_file = tmp_path / "metrics.json"
+        # Create a mock output directory with files
+        output_dir = tmp_path / "output"
+        output_dir.mkdir()
+        metrics_file = output_dir / "metrics.json"
         metrics_file.write_text('{"test": "data"}')
+
+        # Regression dir is within the test case directory
+        regression_dir = test_case_dir / "regression"
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = catalog_path
+        mock_paths.root = test_case_dir
+        mock_paths.regression = regression_dir
+        mock_paths.test_data_dir = tmp_path
+
+        mock_definition = MagicMock()
+        mock_definition.output_directory = output_dir
 
         mock_result = MagicMock(
             successful=True, metric_bundle_filename="metrics.json", output_bundle_filename=None
         )
         mock_result.to_output_path.return_value = metrics_file
+        mock_result.definition = mock_definition
         mock_runner = MagicMock()
         mock_runner.run.return_value = mock_result
 
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_path", return_value=catalog_path)
+        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
         mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref.cli.test_cases.TEST_DATA_DIR", test_data_dir)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test", "--force-regen"],
         )
         assert result.exit_code == 0
 
-        baseline_file = test_data_dir / "regression" / "example" / "test" / "default_metric.json"
-        assert baseline_file.exists()
+        # The full output directory is now copied to regression dir
+        assert regression_dir.exists()
+        assert (regression_dir / "metrics.json").exists()
 
     def test_run_with_existing_baseline(self, invoke_cli, mocker, tmp_path, mock_diagnostic):
         """Test run command logs when baseline exists."""
-        test_data_dir = tmp_path / "test-data"
-        regression_dir = test_data_dir / "regression" / "example" / "test"
-        regression_dir.mkdir(parents=True)
-        baseline_file = regression_dir / "default_metric.json"
-        baseline_file.write_text('{"existing": "baseline"}')
-        catalog_path = tmp_path / "catalog.yaml"
+        # Set up test case directory structure with existing regression data
+        test_case_dir = tmp_path / "test-diag" / "default"
+        test_case_dir.mkdir(parents=True)
+        catalog_path = test_case_dir / "catalog.yaml"
         catalog_path.touch()
+
+        # Create existing regression directory with baseline file
+        regression_dir = test_case_dir / "regression"
+        regression_dir.mkdir(parents=True)
+        baseline_file = regression_dir / "metrics.json"
+        baseline_file.write_text('{"existing": "baseline"}')
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = catalog_path
+        mock_paths.regression = regression_dir
 
         mock_result = MagicMock(
             successful=True, metric_bundle_filename="metrics.json", output_bundle_filename=None
@@ -525,13 +572,13 @@ class TestRunTestCaseCommand:
         mock_runner.run.return_value = mock_result
 
         mocker.patch("climate_ref.cli.test_cases._find_diagnostic", return_value=mock_diagnostic)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_path", return_value=catalog_path)
+        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
         mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref.cli.test_cases.TEST_DATA_DIR", test_data_dir)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test"],
         )
         assert result.exit_code == 0
+        # Without --force-regen, baseline should be unchanged
         assert baseline_file.read_text() == '{"existing": "baseline"}'

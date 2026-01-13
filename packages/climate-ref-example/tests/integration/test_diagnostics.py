@@ -19,29 +19,7 @@ def provider_test_data_dir() -> Path:
     return Path(__file__).parent.parent / "test-data"
 
 
-# Standard parametrized tests using sample data
-diagnostics = [pytest.param(diagnostic, id=diagnostic.slug) for diagnostic in provider.diagnostics()]
-
-# Test case params for parameterized test_case tests
 test_case_params = collect_test_case_params(provider)
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_diagnostics(diagnostic: Diagnostic, diagnostic_validation):
-    """Run diagnostic end-to-end with sample data."""
-    validator = diagnostic_validation(diagnostic)
-    definition = validator.get_definition()
-    validator.execute(definition)
-
-
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
-    """Validate regression outputs can be built from sample data."""
-    validator = diagnostic_validation(diagnostic)
-    definition = validator.get_regression_definition()
-    validator.validate(definition)
-    validator.execution_regression.check(definition.key, definition.output_directory)
 
 
 @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)

@@ -504,7 +504,7 @@ class TestRegressionValidator:
             test_data_dir=tmp_path,
         )
 
-        with pytest.raises(FileNotFoundError, match="No regression data"):
+        with pytest.raises(FileNotFoundError, match="No catalog file"):
             validator.load_regression_definition(tmp_path / "tmp")
 
     def test_load_regression_definition_success(self, tmp_path):
@@ -512,24 +512,26 @@ class TestRegressionValidator:
         mock_diagnostic = MagicMock()
         mock_diagnostic.slug = "my-diag"
 
-        # Create regression directory with test files
-        regression_dir = tmp_path / "my-diag" / "default" / "regression"
-        regression_dir.mkdir(parents=True)
-
         metric_bundle = {
             "DIMENSIONS": {"json_structure": []},
             "RESULTS": {},
             "path": "<OUTPUT_DIR>/result.nc",
             "data_path": "<TEST_DATA_DIR>/input.nc",
         }
-        (regression_dir / "diagnostic.json").write_text(json.dumps(metric_bundle))
-        (regression_dir / "output.json").write_text('{"html": {}}')
 
         validator = RegressionValidator(
             diagnostic=mock_diagnostic,
             test_case_name="default",
             test_data_dir=tmp_path,
         )
+
+        # Create regression data
+        validator.paths.create()
+        validator.paths.catalog.write_text("{}")
+        regression_dir = validator.paths.regression
+        regression_dir.mkdir(parents=True)
+        (regression_dir / "diagnostic.json").write_text(json.dumps(metric_bundle))
+        (regression_dir / "output.json").write_text('{"html": {}}')
 
         work_dir = tmp_path / "work"
         definition = validator.load_regression_definition(work_dir)

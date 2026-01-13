@@ -17,6 +17,7 @@ from loguru import logger
 
 from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_dataset,
+    create_cmip7_filename,
     create_cmip7_instance_id,
     create_cmip7_path,
     get_branding_suffix,
@@ -61,12 +62,13 @@ def _convert_file(
         ds_cmip7 = convert_cmip6_dataset(ds, rename_variables=rename_variables)
 
         # Build output path using CMIP7 DRS
+        # TODO: extract time range from data for filename
         cmip7_subpath = create_cmip7_path(ds_cmip7.attrs)
+        cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range=None)
         cmip7_dir = output_dir / cmip7_subpath
         cmip7_dir.mkdir(parents=True, exist_ok=True)
 
-        # Use original filename
-        cmip7_path = cmip7_dir / cmip6_path.name
+        cmip7_path = cmip7_dir / cmip7_filename
 
         # Only write if file doesn't already exist
         if not cmip7_path.exists():

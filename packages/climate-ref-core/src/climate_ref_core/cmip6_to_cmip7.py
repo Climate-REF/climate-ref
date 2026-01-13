@@ -299,11 +299,16 @@ class CMIP7Metadata:
 
     This captures the additional/modified attributes needed for CMIP7 format.
     Based on CMIP7 Global Attributes V1.0 (DOI: 10.5281/zenodo.17250297).
+
+    Mandatory attributes per spec:
+    - mip_era, region, drs_specs, data_specs_version, product, license_id
+    - temporal_label, vertical_label, horizontal_label, area_label
+    - branding_suffix (derived from labels)
     """
 
-    # Required new attributes
+    # Required new attributes (mandatory per CMIP7 V1.0 spec)
     mip_era: str = "CMIP7"
-    region: str = "glb"
+    region: str = "glb"  # lowercase per spec
     drs_specs: str = "MIP-DRS7"
     data_specs_version: str = "MIP-DS7.1.0.0"
     product: str = "model-output"
@@ -609,3 +614,58 @@ def create_cmip7_path(attrs: dict[str, Any], version: str | None = None) -> str:
         version_str,
     ]
     return "/".join(str(c) for c in components)
+
+
+def create_cmip7_instance_id(attrs: dict[str, Any]) -> str:
+    """
+    Create a CMIP7 instance_id following MIP-DRS7 spec.
+
+    The instance_id uniquely identifies a dataset using the DRS components
+    separated by periods.
+
+    Parameters
+    ----------
+    attrs
+        Dictionary containing CMIP7 attributes
+
+    Returns
+    -------
+    str
+        The CMIP7 instance_id
+
+    Examples
+    --------
+    >>> attrs = {
+    ...     "drs_specs": "MIP-DRS7",
+    ...     "mip_era": "CMIP7",
+    ...     "activity_id": "CMIP",
+    ...     "institution_id": "CCCma",
+    ...     "source_id": "CanESM6-MR",
+    ...     "experiment_id": "historical",
+    ...     "variant_label": "r2i1p1f1",
+    ...     "region": "glb",
+    ...     "frequency": "mon",
+    ...     "variable_id": "tas",
+    ...     "branding_suffix": "tavg-h2m-hxy-u",
+    ...     "grid_label": "g13s",
+    ...     "version": "v20250622",
+    ... }
+    >>> create_cmip7_instance_id(attrs)
+    'MIP-DRS7.CMIP7.CMIP.CCCma.CanESM6-MR.historical.r2i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.g13s.v20250622'
+    """
+    components = [
+        attrs.get("drs_specs", "MIP-DRS7"),
+        attrs.get("mip_era", "CMIP7"),
+        attrs.get("activity_id", "CMIP"),
+        attrs.get("institution_id", ""),
+        attrs.get("source_id", ""),
+        attrs.get("experiment_id", ""),
+        attrs.get("variant_label", ""),
+        attrs.get("region", "glb"),
+        attrs.get("frequency", "mon"),
+        attrs.get("variable_id", ""),
+        attrs.get("branding_suffix", ""),
+        attrs.get("grid_label", "gn"),
+        attrs.get("version", "v1"),
+    ]
+    return ".".join(str(c) for c in components)

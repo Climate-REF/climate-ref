@@ -72,10 +72,16 @@ class TestParseCmip7File:
         assert result["institution_id"] == "CSIRO"
         assert result["activity_id"] == "CMIP"
         assert result["grid_label"] == "gn"
-        assert result["region"] == "GLB"
+        assert result["region"] == "glb"  # lowercase per CMIP7 V1.0 spec
         assert "branding_suffix" in result
+        assert "branded_variable" in result
         assert result["start_time"] is not None
         assert result["end_time"] is not None
+        # New mandatory CMIP7 fields
+        assert result["drs_specs"] == "MIP-DRS7"
+        assert result["data_specs_version"] == "MIP-DS7.1.0.0"
+        assert result["product"] == "model-output"
+        assert result["license_id"] == "CC-BY-4.0"
 
     def test_parse_missing_file(self, tmp_path):
         result = parse_cmip7_file(str(tmp_path / "nonexistent.nc"))
@@ -105,7 +111,8 @@ class TestCMIP7DatasetAdapter:
         assert df["variable_id"].iloc[0] == "tas"
         assert df["source_id"].iloc[0] == "ACCESS-ESM1-5"
         assert "instance_id" in df.columns
-        assert df["instance_id"].iloc[0].startswith("CMIP7.")
+        # Instance_id follows MIP-DRS7 format per CMIP7 V1.0 spec
+        assert df["instance_id"].iloc[0].startswith("MIP-DRS7.CMIP7.")
 
     def test_find_local_datasets_empty_dir(self, tmp_path):
         adapter = CMIP7DatasetAdapter()
@@ -114,13 +121,13 @@ class TestCMIP7DatasetAdapter:
 
     def test_dataset_id_metadata(self):
         adapter = CMIP7DatasetAdapter()
-        # CMIP7 DRS components
+        # CMIP7 DRS components per MIP-DRS7 spec (using variant_label, not member_id)
         expected = (
             "activity_id",
             "institution_id",
             "source_id",
             "experiment_id",
-            "member_id",
+            "variant_label",
             "region",
             "frequency",
             "variable_id",

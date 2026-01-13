@@ -12,6 +12,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_to_cmip7_attrs,
     convert_variant_index,
     create_cmip7_filename,
+    create_cmip7_instance_id,
     create_cmip7_path,
     get_branding_suffix,
     get_cmip7_variable_name,
@@ -434,3 +435,73 @@ class TestVariableBrandingCoverage:
     )
     def test_common_variables_have_branding(self, variable_id: str):
         assert variable_id in VARIABLE_BRANDING
+
+
+class TestCreateCmip7InstanceId:
+    """Test CMIP7 instance_id generation per MIP-DRS7 spec."""
+
+    def test_creates_valid_instance_id(self):
+        """Test instance_id generation with all attributes."""
+        attrs = {
+            "drs_specs": "MIP-DRS7",
+            "mip_era": "CMIP7",
+            "activity_id": "CMIP",
+            "institution_id": "CCCma",
+            "source_id": "CanESM6-MR",
+            "experiment_id": "historical",
+            "variant_label": "r2i1p1f1",
+            "region": "glb",
+            "frequency": "mon",
+            "variable_id": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "grid_label": "g13s",
+            "version": "v20250622",
+        }
+        instance_id = create_cmip7_instance_id(attrs)
+
+        expected = (
+            "MIP-DRS7.CMIP7.CMIP.CCCma.CanESM6-MR.historical.r2i1p1f1."
+            "glb.mon.tas.tavg-h2m-hxy-u.g13s.v20250622"
+        )
+        assert instance_id == expected
+
+    def test_uses_defaults_for_missing_attributes(self):
+        """Test that defaults are used for missing attributes."""
+        attrs = {
+            "institution_id": "TestInst",
+            "source_id": "TestModel",
+            "experiment_id": "piControl",
+            "variant_label": "r1i1p1f1",
+            "variable_id": "pr",
+            "branding_suffix": "tavg-u-hxy-u",
+        }
+        instance_id = create_cmip7_instance_id(attrs)
+
+        # Should use defaults: MIP-DRS7, CMIP7, CMIP, glb, mon, gn, v1
+        assert instance_id.startswith("MIP-DRS7.CMIP7.CMIP.")
+        assert ".glb." in instance_id
+        assert ".mon." in instance_id
+        assert instance_id.endswith(".gn.v1")
+
+    def test_instance_id_matches_path_components(self):
+        """Test that instance_id components match path components."""
+        attrs = {
+            "drs_specs": "MIP-DRS7",
+            "mip_era": "CMIP7",
+            "activity_id": "CMIP",
+            "institution_id": "CSIRO",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "region": "glb",
+            "frequency": "mon",
+            "variable_id": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "grid_label": "gn",
+            "version": "v20240101",
+        }
+        instance_id = create_cmip7_instance_id(attrs)
+        path = create_cmip7_path(attrs)
+
+        # Instance_id uses "." separator, path uses "/"
+        assert instance_id.replace(".", "/") == path

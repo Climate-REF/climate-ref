@@ -9,7 +9,7 @@ before actual CMIP7 data becomes available on ESGF.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, cast
 
 import pandas as pd
 import xarray as xr
@@ -213,6 +213,8 @@ class CMIP7Request:
         """
         Build CMIP7 metadata row from CMIP6 source and converted attributes.
 
+        Based on CMIP7 Global Attributes V1.0 (DOI: 10.5281/zenodo.17250297).
+
         Parameters
         ----------
         cmip6_row
@@ -230,28 +232,54 @@ class CMIP7Request:
         table_id = cmip6_row.get("table_id", "Amon")
         variable_id = cmip6_row.get("variable_id", "tas")
         branding_suffix = get_branding_suffix(variable_id)
+        branding_suffix_str = str(branding_suffix)
 
         # Start with CMIP6 row as base
-        result: dict[str, Any] = cmip6_row.to_dict()
+        result: dict[str, Any] = cast(dict[str, Any], cmip6_row.to_dict())
 
-        # Override with CMIP7-specific values
+        # Remove CMIP6-only fields
+        for field in ["member_id", "table_id", "grid", "sub_experiment", "sub_experiment_id"]:
+            result.pop(field, None)
+
+        # Override with CMIP7-specific values per V1.0 spec
         result.update(
             {
                 "path": cmip7_files[0],  # Primary path
                 "files": cmip7_files,
+                # Mandatory CMIP7 fields
                 "mip_era": "CMIP7",
-                "table_id": get_realm_from_table(table_id),
+                "realm": get_realm_from_table(table_id),
                 "frequency": get_frequency_from_table(table_id),
-                "region": cmip7_attrs.get("region", "GLB"),
-                "branding_suffix": str(branding_suffix),
-                "archive_id": cmip7_attrs.get("archive_id", "WCRP"),
-                "host_collection": cmip7_attrs.get("host_collection", "CMIP7"),
+                "region": cmip7_attrs.get("region", "glb"),  # lowercase per spec
+                "branding_suffix": branding_suffix_str,
+                "branded_variable": f"{variable_id}_{branding_suffix_str}",
                 "drs_specs": cmip7_attrs.get("drs_specs", "MIP-DRS7"),
-                "cv_version": cmip7_attrs.get("cv_version", "7.0.0.0"),
+                "data_specs_version": cmip7_attrs.get("data_specs_version", "MIP-DS7.1.0.0"),
+                "product": cmip7_attrs.get("product", "model-output"),
+                "license_id": cmip7_attrs.get("license_id", "CC-BY-4.0"),
+                # Branding suffix components
                 "temporal_label": cmip7_attrs.get("temporal_label", branding_suffix.temporal_label),
                 "vertical_label": cmip7_attrs.get("vertical_label", branding_suffix.vertical_label),
                 "horizontal_label": cmip7_attrs.get("horizontal_label", branding_suffix.horizontal_label),
                 "area_label": cmip7_attrs.get("area_label", branding_suffix.area_label),
+                # Variant indices (convert from CMIP6 integers to CMIP7 strings)
+                "realization_index": cmip7_attrs.get("realization_index", ""),
+                "initialization_index": cmip7_attrs.get("initialization_index", ""),
+                "physics_index": cmip7_attrs.get("physics_index", ""),
+                "forcing_index": cmip7_attrs.get("forcing_index", ""),
+                # Optional fields
+                "nominal_resolution": cmip7_attrs.get("nominal_resolution", ""),
+                "tracking_id": cmip7_attrs.get("tracking_id", ""),
+                # Parent fields
+                "branch_time_in_child": cmip7_attrs.get("branch_time_in_child"),
+                "branch_time_in_parent": cmip7_attrs.get("branch_time_in_parent"),
+                "parent_activity_id": cmip7_attrs.get("parent_activity_id", ""),
+                "parent_experiment_id": cmip7_attrs.get("parent_experiment_id", ""),
+                "parent_mip_era": cmip7_attrs.get("parent_mip_era", ""),
+                "parent_source_id": cmip7_attrs.get("parent_source_id", ""),
+                "parent_time_units": cmip7_attrs.get("parent_time_units", ""),
+                "parent_variant_label": cmip7_attrs.get("parent_variant_label", ""),
+                "external_variables": cmip7_attrs.get("external_variables", ""),
             }
         )
 

@@ -74,11 +74,9 @@ class TestCMIP7Request:
         )
         cmip7_files = ["/path/to/converted/file.nc"]
         cmip7_attrs = {
-            "region": "GLB",
-            "archive_id": "WCRP",
-            "host_collection": "CMIP7",
+            "region": "glb",
             "drs_specs": "MIP-DRS7",
-            "cv_version": "7.0.0.0",
+            "data_specs_version": "MIP-DS7.1.0.0",
             "temporal_label": "tavg",
             "vertical_label": "h2m",
             "horizontal_label": "hxy",
@@ -87,15 +85,20 @@ class TestCMIP7Request:
 
         result = request._build_cmip7_metadata(cmip6_row, cmip7_files, cmip7_attrs)
 
+        # Core CMIP7 attributes per V1.0 spec
         assert result["mip_era"] == "CMIP7"
-        assert result["table_id"] == "atmos"  # Converted from Amon
+        assert result["realm"] == "atmos"  # Converted from Amon table_id
         assert result["frequency"] == "mon"  # Extracted from Amon
-        assert result["region"] == "GLB"
+        assert result["region"] == "glb"  # lowercase per CMIP7 spec
         assert result["branding_suffix"] == "tavg-h2m-hxy-u"
+        assert result["branded_variable"] == "tas_tavg-h2m-hxy-u"
         assert result["path"] == "/path/to/converted/file.nc"
         assert result["files"] == cmip7_files
-        # Key should be CMIP7 instance_id format
-        assert "CMIP7" in result["key"]
+        # Key should be CMIP7 instance_id format (MIP-DRS7.CMIP7....)
+        assert "MIP-DRS7.CMIP7" in result["key"]
+        # CMIP6-only fields should be removed
+        assert "table_id" not in result
+        assert "member_id" not in result
 
     @patch("climate_ref_core.esgf.cmip7.CMIP6Request")
     def test_fetch_datasets_empty(self, mock_cmip6_request_cls):

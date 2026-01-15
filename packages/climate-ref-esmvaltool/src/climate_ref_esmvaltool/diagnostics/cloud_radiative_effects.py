@@ -65,12 +65,12 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
         test_cases=(
             TestCase(
                 name="default",
-                description="Cloud radiative effects from ACCESS-ESM1-5 historical",
+                description="Cloud radiative effects from NorESM2-LM historical",
                 requests=(
                     CMIP6Request(
                         slug="radiation",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "NorESM2-LM",
                             "experiment_id": "historical",
                             "variable_id": ("rlut", "rlutcs", "rsut", "rsutcs"),
                             "member_id": "r1i1p1f1",
@@ -81,7 +81,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                     CMIP6Request(
                         slug="areacella",
                         facets={
-                            "source_id": "ACCESS-ESM1-5",
+                            "source_id": "NorESM2-LM",
                             "experiment_id": "historical",
                             "variable_id": "areacella",
                             "table_id": "fx",

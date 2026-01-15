@@ -1,0 +1,70 @@
+EOF1: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(23.64413115)
+Coordinates:
+    mode     int64 8B 0, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(3.24777119)
+Coordinates:
+    mode     int64 8B 0
+EOF2: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(12.86547195)
+Coordinates:
+    mode     int64 8B 1, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(1.76720848)
+Coordinates:
+    mode     int64 8B 1
+EOF3: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(11.42166983)
+Coordinates:
+    mode     int64 8B 2, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(1.56888701)
+Coordinates:
+    mode     int64 8B 2
+EOF4: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(7.61430019)
+Coordinates:
+    mode     int64 8B 3, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(1.04590457)
+Coordinates:
+    mode     int64 8B 3
+EOF5: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(6.9391853)
+Coordinates:
+    mode     int64 8B 4, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(0.95317041)
+Coordinates:
+    mode     int64 8B 4
+EOF6: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(5.77327631)
+Coordinates:
+    mode     int64 8B 5, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(0.79302049)
+Coordinates:
+    mode     int64 8B 5
+EOF7: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(4.81250061)
+Coordinates:
+    mode     int64 8B 6, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(0.6610478)
+Coordinates:
+    mode     int64 8B 6
+EOF8: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(4.16304168)
+Coordinates:
+    mode     int64 8B 7, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(0.57183775)
+Coordinates:
+    mode     int64 8B 7
+EOF9: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(3.46292558)
+Coordinates:
+    mode     int64 8B 8, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(0.47566941)
+Coordinates:
+    mode     int64 8B 8
+EOF10: frac (%), error (%): <xarray.DataArray 'variance_fractions' ()> Size: 8B
+array(2.82325989)
+Coordinates:
+    mode     int64 8B 9, <xarray.DataArray 'typical_errors' ()> Size: 8B
+array(0.38780457)
+Coordinates:
+    mode     int64 8B 9

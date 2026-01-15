@@ -333,7 +333,7 @@ class TestRunTestCaseCommand:
     def test_run_help(self, invoke_cli):
         """Test run command help."""
         result = invoke_cli(["test-cases", "run", "--help"])
-        assert "Run a specific test case" in result.stdout
+        assert "Run test cases for diagnostics" in result.stdout
 
     def test_run_nonexistent_diagnostic(self, invoke_cli):
         """Test running non-existent diagnostic."""

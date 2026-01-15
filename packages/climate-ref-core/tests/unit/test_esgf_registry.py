@@ -333,3 +333,37 @@ class TestRegistryRequest:
             assert len(result) == 2
             assert set(result["source_id"].tolist()) == {"HadISST-1-1", "TropFlux-1-0"}
             assert set(result["variable_id"].tolist()) == {"ts", "tauu"}
+
+    def test_fetch_datasets_filters_to_latest_version(self):
+        """Test that fetch_datasets returns only the latest version when multiple versions exist."""
+        mock_registry = MagicMock()
+        # Include multiple versions of the same dataset
+        mock_registry.registry.keys.return_value = [
+            "obs4REF/ESSO/TropFlux-1-0/mon/hfls/gn/v20210727/hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc",
+            "obs4REF/ESSO/TropFlux-1-0/mon/hfls/gn/v20250415/hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc",
+            "obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20210727/ts_mon_HadISST-1-1_PCMDI_gn_187001-201907.nc",
+            "obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20250415/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc",
+        ]
+        mock_registry.fetch.side_effect = lambda key: f"/path/to/{key}"
+
+        mock_manager = MagicMock()
+        mock_manager.__getitem__ = MagicMock(return_value=mock_registry)
+        mock_manager.keys.return_value = ["obs4ref"]
+
+        with patch(
+            "climate_ref_core.esgf.registry.dataset_registry_manager",
+            mock_manager,
+        ):
+            request = RegistryRequest(
+                slug="test-request",
+                registry_name="obs4ref",
+                source_type="obs4MIPs",
+                facets={"source_id": ("HadISST-1-1", "TropFlux-1-0")},
+            )
+            result = request.fetch_datasets()
+
+            # Should only return 2 rows (latest version of each dataset)
+            assert len(result) == 2
+            # All returned rows should have the latest version
+            assert all(result["version"] == "v20250415")
+            assert set(result["source_id"].tolist()) == {"HadISST-1-1", "TropFlux-1-0"}

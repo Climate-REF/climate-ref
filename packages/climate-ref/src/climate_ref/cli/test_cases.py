@@ -185,6 +185,10 @@ def fetch_test_data(  # noqa: PLR0912
         bool,
         typer.Option(help="Show what would be fetched without downloading"),
     ] = False,
+    only_missing: Annotated[
+        bool,
+        typer.Option(help="Only fetch data for test cases without existing catalogs"),
+    ] = False,
 ) -> None:
     """
     Fetch test data from ESGF for running diagnostic tests.
@@ -197,6 +201,7 @@ def fetch_test_data(  # noqa: PLR0912
         ref test-cases fetch                   # Fetch all test data
         ref test-cases fetch --provider ilamb  # Fetch ILAMB test data only
         ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
+        ref test-cases fetch --only-missing    # Skip test cases with existing catalogs
     """
     config = ctx.obj.config
     db = ctx.obj.database
@@ -231,6 +236,12 @@ def fetch_test_data(  # noqa: PLR0912
                 for tc in diag.test_data_spec.test_cases:
                     if test_case and tc.name != test_case:
                         continue
+                    # Check if catalog exists when using --only-missing
+                    if only_missing:
+                        paths = TestCasePaths.from_diagnostic(diag, tc.name)
+                        if paths and paths.catalog.exists():
+                            logger.info(f"  Test case: {tc.name} - [SKIP: catalog exists]")
+                            continue
                     logger.info(f"  Test case: {tc.name} - {tc.description}")
                     if tc.requests:
                         for req in tc.requests:
@@ -244,6 +255,12 @@ def fetch_test_data(  # noqa: PLR0912
             for tc in diag.test_data_spec.test_cases:
                 if test_case and tc.name != test_case:
                     continue
+                # Skip if catalog exists when using --only-missing
+                if only_missing:
+                    paths = TestCasePaths.from_diagnostic(diag, tc.name)
+                    if paths and paths.catalog.exists():
+                        logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
+                        continue
                 if tc.requests:
                     logger.info(f"  Processing test case: {tc.name}")
                     try:
@@ -264,6 +281,7 @@ def list_cases(
     List test cases for all diagnostics.
 
     Shows which test cases are defined for each diagnostic and their descriptions.
+    Also shows whether catalog and regression data exist for each test case.
     """
     config = ctx.obj.config
     db = ctx.obj.database
@@ -278,6 +296,8 @@ def list_cases(
     table.add_column("Test Case", style="yellow")
     table.add_column("Description")
     table.add_column("Requests", justify="right")
+    table.add_column("Catalog", justify="center")
+    table.add_column("Regression", justify="center")
 
     for provider_instance in registry.providers:
         if provider and provider_instance.slug != provider:
@@ -291,17 +311,31 @@ def list_cases(
                     "-",
                     "(no test_data_spec)",
                     "0",
+                    "-",
+                    "-",
                 )
                 continue
 
             for tc in diag.test_data_spec.test_cases:
                 num_requests = len(tc.requests) if tc.requests else 0
+
+                # Check if catalog and regression data exist
+                paths = TestCasePaths.from_diagnostic(diag, tc.name)
+                if paths:
+                    catalog_status = "[green]yes[/green]" if paths.catalog.exists() else "[red]no[/red]"
+                    regression_status = "[green]yes[/green]" if paths.regression.exists() else "[red]no[/red]"
+                else:
+                    catalog_status = "[dim]-[/dim]"
+                    regression_status = "[dim]-[/dim]"
+
                 table.add_row(
                     provider_instance.slug,
                     diag.slug,
                     tc.name,
                     tc.description,
                     str(num_requests),
+                    catalog_status,
+                    regression_status,
                 )
 
     console.print(table)
@@ -584,6 +618,10 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         bool,
         typer.Option(help="Show what would be run without executing"),
     ] = False,
+    only_missing: Annotated[
+        bool,
+        typer.Option(help="Only run test cases without existing regression data"),
+    ] = False,
 ) -> None:
     """
     Run test cases for diagnostics.
@@ -599,6 +637,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         ref test-cases run --provider ilamb              # Run all ILAMB test cases
         ref test-cases run --provider example --diagnostic global-mean-timeseries
         ref test-cases run --provider ilamb --test-case default --fetch
+        ref test-cases run --provider pmp --only-missing # Skip test cases with regression data
     """
     config: Config = ctx.obj.config
     db = ctx.obj.database
@@ -622,6 +661,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
 
     # Collect test cases to run
     test_cases_to_run: list[tuple[Diagnostic, TestCase]] = []
+    skipped_cases: list[tuple[Diagnostic, TestCase]] = []
 
     for diag in provider_instance.diagnostics():
         if diagnostic and diag.slug != diagnostic:
@@ -632,6 +672,12 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         for tc in diag.test_data_spec.test_cases:
             if test_case and tc.name != test_case:
                 continue
+            # Skip if regression exists when using --only-missing
+            if only_missing:
+                paths = TestCasePaths.from_diagnostic(diag, tc.name)
+                if paths and paths.regression.exists():
+                    skipped_cases.append((diag, tc))
+                    continue
             test_cases_to_run.append((diag, tc))
 
     if not test_cases_to_run:
@@ -640,9 +686,13 @@ def run_test_case(  # noqa: PLR0912, PLR0915
             logger.warning(f"  with diagnostic filter: {diagnostic}")
         if test_case:
             logger.warning(f"  with test case filter: {test_case}")
+        if only_missing and skipped_cases:
+            logger.info(f"  ({len(skipped_cases)} test case(s) skipped due to --only-missing)")
         raise typer.Exit(code=0)
 
     logger.info(f"Found {len(test_cases_to_run)} test case(s) to run")
+    if skipped_cases:
+        logger.info(f"Skipping {len(skipped_cases)} test case(s) with existing regression data")
 
     if dry_run:
         table = Table(title="Test Cases to Run")
@@ -650,9 +700,13 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         table.add_column("Diagnostic", style="green")
         table.add_column("Test Case", style="yellow")
         table.add_column("Description")
+        table.add_column("Status", justify="center")
 
         for diag, tc in test_cases_to_run:
-            table.add_row(provider, diag.slug, tc.name, tc.description)
+            table.add_row(provider, diag.slug, tc.name, tc.description, "[green]will run[/green]")
+
+        for diag, tc in skipped_cases:
+            table.add_row(provider, diag.slug, tc.name, tc.description, "[dim]skip (regression exists)[/dim]")
 
         console.print(table)
         return

@@ -1,0 +1,46 @@
+{
+    "ACCESS-ESM1-5": {
+        "r1i1p1f1": {}
+    },
+    "json_structure": [
+        "type",
+        "data",
+        "metric",
+        "item",
+        "value or description"
+    ],
+    "provenance": {
+        "commandLine": "/Users/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+        "conda": {
+            "Platform": "osx-64"
+        },
+        "date": "2026-01-15 15:27:03",
+        "openGL": {
+            "GLX": {
+                "client": {},
+                "server": {}
+            }
+        },
+        "osAccess": false,
+        "packages": {
+            "PMP": "3.9.2",
+            "PMPObs": "See 'References' key below, for detailed obs provenance information.",
+            "cdat_info": "8.2.1",
+            "cdp": "1.7.0",
+            "esmf": "0.8.10",
+            "esmpy": "8.9.0",
+            "matplotlib": "3.10.6",
+            "numpy": "2.0.2",
+            "python": "3.10.10",
+            "scipy": "1.15.2",
+            "xarray": "2025.6.1",
+            "xcdat": "0.10.0"
+        },
+        "platform": {
+            "Name": "Jareds-MacBook-Pro.local",
+            "OS": "Darwin",
+            "Version": "24.6.0"
+        },
+        "userId": "jared"
+    }
+}

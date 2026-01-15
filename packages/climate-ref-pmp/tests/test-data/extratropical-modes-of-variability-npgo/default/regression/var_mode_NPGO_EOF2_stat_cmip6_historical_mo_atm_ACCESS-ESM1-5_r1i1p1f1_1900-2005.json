@@ -1,0 +1,94 @@
+{
+    "REF": {
+        "obs": {
+            "defaultReference": {
+                "NPGO": {
+                    "monthly": {
+                        "frac": 0.10869239160820003,
+                        "mean": -0.0005395665927767151,
+                        "mean_glo": 0.045600454857967807,
+                        "stdv_pc": 0.1523046820542976
+                    }
+                },
+                "period": "1900-2005",
+                "reference_eofs": 2,
+                "source": "/Users/jared/Library/Caches/climate_ref/obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20210727/ts_mon_HadISST-1-1_PCMDI_gn_187001-201907.nc"
+            }
+        }
+    },
+    "RESULTS": {
+        "ACCESS-ESM1-5": {
+            "r1i1p1f1": {
+                "defaultReference": {
+                    "NPGO": {
+                        "monthly": {
+                            "best_matching_model_eofs__cor": 2,
+                            "best_matching_model_eofs__rms": 2,
+                            "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 2,
+                            "cbf": {
+                                "bias": 0.0027258089474634308,
+                                "bias_glo": 0.005250513045456191,
+                                "cor": 0.8534481510986337,
+                                "cor_glo": 0.6939711293392137,
+                                "frac": 0.09980473757252507,
+                                "frac_cbf_regrid": 0.17719366065457162,
+                                "mean": -9.12445813360023e-16,
+                                "mean_glo": 0.052446953510888024,
+                                "rms": 0.15512348230248268,
+                                "rms_glo": 0.0880237514883465,
+                                "rmsc": 0.5689642404642403,
+                                "rmsc_glo": 0.8246743187716381,
+                                "stdv_pc": 0.17714129225605355,
+                                "stdv_pc_ratio_to_obs": 1.163071875839651
+                            },
+                            "eof1": {
+                                "bias": 0.017668123981576054,
+                                "bias_glo": -0.08173985062043408,
+                                "cor": 0.1774984283907909,
+                                "cor_glo": 0.16302232690246704,
+                                "frac": 0.20657187012938819,
+                                "mean": -4.6313277921828685e-17,
+                                "mean_glo": -0.034763214002065966,
+                                "rms": 0.4021749944834805,
+                                "rms_glo": 0.18814339889268672,
+                                "rmsc": 1.2918321609328105,
+                                "rmsc_glo": 1.3202894534373284,
+                                "stdv_pc": 0.3114757116787781,
+                                "stdv_pc_ratio_to_obs": 2.0450829710391636,
+                                "tcor_cbf_vs_eof_pc": 0.2922543412193872
+                            },
+                            "eof2": {
+                                "bias": 0.0019636382943559088,
+                                "bias_glo": 0.01515447932699804,
+                                "cor": 0.6885551476517907,
+                                "cor_glo": 0.5994900453445853,
+                                "frac": 0.10556829364186177,
+                                "mean": -1.0391077744335324e-15,
+                                "mean_glo": 0.06201271720300405,
+                                "rms": 0.20802217100121884,
+                                "rms_glo": 0.09833538274598665,
+                                "rmsc": 0.8081066531829627,
+                                "rmsc_glo": 0.9308711425083706,
+                                "stdv_pc": 0.22266673811241516,
+                                "stdv_pc_ratio_to_obs": 1.46198222608175,
+                                "tcor_cbf_vs_eof_pc": 0.8269986341894474
+                            },
+                            "period": "1900-2005"
+                        },
+                        "target_model_eofs": 2
+                    }
+                }
+            }
+        }
+    },
+    "json_structure": [
+        "model",
+        "realization",
+        "reference",
+        "mode",
+        "season",
+        "method",
+        "statistic"
+    ],
+    "provenance": {}
+}

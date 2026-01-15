@@ -291,6 +291,17 @@ class RegistryRequest:
             return pd.DataFrame()
 
         result = pd.DataFrame(matching_rows)
+
+        # Filter to only the latest version for each unique dataset
+        # Datasets are identified by source_id, variable_id, and grid_label
+        if "version" in result.columns:
+            group_by_cols = ["source_id", "variable_id", "grid_label"]
+            # Only group by columns that exist in the DataFrame
+            group_by_cols = [col for col in group_by_cols if col in result.columns]
+            if group_by_cols:
+                max_version = result.groupby(group_by_cols, sort=False)["version"].transform("max")
+                result = result[result["version"] == max_version]
+
         logger.info(f"Found {len(result)} datasets matching request: {self.slug}")
 
         return result

@@ -1,0 +1,78 @@
+{
+    "REF": {
+        "obs": {
+            "defaultReference": {
+                "PDO": {
+                    "monthly": {
+                        "frac": 0.2608888865549062,
+                        "mean": -0.004573597623146822,
+                        "mean_glo": 0.08480428214887262,
+                        "stdv_pc": 0.2359616756294782
+                    }
+                },
+                "period": "1900-2005",
+                "reference_eofs": 1,
+                "source": "/Users/jared/Library/Caches/climate_ref/obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20210727/ts_mon_HadISST-1-1_PCMDI_gn_187001-201907.nc"
+            }
+        }
+    },
+    "RESULTS": {
+        "ACCESS-ESM1-5": {
+            "r1i1p1f1": {
+                "defaultReference": {
+                    "PDO": {
+                        "monthly": {
+                            "best_matching_model_eofs__cor": 1,
+                            "best_matching_model_eofs__rms": 1,
+                            "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                            "cbf": {
+                                "bias": -0.0011433174459751613,
+                                "bias_glo": -0.048951675749337425,
+                                "cor": 0.8993434332676968,
+                                "cor_glo": 0.8130139038690033,
+                                "frac": 0.19400694184838232,
+                                "frac_cbf_regrid": 0.345476256206236,
+                                "mean": 1.3831166353473376e-16,
+                                "mean_glo": 0.03319227544235176,
+                                "rms": 0.1720018830576012,
+                                "rms_glo": 0.11245731883905132,
+                                "rmsc": 0.4537018076564045,
+                                "rmsc_glo": 0.6670363453510532,
+                                "stdv_pc": 0.25559291900984554,
+                                "stdv_pc_ratio_to_obs": 1.0831967450985285
+                            },
+                            "eof1": {
+                                "bias": -0.0006103232810936958,
+                                "bias_glo": -0.04761132946425604,
+                                "cor": 0.8347623664814707,
+                                "cor_glo": 0.7639405342798322,
+                                "frac": 0.20657187012938819,
+                                "mean": 4.111659692196875e-17,
+                                "mean_glo": 0.034763214002065966,
+                                "rms": 0.2171333916201393,
+                                "rms_glo": 0.12225382738253285,
+                                "rmsc": 0.5789311467813482,
+                                "rmsc_glo": 0.7382391209489562,
+                                "stdv_pc": 0.3114757116787781,
+                                "stdv_pc_ratio_to_obs": 1.3200266986062463,
+                                "tcor_cbf_vs_eof_pc": 0.9575847179376828
+                            },
+                            "period": "1900-2005"
+                        },
+                        "target_model_eofs": 1
+                    }
+                }
+            }
+        }
+    },
+    "json_structure": [
+        "model",
+        "realization",
+        "reference",
+        "mode",
+        "season",
+        "method",
+        "statistic"
+    ],
+    "provenance": {}
+}

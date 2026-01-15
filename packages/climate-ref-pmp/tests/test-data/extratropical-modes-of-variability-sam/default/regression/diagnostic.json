@@ -1,0 +1,229 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "json_structure": [
+      "source_id",
+      "member_id",
+      "experiment_id",
+      "reference_source_id",
+      "mode",
+      "season",
+      "method",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "method": {
+      "cbf": {},
+      "eof1": {}
+    },
+    "mode": {
+      "SAM": {}
+    },
+    "reference_source_id": {
+      "20CR": {}
+    },
+    "season": {
+      "DJF": {},
+      "JJA": {},
+      "MAM": {},
+      "SON": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "bias": {},
+      "bias_glo": {},
+      "cor": {},
+      "cor_glo": {},
+      "frac": {},
+      "frac_cbf_regrid": {},
+      "mean": {},
+      "mean_glo": {},
+      "rms": {},
+      "rms_glo": {},
+      "rmsc": {},
+      "rmsc_glo": {},
+      "stdv_pc": {},
+      "stdv_pc_ratio_to_obs": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {},
+  "RESULTS": {
+    "ACCESS-ESM1-5": {
+      "r1i1p1f1": {
+        "historical": {
+          "20CR": {
+            "SAM": {
+              "DJF": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "1900-2005"
+                },
+                "cbf": {
+                  "bias": -0.0017627693355167456,
+                  "bias_glo": -0.10751222663741837,
+                  "cor": 0.9535500099673928,
+                  "cor_glo": 0.8750640895791058,
+                  "frac": 0.5025454988759965,
+                  "frac_cbf_regrid": 0.4556649366785343,
+                  "mean": 5.2333709381138e-16,
+                  "mean_glo": -0.1980004744385847,
+                  "rms": 0.4834196747683961,
+                  "rms_glo": 0.4478494510532144,
+                  "rmsc": 0.304794921013641,
+                  "rmsc_glo": 0.4998717979872177,
+                  "stdv_pc": 1.4413953116520193,
+                  "stdv_pc_ratio_to_obs": 1.1268949941795374
+                },
+                "eof1": {
+                  "bias": -0.0016678082114772248,
+                  "bias_glo": -0.0982081831877407,
+                  "cor": 0.94886420021771,
+                  "cor_glo": 0.8678050599827487,
+                  "frac": 0.5048348154538993,
+                  "mean": 4.227308447365291e-16,
+                  "mean_glo": -0.18869643066137087,
+                  "rms": 0.4970067323446909,
+                  "rms_glo": 0.45413640205805195,
+                  "rmsc": 0.3197993544056058,
+                  "rmsc_glo": 0.514188555112155,
+                  "stdv_pc": 1.5249939150835536,
+                  "stdv_pc_ratio_to_obs": 1.1922530864154721
+                }
+              },
+              "JJA": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "1900-2005"
+                },
+                "cbf": {
+                  "bias": -0.003367156993455792,
+                  "bias_glo": 0.208333500588414,
+                  "cor": 0.9241482098382122,
+                  "cor_glo": 0.9078856517511366,
+                  "frac": 0.29514525737738073,
+                  "frac_cbf_regrid": 0.26647025149186027,
+                  "mean": 4.282688034011998e-16,
+                  "mean_glo": -0.2056333120819636,
+                  "rms": 0.5830726250567775,
+                  "rms_glo": 0.4411840861742945,
+                  "rmsc": 0.3894914381630507,
+                  "rmsc_glo": 0.4292186577048016,
+                  "stdv_pc": 1.3897058246795564,
+                  "stdv_pc_ratio_to_obs": 0.9331306078739376
+                },
+                "eof1": {
+                  "bias": -0.0031498547275844654,
+                  "bias_glo": 0.21665333977855133,
+                  "cor": 0.8912002755095128,
+                  "cor_glo": 0.8757221922055644,
+                  "frac": 0.3039656175476232,
+                  "mean": 4.670345140538947e-16,
+                  "mean_glo": -0.19731347438892452,
+                  "rms": 0.7041843786427214,
+                  "rms_glo": 0.5027320886760788,
+                  "rmsc": 0.46647561898967516,
+                  "rmsc_glo": 0.4985534852100485,
+                  "stdv_pc": 1.5349260735193369,
+                  "stdv_pc_ratio_to_obs": 1.0306400639537632
+                }
+              },
+              "MAM": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "1900-2005"
+                },
+                "cbf": {
+                  "bias": 0.0013872823105563334,
+                  "bias_glo": -0.011696186541295174,
+                  "cor": 0.926435797304894,
+                  "cor_glo": 0.8712079765304924,
+                  "frac": 0.2725035633501059,
+                  "frac_cbf_regrid": 0.24454796349634472,
+                  "mean": -3.7012023742215757e-16,
+                  "mean_glo": 0.1269255618581102,
+                  "rms": 0.443585407685007,
+                  "rms_glo": 0.3492356474651715,
+                  "rmsc": 0.38357316605218955,
+                  "rmsc_glo": 0.5075274115657438,
+                  "stdv_pc": 0.9998873690720386,
+                  "stdv_pc_ratio_to_obs": 0.848881844811953
+                },
+                "eof1": {
+                  "bias": 0.0011491510999542258,
+                  "bias_glo": -0.028404402783522176,
+                  "cor": 0.9006484262569517,
+                  "cor_glo": 0.8410640610424274,
+                  "frac": 0.2793510814144581,
+                  "mean": -2.6951398834730676e-16,
+                  "mean_glo": 0.11021734500797142,
+                  "rms": 0.5128409816493551,
+                  "rms_glo": 0.38880755848630394,
+                  "rmsc": 0.4457613023699646,
+                  "rmsc_glo": 0.5638012698979227,
+                  "stdv_pc": 1.0997157796545973,
+                  "stdv_pc_ratio_to_obs": 0.9336339158563289
+                }
+              },
+              "SON": {
+                "attributes": {
+                  "best_matching_model_eofs__cor": 1,
+                  "best_matching_model_eofs__rms": 1,
+                  "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                  "period": "1900-2005"
+                },
+                "cbf": {
+                  "bias": 0.0023116518676180487,
+                  "bias_glo": -0.025889833522008653,
+                  "cor": 0.9449423051300752,
+                  "cor_glo": 0.9037240013145639,
+                  "frac": 0.3829945954280354,
+                  "frac_cbf_regrid": 0.34372684676548154,
+                  "mean": -4.0611696874251705e-16,
+                  "mean_glo": 0.15889231781475724,
+                  "rms": 0.5115627480897768,
+                  "rms_glo": 0.3707613301030741,
+                  "rmsc": 0.3318363642461607,
+                  "rmsc_glo": 0.4388074159618457,
+                  "stdv_pc": 1.3698702062473278,
+                  "stdv_pc_ratio_to_obs": 1.1624284535411853
+                },
+                "eof1": {
+                  "bias": 0.0023494382554314413,
+                  "bias_glo": -0.014387371617762337,
+                  "cor": 0.9198650715002095,
+                  "cor_glo": 0.8815445245333614,
+                  "frac": 0.391901747063261,
+                  "mean": -4.744184589401222e-16,
+                  "mean_glo": 0.17039477995997548,
+                  "rms": 0.5998998140647116,
+                  "rms_glo": 0.41080900865565595,
+                  "rmsc": 0.4003372239171418,
+                  "rmsc_glo": 0.4867350281089836,
+                  "stdv_pc": 1.4755379872697303,
+                  "stdv_pc_ratio_to_obs": 1.2520947844992754
+                }
+              },
+              "attributes": {
+                "target_model_eofs": 1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

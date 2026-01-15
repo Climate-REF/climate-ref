@@ -1,0 +1,112 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "source_id",
+      "member_id",
+      "grid_label",
+      "experiment_id",
+      "metric",
+      "reference_datasets"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "EnsoAmpl": {},
+      "EnsoPrMapDjfCorr": {},
+      "EnsoPrMapDjfRmse": {},
+      "EnsoPrMapDjfStd": {},
+      "EnsoPrMapJjaCorr": {},
+      "EnsoPrMapJjaRmse": {},
+      "EnsoPrMapJjaStd": {},
+      "EnsoSeasonality": {},
+      "EnsoSstLonRmse": {}
+    },
+    "reference_datasets": {
+      "HadISST": {},
+      "HadISST_GPCP-Monthly-3-2": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": {
+    "commandLine": "/Users/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+    "conda": {
+      "Platform": "osx-64"
+    },
+    "date": "2026-01-15 15:26:56",
+    "openGL": {
+      "GLX": {
+        "client": {},
+        "server": {}
+      }
+    },
+    "osAccess": false,
+    "packages": {
+      "PMP": "3.9.2",
+      "PMPObs": "See 'References' key below, for detailed obs provenance information.",
+      "cdat_info": "8.2.1",
+      "cdp": "1.7.0",
+      "esmf": "0.8.10",
+      "esmpy": "8.9.0",
+      "matplotlib": "3.10.6",
+      "numpy": "2.0.2",
+      "python": "3.10.10",
+      "scipy": "1.15.2",
+      "xarray": "2025.6.1",
+      "xcdat": "0.10.0"
+    },
+    "platform": {
+      "Name": "Jareds-MacBook-Pro.local",
+      "OS": "Darwin",
+      "Version": "24.6.0"
+    },
+    "userId": "jared"
+  },
+  "RESULTS": {
+    "ACCESS-ESM1-5": {
+      "r1i1p1f1": {
+        "gn": {
+          "historical": {
+            "EnsoAmpl": {
+              "HadISST": 4.523475733392167
+            },
+            "EnsoPrMapDjfCorr": {
+              "HadISST_GPCP-Monthly-3-2": 0.4519816938092388
+            },
+            "EnsoPrMapDjfRmse": {
+              "HadISST_GPCP-Monthly-3-2": 0.29051372938115444
+            },
+            "EnsoPrMapDjfStd": {
+              "HadISST_GPCP-Monthly-3-2": 0.8674357611519518
+            },
+            "EnsoPrMapJjaCorr": {
+              "HadISST_GPCP-Monthly-3-2": 0.6199640768543347
+            },
+            "EnsoPrMapJjaRmse": {
+              "HadISST_GPCP-Monthly-3-2": 0.3951534403442248
+            },
+            "EnsoPrMapJjaStd": {
+              "HadISST_GPCP-Monthly-3-2": 0.884912670808795
+            },
+            "EnsoSeasonality": {
+              "HadISST": 32.728309106472764
+            },
+            "EnsoSstLonRmse": {
+              "HadISST": 0.20416428201082387
+            }
+          }
+        }
+      }
+    }
+  }
+}

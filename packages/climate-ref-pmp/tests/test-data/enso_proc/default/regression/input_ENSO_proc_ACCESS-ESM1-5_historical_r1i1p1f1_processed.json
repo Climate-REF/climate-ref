@@ -1,0 +1,152 @@
+{
+    "model": {
+        "ACCESS-ESM1-5_r1i1p1f1": {
+            "hfls": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/hfls/gn/v20191115/hfls_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "hfls",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/hfls_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/hfls_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "rlds": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlds/gn/v20191115/rlds_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "rlds",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rlds_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rlds_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "rsus": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsus/gn/v20191115/rsus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "rsus",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rsus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rsus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "sst": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/ts/gn/v20191115/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "ts",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "rlus": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rlus/gn/v20191115/rlus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "rlus",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rlus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rlus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "taux": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/tauu/gn/v20191115/tauu_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "tauu",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/tauu_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/tauu_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "hfss": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/hfss/gn/v20191115/hfss_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "hfss",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/hfss_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/hfss_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            },
+            "rsds": {
+                "path + filename": "/Users/jared/.esgf-ref/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/rsds/gn/v20191115/rsds_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc",
+                "varname": "rsds",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rsds_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "areaname": "areacella",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rsds_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412_landmask.nc",
+                "landmaskname": "sftlf"
+            }
+        }
+    },
+    "observations": {
+        "Tropflux": {
+            "hfls": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/ESSO/TropFlux-1-0/mon/hfls/gn/v20250415/hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc",
+                "varname": "hfls",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc"
+            },
+            "sst": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/ESSO/TropFlux-1-0/mon/ts/gn/v20210727/ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc",
+                "varname": "ts",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc"
+            },
+            "taux": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/ESSO/TropFlux-1-0/mon/tauu/gn/v20250415/tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc",
+                "varname": "tauu",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc"
+            },
+            "hfss": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/ESSO/TropFlux-1-0/mon/hfss/gn/v20250415/hfss_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc",
+                "varname": "hfss",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/hfss_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/hfss_mon_TropFlux-1-0_PCMDI_gn_197901-201707_landmask.nc"
+            }
+        },
+        "CERES-EBAF-4-2": {
+            "rlds": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rlds/gn/v20230209/rlds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc",
+                "varname": "rlds",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rlds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rlds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc"
+            },
+            "rsus": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rsus/gn/v20230209/rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc",
+                "varname": "rsus",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc"
+            },
+            "rlus": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rlus/gn/v20230209/rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc",
+                "varname": "rlus",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc"
+            },
+            "rsds": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rsds/gn/v20230209/rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc",
+                "varname": "rsds",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309_landmask.nc"
+            }
+        },
+        "HadISST": {
+            "sst": {
+                "path + filename": "/Users/jared/Library/Caches/climate_ref/obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20250415/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc",
+                "varname": "ts",
+                "areaname": "areacella",
+                "landmaskname": "sftlf",
+                "path + filename_area": "<OUTPUT_DIR>/ref_landmask/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501_landmask.nc",
+                "path + filename_landmask": "<OUTPUT_DIR>/ref_landmask/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501_landmask.nc"
+            }
+        }
+    },
+    "metricsCollection": "ENSO_proc",
+    "experiment_id": "historical"
+}

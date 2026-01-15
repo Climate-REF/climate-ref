@@ -1,0 +1,15 @@
+source,region,analysis,name,type,units,value
+Reference,global,Bias,Period Mean [kg m-2],scalar,kg m-2,14.886450900511786
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Period Mean [kg m-2],scalar,kg m-2,5.338226014043078
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias [kg m-2],scalar,kg m-2,-8.149912251070266
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias Score [1],score,1,0.6003509241535969
+Reference,tropical,Bias,Period Mean [kg m-2],scalar,kg m-2,13.458747059750038
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Period Mean [kg m-2],scalar,kg m-2,4.241176078550585
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias [kg m-2],scalar,kg m-2,-8.583523234017433
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias Score [1],score,1,0.573048988231269
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.3179786800114542
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Correlation [1],scalar,1,0.3631993839551415
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Spatial Distribution Score [1],score,1,0.2273650044185218
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.22162008048454687
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Correlation [1],scalar,1,0.005500924901257073
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Spatial Distribution Score [1],score,1,0.08973959654169054

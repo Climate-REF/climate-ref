@@ -18,7 +18,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf import CMIP6Request, RegistryRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -49,7 +49,7 @@ def _parse_test_cases_from_config(
     parsed_cases: list[TestCase] = []
     for tc_config in test_cases_config:
         # Parse CMIP6 requests
-        requests: list[CMIP6Request] = []
+        requests: list[CMIP6Request | RegistryRequest] = []
         for req_config in tc_config.get("cmip6_requests", []):
             time_span = req_config.get("time_span")
             if time_span is not None:
@@ -66,6 +66,29 @@ def _parse_test_cases_from_config(
                 CMIP6Request(
                     slug=req_config["slug"],
                     facets=facets,
+                    time_span=time_span,
+                )
+            )
+
+        # Parse registry requests
+        for req_config in tc_config.get("registry_requests", []):
+            time_span = req_config.get("time_span")
+            if time_span is not None:
+                time_span = tuple(time_span)
+
+            # Convert list values to tuples for consistency
+            facets = {}
+            for k, v in req_config.items():
+                if k in ("slug", "registry_name", "source_type", "time_span"):
+                    continue
+                facets[k] = tuple(v) if isinstance(v, list) else v
+
+            requests.append(
+                RegistryRequest(
+                    slug=req_config["slug"],
+                    registry_name=req_config["registry_name"],
+                    facets=facets,
+                    source_type=req_config.get("source_type", "obs4REF"),
                     time_span=time_span,
                 )
             )

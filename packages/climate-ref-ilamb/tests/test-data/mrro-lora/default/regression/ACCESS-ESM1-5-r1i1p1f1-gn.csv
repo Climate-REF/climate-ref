@@ -1,0 +1,23 @@
+source,region,analysis,name,type,units,value
+Reference,global,Bias,Period Mean [kg m-2 s-1],scalar,kg m-2 s-1,9.447550594536719e-06
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Period Mean [kg m-2 s-1],scalar,kg m-2 s-1,1.077803977076617e-05
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias [kg m-2 s-1],scalar,kg m-2 s-1,1.0077004827574534e-06
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias Score [1],score,1,0.5374048564045398
+Reference,tropical,Bias,Period Mean [kg m-2 s-1],scalar,kg m-2 s-1,2.0790464821271963e-05
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Period Mean [kg m-2 s-1],scalar,kg m-2 s-1,2.3604082464823256e-05
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias [kg m-2 s-1],scalar,kg m-2 s-1,2.7059782457005697e-06
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias Score [1],score,1,0.4327608485674187
+ACCESS-ESM1-5-r1i1p1f1-gn,global,RMSE,RMSE [kg m-2 s-1],scalar,kg m-2 s-1,1.664630815514496e-05
+ACCESS-ESM1-5-r1i1p1f1-gn,global,RMSE,RMSE Score [1],score,1,0.24620677140742564
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,RMSE,RMSE [kg m-2 s-1],scalar,kg m-2 s-1,3.485885216499679e-05
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,RMSE,RMSE Score [1],score,1,0.20707784395276216
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Annual Cycle,Phase Shift [month],scalar,month,0.29253887586666566
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Annual Cycle,Seasonal Cycle Score [1],score,1,0.6998902709663878
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Annual Cycle,Phase Shift [month],scalar,month,0.06469337514722637
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Annual Cycle,Seasonal Cycle Score [1],score,1,0.7882413215139464
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,1.131256056274366
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Correlation [1],scalar,1,0.6107092919848576
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Spatial Distribution Score [1],score,1,0.7932283994925238
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,1.3984564188901616
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Correlation [1],scalar,1,0.46271998623654154
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Spatial Distribution Score [1],score,1,0.654898708983068

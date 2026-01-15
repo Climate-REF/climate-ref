@@ -1,0 +1,23 @@
+source,region,analysis,name,type,units,value
+Reference,global,Bias,Period Mean [%],scalar,%,13.41330946081589
+CESM2-r1i1p1f1-gn,global,Bias,Period Mean [%],scalar,%,22.641930049226854
+CESM2-r1i1p1f1-gn,global,Bias,Bias [%],scalar,%,0.5906461445038502
+CESM2-r1i1p1f1-gn,global,Bias,Bias Score [1],score,1,0.6276231645979473
+Reference,tropical,Bias,Period Mean [%],scalar,%,0.027538682709868933
+CESM2-r1i1p1f1-gn,tropical,Bias,Period Mean [%],scalar,%,0.15731246297767562
+CESM2-r1i1p1f1-gn,tropical,Bias,Bias [%],scalar,%,-0.006796438309763564
+CESM2-r1i1p1f1-gn,tropical,Bias,Bias Score [1],score,1,0.6845552232038724
+CESM2-r1i1p1f1-gn,global,RMSE,RMSE [%],scalar,%,9.434414500669432
+CESM2-r1i1p1f1-gn,global,RMSE,RMSE Score [1],score,1,0.3806834272392717
+CESM2-r1i1p1f1-gn,tropical,RMSE,RMSE [%],scalar,%,0.00942850270271699
+CESM2-r1i1p1f1-gn,tropical,RMSE,RMSE Score [1],score,1,0.3442254198943915
+CESM2-r1i1p1f1-gn,global,Annual Cycle,Phase Shift [month],scalar,month,0.2912545824274263
+CESM2-r1i1p1f1-gn,global,Annual Cycle,Seasonal Cycle Score [1],score,1,0.8835624519042349
+CESM2-r1i1p1f1-gn,tropical,Annual Cycle,Phase Shift [month],scalar,month,0.014646469624970022
+CESM2-r1i1p1f1-gn,tropical,Annual Cycle,Seasonal Cycle Score [1],score,1,0.9580677921981913
+CESM2-r1i1p1f1-gn,global,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,1.7509970428070474
+CESM2-r1i1p1f1-gn,global,Spatial Distribution,Correlation [1],scalar,1,0.8405983673722822
+CESM2-r1i1p1f1-gn,global,Spatial Distribution,Spatial Distribution Score [1],score,1,0.6826955994091656
+CESM2-r1i1p1f1-gn,tropical,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,12.655281338059728
+CESM2-r1i1p1f1-gn,tropical,Spatial Distribution,Correlation [1],scalar,1,-0.0004015839518744663
+CESM2-r1i1p1f1-gn,tropical,Spatial Distribution,Spatial Distribution Score [1],score,1,0.01232836316970404

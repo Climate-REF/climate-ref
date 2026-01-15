@@ -1,0 +1,79 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "timeseries": {}
+    },
+    "region": {
+      "None": {
+        "Description": "Reference data extents",
+        "Generator": "N/A",
+        "LongName": "None"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "Bias Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "Sv"
+      },
+      "Taylor Score": {
+        "type": "score",
+        "units": "1"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "ACCESS-ESM1-5": {
+        "r1i1p1f1": {
+          "gn": {
+            "None": {
+              "timeseries": {
+                "Bias Score": 0.919075055671174,
+                "Correlation": 0.0908964559226476,
+                "Normalized Standard Deviation": 0.6429937074170117,
+                "Period Mean": 19.366302267377066,
+                "Taylor Score": 0.4515144554691592
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

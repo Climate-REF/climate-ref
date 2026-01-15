@@ -13,7 +13,11 @@ thetao-WOA2023-surface:
   test_cases:
     - name: default
       description: "Historical ocean temperature from ACCESS-ESM1-5"
-      # TODO: Obs4REF data required (no fetcher yet): ilamb/WOA/thetao_mon_WOA_A5B4_gn_200501-201412.nc
+      registry_requests:
+        - slug: reference
+          registry_name: obs4ref
+          variable_id: thetao
+          source_id: WOA2023
       cmip6_requests:
         - slug: thetao
           source_id: ACCESS-ESM1-5
@@ -71,7 +75,11 @@ amoc-RAPID:
   test_cases:
     - name: default
       description: "Historical AMOC from ACCESS-ESM1-5"
-      # TODO: Obs4REF data required (no fetcher yet): ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc
+      registry_requests:
+        - slug: reference
+          registry_name: obs4ref
+          variable_id: msftmz
+          source_id: RAPID
       cmip6_requests:
         - slug: msftmz
           source_id: ACCESS-ESM1-5
@@ -104,7 +112,11 @@ ohc-NOAA:
   test_cases:
     - name: default
       description: "Historical ocean heat content from ACCESS-ESM1-5"
-      # TODO: Obs4REF data required (no fetcher yet): ilamb/NOAA/ohc_yr_OHC_BE_gm_200506-202406.nc
+      registry_requests:
+        - slug: reference
+          registry_name: obs4ref
+          variable_id: ohc
+          source_id: NOAA
       cmip6_requests:
         - slug: thetao
           source_id: ACCESS-ESM1-5

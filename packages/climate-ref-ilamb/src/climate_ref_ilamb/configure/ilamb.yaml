@@ -91,7 +91,11 @@ mrsos-WangMao:
   test_cases:
     - name: default
       description: "Historical soil moisture from ACCESS-ESM1-5"
-      # TODO: Obs4REF data required (no fetcher yet): ilamb/mrsol/WangMao/mrsol_olc.nc
+      registry_requests:
+        - slug: reference
+          registry_name: obs4ref
+          variable_id: mrsol
+          source_id: WangMao
       cmip6_requests:
         - slug: mrsos
           source_id: ACCESS-ESM1-5

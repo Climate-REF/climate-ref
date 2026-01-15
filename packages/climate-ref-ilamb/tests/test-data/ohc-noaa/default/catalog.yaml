@@ -6,89 +6,21 @@ cmip6:
     member_id: r1i1p1f1
     source_id: ACCESS-ESM1-5
   datasets:
-  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115
-    activity_id: CMIP
+  - activity_id: CMIP
     branch_method: standard
     branch_time_in_child: 0.0
     branch_time_in_parent: 21915.0
+    end_time: null
     experiment: all-forcing simulation of the recent past
     experiment_id: historical
-    frequency: mon
-    grid: native atmosphere N96 grid (145x192 latxlon)
-    grid_label: gn
-    institution_id: CSIRO
-    nominal_resolution: 250 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: ACCESS-ESM1-5
-    parent_time_units: days since 0101-1-1
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: ocean
-    source_id: ACCESS-ESM1-5
-    source_type: AOGCM
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Omon
-    variable_id: thetao
-    variant_label: r1i1p1f1
-    member_id: r1i1p1f1
-    standard_name: sea_water_potential_temperature
-    long_name: Sea Water Potential Temperature
-    units: degC
-    vertical_levels: 50
-    start_time: 2000-01-16 12:00:00
-    end_time: 2009-12-16 12:00:00
-    time_range: 2000-01-16 12:00:00-2009-12-16 12:00:00
-    version: v20191115
     finalised: true
-  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115
-    activity_id: CMIP
-    branch_method: standard
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 21915.0
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
-    frequency: mon
-    grid: native atmosphere N96 grid (145x192 latxlon)
-    grid_label: gn
-    institution_id: CSIRO
-    nominal_resolution: 250 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: ACCESS-ESM1-5
-    parent_time_units: days since 0101-1-1
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: ocean
-    source_id: ACCESS-ESM1-5
-    source_type: AOGCM
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Omon
-    variable_id: thetao
-    variant_label: r1i1p1f1
-    member_id: r1i1p1f1
-    standard_name: sea_water_potential_temperature
-    long_name: Sea Water Potential Temperature
-    units: degC
-    vertical_levels: 50
-    start_time: 2010-01-16 12:00:00
-    end_time: 2014-12-16 12:00:00
-    time_range: 2010-01-16 12:00:00-2014-12-16 12:00:00
-    version: v20191115
-    finalised: true
-  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.volcello.gn.v20191115
-    activity_id: CMIP
-    branch_method: standard
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 21915.0
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
     frequency: fx
     grid: native atmosphere N96 grid (145x192 latxlon)
     grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.volcello.gn.v20191115
     institution_id: CSIRO
+    long_name: Ocean Grid-Cell Volume
+    member_id: r1i1p1f1
     nominal_resolution: 250 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
@@ -99,18 +31,50 @@ cmip6:
     realm: ocean
     source_id: ACCESS-ESM1-5
     source_type: AOGCM
+    standard_name: ocean_volume
+    start_time: null
     sub_experiment: none
     sub_experiment_id: none
     table_id: Ofx
+    time_range: null
+    units: m3
     variable_id: volcello
     variant_label: r1i1p1f1
-    member_id: r1i1p1f1
-    standard_name: ocean_volume
-    long_name: Ocean Grid-Cell Volume
-    units: m3
-    vertical_levels: 50
-    start_time: null
-    end_time: null
-    time_range: null
     version: v20191115
+    vertical_levels: 50
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2009-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
     finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115
+    institution_id: CSIRO
+    long_name: Sea Water Potential Temperature
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: sea_water_potential_temperature
+    start_time: 2000-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Omon
+    time_range: 2000-01-16 12:00:00-2009-12-16 12:00:00
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 50

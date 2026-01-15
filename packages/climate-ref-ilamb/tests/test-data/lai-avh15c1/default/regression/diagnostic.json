@@ -1,0 +1,138 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "Annual Cycle": {},
+      "Bias": {},
+      "RMSE": {},
+      "Spatial Distribution": {}
+    },
+    "region": {
+      "global": {
+        "Description": "Global - Land",
+        "Generator": "GlobalLand.nc",
+        "LongName": "Global - Land"
+      },
+      "tropical": {
+        "Description": "Tropical climates",
+        "Generator": "Koppen_coarse.nc",
+        "LongName": "Tropical climates"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "Bias": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Bias Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Phase Shift": {
+        "type": "scalar",
+        "units": "month"
+      },
+      "RMSE": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "RMSE Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Seasonal Cycle Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Spatial Distribution Score": {
+        "type": "score",
+        "units": "1"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "ACCESS-ESM1-5": {
+        "r1i1p1f1": {
+          "gn": {
+            "global": {
+              "Annual Cycle": {
+                "Phase Shift": 0.7214643137910913,
+                "Seasonal Cycle Score": 0.7094689099800806
+              },
+              "Bias": {
+                "Bias": 0.0356820986651506,
+                "Bias Score": 0.3125746511081259,
+                "Period Mean": 1.0926705946678714
+              },
+              "RMSE": {
+                "RMSE": 0.90870921667941,
+                "RMSE Score": 0.3308141273799326
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.6932421816312607,
+                "Normalized Standard Deviation": 0.9009412285708672,
+                "Spatial Distribution Score": 0.8374748607844044
+              }
+            },
+            "tropical": {
+              "Annual Cycle": {
+                "Phase Shift": 0.5833256586465366,
+                "Seasonal Cycle Score": 0.6746646218678761
+              },
+              "Bias": {
+                "Bias": -0.8235312595624334,
+                "Bias Score": 0.2570558731748404,
+                "Period Mean": 2.128319315389842
+              },
+              "RMSE": {
+                "RMSE": 1.4990280134738383,
+                "RMSE Score": 0.3225879571587065
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.5837405385141747,
+                "Normalized Standard Deviation": 0.7636584061407516,
+                "Spatial Distribution Score": 0.7369786658696552
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

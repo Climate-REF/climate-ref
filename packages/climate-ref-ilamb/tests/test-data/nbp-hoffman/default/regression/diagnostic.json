@@ -1,0 +1,74 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "nbp": {}
+    },
+    "region": {
+      "None": {
+        "Description": "Reference data extents",
+        "Generator": "N/A",
+        "LongName": "None"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "Difference Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Trajectory Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "diff(2010)": {
+        "type": "scalar",
+        "units": "Pg"
+      },
+      "nbp(2010)": {
+        "type": "scalar",
+        "units": "Pg"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "ACCESS-ESM1-5": {
+        "r1i1p1f1": {
+          "gn": {
+            "None": {
+              "nbp": {
+                "Difference Score": 0.1717190659697624,
+                "Trajectory Score": 0.0302313298292266,
+                "diff(2010)": -112.77211278557782,
+                "nbp(2010)": -104.72753695903332
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

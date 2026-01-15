@@ -1,0 +1,27 @@
+source,region,analysis,name,type,units,value
+Reference,global,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,2.4315549668703933
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,2.0945642804479476
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias [g d-1 m-2],scalar,g d-1 m-2,0.07018100602948497
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias Score [1],score,1,0.48615168448536317
+Reference,tropical,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,5.124267497652835
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Period Mean [g d-1 m-2],scalar,g d-1 m-2,5.290850672199436
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias [g d-1 m-2],scalar,g d-1 m-2,0.518261958474208
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias Score [1],score,1,0.3731188008841552
+ACCESS-ESM1-5-r1i1p1f1-gn,global,RMSE,RMSE [g d-1 m-2],scalar,g d-1 m-2,1.5631684665637517
+ACCESS-ESM1-5-r1i1p1f1-gn,global,RMSE,RMSE Score [1],score,1,0.4441532999308254
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,RMSE,RMSE [g d-1 m-2],scalar,g d-1 m-2,2.724407574278797
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,RMSE,RMSE Score [1],score,1,0.3698757839536434
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Annual Cycle,Phase Shift [month],scalar,month,0.28561895388797404
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Annual Cycle,Seasonal Cycle Score [1],score,1,0.7536134592573708
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Annual Cycle,Phase Shift [month],scalar,month,1.0213434292456485
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Annual Cycle,Seasonal Cycle Score [1],score,1,0.674926618488798
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,1.2662487148862673
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Correlation [1],scalar,1,0.8570290681784737
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Spatial Distribution Score [1],score,1,0.8786373619828286
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,2.203243661428191
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Correlation [1],scalar,1,0.6337222060811101
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Spatial Distribution Score [1],score,1,0.462792056317881
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Relationship pr,Relationship Score pr [1],score,1,0.49366952840065803
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Relationship pr,Relationship Score pr [1],score,1,0.6561905199039578
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Relationship tas,Relationship Score tas [1],score,1,0.699413133194469
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Relationship tas,Relationship Score tas [1],score,1,0.566641245121439

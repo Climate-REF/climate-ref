@@ -1,0 +1,104 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "Bias": {},
+      "Spatial Distribution": {}
+    },
+    "region": {
+      "global": {
+        "Description": "Global - Land",
+        "Generator": "GlobalLand.nc",
+        "LongName": "Global - Land"
+      },
+      "tropical": {
+        "Description": "Tropical climates",
+        "Generator": "Koppen_coarse.nc",
+        "LongName": "Tropical climates"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "Bias": {
+        "type": "scalar",
+        "units": "kg m-2"
+      },
+      "Bias Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "kg m-2"
+      },
+      "Spatial Distribution Score": {
+        "type": "score",
+        "units": "1"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "ACCESS-ESM1-5": {
+        "r1i1p1f1": {
+          "gn": {
+            "global": {
+              "Bias": {
+                "Bias": -8.149912251070266,
+                "Bias Score": 0.6003509241535969,
+                "Period Mean": 5.338226014043078
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.3631993839551415,
+                "Normalized Standard Deviation": 0.3179786800114542,
+                "Spatial Distribution Score": 0.2273650044185218
+              }
+            },
+            "tropical": {
+              "Bias": {
+                "Bias": -8.583523234017433,
+                "Bias Score": 0.573048988231269,
+                "Period Mean": 4.241176078550585
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.005500924901257,
+                "Normalized Standard Deviation": 0.2216200804845468,
+                "Spatial Distribution Score": 0.0897395965416905
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+[
+  {
+    "attributes": {
+      "long_name": "Objectively analyzed mean fields for sea_water_temperature at standard depth levels.",
+      "standard_name": "sea_water_temperature",
+      "units": "degC"
+    },
+    "dimensions": {
+      "metric": "cycle",
+      "region": "None",
+      "source_id": "Reference"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "values": [
+      18.432594299316406,
+      18.58881378173828,
+      18.618356704711914,
+      18.542512893676758,
+      18.425539016723633,
+      18.390596389770508,
+      18.431915283203125,
+      18.509204864501953,
+      18.42348289489746,
+      18.229026794433594,
+      18.16299819946289,
+      18.256389617919922
+    ]
+  },
+  {
+    "attributes": {
+      "long_name": "Sea Water Potential Temperature",
+      "standard_name": "sea_water_potential_temperature",
+      "units": "degree_Celsius"
+    },
+    "dimensions": {
+      "experiment_id": "historical",
+      "grid_label": "gn",
+      "member_id": "r1i1p1f1",
+      "metric": "cycle",
+      "reference_source_id": "WOA2023",
+      "region": "None",
+      "source_id": "ACCESS-ESM1-5"
+    },
+    "index": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "index_name": "month",
+    "values": [
+      19.38323402404785,
+      19.533344268798828,
+      19.460378646850586,
+      19.26444435119629,
+      19.075538635253906,
+      19.061973571777344,
+      19.140043258666992,
+      19.192237854003906,
+      19.08587074279785,
+      18.927827835083008,
+      18.916440963745117,
+      19.103086471557617
+    ]
+  }
+]

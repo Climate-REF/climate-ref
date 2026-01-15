@@ -1,0 +1,160 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "Annual Cycle": {},
+      "Bias": {},
+      "RMSE": {},
+      "Relationship pr": {},
+      "Relationship tas": {},
+      "Spatial Distribution": {}
+    },
+    "region": {
+      "global": {
+        "Description": "Global - Land",
+        "Generator": "GlobalLand.nc",
+        "LongName": "Global - Land"
+      },
+      "tropical": {
+        "Description": "Tropical climates",
+        "Generator": "Koppen_coarse.nc",
+        "LongName": "Tropical climates"
+      }
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "Bias": {
+        "type": "scalar",
+        "units": "g d-1 m-2"
+      },
+      "Bias Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "g d-1 m-2"
+      },
+      "Phase Shift": {
+        "type": "scalar",
+        "units": "month"
+      },
+      "RMSE": {
+        "type": "scalar",
+        "units": "g d-1 m-2"
+      },
+      "RMSE Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Relationship Score pr": {
+        "type": "score",
+        "units": "1"
+      },
+      "Relationship Score tas": {
+        "type": "score",
+        "units": "1"
+      },
+      "Seasonal Cycle Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Spatial Distribution Score": {
+        "type": "score",
+        "units": "1"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "ACCESS-ESM1-5": {
+        "r1i1p1f1": {
+          "gn": {
+            "global": {
+              "Annual Cycle": {
+                "Phase Shift": 0.285618953887974,
+                "Seasonal Cycle Score": 0.7536134592573708
+              },
+              "Bias": {
+                "Bias": 0.0701810060294849,
+                "Bias Score": 0.4861516844853631,
+                "Period Mean": 2.0945642804479476
+              },
+              "RMSE": {
+                "RMSE": 1.5631684665637515,
+                "RMSE Score": 0.4441532999308254
+              },
+              "Relationship pr": {
+                "Relationship Score pr": 0.493669528400658
+              },
+              "Relationship tas": {
+                "Relationship Score tas": 0.699413133194469
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.8570290681784737,
+                "Normalized Standard Deviation": 1.2662487148862671,
+                "Spatial Distribution Score": 0.8786373619828286
+              }
+            },
+            "tropical": {
+              "Annual Cycle": {
+                "Phase Shift": 1.0213434292456485,
+                "Seasonal Cycle Score": 0.674926618488798
+              },
+              "Bias": {
+                "Bias": 0.518261958474208,
+                "Bias Score": 0.3731188008841552,
+                "Period Mean": 5.290850672199436
+              },
+              "RMSE": {
+                "RMSE": 2.724407574278797,
+                "RMSE Score": 0.3698757839536434
+              },
+              "Relationship pr": {
+                "Relationship Score pr": 0.6561905199039578
+              },
+              "Relationship tas": {
+                "Relationship Score tas": 0.566641245121439
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.6337222060811101,
+                "Normalized Standard Deviation": 2.203243661428191,
+                "Spatial Distribution Score": 0.462792056317881
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,10 @@
+source,region,analysis,name,type,units,value
+Reference,None,Bias,Period Mean [°C],scalar,°C,18.416910861111184
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Bias,Period Mean [°C],scalar,°C,19.176734705648645
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Bias,Bias [°C],scalar,°C,0.7574691621623229
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Bias,Bias Score [1],score,1,0.5298299527207746
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Annual Cycle,Phase Shift [month],scalar,month,0.1723561382463122
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Annual Cycle,Seasonal Cycle Score [1],score,1,0.8523619336987177
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.9913480370377158
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Spatial Distribution,Correlation [1],scalar,1,0.9948635253274144
+ACCESS-ESM1-5-r1i1p1f1-gn,None,Spatial Distribution,Spatial Distribution Score [1],score,1,0.9973564510849755

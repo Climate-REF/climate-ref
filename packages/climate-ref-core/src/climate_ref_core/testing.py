@@ -332,16 +332,26 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
         slug_column = collection.slug_column
         datasets_records = collection.datasets.to_dict(orient="records")
 
-        # Extract paths to separate map
+        # Extract paths to separate map and filter out datasets without paths
+        # Also deduplicate by instance_id (keep first occurrence)
+        filtered_records = []
+        seen_ids = set()
         for record in datasets_records:
             instance_id = record.get(slug_column)
-            if instance_id and "path" in record:  # pragma: no branch
+            if instance_id and "path" in record and instance_id not in seen_ids:  # pragma: no branch
                 paths_map[instance_id] = record.pop("path")
+                seen_ids.add(instance_id)
+                # Sort fields within each record alphabetically
+                sorted_record = dict(sorted(record.items()))
+                filtered_records.append(sorted_record)
+
+        # Sort records by instance_id
+        filtered_records.sort(key=lambda r: r.get(slug_column, ""))
 
         data[source_type.value] = {
             "slug_column": slug_column,
             "selector": dict(collection.selector),
-            "datasets": datasets_records,
+            "datasets": filtered_records,
         }
 
     path.parent.mkdir(parents=True, exist_ok=True)

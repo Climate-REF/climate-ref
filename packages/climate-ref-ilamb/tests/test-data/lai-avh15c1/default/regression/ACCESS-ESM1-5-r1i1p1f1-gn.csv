@@ -1,0 +1,23 @@
+source,region,analysis,name,type,units,value
+Reference,global,Bias,Period Mean [1],scalar,1,1.2255249828184736
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Period Mean [1],scalar,1,1.0926705946678714
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias [1],scalar,1,0.035682098665150604
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Bias,Bias Score [1],score,1,0.31257465110812593
+Reference,tropical,Bias,Period Mean [1],scalar,1,2.951158295452038
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Period Mean [1],scalar,1,2.128319315389842
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias [1],scalar,1,-0.8235312595624334
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Bias,Bias Score [1],score,1,0.2570558731748404
+ACCESS-ESM1-5-r1i1p1f1-gn,global,RMSE,RMSE [1],scalar,1,0.90870921667941
+ACCESS-ESM1-5-r1i1p1f1-gn,global,RMSE,RMSE Score [1],score,1,0.33081412737993265
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,RMSE,RMSE [1],scalar,1,1.4990280134738385
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,RMSE,RMSE Score [1],score,1,0.3225879571587065
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Annual Cycle,Phase Shift [month],scalar,month,0.7214643137910913
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Annual Cycle,Seasonal Cycle Score [1],score,1,0.7094689099800806
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Annual Cycle,Phase Shift [month],scalar,month,0.5833256586465366
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Annual Cycle,Seasonal Cycle Score [1],score,1,0.6746646218678761
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.9009412285708673
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Correlation [1],scalar,1,0.6932421816312607
+ACCESS-ESM1-5-r1i1p1f1-gn,global,Spatial Distribution,Spatial Distribution Score [1],score,1,0.8374748607844044
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Normalized Standard Deviation [1],scalar,1,0.7636584061407516
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Correlation [1],scalar,1,0.5837405385141747
+ACCESS-ESM1-5-r1i1p1f1-gn,tropical,Spatial Distribution,Spatial Distribution Score [1],score,1,0.7369786658696552

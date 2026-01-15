@@ -1,0 +1,160 @@
+{
+  "index": "index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "cmec_output.log"
+  },
+  "data": {},
+  "plots": {
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_mean.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_mean.png",
+      "long_name": "The period mean for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Period Mean"
+      }
+    },
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_shift.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_shift.png",
+      "long_name": "The shift in maximum month for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Shift in maximum month"
+      }
+    },
+    "Reference_None_tmax.png": {
+      "filename": "Reference_None_tmax.png",
+      "long_name": "The maxmimum month for the reference data",
+      "description": "",
+      "dimensions": {
+        "region": "None",
+        "statistic": "Maximum month",
+        "source_id": "Reference"
+      }
+    },
+    "None_None_taylor.png": {
+      "filename": "None_None_taylor.png",
+      "long_name": "The Taylor diagram",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Taylor diagram"
+      }
+    },
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_tmax.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_tmax.png",
+      "long_name": "The maxmimum month for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Maximum month"
+      }
+    },
+    "Reference_None_mean.png": {
+      "filename": "Reference_None_mean.png",
+      "long_name": "The period mean for the reference data",
+      "description": "",
+      "dimensions": {
+        "region": "None",
+        "statistic": "Period Mean",
+        "source_id": "Reference"
+      }
+    },
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_bias.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_bias.png",
+      "long_name": "The bias for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Bias"
+      }
+    },
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_cycle.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_cycle.png",
+      "long_name": "The annual cycle for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Annual cycle"
+      }
+    },
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_cyclescore.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_cyclescore.png",
+      "long_name": "The annual cycle score for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Annual cycle score"
+      }
+    },
+    "ACCESS-ESM1-5-r1i1p1f1-gn_None_biasscore.png": {
+      "filename": "ACCESS-ESM1-5-r1i1p1f1-gn_None_biasscore.png",
+      "long_name": "The bias score for ACCESS-ESM1-5-r1i1p1f1-gn",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023",
+        "region": "None",
+        "statistic": "Bias score"
+      }
+    }
+  },
+  "html": {
+    "index.html": {
+      "filename": "index.html",
+      "long_name": "Results page",
+      "description": "Page displaying scalars and plots from the ILAMB execution.",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "ACCESS-ESM1-5",
+        "reference_source_id": "WOA2023"
+      }
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

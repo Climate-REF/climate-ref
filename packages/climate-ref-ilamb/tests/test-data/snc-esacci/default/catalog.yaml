@@ -1,0 +1,80 @@
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: CESM2
+  datasets:
+  - instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.LImon.snc.gn.v20190308
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 674885.0
+    branch_time_in_parent: 219000.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+    grid_label: gn
+    institution_id: NCAR
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CESM2
+    parent_time_units: days since 0001-01-01 00:00:00
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: landIce land
+    source_id: CESM2
+    source_type: AOGCM BGC
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: LImon
+    variable_id: snc
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: surface_snow_area_fraction
+    long_name: Snow Area Percentage
+    units: '%'
+    vertical_levels: 1
+    start_time: 1850-01-15 11:45:00.000016
+    end_time: 2014-12-15 12:00:00
+    time_range: 1850-01-15 11:45:00.000016-2014-12-15 12:00:00
+    version: v20190308
+    finalised: true
+  - instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 674885.0
+    branch_time_in_parent: 219000.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: fx
+    grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+    grid_label: gn
+    institution_id: NCAR
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CESM2
+    parent_time_units: days since 0001-01-01 00:00:00
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos land
+    source_id: CESM2
+    source_type: AOGCM BGC
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: cell_area
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    units: m2
+    vertical_levels: 1
+    start_time: null
+    end_time: null
+    time_range: null
+    version: v20190308
+    finalised: true

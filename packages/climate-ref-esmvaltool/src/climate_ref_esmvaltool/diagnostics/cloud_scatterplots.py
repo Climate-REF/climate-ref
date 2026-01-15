@@ -84,33 +84,34 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
 
     test_data_spec = TestDataSpecification(
         test_cases=(
-            TestCase(
-                name="default",
-                description="Cloud scatterplot clt vs swcre from CESM2 historical",
-                requests=(
-                    CMIP6Request(
-                        slug="cloud",
-                        facets={
-                            "source_id": "CESM2",
-                            "experiment_id": "historical",
-                            "variable_id": ("clt", "rsut", "rsutcs"),
-                            "member_id": "r1i1p1f1",
-                            "table_id": "Amon",
-                        },
-                        time_span=("1996-01", "2014-12"),
-                    ),
-                    CMIP6Request(
-                        slug="areacella",
-                        facets={
-                            "source_id": "CESM2",
-                            "experiment_id": "historical",
-                            "variable_id": "areacella",
-                            "table_id": "fx",
-                            "member_id": "r1i1p1f1",
-                        },
-                    ),
-                ),
-            ),
+            # TODO: Select a model that has chunked output so we don't need to download a 10GB file
+            # TestCase(
+            #     name="default",
+            #     description="Cloud scatterplot clt vs swcre from CESM2 historical",
+            #     requests=(
+            #         CMIP6Request(
+            #             slug="cloud",
+            #             facets={
+            #                 "source_id": "CESM2",
+            #                 "experiment_id": "historical",
+            #                 "variable_id": ("clt", "rsut", "rsutcs"),
+            #                 "member_id": "r1i1p1f1",
+            #                 "table_id": "Amon",
+            #             },
+            #             time_span=("1996-01", "2014-12"),
+            #         ),
+            #         CMIP6Request(
+            #             slug="areacella",
+            #             facets={
+            #                 "source_id": "CESM2",
+            #                 "experiment_id": "historical",
+            #                 "variable_id": "areacella",
+            #                 "table_id": "fx",
+            #                 "member_id": "r1i1p1f1",
+            #             },
+            #         ),
+            #     ),
+            # ),
         ),
     )
 

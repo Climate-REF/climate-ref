@@ -1,0 +1,72 @@
+obs4mips:
+  slug_column: instance_id
+  selector:
+    source_id: 20CR
+    variable_id: psl
+  datasets:
+  - activity_id: obs4MIPs
+    frequency: mon
+    grid: 2.0x2.0 degree latitude x longitude
+    grid_label: gn
+    institution_id: NOAA-ESRL-PSD
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: 20CR
+    source_type: reanalysis
+    source_version_number: N/A
+    variable_id: psl
+    variant_label: PCMDI
+    long_name: Sea Level Pressure
+    units: Pa
+    vertical_levels: 1
+    start_time: 1871-01-16 12:00:00
+    end_time: 2012-12-16 12:00:00
+    time_range: 1871-01-16 12:00:00-2012-12-16 12:00:00
+    version: v20210727
+    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR.mon.psl.250km.gn.v20210727
+    finalised: true
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.psl.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: psl
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: air_pressure_at_mean_sea_level
+    long_name: Sea Level Pressure
+    units: Pa
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true

@@ -17,7 +17,12 @@ from rich.console import Console
 from rich.table import Table
 
 from climate_ref.config import Config
-from climate_ref.datasets import CMIP6DatasetAdapter, DatasetAdapter, Obs4MIPsDatasetAdapter
+from climate_ref.datasets import (
+    CMIP6DatasetAdapter,
+    DatasetAdapter,
+    Obs4MIPsDatasetAdapter,
+    PMPClimatologyDatasetAdapter,
+)
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.solver import solve_executions
 from climate_ref.testing import TestCaseRunner
@@ -138,6 +143,11 @@ def _fetch_and_build_catalog(
 
         elif source_type == "obs4MIPs":
             data_catalog[SourceDatasetType.obs4MIPs] = _build_catalog(Obs4MIPsDatasetAdapter(), file_paths)
+
+        elif source_type == "PMPClimatology":
+            data_catalog[SourceDatasetType.PMPClimatology] = _build_catalog(
+                PMPClimatologyDatasetAdapter(), file_paths
+            )
 
     if not data_catalog:
         raise DatasetResolutionError(
@@ -428,90 +438,43 @@ def _print_regression_summary(
     console.print(summary)
 
 
-@app.command(name="run")
-def run_test_case(  # noqa: PLR0912, PLR0915
-    ctx: typer.Context,
-    provider: Annotated[
-        str,
-        typer.Option(help="Provider slug (e.g., 'example', 'ilamb')"),
-    ],
-    diagnostic: Annotated[
-        str,
-        typer.Option(help="Diagnostic slug (e.g., 'global-mean-timeseries')"),
-    ],
-    test_case: Annotated[
-        str,
-        typer.Option(help="Test case name (e.g., 'default')"),
-    ] = "default",
-    output_directory: Annotated[
-        Path | None,
-        typer.Option(help="Output directory for execution results"),
-    ] = None,
-    force_regen: Annotated[
-        bool,
-        typer.Option(help="Force regeneration of regression baselines"),
-    ] = False,
-    fetch: Annotated[
-        bool,
-        typer.Option(help="Fetch test data from ESGF before running"),
-    ] = False,
-    size_threshold: Annotated[
-        float,
-        typer.Option(help="Flag files larger than this size in MB (default: 1.0)"),
-    ] = 1.0,
-) -> None:
+def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
+    config: Config,
+    console: Console,
+    diag: Diagnostic,
+    tc: TestCase,
+    output_directory: Path | None,
+    force_regen: bool,
+    fetch: bool,
+    size_threshold: float,
+) -> bool:
     """
-    Run a specific test case for a diagnostic.
+    Run a single test case for a diagnostic.
 
-    Executes the diagnostic using pre-defined datasets from the test_data_spec
-    and optionally compares against regression baselines.
-
-    Example:
-        ref test-cases run --provider example --diagnostic global-mean-timeseries
-        ref test-cases run --provider ilamb --diagnostic lai-avh15c1 --fetch
+    Returns True if successful, False otherwise.
     """
-    config: Config = ctx.obj.config
-    db = ctx.obj.database
-    console: Console = ctx.obj.console
-
-    # Build provider registry and find the diagnostic
-    registry = ProviderRegistry.build_from_config(config, db)
-    diag = _find_diagnostic(registry, provider, diagnostic)
-
-    if diag is None:
-        logger.error(f"Diagnostic {provider}/{diagnostic} not found")
-        raise typer.Exit(code=1)
-
-    # Verify test_data_spec exists and get the test case
-    if diag.test_data_spec is None:
-        logger.error(f"Diagnostic {provider}/{diagnostic} has no test_data_spec")
-        raise typer.Exit(code=1)
-
-    if not diag.test_data_spec.has_case(test_case):
-        logger.error(f"Test case {test_case!r} not found for {provider}/{diagnostic}")
-        logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
-        raise typer.Exit(code=1)
-
-    tc = diag.test_data_spec.get_case(test_case)
+    provider_slug = diag.provider.slug
+    diagnostic_slug = diag.slug
+    test_case_name = tc.name
 
     # Resolve datasets: either fetch from ESGF or load from pre-built catalog
     if fetch:
-        logger.info(f"Fetching test data for {provider}/{diagnostic}")
+        logger.info(f"Fetching test data for {provider_slug}/{diagnostic_slug}/{test_case_name}")
         try:
             datasets = _fetch_and_build_catalog(diag, tc)
         except DatasetResolutionError as e:
-            logger.error(str(e))
-            raise typer.Exit(code=1)
+            logger.error(f"Failed to fetch data for {provider_slug}/{diagnostic_slug}/{test_case_name}: {e}")
+            return False
     else:
-        paths = TestCasePaths.from_diagnostic(diag, test_case)
+        paths = TestCasePaths.from_diagnostic(diag, test_case_name)
         if paths is None:
-            logger.error(f"Could not determine test data directory for {provider}/{diagnostic}")
-            raise typer.Exit(code=1)
+            logger.error(f"Could not determine test data directory for {provider_slug}/{diagnostic_slug}")
+            return False
 
         if not paths.catalog.exists():
-            logger.error(f"No catalog file found for {provider}/{diagnostic}/{test_case}")
+            logger.error(f"No catalog file found for {provider_slug}/{diagnostic_slug}/{test_case_name}")
             logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
-            raise typer.Exit(code=1)
+            return False
 
         logger.info(f"Loading catalog from {paths.catalog}")
         datasets = load_datasets_from_yaml(paths.catalog)
@@ -519,42 +482,43 @@ def run_test_case(  # noqa: PLR0912, PLR0915
     # Create runner and execute
     runner = TestCaseRunner(config=config, datasets=datasets)
 
-    logger.info(f"Running test case {test_case!r} for {provider}/{diagnostic}")
+    logger.info(f"Running test case {test_case_name!r} for {provider_slug}/{diagnostic_slug}")
 
     try:
-        result = runner.run(diag, test_case, output_directory)
+        result = runner.run(diag, test_case_name, output_directory)
     except NoTestDataSpecError:
-        logger.error(f"Diagnostic {provider}/{diagnostic} has no test_data_spec")
-        raise typer.Exit(code=1)
+        logger.error(f"Diagnostic {provider_slug}/{diagnostic_slug} has no test_data_spec")
+        return False
     except TestCaseNotFoundError:
-        logger.error(f"Test case {test_case!r} not found for {provider}/{diagnostic}")
+        logger.error(f"Test case {test_case_name!r} not found for {provider_slug}/{diagnostic_slug}")
         if diag.test_data_spec:
             logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
-        raise typer.Exit(code=1)
+        return False
     except DatasetResolutionError as e:
         logger.error(str(e))
         logger.error("Have you run 'ref test-cases fetch' first?")
-        raise typer.Exit(code=1)
+        return False
     except Exception as e:
-        logger.error(f"Diagnostic execution failed: {e}")
-        raise typer.Exit(code=1)
+        case_id = f"{provider_slug}/{diagnostic_slug}/{test_case_name}"
+        logger.error(f"Diagnostic execution failed for {case_id}: {e!s}")
+        return False
 
-    if result.successful:
-        logger.info("Diagnostic execution completed successfully")
-        if result.metric_bundle_filename:
-            logger.info(f"Metric bundle: {result.to_output_path(result.metric_bundle_filename)}")
-        if result.output_bundle_filename:
-            logger.info(f"Output bundle: {result.to_output_path(result.output_bundle_filename)}")
-    else:
-        logger.error("Diagnostic execution failed")
-        raise typer.Exit(code=1)
+    if not result.successful:
+        logger.error(f"Execution failed: {provider_slug}/{diagnostic_slug}/{test_case_name}")
+        return False
+
+    logger.info(f"Execution completed: {provider_slug}/{diagnostic_slug}/{test_case_name}")
+    if result.metric_bundle_filename:
+        logger.info(f"Metric bundle: {result.to_output_path(result.metric_bundle_filename)}")
+    if result.output_bundle_filename:
+        logger.info(f"Output bundle: {result.to_output_path(result.output_bundle_filename)}")
 
     # Handle regression baseline comparison/regeneration
-    paths = TestCasePaths.from_diagnostic(diag, test_case)
+    paths = TestCasePaths.from_diagnostic(diag, test_case_name)
 
     if paths is None:
         logger.warning("Could not determine test case directory for provider package")
-        return
+        return True
 
     if force_regen:
         paths.create()
@@ -581,3 +545,147 @@ def run_test_case(  # noqa: PLR0912, PLR0915
     elif paths.regression.exists():
         logger.info(f"Regression data exists at: {paths.regression}")
         logger.info("Use --force-regen to update the baseline")
+
+    return True
+
+
+@app.command(name="run")
+def run_test_case(  # noqa: PLR0912, PLR0915
+    ctx: typer.Context,
+    provider: Annotated[
+        str,
+        typer.Option(help="Provider slug (required, e.g., 'example', 'ilamb')"),
+    ],
+    diagnostic: Annotated[
+        str | None,
+        typer.Option(help="Specific diagnostic slug to run (e.g., 'global-mean-timeseries')"),
+    ] = None,
+    test_case: Annotated[
+        str | None,
+        typer.Option(help="Specific test case name to run (e.g., 'default')"),
+    ] = None,
+    output_directory: Annotated[
+        Path | None,
+        typer.Option(help="Output directory for execution results"),
+    ] = None,
+    force_regen: Annotated[
+        bool,
+        typer.Option(help="Force regeneration of regression baselines"),
+    ] = False,
+    fetch: Annotated[
+        bool,
+        typer.Option(help="Fetch test data from ESGF before running"),
+    ] = False,
+    size_threshold: Annotated[
+        float,
+        typer.Option(help="Flag files larger than this size in MB (default: 1.0)"),
+    ] = 1.0,
+    dry_run: Annotated[
+        bool,
+        typer.Option(help="Show what would be run without executing"),
+    ] = False,
+) -> None:
+    """
+    Run test cases for diagnostics.
+
+    Executes diagnostics using pre-defined datasets from the test_data_spec
+    and optionally compares against regression baselines.
+
+    Use --provider to select which provider's diagnostics to run (required).
+    Use --diagnostic and --test-case to further narrow the scope.
+
+    Examples
+    --------
+        ref test-cases run --provider ilamb              # Run all ILAMB test cases
+        ref test-cases run --provider example --diagnostic global-mean-timeseries
+        ref test-cases run --provider ilamb --test-case default --fetch
+    """
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console: Console = ctx.obj.console
+
+    # Build provider registry
+    registry = ProviderRegistry.build_from_config(config, db)
+
+    # Find the provider
+    provider_instance = None
+    for p in registry.providers:
+        if p.slug == provider:
+            provider_instance = p
+            break
+
+    if provider_instance is None:
+        logger.error(f"Provider '{provider}' not found")
+        available = [p.slug for p in registry.providers]
+        logger.error(f"Available providers: {available}")
+        raise typer.Exit(code=1)
+
+    # Collect test cases to run
+    test_cases_to_run: list[tuple[Diagnostic, TestCase]] = []
+
+    for diag in provider_instance.diagnostics():
+        if diagnostic and diag.slug != diagnostic:
+            continue
+        if diag.test_data_spec is None:
+            continue
+
+        for tc in diag.test_data_spec.test_cases:
+            if test_case and tc.name != test_case:
+                continue
+            test_cases_to_run.append((diag, tc))
+
+    if not test_cases_to_run:
+        logger.warning(f"No test cases found for provider '{provider}'")
+        if diagnostic:
+            logger.warning(f"  with diagnostic filter: {diagnostic}")
+        if test_case:
+            logger.warning(f"  with test case filter: {test_case}")
+        raise typer.Exit(code=0)
+
+    logger.info(f"Found {len(test_cases_to_run)} test case(s) to run")
+
+    if dry_run:
+        table = Table(title="Test Cases to Run")
+        table.add_column("Provider", style="cyan")
+        table.add_column("Diagnostic", style="green")
+        table.add_column("Test Case", style="yellow")
+        table.add_column("Description")
+
+        for diag, tc in test_cases_to_run:
+            table.add_row(provider, diag.slug, tc.name, tc.description)
+
+        console.print(table)
+        return
+
+    # Run each test case
+    successes = 0
+    failures = 0
+    failed_cases: list[str] = []
+
+    for diag, tc in test_cases_to_run:
+        success = _run_single_test_case(
+            config=config,
+            console=console,
+            diag=diag,
+            tc=tc,
+            output_directory=output_directory,
+            force_regen=force_regen,
+            fetch=fetch,
+            size_threshold=size_threshold,
+        )
+        if success:
+            successes += 1
+        else:
+            failures += 1
+            failed_cases.append(f"{provider}/{diag.slug}/{tc.name}")
+
+    # Print summary
+    console.print()
+    if failures == 0:
+        console.print(f"[green]All {successes} test case(s) passed[/green]")
+    else:
+        console.print(f"[yellow]Results: {successes} passed, {failures} failed[/yellow]")
+        console.print("[red]Failed test cases:[/red]")
+        for case in failed_cases:
+            console.print(f"  - {case}")
+        raise typer.Exit(code=1)

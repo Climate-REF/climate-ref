@@ -1,0 +1,223 @@
+obs4mips:
+  slug_column: instance_id
+  selector:
+    activity_id: obs4MIPs
+  datasets:
+  - activity_id: obs4MIPs
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    institution_id: MOHC
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: HadISST-1-1
+    source_type: satellite_blended
+    source_version_number: 1-1
+    variable_id: ts
+    variant_label: PCMDI
+    long_name: Surface Temperature
+    units: K
+    vertical_levels: 1
+    start_time: 1870-01-16 11:59:59.464417
+    end_time: 2019-07-16 12:00:00
+    time_range: 1870-01-16 11:59:59.464417-2019-07-16 12:00:00
+    version: v20210727
+    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20210727
+    finalised: true
+  - activity_id: obs4MIPs
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    institution_id: MOHC
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: HadISST-1-1
+    source_type: satellite_blended
+    source_version_number: 1-1
+    variable_id: ts
+    variant_label: PCMDI
+    long_name: Surface Temperature
+    units: K
+    vertical_levels: 1
+    start_time: 1870-01-16 12:00:00
+    end_time: 2025-01-16 12:00:00
+    time_range: 1870-01-16 12:00:00-2025-01-16 12:00:00
+    version: v20250415
+    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    finalised: true
+  - activity_id: obs4MIPs
+    frequency: mon
+    grid: 0.5x0.5 degree latitude x longitude
+    grid_label: gn
+    institution_id: NASA-GSFC
+    nominal_resolution: 50 km
+    product: observations
+    realm: atmos
+    source_id: GPCP-Monthly-3-2
+    source_type: satellite_blended
+    source_version_number: '3.2'
+    variable_id: pr
+    variant_label: RSS
+    long_name: Precipitation
+    units: kg m-2 s-1
+    vertical_levels: 1
+    start_time: 1983-01-16 12:00:00
+    end_time: 2023-03-16 12:00:00
+    time_range: 1983-01-16 12:00:00-2023-03-16 12:00:00
+    version: v20231205
+    instance_id: obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20231205
+    finalised: true
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: ts
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: surface_temperature
+    long_name: Surface Temperature
+    units: K
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: pr
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: precipitation_flux
+    long_name: Precipitation
+    units: kg m-2 s-1
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: fx
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: cell_area
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    units: m2
+    vertical_levels: 1
+    start_time: null
+    end_time: null
+    time_range: null
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: fx
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    variable_id: sftlf
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: land_area_fraction
+    long_name: Percentage of the grid  cell occupied by land (including lakes)
+    units: '%'
+    vertical_levels: 1
+    start_time: null
+    end_time: null
+    time_range: null
+    version: v20191115
+    finalised: true

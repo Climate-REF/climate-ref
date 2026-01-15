@@ -96,9 +96,9 @@ mrsos-WangMao:
         - slug: mrsos
           source_id: ACCESS-ESM1-5
           experiment_id: historical
-          variable_id: mrsos
+          variable_id: [mrsol, mrsos]
           member_id: r1i1p1f1
-          table_id: Lmon
+          table_id: [Emon, Lmon]
         - slug: supplementary
           source_id: ACCESS-ESM1-5
           experiment_id: historical

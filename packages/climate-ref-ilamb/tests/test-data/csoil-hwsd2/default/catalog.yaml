@@ -1,0 +1,116 @@
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Emon.cSoil.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: land
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Emon
+    variable_id: cSoil
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: soil_mass_content_of_carbon
+    long_name: Carbon Mass in Model Soil Pool
+    units: kg m-2
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: fx
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: cell_area
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    units: m2
+    vertical_levels: 1
+    start_time: null
+    end_time: null
+    time_range: null
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: fx
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    variable_id: sftlf
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: land_area_fraction
+    long_name: Percentage of the grid  cell occupied by land (including lakes)
+    units: '%'
+    vertical_levels: 1
+    start_time: null
+    end_time: null
+    time_range: null
+    version: v20191115
+    finalised: true

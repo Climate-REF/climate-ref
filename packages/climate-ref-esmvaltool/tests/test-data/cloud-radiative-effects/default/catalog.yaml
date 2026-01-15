@@ -1,0 +1,187 @@
+cmip6:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsutcs.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: rsutcs
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: toa_outgoing_shortwave_flux_assuming_clear_sky
+    long_name: TOA Outgoing Clear-Sky Shortwave Radiation
+    units: W m-2
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlutcs.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: rlutcs
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: toa_outgoing_longwave_flux_assuming_clear_sky
+    long_name: TOA Outgoing Clear-Sky Longwave Radiation
+    units: W m-2
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsut.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: rsut
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: toa_outgoing_shortwave_flux
+    long_name: TOA Outgoing Shortwave Radiation
+    units: W m-2
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlut.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    variable_id: rlut
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: toa_outgoing_longwave_flux
+    long_name: TOA Outgoing Longwave Radiation
+    units: W m-2
+    vertical_levels: 1
+    start_time: 1850-01-16 12:00:00
+    end_time: 2014-12-16 12:00:00
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    version: v20191115
+    finalised: true
+  - instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+    activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    frequency: fx
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    institution_id: CSIRO
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    member_id: r1i1p1f1
+    standard_name: cell_area
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    units: m2
+    vertical_levels: 1
+    start_time: null
+    end_time: null
+    time_range: null
+    version: v20191115
+    finalised: true

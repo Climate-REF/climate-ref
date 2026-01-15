@@ -13,7 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import _get_resource, process_json_result
 
@@ -84,13 +84,15 @@ class ENSO(CommandLineDiagnostic):
                                     "table_id": "fx",
                                 },
                             ),
-                            Obs4MIPsRequest(
-                                slug="obs4mips",
+                            # obs4REF datasets from registry (not ESGF)
+                            RegistryRequest(
+                                slug="obs4ref",
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                                 facets={
                                     "source_id": ("GPCP-Monthly-3-2", "HadISST-1-1"),
                                     "variable_id": ("pr", "ts"),
                                 },
-                                time_span=("2000-01", "2014-12"),
                             ),
                         ),
                     ),
@@ -133,8 +135,11 @@ class ENSO(CommandLineDiagnostic):
                                     "table_id": "fx",
                                 },
                             ),
-                            Obs4MIPsRequest(
-                                slug="obs4mips",
+                            # obs4REF datasets from registry (not ESGF)
+                            RegistryRequest(
+                                slug="obs4ref",
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                                 facets={
                                     "source_id": (
                                         "GPCP-Monthly-3-2",
@@ -153,7 +158,6 @@ class ENSO(CommandLineDiagnostic):
                                         "rsus",
                                     ),
                                 },
-                                time_span=("2000-01", "2014-12"),
                             ),
                         ),
                     ),

@@ -12,7 +12,8 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf.registry import RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_pmp_command, process_json_result
 
@@ -93,12 +94,14 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),
-                            Obs4MIPsRequest(
+                            RegistryRequest(
                                 slug=f"{self.mode_id.lower()}-hadisst",
                                 facets={
                                     "source_id": "HadISST-1-1",
                                     "variable_id": "ts",
                                 },
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                             ),
                         ),
                     ),
@@ -124,12 +127,14 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),
-                            Obs4MIPsRequest(
+                            RegistryRequest(
                                 slug=f"{self.mode_id.lower()}-20cr",
                                 facets={
                                     "source_id": "20CR",
                                     "variable_id": "psl",
                                 },
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                             ),
                         ),
                     ),

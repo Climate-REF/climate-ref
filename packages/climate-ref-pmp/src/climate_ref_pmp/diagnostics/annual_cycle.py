@@ -12,7 +12,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf import CMIP6Request, RegistryRequest
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
@@ -270,8 +270,11 @@ class AnnualCycle(CommandLineDiagnostic):
                         },
                         time_span=("2000-01", "2014-12"),
                     ),
-                    # Note: PMPClimatology reference data (ERA-5 psl) must be fetched separately
-                    # as it is not available via ESGF.
+                    RegistryRequest(
+                        slug="pmp-climatology",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "psl", "source_id": "ERA-5"},
+                    ),
                 ),
             ),
         ),

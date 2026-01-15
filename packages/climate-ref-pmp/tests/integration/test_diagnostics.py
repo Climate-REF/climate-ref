@@ -19,49 +19,15 @@ def provider_test_data_dir() -> Path:
     return Path(__file__).parent.parent / "test-data"
 
 
+# TODO: Remove skips when sample data supports ENSO diagnostics
 enso_skip_diagnostics = [
     "enso-teleconnections",
     "enso-clivar-teleconnections",
 ]
 
-diagnostics = [
-    pytest.param(
-        diagnostic,
-        id=diagnostic.slug,
-        marks=[
-            *(
-                [pytest.mark.skip(reason="ENSO diagnostics do not support the sample data")]
-                if diagnostic.slug in enso_skip_diagnostics
-                else []
-            ),
-        ],
-    )
-    for diagnostic in provider.diagnostics()
-]
 
 # Test case params for parameterized test_case tests
 test_case_params = collect_test_case_params(provider)
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_diagnostics(diagnostic: Diagnostic, diagnostic_validation):
-    if "enso" in diagnostic.slug:
-        pytest.skip("ENSO diagnostics do not support the sample data")
-
-    validator = diagnostic_validation(diagnostic)
-
-    definition = validator.get_definition()
-    validator.execute(definition)
-
-
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
-    validator = diagnostic_validation(diagnostic)
-
-    definition = validator.get_regression_definition()
-    validator.validate(definition)
-    validator.execution_regression.check(definition.key, definition.output_directory)
 
 
 @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)

@@ -1,0 +1,115 @@
+cmip6:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
+    institution_id: CSIRO
+    long_name: Precipitation
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: precipitation_flux
+    start_time: 1850-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    units: kg m-2 s-1
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tauu.gn.v20191115
+    institution_id: CSIRO
+    long_name: Surface Downward Eastward Wind Stress
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: surface_downward_eastward_stress
+    start_time: 1850-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    units: Pa
+    variable_id: tauu
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
+    institution_id: CSIRO
+    long_name: Sea Surface Temperature
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: sea_surface_temperature
+    start_time: 1850-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Omon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    units: degC
+    variable_id: tos
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1

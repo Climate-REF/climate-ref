@@ -1,0 +1,27 @@
+obs4mips:
+  slug_column: instance_id
+  selector:
+    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20251209
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: 2007-12-16 12:00:00
+    finalised: true
+    frequency: mon
+    grid: 0.25x 0.25 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ta.25km.gn.v20251209
+    institution_id: ECMWF
+    long_name: Air Temperature
+    nominal_resolution: 25 km
+    product: reanalysis
+    realm: atmos
+    source_id: ERA-5
+    source_type: reanalysis
+    source_version_number: '1.0'
+    start_time: 2007-01-16 12:00:00
+    time_range: 2007-01-16 12:00:00-2007-12-16 12:00:00
+    units: K
+    variable_id: ta
+    variant_label: PCMDI
+    version: v20251209
+    vertical_levels: 37

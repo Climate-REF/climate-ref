@@ -1,0 +1,272 @@
+cmip6:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
+    institution_id: CSIRO
+    long_name: Specific Humidity
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: specific_humidity
+    start_time: 1950-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
+    units: '1'
+    variable_id: hus
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 19
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
+    institution_id: CSIRO
+    long_name: Precipitation
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: precipitation_flux
+    start_time: 1850-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    units: kg m-2 s-1
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.psl.gn.v20191115
+    institution_id: CSIRO
+    long_name: Sea Level Pressure
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: air_pressure_at_mean_sea_level
+    start_time: 1850-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    units: Pa
+    variable_id: psl
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
+    institution_id: CSIRO
+    long_name: Near-Surface Air Temperature
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: air_temperature
+    start_time: 1850-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    units: K
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: 2014-12-16 12:00:00
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
+    institution_id: CSIRO
+    long_name: Eastward Wind
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: eastward_wind
+    start_time: 1950-01-16 12:00:00
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
+    units: m s-1
+    variable_id: ua
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 19
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    end_time: null
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    finalised: true
+    frequency: fx
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+    institution_id: CSIRO
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: cell_area
+    start_time: null
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    time_range: null
+    units: m2
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    source_id: ERA-5
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: 1980-12-16 12:00:00
+    finalised: true
+    frequency: mon
+    grid: 0.25x 0.25 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20251209
+    institution_id: ECMWF
+    long_name: Sea Level Pressure
+    nominal_resolution: 25 km
+    product: reanalysis
+    realm: atmos
+    source_id: ERA-5
+    source_type: reanalysis
+    source_version_number: '1.0'
+    start_time: 1980-01-16 12:00:00
+    time_range: 1980-01-16 12:00:00-1980-12-16 12:00:00
+    units: Pa
+    variable_id: psl
+    variant_label: PCMDI
+    version: v20251209
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: 1980-12-16 12:00:00
+    finalised: true
+    frequency: mon
+    grid: 0.25x 0.25 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ua.25km.gn.v20251209
+    institution_id: ECMWF
+    long_name: Eastward Wind
+    nominal_resolution: 25 km
+    product: reanalysis
+    realm: atmos
+    source_id: ERA-5
+    source_type: reanalysis
+    source_version_number: '1.0'
+    start_time: 1980-01-16 12:00:00
+    time_range: 1980-01-16 12:00:00-1980-12-16 12:00:00
+    units: m s-1
+    variable_id: ua
+    variant_label: PCMDI
+    version: v20251209
+    vertical_levels: 37

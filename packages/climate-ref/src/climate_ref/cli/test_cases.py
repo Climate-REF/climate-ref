@@ -11,11 +11,12 @@ from typing import Annotated
 
 import pandas as pd
 import typer
-from git import InvalidGitRepositoryError, Repo
 from loguru import logger
 from rich.console import Console
 from rich.table import Table
 
+from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_for_path
+from climate_ref.cli._utils import format_size
 from climate_ref.config import Config
 from climate_ref.datasets import (
     CMIP6DatasetAdapter,
@@ -37,6 +38,7 @@ from climate_ref_core.exceptions import (
 from climate_ref_core.testing import (
     TestCase,
     TestCasePaths,
+    catalog_changed_since_regression,
     get_catalog_hash,
     load_datasets_from_yaml,
     save_datasets_to_yaml,
@@ -368,45 +370,6 @@ def _find_diagnostic(
     return None
 
 
-def _format_size(size_bytes: int | float) -> str:
-    """Format file size in human-readable form."""
-    size = float(size_bytes)
-    for unit in ("B", "KB", "MB", "GB"):
-        if size < 1024:
-            return f"{size:.1f} {unit}"
-        size /= 1024
-    return f"{size:.1f} TB"
-
-
-def _get_git_status(file_path: Path, repo: Repo) -> str:
-    """Get git status for a file using GitPython."""
-    try:
-        rel_path = str(file_path.relative_to(repo.working_dir))
-
-        # Check if untracked
-        if rel_path in repo.untracked_files:
-            return "new"
-
-        # Check staged changes (index vs HEAD)
-        staged_files = {item.a_path for item in repo.index.diff("HEAD")}
-        if rel_path in staged_files:
-            return "staged"
-
-        # Check unstaged changes (working tree vs index)
-        unstaged_files = {item.a_path for item in repo.index.diff(None)}
-        if rel_path in unstaged_files:
-            return "modified"
-
-        # Check if file is tracked
-        try:
-            repo.git.ls_files("--error-unmatch", rel_path)
-            return "tracked"
-        except Exception:
-            return "untracked"
-    except Exception:
-        return "unknown"
-
-
 def _print_regression_summary(
     console: Console,
     regression_dir: Path,
@@ -424,47 +387,32 @@ def _print_regression_summary(
     size_threshold_mb
         Files larger than this (in MB) will be flagged
     """
-    # Try to get git repo
-    try:
-        repo = Repo(regression_dir, search_parent_directories=True)
-        repo_root = Path(repo.working_dir)
-    except InvalidGitRepositoryError:
-        repo = None
-        repo_root = regression_dir
+    repo = get_repo_for_path(regression_dir)
+    repo_root = Path(repo.working_dir) if repo else regression_dir
 
-    # Collect file info
-    files = sorted(regression_dir.rglob("*"))
-    files = [f for f in files if f.is_file()]
+    threshold_bytes = int(size_threshold_mb * 1024 * 1024)
+    file_info = collect_regression_file_info(regression_dir, repo, threshold_bytes)
 
-    if not files:
+    if not file_info:
         console.print("[yellow]No files in regression directory[/yellow]")
         return
 
-    threshold_bytes = int(size_threshold_mb * 1024 * 1024)
-    total_size = 0
-    large_files = 0
+    total_size = sum(f["size"] for f in file_info)
+    large_files = sum(1 for f in file_info if f["is_large"])
 
     table = Table(title=f"Regression Data: {regression_dir.relative_to(repo_root)}")
     table.add_column("File", style="cyan", no_wrap=False)
     table.add_column("Size", justify="right")
     table.add_column("Git Status", justify="center")
 
-    for file_path in files:
-        size = file_path.stat().st_size
-        total_size += size
-        is_large = size > threshold_bytes
-
-        # Format relative path
-        rel_path = str(file_path.relative_to(regression_dir))
-
+    for info in file_info:
         # Format size with color
-        size_str = _format_size(size)
-        if is_large:
+        size_str = format_size(info["size"])
+        if info["is_large"]:
             size_str = f"[bold red]{size_str}[/bold red]"
-            large_files += 1
 
         # Get git status with color
-        git_status = _get_git_status(file_path, repo) if repo else "unknown"
+        git_status = info["git_status"]
         status_colors = {
             "new": "[green]new[/green]",
             "staged": "[green]staged[/green]",
@@ -476,42 +424,15 @@ def _print_regression_summary(
         }
         git_status_str = status_colors.get(git_status, f"[dim]{git_status}[/dim]")
 
-        table.add_row(rel_path, size_str, git_status_str)
+        table.add_row(info["rel_path"], size_str, git_status_str)
 
     console.print(table)
 
     # Summary line
-    summary = f"\n[bold]Total:[/bold] {len(files)} files, {_format_size(total_size)}"
+    summary = f"\n[bold]Total:[/bold] {len(file_info)} files, {format_size(total_size)}"
     if large_files > 0:
         summary += f" ([red]{large_files} files > {size_threshold_mb} MB[/red])"
     console.print(summary)
-
-
-def _catalog_changed_since_regression(paths: TestCasePaths) -> bool:
-    """
-    Check if the catalog has changed since regression data was generated.
-
-    Returns True if:
-    - No regression data exists (new test case)
-    - No stored catalog hash exists (legacy regression data)
-    - The catalog hash differs from the stored one
-
-    Parameters
-    ----------
-    paths
-        TestCasePaths for the test case
-    """
-    if not paths.regression.exists():
-        return True  # No regression data, needs to run
-    if not paths.regression_catalog_hash.exists():
-        return True  # No stored hash, needs to run
-    if not paths.catalog.exists():
-        return True  # No catalog file, needs to run
-
-    stored_hash = paths.regression_catalog_hash.read_text().strip()
-    current_hash = get_catalog_hash(paths.catalog)
-
-    return stored_hash != current_hash
 
 
 def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
@@ -737,7 +658,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
                     continue
             # Skip if catalog hasn't changed when using --if-changed
             if if_changed:
-                if paths and not _catalog_changed_since_regression(paths):
+                if paths and not catalog_changed_since_regression(paths):
                     skipped_cases.append((diag, tc))
                     continue
             test_cases_to_run.append((diag, tc))

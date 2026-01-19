@@ -354,6 +354,38 @@ def get_catalog_hash(path: Path) -> str | None:
     return str(hash_value) if hash_value is not None else None
 
 
+def catalog_changed_since_regression(paths: TestCasePaths) -> bool:
+    """
+    Check if the catalog has changed since regression data was generated.
+
+    Returns True if:
+    - No regression data exists (new test case)
+    - No stored catalog hash exists (legacy regression data)
+    - The catalog hash differs from the stored one
+
+    Parameters
+    ----------
+    paths
+        TestCasePaths for the test case
+
+    Returns
+    -------
+    :
+        True if regression should be regenerated, False otherwise
+    """
+    if not paths.regression.exists():
+        return True  # No regression data, needs to run
+    if not paths.regression_catalog_hash.exists():
+        return True  # No stored hash, needs to run
+    if not paths.catalog.exists():
+        return True  # No catalog file, needs to run
+
+    stored_hash = paths.regression_catalog_hash.read_text().strip()
+    current_hash = get_catalog_hash(paths.catalog)
+
+    return stored_hash != current_hash
+
+
 def save_datasets_to_yaml(
     datasets: ExecutionDatasetCollection,
     path: Path,

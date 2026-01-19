@@ -14,6 +14,7 @@ from climate_ref_core.testing import (
     TestCasePaths,
     TestDataSpecification,
     _get_provider_test_data_dir,
+    catalog_changed_since_regression,
     get_catalog_hash,
     load_datasets_from_yaml,
     save_datasets_to_yaml,
@@ -535,6 +536,74 @@ cmip6:
 
         result = get_catalog_hash(yaml_path)
         assert result is None
+
+
+class TestCatalogChangedSinceRegression:
+    """Tests for catalog_changed_since_regression function."""
+
+    def test_returns_true_when_no_regression_exists(self, tmp_path):
+        """Test returns True when regression directory doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_no_catalog_hash_file(self, tmp_path):
+        """Test returns True when catalog hash file doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        # No .catalog_hash file
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_no_catalog_file(self, tmp_path):
+        """Test returns True when catalog file doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("abc123")
+        # No catalog file
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_hash_differs(self, tmp_path):
+        """Test returns True when catalog hash differs from stored hash."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: new_hash_456\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("old_hash_123")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_false_when_hash_matches(self, tmp_path):
+        """Test returns False when catalog hash matches stored hash."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: same_hash_789\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("same_hash_789")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is False
+
+    def test_handles_whitespace_in_stored_hash(self, tmp_path):
+        """Test handles whitespace in stored hash file."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: hash_value\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("  hash_value  \n")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is False
 
 
 class TestTestCasePathsFromDiagnostic:

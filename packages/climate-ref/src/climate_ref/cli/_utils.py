@@ -4,6 +4,30 @@ from rich import box
 from rich.console import Console
 from rich.table import Table
 
+_BYTES_PER_UNIT = 1024
+
+
+def format_size(size_bytes: int | float) -> str:
+    """
+    Format file size in human-readable form.
+
+    Parameters
+    ----------
+    size_bytes
+        Size in bytes
+
+    Returns
+    -------
+    :
+        Human-readable size string (e.g., "1.5 MB")
+    """
+    size = float(size_bytes)
+    for unit in ("B", "KB", "MB", "GB"):
+        if size < _BYTES_PER_UNIT:
+            return f"{size:.1f} {unit}"
+        size /= _BYTES_PER_UNIT
+    return f"{size:.1f} TB"
+
 
 def parse_facet_filters(filters: list[str] | None) -> dict[str, str]:
     """

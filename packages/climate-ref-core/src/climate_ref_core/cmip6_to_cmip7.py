@@ -10,7 +10,7 @@ Key differences between CMIP6 and CMIP7
 - Variable naming: CMIP7 uses branded names like `tas_tavg-h2m-hxy-u` instead of `tas`
 - Branding suffix: `<temporal>-<vertical>-<horizontal>-<area>` labels (e.g., `tavg-h2m-hxy-u`)
 - Variant indices: Changed from integers to prefixed strings (1 -> "r1", "i1", "p1", "f1")
-- New mandatory attributes: data_specs_version, tracking_id, creation_date, product, license_id
+- New mandatory attributes: license_id
 - table_id: Uses realm names instead of CMOR table names (atmos vs Amon)
 - Directory structure: MIP-DRS7 specification
 - Filename format: Includes branding suffix, region, and grid_label
@@ -71,12 +71,14 @@ FREQUENCY_MAP = {
 
 # CMIP6-only attributes that should be removed when converting to CMIP7
 # These are not part of the CMIP7 Global Attributes specification (V1.0)
+# These may be included in output, but they won't be checked
 CMIP6_ONLY_ATTRIBUTES = {
     "further_info_url",  # CMIP6-specific URL format, replaced by different mechanism in CMIP7
     "grid",  # Replaced by grid_label in CMIP7
     "member_id",  # Redundant with variant_label, not in CMIP7 spec
     "sub_experiment",  # Not in CMIP7 spec
     "sub_experiment_id",  # Not in CMIP7 spec
+    "table_id",  # Not in CMIP7 spec
 }
 
 
@@ -377,7 +379,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["mip_era"] = cmip7_meta.mip_era
     attrs["parent_mip_era"] = attrs.get("parent_mip_era", "CMIP6")
 
-    # Add new required CMIP7 attributes
+    # New/updated CMIP7 attributes
     attrs["region"] = cmip7_meta.region
     attrs["drs_specs"] = cmip7_meta.drs_specs
     attrs["data_specs_version"] = cmip7_meta.data_specs_version
@@ -422,7 +424,6 @@ def convert_cmip6_to_cmip7_attrs(
         old_table_id = attrs["table_id"]
         realm = get_realm_from_table(old_table_id)
         attrs["realm"] = realm
-        attrs["table_id"] = realm
         # Also update frequency if not present
         if "frequency" not in attrs:
             attrs["frequency"] = get_frequency_from_table(old_table_id)
@@ -441,7 +442,6 @@ def convert_cmip6_to_cmip7_attrs(
 
 def convert_cmip6_dataset(
     ds: xr.Dataset,
-    rename_variables: bool = True,
     inplace: bool = False,
 ) -> xr.Dataset:
     """
@@ -454,8 +454,6 @@ def convert_cmip6_dataset(
     ----------
     ds
         The CMIP6 xarray Dataset to convert
-    rename_variables
-        If True, rename data variables to CMIP7 branded format
     inplace
         If True, modify the dataset in place; otherwise return a copy
 
@@ -477,17 +475,6 @@ def convert_cmip6_dataset(
 
     branding = get_branding_suffix(variable_id) if variable_id else None
     ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs, variable_id=variable_id, branding=branding)
-
-    # Rename variables if requested
-    if rename_variables and variable_id and branding:
-        rename_map: dict[str, str] = {}
-        for var in data_vars:
-            var_branding = get_branding_suffix(var)
-            new_name = get_cmip7_variable_name(var, var_branding)
-            if var != new_name:
-                rename_map[var] = new_name
-        if rename_map:
-            ds = ds.rename(rename_map)
 
     return ds
 

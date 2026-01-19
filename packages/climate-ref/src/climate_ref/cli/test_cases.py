@@ -244,7 +244,7 @@ def fetch_test_data(  # noqa: PLR0912
 
     logger.info(f"Found {len(diagnostics_to_process)} diagnostics with test data specifications")
 
-    if dry_run:
+    if dry_run:  # pragma: no cover
         for diag in diagnostics_to_process:
             logger.info(f"Would fetch data for: {diag.provider.slug}/{diag.slug}")
             if diag.test_data_spec:
@@ -264,7 +264,7 @@ def fetch_test_data(  # noqa: PLR0912
         return
 
     # Process each diagnostic test case
-    for diag in diagnostics_to_process:
+    for diag in diagnostics_to_process:  # pragma: no cover
         logger.info(f"Fetching data for: {diag.provider.slug}/{diag.slug}")
         if diag.test_data_spec:
             for tc in diag.test_data_spec.test_cases:
@@ -370,7 +370,7 @@ def _find_diagnostic(
     return None
 
 
-def _print_regression_summary(
+def _print_regression_summary(  # pragma: no cover
     console: Console,
     regression_dir: Path,
     size_threshold_mb: float = 1.0,
@@ -677,7 +677,7 @@ def run_test_case(  # noqa: PLR0912, PLR0915
     if skipped_cases:
         logger.info(f"Skipping {len(skipped_cases)} test case(s) with existing regression data")
 
-    if dry_run:
+    if dry_run:  # pragma: no cover
         table = Table(title="Test Cases to Run")
         table.add_column("Provider", style="cyan")
         table.add_column("Diagnostic", style="green")

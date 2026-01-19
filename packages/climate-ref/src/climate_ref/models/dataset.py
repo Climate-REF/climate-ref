@@ -148,6 +148,80 @@ class CMIP6Dataset(Dataset):
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore
 
 
+class CMIP7Dataset(Dataset):
+    """
+    Represents a CMIP7 dataset.
+
+    Based on CMIP7 Global Attributes V1.0 (DOI: 10.5281/zenodo.17250297).
+    CMIP7 datasets have branding suffix components, variant indices as strings,
+    and additional DRS version information.
+    """
+
+    __tablename__ = "cmip7_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    # Core identification (mandatory per CMIP7 spec)
+    activity_id: Mapped[str] = mapped_column()
+    institution_id: Mapped[str] = mapped_column()
+    source_id: Mapped[str] = mapped_column(index=True)
+    experiment_id: Mapped[str] = mapped_column(index=True)
+    variant_label: Mapped[str] = mapped_column()
+    variable_id: Mapped[str] = mapped_column()
+    grid_label: Mapped[str] = mapped_column()
+    version: Mapped[str] = mapped_column()
+
+    # CMIP7-specific mandatory fields
+    mip_era: Mapped[str] = mapped_column(default="CMIP7")
+    region: Mapped[str] = mapped_column(default="glb")  # lowercase per spec
+    frequency: Mapped[str] = mapped_column()
+    branding_suffix: Mapped[str] = mapped_column()
+    branded_variable: Mapped[str] = mapped_column()
+
+    # Branding suffix components (mandatory per spec)
+    temporal_label: Mapped[str] = mapped_column(nullable=True)
+    vertical_label: Mapped[str] = mapped_column(nullable=True)
+    horizontal_label: Mapped[str] = mapped_column(nullable=True)
+    area_label: Mapped[str] = mapped_column(nullable=True)
+
+    # DRS and spec info (mandatory per spec)
+    drs_specs: Mapped[str] = mapped_column(default="MIP-DRS7")
+    data_specs_version: Mapped[str] = mapped_column(default="MIP-DS7.1.0.0")
+    product: Mapped[str] = mapped_column(default="model-output")
+    license_id: Mapped[str] = mapped_column(default="CC-BY-4.0")
+
+    # Variant indices (CMIP7 uses prefixed strings, e.g., "r1", "i1", "p1", "f1")
+    realization_index: Mapped[str] = mapped_column(nullable=True)
+    initialization_index: Mapped[str] = mapped_column(nullable=True)
+    physics_index: Mapped[str] = mapped_column(nullable=True)
+    forcing_index: Mapped[str] = mapped_column(nullable=True)
+
+    # Optional metadata
+    realm: Mapped[str] = mapped_column(nullable=True)
+    nominal_resolution: Mapped[str] = mapped_column(nullable=True)
+    tracking_id: Mapped[str] = mapped_column(nullable=True)
+    standard_name: Mapped[str] = mapped_column(nullable=True)
+    long_name: Mapped[str] = mapped_column(nullable=True)
+    units: Mapped[str] = mapped_column(nullable=True)
+
+    # Conditionally required parent fields (when parent exists)
+    branch_time_in_child: Mapped[float] = mapped_column(nullable=True)
+    branch_time_in_parent: Mapped[float] = mapped_column(nullable=True)
+    parent_activity_id: Mapped[str] = mapped_column(nullable=True)
+    parent_experiment_id: Mapped[str] = mapped_column(nullable=True)
+    parent_mip_era: Mapped[str] = mapped_column(nullable=True)
+    parent_source_id: Mapped[str] = mapped_column(nullable=True)
+    parent_time_units: Mapped[str] = mapped_column(nullable=True)
+    parent_variant_label: Mapped[str] = mapped_column(nullable=True)
+    external_variables: Mapped[str] = mapped_column(nullable=True)
+
+    instance_id: Mapped[str] = mapped_column(index=True)
+    """
+    Unique identifier for the dataset (CMIP7 DRS format).
+    """
+
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP7}  # type: ignore
+
+
 class Obs4MIPsDataset(Dataset):
     """
     Represents a obs4mips dataset

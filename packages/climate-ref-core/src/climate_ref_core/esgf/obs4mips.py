@@ -6,6 +6,8 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
+import pandas as pd
+
 from climate_ref_core.esgf.base import IntakeESGFMixin
 
 if TYPE_CHECKING:
@@ -44,6 +46,7 @@ class Obs4MIPsRequest(IntakeESGFMixin):
         "grid_label",
         "version",
         "data_node",
+        "project",
     )
 
     def __init__(
@@ -78,6 +81,14 @@ class Obs4MIPsRequest(IntakeESGFMixin):
         for key in self.obs4mips_filename_paths:
             if key not in self.avail_facets:
                 raise ValueError(f"Filename path {key!r} not in available facets")
+
+    def fetch_datasets(self) -> pd.DataFrame:
+        """Fetch dataset metadata from ESGF with project=obs4MIPs."""
+        # Ensure project facet is set to obs4MIPs
+        if "project" not in self.facets:
+            self.facets["project"] = "obs4MIPs"
+
+        return super().fetch_datasets()
 
     def __repr__(self) -> str:
         return f"Obs4MIPsRequest(slug={self.slug!r}, facets={self.facets!r})"

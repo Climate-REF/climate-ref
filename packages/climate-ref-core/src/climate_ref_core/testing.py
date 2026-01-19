@@ -193,6 +193,11 @@ class TestCasePaths:
         return self.root / "regression"
 
     @property
+    def regression_catalog_hash(self) -> Path:
+        """Path to catalog hash file in regression directory."""
+        return self.regression / ".catalog_hash"
+
+    @property
     def test_data_dir(self) -> Path:
         """Path to the test-data directory (parent of diagnostic slug dir)."""
         return self.root.parent.parent
@@ -270,12 +275,14 @@ def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
       datasets:
         - instance_id: CMIP6.CMIP...
           variable_id: tas
+          filename: tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc
           # ... other metadata
     ```
 
     Paths are loaded from a separate `.paths.yaml` file if it exists,
     allowing the main catalog to be version-controlled while paths
-    remain user-specific.
+    remain user-specific. Multi-file datasets have multiple rows with
+    paths keyed by `{instance_id}::{filename}`.
     """
     with open(path) as f:
         data = yaml.safe_load(f)
@@ -290,16 +297,28 @@ def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
     collections: dict[SourceDatasetType | str, DatasetCollection] = {}
 
     for source_type_str, source_data in data.items():
+        if source_type_str == "_metadata":
+            continue  # Skip metadata section
         source_type = SourceDatasetType(source_type_str)
         selector_dict = source_data.get("selector", {})
         selector: Selector = tuple(sorted(selector_dict.items()))
         datasets_list = source_data.get("datasets", [])
         slug_column = source_data.get("slug_column", "instance_id")
 
-        # Merge paths from paths file
+        # Merge paths from paths file using composite key
         for dataset in datasets_list:
             instance_id = dataset.get(slug_column)
-            if instance_id and instance_id in paths_map:
+            filename = dataset.get("filename")
+            if instance_id and filename:
+                # Try composite key first (new format for multi-file datasets)
+                composite_key = f"{instance_id}::{filename}"
+                if composite_key in paths_map:
+                    dataset["path"] = paths_map[composite_key]
+                elif instance_id in paths_map:
+                    # Fall back to simple key for backward compatibility
+                    dataset["path"] = paths_map[instance_id]
+            elif instance_id and instance_id in paths_map:
+                # Legacy format without filename
                 dataset["path"] = paths_map[instance_id]
 
         collections[source_type] = DatasetCollection(
@@ -311,12 +330,48 @@ def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
     return ExecutionDatasetCollection(collections)
 
 
-def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> None:
+def get_catalog_hash(path: Path) -> str | None:
+    """
+    Get the hash stored in an existing catalog file.
+
+    Parameters
+    ----------
+    path
+        Path to the catalog YAML file
+
+    Returns
+    -------
+    :
+        The hash string if found, None if file doesn't exist or has no hash
+    """
+    if not path.exists():
+        return None
+    with open(path) as f:
+        data = yaml.safe_load(f)
+    if data is None:
+        return None
+    hash_value = data.get("_metadata", {}).get("hash")
+    return str(hash_value) if hash_value is not None else None
+
+
+def save_datasets_to_yaml(
+    datasets: ExecutionDatasetCollection,
+    path: Path,
+    *,
+    force: bool = False,
+) -> bool:
     """
     Save ExecutionDatasetCollection to a YAML file.
 
     Paths are saved to a separate `.paths.yaml` file to allow the main
     catalog to be version-controlled while paths remain user-specific.
+
+    Multi-file datasets (e.g., time-chunked data) are stored as multiple rows,
+    one per file. Paths are keyed by `{instance_id}::{filename}` to support
+    multiple files per dataset.
+
+    By default, the catalog is only written if the content has changed
+    (detected via hash comparison). Use `force=True` to always write.
 
     Parameters
     ----------
@@ -324,24 +379,54 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
         The datasets to save
     path
         Path to write the YAML file
+    force
+        If True, always write the catalog even if unchanged
+
+    Returns
+    -------
+    :
+        True if the catalog was written, False if skipped (unchanged)
     """
-    data: dict[str, Any] = {}
+    # Compute the hash first to check if we need to write
+    new_hash = datasets.hash
+
+    if not force:
+        existing_hash = get_catalog_hash(path)
+        if existing_hash == new_hash:
+            logger.info(f"Catalog unchanged, skipping write: {path}")
+            return False
+
+    data: dict[str, Any] = {
+        "_metadata": {"hash": new_hash},
+    }
     paths_map: dict[str, str] = {}
 
     for source_type, collection in datasets.items():
         slug_column = collection.slug_column
         datasets_records = collection.datasets.to_dict(orient="records")
 
-        # Extract paths to separate map
+        # Extract paths to separate map, keeping all rows (including multi-file datasets)
+        filtered_records = []
         for record in datasets_records:
             instance_id = record.get(slug_column)
             if instance_id and "path" in record:  # pragma: no branch
-                paths_map[instance_id] = record.pop("path")
+                file_path = record.pop("path")
+                filename = Path(file_path).name
+                # Store filename in record for matching when loading
+                record["filename"] = filename
+                # Use composite key to support multiple files per instance_id
+                paths_map[f"{instance_id}::{filename}"] = file_path
+                # Sort fields within each record alphabetically
+                sorted_record = dict(sorted(record.items()))
+                filtered_records.append(sorted_record)
+
+        # Sort records by instance_id, then by filename for stability
+        filtered_records.sort(key=lambda r: (r.get(slug_column, ""), r.get("filename", "")))
 
         data[source_type.value] = {
             "slug_column": slug_column,
             "selector": dict(collection.selector),
-            "datasets": datasets_records,
+            "datasets": filtered_records,
         }
 
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -353,6 +438,7 @@ def save_datasets_to_yaml(datasets: ExecutionDatasetCollection, path: Path) -> N
     with open(paths_file, "w") as f:
         yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
+    return True
 
 
 def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> None:

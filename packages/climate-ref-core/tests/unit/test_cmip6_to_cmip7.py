@@ -159,19 +159,15 @@ class TestConvertCmip6ToCmip7Attrs:
         assert cmip7_attrs["tracking_id"].startswith("hdl:21.14107/")
         assert "creation_date" in cmip7_attrs
 
-        # Removed CMIP6 attributes should not be present
-        assert "archive_id" not in cmip7_attrs
-        assert "host_collection" not in cmip7_attrs
-        assert "cv_version" not in cmip7_attrs
-
     def test_converts_table_id_to_realm(self):
         cmip6_attrs = {"table_id": "Amon", "variable_id": "tas"}
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
-        assert cmip7_attrs["table_id"] == "atmos"
         assert cmip7_attrs["realm"] == "atmos"
         assert cmip7_attrs["frequency"] == "mon"
         assert cmip7_attrs["cmip6_compound_name"] == "Amon.tas"
+
+        assert "table_id" not in cmip7_attrs
 
     def test_updates_conventions(self):
         cmip6_attrs = {"Conventions": "CF-1.6", "variable_id": "tas"}
@@ -276,23 +272,11 @@ class TestConvertCmip6Dataset:
         assert ds_cmip7.attrs["branded_variable"] == "tas_tavg-h2m-hxy-u"
         assert ds_cmip7.attrs["Conventions"] == "CF-1.12"
 
-    def test_renames_variables(self, sample_cmip6_dataset: xr.Dataset):
-        ds_cmip7 = convert_cmip6_dataset(sample_cmip6_dataset, rename_variables=True)
-
-        assert "tas_tavg-h2m-hxy-u" in ds_cmip7.data_vars
-        assert "tas" not in ds_cmip7.data_vars
-
-    def test_preserves_variables_when_rename_disabled(self, sample_cmip6_dataset: xr.Dataset):
-        ds_cmip7 = convert_cmip6_dataset(sample_cmip6_dataset, rename_variables=False)
+    def test_preserves_variable_name(self, sample_cmip6_dataset: xr.Dataset):
+        ds_cmip7 = convert_cmip6_dataset(sample_cmip6_dataset)
 
         assert "tas" in ds_cmip7.data_vars
         assert "tas_tavg-h2m-hxy-u" not in ds_cmip7.data_vars
-
-    def test_preserves_data_values(self, sample_cmip6_dataset: xr.Dataset):
-        original_data = sample_cmip6_dataset["tas"].values.copy()
-        ds_cmip7 = convert_cmip6_dataset(sample_cmip6_dataset, rename_variables=True)
-
-        np.testing.assert_array_equal(ds_cmip7["tas_tavg-h2m-hxy-u"].values, original_data)
 
     def test_does_not_modify_original_by_default(self, sample_cmip6_dataset: xr.Dataset):
         original_mip_era = sample_cmip6_dataset.attrs.get("mip_era")

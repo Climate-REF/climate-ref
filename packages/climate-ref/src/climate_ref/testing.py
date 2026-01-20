@@ -123,7 +123,7 @@ def validate_result(
 
     # Import late to avoid importing executors,
     # some of which have on-import side effects, at package load time
-    from climate_ref.executor import handle_execution_result
+    from climate_ref.executor import handle_execution_result  # noqa: PLC0415
 
     # Process and store the result
     handle_execution_result(config, database=database, execution=execution, result=result)

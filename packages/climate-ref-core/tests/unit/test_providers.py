@@ -2,7 +2,6 @@ import io
 import logging
 import subprocess
 import textwrap
-import time
 from contextlib import contextmanager
 from contextlib import nullcontext as does_not_raise
 from pathlib import Path

@@ -1,19 +1,19 @@
-# # Test installation of the latest version from PyPI works.
-# # We make sure that we run the tests that apply to the version we installed,
-# # rather than the latest tests in main.
-# # The reason we do this, is that we want this workflow to test
-# # that installing from PyPI leads to a correct installation.
-# # If we tested against main, the tests could fail
-# # because the tests from main require the new features in main to pass.
-# name: Test installation PyPI
+# Test installation of the latest version from PyPI works.
+# We make sure that we run the tests that apply to the version we installed,
+# rather than the latest tests in main.
+# The reason we do this, is that we want this workflow to test
+# that installing from PyPI leads to a correct installation.
+# If we tested against main, the tests could fail
+# because the tests from main require the new features in main to pass.
+name: Test installation PyPI
 
-# on:
-#   workflow_dispatch:
-#   schedule:
-#     # * is a special character in YAML so you have to quote this string
-#     # This means At 03:00 on Wednesday.
-#     # see https://crontab.guru/#0_0_*_*_3
-#     - cron:  '0 3 * * 3'
+on:
+  workflow_dispatch:
+  schedule:
+    # * is a special character in YAML so you have to quote this string
+    # This means At 03:00 on Wednesday.
+    # see https://crontab.guru/#0_0_*_*_3
+    - cron:  '0 3 * * 3'
 
 jobs:
   test-pypi-install:

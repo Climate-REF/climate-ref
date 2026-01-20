@@ -1,15 +1,15 @@
-# # Generate a draft release on GitHub when a new tag is pushed
-# # The draft release will contain draft release notes and some built wheels
+# Generate a draft release on GitHub when a new tag is pushed
+# The draft release will contain draft release notes and some built wheels
 
-# name: Release
+name: Release
 
-# on:
-#   push:
-#     tags: ['v*']
+on:
+  push:
+    tags: ['v*']
 
-# defaults:
-#   run:
-#     shell: bash
+defaults:
+  run:
+    shell: bash
 
 jobs:
   draft-release:

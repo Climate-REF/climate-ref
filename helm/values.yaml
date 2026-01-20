@@ -52,24 +52,6 @@ flower:
     type: ClusterIP
     port: 5555
 
-  livenessProbe:
-    httpGet:
-      path: /healthcheck
-      port: http
-    initialDelaySeconds: 30
-    periodSeconds: 30
-    timeoutSeconds: 10
-    failureThreshold: 3
-
-  readinessProbe:
-    httpGet:
-      path: /healthcheck
-      port: http
-    initialDelaySeconds: 15
-    periodSeconds: 10
-    timeoutSeconds: 5
-    failureThreshold: 3
-
   resources: {}
 
   autoscaling:
@@ -128,33 +110,6 @@ defaults:
   service:
     type: ClusterIP
     port: 80
-
-  livenessProbe:
-    exec:
-      command:
-      - /app/.venv/bin/celery
-      - -A
-      - climate_ref_celery
-      - inspect
-      - ping
-      - --destination
-      - celery@$HOSTNAME
-    initialDelaySeconds: 60
-    periodSeconds: 30
-    timeoutSeconds: 10
-    failureThreshold: 3
-
-  readinessProbe:
-    exec:
-      command:
-      - /app/.venv/bin/celery
-      - -A
-      - climate_ref_celery
-      - status
-    initialDelaySeconds: 30
-    periodSeconds: 15
-    timeoutSeconds: 10
-    failureThreshold: 3
 
   resources: {}
 

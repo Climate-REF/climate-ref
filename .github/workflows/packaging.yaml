@@ -36,6 +36,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       packages: write
+    outputs:
+      generated-semver: ${{ steps.semantic-version.outputs.generated-semver }}
     steps:
     - uses: actions/checkout@v4
     - uses: actions/setup-python@v5
@@ -130,3 +132,23 @@ jobs:
     - name: Simple Solve
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 180 --one-per-provider
+    - name: Capture Worker Logs on Failure
+      if: failure()
+      run: |
+        echo "=== PMP Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=pmp --tail=500 || true
+        echo ""
+        echo "=== ESMValTool Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=esmvaltool --tail=500 || true
+        echo ""
+        echo "=== ILAMB Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=ilamb --tail=500 || true
+        echo ""
+        echo "=== Example Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=example --tail=500 || true
+        echo ""
+        echo "=== Orchestrator Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=orchestrator --tail=500 || true
+        echo ""
+        echo "=== Dragonfly Logs ==="
+        kubectl logs -l app.kubernetes.io/name=dragonfly --tail=200 || true

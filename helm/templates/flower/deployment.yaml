@@ -50,10 +50,14 @@ spec:
         ports:
         - name: http
           containerPort: {{ .Values.flower.service.port }}
+        {{- with .Values.flower.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with .Values.flower.readinessProbe }}
         readinessProbe:
-          httpGet:
-            path: /healthcheck
-            port: http
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- with .Values.flower.resources }}
         resources:
           {{- toYaml . | nindent 12 }}

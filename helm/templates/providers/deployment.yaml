@@ -57,6 +57,14 @@ spec:
         envFrom:
         - secretRef:
             name: {{ include "ref.fullname" $ }}-{{ $provider }}
+        {{- with $spec.livenessProbe }}
+        livenessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
+        {{- with $spec.readinessProbe }}
+        readinessProbe:
+          {{- toYaml . | nindent 10 }}
+        {{- end }}
         {{- with $spec.resources }}
         resources:
           {{- toYaml . | nindent 12 }}

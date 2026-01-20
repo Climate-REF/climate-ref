@@ -4,6 +4,7 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+import yaml
 
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import ExecutionResult
@@ -13,6 +14,8 @@ from climate_ref_core.testing import (
     TestCasePaths,
     TestDataSpecification,
     _get_provider_test_data_dir,
+    catalog_changed_since_regression,
+    get_catalog_hash,
     load_datasets_from_yaml,
     save_datasets_to_yaml,
     validate_cmec_bundles,
@@ -151,6 +154,13 @@ class TestTestCasePaths:
         assert default.root != custom.root
         assert default.regression != custom.regression
 
+    def test_regression_catalog_hash_property(self, tmp_path):
+        """Test regression_catalog_hash returns correct path."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+
+        expected = tmp_path / "my-diag" / "default" / "regression" / ".catalog_hash"
+        assert paths.regression_catalog_hash == expected
+
 
 class TestYamlSerialization:
     """Tests for YAML serialization functions."""
@@ -189,6 +199,66 @@ class TestYamlSerialization:
         loaded_collection = loaded[SourceDatasetType.CMIP6]
         assert loaded_collection.slug_column == "instance_id"
         assert len(loaded_collection.datasets) == 2
+
+    def test_save_and_load_multifile_dataset(self, tmp_path):
+        """Test that multi-file datasets (same instance_id, different files) are preserved."""
+        # Create test data with multiple files per dataset (e.g., time-chunked data)
+        df = pd.DataFrame(
+            {
+                "instance_id": [
+                    "CMIP6.test.dataset1",
+                    "CMIP6.test.dataset1",
+                    "CMIP6.test.dataset1",
+                ],
+                "source_id": ["MODEL1", "MODEL1", "MODEL1"],
+                "variable_id": ["tas", "tas", "tas"],
+                "start_time": ["1850-01-01", "1870-01-01", "1890-01-01"],
+                "end_time": ["1869-12-31", "1889-12-31", "1909-12-31"],
+                "path": [
+                    "/path/to/tas_1850-1869.nc",
+                    "/path/to/tas_1870-1889.nc",
+                    "/path/to/tas_1890-1909.nc",
+                ],
+            }
+        )
+
+        collection = DatasetCollection(
+            datasets=df,
+            slug_column="instance_id",
+            selector=(("source_id", "MODEL1"),),
+        )
+
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        # Save to YAML
+        yaml_path = tmp_path / "test_datasets.yaml"
+        save_datasets_to_yaml(datasets, yaml_path)
+
+        # Check that paths file has 3 entries with composite keys
+        paths_file = yaml_path.with_suffix(".paths.yaml")
+        assert paths_file.exists()
+
+        with open(paths_file) as f:
+            paths_map = yaml.safe_load(f)
+        assert len(paths_map) == 3
+        # Verify composite keys are used
+        assert "CMIP6.test.dataset1::tas_1850-1869.nc" in paths_map
+        assert "CMIP6.test.dataset1::tas_1870-1889.nc" in paths_map
+        assert "CMIP6.test.dataset1::tas_1890-1909.nc" in paths_map
+
+        # Load from YAML
+        loaded = load_datasets_from_yaml(yaml_path)
+
+        # Verify all 3 rows are preserved
+        loaded_collection = loaded[SourceDatasetType.CMIP6]
+        assert len(loaded_collection.datasets) == 3
+
+        # Verify paths are correctly matched back
+        loaded_df = loaded_collection.datasets
+        paths = loaded_df["path"].tolist()
+        assert "/path/to/tas_1850-1869.nc" in paths
+        assert "/path/to/tas_1870-1889.nc" in paths
+        assert "/path/to/tas_1890-1909.nc" in paths
 
     def test_save_creates_parent_dirs(self, tmp_path):
         """Test that save creates parent directories if needed."""
@@ -292,6 +362,248 @@ cmip6:
         assert "path" not in collection.datasets.columns or pd.isna(
             collection.datasets.iloc[0].get("path", None)
         )
+
+    def test_save_stores_hash_in_metadata(self, tmp_path):
+        """Test that save_datasets_to_yaml stores hash in _metadata section."""
+        df = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.dataset"],
+                "path": ["/path/to/file.nc"],
+            }
+        )
+        collection = DatasetCollection(datasets=df, slug_column="instance_id", selector=())
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        yaml_path = tmp_path / "test.yaml"
+        save_datasets_to_yaml(datasets, yaml_path)
+
+        # Check hash is stored
+        with open(yaml_path) as f:
+            data = yaml.safe_load(f)
+
+        assert "_metadata" in data
+        assert "hash" in data["_metadata"]
+        assert data["_metadata"]["hash"] == datasets.hash
+
+    def test_save_skips_write_when_unchanged(self, tmp_path):
+        """Test that save_datasets_to_yaml skips write when hash matches."""
+        df = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.dataset"],
+                "path": ["/path/to/file.nc"],
+            }
+        )
+        collection = DatasetCollection(datasets=df, slug_column="instance_id", selector=())
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        yaml_path = tmp_path / "test.yaml"
+
+        # First write
+        result1 = save_datasets_to_yaml(datasets, yaml_path)
+        assert result1 is True
+
+        # Get modification time
+        mtime1 = yaml_path.stat().st_mtime
+
+        # Second write with same data should skip
+        result2 = save_datasets_to_yaml(datasets, yaml_path)
+        assert result2 is False
+
+        # File should not have been modified
+        mtime2 = yaml_path.stat().st_mtime
+        assert mtime1 == mtime2
+
+    def test_save_writes_when_changed(self, tmp_path):
+        """Test that save_datasets_to_yaml writes when hash differs."""
+        df1 = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.dataset1"],
+                "path": ["/path/to/file1.nc"],
+            }
+        )
+        collection1 = DatasetCollection(datasets=df1, slug_column="instance_id", selector=())
+        datasets1 = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection1})
+
+        df2 = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.dataset2"],
+                "path": ["/path/to/file2.nc"],
+            }
+        )
+        collection2 = DatasetCollection(datasets=df2, slug_column="instance_id", selector=())
+        datasets2 = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection2})
+
+        yaml_path = tmp_path / "test.yaml"
+
+        # First write
+        result1 = save_datasets_to_yaml(datasets1, yaml_path)
+        assert result1 is True
+
+        # Second write with different data should write
+        result2 = save_datasets_to_yaml(datasets2, yaml_path)
+        assert result2 is True
+
+        # Verify the new data is in the file
+        loaded = load_datasets_from_yaml(yaml_path)
+        assert "CMIP6.test.dataset2" in loaded[SourceDatasetType.CMIP6].datasets["instance_id"].values
+
+    def test_save_force_overwrites_even_when_unchanged(self, tmp_path):
+        """Test that force=True writes even when hash matches."""
+        df = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.dataset"],
+                "path": ["/path/to/file.nc"],
+            }
+        )
+        collection = DatasetCollection(datasets=df, slug_column="instance_id", selector=())
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        yaml_path = tmp_path / "test.yaml"
+
+        # First write
+        result1 = save_datasets_to_yaml(datasets, yaml_path)
+        assert result1 is True
+
+        # Force write with same data
+        result2 = save_datasets_to_yaml(datasets, yaml_path, force=True)
+        assert result2 is True
+
+    def test_load_ignores_metadata_section(self, tmp_path):
+        """Test that load_datasets_from_yaml ignores _metadata section."""
+        yaml_content = """
+_metadata:
+  hash: abc123
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets:
+    - instance_id: CMIP6.test
+      variable_id: tas
+"""
+        yaml_path = tmp_path / "test.yaml"
+        yaml_path.write_text(yaml_content)
+
+        loaded = load_datasets_from_yaml(yaml_path)
+
+        # Should only have cmip6, not _metadata
+        assert SourceDatasetType.CMIP6 in loaded
+        assert len(list(loaded.keys())) == 1
+
+
+class TestGetCatalogHash:
+    """Tests for get_catalog_hash function."""
+
+    def test_returns_none_for_nonexistent_file(self, tmp_path):
+        """Test returns None when file doesn't exist."""
+        yaml_path = tmp_path / "nonexistent.yaml"
+        result = get_catalog_hash(yaml_path)
+        assert result is None
+
+    def test_returns_none_when_no_metadata(self, tmp_path):
+        """Test returns None when file has no _metadata section."""
+        yaml_content = """
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets: []
+"""
+        yaml_path = tmp_path / "test.yaml"
+        yaml_path.write_text(yaml_content)
+
+        result = get_catalog_hash(yaml_path)
+        assert result is None
+
+    def test_returns_hash_when_present(self, tmp_path):
+        """Test returns hash when _metadata.hash is present."""
+        yaml_content = """
+_metadata:
+  hash: abc123def456
+cmip6:
+  slug_column: instance_id
+  selector: {}
+  datasets: []
+"""
+        yaml_path = tmp_path / "test.yaml"
+        yaml_path.write_text(yaml_content)
+
+        result = get_catalog_hash(yaml_path)
+        assert result == "abc123def456"
+
+    def test_returns_none_for_empty_file(self, tmp_path):
+        """Test returns None for empty YAML file."""
+        yaml_path = tmp_path / "empty.yaml"
+        yaml_path.write_text("")
+
+        result = get_catalog_hash(yaml_path)
+        assert result is None
+
+
+class TestCatalogChangedSinceRegression:
+    """Tests for catalog_changed_since_regression function."""
+
+    def test_returns_true_when_no_regression_exists(self, tmp_path):
+        """Test returns True when regression directory doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_no_catalog_hash_file(self, tmp_path):
+        """Test returns True when catalog hash file doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        # No .catalog_hash file
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_no_catalog_file(self, tmp_path):
+        """Test returns True when catalog file doesn't exist."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("abc123")
+        # No catalog file
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_hash_differs(self, tmp_path):
+        """Test returns True when catalog hash differs from stored hash."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: new_hash_456\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("old_hash_123")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_false_when_hash_matches(self, tmp_path):
+        """Test returns False when catalog hash matches stored hash."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: same_hash_789\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("same_hash_789")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is False
+
+    def test_handles_whitespace_in_stored_hash(self, tmp_path):
+        """Test handles whitespace in stored hash file."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: hash_value\ncmip6:\n  datasets: []\n")
+        paths.regression.mkdir(parents=True)
+        paths.regression_catalog_hash.write_text("  hash_value  \n")
+
+        result = catalog_changed_since_regression(paths)
+        assert result is False
 
 
 class TestTestCasePathsFromDiagnostic:

@@ -145,6 +145,7 @@ class TestCaseRunner:
         diagnostic: Diagnostic,
         test_case_name: str = "default",
         output_dir: Path | None = None,
+        clean: bool = False,
     ) -> ExecutionResult:
         """
         Run a specific test case for a diagnostic.
@@ -157,6 +158,8 @@ class TestCaseRunner:
             Name of the test case to run (default: "default")
         output_dir
             Optional output directory for results
+        clean
+            If True, delete the output directory before running
 
         Returns
         -------
@@ -194,6 +197,9 @@ class TestCaseRunner:
                 / diagnostic.slug
                 / test_case_name
             )
+
+        if clean and output_dir.exists():
+            shutil.rmtree(output_dir)
 
         output_dir.mkdir(parents=True, exist_ok=True)
 

@@ -1,6 +1,47 @@
 import pytest
 
-from climate_ref.cli._utils import parse_facet_filters
+from climate_ref.cli._utils import format_size, parse_facet_filters
+
+
+class TestFormatSize:
+    """Tests for format_size function."""
+
+    @pytest.mark.parametrize(
+        "size_bytes,expected",
+        [
+            (0, "0.0 B"),
+            (1, "1.0 B"),
+            (512, "512.0 B"),
+            (1023, "1023.0 B"),
+            (1024, "1.0 KB"),
+            (1536, "1.5 KB"),
+            (1048576, "1.0 MB"),
+            (1572864, "1.5 MB"),
+            (1073741824, "1.0 GB"),
+            (1610612736, "1.5 GB"),
+            (1099511627776, "1.0 TB"),
+            (1649267441664, "1.5 TB"),
+        ],
+    )
+    def test_format_size_various_values(self, size_bytes, expected):
+        """Test format_size with various byte values."""
+        assert format_size(size_bytes) == expected
+
+    def test_format_size_with_float_input(self):
+        """Test format_size handles float input."""
+        assert format_size(1024.5) == "1.0 KB"
+        assert format_size(1536.0) == "1.5 KB"
+
+    def test_format_size_boundary_values(self):
+        """Test format_size at unit boundaries."""
+        # Just under 1KB
+        assert format_size(1023) == "1023.0 B"
+        # Exactly 1KB
+        assert format_size(1024) == "1.0 KB"
+        # Just under 1MB
+        assert format_size(1048575) == "1024.0 KB"
+        # Exactly 1MB
+        assert format_size(1048576) == "1.0 MB"
 
 
 def test_parse_facet_filters_valid_input():

@@ -1,0 +1,154 @@
+name: Packaging
+
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - "main"
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+  packages: write
+  attestations: write
+  id-token: write
+
+jobs:
+  containers:
+    name: Containers
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: ./.github/actions/build-container
+        with:
+          container-name: climate-ref
+          dockerfile: packages/climate-ref/Dockerfile
+  helm:
+    name: Helm Chart
+    runs-on: ubuntu-latest
+    permissions:
+      packages: write
+    outputs:
+      generated-semver: ${{ steps.semantic-version.outputs.generated-semver }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-python@v5
+    - name: Install jq
+      run: |
+        sudo apt-get install --yes jq
+    - name: Install yq
+      run: |
+        pip install yq
+    - name: Generate SemVer
+      id: semantic-version
+      run: |
+        CHART_VERSION=$(yq -r '.version' helm/Chart.yaml)
+        LOCAL_SEGMENT=+pr-${{ github.event.pull_request.number }}
+        GENERATED_VERSION=${CHART_VERSION}${LOCAL_SEGMENT}
+        yq -Y -i ".version = \"$GENERATED_VERSION\"" helm/Chart.yaml
+        echo "generated-semver=$GENERATED_VERSION" >> $GITHUB_OUTPUT
+    - name: Chart | Push
+      uses: appany/helm-oci-chart-releaser@v0.5.0
+      with:
+        name: ref
+        repository: climate-ref/charts
+        tag: ${{ steps.semantic-version.outputs.generated-semver }}
+        path: helm
+        registry: ghcr.io
+        registry_username: ${{ github.actor }}
+        registry_password: ${{ secrets.GITHUB_TOKEN }}
+        update_dependencies: 'true'
+
+  test:
+    name: Test Helm Deployment
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    needs: [containers, helm]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Cache Sample Data (Restore)
+      id: cache-sample-data-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/cache/ref-config
+        key: ${{ runner.os }}-sample-data
+        enableCrossOsArchive: true
+    - name: Set permissions for cached data
+      run: |
+        sudo install -d --owner=1000 --group=1000 ${GITHUB_WORKSPACE}/cache/ref-config
+    - name: Start minikube
+      uses: medyagh/setup-minikube@latest
+      with:
+        mount-path: '${{ github.workspace }}/cache/ref-config:/cache/ref-config'
+    - name: Set up Helm
+      uses: azure/setup-helm@v4.3.0
+    - name: Install Chart
+      run: |
+        helm install test oci://ghcr.io/climate-ref/charts/ref \
+          --version=${{ needs.helm.outputs.generated-semver }} \
+          --set climate-ref.image.tag=pr-${{ github.event.pull_request.number }} \
+          -f helm/ci/gh-actions-values.yaml
+
+        sleep 60
+        kubectl get pods
+        echo ""
+        kubectl describe pod -l app.kubernetes.io/component=pmp
+        echo ""
+        kubectl logs -l app.kubernetes.io/component=pmp
+    - name: Run Migrations
+      run: |
+        kubectl exec deployment/test-ref-orchestrator -- ref config list
+    - name: Initialize Providers (pmp)
+      run: |
+        # Imports ilamb3 which tries to create /home/app/.config/ilamb3 on import, no way to tell it to live somewhere else
+        kubectl exec deployment/test-ref-pmp -- ref providers create-env --provider pmp
+    - name: Initialize Providers (emsvaltool)
+      run: |
+        kubectl exec deployment/test-ref-esmvaltool -- ref providers create-env --provider esmvaltool
+    - name: Fetch Test Data
+      run: |
+        kubectl exec deployment/test-ref-orchestrator -- ref datasets fetch-data --registry sample-data --output-directory /ref/sample-data
+
+    - name: Cache Sample Data (Save)
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/cache/ref-config
+        key: ${{ runner.os }}-sample-data
+
+    - name: Ingest Test Data (CMIP6)
+      run: |
+        kubectl exec deployment/test-ref-orchestrator -- ref -v datasets ingest --source-type cmip6 /ref/sample-data/CMIP6
+    - name: Ingest Test Data (obs4mips)
+      run: |
+        kubectl exec deployment/test-ref-orchestrator -- ref -v datasets ingest --source-type obs4mips /ref/sample-data/obs4REF
+    - name: Simple Solve
+      run: |
+        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 180 --one-per-provider
+    - name: Capture Worker Logs on Failure
+      if: failure()
+      run: |
+        echo "=== PMP Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=pmp --tail=500 || true
+        echo ""
+        echo "=== ESMValTool Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=esmvaltool --tail=500 || true
+        echo ""
+        echo "=== ILAMB Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=ilamb --tail=500 || true
+        echo ""
+        echo "=== Example Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=example --tail=500 || true
+        echo ""
+        echo "=== Orchestrator Worker Logs ==="
+        kubectl logs -l app.kubernetes.io/component=orchestrator --tail=500 || true
+        echo ""
+        echo "=== Dragonfly Logs ==="
+        kubectl logs -l app.kubernetes.io/name=dragonfly --tail=200 || true

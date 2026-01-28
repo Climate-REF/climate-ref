@@ -1,0 +1,63 @@
+name: Offline Solve Test
+
+on:
+  # Allow manual triggering of this workflow
+  workflow_dispatch:
+  # Run every other day at 3:00am UTC
+  schedule:
+    - cron: '0 3 */2 * *'
+
+permissions:
+  contents: read
+
+jobs:
+  # Test that solve operations work without network access
+  # This is critical for HPC environments where compute nodes don't have internet
+  # Uses Docker with --network none to truly block all network access
+  test-offline-solve:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: ubuntu-latest
+    env:
+      IMAGE: ghcr.io/climate-ref/climate-ref:latest
+    steps:
+      - name: Pull latest container from main
+        run: docker pull $IMAGE
+      - name: Setup with network (fetch data, create envs, ingest)
+        run: |
+          # Create a volume to persist data between setup and offline test
+          docker volume create ref-offline-test
+
+          # Fetch test data
+          docker run --rm \
+            -v ref-offline-test:/ref \
+            $IMAGE \
+            datasets fetch-data --registry sample-data --output-directory /ref/sample-data
+
+          # Create conda environments (requires network)
+          docker run --rm \
+            -v ref-offline-test:/ref \
+            $IMAGE \
+            providers create-env
+
+          # Ingest sample data
+          docker run --rm \
+            -v ref-offline-test:/ref \
+            $IMAGE \
+            datasets ingest --source-type cmip6 /ref/sample-data/CMIP6
+
+          docker run --rm \
+            -v ref-offline-test:/ref \
+            $IMAGE \
+            datasets ingest --source-type obs4mips /ref/sample-data/obs4REF
+      - name: Run solve with no network access
+        run: |
+          # Run solve with --network none to verify no network is needed
+          # This is the actual offline test - if this fails, something needs network
+          docker run --rm \
+            --network none \
+            -v ref-offline-test:/ref \
+            $IMAGE \
+            -v solve --one-per-provider --timeout 300
+      - name: Cleanup
+        if: always()
+        run: docker volume rm ref-offline-test || true

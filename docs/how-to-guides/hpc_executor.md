@@ -12,7 +12,21 @@ You could use HPCExecutor if:
 
 ## Pre-requirements
 
-Since the compute nodes on HPCs generally do not have an external internet connection, please pre-install the conda virtual environments and pre-fetch and pre-ingest all data needed by the REF on the login node before running the REF on compute nodes using HPCExecutor. Also, please clean (delete) everything under `${HOME}/.cache/mamba/proc/`. These files are used by the `micromamba` intalled that were required by ESMValTool and PMP.
+Since compute nodes on HPCs generally do not have internet access, you must prepare everything on the login node before submitting jobs:
+
+```bash
+# Set up all provider environments and fetch required data
+ref providers setup
+
+# Ingest your datasets
+ref datasets ingest --source-type cmip6 /path/to/cmip6/data
+ref datasets ingest --source-type obs4mips /path/to/obs4mips/data
+
+# Clean mamba cache to avoid stale lock files
+rm -rf ${HOME}/.cache/mamba/proc/
+```
+
+The `ref providers setup` command creates conda environments and downloads any reference data that diagnostics need (climatologies, auxiliary files, etc.). This ensures diagnostics can run offline on compute nodes without making network calls.
 
 ## HPCExecutor
 

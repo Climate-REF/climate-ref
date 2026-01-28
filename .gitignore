@@ -150,7 +150,7 @@ dmypy.json
 
 # Generated output
 out
-.ref
+.ref*
 
 # Ignore copied LICENCE/NOTICE files
 packages/*/LICENCE

@@ -855,6 +855,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-mock" },
     { name = "pytest-regressions" },
+    { name = "pytest-socket" },
     { name = "pytest-xdist" },
     { name = "requests" },
     { name = "rich" },
@@ -914,6 +915,7 @@ dev = [
     { name = "pytest-cov", specifier = ">=4.0.0" },
     { name = "pytest-mock", specifier = ">=3.12" },
     { name = "pytest-regressions", specifier = ">=2.5.0" },
+    { name = "pytest-socket", specifier = ">=0.7.0" },
     { name = "pytest-xdist", specifier = ">=3.6.1" },
     { name = "requests", specifier = ">=2.32.3" },
     { name = "rich", specifier = ">=14.0.0" },
@@ -3927,6 +3929,18 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/1a/6f/fa2e2971f502b65cc3a056daf275d5d72ad98615a09da1493397a88dc797/pytest_regressions-2.9.1.tar.gz", hash = "sha256:987ed799560ab0fb3bdd7ad06c904cbee6cbad4a42c4a2a56891a54b24ee6908", size = 115361, upload-time = "2026-01-09T16:48:01.88Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2c/ac/4218ae0f0c775c043e2911d99424cb42e81c83555716c86b7fabae854b0b/pytest_regressions-2.9.1-py3-none-any.whl", hash = "sha256:6cd73913e8c3e1ee623950376f107a47a4c055fe48ca1d9214612373893d232b", size = 25052, upload-time = "2026-01-09T16:48:00.441Z" },
+]
+
+[[package]]
+name = "pytest-socket"
+version = "0.7.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/05/ff/90c7e1e746baf3d62ce864c479fd53410b534818b9437413903596f81580/pytest_socket-0.7.0.tar.gz", hash = "sha256:71ab048cbbcb085c15a4423b73b619a8b35d6a307f46f78ea46be51b1b7e11b3", size = 12389, upload-time = "2024-01-28T20:17:23.177Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/19/58/5d14cb5cb59409e491ebe816c47bf81423cd03098ea92281336320ae5681/pytest_socket-0.7.0-py3-none-any.whl", hash = "sha256:7e0f4642177d55d317bbd58fc68c6bd9048d6eadb2d46a89307fa9221336ce45", size = 6754, upload-time = "2024-01-28T20:17:22.105Z" },
 ]
 
 [[package]]

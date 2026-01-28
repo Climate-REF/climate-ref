@@ -133,11 +133,14 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
       - uses: ./.github/actions/setup
-      - name: Fetch test data (simulates provider setup)
+      - name: Setup provider environments (simulates provider setup)
         run: |
-          # This simulates what `ref providers setup` will do once implemented
-          # Fetch all data that diagnostics need BEFORE running offline tests
+          make virtual-environment
           make fetch-test-data
+          uv run ref datasets fetch-data --registry ilamb --symlink
+          uv run ref datasets fetch-data --registry iomb --symlink
+          uv run ref datasets fetch-data --registry esmvaltool --symlink
+          uv run ref providers create-env
       - name: Run offline solve tests
         run: |
           # Run with --slow to include the one_per_provider test

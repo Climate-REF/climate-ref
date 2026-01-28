@@ -2,12 +2,9 @@
 Integration tests for provider setup functionality.
 """
 
-import socket
-
 import pytest
 
 from climate_ref.provider_registry import ProviderRegistry
-from climate_ref_core.testing import NetworkBlockedError, block_network
 
 
 class TestProviderSetup:
@@ -57,36 +54,3 @@ class TestProviderSetup:
         for provider in provider_registry.providers:
             result = provider.validate_setup(config)
             assert isinstance(result, bool)
-
-
-class TestBlockNetwork:
-    """Tests for the network blocking utility."""
-
-    def test_block_network_blocks_connections(self):
-        """Test that block_network prevents socket connections."""
-        with pytest.raises(NetworkBlockedError):
-            with block_network():
-                socket.socket()
-
-    def test_block_network_restores_after_exit(self):
-        """Test that network is restored after context manager exits."""
-        original_socket = socket.socket
-
-        with block_network():
-            pass
-
-        # Should be restored
-        assert socket.socket is original_socket
-
-    def test_block_network_restores_on_exception(self):
-        """Test that network is restored even when an exception occurs."""
-        original_socket = socket.socket
-
-        try:
-            with block_network():
-                raise ValueError("Test exception")
-        except ValueError:
-            pass
-
-        # Should be restored
-        assert socket.socket is original_socket

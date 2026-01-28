@@ -11,10 +11,7 @@ This module provides:
 from __future__ import annotations
 
 import shutil
-import socket
 import sys
-from collections.abc import Iterator
-from contextlib import contextmanager
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -581,34 +578,6 @@ class RegressionValidator:
         result = self.diagnostic.build_execution_result(definition)
         result.to_output_path("out.log").touch()  # Log file not tracked in regression
         validate_cmec_bundles(self.diagnostic, result)
-
-
-@contextmanager
-def block_network() -> Iterator[None]:
-    """
-    Context manager that blocks all network access.
-
-    Raises NetworkBlockedError if any socket connection is attempted.
-    Use this in tests to verify operations work offline.
-
-    Example
-    -------
-    >>> with block_network():
-    ...     # This will raise NetworkBlockedError
-    ...     requests.get("https://example.com")
-    """
-    _original_socket = socket.socket
-
-    def _blocked_socket(*args: Any, **kwargs: Any) -> Any:
-        raise NetworkBlockedError(
-            "Network access attempted while blocked. Ensure all required data is fetched during setup."
-        )
-
-    socket.socket = _blocked_socket  # type: ignore[assignment,misc]
-    try:
-        yield
-    finally:
-        socket.socket = _original_socket  # type: ignore[misc]
 
 
 def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:

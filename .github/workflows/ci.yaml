@@ -137,9 +137,9 @@ jobs:
         run: |
           make virtual-environment
           make fetch-test-data
-          uv run ref datasets fetch-data --registry ilamb --symlink
-          uv run ref datasets fetch-data --registry iomb --symlink
-          uv run ref datasets fetch-data --registry esmvaltool --symlink
+          # uv run ref datasets fetch-data --registry ilamb --symlink
+          # uv run ref datasets fetch-data --registry iomb --symlink
+          # uv run ref datasets fetch-data --registry esmvaltool --symlink
           uv run ref providers create-env
       - name: Run offline solve tests
         run: |

@@ -133,10 +133,15 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
       - uses: ./.github/actions/setup
+      - name: Fetch test data (simulates provider setup)
+        run: |
+          # This simulates what `ref providers setup` will do once implemented
+          # Fetch all data that diagnostics need BEFORE running offline tests
+          make fetch-test-data
       - name: Run offline solve tests
         run: |
           # Run with --slow to include the one_per_provider test
-          # The CI runs with a clean cache, so this tests true offline capability
+          # Tests verify that solve works without network after data is fetched
           uv run pytest packages/climate-ref/tests/integration/test_offline_solve.py -v --slow
 
   smoke-test:

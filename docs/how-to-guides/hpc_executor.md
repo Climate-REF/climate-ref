@@ -12,7 +12,7 @@ You could use HPCExecutor if:
 
 ## Pre-requirements
 
-Since compute nodes on HPCs generally do not have internet access, you must prepare everything on the login node before submitting jobs:
+Since compute nodes on HPCs may not have internet access, you may want to prepare everything on the login node before submitting jobs:
 
 ```bash
 # Set up all provider environments and fetch required data

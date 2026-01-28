@@ -151,16 +151,15 @@ def setup(
 
         logger.info(f"Setting up provider {provider_.slug}")
         try:
-            if not skip_env:
-                logger.info(f"Setting up environment for {provider_.slug}")
-                provider_.setup_environment(config)
-            if not skip_data:
-                logger.info(f"Fetching data for {provider_.slug}")
-                provider_.fetch_data(config)
-            provider_.post_setup(config)
-            logger.info(f"Finished setting up provider {provider_.slug}")
+            provider_.setup(config, skip_env=skip_env, skip_data=skip_data)
+            is_valid = provider_.validate_setup(config)
+            if not is_valid:
+                logger.error(f"Provider {provider_.slug} setup completed but validation failed")
+                failed_providers.append(provider_.slug)
+            else:
+                logger.info(f"Finished setting up provider {provider_.slug}")
         except Exception as e:
-            logger.error(f"Failed to setup provider {provider_.slug}: {e}")
+            logger.opt(exception=True).error(f"Failed to setup provider {provider_.slug}: {e}")
             failed_providers.append(provider_.slug)
 
     if failed_providers:

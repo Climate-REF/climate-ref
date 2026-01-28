@@ -38,12 +38,6 @@ if TYPE_CHECKING:
     from climate_ref_core.providers import DiagnosticProvider
 
 
-class NetworkBlockedError(Exception):
-    """Raised when network access is attempted while blocked."""
-
-    pass
-
-
 @frozen
 class TestCase:
     """

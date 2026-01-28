@@ -175,7 +175,13 @@ class DiagnosticProvider:
         """
         return self._diagnostics[slug.lower()]
 
-    def setup(self, config: Config) -> None:
+    def setup(
+        self,
+        config: Config,
+        *,
+        skip_env: bool = False,
+        skip_data: bool = False,
+    ) -> None:
         """
         Perform all setup required before offline execution.
 
@@ -188,9 +194,15 @@ class DiagnosticProvider:
         ----------
         config
             The application configuration
+        skip_env
+            If True, skip environment setup (e.g., conda)
+        skip_data
+            If True, skip data fetching
         """
-        self.setup_environment(config)
-        self.fetch_data(config)
+        if not skip_env:
+            self.setup_environment(config)
+        if not skip_data:
+            self.fetch_data(config)
         self.post_setup(config)
 
     def setup_environment(self, config: Config) -> None:

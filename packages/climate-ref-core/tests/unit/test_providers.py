@@ -454,6 +454,51 @@ class TestLifecycleHooks:
         fetch_data.assert_called_once_with(mock_config)
         post_setup.assert_called_once_with(mock_config)
 
+    def test_setup_skip_env(self, mocker):
+        """Test that setup() skips setup_environment when skip_env=True."""
+        provider = DiagnosticProvider("test", "1.0")
+        mock_config = mocker.Mock()
+
+        setup_env = mocker.patch.object(provider, "setup_environment")
+        fetch_data = mocker.patch.object(provider, "fetch_data")
+        post_setup = mocker.patch.object(provider, "post_setup")
+
+        provider.setup(mock_config, skip_env=True)
+
+        setup_env.assert_not_called()
+        fetch_data.assert_called_once_with(mock_config)
+        post_setup.assert_called_once_with(mock_config)
+
+    def test_setup_skip_data(self, mocker):
+        """Test that setup() skips fetch_data when skip_data=True."""
+        provider = DiagnosticProvider("test", "1.0")
+        mock_config = mocker.Mock()
+
+        setup_env = mocker.patch.object(provider, "setup_environment")
+        fetch_data = mocker.patch.object(provider, "fetch_data")
+        post_setup = mocker.patch.object(provider, "post_setup")
+
+        provider.setup(mock_config, skip_data=True)
+
+        setup_env.assert_called_once_with(mock_config)
+        fetch_data.assert_not_called()
+        post_setup.assert_called_once_with(mock_config)
+
+    def test_setup_skip_both(self, mocker):
+        """Test that setup() skips both when both skip flags are True."""
+        provider = DiagnosticProvider("test", "1.0")
+        mock_config = mocker.Mock()
+
+        setup_env = mocker.patch.object(provider, "setup_environment")
+        fetch_data = mocker.patch.object(provider, "fetch_data")
+        post_setup = mocker.patch.object(provider, "post_setup")
+
+        provider.setup(mock_config, skip_env=True, skip_data=True)
+
+        setup_env.assert_not_called()
+        fetch_data.assert_not_called()
+        post_setup.assert_called_once_with(mock_config)
+
     def test_default_hooks_are_noop(self, mocker):
         """Test that default hook implementations do nothing."""
         provider = DiagnosticProvider("test", "1.0")

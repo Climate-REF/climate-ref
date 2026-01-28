@@ -10,7 +10,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager
+from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager, fetch_all_files
 from climate_ref_core.providers import CondaDiagnosticProvider
 from climate_ref_pmp.diagnostics import ENSO, AnnualCycle, ExtratropicalModesOfVariability
 
@@ -37,6 +37,11 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
         if "FI_PROVIDER" not in os.environ:  # pragma: no branch
             logger.debug("Setting env variable 'FI_PROVIDER=tcp'")
             self.env_vars["FI_PROVIDER"] = "tcp"
+
+    def fetch_data(self, config: Config) -> None:
+        """Fetch PMP climatology data."""
+        registry = dataset_registry_manager["pmp-climatology"]
+        fetch_all_files(registry, "pmp-climatology", output_dir=None)
 
 
 provider = PMPDiagnosticProvider("PMP", __version__)

@@ -5,18 +5,35 @@ This module provides a diagnostics provider for ILAMB, a tool for evaluating
 climate models against observations.
 """
 
+from __future__ import annotations
+
 import importlib.metadata
 import importlib.resources
+from typing import TYPE_CHECKING
 
 import yaml
 
-from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager
+from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager, fetch_all_files
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_ilamb.standard import ILAMBStandard
 
+if TYPE_CHECKING:
+    from climate_ref.config import Config
+
 __version__ = importlib.metadata.version("climate-ref-ilamb")
 
-provider = DiagnosticProvider("ILAMB", __version__)
+
+class ILAMBProvider(DiagnosticProvider):
+    """Provider for ILAMB diagnostics."""
+
+    def fetch_data(self, config: Config) -> None:
+        """Fetch ILAMB reference data from all registries."""
+        for name in ("ilamb-test", "ilamb", "iomb"):
+            registry = dataset_registry_manager[name]
+            fetch_all_files(registry, name, output_dir=None)
+
+
+provider = ILAMBProvider("ILAMB", __version__)
 
 # Register some datasets
 dataset_registry_manager.register(

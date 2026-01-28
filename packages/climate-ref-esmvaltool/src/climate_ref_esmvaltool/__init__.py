@@ -2,14 +2,31 @@
 Rapid evaluating CMIP data with ESMValTool.
 """
 
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import climate_ref_esmvaltool.diagnostics
-from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager
+from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager, fetch_all_files
 from climate_ref_core.providers import CondaDiagnosticProvider
 from climate_ref_esmvaltool._version import __version__
 from climate_ref_esmvaltool.recipe import _ESMVALTOOL_COMMIT
 
+if TYPE_CHECKING:
+    from climate_ref.config import Config
+
+
+class ESMValToolProvider(CondaDiagnosticProvider):
+    """Provider for ESMValTool diagnostics."""
+
+    def fetch_data(self, config: Config) -> None:
+        """Fetch ESMValTool reference data."""
+        registry = dataset_registry_manager["esmvaltool"]
+        fetch_all_files(registry, "esmvaltool", output_dir=None)
+
+
 # Initialise the diagnostics manager.
-provider = CondaDiagnosticProvider(
+provider = ESMValToolProvider(
     "ESMValTool",
     __version__,
     repo="https://github.com/ESMValGroup/ESMValTool.git",

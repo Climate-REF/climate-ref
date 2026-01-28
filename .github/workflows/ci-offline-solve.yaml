@@ -19,45 +19,77 @@ jobs:
     runs-on: ubuntu-latest
     env:
       IMAGE: ghcr.io/climate-ref/climate-ref:latest
+      REF_DIR: /tmp/ref-offline-test
     steps:
+      - name: Checkout (for cache key)
+        uses: actions/checkout@v6
+        with:
+          sparse-checkout: |
+            packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements
+            packages/climate-ref-pmp/src/climate_ref_pmp/requirements
+          sparse-checkout-cone-mode: false
+
       - name: Pull latest container from main
         run: docker pull $IMAGE
-      - name: Setup with network (fetch data, create envs, ingest)
-        run: |
-          # Create a volume to persist data between setup and offline test
-          docker volume create ref-offline-test
 
-          # Fetch test data
+      # Cache conda environments
+      - name: Cache conda environments
+        id: cache-conda
+        uses: actions/cache@v5
+        with:
+          path: /tmp/ref-offline-test/software/conda
+          key: offline-conda-${{ hashFiles('packages/*/src/*/requirements/conda-lock.yml') }}
+
+          # Cache test data (~100MB, quick to download but saves time)
+      - name: Cache test data
+        id: cache-data
+        uses: actions/cache@v5
+        with:
+          path: /tmp/ref-offline-test/sample-data
+          key: offline-sample-data-v1
+
+      - name: Create REF directory
+        run: |
+          mkdir -p $REF_DIR
+          # Fix permissions for Docker user (uid 1000)
+          sudo chown -R 1000:1000 $REF_DIR
+
+      - name: Fetch test data
+        if: steps.cache-data.outputs.cache-hit != 'true'
+        run: |
           docker run --rm \
-            -v ref-offline-test:/ref \
+            -v $REF_DIR:/ref \
             $IMAGE \
             datasets fetch-data --registry sample-data --output-directory /ref/sample-data
 
-          # Create conda environments (requires network)
+      - name: Setup provider environments
+        if: steps.cache-conda.outputs.cache-hit != 'true'
+        run: |
+          # Run provider setup (creates conda envs and fetches reference data)
           docker run --rm \
-            -v ref-offline-test:/ref \
+            -v $REF_DIR:/ref \
             $IMAGE \
-            providers create-env
+            providers setup
 
-          # Ingest sample data
+      - name: Ingest sample data
+        run: |
+          # Always re-ingest since DB is not cached
           docker run --rm \
-            -v ref-offline-test:/ref \
+            -v $REF_DIR:/ref \
             $IMAGE \
             datasets ingest --source-type cmip6 /ref/sample-data/CMIP6
 
           docker run --rm \
-            -v ref-offline-test:/ref \
+            -v $REF_DIR:/ref \
             $IMAGE \
             datasets ingest --source-type obs4mips /ref/sample-data/obs4REF
+
       - name: Run solve with no network access
         run: |
           # Run solve with --network none to verify no network is needed
           # This is the actual offline test - if this fails, something needs network
           docker run --rm \
             --network none \
-            -v ref-offline-test:/ref \
+            -v $REF_DIR:/ref \
             $IMAGE \
-            -v solve --one-per-provider --timeout 300
-      - name: Cleanup
-        if: always()
-        run: docker volume rm ref-offline-test || true
+            -v solve --one-per-provider --timeout 3600

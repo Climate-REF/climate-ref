@@ -432,3 +432,86 @@ class TestCondaDiagnosticProvider:
                 text=True,
                 env={"existing_var": "existing_value", "test_var": "test_value"},
             )
+
+
+class TestLifecycleHooks:
+    """Tests for provider lifecycle hooks."""
+
+    def test_setup_calls_hooks_in_order(self, mocker):
+        """Test that setup() calls hooks in the correct order."""
+        provider = DiagnosticProvider("test", "1.0")
+        mock_config = mocker.Mock()
+
+        # Mock all the individual hooks
+        setup_env = mocker.patch.object(provider, "setup_environment")
+        fetch_data = mocker.patch.object(provider, "fetch_data")
+        post_setup = mocker.patch.object(provider, "post_setup")
+
+        provider.setup(mock_config)
+
+        # Verify called in order
+        setup_env.assert_called_once_with(mock_config)
+        fetch_data.assert_called_once_with(mock_config)
+        post_setup.assert_called_once_with(mock_config)
+
+    def test_default_hooks_are_noop(self, mocker):
+        """Test that default hook implementations do nothing."""
+        provider = DiagnosticProvider("test", "1.0")
+        mock_config = mocker.Mock()
+
+        # These should not raise
+        provider.setup_environment(mock_config)
+        provider.fetch_data(mock_config)
+        provider.post_setup(mock_config)
+
+    def test_validate_setup_default_returns_true(self, mocker):
+        """Test that default validate_setup returns True."""
+        provider = DiagnosticProvider("test", "1.0")
+        mock_config = mocker.Mock()
+
+        assert provider.validate_setup(mock_config) is True
+
+    def test_conda_setup_environment_calls_create_env(self, mocker, tmp_path):
+        """Test that CondaDiagnosticProvider.setup_environment calls create_env."""
+        mocker.patch.object(
+            climate_ref_core.providers.os.environ,
+            "copy",
+            return_value={},
+        )
+        provider = CondaDiagnosticProvider("test", "1.0")
+        provider.prefix = tmp_path / "conda"
+        mock_config = mocker.Mock()
+
+        create_env = mocker.patch.object(provider, "create_env")
+
+        provider.setup_environment(mock_config)
+
+        create_env.assert_called_once()
+
+    def test_conda_validate_setup_checks_env_path(self, mocker, tmp_path):
+        """Test that CondaDiagnosticProvider.validate_setup checks env_path exists."""
+        mocker.patch.object(
+            climate_ref_core.providers.os.environ,
+            "copy",
+            return_value={},
+        )
+        provider = CondaDiagnosticProvider("test", "1.0")
+        provider.prefix = tmp_path / "conda"
+        mock_config = mocker.Mock()
+
+        env_path = tmp_path / "conda" / "test-env"
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=env_path,
+        )
+
+        # Should return False when env_path doesn't exist
+        assert provider.validate_setup(mock_config) is False
+
+        # Create the path
+        env_path.mkdir(parents=True)
+
+        # Should return True when env_path exists
+        assert provider.validate_setup(mock_config) is True

@@ -82,3 +82,91 @@ def create_env(
             logger.info(f"Skipping creating {txt} because it does not use conda environments.")
 
     list_(ctx)
+
+
+@app.command()
+def setup(
+    ctx: typer.Context,
+    provider: Annotated[
+        str | None,
+        typer.Option(help="Only run setup for the named provider."),
+    ] = None,
+    skip_env: Annotated[
+        bool,
+        typer.Option(help="Skip environment setup (e.g., conda)."),
+    ] = False,
+    skip_data: Annotated[
+        bool,
+        typer.Option(help="Skip data fetching."),
+    ] = False,
+    validate_only: Annotated[
+        bool,
+        typer.Option(help="Only validate setup, don't run it."),
+    ] = False,
+) -> None:
+    """
+    Run provider setup for offline execution.
+
+    This command prepares all providers for offline execution by:
+    1. Creating conda environments (if applicable)
+    2. Fetching required reference datasets to pooch cache
+
+    All operations are idempotent and safe to run multiple times.
+    Run this on a login node with internet access before solving on compute nodes.
+
+    Examples
+    --------
+        # Setup all providers
+        ref providers setup
+
+        # Setup only ESMValTool provider
+        ref providers setup --provider esmvaltool
+
+        # Only validate, don't run setup
+        ref providers setup --validate-only
+    """
+    config = ctx.obj.config
+    db = ctx.obj.database
+    console = ctx.obj.console
+    providers = ProviderRegistry.build_from_config(config, db).providers
+
+    if provider is not None:
+        available = ", ".join([f'"{p.slug}"' for p in providers])
+        providers = [p for p in providers if p.slug == provider]
+        if not providers:
+            msg = f'Provider "{provider}" not available. Choose from: {available}'
+            logger.error(msg)
+            raise typer.Exit(code=1)
+
+    failed_providers: list[str] = []
+
+    for provider_ in providers:
+        if validate_only:
+            is_valid = provider_.validate_setup(config)
+            status = "[green]valid[/green]" if is_valid else "[red]invalid[/red]"
+            console.print(f"Provider {provider_.slug}: {status}")
+            if not is_valid:
+                failed_providers.append(provider_.slug)
+            continue
+
+        logger.info(f"Setting up provider {provider_.slug}")
+        try:
+            if not skip_env:
+                logger.info(f"Setting up environment for {provider_.slug}")
+                provider_.setup_environment(config)
+            if not skip_data:
+                logger.info(f"Fetching data for {provider_.slug}")
+                provider_.fetch_data(config)
+            provider_.post_setup(config)
+            logger.info(f"Finished setting up provider {provider_.slug}")
+        except Exception as e:
+            logger.error(f"Failed to setup provider {provider_.slug}: {e}")
+            failed_providers.append(provider_.slug)
+
+    if failed_providers:
+        msg = f"Setup failed for providers: {', '.join(failed_providers)}"
+        logger.error(msg)
+        raise typer.Exit(code=1)
+
+    if not validate_only:
+        list_(ctx)

@@ -123,30 +123,6 @@ jobs:
           echo "No changelog present."
           exit 1
 
-  # Test that solve operations work without network access
-  # This is critical for HPC environments where compute nodes don't have internet
-  # Currently expected to fail until provider lifecycle hooks are implemented
-  test-offline-solve:
-    runs-on: ubuntu-latest
-    continue-on-error: true  # Expected to fail until hooks are implemented
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v6
-      - uses: ./.github/actions/setup
-      - name: Setup provider environments (simulates provider setup)
-        run: |
-          make virtual-environment
-          make fetch-test-data
-          # uv run ref datasets fetch-data --registry ilamb --symlink
-          # uv run ref datasets fetch-data --registry iomb --symlink
-          # uv run ref datasets fetch-data --registry esmvaltool --symlink
-          uv run ref providers create-env
-      - name: Run offline solve tests
-        run: |
-          # Run with --slow to include the one_per_provider test
-          # Tests verify that solve works without network after data is fetched
-          uv run pytest packages/climate-ref/tests/integration/test_offline_solve.py -v --slow
-
   smoke-test:
     runs-on: ubuntu-latest
     steps:

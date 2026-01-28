@@ -68,7 +68,6 @@ dev = [
     "celery-types>=0.23.0",
     "types-tqdm>=4.67",
     "pytest-xdist>=3.6.1",
-    "pytest-socket>=0.7.0",
     "types-pyyaml>=6.0.12",
     "mkdocs-typer>=0.0.3",
 ]

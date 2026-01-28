@@ -20,7 +20,7 @@ on:
 jobs:
   bump_version:
     name: "Bump version and create changelog"
-    if: ! startsWith(github.event.head_commit.message, 'bump:')
+    if: "!startsWith(github.event.head_commit.message, 'bump:')"
     runs-on: ubuntu-latest
     env:
       CI_COMMIT_EMAIL: "ci-runner@climate-ref.invalid"

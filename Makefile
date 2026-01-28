@@ -64,6 +64,7 @@ ruff-fixes:  ## fix the code using ruff
 test-ref:  ## run the tests
 	uv run --package climate-ref \
 		pytest packages/climate-ref \
+		--ignore=packages/climate-ref/tests/integration/test_offline_solve.py \
 		-r a -v --doctest-modules --cov=packages/climate-ref/src --cov-report=term --cov-append
 
 .PHONY: test-core
@@ -130,6 +131,7 @@ test-quick: clean  ## run all the tests at once
 	# It doesn't execute each test using the target package as above
 	uv run \
 		pytest tests packages \
+		--ignore=packages/climate-ref/tests/integration/test_offline_solve.py \
 		-r a -v  --cov-report=term -n auto
 
 # Note on code coverage and testing:

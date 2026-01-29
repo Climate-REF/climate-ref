@@ -296,3 +296,19 @@ def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
     assert path == tmp_path / "default_ignore_datasets.yaml"
     assert path.parent.exists()
     assert path.read_text(encoding="utf-8") == ""
+
+
+def test_get_default_ignore_datasets_file_network_error(mocker, tmp_path):
+    """Test that network errors during requests.get() are handled gracefully."""
+    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+    # Simulate network error (e.g., no network access in offline/HPC environment)
+    mocker.patch.object(
+        climate_ref.config.requests,
+        "get",
+        side_effect=requests.exceptions.ConnectionError("Network unreachable"),
+    )
+
+    path = _get_default_ignore_datasets_file()
+    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert path.parent.exists()
+    assert path.read_text(encoding="utf-8") == ""

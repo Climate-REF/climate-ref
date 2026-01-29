@@ -5,8 +5,8 @@
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
 
-This package provides an example implementation of a metrics provider for the Climate REF (Rapid Evaluation Framework).
-It serves as a template and reference for developers who want to create their own metrics providers.
+This package provides an example implementation of a diagnostic provider for the Climate REF (Rapid Evaluation Framework).
+It serves as a template and reference for developers who want to create their own diagnostic providers.
 
 ## Installation
 
@@ -16,33 +16,72 @@ pip install climate-ref-example
 
 ## Features
 
-- Example implementation of a basic metrics provider
-- Simple counter metric demonstration
+- Example implementation of a diagnostic provider
+- Global mean timeseries diagnostic demonstration
 - Complete implementation of all required interfaces
-- Documentation and comments explaining the implementation
+- Test data specification for reproducible testing
 
 ## Usage
 
-```bash
-# Run the example metrics through REF
-ref run-metrics --provider example --input /path/to/data
+Enable the provider in your `ref.toml` configuration:
+
+```toml
+[[diagnostic_providers]]
+provider = "climate_ref_example:provider"
 ```
 
-## Example Metric
+Then run diagnostics:
 
-The package implements a simple counter metric that demonstrates the basic structure of a REF metric:
+```bash
+ref solve --provider example
+```
+
+## Example Diagnostic
+
+The package implements a `GlobalMeanTimeseries` diagnostic that calculates the annual mean global mean timeseries for CMIP6 datasets:
 
 ```python
-from climate_ref_core import BaseProvider, Metric
+from climate_ref_core.providers import DiagnosticProvider
+from climate_ref_core.diagnostics import Diagnostic, DataRequirement, ExecutionDefinition, ExecutionResult
+from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 
-class ExampleProvider(BaseProvider):
-    def get_metrics(self):
-        return [ExampleMetric()]
+class GlobalMeanTimeseries(Diagnostic):
+    """Calculate the annual mean global mean timeseries for a dataset."""
 
-class ExampleMetric(Metric):
-    def calculate(self, data):
-        return len(data)
+    name = "Global Mean Timeseries"
+    slug = "global-mean-timeseries"
+
+    data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
+            group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
+        ),
+    )
+    facets = ("source_id", "variable_id", "experiment_id", "variant_label", "region", "metric", "statistic")
+
+    def execute(self, definition: ExecutionDefinition) -> None:
+        # Perform the diagnostic calculation
+        ...
+
+    def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:
+        # Build and return the execution result
+        ...
+
+# Register diagnostics with a provider
+provider = DiagnosticProvider("Example", __version__)
+provider.register(GlobalMeanTimeseries())
 ```
+
+## Creating Your Own Provider
+
+Use this package as a template:
+
+```bash
+cp -r packages/climate-ref-example packages/climate-ref-myprovider
+```
+
+See the [Adding Custom Diagnostics](https://climate-ref.readthedocs.io/en/latest/how-to-guides/adding_custom_diagnostics/) guide for detailed instructions.
 
 ## Documentation
 
@@ -50,7 +89,7 @@ For detailed documentation, please visit [https://climate-ref.readthedocs.io/](h
 
 ## Contributing
 
-Contributions are welcome! Please see the main project's [Contributing Guide](https://climate-ref.readthedocs.io/en/latest/contributing/) for more information.
+Contributions are welcome! Please see the main project's [Contributing Guide](https://climate-ref.readthedocs.io/en/latest/development/) for more information.
 
 ## License
 

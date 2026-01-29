@@ -132,18 +132,26 @@ ref config list
 Your configuration should be displayed without errors and should include any changes you made in the `ref.toml` file.
 
 
-## 6. Create Provider-specific conda environments
+## 6. Set up diagnostic providers
 
-Some diagnostic providers require specific conda environments to be created before they can be used.
-This should happen before you run any diagnostics to avoid multiple installations of the same environment.
-By default, these conda environments will be installed in the `$REF_CONFIGURATION/software` directory,
-but the location can be changed in the configuration file using the [paths.software](../configuration.md#paths_software).
-
-You can create these environments using the following command:
+Diagnostic providers may need additional setup before they can be used,
+such as creating conda environments or downloading reference data.
+Run the following command to prepare all providers:
 
 ```bash
-ref providers create-env
+ref providers setup
 ```
+
+This creates any required conda environments (installed in `$REF_CONFIGURATION/software` by default,
+configurable via [paths.software](../configuration.md#paths_software)) and downloads reference data to the local cache.
+
+/// admonition | HPC users
+    type: tip
+
+If you're on an HPC system where compute nodes lack internet access,
+run this command on a login node before submitting jobs.
+
+///
 
 ## Next steps
 

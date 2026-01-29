@@ -185,8 +185,8 @@ class DiagnosticProvider:
         """
         Perform all setup required before offline execution.
 
-        This is a convenience method that calls all other lifecycle hooks
-        in the correct order. Override individual hooks for fine-grained control.
+        This calls setup_environment and fetch_data in the correct order.
+        Override individual hooks for fine-grained control.
 
         This method MUST be idempotent - safe to call multiple times.
 
@@ -203,7 +203,6 @@ class DiagnosticProvider:
             self.setup_environment(config)
         if not skip_data:
             self.fetch_data(config)
-        self.post_setup(config)
 
     def setup_environment(self, config: Config) -> None:
         """
@@ -245,24 +244,6 @@ class DiagnosticProvider:
         """
         pass
 
-    def post_setup(self, config: Config) -> None:
-        """
-        Perform any post-setup tasks.
-
-        Called after environment setup and data fetching.
-        Use for tasks that depend on both being complete.
-
-        Default implementation does nothing.
-
-        This method MUST be idempotent.
-
-        Parameters
-        ----------
-        config
-            The application configuration
-        """
-        pass
-
     def validate_setup(self, config: Config) -> bool:
         """
         Validate that the provider is ready for offline execution.
@@ -281,6 +262,17 @@ class DiagnosticProvider:
             True if setup is valid and complete
         """
         return True
+
+    def get_data_path(self) -> Path | None:
+        """
+        Get the path where this provider's data is cached.
+
+        Returns
+        -------
+        Path | None
+            The data cache path, or None if the provider doesn't use cached data.
+        """
+        return None
 
 
 def import_provider(fqn: str) -> DiagnosticProvider:
@@ -619,4 +611,13 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
 
     def validate_setup(self, config: Config) -> bool:
         """Validate conda environment exists."""
-        return self.env_path.exists()
+        env_exists = self.env_path.exists()
+        if not env_exists:
+            logger.error(
+                f"Conda environment for {self.slug} is not available at {self.env_path}. "
+                f"Please run `ref providers setup --provider {self.slug}` to install it."
+            )
+
+        # TODO: Could add more validation here (e.g., check packages installed)
+
+        return env_exists

@@ -2,6 +2,7 @@
 Manage the REF providers.
 """
 
+import warnings
 from typing import Annotated
 
 import pandas as pd
@@ -33,12 +34,23 @@ def list_(ctx: typer.Context) -> None:
                 env += " (not installed)"
         return env
 
+    def get_data_path(provider: DiagnosticProvider) -> str:
+        """Get the data cache path for a provider."""
+        data_path = provider.get_data_path()
+        if data_path is None:
+            return ""
+        path_str = str(data_path)
+        if not data_path.exists():
+            path_str += " (not fetched)"
+        return path_str
+
     results_df = pd.DataFrame(
         [
             {
                 "provider": provider.slug,
                 "version": provider.version,
                 "conda environment": get_env(provider),
+                "data path": get_data_path(provider),
             }
             for provider in provider_registry.providers
         ]
@@ -46,7 +58,7 @@ def list_(ctx: typer.Context) -> None:
     pretty_print_df(results_df, console=console)
 
 
-@app.command()
+@app.command(deprecated=True)
 def create_env(
     ctx: typer.Context,
     provider: Annotated[
@@ -57,9 +69,18 @@ def create_env(
     """
     Create a conda environment containing the provider software.
 
+    .. deprecated::
+        Use `ref providers setup` instead, which handles both environment creation
+        and data fetching in a single command.
+
     If no provider is specified, all providers will be installed.
     If the provider is up to date or does not use a conda environment, it will be skipped.
     """
+    warnings.warn(
+        "create-env is deprecated. Use 'ref providers setup' instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     config = ctx.obj.config
     db = ctx.obj.database
     providers = ProviderRegistry.build_from_config(config, db).providers
@@ -108,22 +129,13 @@ def setup(
     Run provider setup for offline execution.
 
     This command prepares all providers for offline execution by:
+
     1. Creating conda environments (if applicable)
+
     2. Fetching required reference datasets to pooch cache
 
     All operations are idempotent and safe to run multiple times.
     Run this on a login node with internet access before solving on compute nodes.
-
-    Examples
-    --------
-        # Setup all providers
-        ref providers setup
-
-        # Setup only ESMValTool provider
-        ref providers setup --provider esmvaltool
-
-        # Only validate, don't run setup
-        ref providers setup --validate-only
     """
     config = ctx.obj.config
     db = ctx.obj.database

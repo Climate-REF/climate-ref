@@ -1,66 +1,66 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20251001_073402/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_163843/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20251001_073402/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_163843/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20251001_073402/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "filename": "executions/recipe_20251001_073402/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+    "executions/recipe_20260130_163843/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "filename": "executions/recipe_20260130_163843/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
       "long_name": "Time series of NH September/SH February sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20251001_073402/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "filename": "executions/recipe_20251001_073402/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+    "executions/recipe_20260130_163843/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "filename": "executions/recipe_20260130_163843/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
       "long_name": "Time series of NH September/SH February sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20251001_073402/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "filename": "executions/recipe_20251001_073402/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+    "executions/recipe_20260130_163843/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "filename": "executions/recipe_20260130_163843/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
       "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20251001_073402/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
-      "filename": "executions/recipe_20251001_073402/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+    "executions/recipe_20260130_163843/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "filename": "executions/recipe_20260130_163843/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
       "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     }
   },
   "plots": {
-    "executions/recipe_20251001_073402/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "filename": "executions/recipe_20251001_073402/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+    "executions/recipe_20260130_163843/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "filename": "executions/recipe_20260130_163843/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
       "long_name": "Time series of NH September/SH February sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20251001_073402/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "filename": "executions/recipe_20251001_073402/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+    "executions/recipe_20260130_163843/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "filename": "executions/recipe_20260130_163843/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
       "long_name": "Time series of NH September/SH February sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20251001_073402/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "filename": "executions/recipe_20251001_073402/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+    "executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "filename": "executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
       "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20251001_073402/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
-      "filename": "executions/recipe_20251001_073402/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+    "executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "filename": "executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
       "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.",
       "description": "",
       "dimensions": null
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20251001_073402/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20251001_073402/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_163843/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_163843/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

@@ -1,0 +1,116 @@
+INFO    [2304041] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2304041] Package versions
+INFO    [2304041] ----------------
+INFO    [2304041] ESMValCore: 2.13.0
+INFO    [2304041] ESMValTool: 2.13.0
+INFO    [2304041] ----------------
+INFO    [2304041] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2304041] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_162325/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162325/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162325/run/cmor_log.txt
+INFO    [2304041] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:23:26 UTC
+INFO    [2304041] ----------------------------------------------------------------------
+INFO    [2304041] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2304041] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_162325/run
+INFO    [2304041] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162325/work
+INFO    [2304041] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_162325/preproc
+INFO    [2304041] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162325/plots
+INFO    [2304041] ----------------------------------------------------------------------
+INFO    [2304041] Running tasks using at most 10 processes
+INFO    [2304041] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2304041] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2304041] Creating tasks from recipe
+INFO    [2304041] Creating tasks for diagnostic plot_joint_cli_ta_model
+INFO    [2304041] Creating diagnostic task plot_joint_cli_ta_model/plot
+INFO    [2304041] Creating preprocessor task plot_joint_cli_ta_model/cli
+INFO    [2304041] Creating preprocessor 'common_grid_levels_cli' task for variable 'cli'
+INFO    [2304041] Found input files for Dataset: cli, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn, v20190308
+INFO    [2304041] PreprocessingTask plot_joint_cli_ta_model/cli created.
+INFO    [2304041] Creating preprocessor task plot_joint_cli_ta_model/ta
+INFO    [2304041] Creating preprocessor 'common_grid_levels_ta' task for variable 'ta'
+INFO    [2304041] Found input files for Dataset: ta, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn, v20190308
+INFO    [2304041] PreprocessingTask plot_joint_cli_ta_model/ta created.
+INFO    [2304041] These tasks will be executed: plot_joint_cli_ta_model/plot, plot_joint_cli_ta_model/ta, plot_joint_cli_ta_model/cli
+INFO    [2304041] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162325/run/recipe_filled.yml
+INFO    [2304041] Using Dask distributed scheduler (address: tcp://127.0.0.1:42135, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2304041] Running 3 tasks using 3 processes
+INFO    [2304120] Starting task plot_joint_cli_ta_model/cli in process [2304120]
+INFO    [2304122] Starting task plot_joint_cli_ta_model/ta in process [2304122]
+INFO    [2304041] Progress: 2 tasks running, 1 tasks waiting for ancestors, 0/3 done
+WARNING [2304120] Found variable cli in CMIP6:CESM2, but there were other present in the file. Those extra variables are usually metadata (cell area, latitude descriptions) that was not saved according to CF-conventions. It is possible that errors appear further on because of this.
+Full list of cubes encountered: 0: mass_fraction_of_cloud_ice_in_air / (kg kg-1) (time: 228; atmosphere_hybrid_sigma_pressure_coordinate: 32; latitude: 19; longitude: 36)
+1: surface_air_pressure / (Pa)         (time: 228; latitude: 19; longitude: 36)
+INFO    [2304122] Computing and saving data for preprocessing task plot_joint_cli_ta_model/ta
+INFO    [2304122] plot_joint_cli_ta_model/ta    [###################################     ] |  89% Completed | 10.03 s
+INFO    [2304122] plot_joint_cli_ta_model/ta    [########################################] | 100% Completed | 11.03 s
+INFO    [2304120] Computing and saving data for preprocessing task plot_joint_cli_ta_model/cli
+INFO    [2304122] Successfully completed task plot_joint_cli_ta_model/ta (priority 2) in 0:00:12.245198
+INFO    [2304041] Progress: 1 tasks running, 1 tasks waiting for ancestors, 1/3 done
+INFO    [2304120] plot_joint_cli_ta_model/cli   [################################        ] |  82% Completed | 10.02 s
+INFO    [2304120] plot_joint_cli_ta_model/cli   [########################################] | 100% Completed | 13.02 s
+INFO    [2304120] Successfully completed task plot_joint_cli_ta_model/cli (priority 1) in 0:00:25.271356
+INFO    [2304041] Progress: 0 tasks running, 1 tasks waiting for ancestors, 2/3 done
+INFO    [2304124] Starting task plot_joint_cli_ta_model/plot in process [2304124]
+INFO    [2304124] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20260130_162325/run/plot_joint_cli_ta_model/plot/settings.yml']
+INFO    [2304124] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162325/work/plot_joint_cli_ta_model/plot
+INFO    [2304124] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162325/plots/plot_joint_cli_ta_model/plot
+INFO    [2304124] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162325/run/plot_joint_cli_ta_model/plot/log.txt
+INFO    [2304124] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162325/run/plot_joint_cli_ta_model/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20260130_162325/run/plot_joint_cli_ta_model/plot/settings.yml
+INFO    [2304041] Progress: 1 tasks running, 0 tasks waiting for ancestors, 2/3 done
+INFO    [2304124] Maximum memory used (estimate): 0.4 GB
+INFO    [2304124] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2304124] Successfully completed task plot_joint_cli_ta_model/plot (priority 0) in 0:00:12.750372
+INFO    [2304041] Progress: 0 tasks running, 0 tasks waiting for ancestors, 3/3 done
+INFO    [2304041] Successfully completed all tasks.
+INFO    [2304041] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162325/run/recipe_filled.yml
+INFO    [2304041] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162325/index.html
+INFO    [2304041] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_162325
+Then visit http://localhost:31415 in your browser
+INFO    [2304041] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2304041] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:24:08 UTC
+INFO    [2304041] Time for running the recipe was: 0:00:42.157273
+INFO    [2304041] Maximum memory used (estimate): 5.4 GB
+INFO    [2304041] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2304041] Removing `preproc` directory containing preprocessed data
+INFO    [2304041] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [2304041] Run was successful

@@ -1,0 +1,32 @@
+seaborn_func: barplot
+reset_index: true
+write_netcdf: true
+seaborn_kwargs:
+  x: shape_id
+  y: ua
+  hue: dataset
+add_aux_coords: true
+facets_as_columns:
+- dataset
+plot_object_methods:
+  set_xlabel: region
+  set_ylabel: ua trend [m s-1 yr-1]
+seaborn_settings:
+  style: ticks
+  rc:
+    figure.figsize:
+    - 28
+    - 6
+suptitle: Trend in Zonal Wind at 200 hPa
+recipe: recipe.yml
+version: 2.13.0
+script: plot
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/run/ua200_trends/plot
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/ua200_trends/plot
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/work/ua200_trends/plot
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+scheduler_address: tcp://127.0.0.1:43545
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/metadata.yml

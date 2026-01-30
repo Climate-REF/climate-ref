@@ -1,0 +1,80 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot_gwl_stats with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+gwls:
+- 1.5
+- 2.0
+- 3.0
+- 4.0
+- 5.0
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/gwl_mean_plots_tas/tas/CMIP6_ACCESS-ESM1-5_Amon_ssp126-historical_r1i1p1f1_tas_gn_2000-2100.nc
+  : activity:
+    - ScenarioMIP
+    - CMIP
+    alias: ACCESS-ESM1-5
+    dataset: ACCESS-ESM1-5
+    diagnostic: gwl_mean_plots_tas
+    end_year: 2100
+    ensemble: r1i1p1f1
+    exp: ssp126-historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/gwl_mean_plots_tas/tas/CMIP6_ACCESS-ESM1-5_Amon_ssp126-historical_r1i1p1f1_tas_gn_2000-2100.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: multi_model_gwl_stats
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 2000
+    timerange: 2000/2100
+    units: K
+    variable_group: tas
+    version:
+    - v20191115
+    - v20210318
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162125/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+- <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/gwl_mean_plots_tas/tas/metadata.yml
+log_level: info
+output_file_type: png
+pattern: GWL_exceedance_years.csv
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/plots/gwl_mean_plots_tas/plot_gwl_stats
+quickplot:
+  cmap_mean: RdBu_r
+  cmap_stdev: YlOrRd
+  mean_level_params:
+  - -60.0
+  - 55.0
+  - 5.0
+  plot_type: map
+  stdev_level_params:
+  - 0.0
+  - 11.0
+  - 1.0
+  title_var: Temperature
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/run/gwl_mean_plots_tas/plot_gwl_stats
+scheduler_address: tcp://127.0.0.1:42497
+script: plot_gwl_stats
+version: 2.13.0
+window_size: 21
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/work/gwl_mean_plots_tas/plot_gwl_stats
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162125/work/gwl_mean_plots_tas/plot_gwl_stats
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162125/plots/gwl_mean_plots_tas/plot_gwl_stats
+INFO:plot_gwl_exceedance_mm_stats:GWL exceedance years file is <OUTPUT_DIR>/executions/recipe_20260130_162125/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv
+INFO:plot_gwl_exceedance_mm_stats:List of Projects: ['CMIP6']
+INFO:plot_gwl_exceedance_mm_stats:Calculating means and standard deviations for GWL: 1.5
+INFO:plot_gwl_exceedance_mm_stats:Cube var name is tas
+INFO:plot_gwl_exceedance_mm_stats:Model: ACCESS-ESM1-5, Exp : ssp126-historical start year: 2021, endyear: 2041
+INFO:plot_gwl_exceedance_mm_stats:No standard deviation calculated for a single instance.
+INFO:plot_gwl_exceedance_mm_stats:Calculating means and standard deviations for GWL: 2.0
+INFO:plot_gwl_exceedance_mm_stats:Cube var name is tas
+INFO:plot_gwl_exceedance_mm_stats:Model: ACCESS-ESM1-5, Exp : ssp126-historical start year: 2064, endyear: 2084
+INFO:plot_gwl_exceedance_mm_stats:No standard deviation calculated for a single instance.
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

@@ -1,42 +1,42 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250917_081843/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162200/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250917_081843/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162200/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250917_081843/work/fire_evaluation/fire_evaluation/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_vpd_gn_2013-2014.nc": {
-      "filename": "executions/recipe_20250917_081843/work/fire_evaluation/fire_evaluation/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_vpd_gn_2013-2014.nc",
+    "executions/recipe_20260130_162200/work/fire_evaluation/fire_evaluation/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_vpd_gn_2013-2014.nc": {
+      "filename": "executions/recipe_20260130_162200/work/fire_evaluation/fire_evaluation/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_vpd_gn_2013-2014.nc",
       "long_name": "",
       "description": "",
       "dimensions": null
     }
   },
   "plots": {
-    "executions/recipe_20250917_081843/plots/fire_evaluation/fire_evaluation/burnt_fraction_ACCESS-ESM1-5_historical_2013_2014.png": {
-      "filename": "executions/recipe_20250917_081843/plots/fire_evaluation/fire_evaluation/burnt_fraction_ACCESS-ESM1-5_historical_2013_2014.png",
+    "executions/recipe_20260130_162200/plots/fire_evaluation/fire_evaluation/burnt_fraction_ACCESS-ESM1-5_historical_2013_2014.png": {
+      "filename": "executions/recipe_20260130_162200/plots/fire_evaluation/fire_evaluation/burnt_fraction_ACCESS-ESM1-5_historical_2013_2014.png",
       "long_name": "Burnt area fraction for the ACCESS-ESM1-5 (CMIP6-historical) for the time period 2013/2014 as computed with the ConFire model (Jones et al., 2024).",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_081843/plots/fire_evaluation/fire_evaluation/fire_weather_control_ACCESS-ESM1-5_historical_2013_2014.png": {
-      "filename": "executions/recipe_20250917_081843/plots/fire_evaluation/fire_evaluation/fire_weather_control_ACCESS-ESM1-5_historical_2013_2014.png",
+    "executions/recipe_20260130_162200/plots/fire_evaluation/fire_evaluation/fire_weather_control_ACCESS-ESM1-5_historical_2013_2014.png": {
+      "filename": "executions/recipe_20260130_162200/plots/fire_evaluation/fire_evaluation/fire_weather_control_ACCESS-ESM1-5_historical_2013_2014.png",
       "long_name": "Fire weather control for the ACCESS-ESM1-5 (CMIP6-historical) for the time period 2013/2014 as computed with the ConFire model (Jones et al., 2024).",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_081843/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_ACCESS-ESM1-5_historical_2013_2014.png": {
-      "filename": "executions/recipe_20250917_081843/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_ACCESS-ESM1-5_historical_2013_2014.png",
+    "executions/recipe_20260130_162200/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_ACCESS-ESM1-5_historical_2013_2014.png": {
+      "filename": "executions/recipe_20260130_162200/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_ACCESS-ESM1-5_historical_2013_2014.png",
       "long_name": "Fuel load continuity control for the ACCESS-ESM1-5 (CMIP6-historical) for the time period 2013/2014 as computed with the ConFire model (Jones et al., 2024).",
       "description": "",
       "dimensions": null
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250917_081843/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250917_081843/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162200/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162200/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

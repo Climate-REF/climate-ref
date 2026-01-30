@@ -1,0 +1,30 @@
+? <OUTPUT_DIR>/executions/recipe_20260130_162750/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+  authors:
+  - andela_bouwe
+  - righi_mattia
+  caption: Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.
+  domains:
+  - global
+  plot_types:
+  - zonal
+  references:
+  - acknow_project
+  statistics:
+  - mean
+? <OUTPUT_DIR>/executions/recipe_20260130_162750/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+  authors:
+  - andela_bouwe
+  - righi_mattia
+  caption: Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.
+  domains:
+  - global
+  plot_types:
+  - zonal
+  references:
+  - acknow_project
+  statistics:
+  - mean

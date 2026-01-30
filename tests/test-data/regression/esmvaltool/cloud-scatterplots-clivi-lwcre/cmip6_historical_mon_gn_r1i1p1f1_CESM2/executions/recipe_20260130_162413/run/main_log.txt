@@ -1,0 +1,111 @@
+INFO    [2304462] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2304462] Package versions
+INFO    [2304462] ----------------
+INFO    [2304462] ESMValCore: 2.13.0
+INFO    [2304462] ESMValTool: 2.13.0
+INFO    [2304462] ----------------
+INFO    [2304462] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2304462] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_162413/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162413/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162413/run/cmor_log.txt
+INFO    [2304462] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:24:13 UTC
+INFO    [2304462] ----------------------------------------------------------------------
+INFO    [2304462] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2304462] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_162413/run
+INFO    [2304462] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162413/work
+INFO    [2304462] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc
+INFO    [2304462] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162413/plots
+INFO    [2304462] ----------------------------------------------------------------------
+INFO    [2304462] Running tasks using at most 10 processes
+INFO    [2304462] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2304462] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2304462] Creating tasks from recipe
+INFO    [2304462] Creating tasks for diagnostic plot_joint_clivi_lwcre_model
+INFO    [2304462] Creating diagnostic task plot_joint_clivi_lwcre_model/plot
+INFO    [2304462] Creating preprocessor task plot_joint_clivi_lwcre_model/clivi
+INFO    [2304462] Creating preprocessor 'common_grid_clivi_clwvi' task for variable 'clivi'
+INFO    [2304462] Found input files for Dataset: clivi, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn, v20190308
+INFO    [2304462] PreprocessingTask plot_joint_clivi_lwcre_model/clivi created.
+INFO    [2304462] Creating preprocessor task plot_joint_clivi_lwcre_model/lwcre
+INFO    [2304462] Creating preprocessor 'common_grid_lwcre' task for variable 'lwcre'
+INFO    [2304462] Found input files for Dataset: lwcre, Amon, CMIP6, CESM2, CMIP, historical, r1i1p1f1, gn, v20190308
+INFO    [2304462] PreprocessingTask plot_joint_clivi_lwcre_model/lwcre created.
+INFO    [2304462] These tasks will be executed: plot_joint_clivi_lwcre_model/plot, plot_joint_clivi_lwcre_model/lwcre, plot_joint_clivi_lwcre_model/clivi
+INFO    [2304462] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162413/run/recipe_filled.yml
+INFO    [2304462] Using Dask distributed scheduler (address: tcp://127.0.0.1:46667, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2304462] Running 3 tasks using 3 processes
+INFO    [2304544] Starting task plot_joint_clivi_lwcre_model/lwcre in process [2304544]
+INFO    [2304542] Starting task plot_joint_clivi_lwcre_model/clivi in process [2304542]
+INFO    [2304462] Progress: 2 tasks running, 1 tasks waiting for ancestors, 0/3 done
+INFO    [2304542] Computing and saving data for preprocessing task plot_joint_clivi_lwcre_model/clivi
+INFO    [2304542] plot_joint_clivi_lwcre_model/clivi [########################################] | 100% Completed | 1.01 s
+INFO    [2304544] Computing and saving data for preprocessing task plot_joint_clivi_lwcre_model/lwcre
+INFO    [2304542] Successfully completed task plot_joint_clivi_lwcre_model/clivi (priority 1) in 0:00:02.229800
+INFO    [2304462] Progress: 1 tasks running, 1 tasks waiting for ancestors, 1/3 done
+INFO    [2304544] plot_joint_clivi_lwcre_model/lwcre [########################################] | 100% Completed | 1.02 s
+INFO    [2304544] Successfully completed task plot_joint_clivi_lwcre_model/lwcre (priority 2) in 0:00:03.255251
+INFO    [2304462] Progress: 0 tasks running, 1 tasks waiting for ancestors, 2/3 done
+INFO    [2304546] Starting task plot_joint_clivi_lwcre_model/plot in process [2304546]
+INFO    [2304546] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20260130_162413/run/plot_joint_clivi_lwcre_model/plot/settings.yml']
+INFO    [2304546] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot
+INFO    [2304546] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162413/plots/plot_joint_clivi_lwcre_model/plot
+INFO    [2304546] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162413/run/plot_joint_clivi_lwcre_model/plot/log.txt
+INFO    [2304546] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162413/run/plot_joint_clivi_lwcre_model/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20260130_162413/run/plot_joint_clivi_lwcre_model/plot/settings.yml
+INFO    [2304462] Progress: 1 tasks running, 0 tasks waiting for ancestors, 2/3 done
+INFO    [2304546] Maximum memory used (estimate): 0.4 GB
+INFO    [2304546] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2304546] Successfully completed task plot_joint_clivi_lwcre_model/plot (priority 0) in 0:00:05.425192
+INFO    [2304462] Progress: 0 tasks running, 0 tasks waiting for ancestors, 3/3 done
+INFO    [2304462] Successfully completed all tasks.
+INFO    [2304462] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162413/run/recipe_filled.yml
+INFO    [2304462] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162413/index.html
+INFO    [2304462] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_162413
+Then visit http://localhost:31415 in your browser
+INFO    [2304462] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2304462] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:24:26 UTC
+INFO    [2304462] Time for running the recipe was: 0:00:12.945107
+INFO    [2304462] Maximum memory used (estimate): 2.9 GB
+INFO    [2304462] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2304462] Removing `preproc` directory containing preprocessed data
+INFO    [2304462] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [2304462] Run was successful

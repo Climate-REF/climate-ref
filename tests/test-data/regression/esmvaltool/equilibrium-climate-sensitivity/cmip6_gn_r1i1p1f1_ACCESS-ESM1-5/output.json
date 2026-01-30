@@ -1,42 +1,42 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250922_114815/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162732/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250922_114815/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162732/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250922_114815/work/ecs/calculate/ecs.nc": {
-      "filename": "executions/recipe_20250922_114815/work/ecs/calculate/ecs.nc",
+    "executions/recipe_20260130_162732/work/ecs/calculate/ecs.nc": {
+      "filename": "executions/recipe_20260130_162732/work/ecs/calculate/ecs.nc",
       "long_name": "Equilibrium Climate Sensitivity (Gregory method) for multiple climate models.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250922_114815/work/ecs/calculate/ecs_regression_ACCESS-ESM1-5.nc": {
-      "filename": "executions/recipe_20250922_114815/work/ecs/calculate/ecs_regression_ACCESS-ESM1-5.nc",
+    "executions/recipe_20260130_162732/work/ecs/calculate/ecs_regression_ACCESS-ESM1-5.nc": {
+      "filename": "executions/recipe_20260130_162732/work/ecs/calculate/ecs_regression_ACCESS-ESM1-5.nc",
       "long_name": "Global annual mean top of the atmosphere (TOA) net radiation flux anomaly N vs. global annual mean near-surface air temperature anomaly ΔT for 25 years (blue circles) of the abrupt 4x CO2 experiment for model ACCESS-ESM1-5 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The solid black line corresponds to an ordinary linear regression between N and ΔT. On the top left, R2 corresponds to the coefficient of determination of the linear regression. The equilibrium climate sensitivity (ECS) is estimated as the x-intercept of the linear regression (interception of the solid and dashed black lines) divided by 2.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250922_114815/work/ecs/calculate/lambda.nc": {
-      "filename": "executions/recipe_20250922_114815/work/ecs/calculate/lambda.nc",
+    "executions/recipe_20260130_162732/work/ecs/calculate/lambda.nc": {
+      "filename": "executions/recipe_20260130_162732/work/ecs/calculate/lambda.nc",
       "long_name": "Climate Feedback Parameter for multiple climate models.",
       "description": "",
       "dimensions": null
     }
   },
   "plots": {
-    "executions/recipe_20250922_114815/plots/ecs/calculate/ACCESS-ESM1-5.png": {
-      "filename": "executions/recipe_20250922_114815/plots/ecs/calculate/ACCESS-ESM1-5.png",
+    "executions/recipe_20260130_162732/plots/ecs/calculate/ACCESS-ESM1-5.png": {
+      "filename": "executions/recipe_20260130_162732/plots/ecs/calculate/ACCESS-ESM1-5.png",
       "long_name": "Global annual mean top of the atmosphere (TOA) net radiation flux anomaly N vs. global annual mean near-surface air temperature anomaly ΔT for 25 years (blue circles) of the abrupt 4x CO2 experiment for model ACCESS-ESM1-5 (ensemble member r1i1p1f1). Anomalies are calculated relative to a pre-industrial control simulation of the same model. The solid black line corresponds to an ordinary linear regression between N and ΔT. On the top left, R2 corresponds to the coefficient of determination of the linear regression. The equilibrium climate sensitivity (ECS) is estimated as the x-intercept of the linear regression (interception of the solid and dashed black lines) divided by 2.",
       "description": "",
       "dimensions": null
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250922_114815/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250922_114815/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162732/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162732/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

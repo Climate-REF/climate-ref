@@ -1,42 +1,42 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250917_082226/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162450/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250917_082226/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162450/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250917_082226/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_histogram.nc": {
-      "filename": "executions/recipe_20250917_082226/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_histogram.nc",
+    "executions/recipe_20260130_162450/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_histogram.nc": {
+      "filename": "executions/recipe_20260130_162450/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_histogram.nc",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082226/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_pr_histogram.nc": {
-      "filename": "executions/recipe_20250917_082226/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_pr_histogram.nc",
+    "executions/recipe_20260130_162450/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_pr_histogram.nc": {
+      "filename": "executions/recipe_20260130_162450/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clwvi_pr_histogram.nc",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082226/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_pr_histogram.nc": {
-      "filename": "executions/recipe_20250917_082226/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_pr_histogram.nc",
+    "executions/recipe_20260130_162450/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_pr_histogram.nc": {
+      "filename": "executions/recipe_20260130_162450/work/plot_joint_clwvi_pr_model/plot/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_pr_histogram.nc",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     }
   },
   "plots": {
-    "executions/recipe_20250917_082226/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
-      "filename": "executions/recipe_20250917_082226/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
+    "executions/recipe_20260130_162450/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
+      "filename": "executions/recipe_20260130_162450/plots/plot_joint_clwvi_pr_model/plot/png/jointplot_clwvi_pr_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250917_082226/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250917_082226/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162450/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162450/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

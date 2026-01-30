@@ -1,0 +1,626 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<prov:document xmlns:preprocessor="https://www.esmvaltool.org/preprocessor" xmlns:attribute="https://www.esmvaltool.org/attribute" xmlns:file="https://www.esmvaltool.org/file" xmlns:task="https://www.esmvaltool.org/task" xmlns:software="https://www.esmvaltool.org/software" xmlns:recipe="https://www.esmvaltool.org/recipe" xmlns:author="https://www.esmvaltool.org/author" xmlns:project="https://www.esmvaltool.org/project" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <prov:entity prov:id="recipe:recipe.yml">
+    <attribute:description>ENSO CLIVAR metrics by Yann Planton, background climatology for REF</attribute:description>
+    <attribute:references>[]</attribute:references>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:agent prov:ref="author:Chun, Felicity"/>
+  </prov:wasAttributedTo>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_197901-201812.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:comment>''
+</attribute:comment>
+    <attribute:history>Created on 2025-04-16 01:36:30</attribute:history>
+    <attribute:host>gadi-cpu-clx-2121.gadi.nci.org.au</attribute:host>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:positive>down</attribute:positive>
+    <attribute:project_id>OBS6</attribute:project_id>
+    <attribute:reference>doi:10.1007/s00382-011-1115-0, doi:10.1007/s00382-012-1455-4</attribute:reference>
+    <attribute:source>https://incois.gov.in/tropflux/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>TROPFLUX data reformatted for ESMValTool v2.12.0.dev40+gf6c682ffb</attribute:title>
+    <attribute:user>fc6164</attribute:user>
+    <attribute:version>v1</attribute:version>
+  </prov:entity>
+  <prov:agent prov:id="author:Planton, Yann">
+    <attribute:institute>Monash University</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0002-9664-8180</attribute:orcid>
+  </prov:agent>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc">
+    <attribute:alias>obs4MIPs</attribute:alias>
+    <attribute:dataset>GPCP-V2.3</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2017</attribute:end_year>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:long_name>Precipitation</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>[]</attribute:modeling_realm>
+    <attribute:original_short_name>pr</attribute:original_short_name>
+    <attribute:preprocessor>map_bias_level2</attribute:preprocessor>
+    <attribute:project>obs4MIPs</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>pr</attribute:short_name>
+    <attribute:standard_name>precipitation_flux</attribute:standard_name>
+    <attribute:start_year>1979</attribute:start_year>
+    <attribute:tier>1</attribute:tier>
+    <attribute:timerange>1979/2017</attribute:timerange>
+    <attribute:units>kg m-2 s-1</attribute:units>
+    <attribute:variable_group>pr_bias</attribute:variable_group>
+    <attribute:version>v20180519</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'full'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Omon_tos_197901-201812.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/sst_bias"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_197901-201812.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/tauu_bias"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP6</attribute:alias>
+    <attribute:dataset>ACCESS-ESM1-5</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2014</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>CSIRO</attribute:institute>
+    <attribute:long_name>Precipitation</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>pr</attribute:original_short_name>
+    <attribute:preprocessor>map_bias_level2</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>1</attribute:recipe_dataset_index>
+    <attribute:short_name>pr</attribute:short_name>
+    <attribute:standard_name>precipitation_flux</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/20141216T120000</attribute:timerange>
+    <attribute:units>kg m-2 s-1</attribute:units>
+    <attribute:variable_group>pr_bias</attribute:variable_group>
+    <attribute:version>v20191115</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'full'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/pr/gn/v20191115/pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/pr_bias"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/obs4MIPs/GPCP-V2.3/v20180519/pr_GPCP-SG_L3_v2.3_197901-201710.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/pr_bias"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Omon/tos/gn/v20191115/tos_Omon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2019-11-15T15:21:42Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:external_variables>areacello</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2019-11-15T15:21:42Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/).  Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file).  The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: tos (['sst'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>ocean</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Omon</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:e14f55f257cceafb2523e41244962371</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/02850fcc-be64-40de-b7ca-9b8aa6e688a0</attribute:tracking_id>
+    <attribute:variable_id>tos</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20191115</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:diagnostic_level2/pr_seacycle"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:activity prov:id="task:diagnostic_level2/pr_bias"/>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Beucher, Romain"/>
+  </prov:wasAttributedTo>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:diagnostic_level2/pr_bias"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc">
+    <attribute:alias>obs4MIPs</attribute:alias>
+    <attribute:dataset>GPCP-V2.3</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2017</attribute:end_year>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:long_name>Precipitation</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>[]</attribute:modeling_realm>
+    <attribute:original_short_name>pr</attribute:original_short_name>
+    <attribute:preprocessor>map_sea_cyclel2</attribute:preprocessor>
+    <attribute:project>obs4MIPs</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>pr</attribute:short_name>
+    <attribute:standard_name>precipitation_flux</attribute:standard_name>
+    <attribute:start_year>1979</attribute:start_year>
+    <attribute:tier>1</attribute:tier>
+    <attribute:timerange>1979/2017</attribute:timerange>
+    <attribute:units>kg m-2 s-1</attribute:units>
+    <attribute:variable_group>pr_seacycle</attribute:variable_group>
+    <attribute:version>v20180519</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'monthly'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:agent prov:id="author:Chun, Felicity">
+    <attribute:github>flicj191</attribute:github>
+    <attribute:institute>ACCESS-NRI, Australia</attribute:institute>
+    <attribute:orcid>https://orcid.org/0009-0007-0845-0953</attribute:orcid>
+  </prov:agent>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/tauu/gn/v20191115/tauu_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2019-11-15T05:11:13Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2019-11-15T05:11:13Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/).  Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file).  The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: tauu (['fld_s03i460'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:e14f55f257cceafb2523e41244962371</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/87b25ea0-7fec-462f-8612-b25599906e91</attribute:tracking_id>
+    <attribute:variable_id>tauu</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20191115</attribute:version>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:diagnostic_level2/tauu_bias"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:activity prov:id="task:diagnostic_level2/plot_script"/>
+  <prov:activity prov:id="task:diagnostic_level2/sst_bias"/>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP6</attribute:alias>
+    <attribute:dataset>ACCESS-ESM1-5</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2014</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>CSIRO</attribute:institute>
+    <attribute:long_name>Surface Downward Eastward Wind Stress</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>tauu</attribute:original_short_name>
+    <attribute:preprocessor>map_bias_level2</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>1</attribute:recipe_dataset_index>
+    <attribute:short_name>tauu</attribute:short_name>
+    <attribute:standard_name>surface_downward_eastward_stress</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/20141216T120000</attribute:timerange>
+    <attribute:units>Pa</attribute:units>
+    <attribute:variable_group>tauu_bias</attribute:variable_group>
+    <attribute:version>v20191115</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'full'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/pr/gn/v20191115/pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2019-11-15T04:32:57Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2019-11-15T04:32:57Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/).  Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file).  The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: pr (['fld_s05i216'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:e14f55f257cceafb2523e41244962371</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/e1bc1d0d-54d8-4a7f-adae-d3f6324a2366</attribute:tracking_id>
+    <attribute:variable_id>pr</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20191115</attribute:version>
+  </prov:entity>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Chun, Felicity"/>
+  </prov:wasAttributedTo>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc">
+    <attribute:alias>OBS6</attribute:alias>
+    <attribute:dataset>TROPFLUX</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:long_name>Sea Surface Temperature</attribute:long_name>
+    <attribute:mip>Omon</attribute:mip>
+    <attribute:modeling_realm>['ocean']</attribute:modeling_realm>
+    <attribute:original_short_name>tos</attribute:original_short_name>
+    <attribute:preprocessor>map_bias_level2</attribute:preprocessor>
+    <attribute:project>OBS6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>tos</attribute:short_name>
+    <attribute:standard_name>sea_surface_temperature</attribute:standard_name>
+    <attribute:tier>2</attribute:tier>
+    <attribute:type>reanaly</attribute:type>
+    <attribute:units>degC</attribute:units>
+    <attribute:variable_group>sst_bias</attribute:variable_group>
+    <attribute:version>v1</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'full'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP6</attribute:alias>
+    <attribute:dataset>ACCESS-ESM1-5</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2014</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>CSIRO</attribute:institute>
+    <attribute:long_name>Precipitation</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>pr</attribute:original_short_name>
+    <attribute:preprocessor>map_sea_cyclel2</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>1</attribute:recipe_dataset_index>
+    <attribute:short_name>pr</attribute:short_name>
+    <attribute:standard_name>precipitation_flux</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/20141216T120000</attribute:timerange>
+    <attribute:units>kg m-2 s-1</attribute:units>
+    <attribute:variable_group>pr_seacycle</attribute:variable_group>
+    <attribute:version>v20191115</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'monthly'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Omon/tos/gn/v20191115/tos_Omon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/sst_bias"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc">
+    <attribute:alias>OBS6</attribute:alias>
+    <attribute:dataset>TROPFLUX</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2018</attribute:end_year>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:long_name>Surface Downward Eastward Wind Stress</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>tauu</attribute:original_short_name>
+    <attribute:preprocessor>map_bias_level2</attribute:preprocessor>
+    <attribute:project>OBS6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>tauu</attribute:short_name>
+    <attribute:standard_name>surface_downward_eastward_stress</attribute:standard_name>
+    <attribute:start_year>1979</attribute:start_year>
+    <attribute:tier>2</attribute:tier>
+    <attribute:timerange>1979/2018</attribute:timerange>
+    <attribute:type>reanaly</attribute:type>
+    <attribute:units>Pa</attribute:units>
+    <attribute:variable_group>tauu_bias</attribute:variable_group>
+    <attribute:version>v1</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'full'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/pr/gn/v20191115/pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/pr_seacycle"/>
+  </prov:wasDerivedFrom>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:agent prov:ref="author:Beucher, Romain"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:activity prov:id="task:diagnostic_level2/tauu_bias"/>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/obs4MIPs/GPCP-V2.3/v20180519/pr_GPCP-SG_L3_v2.3_197901-201710.nc">
+    <attribute:Conventions>CF-1.4</attribute:Conventions>
+    <attribute:cmor_version>2.9.1</attribute:cmor_version>
+    <attribute:comment>NOAA Climate Data Record Program for satellites, FY 2011. Global Precipitation Climatology Project (GPCP) Monthly Version 2.3 gridded, merged satellite/gauge precipitation Climate Data Record (CDR) with errors from 1979 to present.</attribute:comment>
+    <attribute:contact>George Huffman (george.j.huffman@nasa.gov)</attribute:contact>
+    <attribute:creation_date>2018-02-08T15:25:54Z</attribute:creation_date>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:history>2018-02-08T15:25:54Z CMOR rewrote data to comply with CF standards and CMIP5 requirements.</attribute:history>
+    <attribute:institute_id>NASA-GSFC</attribute:institute_id>
+    <attribute:institution>NASA Goddard Space Flight Center, Greenbelt MD, USA</attribute:institution>
+    <attribute:mip_specs>CMIP5</attribute:mip_specs>
+    <attribute:model_id>Obs-GPCP</attribute:model_id>
+    <attribute:modeling_realm>atmos</attribute:modeling_realm>
+    <attribute:product>observations</attribute:product>
+    <attribute:project_id>obs4MIPs</attribute:project_id>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>Huffman et al. 1997, http://dx.doi.org/10.1175/1520-0477(1997)078&lt;0005:TGPCPG&gt;2.0.CO;2; Adler et al. 2003, http://dx.doi.org/10.1175/1525-7541(2003)004&lt;1147:TVGPCP&gt;2.0.CO;2; Huffman et al. 2009, http://dx.doi.org/10.1029/2009GL040000; Adler et al. 2016, Global Precipitation Climatology Project (GPCP) Monthly Analysis: Climate Algorithm Theoretical Basis Document (C-ATBD)</attribute:references>
+    <attribute:source>Obs-GPCP (Global Precipitation Climatology Project) v23rB1</attribute:source>
+    <attribute:source_id>GPCP</attribute:source_id>
+    <attribute:source_type>satellite_retrieval_and_gauge_analysis</attribute:source_type>
+    <attribute:table_id>Table Amon_ana (10 March 2011) 34230b4cbd7bedf38c827d6e41c1b8ea</attribute:table_id>
+    <attribute:title>Global Precipitation Climatology Project (GPCP) Climate Data Record (CDR), Monthly V2.3 observation output prepared for obs4MIPs.</attribute:title>
+    <attribute:tracking_id>4070c751-6c2d-440f-a4d7-5b325fb98990</attribute:tracking_id>
+  </prov:entity>
+  <prov:activity prov:id="software:esmvaltool==2.13.0"/>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/obs4MIPs/GPCP-V2.3/v20180519/pr_GPCP-SG_L3_v2.3_197901-201710.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/pr_seacycle"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/tauu/gn/v20191115/tauu_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/tauu_bias"/>
+  </prov:wasDerivedFrom>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Planton, Yann"/>
+  </prov:wasAttributedTo>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP6</attribute:alias>
+    <attribute:dataset>ACCESS-ESM1-5</attribute:dataset>
+    <attribute:diagnostic>diagnostic_level2</attribute:diagnostic>
+    <attribute:end_year>2014</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>CSIRO</attribute:institute>
+    <attribute:long_name>Sea Surface Temperature</attribute:long_name>
+    <attribute:mip>Omon</attribute:mip>
+    <attribute:modeling_realm>['ocean']</attribute:modeling_realm>
+    <attribute:original_short_name>tos</attribute:original_short_name>
+    <attribute:preprocessor>map_bias_level2</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>1</attribute:recipe_dataset_index>
+    <attribute:short_name>tos</attribute:short_name>
+    <attribute:standard_name>sea_surface_temperature</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/20141216T120000</attribute:timerange>
+    <attribute:units>degC</attribute:units>
+    <attribute:variable_group>sst_bias</attribute:variable_group>
+    <attribute:version>v20191115</attribute:version>
+    <preprocessor:climate_statistics>{'operator': 'mean', 'period': 'full'}</preprocessor:climate_statistics>
+    <preprocessor:extract_region>{'start_longitude': 150.0, 'end_longitude': 270.0, 'start_latitude': -15.0, 'end_latitude': 15.0}</preprocessor:extract_region>
+    <preprocessor:regrid>{'target_grid': '1x1', 'scheme': 'linear'}</preprocessor:regrid>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png">
+    <attribute:caption>Time-mean precipitation bias in the equatorial Pacific, primarily highlighting the double intertropical convergence zone (ITCZ) bias.</attribute:caption>
+    <attribute:references>['planton2021']</attribute:references>
+    <attribute:scheduler_address>tcp://127.0.0.1:43899</attribute:scheduler_address>
+    <attribute:script>plot_script</attribute:script>
+    <attribute:script_file>enso_metrics/climatology_diagnosticlevel2.py</attribute:script_file>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script/png/ACCESS-ESM1-5_pr_map_bias_level2.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_level2/tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc"/>
+    <prov:activity prov:ref="task:diagnostic_level2/plot_script"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Omon_tos_197901-201812.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:comment>''
+</attribute:comment>
+    <attribute:history>Created on 2025-02-27 02:47:38</attribute:history>
+    <attribute:host>gadi-cpu-clx-0539.gadi.nci.org.au</attribute:host>
+    <attribute:mip>Omon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS6</attribute:project_id>
+    <attribute:reference>doi:10.1007/s00382-011-1115-0, doi:10.1007/s00382-012-1455-4</attribute:reference>
+    <attribute:source>https://incois.gov.in/tropflux/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>TROPFLUX data reformatted for ESMValTool v2.12.0.dev40+gf6c682ffb</attribute:title>
+    <attribute:user>fc6164</attribute:user>
+    <attribute:version>v1</attribute:version>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:diagnostic_level2/sst_bias"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:activity prov:id="task:diagnostic_level2/pr_seacycle"/>
+  <prov:agent prov:id="author:Beucher, Romain">
+    <attribute:github>rbeucher</attribute:github>
+    <attribute:institute>ACCESS-NRI, Australia</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0003-3891-5444</attribute:orcid>
+  </prov:agent>
+</prov:document>

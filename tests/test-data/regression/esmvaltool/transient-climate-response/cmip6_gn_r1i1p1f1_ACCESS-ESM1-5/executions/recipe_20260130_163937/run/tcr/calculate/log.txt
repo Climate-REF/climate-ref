@@ -1,0 +1,82 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script calculate with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+calculate_mmm: false
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_163937/preproc/tcr/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-01801216T120000.nc
+  : activity: CMIP
+    alias: 1pctCO2
+    dataset: ACCESS-ESM1-5
+    diagnostic: tcr
+    end_year: 180
+    ensemble: r1i1p1f1
+    exp: 1pctCO2
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_163937/preproc/tcr/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-01801216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: spatial_mean
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 101
+    timerange: 01010116T120000/01801216T120000
+    units: K
+    variable_group: tas
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_163937/preproc/tcr/tas/CMIP6_ACCESS-ESM1-5_Amon_piControl_r1i1p1f1_tas_gn_01010116T120000-01801216T120000.nc
+  : activity: CMIP
+    alias: piControl
+    dataset: ACCESS-ESM1-5
+    diagnostic: tcr
+    end_year: 180
+    ensemble: r1i1p1f1
+    exp: piControl
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_163937/preproc/tcr/tas/CMIP6_ACCESS-ESM1-5_Amon_piControl_r1i1p1f1_tas_gn_01010116T120000-01801216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: spatial_mean
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 101
+    timerange: 01010116T120000/01801216T120000
+    units: K
+    variable_group: tas
+    version: v20210316
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_163937/preproc/tcr/tas/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_163937/plots/tcr/calculate
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_163937/run/tcr/calculate
+scheduler_address: tcp://127.0.0.1:35469
+script: calculate
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_163937/work/tcr/calculate
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_163937/work/tcr/calculate
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_163937/plots/tcr/calculate
+INFO:tcr.py:Calculating anomalies
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/coords.py:2258: IrisVagueMetadataWarning: Cannot check if coordinate is contiguous: Invalid operation for 'year', with 0 bound(s). Contiguous bounds are only defined for 1D coordinates with 2 bounds. Metadata may not be fully descriptive for 'year'. Ignoring bounds.
+  warnings.warn(
+
+INFO:tcr.py:TCR (ACCESS-ESM1-5) = 1.97 K
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_163937/work/tcr/calculate/ACCESS-ESM1-5.nc
+INFO:tcr.py:Wrote <OUTPUT_DIR>/executions/recipe_20260130_163937/plots/tcr/calculate/ACCESS-ESM1-5.png
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_163937/work/tcr/calculate/tcr.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

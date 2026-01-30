@@ -1,0 +1,423 @@
+INFO    [2309407] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2309407] Package versions
+INFO    [2309407] ----------------
+INFO    [2309407] ESMValCore: 2.13.0
+INFO    [2309407] ESMValTool: 2.13.0
+INFO    [2309407] ----------------
+INFO    [2309407] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2309407] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_162807/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162807/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162807/run/cmor_log.txt
+INFO    [2309407] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:28:07 UTC
+INFO    [2309407] ----------------------------------------------------------------------
+INFO    [2309407] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2309407] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_162807/run
+INFO    [2309407] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162807/work
+INFO    [2309407] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc
+INFO    [2309407] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162807/plots
+INFO    [2309407] ----------------------------------------------------------------------
+INFO    [2309407] Running tasks using at most 10 processes
+INFO    [2309407] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2309407] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2309407] For Dataset: tas, Amon, OBS, HadCRUT5, 5.0.1.0-analysis, supplementaries: areacella, *, *: ignoring supplementary variable 'areacella', unable to expand wildcards 'mip', 'version'.
+INFO    [2309407] For Dataset: tas, Amon, obs4MIPs, ERA-5, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [2309407] For Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [2309407] For Dataset: pr, Amon, native6, ERA5, v1, supplementaries: areacella, *, *: ignoring supplementary variable 'areacella', unable to expand wildcards 'mip', 'version'.
+INFO    [2309407] For Dataset: psl, Amon, obs4MIPs, ERA-5, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [2309407] For Dataset: ua, Amon, obs4MIPs, ERA-5, supplementaries: areacella: ignoring supplementary variable 'areacella', unable to expand wildcards 'institute'.
+INFO    [2309407] For Dataset: hus, Amon, native6, ERA5, v1, supplementaries: areacella, *, *: ignoring supplementary variable 'areacella', unable to expand wildcards 'mip', 'version'.
+INFO    [2309407] Creating tasks from recipe
+INFO    [2309407] Creating tasks for diagnostic tas_trends
+INFO    [2309407] Creating diagnostic task tas_trends/plot
+INFO    [2309407] Creating preprocessor task tas_trends/tas
+INFO    [2309407] Creating preprocessor 'trend_tas' task for variable 'tas'
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'tas_trends',
+ 'variable_group': 'tas',
+ 'dataset': 'HadCRUT5',
+ 'project': 'OBS',
+ 'mip': 'Amon',
+ 'short_name': 'tas',
+ 'alias': 'OBS',
+ 'frequency': 'mon',
+ 'long_name': 'Near-Surface Air Temperature',
+ 'modeling_realm': ['atmos'],
+ 'original_short_name': 'tas',
+ 'preprocessor': 'trend_tas',
+ 'recipe_dataset_index': 0,
+ 'standard_name': 'air_temperature',
+ 'tier': 2,
+ 'timerange': '1980/2009',
+ 'type': 'ground',
+ 'units': 'K',
+ 'version': '5.0.1.0-analysis'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: tas, Amon, OBS, HadCRUT5, 5.0.1.0-analysis
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'tas_trends',
+ 'variable_group': 'tas',
+ 'dataset': 'ERA-5',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'tas',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Near-Surface Air Temperature',
+ 'modeling_realm': [],
+ 'original_short_name': 'tas',
+ 'preprocessor': 'trend_tas',
+ 'recipe_dataset_index': 1,
+ 'reference_for_metric': "true'",
+ 'standard_name': 'air_temperature',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'K'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: tas, Amon, obs4MIPs, ERA-5, v20250220
+INFO    [2309407] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [2309407] PreprocessingTask tas_trends/tas created.
+INFO    [2309407] Creating tasks for diagnostic pr_trends
+INFO    [2309407] Creating diagnostic task pr_trends/plot
+INFO    [2309407] Creating preprocessor task pr_trends/pr
+INFO    [2309407] Creating preprocessor 'trend_pr' task for variable 'pr'
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'pr_trends',
+ 'variable_group': 'pr',
+ 'dataset': 'GPCP-V2.3',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'pr',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'modeling_realm': [],
+ 'original_short_name': 'pr',
+ 'preprocessor': 'trend_pr',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': True,
+ 'standard_name': 'precipitation_flux',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'kg m-2 s-1'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'pr_trends',
+ 'variable_group': 'pr',
+ 'dataset': 'ERA5',
+ 'project': 'native6',
+ 'mip': 'Amon',
+ 'short_name': 'pr',
+ 'alias': 'native6',
+ 'automatic_regrid': True,
+ 'family': 'E5',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'modeling_realm': ['atmos'],
+ 'original_short_name': 'pr',
+ 'preprocessor': 'trend_pr',
+ 'recipe_dataset_index': 1,
+ 'reference_for_metric': True,
+ 'standard_name': 'precipitation_flux',
+ 'tier': 3,
+ 'timerange': '1980/2009',
+ 'tres': '1M',
+ 'type': 'reanaly',
+ 'typeid': '00',
+ 'units': 'kg m-2 s-1',
+ 'version': 'v1'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: pr, Amon, native6, ERA5, v1
+INFO    [2309407] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [2309407] PreprocessingTask pr_trends/pr created.
+INFO    [2309407] Creating tasks for diagnostic psl_trends
+INFO    [2309407] Creating diagnostic task psl_trends/plot
+INFO    [2309407] Creating preprocessor task psl_trends/psl
+INFO    [2309407] Creating preprocessor 'trend_psl' task for variable 'psl'
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'psl_trends',
+ 'variable_group': 'psl',
+ 'dataset': 'ERA-5',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'psl',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Level Pressure',
+ 'modeling_realm': [],
+ 'original_short_name': 'psl',
+ 'preprocessor': 'trend_psl',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': "true'",
+ 'standard_name': 'air_pressure_at_mean_sea_level',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'Pa'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: psl, Amon, obs4MIPs, ERA-5, v20250220
+INFO    [2309407] Found input files for Dataset: psl, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [2309407] PreprocessingTask psl_trends/psl created.
+INFO    [2309407] Creating tasks for diagnostic ua200_trends
+INFO    [2309407] Creating diagnostic task ua200_trends/plot
+INFO    [2309407] Creating preprocessor task ua200_trends/ua
+INFO    [2309407] Creating preprocessor 'trend_ua200' task for variable 'ua'
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'ua200_trends',
+ 'variable_group': 'ua',
+ 'dataset': 'ERA-5',
+ 'project': 'obs4MIPs',
+ 'mip': 'Amon',
+ 'short_name': 'ua',
+ 'alias': 'obs4MIPs',
+ 'frequency': 'mon',
+ 'long_name': 'Eastward Wind',
+ 'modeling_realm': [],
+ 'original_short_name': 'ua',
+ 'preprocessor': 'trend_ua200',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': "true'",
+ 'standard_name': 'eastward_wind',
+ 'tier': 1,
+ 'timerange': '1980/2009',
+ 'units': 'm s-1'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: ua, Amon, obs4MIPs, ERA-5, v20250220
+INFO    [2309407] Found input files for Dataset: ua, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [2309407] PreprocessingTask ua200_trends/ua created.
+INFO    [2309407] Creating tasks for diagnostic hus200_trends
+INFO    [2309407] Creating diagnostic task hus200_trends/plot
+INFO    [2309407] Creating preprocessor task hus200_trends/hus
+INFO    [2309407] Creating preprocessor 'trend_hus200' task for variable 'hus'
+WARNING [2309407] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'hus200_trends',
+ 'variable_group': 'hus',
+ 'dataset': 'ERA5',
+ 'project': 'native6',
+ 'mip': 'Amon',
+ 'short_name': 'hus',
+ 'alias': 'native6',
+ 'automatic_regrid': True,
+ 'family': 'E5',
+ 'frequency': 'mon',
+ 'grib_id': '133',
+ 'level': 'pl',
+ 'long_name': 'Specific Humidity',
+ 'modeling_realm': ['atmos'],
+ 'original_short_name': 'hus',
+ 'preprocessor': 'trend_hus200',
+ 'recipe_dataset_index': 0,
+ 'reference_for_metric': True,
+ 'standard_name': 'specific_humidity',
+ 'tier': 3,
+ 'timerange': '1980/2009',
+ 'tres': '1M',
+ 'type': 'reanaly',
+ 'typeid': '00',
+ 'units': '1',
+ 'version': 'v1'}
+session: 'recipe_20260130_162807'.
+INFO    [2309407] Found input files for Dataset: hus, Amon, native6, ERA5, v1
+INFO    [2309407] Found input files for Dataset: hus, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [2309407] PreprocessingTask hus200_trends/hus created.
+INFO    [2309407] These tasks will be executed: psl_trends/plot, ua200_trends/ua, pr_trends/pr, psl_trends/psl, hus200_trends/hus, ua200_trends/plot, tas_trends/tas, tas_trends/plot, pr_trends/plot, hus200_trends/plot
+INFO    [2309407] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162807/run/recipe_filled.yml
+INFO    [2309407] Using Dask distributed scheduler (address: tcp://127.0.0.1:43545, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2309407] Running 10 tasks using 10 processes
+INFO    [2309486] Starting task tas_trends/tas in process [2309486]
+INFO    [2309488] Starting task pr_trends/pr in process [2309488]
+INFO    [2309490] Starting task psl_trends/psl in process [2309490]
+INFO    [2309494] Starting task hus200_trends/hus in process [2309494]
+INFO    [2309492] Starting task ua200_trends/ua in process [2309492]
+INFO    [2309407] Progress: 5 tasks running, 5 tasks waiting for ancestors, 0/10 done
+INFO    [2309490] Computing and saving data for preprocessing task psl_trends/psl
+INFO    [2309490] psl_trends/psl                [########################################] | 100% Completed | 2.13 s
+INFO    [2309492] Computing and saving data for preprocessing task ua200_trends/ua
+INFO    [2309490] Successfully completed task psl_trends/psl (priority 5) in 0:00:04.878605
+INFO    [2309407] Progress: 4 tasks running, 5 tasks waiting for ancestors, 1/10 done
+INFO    [2309407] Progress: 5 tasks running, 4 tasks waiting for ancestors, 1/10 done
+INFO    [2309496] Starting task psl_trends/plot in process [2309496]
+INFO    [2309496] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260130_162807/run/psl_trends/plot/settings.yml']
+INFO    [2309496] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162807/work/psl_trends/plot
+INFO    [2309496] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/psl_trends/plot
+INFO    [2309496] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162807/run/psl_trends/plot/log.txt
+INFO    [2309496] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162807/run/psl_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260130_162807/run/psl_trends/plot/settings.yml
+INFO    [2309492] ua200_trends/ua               [########################################] | 100% Completed | 2.33 s
+INFO    [2309486] Computing and saving data for preprocessing task tas_trends/tas
+INFO    [2309492] Successfully completed task ua200_trends/ua (priority 7) in 0:00:07.282385
+INFO    [2309407] Progress: 4 tasks running, 4 tasks waiting for ancestors, 2/10 done
+INFO    [2309498] Starting task ua200_trends/plot in process [2309498]
+INFO    [2309498] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260130_162807/run/ua200_trends/plot/settings.yml']
+INFO    [2309498] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162807/work/ua200_trends/plot
+INFO    [2309498] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/ua200_trends/plot
+INFO    [2309498] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162807/run/ua200_trends/plot/log.txt
+INFO    [2309498] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162807/run/ua200_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260130_162807/run/ua200_trends/plot/settings.yml
+INFO    [2309407] Progress: 5 tasks running, 3 tasks waiting for ancestors, 2/10 done
+INFO    [2309486] tas_trends/tas                [########################################] | 100% Completed | 3.18 s
+INFO    [2309488] Computing and saving data for preprocessing task pr_trends/pr
+INFO    [2309486] Successfully completed task tas_trends/tas (priority 1) in 0:00:10.588082
+INFO    [2309407] Progress: 4 tasks running, 3 tasks waiting for ancestors, 3/10 done
+INFO    [2309500] Starting task tas_trends/plot in process [2309500]
+INFO    [2309500] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260130_162807/run/tas_trends/plot/settings.yml']
+INFO    [2309500] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162807/work/tas_trends/plot
+INFO    [2309500] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/tas_trends/plot
+INFO    [2309500] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162807/run/tas_trends/plot/log.txt
+INFO    [2309500] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162807/run/tas_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260130_162807/run/tas_trends/plot/settings.yml
+INFO    [2309407] Progress: 5 tasks running, 2 tasks waiting for ancestors, 3/10 done
+INFO    [2309496] Maximum memory used (estimate): 0.4 GB
+INFO    [2309496] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [2309496] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+INFO    [2309496] Successfully completed task psl_trends/plot (priority 4) in 0:00:06.783973
+INFO    [2309407] Progress: 4 tasks running, 2 tasks waiting for ancestors, 4/10 done
+INFO    [2309498] Maximum memory used (estimate): 0.4 GB
+INFO    [2309498] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [2309498] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+INFO    [2309498] Successfully completed task ua200_trends/plot (priority 6) in 0:00:07.948351
+INFO    [2309407] Progress: 3 tasks running, 2 tasks waiting for ancestors, 5/10 done
+INFO    [2309500] Maximum memory used (estimate): 0.5 GB
+INFO    [2309500] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2309488] pr_trends/pr                  [#                                       ] |   4% Completed | 10.34 s
+WARNING [2309500] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+INFO    [2309500] Successfully completed task tas_trends/plot (priority 0) in 0:00:17.957300
+INFO    [2309407] Progress: 2 tasks running, 2 tasks waiting for ancestors, 6/10 done
+INFO    [2309488] pr_trends/pr                  [###                                     ] |   8% Completed | 20.35 s
+INFO    [2309488] pr_trends/pr                  [###                                     ] |   9% Completed | 30.76 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 40.76 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 50.78 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 60.79 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 71.14 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 81.98 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 91.98 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 101.99 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 112.07 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 125.23 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 135.24 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 145.25 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 155.55 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 165.56 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 175.67 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 185.68 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 196.10 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 206.11 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 216.12 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 226.12 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 237.00 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 247.01 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 257.78 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 267.79 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 278.24 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 288.25 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 298.40 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 308.41 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 319.40 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 329.40 s
+INFO    [2309488] pr_trends/pr                  [####                                    ] |  10% Completed | 340.17 s
+INFO    [2309494] Computing and saving data for preprocessing task hus200_trends/hus
+INFO    [2309488] Successfully completed task pr_trends/pr (priority 3) in 0:05:59.451196
+INFO    [2309407] Progress: 1 tasks running, 2 tasks waiting for ancestors, 7/10 done
+INFO    [2309502] Starting task pr_trends/plot in process [2309502]
+INFO    [2309502] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260130_162807/run/pr_trends/plot/settings.yml']
+INFO    [2309502] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162807/work/pr_trends/plot
+INFO    [2309502] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/pr_trends/plot
+INFO    [2309502] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162807/run/pr_trends/plot/log.txt
+INFO    [2309502] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162807/run/pr_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260130_162807/run/pr_trends/plot/settings.yml
+INFO    [2309407] Progress: 2 tasks running, 1 tasks waiting for ancestors, 7/10 done
+INFO    [2309494] hus200_trends/hus             [                                        ] |   1% Completed | 10.18 s
+INFO    [2309502] Maximum memory used (estimate): 0.4 GB
+INFO    [2309502] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2309502] Successfully completed task pr_trends/plot (priority 2) in 0:00:13.094781
+INFO    [2309407] Progress: 1 tasks running, 1 tasks waiting for ancestors, 8/10 done
+INFO    [2309494] hus200_trends/hus             [##                                      ] |   5% Completed | 20.19 s
+INFO    [2309494] hus200_trends/hus             [##                                      ] |   7% Completed | 30.20 s
+INFO    [2309494] hus200_trends/hus             [####                                    ] |  10% Completed | 40.21 s
+INFO    [2309494] hus200_trends/hus             [#####                                   ] |  14% Completed | 50.21 s
+INFO    [2309494] hus200_trends/hus             [######                                  ] |  17% Completed | 60.22 s
+INFO    [2309494] hus200_trends/hus             [########                                ] |  20% Completed | 70.23 s
+INFO    [2309494] hus200_trends/hus             [#########                               ] |  24% Completed | 80.23 s
+INFO    [2309494] hus200_trends/hus             [###########                             ] |  28% Completed | 90.24 s
+INFO    [2309494] hus200_trends/hus             [############                            ] |  31% Completed | 100.25 s
+INFO    [2309494] hus200_trends/hus             [#############                           ] |  34% Completed | 110.26 s
+INFO    [2309494] hus200_trends/hus             [###############                         ] |  38% Completed | 120.27 s
+INFO    [2309494] hus200_trends/hus             [#################                       ] |  43% Completed | 130.27 s
+INFO    [2309494] hus200_trends/hus             [##################                      ] |  46% Completed | 140.28 s
+INFO    [2309494] hus200_trends/hus             [####################                    ] |  50% Completed | 150.29 s
+INFO    [2309494] hus200_trends/hus             [#####################                   ] |  54% Completed | 160.30 s
+INFO    [2309494] hus200_trends/hus             [#######################                 ] |  59% Completed | 170.30 s
+INFO    [2309494] hus200_trends/hus             [#########################               ] |  64% Completed | 180.31 s
+INFO    [2309494] hus200_trends/hus             [###########################             ] |  69% Completed | 190.32 s
+INFO    [2309494] hus200_trends/hus             [#############################           ] |  74% Completed | 200.32 s
+INFO    [2309494] hus200_trends/hus             [###############################         ] |  78% Completed | 210.33 s
+INFO    [2309494] hus200_trends/hus             [#################################       ] |  83% Completed | 220.34 s
+INFO    [2309494] hus200_trends/hus             [###################################     ] |  88% Completed | 230.34 s
+INFO    [2309494] hus200_trends/hus             [#####################################   ] |  92% Completed | 240.35 s
+INFO    [2309494] hus200_trends/hus             [####################################### ] |  99% Completed | 250.36 s
+INFO    [2309494] hus200_trends/hus             [########################################] | 100% Completed | 252.36 s
+INFO    [2309494] Successfully completed task hus200_trends/hus (priority 9) in 0:10:12.166044
+INFO    [2309407] Progress: 0 tasks running, 1 tasks waiting for ancestors, 9/10 done
+INFO    [2309504] Starting task hus200_trends/plot in process [2309504]
+INFO    [2309504] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260130_162807/run/hus200_trends/plot/settings.yml']
+INFO    [2309504] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162807/work/hus200_trends/plot
+INFO    [2309504] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/hus200_trends/plot
+INFO    [2309504] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162807/run/hus200_trends/plot/log.txt
+INFO    [2309504] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162807/run/hus200_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260130_162807/run/hus200_trends/plot/settings.yml
+INFO    [2309407] Progress: 1 tasks running, 0 tasks waiting for ancestors, 9/10 done
+INFO    [2309504] Maximum memory used (estimate): 0.4 GB
+INFO    [2309504] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2309504] Successfully completed task hus200_trends/plot (priority 8) in 0:00:08.815301
+INFO    [2309407] Progress: 0 tasks running, 0 tasks waiting for ancestors, 10/10 done
+INFO    [2309407] Successfully completed all tasks.
+INFO    [2309407] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162807/run/recipe_filled.yml
+INFO    [2309407] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162807/index.html
+INFO    [2309407] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_162807
+Then visit http://localhost:31415 in your browser
+INFO    [2309407] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2309407] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:38:35 UTC
+INFO    [2309407] Time for running the recipe was: 0:10:27.666733
+INFO    [2309407] Maximum memory used (estimate): 12.8 GB
+INFO    [2309407] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2309407] Removing `preproc` directory containing preprocessed data
+INFO    [2309407] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [2309407] Run was successful

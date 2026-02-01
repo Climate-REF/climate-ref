@@ -1,0 +1,32 @@
+? <OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png
+: &id001
+  ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_nh/OBS_OSI-450-nh_reanaly_v3_OImon_siconc_1995-2014.nc
+  - <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_nh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+  authors:
+  - schlund_manuel
+  caption: 20-year average seasonal cycle of the sea ice area in million km2 from
+    ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.
+  long_names:
+  - Sea-Ice Area Percentage (Ocean Grid)
+  - Sea Ice Area Fraction
+  plot_types:
+  - seas
+? <OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png
+: &id002
+  ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc
+  - <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc
+  authors:
+  - schlund_manuel
+  caption: 20-year average seasonal cycle of the sea ice area in million km2 from
+    ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.
+  long_names:
+  - Sea-Ice Area Percentage (Ocean Grid)
+  - Sea Ice Area Fraction
+  plot_types:
+  - seas
+? <OUTPUT_DIR>/executions/recipe_20260130_163843/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc
+: *id001
+? <OUTPUT_DIR>/executions/recipe_20260130_163843/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc
+: *id002

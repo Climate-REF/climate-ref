@@ -1,0 +1,90 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+bins: 20
+cbar: true
+cbar_kws:
+  extend: max
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/clt/OBS_ESACCI-CLOUD_sat_AVHRR-AMPM-fv3.0_Amon_clt_2001-2016.nc
+  : alias: ESACCI-CLOUD
+    dataset: ESACCI-CLOUD
+    diagnostic: plot_joint_clt_swcre_ref
+    end_year: 2016
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/clt/OBS_ESACCI-CLOUD_sat_AVHRR-AMPM-fv3.0_Amon_clt_2001-2016.nc
+    frequency: mon
+    long_name: Total Cloud Fraction
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_clt
+    project: OBS
+    recipe_dataset_index: 0
+    short_name: clt
+    standard_name: cloud_area_fraction
+    start_year: 2001
+    tier: 2
+    timerange: 2001/2016
+    type: sat
+    units: '%'
+    variable_group: clt
+    version: AVHRR-AMPM-fv3.0
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/swcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_swcre_2001-2016.nc
+  : alias: CERES-EBAF
+    dataset: CERES-EBAF
+    derive: true
+    diagnostic: plot_joint_clt_swcre_ref
+    end_year: 2016
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/swcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_swcre_2001-2016.nc
+    force_derivation: false
+    frequency: mon
+    long_name: TOA Shortwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_swcre
+    project: OBS
+    recipe_dataset_index: 0
+    short_name: swcre
+    standard_name: ''
+    start_year: 2001
+    tier: 2
+    timerange: 2001/2016
+    type: sat
+    units: W m-2
+    variable_group: swcre
+    version: Ed4.2
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/clt/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/swcre/metadata.yml
+joint_kws:
+  cmap: YlGnBu
+  vmax: 0.015
+log_level: info
+marginal_kws:
+  color: darkturquoise
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot
+plot_filename: jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clt_swcre_ref/plot
+scheduler_address: tcp://127.0.0.1:41875
+script: plot
+seaborn_settings:
+  rc:
+    axes.titlepad: 15.0
+  style: ticks
+suptitle: ESACCI-CLOUD / CERES-EBAF
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot
+x: clt
+y: swcre
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot/png/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF.png
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_swcre_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_swcre_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

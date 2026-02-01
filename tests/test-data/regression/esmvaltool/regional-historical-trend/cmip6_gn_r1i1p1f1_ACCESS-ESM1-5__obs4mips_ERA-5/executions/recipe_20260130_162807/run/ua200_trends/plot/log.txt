@@ -1,0 +1,110 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+add_aux_coords: true
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+facets_as_columns:
+- dataset
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_ua_gn_1980-2009.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: ua200_trends
+    end_year: 2009
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_ua_gn_1980-2009.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Eastward Wind
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: trend_ua200
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: ua
+    standard_name: eastward_wind
+    start_year: 1980
+    timerange: 1980/2009
+    units: m s-1 yr-1
+    variable_group: ua
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/obs4MIPs_ERA-5_ua_1980-2009.nc
+  : alias: obs4MIPs
+    dataset: ERA-5
+    diagnostic: ua200_trends
+    end_year: 2009
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/obs4MIPs_ERA-5_ua_1980-2009.nc
+    frequency: mon
+    long_name: Eastward Wind
+    mip: Amon
+    modeling_realm: []
+    preprocessor: trend_ua200
+    project: obs4MIPs
+    recipe_dataset_index: 0
+    reference_for_metric: true'
+    short_name: ua
+    standard_name: eastward_wind
+    start_year: 1980
+    tier: 1
+    timerange: 1980/2009
+    units: m s-1 yr-1
+    variable_group: ua
+    version: v20250220
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/ua200_trends/plot
+plot_object_methods:
+  set_xlabel: region
+  set_ylabel: ua trend [m s-1 yr-1]
+recipe: recipe.yml
+reset_index: true
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/run/ua200_trends/plot
+scheduler_address: tcp://127.0.0.1:43545
+script: plot
+seaborn_func: barplot
+seaborn_kwargs:
+  hue: dataset
+  x: shape_id
+  y: ua
+seaborn_settings:
+  rc:
+    figure.figsize:
+    - 28
+    - 6
+  style: ticks
+suptitle: Trend in Zonal Wind at 200 hPa
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/work/ua200_trends/plot
+write_netcdf: true
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162807/work/ua200_trends/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/ua200_trends/plot
+INFO:seaborn_diag:Using plotting function seaborn.barplot
+INFO:seaborn_diag:Grouping datasets by 'alias' to create main data frame (data frames are merged [combined along axis 1, i.e., columns] within groups, then concatenated [combined along axis 0, i.e., rows] across groups)
+INFO:seaborn_diag:Adding aux_coords as columns
+INFO:seaborn_diag:Adding facets as columns: ['dataset']
+INFO:seaborn_diag:Processing group 'CMIP6'
+INFO:seaborn_diag:Reading <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_ua_gn_1980-2009.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/_nc_load_rules/helpers.py:498: UnknownCellMethodWarning: NetCDF variable 'ua' contains unknown cell method 'trend'
+  warnings.warn(msg, category=UnknownCellMethodWarning)
+
+INFO:seaborn_diag:Processing group 'obs4MIPs'
+INFO:seaborn_diag:Reading <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/ua200_trends/ua/obs4MIPs_ERA-5_ua_1980-2009.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/_nc_load_rules/helpers.py:498: UnknownCellMethodWarning: NetCDF variable 'ua' contains unknown cell method 'trend'
+  warnings.warn(msg, category=UnknownCellMethodWarning)
+
+INFO:seaborn_diag:Successfully retrieved main data frame from input data
+INFO:seaborn_diag:Creating plot with
+seaborn.barplot(
+    data=main_data_frame,
+    x='shape_id',
+    y='ua',
+    hue='dataset',
+)
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162807/work/ua200_trends/plot/seaborn_barplot.nc
+INFO:seaborn_diag:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/ua200_trends/plot/seaborn_barplot.png
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

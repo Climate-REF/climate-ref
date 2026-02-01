@@ -4,4 +4,3 @@ channels:
 
 dependencies:
   - esmvaltool-python
-  - arviz

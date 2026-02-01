@@ -1,0 +1,563 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<prov:document xmlns:author="https://www.esmvaltool.org/author" xmlns:project="https://www.esmvaltool.org/project" xmlns:file="https://www.esmvaltool.org/file" xmlns:recipe="https://www.esmvaltool.org/recipe" xmlns:task="https://www.esmvaltool.org/task" xmlns:attribute="https://www.esmvaltool.org/attribute" xmlns:software="https://www.esmvaltool.org/software" xmlns:preprocessor="https://www.esmvaltool.org/preprocessor" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2007_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:52:10 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2007, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:11:47 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data2/adaptor.mars.internal-1613470266.123197-22378-12-a7a67121-6a01-47b1-b95f-77182bda2b8c.nc /cache/tmp/a7a67121-6a01-47b1-b95f-77182bda2b8c-adaptor.mars.internal-1613470266.1237435-22378-5-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1993_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1984_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:46:02 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1984, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:10:10 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data0/adaptor.mars.internal-1613470168.9592538-10249-16-50b873d0-044d-4c7a-afd8-876a097999bb.nc /cache/tmp/50b873d0-044d-4c7a-afd8-876a097999bb-adaptor.mars.internal-1613470168.9597912-10249-5-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1981_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/plots/hus200_trends/plot/seaborn_barplot.png">
+    <attribute:add_aux_coords>True</attribute:add_aux_coords>
+    <attribute:caption>Seaborn barplot for one or more dataset(s)</attribute:caption>
+    <attribute:facets_as_columns>['dataset']</attribute:facets_as_columns>
+    <attribute:plot_object_methods>{'set_xlabel': 'region', 'set_ylabel': 'hus trend [yr-1]'}</attribute:plot_object_methods>
+    <attribute:reset_index>True</attribute:reset_index>
+    <attribute:scheduler_address>tcp://127.0.0.1:43545</attribute:scheduler_address>
+    <attribute:script>plot</attribute:script>
+    <attribute:script_file>seaborn_diag.py</attribute:script_file>
+    <attribute:seaborn_func>barplot</attribute:seaborn_func>
+    <attribute:seaborn_kwargs>{'x': 'shape_id', 'y': 'hus', 'hue': 'dataset'}</attribute:seaborn_kwargs>
+    <attribute:seaborn_settings>{'style': 'ticks', 'rc': {'figure.figsize': [28, 6]}}</attribute:seaborn_settings>
+    <attribute:suptitle>Trend in Specific Humidity at 200 hPa</attribute:suptitle>
+    <attribute:write_netcdf>True</attribute:write_netcdf>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2000_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1980_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:agent prov:id="author:Schlund, Manuel">
+    <attribute:email>manuel.schlund@dlr.de</attribute:email>
+    <attribute:github>schlunma</attribute:github>
+    <attribute:institute>DLR, Germany</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0001-5251-0158</attribute:orcid>
+  </prov:agent>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1991_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1982_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1980_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:46:09 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1980, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:07:34 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data6/adaptor.mars.internal-1613470011.744898-5277-26-3b49d8e7-f167-42e0-8946-84c6efae1a32.nc /cache/tmp/3b49d8e7-f167-42e0-8946-84c6efae1a32-adaptor.mars.internal-1613470011.7453704-5277-6-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1988_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/plots/hus200_trends/plot/seaborn_barplot.png"/>
+    <prov:agent prov:ref="author:Schlund, Manuel"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2004_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2005_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1998_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1982_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:46:17 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1982, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:09:09 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data9/adaptor.mars.internal-1613470105.512701-1530-24-cc0d6ec3-1034-4a7b-893b-9b0c519b99f4.nc /cache/tmp/cc0d6ec3-1034-4a7b-893b-9b0c519b99f4-adaptor.mars.internal-1613470105.5133204-1530-10-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1981_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:13 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1981, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:06:42 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data5/adaptor.mars.internal-1613469958.3069067-30174-23-f8345172-ca12-4a55-bf98-c3967045d3cb.nc /cache/tmp/f8345172-ca12-4a55-bf98-c3967045d3cb-adaptor.mars.internal-1613469958.3075147-30174-8-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2008_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2006_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1998_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:44:18 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1998, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:09:17 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data9/adaptor.mars.internal-1613470115.4492025-3662-30-e76a4636-bcc7-4bc8-84c5-fb6c5e8a0b5b.nc /cache/tmp/e76a4636-bcc7-4bc8-84c5-fb6c5e8a0b5b-adaptor.mars.internal-1613470115.4498112-3662-6-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1993_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:49 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1993, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:00:18 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data8/adaptor.mars.internal-1613469573.4109259-4304-7-b30ea1fb-15ec-4807-a61b-905d8f907011.nc /cache/tmp/b30ea1fb-15ec-4807-a61b-905d8f907011-adaptor.mars.internal-1613469573.4114761-4304-3-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:activity prov:id="task:hus200_trends/hus"/>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1995_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/hus/gn/v20191115/hus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1989_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:42 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1989, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:00:15 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data9/adaptor.mars.internal-1613469573.177093-21860-27-8e91f2ff-a89f-4ee1-bfac-84b61134b93e.nc /cache/tmp/8e91f2ff-a89f-4ee1-bfac-84b61134b93e-adaptor.mars.internal-1613469573.1776888-21860-9-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Schlund, Manuel"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2002_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1983_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:48 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1983, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:11:11 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data6/adaptor.mars.internal-1613470230.650301-16746-16-5d25dc8e-8e88-4137-b62f-58e5d0aadd59.nc /cache/tmp/5d25dc8e-8e88-4137-b62f-58e5d0aadd59-adaptor.mars.internal-1613470230.6508858-16746-4-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1989_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2001_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1985_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1985_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:56 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1985, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:01:10 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data7/adaptor.mars.internal-1613469626.1982696-357-11-608caabe-5eb0-4ff0-9ce0-999607e35a90.nc /cache/tmp/608caabe-5eb0-4ff0-9ce0-999607e35a90-adaptor.mars.internal-1613469626.198831-357-3-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP6</attribute:alias>
+    <attribute:dataset>ACCESS-ESM1-5</attribute:dataset>
+    <attribute:diagnostic>hus200_trends</attribute:diagnostic>
+    <attribute:end_year>2009</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>CSIRO</attribute:institute>
+    <attribute:long_name>Specific Humidity</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>hus</attribute:original_short_name>
+    <attribute:preprocessor>trend_hus200</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>1</attribute:recipe_dataset_index>
+    <attribute:short_name>hus</attribute:short_name>
+    <attribute:standard_name>specific_humidity</attribute:standard_name>
+    <attribute:start_year>1980</attribute:start_year>
+    <attribute:timerange>1980/2009</attribute:timerange>
+    <attribute:units>1</attribute:units>
+    <attribute:variable_group>hus</attribute:variable_group>
+    <attribute:version>v20191115</attribute:version>
+    <preprocessor:area_statistics>{'operator': 'mean'}</preprocessor:area_statistics>
+    <preprocessor:convert_units>{'units': 'year-1'}</preprocessor:convert_units>
+    <preprocessor:extract_levels>{'levels': 20000, 'scheme': 'linear', 'coordinate': 'air_pressure'}</preprocessor:extract_levels>
+    <preprocessor:extract_shape>{'shapefile': PosixPath('/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/preprocessor/shapefiles/ar6.shp'), 'decomposed': True, 'ids': {'Acronym': ['NWN', 'NEN', 'GIC', 'WNA', 'CNA', 'ENA', 'NCA', 'SCA', 'CAR', 'NWS', 'NSA', 'NES', 'SAM', 'SWS', 'SES', 'SSA', 'NEU', 'WCE', 'EEU', 'MED', 'SAH', 'WAF', 'CAF', 'NEAF', 'SEAF', 'WSAF', 'ESAF', 'MDG', 'RAR', 'WSB', 'ESB', 'RFE', 'WCA', 'ECA', 'TIB', 'EAS', 'ARP', 'SAS', 'SEA', 'NAU', 'CAU', 'EAU', 'SAU', 'NZ', 'WAN', 'EAN']}}</preprocessor:extract_shape>
+    <preprocessor:linear_trend>{}</preprocessor:linear_trend>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1997_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:44:29 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1997, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:04:48 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data6/adaptor.mars.internal-1613469844.8080084-8720-32-aa824d5d-5cdf-4c9a-9a0f-eb1eee27eaa9.nc /cache/tmp/aa824d5d-5cdf-4c9a-9a0f-eb1eee27eaa9-adaptor.mars.internal-1613469844.8087256-8720-7-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2006_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:52:03 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2006, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:04:50 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data0/adaptor.mars.internal-1613469849.7102869-13974-28-bdf3c48e-b3fb-4d1c-9b7a-18fee24bfa73.nc /cache/tmp/bdf3c48e-b3fb-4d1c-9b7a-18fee24bfa73-adaptor.mars.internal-1613469849.7109506-13974-9-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1986_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:21 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1986, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:02:50 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data2/adaptor.mars.internal-1613469727.7449334-6099-25-08f99fb3-4306-4665-b1cf-7856acd7d074.nc /cache/tmp/08f99fb3-4306-4665-b1cf-7856acd7d074-adaptor.mars.internal-1613469727.7455-6099-9-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2000_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:44:07 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2000, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:10:54 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data5/adaptor.mars.internal-1613470213.6553254-11252-1-1181fdf8-e0f3-4484-8a64-4d7d97546769.nc /cache/tmp/1181fdf8-e0f3-4484-8a64-4d7d97546769-adaptor.mars.internal-1613470213.6572726-11252-1-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1987_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1990_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:46:09 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1990, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:11:56 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data0/adaptor.mars.internal-1613470273.542572-19140-31-0e1b367e-c733-4ed2-9606-a73bfca795af.nc /cache/tmp/0e1b367e-c733-4ed2-9606-a73bfca795af-adaptor.mars.internal-1613470273.543159-19140-6-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/fx/areacella/gn/v20191115/areacella_fx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2009_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2007_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/fx/areacella/gn/v20191115/areacella_fx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2019-11-15T17:53:07Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>fx</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2019-11-15T17:53:07Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/).  Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file).  The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: areacella (['fld_s02i204'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>fx</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:e14f55f257cceafb2523e41244962371</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/f0abeaa6-9383-4702-88d5-2631baac4f4d</attribute:tracking_id>
+    <attribute:variable_id>areacella</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20191115</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/plots/hus200_trends/plot/seaborn_barplot.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/plot"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2008_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:31 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2008, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:01:11 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data6/adaptor.mars.internal-1613469629.0500119-6766-3-57592f1f-4916-4b53-a1a1-2f7ca7032a10.nc /cache/tmp/57592f1f-4916-4b53-a1a1-2f7ca7032a10-adaptor.mars.internal-1613469629.050683-6766-1-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2003_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/hus/gn/v20191115/hus_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_198001-201412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2019-11-21T06:04:10Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2019-11-21T06:04:10Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/).  Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file).  The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: hus (['fld_s30i205'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:e14f55f257cceafb2523e41244962371</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/3acd2b3a-e41b-4c1b-8b83-e9fc40e60d9d</attribute:tracking_id>
+    <attribute:variable_id>hus</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20191115</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2004_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:56 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2004, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:05:46 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data6/adaptor.mars.internal-1613469901.634478-30491-14-8a488d54-f4b4-4c64-9b41-6de1146b35d1.nc /cache/tmp/8a488d54-f4b4-4c64-9b41-6de1146b35d1-adaptor.mars.internal-1613469901.635564-30491-4-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1987_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:41 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1987, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:04:40 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data1/adaptor.mars.internal-1613469838.4995203-21337-1-80de0a3c-e37a-43ad-92bf-cea62dbf9845.nc /cache/tmp/80de0a3c-e37a-43ad-92bf-cea62dbf9845-adaptor.mars.internal-1613469838.5015337-21337-1-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1988_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:33 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1988, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:10:19 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data1/adaptor.mars.internal-1613470175.481168-23469-3-0d5351f0-6e89-44ed-93f8-731bf45677fc.nc /cache/tmp/0d5351f0-6e89-44ed-93f8-731bf45677fc-adaptor.mars.internal-1613470175.4817464-23469-2-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1986_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1995_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:15 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1995, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:11:02 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data5/adaptor.mars.internal-1613470221.7721999-10725-36-b1f369f5-667a-4c0e-802e-7bdc07de5eea.nc /cache/tmp/b1f369f5-667a-4c0e-802e-7bdc07de5eea-adaptor.mars.internal-1613470221.7731438-10725-8-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:activity prov:id="software:esmvaltool==2.13.0"/>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1996_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2002_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:44 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2002, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:09:24 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data4/adaptor.mars.internal-1613470119.8506238-10344-9-47c6cd1d-4a29-4b5a-b3b6-b21917502fd5.nc /cache/tmp/47c6cd1d-4a29-4b5a-b3b6-b21917502fd5-adaptor.mars.internal-1613470119.8514302-10344-3-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1999_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:44:00 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1999, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:02:05 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data5/adaptor.mars.internal-1613469683.6556232-2910-3-414eaa94-1610-4575-b98f-15954e22a2cf.nc /cache/tmp/414eaa94-1610-4575-b98f-15954e22a2cf-adaptor.mars.internal-1613469683.6566203-2910-1-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1994_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:22 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1994, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:03:03 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data3/adaptor.mars.internal-1613469735.874031-10155-11-2c420756-3216-4e8b-a0cb-e294f60b0b95.nc /cache/tmp/2c420756-3216-4e8b-a0cb-e294f60b0b95-adaptor.mars.internal-1613469735.8894975-10155-2-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1991_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:56 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1991, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:08:28 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data5/adaptor.mars.internal-1613470065.2036326-25414-9-9d51e229-2c3a-4c49-8db0-9826e7c34e34.nc /cache/tmp/9d51e229-2c3a-4c49-8db0-9826e7c34e34-adaptor.mars.internal-1613470065.2042449-25414-5-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1983_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:hus200_trends/plot"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc">
+    <attribute:alias>native6</attribute:alias>
+    <attribute:automatic_regrid>True</attribute:automatic_regrid>
+    <attribute:dataset>ERA5</attribute:dataset>
+    <attribute:diagnostic>hus200_trends</attribute:diagnostic>
+    <attribute:end_year>2009</attribute:end_year>
+    <attribute:family>E5</attribute:family>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grib_id>133</attribute:grib_id>
+    <attribute:level>pl</attribute:level>
+    <attribute:long_name>Specific Humidity</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>hus</attribute:original_short_name>
+    <attribute:preprocessor>trend_hus200</attribute:preprocessor>
+    <attribute:project>native6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:reference_for_metric>True</attribute:reference_for_metric>
+    <attribute:short_name>hus</attribute:short_name>
+    <attribute:standard_name>specific_humidity</attribute:standard_name>
+    <attribute:start_year>1980</attribute:start_year>
+    <attribute:tier>3</attribute:tier>
+    <attribute:timerange>1980/2009</attribute:timerange>
+    <attribute:tres>1M</attribute:tres>
+    <attribute:type>reanaly</attribute:type>
+    <attribute:typeid>00</attribute:typeid>
+    <attribute:units>1</attribute:units>
+    <attribute:variable_group>hus</attribute:variable_group>
+    <attribute:version>v1</attribute:version>
+    <preprocessor:area_statistics>{'operator': 'mean'}</preprocessor:area_statistics>
+    <preprocessor:convert_units>{'units': 'year-1'}</preprocessor:convert_units>
+    <preprocessor:extract_levels>{'levels': 20000, 'scheme': 'linear', 'coordinate': 'air_pressure'}</preprocessor:extract_levels>
+    <preprocessor:extract_shape>{'shapefile': PosixPath('/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/preprocessor/shapefiles/ar6.shp'), 'decomposed': True, 'ids': {'Acronym': ['NWN', 'NEN', 'GIC', 'WNA', 'CNA', 'ENA', 'NCA', 'SCA', 'CAR', 'NWS', 'NSA', 'NES', 'SAM', 'SWS', 'SES', 'SSA', 'NEU', 'WCE', 'EEU', 'MED', 'SAH', 'WAF', 'CAF', 'NEAF', 'SEAF', 'WSAF', 'ESAF', 'MDG', 'RAR', 'WSB', 'ESB', 'RFE', 'WCA', 'ECA', 'TIB', 'EAS', 'ARP', 'SAS', 'SEA', 'NAU', 'CAU', 'EAU', 'SAU', 'NZ', 'WAN', 'EAN']}}</preprocessor:extract_shape>
+    <preprocessor:linear_trend>{}</preprocessor:linear_trend>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Weigel, Katja"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1984_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1992_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:45:56 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1992, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:02:58 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data9/adaptor.mars.internal-1613469736.4523153-26906-36-37296583-b665-4e94-92d8-58f42264d808.nc /cache/tmp/37296583-b665-4e94-92d8-58f42264d808-adaptor.mars.internal-1613469736.4528513-26906-13-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:agent prov:id="author:Weigel, Katja">
+    <attribute:github>katjaweigel</attribute:github>
+    <attribute:institute>University of Bremen and DLR, Germany</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0001-6133-7801</attribute:orcid>
+  </prov:agent>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1994_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/plots/hus200_trends/plot/seaborn_barplot.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/plot"/>
+  </prov:wasDerivedFrom>
+  <prov:activity prov:id="task:hus200_trends/plot"/>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2009_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:09 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2009, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:03:45 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data9/adaptor.mars.internal-1613469783.381963-12188-26-86a05c17-3c96-4c17-801a-b25f3fb365bb.nc /cache/tmp/86a05c17-3c96-4c17-801a-b25f3fb365bb-adaptor.mars.internal-1613469783.382495-12188-7-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2001_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:24 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2001, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:03:58 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data9/adaptor.mars.internal-1613469795.7604463-2875-11-ab513f60-c050-45a7-8a4c-a5792d1a6f07.nc /cache/tmp/ab513f60-c050-45a7-8a4c-a5792d1a6f07-adaptor.mars.internal-1613469795.7610385-2875-5-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1992_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1999_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1997_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2005_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:38 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2005, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:06:40 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data7/adaptor.mars.internal-1613469955.4953496-29107-29-a9a090fa-f1ef-4800-adc7-6751f5060b02.nc /cache/tmp/a9a090fa-f1ef-4800-adc7-6751f5060b02-adaptor.mars.internal-1613469955.4959936-29107-7-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="recipe:recipe.yml">
+    <attribute:description>Box plot, linear trends for the 46 IPCC AR6 reference regions for land (Iturbide et al., 2020). The diagnostic called in this recipe uses the seaborn.boxplot function. See seaborn manual for detailed information (https://seaborn.pydata.org/generated/seaborn.boxplot.html).</attribute:description>
+    <attribute:references>[]</attribute:references>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1996_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:43:49 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 1996, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:03:53 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data4/adaptor.mars.internal-1613469789.6651168-8291-9-9abdc6ef-bbb2-456b-8470-79f01fadc978.nc /cache/tmp/9abdc6ef-bbb2-456b-8470-79f01fadc978-adaptor.mars.internal-1613469789.6657233-8291-3-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_2003_monthly.nc">
+    <attribute:Conventions>CF-1.6</attribute:Conventions>
+    <attribute:history>2021-02-16 11:51:50 UTC by era5cli 1.0.0: reanalysis-era5-pressure-levels-monthly-means {'variable': 'specific_humidity', 'year': 2003, 'product_type': 'monthly_averaged_reanalysis', 'month': ['01', '02', '03', '04', '05', '06', '07', '08', '09', '10', '11', '12'], 'time': ['00:00'], 'format': 'netcdf', 'pressure_level': [1, 2, 3, 5, 7, 10, 20, 30, 50, 70, 100, 125, 150, 175, 200, 225, 250, 300, 350, 400, 450, 500, 550, 600, 650, 700, 750, 775, 800, 825, 850, 875, 900, 925, 950, 975, 1000]}
+2021-02-16 10:12:04 GMT by grib_to_netcdf-2.16.0: /opt/ecmwf/eccodes/bin/grib_to_netcdf -S param -o /cache/data2/adaptor.mars.internal-1613470283.0155637-7061-21-4b14e237-48b7-4614-9924-bca4bd04ae02.nc /cache/tmp/4b14e237-48b7-4614-9924-bca4bd04ae02-adaptor.mars.internal-1613470283.0161061-7061-6-tmp.grib</attribute:history>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/native6/Tier3/ERA5/v1/mon/hus/era5_specific_humidity_1990_monthly.nc"/>
+    <prov:activity prov:ref="task:hus200_trends/hus"/>
+  </prov:wasDerivedFrom>
+</prov:document>

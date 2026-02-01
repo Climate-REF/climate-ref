@@ -1,42 +1,42 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250917_082133/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162413/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250917_082133/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162413/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250917_082133/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_histogram.nc": {
-      "filename": "executions/recipe_20250917_082133/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_histogram.nc",
+    "executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_histogram.nc": {
+      "filename": "executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_histogram.nc",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082133/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_lwcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082133/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_lwcre_histogram.nc",
+    "executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_lwcre_histogram.nc",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082133/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_lwcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082133/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_lwcre_histogram.nc",
+    "executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_lwcre_histogram.nc",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     }
   },
   "plots": {
-    "executions/recipe_20250917_082133/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
-      "filename": "executions/recipe_20250917_082133/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
+    "executions/recipe_20260130_162413/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
+      "filename": "executions/recipe_20260130_162413/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
       "dimensions": null
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250917_082133/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250917_082133/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162413/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162413/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

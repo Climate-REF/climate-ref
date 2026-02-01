@@ -1,0 +1,144 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+add_aux_coords: true
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+facets_as_columns:
+- dataset
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_1980-2009.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: pr_trends
+    end_year: 2009
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_1980-2009.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: trend_pr
+    project: CMIP6
+    recipe_dataset_index: 2
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1980
+    timerange: 1980/2009
+    units: mm kg m-3 day-1 yr-1
+    variable_group: pr
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/native6_ERA5_reanaly_v1_Amon_pr_1980-2009.nc
+  : alias: native6
+    automatic_regrid: true
+    dataset: ERA5
+    diagnostic: pr_trends
+    end_year: 2009
+    family: E5
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/native6_ERA5_reanaly_v1_Amon_pr_1980-2009.nc
+    frequency: mon
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: trend_pr
+    project: native6
+    recipe_dataset_index: 1
+    reference_for_metric: true
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1980
+    tier: 3
+    timerange: 1980/2009
+    tres: 1M
+    type: reanaly
+    typeid: '00'
+    units: mm kg m-3 day-1 yr-1
+    variable_group: pr
+    version: v1
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/obs4MIPs_GPCP-V2.3_pr_1980-2009.nc
+  : alias: obs4MIPs
+    dataset: GPCP-V2.3
+    diagnostic: pr_trends
+    end_year: 2009
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/obs4MIPs_GPCP-V2.3_pr_1980-2009.nc
+    frequency: mon
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm: []
+    preprocessor: trend_pr
+    project: obs4MIPs
+    recipe_dataset_index: 0
+    reference_for_metric: true
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1980
+    tier: 1
+    timerange: 1980/2009
+    units: mm kg m-3 day-1 yr-1
+    variable_group: pr
+    version: v20180519
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/metadata.yml
+legend_title: Data
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/pr_trends/plot
+plot_object_methods:
+  set_xlabel: region
+  set_ylabel: pr trend [mm kg m-3 day-1 yr-1]
+recipe: recipe.yml
+reset_index: true
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/run/pr_trends/plot
+scheduler_address: tcp://127.0.0.1:43545
+script: plot
+seaborn_func: barplot
+seaborn_kwargs:
+  hue: dataset
+  x: shape_id
+  y: pr
+seaborn_settings:
+  rc:
+    figure.figsize:
+    - 28
+    - 6
+  style: ticks
+suptitle: Trend in Precipitation
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162807/work/pr_trends/plot
+write_netcdf: true
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162807/work/pr_trends/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/pr_trends/plot
+INFO:seaborn_diag:Using plotting function seaborn.barplot
+INFO:seaborn_diag:Grouping datasets by 'alias' to create main data frame (data frames are merged [combined along axis 1, i.e., columns] within groups, then concatenated [combined along axis 0, i.e., rows] across groups)
+INFO:seaborn_diag:Adding aux_coords as columns
+INFO:seaborn_diag:Adding facets as columns: ['dataset']
+INFO:seaborn_diag:Processing group 'CMIP6'
+INFO:seaborn_diag:Reading <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_1980-2009.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/_nc_load_rules/helpers.py:498: UnknownCellMethodWarning: NetCDF variable 'pr' contains unknown cell method 'trend'
+  warnings.warn(msg, category=UnknownCellMethodWarning)
+
+INFO:seaborn_diag:Processing group 'native6'
+INFO:seaborn_diag:Reading <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/native6_ERA5_reanaly_v1_Amon_pr_1980-2009.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/_nc_load_rules/helpers.py:498: UnknownCellMethodWarning: NetCDF variable 'pr' contains unknown cell method 'trend'
+  warnings.warn(msg, category=UnknownCellMethodWarning)
+
+INFO:seaborn_diag:Processing group 'obs4MIPs'
+INFO:seaborn_diag:Reading <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/pr_trends/pr/obs4MIPs_GPCP-V2.3_pr_1980-2009.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/_nc_load_rules/helpers.py:498: UnknownCellMethodWarning: NetCDF variable 'pr' contains unknown cell method 'trend'
+  warnings.warn(msg, category=UnknownCellMethodWarning)
+
+INFO:seaborn_diag:Successfully retrieved main data frame from input data
+INFO:seaborn_diag:Creating plot with
+seaborn.barplot(
+    data=main_data_frame,
+    x='shape_id',
+    y='pr',
+    hue='dataset',
+)
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162807/work/pr_trends/plot/seaborn_barplot.nc
+INFO:seaborn_diag:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/pr_trends/plot/seaborn_barplot.png
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

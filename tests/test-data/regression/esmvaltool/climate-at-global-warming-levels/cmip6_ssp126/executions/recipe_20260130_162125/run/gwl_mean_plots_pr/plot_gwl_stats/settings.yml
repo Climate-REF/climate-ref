@@ -1,0 +1,34 @@
+window_size: 21
+gwls:
+- 1.5
+- 2.0
+- 3.0
+- 4.0
+- 5.0
+pattern: GWL_exceedance_years.csv
+quickplot:
+  plot_type: map
+  cmap_mean: YlGnBu
+  cmap_stdev: YlGnBu
+  title_var: Precipitation
+  mean_level_params:
+  - 0.0
+  - 18.0
+  - 2.0
+  stdev_level_params:
+  - 0.0
+  - 11.0
+  - 1.0
+recipe: recipe.yml
+version: 2.13.0
+script: plot_gwl_stats
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/run/gwl_mean_plots_pr/plot_gwl_stats
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/plots/gwl_mean_plots_pr/plot_gwl_stats
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/work/gwl_mean_plots_pr/plot_gwl_stats
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+scheduler_address: tcp://127.0.0.1:42497
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162125/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+- <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/gwl_mean_plots_pr/pr/metadata.yml

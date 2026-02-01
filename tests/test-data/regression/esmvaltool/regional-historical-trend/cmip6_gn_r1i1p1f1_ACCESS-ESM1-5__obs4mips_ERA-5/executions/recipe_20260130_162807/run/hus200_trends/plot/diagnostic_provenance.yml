@@ -1,0 +1,10 @@
+? <OUTPUT_DIR>/executions/recipe_20260130_162807/plots/hus200_trends/plot/seaborn_barplot.png
+: &id001
+  ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_hus_gn_1980-2009.nc
+  - <OUTPUT_DIR>/executions/recipe_20260130_162807/preproc/hus200_trends/hus/native6_ERA5_reanaly_v1_Amon_hus_1980-2009.nc
+  authors:
+  - schlund_manuel
+  caption: Seaborn barplot for one or more dataset(s)
+? <OUTPUT_DIR>/executions/recipe_20260130_162807/work/hus200_trends/plot/seaborn_barplot.nc
+: *id001

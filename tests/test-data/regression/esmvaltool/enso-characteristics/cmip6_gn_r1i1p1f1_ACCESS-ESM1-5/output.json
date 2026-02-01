@@ -1,66 +1,66 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250917_082434/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162632/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250917_082434/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162632/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250917_082434/work/diagnostic_metrics/plot_script/matrix.csv": {
-      "filename": "executions/recipe_20250917_082434/work/diagnostic_metrics/plot_script/matrix.csv",
+    "executions/recipe_20260130_162632/work/diagnostic_metrics/plot_script/matrix.csv": {
+      "filename": "executions/recipe_20260130_162632/work/diagnostic_metrics/plot_script/matrix.csv",
       "long_name": "List of metric values.",
       "description": "",
       "dimensions": null
     }
   },
   "plots": {
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_09pattern.png",
       "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N).",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_10lifecycle.png",
       "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_11amplitude.png",
       "long_name": "Standard deviation of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), representing the amplitude of variability.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_12seasonality.png",
       "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_13asymmetry.png",
       "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). ",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_14duration.png",
       "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event.",
       "description": "",
       "dimensions": null
     },
-    "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png": {
-      "filename": "executions/recipe_20250917_082434/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png",
+    "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png": {
+      "filename": "executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_15diversity.png",
       "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events.",
       "description": "",
       "dimensions": null
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250917_082434/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250917_082434/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162632/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162632/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

@@ -1,0 +1,88 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script script1 with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+  : activity: CMIP
+    alias: ACCESS-ESM1-5
+    caption: Annual global mean {long_name} according to {dataset}.
+    dataset: ACCESS-ESM1-5
+    diagnostic: timeseries
+    end_year: 250
+    ensemble: r1i1p1f1
+    exp: 1pctCO2
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: annual_mean_global
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 101
+    timerange: 01010116T120000/02501216T120000
+    units: degrees_C
+    variable_group: tas
+    version: v20191115
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162750/plots/timeseries/script1
+quickplot:
+  plot_type: plot
+realms:
+- atmos
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162750/run/timeseries/script1
+scheduler_address: tcp://127.0.0.1:32821
+script: script1
+themes:
+- phys
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162750/work/timeseries/script1
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162750/work/timeseries/script1
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162750/plots/timeseries/script1
+INFO:diagnostic:Example of how to select only CMIP5 temperature data:
+[]
+INFO:diagnostic:Example of how to sort this selection by dataset:
+[]
+INFO:diagnostic:Example of how to group and sort input data by variable groups from the recipe:
+{'tas': [{'activity': 'CMIP',
+          'alias': 'ACCESS-ESM1-5',
+          'caption': 'Annual global mean {long_name} according to {dataset}.',
+          'dataset': 'ACCESS-ESM1-5',
+          'diagnostic': 'timeseries',
+          'end_year': 250,
+          'ensemble': 'r1i1p1f1',
+          'exp': '1pctCO2',
+          'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc',
+          'frequency': 'mon',
+          'grid': 'gn',
+          'institute': 'CSIRO',
+          'long_name': 'Near-Surface Air Temperature',
+          'mip': 'Amon',
+          'modeling_realm': ['atmos'],
+          'preprocessor': 'annual_mean_global',
+          'project': 'CMIP6',
+          'recipe_dataset_index': 0,
+          'short_name': 'tas',
+          'standard_name': 'air_temperature',
+          'start_year': 101,
+          'timerange': '01010116T120000/02501216T120000',
+          'units': 'degrees_C',
+          'variable_group': 'tas',
+          'version': 'v20191115'}]}
+INFO:diagnostic:Processing variable tas
+INFO:diagnostic:Processing dataset ACCESS-ESM1-5
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162750/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162750/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

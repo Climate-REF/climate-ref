@@ -97,7 +97,7 @@ def validate_registry_cache(
             continue
 
         # Check if file exists in cache
-        cached_path = pathlib.Path(registry.abspath(key))  # type: ignore[attr-defined]
+        cached_path = registry.abspath / key  # type: ignore[attr-defined]
         if not cached_path.exists():
             errors.append(f"{name}: File not cached: {key}")
             continue

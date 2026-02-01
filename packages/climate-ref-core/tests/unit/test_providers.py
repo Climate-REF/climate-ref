@@ -433,6 +433,42 @@ class TestCondaDiagnosticProvider:
                 env={"existing_var": "existing_value", "test_var": "test_value"},
             )
 
+    def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider):
+        """Test that run() re-raises CalledProcessError when command fails."""
+        conda_exe = tmp_path / "conda" / "micromamba"
+        mock_env_path = mocker.Mock(
+            spec=Path,
+            new_callable=mocker.PropertyMock,
+            exists=lambda: True,
+            __str__=lambda _: str(provider.prefix / "mock-env"),
+        )
+
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "get_conda_exe",
+            create_autospec=True,
+            return_value=conda_exe,
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=mock_env_path,
+        )
+
+        # Mock subprocess.run to raise CalledProcessError
+        error = subprocess.CalledProcessError(1, "mock-command", output="error output")
+        error.stdout = "error output"
+        mocker.patch.object(
+            climate_ref_core.providers.subprocess,
+            "run",
+            create_autospec=True,
+            side_effect=error,
+        )
+
+        with pytest.raises(subprocess.CalledProcessError):
+            provider.run(["mock-command"])
+
 
 class TestLifecycleHooks:
     """Tests for provider lifecycle hooks."""
@@ -506,6 +542,12 @@ class TestLifecycleHooks:
         mock_config = mocker.Mock()
 
         assert provider.validate_setup(mock_config) is True
+
+    def test_get_data_path_default_returns_none(self):
+        """Test that default get_data_path returns None."""
+        provider = DiagnosticProvider("test", "1.0")
+
+        assert provider.get_data_path() is None
 
     def test_conda_setup_environment_calls_create_env(self, mocker, tmp_path):
         """Test that CondaDiagnosticProvider.setup_environment calls create_env."""

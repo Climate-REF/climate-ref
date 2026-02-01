@@ -56,3 +56,14 @@ class TestProvidersSetup:
         """Test setup with --skip-data."""
         result = invoke_cli(["providers", "setup", "--skip-data"])
         assert result.exit_code == 0
+
+    def test_setup_skip_both(self, config, invoke_cli):
+        """Test setup with both --skip-env and --skip-data."""
+        result = invoke_cli(["providers", "setup", "--skip-env", "--skip-data"])
+        assert result.exit_code == 0
+
+    def test_setup_validate_only_provider_filter(self, config, invoke_cli):
+        """Test setup with --validate-only and --provider filter."""
+        result = invoke_cli(["providers", "setup", "--validate-only", "--provider", "example"])
+        assert result.exit_code == 0
+        assert "valid" in result.stdout

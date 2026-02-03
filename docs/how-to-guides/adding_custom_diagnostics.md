@@ -24,7 +24,7 @@ This protocol defines the interface that all diagnostics must implement, includi
 - `def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult`:
   The method that builds the execution result, returning an `ExecutionResult` object.
 
-## 1. Scaffold a new provider` classes.
+## 1. Scaffold a new provider
 
 Use the [climate-ref-example](https://github.com/Climate-REF/climate-ref/tree/main/packages/climate-ref-example) package as a template:
 
@@ -54,7 +54,23 @@ mv conda-lock.yml packages/climate-ref-myprovider/src/climate_ref_myprovider/req
 
 ## 3. Implement Diagnostic classes
 
-Inside your provider package, create classes that implement the [Diagnostic protocol][climate_ref_core.diagnostics.AbstractDiagnostic]:
+Inside your provider package, create classes that implement the [Diagnostic protocol][climate_ref_core.diagnostics.AbstractDiagnostic].
+
+/// admonition | Offline execution requirement
+    type: warning
+
+Diagnostics **must not** make network calls during `execute()` or `build_execution_result()`.
+The REF is designed to run on HPC compute nodes that typically lack internet access.
+
+All required data must be either:
+
+- Provided via the `definition.datasets` (input data from CMIP6, obs4MIPs, etc.)
+- Pre-fetched during provider setup via `fetch_data()` lifecycle hook
+
+If your diagnostic needs reference datasets, climatologies, or auxiliary files,
+implement the `fetch_data()` hook on your provider (see [Section 5](#5-provider-lifecycle-hooks-optional)).
+
+///
 
 ```python
 from climate_ref_core.diagnostics import Diagnostic, ExecutionResult, ExecutionDefinition, DataRequirement
@@ -167,7 +183,108 @@ as in the examples above, you would add the following to your `pyproject.toml`:
 myprovider = "climate_ref_myprovider:provider"
 ```
 
-## 5. Write basic tests
+## 5. Provider lifecycle hooks (optional)
+
+If your provider needs to run on HPC systems where compute nodes lack internet access,
+you can implement lifecycle hooks to prepare for offline execution.
+These hooks are called by `ref providers setup` before any diagnostics are run.
+
+### Available hooks
+
+| Hook | Purpose | When to use |
+|------|---------|-------------|
+| `setup_environment(config)` | Set up execution environment | Conda env creation, tool installation |
+| `fetch_data(config)` | Download required data | Reference datasets, auxiliary files |
+| `post_setup(config)` | Post-setup tasks | Tasks requiring both env and data |
+| `validate_setup(config)` | Validate setup is complete | Return `True` if ready for offline execution |
+
+All hooks receive the application `Config` object and **must be idempotent** (safe to call multiple times).
+
+### Choosing a provider base class
+
+The REF provides several provider base classes depending on your needs:
+
+| Base Class | Use Case |
+|------------|----------|
+| `DiagnosticProvider` | Pure Python diagnostics, no special environment needed |
+| `CommandLineDiagnosticProvider` | Diagnostics that run via subprocess |
+| `CondaDiagnosticProvider` | Diagnostics requiring an isolated conda environment |
+
+`CondaDiagnosticProvider` automatically implements `setup_environment()` to create conda environments.
+
+### Example: Provider with data fetching
+
+If your diagnostics need reference data, override `fetch_data()`:
+
+```python
+from climate_ref_core.providers import DiagnosticProvider
+
+class MyProvider(DiagnosticProvider):
+    def __init__(self):
+        super().__init__("MyProvider", __version__)
+        self._registry = None  # DatasetRegistry for reference data
+
+    def fetch_data(self, config):
+        """Download reference datasets for offline execution."""
+        if self._registry is None:
+            return
+
+        # Fetch all registered files to the pooch cache
+        self._registry.fetch_all_files()
+
+    def validate_setup(self, config):
+        """Check all required data is available."""
+        if self._registry is None:
+            return True
+        # Check that all files are cached
+        return all(
+            self._registry.is_cached(name)
+            for name in self._registry.list_files()
+        )
+```
+
+### Example: Conda-based provider
+
+For providers using conda environments, extend `CondaDiagnosticProvider`:
+
+```python
+from climate_ref_core.providers import CondaDiagnosticProvider
+
+class MyCondaProvider(CondaDiagnosticProvider):
+    def __init__(self):
+        super().__init__("MyCondaProvider", __version__)
+
+    def fetch_data(self, config):
+        """Fetch data after conda env is ready."""
+        # Called after setup_environment() creates the conda env
+        # Download any reference data here
+        pass
+
+    def post_setup(self, config):
+        """Run any post-setup tasks."""
+        # Called after both env and data are ready
+        pass
+```
+
+The conda environment is defined by a `conda-lock.yml` file in your package's `requirements/` directory.
+See the [ESMValTool provider](https://github.com/Climate-REF/climate-ref/tree/main/packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements) for an example.
+
+### Running setup
+
+Users run provider setup with:
+
+```bash
+# Setup all providers
+ref providers setup
+
+# Setup specific provider
+ref providers setup --provider myprovider
+
+# Validate setup
+ref providers setup --validate-only
+```
+
+## 6. Write basic tests
 
 Add unit tests under `packages/climate-ref-myprovider/tests/` to verify the data requirements and execution logic of your diagnostics.
 
@@ -253,7 +370,7 @@ pytest  --slow -k "[global-mean-timeseries]" --force-regen
 
 The `global-mean-timeseries` is the slug (or the subset of the slug) of the diagnostic you want to test.
 
-## 6. Enable your provider in configuration
+## 7. Enable your provider in configuration
 
 Edit your `ref.toml` configuration file to include your new provider:
 
@@ -264,7 +381,7 @@ provider = "climate_ref_myprovider:provider"
 
 Next time you run a `ref` command you should see your provider being added to the database.
 
-## 7. Update Controlled Vocabulary (optional)
+## 8. Update Controlled Vocabulary (optional)
 
 If your metrics use new facets in its metric output (e.g. custom experiment IDs or grid labels),
 extend the controlled vocabulary in `climate-ref-core`:

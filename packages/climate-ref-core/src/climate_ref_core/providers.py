@@ -175,6 +175,105 @@ class DiagnosticProvider:
         """
         return self._diagnostics[slug.lower()]
 
+    def setup(
+        self,
+        config: Config,
+        *,
+        skip_env: bool = False,
+        skip_data: bool = False,
+    ) -> None:
+        """
+        Perform all setup required before offline execution.
+
+        This calls setup_environment and fetch_data in the correct order.
+        Override individual hooks for fine-grained control.
+
+        This method MUST be idempotent - safe to call multiple times.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        skip_env
+            If True, skip environment setup (e.g., conda)
+        skip_data
+            If True, skip data fetching
+        """
+        if not skip_env:
+            self.setup_environment(config)
+        if not skip_data:
+            self.fetch_data(config)
+
+    def setup_environment(self, config: Config) -> None:
+        """
+        Set up the execution environment (e.g., conda environment).
+
+        Default implementation does nothing. Override in subclasses
+        that require environment setup.
+
+        This method MUST be idempotent.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        """
+        pass
+
+    def fetch_data(self, config: Config) -> None:
+        """
+        Fetch all data required for offline execution.
+
+        This includes reference datasets, climatology files, map files,
+        recipes, or any other data the provider needs.
+
+        Default implementation does nothing. Override in subclasses
+        that require data fetching. Providers are responsible for
+        determining what data they need and how to fetch it.
+
+        Data should be downloaded to the pooch cache (via `fetch_all_files`
+        with `output_dir=None`). Diagnostics can then access data via
+        `registry.abspath`.
+
+        This method MUST be idempotent.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        """
+        pass
+
+    def validate_setup(self, config: Config) -> bool:
+        """
+        Validate that the provider is ready for offline execution.
+
+        Returns True if setup is complete and valid, False otherwise.
+        Default implementation returns True.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+
+        Returns
+        -------
+        bool
+            True if setup is valid and complete
+        """
+        return True
+
+    def get_data_path(self) -> Path | None:
+        """
+        Get the path where this provider's data is cached.
+
+        Returns
+        -------
+        Path | None
+            The data cache path, or None if the provider doesn't use cached data.
+        """
+        return None
+
 
 def import_provider(fqn: str) -> DiagnosticProvider:
     """
@@ -505,3 +604,20 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.error(f"Failed to run {cmd}")
             logger.error(e.stdout)
             raise e
+
+    def setup_environment(self, config: Config) -> None:
+        """Set up the conda environment."""
+        self.create_env()
+
+    def validate_setup(self, config: Config) -> bool:
+        """Validate conda environment exists."""
+        env_exists = self.env_path.exists()
+        if not env_exists:
+            logger.error(
+                f"Conda environment for {self.slug} is not available at {self.env_path}. "
+                f"Please run `ref providers setup --provider {self.slug}` to install it."
+            )
+
+        # TODO: Could add more validation here (e.g., check packages installed)
+
+        return env_exists

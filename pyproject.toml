@@ -56,7 +56,6 @@ dev = [
     "jupytext>=1.16.3",
     "matplotlib>=3.10.1",
     "notebook>=7",
-    "pandas>=2.2.3",
     "pandas-indexing>=0.6.3",
     "prettyprinter>=0.18.0",
     "requests>=2.32.3",

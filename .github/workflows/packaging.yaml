@@ -106,13 +106,10 @@ jobs:
     - name: Run Migrations
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref config list
-    - name: Initialize Providers (pmp)
+    - name: Initialize Providers
       run: |
         # Imports ilamb3 which tries to create /home/app/.config/ilamb3 on import, no way to tell it to live somewhere else
-        kubectl exec deployment/test-ref-pmp -- ref providers create-env --provider pmp
-    - name: Initialize Providers (emsvaltool)
-      run: |
-        kubectl exec deployment/test-ref-esmvaltool -- ref providers create-env --provider esmvaltool
+        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider pmp
     - name: Fetch Test Data
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref datasets fetch-data --registry sample-data --output-directory /ref/sample-data
@@ -131,7 +128,7 @@ jobs:
         kubectl exec deployment/test-ref-orchestrator -- ref -v datasets ingest --source-type obs4mips /ref/sample-data/obs4REF
     - name: Simple Solve
       run: |
-        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 180 --one-per-provider
+        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 360 --one-per-provider
     - name: Capture Worker Logs on Failure
       if: failure()
       run: |

@@ -21,3 +21,49 @@ class TestProvidersCreateEnv:
             ],
             expected_exit_code=1,
         )
+
+
+class TestProvidersSetup:
+    def test_setup(self, config, invoke_cli):
+        """Test that setup command runs without error."""
+        result = invoke_cli(["providers", "setup"])
+        assert result.exit_code == 0
+
+    def test_setup_provider_filter(self, config, invoke_cli):
+        """Test setup with --provider filter."""
+        result = invoke_cli(["providers", "setup", "--provider", "example"])
+        assert result.exit_code == 0
+
+    def test_setup_invalid_provider(self, config, invoke_cli):
+        """Test setup with invalid provider."""
+        invoke_cli(
+            ["providers", "setup", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+
+    def test_setup_validate_only(self, config, invoke_cli):
+        """Test setup with --validate-only."""
+        result = invoke_cli(["providers", "setup", "--validate-only"])
+        assert result.exit_code == 0
+        assert "valid" in result.stdout or "invalid" in result.stdout
+
+    def test_setup_skip_env(self, config, invoke_cli):
+        """Test setup with --skip-env."""
+        result = invoke_cli(["providers", "setup", "--skip-env"])
+        assert result.exit_code == 0
+
+    def test_setup_skip_data(self, config, invoke_cli):
+        """Test setup with --skip-data."""
+        result = invoke_cli(["providers", "setup", "--skip-data"])
+        assert result.exit_code == 0
+
+    def test_setup_skip_both(self, config, invoke_cli):
+        """Test setup with both --skip-env and --skip-data."""
+        result = invoke_cli(["providers", "setup", "--skip-env", "--skip-data"])
+        assert result.exit_code == 0
+
+    def test_setup_validate_only_provider_filter(self, config, invoke_cli):
+        """Test setup with --validate-only and --provider filter."""
+        result = invoke_cli(["providers", "setup", "--validate-only", "--provider", "example"])
+        assert result.exit_code == 0
+        assert "valid" in result.stdout

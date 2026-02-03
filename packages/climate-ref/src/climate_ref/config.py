@@ -364,8 +364,8 @@ def _get_default_ignore_datasets_file() -> Path:
             f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
             f"to {ignore_datasets_file}"
         )
-        response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
         try:
+            response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
             response.raise_for_status()
         except requests.RequestException as exc:
             logger.warning(f"Failed to download default ignore datasets file: {exc}")

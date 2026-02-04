@@ -8,7 +8,6 @@ Climate-REF uses a [TOML](https://toml.io/en/) configuration file to specify dat
 
 Additional information about the configuration file can be found in the [Configuration documentation](../configuration.md).
 
-
 ## 1. Select a location for storing your configuration
 
 The most important part of the REF configuration is the location where the REF will store its data and results.
@@ -24,7 +23,6 @@ or exported directly in your terminal session (assuming a bash shell):
 ```bash
 export REF_CONFIGURATION="/path/to/your/ref/configuration"
 ```
-
 
 ## 2. Generate
 
@@ -96,7 +94,6 @@ provider = "climate_ref_pmp:provider"
 [diagnostic_providers.config]
 ```
 
-
 The particularly important sections to customize are:
 
 - **paths**: Set the paths for logs, scratch space, software, and results. These should point to directories where you have write access.
@@ -120,7 +117,6 @@ export REF_DATASET_CACHE_DIR="/path/to/your/dataset/cache"
 
 If environment variables are set, Climate-REF will use their values in preference to those found in the configuration file.
 
-
 ## 5. Validate your configuration
 
 To ensure your configuration is valid and correctly read by the REF, you can run the following command:
@@ -130,7 +126,6 @@ ref config list
 ```
 
 Your configuration should be displayed without errors and should include any changes you made in the `ref.toml` file.
-
 
 ## 6. Set up diagnostic providers
 
@@ -144,6 +139,15 @@ ref providers setup
 
 This creates any required conda environments (installed in `$REF_CONFIGURATION/software` by default,
 configurable via [paths.software](../configuration.md#paths_software)) and downloads reference data to the local cache.
+
+/// admonition | Conda Environments
+    type: note
+
+There may be some error messages related to linking when setting up the conda environments.
+This is expected and does not impact the REF's functionality.
+The ILAMB provider does not currently have a conda environment.
+
+//
 
 /// admonition | HPC users
     type: tip

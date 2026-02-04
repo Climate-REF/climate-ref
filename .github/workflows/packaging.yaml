@@ -109,7 +109,7 @@ jobs:
     - name: Initialize Providers
       run: |
         # Imports ilamb3 which tries to create /home/app/.config/ilamb3 on import, no way to tell it to live somewhere else
-        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider pmp
+        kubectl exec deployment/test-ref-orchestrator -- ref providers setup
     - name: Fetch Test Data
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref datasets fetch-data --registry sample-data --output-directory /ref/sample-data

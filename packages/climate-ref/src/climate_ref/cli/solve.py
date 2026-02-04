@@ -2,8 +2,6 @@ from typing import Annotated
 
 import typer
 
-from climate_ref.solver import SolveFilterOptions, solve_required_executions
-
 app = typer.Typer()
 
 
@@ -54,6 +52,8 @@ def solve(  # noqa: PLR0913
     Filters can be applied to limit the diagnostics and providers that are considered, see the options
     `--diagnostic` and `--provider` for more information.
     """
+    from climate_ref.solver import SolveFilterOptions, solve_required_executions
+
     config = ctx.obj.config
     db = ctx.obj.database
 

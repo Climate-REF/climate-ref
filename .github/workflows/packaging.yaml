@@ -94,7 +94,7 @@ jobs:
       run: |
         helm install test oci://ghcr.io/climate-ref/charts/ref \
           --version=${{ needs.helm.outputs.generated-semver }} \
-          --set climate-ref.image.tag=pr-${{ github.event.pull_request.number }} \
+          --set defaults.image.tag=pr-${{ github.event.pull_request.number }} \
           -f helm/ci/gh-actions-values.yaml
 
         sleep 60
@@ -109,7 +109,11 @@ jobs:
     - name: Initialize Providers
       run: |
         # Imports ilamb3 which tries to create /home/app/.config/ilamb3 on import, no way to tell it to live somewhere else
-        kubectl exec deployment/test-ref-orchestrator -- ref providers setup
+        # First, set up all providers without fetching data (handles conda envs)
+        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --skip-data
+        # Fetch data for providers except esmvaltool (ERA5 data is too large for CI)
+        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider pmp
+        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider ilamb
     - name: Fetch Test Data
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref datasets fetch-data --registry sample-data --output-directory /ref/sample-data

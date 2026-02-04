@@ -16,6 +16,20 @@ permissions:
   id-token: write
 
 jobs:
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      helm: ${{ steps.filter.outputs.helm }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            helm:
+              - 'helm/**'
+
   containers:
     name: Containers
     runs-on: ubuntu-latest
@@ -34,6 +48,8 @@ jobs:
   helm:
     name: Helm Chart
     runs-on: ubuntu-latest
+    needs: [changes]
+    if: needs.changes.outputs.helm == 'true' || github.event_name != 'pull_request'
     permissions:
       packages: write
     outputs:
@@ -70,8 +86,9 @@ jobs:
   test:
     name: Test Helm Deployment
     runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    needs: [containers, helm]
+    timeout-minutes: 30
+    if: github.event_name == 'pull_request' && needs.changes.outputs.helm == 'true'
+    needs: [changes, containers, helm]
     steps:
     - uses: actions/checkout@v6
     - name: Cache Sample Data (Restore)

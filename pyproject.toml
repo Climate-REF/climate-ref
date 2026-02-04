@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-root"
-version = "0.8.1"
+version = "0.9.0"
 description = "Climate Rapid Evaluation Framework (REF) root package"
 readme = "README.md"
 authors = [{ name = "Jared Lewis", email = "jared.lewis@climate-resource.com" }]
@@ -56,7 +56,6 @@ dev = [
     "jupytext>=1.16.3",
     "matplotlib>=3.10.1",
     "notebook>=7",
-    "pandas>=2.2.3",
     "pandas-indexing>=0.6.3",
     "prettyprinter>=0.18.0",
     "requests>=2.32.3",

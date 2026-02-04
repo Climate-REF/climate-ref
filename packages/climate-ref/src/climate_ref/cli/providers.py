@@ -106,7 +106,7 @@ def create_env(
 
 
 @app.command()
-def setup(
+def setup(  # noqa: PLR0913
     ctx: typer.Context,
     provider: Annotated[
         str | None,
@@ -119,6 +119,10 @@ def setup(
     skip_data: Annotated[
         bool,
         typer.Option(help="Skip data fetching."),
+    ] = False,
+    skip_validate: Annotated[
+        bool,
+        typer.Option(help="Skip validation."),
     ] = False,
     validate_only: Annotated[
         bool,
@@ -164,12 +168,15 @@ def setup(
         logger.info(f"Setting up provider {provider_.slug}")
         try:
             provider_.setup(config, skip_env=skip_env, skip_data=skip_data)
-            is_valid = provider_.validate_setup(config)
-            if not is_valid:
-                logger.error(f"Provider {provider_.slug} setup completed but validation failed")
-                failed_providers.append(provider_.slug)
+            if not skip_validate:
+                is_valid = provider_.validate_setup(config)
+                if not is_valid:
+                    logger.error(f"Provider {provider_.slug} setup completed but validation failed")
+                    failed_providers.append(provider_.slug)
+                else:
+                    logger.info(f"Finished setting up provider {provider_.slug}")
             else:
-                logger.info(f"Finished setting up provider {provider_.slug}")
+                logger.info(f"Skipped validation for provider {provider_.slug}")
         except Exception as e:
             logger.opt(exception=True).error(f"Failed to setup provider {provider_.slug}: {e}")
             failed_providers.append(provider_.slug)

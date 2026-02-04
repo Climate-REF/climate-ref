@@ -21,6 +21,38 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.9.0 (2026-02-03)
+
+### Features
+
+- Added test data management infrastructure for diagnostic development:
+
+  - New `ref test-cases` CLI commands (`fetch`, `list`, `run`) for managing and running diagnostic test cases.
+  - ESGF data fetching utilities with support for CMIP6 and obs4MIPs datasets.
+  - `TestDataSpecification` and `TestCase` classes for defining reproducible test scenarios.
+
+  ([#475](https://github.com/Climate-REF/climate-ref/pull/475))
+- Add functionality to translate a CMIP6 dataset to the new CMIP7 conventions ([#484](https://github.com/Climate-REF/climate-ref/pull/484))
+- Added test automation infrastructure for diagnostic testing using test-cases ([#485](https://github.com/Climate-REF/climate-ref/pull/485))
+- Added CMIP6 to CMIP7 format conversion command-line script to translate CMIP6 datasets into CMIP7-compatible format. ([#489](https://github.com/Climate-REF/climate-ref/pull/489))
+- Added `RegistryRequest` class for fetching datasets from pooch registries (pmp-climatology, obs4ref) instead of ESGF. ([#490](https://github.com/Climate-REF/climate-ref/pull/490))
+- Added Helm chart for Kubernetes deployment with automated CI/CD pipeline for building and publishing the chart to GitHub Container Registry, including deployment templates for provider workloads (ESMValTool, PMP, ILAMB), Flower monitoring UI, Dragonfly Redis dependency, and comprehensive integration testing in minikube. ([#492](https://github.com/Climate-REF/climate-ref/pull/492))
+- Add CI workflow to verify solve works without network access (ci-offline-solve.yaml).
+  This test uses Docker with --network none to block all network access including
+  subprocesses. Runs every other day and can be triggered manually. ([#497](https://github.com/Climate-REF/climate-ref/pull/497))
+- Added provider lifecycle hooks for offline execution setup. Providers can now implement `setup_environment()`, `fetch_data()`, and `post_setup()` methods to prepare for execution on HPC compute nodes without internet access. A new `ref providers setup` CLI command runs all provider setup hooks, fetching required reference data to the local cache before offline solving. ([#498](https://github.com/Climate-REF/climate-ref/pull/498))
+
+### Improvements
+
+- Clean up the open database connections in the test suite ([#482](https://github.com/Climate-REF/climate-ref/pull/482))
+- Improved catalog handling with hash-based change detection and multi-file dataset support. Enhanced CLI `test-cases` commands with new flags: `--only-missing`, `--force`, `--dry-run`, `--if-changed`, and `--clean`. ([#490](https://github.com/Climate-REF/climate-ref/pull/490))
+- Updated ESMValTool to v2.13.0 ([#500](https://github.com/Climate-REF/climate-ref/pull/500))
+
+### Trivial/Internal Changes
+
+- [#480](https://github.com/Climate-REF/climate-ref/pull/480), [#506](https://github.com/Climate-REF/climate-ref/pull/506)
+
+
 ## climate-ref 0.8.1 (2026-01-06)
 
 ### Bug Fixes

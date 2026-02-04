@@ -1,6 +1,7 @@
 # Climate REF Helm Chart
 
-A Helm chart for deploying the Climate REF (Rapid Evaluation Framework) on Kubernetes. This chart deploys a distributed task execution system using Celery workers for running climate diagnostics.
+A Helm chart for deploying the Climate REF (Rapid Evaluation Framework) on Kubernetes.
+This chart deploys a distributed task execution system using Celery workers for running climate diagnostics.
 
 ## Overview
 
@@ -17,6 +18,10 @@ The chart deploys:
 - Access to container images:
   - `ghcr.io/climate-ref/climate-ref`
   - `mher/flower`
+
+## Versioning
+
+This chart uses **coupled versioning**: the chart version, appVersion, and default image tag are all kept in sync with the main application version.
 
 ## Installation
 
@@ -142,7 +147,7 @@ These defaults apply to all providers unless overridden per-provider.
 | --------------------------- | ------------------------- | --------------------------------- |
 | `defaults.replicaCount`     | Number of worker replicas | `1`                               |
 | `defaults.image.repository` | Worker image repository   | `ghcr.io/climate-ref/climate-ref` |
-| `defaults.image.tag`        | Worker image tag          | `pr-388`                          |
+| `defaults.image.tag`        | Worker image tag          | `v0.9.0`                          |
 | `defaults.image.pullPolicy` | Image pull policy         | `IfNotPresent`                    |
 | `defaults.resources`        | Resource requests/limits  | `{}`                              |
 | `defaults.nodeSelector`     | Node selector             | `{}`                              |

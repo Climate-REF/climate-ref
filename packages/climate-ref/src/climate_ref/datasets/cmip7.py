@@ -8,53 +8,17 @@ from __future__ import annotations
 
 import traceback
 import warnings
-from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import xarray as xr
 from ecgtools import Builder
-from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP7Dataset
-
-
-def _parse_datetime(dt_str: pd.Series[str]) -> pd.Series[datetime | Any]:
-    """
-    Parse datetime strings from CMIP7 files.
-
-    Pandas tries to coerce everything to their own datetime format, which is not what we want here.
-    """
-
-    def _inner(date_string: str | None) -> datetime | None:
-        if not date_string or pd.isnull(date_string):
-            return None
-
-        # Try to parse the date string with and without milliseconds
-        for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"):
-            try:
-                return datetime.strptime(date_string, fmt)
-            except ValueError:
-                continue
-
-        # If all parsing attempts fail, log an error and return None
-        logger.error(f"Failed to parse date string: {date_string}")
-        return None
-
-    return pd.Series(
-        [_inner(dt) for dt in dt_str],
-        index=dt_str.index,
-        dtype="object",
-    )
-
-
-def _clean_branch_time(branch_time: pd.Series[str]) -> pd.Series[float]:
-    """Clean branch time values, handling missing values and suffixes."""
-    # Handle missing values (these result in nan values)
-    return pd.to_numeric(branch_time.astype(str).str.replace("D", ""), errors="coerce")
 
 
 def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
@@ -240,15 +204,15 @@ class CMIP7DatasetAdapter(DatasetAdapter):
 
         # Convert the start_time and end_time columns to datetime objects
         if "start_time" in datasets.columns:
-            datasets["start_time"] = _parse_datetime(datasets["start_time"])
+            datasets["start_time"] = parse_datetime(datasets["start_time"])
         if "end_time" in datasets.columns:
-            datasets["end_time"] = _parse_datetime(datasets["end_time"])
+            datasets["end_time"] = parse_datetime(datasets["end_time"])
 
         # Clean branch times
         if "branch_time_in_child" in datasets.columns:
-            datasets["branch_time_in_child"] = _clean_branch_time(datasets["branch_time_in_child"])
+            datasets["branch_time_in_child"] = clean_branch_time(datasets["branch_time_in_child"])
         if "branch_time_in_parent" in datasets.columns:
-            datasets["branch_time_in_parent"] = _clean_branch_time(datasets["branch_time_in_parent"])
+            datasets["branch_time_in_parent"] = clean_branch_time(datasets["branch_time_in_parent"])
 
         # Build instance_id following CMIP7 DRS format
         # CMIP7.<activity_id>.<institution_id>.<source_id>.<experiment_id>.<variant_label>.

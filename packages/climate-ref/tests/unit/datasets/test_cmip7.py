@@ -10,10 +10,9 @@ import xarray as xr
 
 from climate_ref.datasets.cmip7 import (
     CMIP7DatasetAdapter,
-    _clean_branch_time,
-    _parse_datetime,
     parse_cmip7_file,
 )
+from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP7Dataset
 from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_dataset,
@@ -213,10 +212,10 @@ class TestCMIP7Model:
 class TestCMIP7HelperFunctions:
     """Tests for CMIP7 adapter helper functions."""
 
-    def test_clean_branch_time(self):
+    def testclean_branch_time(self):
         """Test branch time cleaning handles various formats."""
         inp = pd.Series(["0D", "12", "12.0", "12.000", None, np.nan])
-        result = _clean_branch_time(inp)
+        result = clean_branch_time(inp)
 
         assert result.iloc[0] == 0.0
         assert result.iloc[1] == 12.0
@@ -225,10 +224,10 @@ class TestCMIP7HelperFunctions:
         assert pd.isna(result.iloc[4])
         assert pd.isna(result.iloc[5])
 
-    def test_parse_datetime_valid(self):
+    def testparse_datetime_valid(self):
         """Test datetime parsing with valid inputs."""
         inp = pd.Series(["2025-01-01", "2025-06-15 12:30:00", None])
-        result = _parse_datetime(inp)
+        result = parse_datetime(inp)
 
         assert result.iloc[0] == datetime.datetime(2025, 1, 1)
         assert result.iloc[1] == datetime.datetime(2025, 6, 15, 12, 30, 0)

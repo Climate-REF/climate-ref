@@ -335,10 +335,9 @@ diagnostics:
         additional_datasets:
         - dataset: HadCRUT5
           project: OBS
+          tier: 2
           type: ground
           version: 5.0.1.0-analysis
-          tier: 2
-        short_name: tas
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -393,8 +392,6 @@ diagnostics:
         additional_datasets:
         - dataset: GPCP-V2.3
           project: obs4MIPs
-          tier: 1
-        short_name: pr
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -452,7 +449,6 @@ diagnostics:
           frequency: mon
           grid: gn
           institute: ECMWF
-        short_name: psl
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -507,9 +503,9 @@ diagnostics:
         additional_datasets:
         - dataset: ERA5
           project: native6
+          tier: 3
           type: reanaly
           version: v1
-          tier: 3
         short_name: hus
     scripts:
       figures:
@@ -623,10 +619,9 @@ diagnostics:
         additional_datasets:
         - dataset: HadCRUT5
           project: OBS
+          tier: 2
           type: ground
           version: 5.0.1.0-analysis
-          tier: 2
-        short_name: tas
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -680,8 +675,6 @@ diagnostics:
         additional_datasets:
         - dataset: GPCP-V2.3
           project: obs4MIPs
-          tier: 1
-        short_name: pr
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -738,7 +731,6 @@ diagnostics:
           frequency: mon
           grid: gn
           institute: ECMWF
-        short_name: psl
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -792,9 +784,9 @@ diagnostics:
         additional_datasets:
         - dataset: ERA5
           project: native6
+          tier: 3
           type: reanaly
           version: v1
-          tier: 3
         short_name: hus
     scripts:
       figures:

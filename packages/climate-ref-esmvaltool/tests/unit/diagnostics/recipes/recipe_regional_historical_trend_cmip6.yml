@@ -8,7 +8,6 @@ documentation:
   maintainer:
   - weigel_katja
   title: Linear trends.
-datasets: []
 preprocessors:
   trend_tas:
     custom_order: true
@@ -316,15 +315,6 @@ diagnostics:
         mip: Amon
         timerange: 1980/2009
         additional_datasets:
-        - dataset: HadCRUT5
-          project: OBS
-          type: ground
-          version: 5.0.1.0-analysis
-          tier: 2
-        - dataset: ERA-5
-          project: obs4MIPs
-          tier: 1
-          reference_for_metric: true'
         - project: CMIP6
           activity: CMIP
           dataset: ACCESS-ESM1-5
@@ -364,16 +354,6 @@ diagnostics:
         mip: Amon
         timerange: 1980/2009
         additional_datasets:
-        - dataset: GPCP-V2.3
-          project: obs4MIPs
-          tier: 1
-          reference_for_metric: true
-        - dataset: ERA5
-          project: native6
-          type: reanaly
-          version: v1
-          tier: 3
-          reference_for_metric: true
         - project: CMIP6
           activity: CMIP
           dataset: ACCESS-ESM1-5
@@ -413,10 +393,6 @@ diagnostics:
         mip: Amon
         timerange: 1980/2009
         additional_datasets:
-        - dataset: ERA-5
-          project: obs4MIPs
-          tier: 1
-          reference_for_metric: true'
         - project: CMIP6
           activity: CMIP
           dataset: ACCESS-ESM1-5
@@ -456,10 +432,6 @@ diagnostics:
         mip: Amon
         timerange: 1980/2009
         additional_datasets:
-        - dataset: ERA-5
-          project: obs4MIPs
-          tier: 1
-          reference_for_metric: true'
         - project: CMIP6
           activity: CMIP
           dataset: ACCESS-ESM1-5
@@ -498,12 +470,6 @@ diagnostics:
         mip: Amon
         timerange: 1980/2009
         additional_datasets:
-        - dataset: ERA5
-          project: native6
-          type: reanaly
-          version: v1
-          tier: 3
-          reference_for_metric: true
         - project: CMIP6
           activity: CMIP
           dataset: ACCESS-ESM1-5

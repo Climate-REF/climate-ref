@@ -341,7 +341,6 @@ diagnostics:
           exp: historical
           grid: gn
           mip: Amon
-        short_name: tas
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -402,7 +401,6 @@ diagnostics:
           exp: historical
           grid: gn
           mip: Amon
-        short_name: pr
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -463,7 +461,6 @@ diagnostics:
           exp: historical
           grid: gn
           mip: Amon
-        short_name: psl
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -646,7 +643,6 @@ diagnostics:
           exp: historical
           grid: gn
           mip: Amon
-        short_name: tas
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -706,7 +702,6 @@ diagnostics:
           exp: historical
           grid: gn
           mip: Amon
-        short_name: pr
     scripts:
       figures:
         script: monitor/multi_datasets.py
@@ -766,7 +761,6 @@ diagnostics:
           exp: historical
           grid: gn
           mip: Amon
-        short_name: psl
     scripts:
       figures:
         script: monitor/multi_datasets.py

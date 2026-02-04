@@ -15,11 +15,13 @@ from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.datasets import get_dataset_adapter
-from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
-from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
+from climate_ref.datasets import (
+    CMIP6DatasetAdapter,
+    CMIP7DatasetAdapter,
+    Obs4MIPsDatasetAdapter,
+    PMPClimatologyDatasetAdapter,
+    get_dataset_adapter,
+)
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel

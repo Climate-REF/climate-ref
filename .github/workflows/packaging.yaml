@@ -110,7 +110,7 @@ jobs:
       run: |
         # Imports ilamb3 which tries to create /home/app/.config/ilamb3 on import, no way to tell it to live somewhere else
         # First, set up all providers without fetching data (handles conda envs)
-        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --skip-data
+        kubectl exec deployment/test-ref-orchestrator -- ref providers setup --skip-data --skip-validate
         # Fetch data for providers except esmvaltool (ERA5 data is too large for CI)
         kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider pmp
         kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider ilamb

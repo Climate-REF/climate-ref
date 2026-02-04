@@ -19,7 +19,7 @@ from abc import abstractmethod
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import requests
 import yaml
@@ -179,13 +179,14 @@ class DiagnosticProvider:
         self,
         config: Config,
         *,
+        db: Any = None,
         skip_env: bool = False,
         skip_data: bool = False,
     ) -> None:
         """
         Perform all setup required before offline execution.
 
-        This calls setup_environment and fetch_data in the correct order.
+        This calls setup_environment, fetch_data, and ingest_data in the correct order.
         Override individual hooks for fine-grained control.
 
         This method MUST be idempotent - safe to call multiple times.
@@ -194,15 +195,22 @@ class DiagnosticProvider:
         ----------
         config
             The application configuration
+        db
+            Optional database instance for data ingestion.
+
+            If None, ingestion is skipped. This allows providers to be set up without the full
+            climate-ref package (e.g., for environment setup or data fetching only).
         skip_env
             If True, skip environment setup (e.g., conda)
         skip_data
-            If True, skip data fetching
+            If True, skip data fetching and ingestion
         """
         if not skip_env:
             self.setup_environment(config)
         if not skip_data:
             self.fetch_data(config)
+            if db is not None:
+                self.ingest_data(config, db)
 
     def setup_environment(self, config: Config) -> None:
         """
@@ -241,6 +249,35 @@ class DiagnosticProvider:
         ----------
         config
             The application configuration
+        """
+        pass
+
+    def ingest_data(self, config: Config, db: Any) -> None:
+        """
+        Ingest fetched data into the database.
+
+        This is called after fetch_data to register any provider-specific
+        datasets in the database. For example, PMP climatology data needs
+        to be ingested so it can be used by diagnostics.
+
+        Default implementation does nothing. Override in subclasses
+        that have data to ingest.
+
+        This method MUST be idempotent.
+
+        Note: This method is only called when a database instance is provided
+        to setup(). The database and ingestion utilities are part of the
+        climate-ref package, not climate-ref-core. Provider implementations
+        should handle ImportError gracefully if they need to import from
+        climate-ref, allowing the provider to work standalone without
+        the full climate-ref package installed.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        db
+            The database instance (from climate-ref package)
         """
         pass
 

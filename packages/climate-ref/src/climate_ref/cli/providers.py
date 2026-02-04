@@ -118,7 +118,7 @@ def setup(  # noqa: PLR0913
     ] = False,
     skip_data: Annotated[
         bool,
-        typer.Option(help="Skip data fetching."),
+        typer.Option(help="Skip data fetching and ingestion."),
     ] = False,
     skip_validate: Annotated[
         bool,
@@ -137,6 +137,8 @@ def setup(  # noqa: PLR0913
     1. Creating conda environments (if applicable)
 
     2. Fetching required reference datasets to pooch cache
+
+    3. Ingesting provider-specific datasets into the database
 
     All operations are idempotent and safe to run multiple times.
     Run this on a login node with internet access before solving on compute nodes.
@@ -167,7 +169,7 @@ def setup(  # noqa: PLR0913
 
         logger.info(f"Setting up provider {provider_.slug}")
         try:
-            provider_.setup(config, skip_env=skip_env, skip_data=skip_data)
+            provider_.setup(config, db=db, skip_env=skip_env, skip_data=skip_data)
             if not skip_validate:
                 is_valid = provider_.validate_setup(config)
                 if not is_valid:

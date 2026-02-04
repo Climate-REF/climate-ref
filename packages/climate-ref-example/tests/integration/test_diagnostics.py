@@ -43,16 +43,16 @@ def test_validate_test_case_regression(
         test_case_name,
     )
 
-    if not paths.catalog.exists():
-        pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
-    if not paths.regression.exists():
-        pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
-
     validator = RegressionValidator(
         diagnostic=diagnostic,
         test_case_name=test_case_name,
         test_data_dir=provider_test_data_dir,
     )
+
+    if not paths.catalog.exists():
+        pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
+    if not validator.has_regression_data():
+        pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
 
     definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
     validator.validate(definition)

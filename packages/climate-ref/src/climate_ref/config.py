@@ -301,7 +301,7 @@ class DbConfig:
 
 def default_providers() -> list[DiagnosticProviderConfig]:
     """
-    Default diagnostic provider
+    Return default diagnostic providers.
 
     Used if no diagnostic providers are specified in the configuration
 
@@ -309,7 +309,7 @@ def default_providers() -> list[DiagnosticProviderConfig]:
     -------
     :
         List of default diagnostic providers
-    """  # noqa: D401
+    """
     env_providers = env.list("REF_DIAGNOSTIC_PROVIDERS", default=None)
     if env_providers:
         return [DiagnosticProviderConfig(provider=provider) for provider in env_providers]

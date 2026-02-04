@@ -57,7 +57,7 @@ def _verify_hash_matches(fname: str | pathlib.Path, known_hash: str) -> bool:
 
     algorithm = pooch.hashes.hash_algorithm(known_hash)
     new_hash = pooch.hashes.file_hash(str(fname), alg=algorithm)
-    matches = new_hash.lower() == known_hash.split(":")[-1].lower()
+    matches = new_hash.lower() == known_hash.rsplit(":", maxsplit=1)[-1].lower()
     if not matches:
         raise ValueError(
             f"{algorithm.upper()} hash of downloaded file ({fname!s}) does not match"

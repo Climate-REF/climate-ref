@@ -198,12 +198,32 @@ def solve_executions(
             provider,
         )
     elif isinstance(first_item, Sequence):
-        # We have a sequence of collections of data requirements
+        # We have a sequence of collections of data requirements (OR logic)
+        # Try each requirement collection and yield from those that have matching data
+        any_matched = False
         for requirement_collection in diagnostic.data_requirements:
             if not isinstance(requirement_collection, Sequence):
                 raise TypeError(f"Expected a sequence of DataRequirement, got {type(requirement_collection)}")
-            yield from _solve_from_data_requirements(
-                data_catalog, diagnostic, requirement_collection, provider
+            try:
+                # Check if all required source types are available
+                for req in requirement_collection:
+                    if isinstance(req, DataRequirement) and req.source_type not in data_catalog:
+                        raise InvalidDiagnosticException(
+                            diagnostic, f"No data catalog for source type {req.source_type}"
+                        )
+                yield from _solve_from_data_requirements(
+                    data_catalog, diagnostic, requirement_collection, provider
+                )
+                any_matched = True
+            except InvalidDiagnosticException:
+                # This requirement set doesn't match available data, try the next one
+                continue
+        if not any_matched:
+            available = ", ".join(str(s) for s in data_catalog.keys())
+            raise InvalidDiagnosticException(
+                diagnostic,
+                f"No data catalog matches any of the diagnostic's data requirements. "
+                f"Available source types: {available}",
             )
     else:
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")

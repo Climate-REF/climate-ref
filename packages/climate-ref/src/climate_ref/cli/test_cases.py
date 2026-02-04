@@ -20,6 +20,7 @@ from climate_ref.cli._utils import format_size
 from climate_ref.config import Config
 from climate_ref.datasets import (
     CMIP6DatasetAdapter,
+    CMIP7DatasetAdapter,
     DatasetAdapter,
     Obs4MIPsDatasetAdapter,
     PMPClimatologyDatasetAdapter,
@@ -151,6 +152,9 @@ def _fetch_and_build_catalog(
         if source_type == "CMIP6":
             data_catalog[SourceDatasetType.CMIP6] = _build_catalog(CMIP6DatasetAdapter(), file_paths)
 
+        elif source_type == "CMIP7":
+            data_catalog[SourceDatasetType.CMIP7] = _build_catalog(CMIP7DatasetAdapter(), file_paths)
+
         elif source_type == "obs4MIPs":
             data_catalog[SourceDatasetType.obs4MIPs] = _build_catalog(Obs4MIPsDatasetAdapter(), file_paths)
 
@@ -178,7 +182,7 @@ def _fetch_and_build_catalog(
 
 
 @app.command(name="fetch")
-def fetch_test_data(  # noqa: PLR0912
+def fetch_test_data(  # noqa: PLR0912, PLR0915
     ctx: typer.Context,
     provider: Annotated[
         str | None,
@@ -224,6 +228,17 @@ def fetch_test_data(  # noqa: PLR0912
     # Build provider registry to access diagnostics
     registry = ProviderRegistry.build_from_config(config, db)
 
+    # Check if the requested provider exists in the registry
+    available_providers = [p.slug for p in registry.providers]
+    if provider and provider not in available_providers:
+        logger.error(f"Provider '{provider}' is not configured")
+        if available_providers:
+            logger.error(f"Available providers: {', '.join(sorted(available_providers))}")
+        else:
+            logger.error("No providers are configured. Check your configuration file.")
+        logger.error("To add a provider, update your config file or set REF_DIAGNOSTIC_PROVIDERS")
+        raise typer.Exit(code=1)
+
     # Collect diagnostics to process
     diagnostics_to_process: list[Diagnostic] = []
 
@@ -239,7 +254,10 @@ def fetch_test_data(  # noqa: PLR0912
             diagnostics_to_process.append(diag)
 
     if not diagnostics_to_process:
-        logger.warning("No diagnostics with test_data_spec found")
+        if provider:
+            logger.warning(f"No diagnostics with test_data_spec found for provider '{provider}'")
+        else:
+            logger.warning("No diagnostics with test_data_spec found")
         raise typer.Exit(code=0)
 
     logger.info(f"Found {len(diagnostics_to_process)} diagnostics with test data specifications")
@@ -306,6 +324,16 @@ def list_cases(
 
     # Build provider registry to access diagnostics
     registry = ProviderRegistry.build_from_config(config, db)
+
+    # Check if the requested provider exists in the registry
+    available_providers = [p.slug for p in registry.providers]
+    if provider and provider not in available_providers:
+        logger.error(f"Provider '{provider}' is not configured")
+        if available_providers:
+            logger.error(f"Available providers: {', '.join(sorted(available_providers))}")
+        else:
+            logger.error("No providers are configured. Check your configuration file.")
+        raise typer.Exit(code=1)
 
     table = Table(title="Test Data Specifications")
     table.add_column("Provider", style="cyan")

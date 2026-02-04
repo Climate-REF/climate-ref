@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-root"
-version = "0.8.1"
+version = "0.9.0"
 description = "Climate Rapid Evaluation Framework (REF) root package"
 readme = "README.md"
 authors = [{ name = "Jared Lewis", email = "jared.lewis@climate-resource.com" }]

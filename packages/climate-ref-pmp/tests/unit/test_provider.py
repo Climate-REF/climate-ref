@@ -150,7 +150,7 @@ class TestPMPProviderHooks:
         mock_db = mocker.Mock()
 
         # Create the climatology directory
-        climatology_dir = tmp_path / "pmp-climatology"
+        climatology_dir = tmp_path / "PMP_obs4MIPsClims"
         climatology_dir.mkdir()
 
         mocker.patch.object(provider, "get_data_path", return_value=tmp_path)
@@ -169,7 +169,7 @@ class TestPMPProviderHooks:
         mock_db = mocker.Mock()
 
         # Create the climatology directory
-        climatology_dir = tmp_path / "pmp-climatology"
+        climatology_dir = tmp_path / "PMP_obs4MIPsClims"
         climatology_dir.mkdir()
 
         mocker.patch.object(provider, "get_data_path", return_value=tmp_path)

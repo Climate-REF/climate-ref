@@ -103,7 +103,7 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
             return
 
         # Find the pmp-climatology subdirectory
-        climatology_path = data_path / _REGISTRY_NAME
+        climatology_path = data_path / "PMP_obs4MIPsClims"
         if not climatology_path.exists():
             logger.warning(f"PMP climatology data not found at {climatology_path}")
             return

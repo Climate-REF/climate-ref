@@ -23,6 +23,7 @@ from climate_ref.solver import (
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets, SelectParentExperiment
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, FacetFilter
+from climate_ref_core.exceptions import InvalidDiagnosticException
 
 
 @pytest.fixture
@@ -549,6 +550,163 @@ def test_solve_metric_executions_multiple_sets(solver, mock_diagnostic, provider
         ("experiment_id", "ssp119"),
         ("variable_id", "pr"),
     )
+
+
+def test_solve_metric_executions_or_logic_missing_source_type(mock_diagnostic, provider):
+    """Test OR logic when one requirement set has a missing source type."""
+    metric = mock_diagnostic
+    # First set requires CMIP7 (not available), second set requires CMIP6 (available)
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    # Only CMIP6 data available
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+
+    # Should fall back to CMIP6 requirement
+    assert len(executions) == 1
+    assert SourceDatasetType.CMIP6 in executions[0].datasets
+
+
+def test_solve_metric_executions_or_logic_first_matches(mock_diagnostic, provider):
+    """Test OR logic when first requirement set matches."""
+    metric = mock_diagnostic
+    # First set requires CMIP6 (available), second set also requires CMIP6
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "pr"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas", "pr"],
+                "experiment_id": ["historical", "historical"],
+                "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+
+    # Both requirement sets should produce executions
+    assert len(executions) == 2
+
+
+def test_solve_metric_executions_or_logic_no_matches(mock_diagnostic, provider):
+    """Test OR logic when no requirement sets match."""
+    metric = mock_diagnostic
+    # Both sets require source types that are not available
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "pr"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    # No matching data
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+
+    with pytest.raises(InvalidDiagnosticException, match="No data catalog matches"):
+        list(solve_executions(data_catalog, metric, provider))
+
+
+def test_solve_metric_executions_or_logic_with_cmip7_available(mock_diagnostic, provider):
+    """Test OR logic when CMIP7 data is available."""
+    metric = mock_diagnostic
+    # First set requires CMIP7 (available), second set requires CMIP6
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    # Both CMIP6 and CMIP7 data available
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+        SourceDatasetType.CMIP7: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+
+    # Both sets should produce executions
+    assert len(executions) == 2
+    source_types = {next(iter(e.datasets.keys())) for e in executions}
+    assert SourceDatasetType.CMIP6 in source_types
+    assert SourceDatasetType.CMIP7 in source_types
 
 
 def _prep_data_catalog(data_catalog: dict[str, Any]) -> pd.DataFrame:

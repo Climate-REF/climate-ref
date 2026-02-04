@@ -153,6 +153,24 @@ class TestIgnoreFacets:
 class TestAddSupplementaryDataset:
     constraint = AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6)
 
+    def test_from_defaults_cmip7(self):
+        """Test from_defaults factory method with CMIP7 source type."""
+        constraint = AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7)
+        assert constraint.supplementary_facets == {"variable_id": "areacella"}
+        # CMIP7 uses variant_label instead of member_id
+        assert "variant_label" in constraint.optional_matching_facets
+        assert "member_id" not in constraint.optional_matching_facets
+        assert "source_id" in constraint.matching_facets
+        assert "grid_label" in constraint.matching_facets
+
+    def test_from_defaults_cmip7_matching_facets(self):
+        """Test that CMIP7 has correct matching facets."""
+        constraint = AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7)
+        # CMIP7 matching facets
+        assert constraint.matching_facets == ("source_id", "grid_label")
+        # CMIP7 optional matching facets
+        assert constraint.optional_matching_facets == ("experiment_id", "variant_label")
+
     @pytest.mark.parametrize(
         "data_catalog, expected_rows",
         [

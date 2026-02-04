@@ -256,3 +256,51 @@ def test_migrate_no_backup_for_postgres(config):
 
     # Verify no backup directory was created
     assert not (Path("backups")).exists()
+
+
+def test_migrate_skip_backup(tmp_path, config):
+    """Test that skip_backup=True prevents backup creation."""
+    # Create a test database
+    db_path = tmp_path / "climate_ref.db"
+
+    # Configure the database URL to point to our test database
+    config.db.database_url = f"sqlite:///{db_path}"
+    config.db.max_backups = 2
+
+    # Create database instance with skip_backup=True
+    db = Database.from_config(config, run_migrations=True, skip_backup=True)
+    db.close()
+
+    # Verify no backup was created
+    backup_dir = db_path.parent / "backups"
+    assert not backup_dir.exists() or len(list(backup_dir.glob("climate_ref_*.db"))) == 0
+
+
+def test_from_config_skip_backup_parameter(tmp_path, config, mocker):
+    """Test that from_config passes skip_backup to migrate."""
+    db_path = tmp_path / "climate_ref.db"
+    config.db.database_url = f"sqlite:///{db_path}"
+
+    # Mock _create_backup to verify it's not called
+    mock_backup = mocker.patch("climate_ref.database._create_backup")
+
+    db = Database.from_config(config, run_migrations=True, skip_backup=True)
+    db.close()
+
+    # Backup should not have been called
+    mock_backup.assert_not_called()
+
+
+def test_from_config_creates_backup_by_default(tmp_path, config, mocker):
+    """Test that from_config creates backup by default (skip_backup=False)."""
+    db_path = tmp_path / "climate_ref.db"
+    config.db.database_url = f"sqlite:///{db_path}"
+
+    # Mock _create_backup to verify it is called
+    mock_backup = mocker.patch("climate_ref.database._create_backup")
+
+    db = Database.from_config(config, run_migrations=True, skip_backup=False)
+    db.close()
+
+    # Backup should have been called
+    mock_backup.assert_called_once()

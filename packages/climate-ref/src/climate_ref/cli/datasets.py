@@ -18,7 +18,7 @@ from climate_ref.cli._utils import pretty_print_df
 from climate_ref.database import ModelState
 from climate_ref.models import Dataset
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.source_types import SourceDatasetType
 
 app = typer.Typer(help=__doc__)
 

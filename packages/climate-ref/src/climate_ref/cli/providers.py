@@ -5,13 +5,10 @@ Manage the REF providers.
 import warnings
 from typing import Annotated
 
-import pandas as pd
 import typer
 from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
-from climate_ref.provider_registry import ProviderRegistry
-from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider
 
 app = typer.Typer(help=__doc__)
 
@@ -21,6 +18,11 @@ def list_(ctx: typer.Context) -> None:
     """
     Print the available providers.
     """
+    import pandas as pd
+
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider
+
     config = ctx.obj.config
     db = ctx.obj.database
     console = ctx.obj.console
@@ -81,6 +83,9 @@ def create_env(
         DeprecationWarning,
         stacklevel=2,
     )
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.providers import CondaDiagnosticProvider
+
     config = ctx.obj.config
     db = ctx.obj.database
     providers = ProviderRegistry.build_from_config(config, db).providers
@@ -141,6 +146,8 @@ def setup(  # noqa: PLR0913
     All operations are idempotent and safe to run multiple times.
     Run this on a login node with internet access before solving on compute nodes.
     """
+    from climate_ref.provider_registry import ProviderRegistry
+
     config = ctx.obj.config
     db = ctx.obj.database
     console = ctx.obj.console

@@ -32,7 +32,6 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition
-from climate_ref_core.exceptions import InvalidDiagnosticException
 from climate_ref_core.providers import DiagnosticProvider
 
 
@@ -219,9 +218,11 @@ def _solve_from_data_requirements(
         if not isinstance(requirement, DataRequirement):
             raise TypeError(f"Expected a DataRequirement, got {type(requirement)}")
         if requirement.source_type not in data_catalog:
-            raise InvalidDiagnosticException(
-                diagnostic, f"No data catalog for source type {requirement.source_type}"
+            logger.debug(
+                f"No data catalog for source type {requirement.source_type} of "
+                f"{provider.slug} diagnostic {diagnostic.slug}"
             )
+            return
 
         dataset_groups[requirement.source_type] = extract_covered_datasets(
             data_catalog[requirement.source_type], requirement

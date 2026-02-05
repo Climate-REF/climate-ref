@@ -13,6 +13,7 @@ from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
+from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref_core.datasets import SourceDatasetType
@@ -142,6 +143,8 @@ def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
     """
     if source_type.lower() == SourceDatasetType.CMIP6.value:
         return CMIP6DatasetAdapter(**kwargs)
+    elif source_type.lower() == SourceDatasetType.CMIP7.value:
+        return CMIP7DatasetAdapter(**kwargs)
     elif source_type.lower() == SourceDatasetType.obs4MIPs.value.lower():
         return Obs4MIPsDatasetAdapter(**kwargs)
     elif source_type.lower() == SourceDatasetType.PMPClimatology.value.lower():
@@ -152,6 +155,7 @@ def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
 
 __all__ = [
     "CMIP6DatasetAdapter",
+    "CMIP7DatasetAdapter",
     "DatasetAdapter",
     "IngestionStats",
     "Obs4MIPsDatasetAdapter",

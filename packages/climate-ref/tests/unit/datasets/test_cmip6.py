@@ -8,15 +8,14 @@ from climate_ref.database import Database
 from climate_ref.datasets.cmip6 import (
     CMIP6DatasetAdapter,
     _apply_fixes,
-    _clean_branch_time,
-    _parse_datetime,
 )
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
+from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 
 
-def test_parse_datetime():
+def testparse_datetime():
     pd.testing.assert_series_equal(
-        _parse_datetime(pd.Series(["2021-01-01 00:00:00", "1850-01-17 00:29:59.999993", None])),
+        parse_datetime(pd.Series(["2021-01-01 00:00:00", "1850-01-17 00:29:59.999993", None])),
         pd.Series(
             [datetime.datetime(2021, 1, 1, 0, 0), datetime.datetime(1850, 1, 17, 0, 29, 59, 999993), None],
             dtype="object",
@@ -32,11 +31,11 @@ def test_parse_exception(parsing_func):
     assert "TRACEBACK" in result
 
 
-def test_clean_branch_time():
+def testclean_branch_time():
     inp = pd.Series(["0D", "12", "12.0", "12.000", "12.0000", "12.00000", None, np.nan])
     exp = pd.Series([0.0, 12.0, 12.0, 12.0, 12.0, 12.0, np.nan, np.nan])
 
-    pd.testing.assert_series_equal(_clean_branch_time(inp), exp)
+    pd.testing.assert_series_equal(clean_branch_time(inp), exp)
 
 
 class TestCMIP6Adapter:

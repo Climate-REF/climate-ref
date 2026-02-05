@@ -1,7 +1,7 @@
 # Ingest Datasets
 
 Ingestion extracts metadata from your locally downloaded datasets and stores it in a local catalog for easy querying and filtering.
-This makes subsequesnt operations, such as running diagnostics, more efficient as the system can quickly access the necessary metadata without needing to reprocess the files.
+This makes subsequent operations, such as running diagnostics, more efficient as the system can quickly access the necessary metadata without needing to reprocess the files.
 
 Before you begin, ensure you have:
 

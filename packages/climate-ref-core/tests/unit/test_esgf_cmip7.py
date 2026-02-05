@@ -277,9 +277,10 @@ class TestConvertFileToCmip7:
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
 
-        # Set up mocks
+        # Set up mocks - open_dataset is used as a context manager
         mock_ds = MagicMock()
-        mock_open.return_value = mock_ds
+        mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
+        mock_open.return_value.__exit__ = MagicMock(return_value=False)
         mock_converted_ds = MagicMock()
         mock_convert.return_value = mock_converted_ds
 
@@ -305,7 +306,6 @@ class TestConvertFileToCmip7:
         mock_open.assert_called_once()
         mock_convert.assert_called_once_with(mock_ds)
         mock_converted_ds.to_netcdf.assert_called_once()
-        mock_ds.close.assert_called_once()
 
         # Check output path structure
         assert "CMIP" in str(result)
@@ -322,7 +322,8 @@ class TestConvertFileToCmip7:
 
         # Set up mocks
         mock_ds = MagicMock()
-        mock_open.return_value = mock_ds
+        mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
+        mock_open.return_value.__exit__ = MagicMock(return_value=False)
         mock_converted_ds = MagicMock()
         mock_convert.return_value = mock_converted_ds
 
@@ -359,7 +360,8 @@ class TestConvertFileToCmip7:
 
         # Set up mocks
         mock_ds = MagicMock()
-        mock_open.return_value = mock_ds
+        mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
+        mock_open.return_value.__exit__ = MagicMock(return_value=False)
         mock_converted_ds = MagicMock()
         mock_converted_ds.to_netcdf.side_effect = PermissionError("Permission denied")
         mock_convert.return_value = mock_converted_ds

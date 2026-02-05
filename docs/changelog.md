@@ -21,6 +21,27 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.9.1 (2026-02-05)
+
+### Features
+
+- Added `ingest_data()` lifecycle hook to providers, enabling automatic dataset ingestion during `ref providers setup`. PMP climatology data is now ingested automatically, eliminating the need for a separate manual ingestion step. ([#508](https://github.com/Climate-REF/climate-ref/pull/508))
+
+### Improvements
+
+- Implemented coupled versioning for Helm chart: chart version, appVersion, and default image tag now stay in sync with the application version and are updated automatically by bump-my-version. ([#507](https://github.com/Climate-REF/climate-ref/pull/507))
+- Improved CLI performance by skipping database backup for read-only commands like `config list` and `datasets list`. ([#511](https://github.com/Climate-REF/climate-ref/pull/511))
+- Improved CLI startup time by deferring heavy imports until needed. ([#512](https://github.com/Climate-REF/climate-ref/pull/512))
+
+### Bug Fixes
+
+- Fixed Helm chart CI to use correct image tag override path (`defaults.image.tag` instead of invalid `climate-ref.image.tag`). ([#507](https://github.com/Climate-REF/climate-ref/pull/507))
+
+### Improved Documentation
+
+- Updated getting started documentation with clearer configuration and dataset download instructions. ([#508](https://github.com/Climate-REF/climate-ref/pull/508))
+
+
 ## climate-ref 0.9.0 (2026-02-03)
 
 ### Features

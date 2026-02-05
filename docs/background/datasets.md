@@ -64,7 +64,7 @@ Diagnostics specify their data requirements through the `data_requirements` attr
 
 1. **Source type**: Which dataset collection to use (CMIP6, obs4MIPs, etc.)
 2. **Filters**: Conditions that datasets must meet to be included
-3. **Grouping**: How to organize the datasets for separate diagnostic executions
+3. **Grouping**: How to organise the datasets for separate diagnostic executions
 4. **Constraints**: Additional validation rules for dataset groups
 
 For a detailed guide on selecting datasets for diagnostics, see the [dataset selection how-to guide](../how-to-guides/dataset-selection.py).

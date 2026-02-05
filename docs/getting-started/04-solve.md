@@ -55,4 +55,4 @@ This log output is very useful to include if you need to [report an issue or see
 
 ## Next steps
 
-Once diagnostics have completed, visualize the results in the [Visualise tutorial](05-visualise.md).
+Once diagnostics have completed, visualise the results in the [Visualise tutorial](05-visualise.md).

@@ -149,7 +149,7 @@ def build_app() -> typer.Typer:
         The CLI app
     """
     # Import here to avoid circular imports since submodules import read_only from this module
-    from climate_ref.cli import (  # noqa: PLC0415
+    from climate_ref.cli import (
         config,
         datasets,
         executions,

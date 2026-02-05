@@ -211,10 +211,13 @@ def solve_executions(
                         raise InvalidDiagnosticException(
                             diagnostic, f"No data catalog for source type {req.source_type}"
                         )
-                yield from _solve_from_data_requirements(
-                    data_catalog, diagnostic, requirement_collection, provider
+                # Buffer executions to check if any were actually produced
+                executions = list(
+                    _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
                 )
-                any_matched = True
+                if executions:
+                    any_matched = True
+                    yield from executions
             except InvalidDiagnosticException:
                 # This requirement set doesn't match available data, try the next one
                 continue
@@ -374,7 +377,12 @@ class ExecutionSolver:
                 if not matches_filter(diagnostic, filters):
                     logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
                     continue
-                yield from solve_executions(self.data_catalog, diagnostic, provider)
+                try:
+                    yield from solve_executions(self.data_catalog, diagnostic, provider)
+                except InvalidDiagnosticException as e:
+                    # Skip diagnostics that don't have matching data
+                    logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
+                    continue
 
 
 def solve_required_executions(  # noqa: PLR0912, PLR0913

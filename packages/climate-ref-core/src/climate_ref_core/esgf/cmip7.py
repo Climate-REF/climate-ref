@@ -28,7 +28,7 @@ def _get_cmip7_cache_dir() -> Path:
     return cache_dir
 
 
-def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, str]) -> Path:
+def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Path:
     """
     Convert a CMIP6 file to CMIP7 format.
 
@@ -74,21 +74,19 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, str]) -> Pa
     # Convert the file
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    ds = xr.open_dataset(cmip6_path, decode_times=time_coder)
-    ds_cmip7 = convert_cmip6_dataset(ds)
-    try:
-        ds_cmip7.to_netcdf(output_file)
-    except PermissionError:
-        # If we can't write but file exists (race condition or permission issue), use it
-        if output_file.exists():
-            logger.debug(f"Using existing CMIP7 file (could not overwrite): {output_file}")
-            ds.close()
-            return output_file
-        # Clear the cache directory hint for the user
-        logger.error(f"Permission denied writing to {output_file}")
-        logger.error(f"Try clearing the cache: rm -rf {_get_cmip7_cache_dir()}")
-        raise
-    ds.close()
+    with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
+        ds_cmip7 = convert_cmip6_dataset(ds)
+        try:
+            ds_cmip7.to_netcdf(output_file)
+        except PermissionError:
+            # If we can't write but file exists (race condition or permission issue), use it
+            if output_file.exists():
+                logger.debug(f"Using existing CMIP7 file (could not overwrite): {output_file}")
+                return output_file
+            # Clear the cache directory hint for the user
+            logger.error(f"Permission denied writing to {output_file}")
+            logger.error(f"Try clearing the cache: rm -rf {_get_cmip7_cache_dir()}")
+            raise
 
     return output_file
 

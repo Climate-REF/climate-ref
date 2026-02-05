@@ -223,7 +223,7 @@ filename = "sqlite://climate_ref.db"
     )
     def test_executor_build_config(self, mocker, config, db):
         mock_executor = mocker.MagicMock(spec=Executor)
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=mock_executor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=mock_executor)
 
         executor = config.executor.build(config, db)
         assert executor == mock_executor.return_value
@@ -235,7 +235,7 @@ filename = "sqlite://climate_ref.db"
     )
     def test_executor_build_extra_config(self, mocker, config, db):
         mock_executor = mocker.MagicMock(spec=Executor)
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=mock_executor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=mock_executor)
 
         config.executor = evolve(config.executor, config={"extra": 1})
 
@@ -249,7 +249,7 @@ filename = "sqlite://climate_ref.db"
         class NotAnExecutor:
             def __init__(self, **kwargs): ...
 
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=NotAnExecutor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=NotAnExecutor)
 
         match = r"Expected an Executor, got <class '.*\.NotAnExecutor'>"
         with pytest.raises(InvalidExecutorException, match=match):

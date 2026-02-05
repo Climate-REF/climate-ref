@@ -1,8 +1,14 @@
-import pandas as pd
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 from loguru import logger
 from rich import box
 from rich.console import Console
 from rich.table import Table
+
+if TYPE_CHECKING:
+    import pandas as pd
 
 _BYTES_PER_UNIT = 1024
 

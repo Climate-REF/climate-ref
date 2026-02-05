@@ -51,6 +51,10 @@ ignore = [
 "stubs/*" = [
     "PLR0913",  # Too many arguments in function definition
 ]
+# CLI modules use lazy imports to speed up startup time
+"*/cli/*.py" = [
+    "PLC0415",  # Import outside top-level (lazy imports for performance)
+]
 
 [lint.isort]
 known-first-party = ["climate_ref", "climate_ref_core"]

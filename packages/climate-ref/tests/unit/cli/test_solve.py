@@ -6,7 +6,7 @@ def test_solve_help(invoke_cli):
 
 class TestSolve:
     def test_solve(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.cli.solve.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve"])
 
         assert mock_solve.call_count == 1
@@ -19,21 +19,21 @@ class TestSolve:
         assert kwargs["filters"].provider is None
 
     def test_solve_with_timeout(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.cli.solve.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve", "--timeout", "10"])
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["timeout"] == 10
 
     def test_solve_with_dryrun(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.cli.solve.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve", "--dry-run"])
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["dry_run"]
 
     def test_solve_with_filters(self, sample_data_dir, db, invoke_cli, mocker):
-        mock_solve = mocker.patch("climate_ref.cli.solve.solve_required_executions")
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(
             [
                 "solve",

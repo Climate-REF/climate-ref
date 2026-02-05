@@ -158,7 +158,7 @@ def _mk_df(instance_id="CESM2.tas.gn", rows=None):
 
 
 def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, _config, db = test_db
 
     df = _mk_df(
         rows=[
@@ -176,7 +176,7 @@ def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
     )
 
     with db.session.begin():
-        result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+        result = adapter.register_dataset(db=db, data_catalog_dataset=df)
 
     assert result.dataset_state == ModelState.CREATED
     assert set(result.files_added) == {"f1.nc", "f2.nc"}
@@ -202,7 +202,7 @@ def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
 
 
 def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, _config, db = test_db
 
     # First, create initial dataset with existing files
     initial_df = _mk_df(
@@ -221,7 +221,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
     )
 
     with db.session.begin():
-        adapter.register_dataset(config=config, db=db, data_catalog_dataset=initial_df)
+        adapter.register_dataset(db=db, data_catalog_dataset=initial_df)
 
     # Now update with modified data
     updated_df = _mk_df(
@@ -245,7 +245,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
     )
 
     with db.session.begin():
-        result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=updated_df)
+        result = adapter.register_dataset(db=db, data_catalog_dataset=updated_df)
 
     assert result.dataset_state == ModelState.UPDATED
     assert set(result.files_added) == {"f3.nc"}
@@ -266,7 +266,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
 
 
 def test_register_dataset_raises_on_removal(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, _config, db = test_db
 
     # First, create initial dataset with files
     initial_df = _mk_df(
@@ -285,7 +285,7 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
     )
 
     with db.session.begin():
-        adapter.register_dataset(config=config, db=db, data_catalog_dataset=initial_df)
+        adapter.register_dataset(db=db, data_catalog_dataset=initial_df)
 
     # New catalog omits "remove.nc" -> triggers removal path
     updated_df = _mk_df(
@@ -300,11 +300,11 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
 
     with pytest.raises(NotImplementedError, match="Removing files is not yet supported"):
         with db.session.begin():
-            adapter.register_dataset(config=config, db=db, data_catalog_dataset=updated_df)
+            adapter.register_dataset(db=db, data_catalog_dataset=updated_df)
 
 
 def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, _config, db = test_db
 
     df = pd.concat(
         [
@@ -334,12 +334,12 @@ def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
 
     with pytest.raises(RefException, match="Found multiple datasets in the same directory"):
         with db.session.begin():
-            adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+            adapter.register_dataset(db=db, data_catalog_dataset=df)
 
 
 def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     """Test that changes to dataset metadata are properly captured and result in UPDATED state"""
-    adapter, config, db = test_db
+    adapter, _config, db = test_db
 
     # First, create initial dataset with original metadata
     df = _mk_df(
@@ -354,7 +354,7 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     )
 
     with db.session.begin():
-        initial_result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+        initial_result = adapter.register_dataset(db=db, data_catalog_dataset=df)
 
     assert initial_result.dataset_state == ModelState.CREATED
 
@@ -362,7 +362,7 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     df.loc[0, "grid_label"] = "gr2"
 
     with db.session.begin():
-        update_result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+        update_result = adapter.register_dataset(db=db, data_catalog_dataset=df)
 
     # Should be UPDATED because dataset metadata changed
     assert update_result.dataset_state == ModelState.UPDATED

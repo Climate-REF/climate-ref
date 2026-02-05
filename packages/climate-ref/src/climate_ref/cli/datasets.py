@@ -172,7 +172,7 @@ def ingest(  # noqa
                     if not dataset:
                         logger.info(f"Would save dataset {instance_id} to the database")
                 else:
-                    results = adapter.register_dataset(config, db, data_catalog_dataset)
+                    results = adapter.register_dataset(db, data_catalog_dataset)
 
                     if results.dataset_state == ModelState.CREATED:
                         num_created_datasets += 1

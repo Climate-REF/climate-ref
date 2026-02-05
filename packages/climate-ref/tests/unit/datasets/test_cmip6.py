@@ -69,7 +69,7 @@ class TestCMIP6Adapter:
         target_metadata.loc[:, "version"] = "v20000101"
         target_metadata.loc[:, "instance_id"] = target_ds.replace("v20191115", "v20000101")
         with db_seeded.session.begin():
-            adapter.register_dataset(config, db_seeded, target_metadata)
+            adapter.register_dataset(db_seeded, target_metadata)
 
         # An older version should not be in the catalog
         pd.testing.assert_frame_equal(
@@ -82,7 +82,7 @@ class TestCMIP6Adapter:
         new_instance_id = target_ds.replace("v20191115", "v20230101")
         target_metadata.loc[:, "instance_id"] = new_instance_id
         with db_seeded.session.begin():
-            adapter.register_dataset(config, db_seeded, target_metadata)
+            adapter.register_dataset(db_seeded, target_metadata)
 
         # The new version should be in the catalog
         latest_data_catalog = adapter.load_catalog(db_seeded)
@@ -101,7 +101,7 @@ class TestCMIP6Adapter:
             adapter = CMIP6DatasetAdapter()
             with database.session.begin():
                 for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
-                    adapter.register_dataset(config, database, data_catalog_dataset)
+                    adapter.register_dataset(database, data_catalog_dataset)
 
             local_data_catalog = (
                 catalog.drop(columns=["time_range"])

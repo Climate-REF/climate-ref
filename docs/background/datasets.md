@@ -19,8 +19,8 @@ but CMIP7 and other future datasets will be added in the future.
 - **Usage:** Used as model reference data for benchmarking and evaluation.
 - **Metadata Parsing:**
   The REF supports two methods for parsing CMIP6 metadata:
-  - **DRS Parser (default)**: Extracts metadata from file paths and names according to the [Data Reference Syntax (DRS)](https://docs.google.com/document/d/1h0r8RZr_f3-8egBMMh7aqLwy3snpD6_MrDz1q8n5XUk/edit?tab=t.0). This approach enables fast loading of metadata without opening each file.
-  - **Complete Parser**: Opens each file and extracts all available metadata from the file's attributes. This provides more comprehensive metadata but is significantly slower.
+  - **DRS Parser (default)**: Extracts metadata from file paths and names according to the [Data Reference Syntax (DRS)](https://docs.google.com/document/d/1h0r8RZr_f3-8egBMMh7aqLwy3snpD6_MrDz1q8n5XUk/edit?tab=t.0). This approach enables fast ingestion without opening each file. Remaining metadata (e.g. exact time ranges, parent experiment details) is extracted lazily at solve time only for datasets that match a diagnostic's requirements.
+  - **Complete Parser**: Opens each file and extracts all available metadata from the file's attributes upfront. This provides complete metadata at ingestion time but is significantly slower for large archives.
 
 You can select the parser by setting `cmip6_parser: "drs"` or `cmip6_parser: "complete"` in your REF configuration file.
 

@@ -12,7 +12,7 @@ ref solve --timeout 3600
 
 This will:
 
-- Query the catalog of ingested datasets (observations and model-output)
+- Query the catalog of ingested datasets (observations and model-output), completing any missing metadata as needed
 - Determine which diagnostics are applicable and how many different executions are needed
 - Execute each diagnostic in parallel on your machine
 - Use a timeout of 3600 seconds (1 hour) to complete the runs

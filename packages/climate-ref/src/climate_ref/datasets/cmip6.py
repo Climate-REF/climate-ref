@@ -8,8 +8,10 @@ from ecgtools import Builder
 from loguru import logger
 
 from climate_ref.config import Config
+from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
+from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP6Dataset
 
@@ -37,7 +39,7 @@ def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
     return data_catalog
 
 
-class CMIP6DatasetAdapter(DatasetAdapter):
+class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
     """
     Adapter for CMIP6 datasets
     """
@@ -179,5 +181,66 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         # Temporary fix for some datasets
         # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
         datasets = _apply_fixes(datasets)
+
+        return datasets
+
+    def finalise_datasets(self, db: Database, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Finalise unfinalised CMIP6 datasets by opening files to extract full metadata.
+
+        Parameters
+        ----------
+        db
+            Database instance for persisting updated metadata
+        datasets
+            DataFrame containing datasets to finalise (should have finalised=False)
+
+        Returns
+        -------
+        :
+            Updated DataFrame with full metadata extracted from files
+        """
+        unfinalised = datasets[datasets["finalised"] == False]  # noqa: E712
+        if unfinalised.empty:
+            return datasets
+
+        logger.info(f"Finalising {len(unfinalised)} unfinalised CMIP6 datasets")
+
+        for idx, row in unfinalised.iterrows():
+            path = row.get("path")
+            if not path:
+                logger.warning(f"No path for dataset at index {idx}, skipping")
+                continue
+
+            try:
+                parsed = parse_cmip6_complete(str(path))
+                if "INVALID_ASSET" in parsed:
+                    logger.warning(f"Failed to finalise {path}: {parsed.get('TRACEBACK', '')}")
+                    continue
+
+                # Update the row with the full metadata from the complete parser
+                for key, value in parsed.items():
+                    if key in datasets.columns and value is not None:
+                        datasets.at[idx, key] = value
+
+                datasets.at[idx, "finalised"] = True
+
+            except Exception:
+                logger.exception(f"Error finalising dataset at {path}")
+                continue
+
+        # Apply fixes (branch time cleaning, parent_variant_label, etc.)
+        datasets = _apply_fixes(datasets)
+
+        # Persist finalised datasets back to the database
+        finalised_mask = datasets["finalised"] == True  # noqa: E712
+        for idx, row in datasets[finalised_mask & unfinalised.index.isin(datasets.index)].iterrows():
+            slug = row.get(self.slug_column)
+            if slug:
+                data_catalog_dataset = datasets[datasets[self.slug_column] == slug]
+                try:
+                    self.register_dataset(db=db, data_catalog_dataset=data_catalog_dataset)
+                except Exception:
+                    logger.exception(f"Error persisting finalised dataset {slug}")
 
         return datasets

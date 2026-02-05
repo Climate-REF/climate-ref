@@ -623,19 +623,20 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         }
         for file in result_dir.glob("work/*_trends/plot/seaborn_barplot.nc"):
             ds = xarray.open_dataset(file)
-            source_id = execution_dataset[SourceDatasetType.CMIP6].source_id.iloc[0]
-            select = source_id == np.array([s.strip() for s in ds.dataset.values.astype(str).tolist()])
-            ds.isel(dim0=select)
-            variable_id = next(iter(ds.data_vars.keys()))
-            metric_args[MetricCV.DIMENSIONS.value]["variable_id"][variable_id] = {}
-            metric_args[MetricCV.RESULTS.value][variable_id] = {}
-            for region_value, trend_value in zip(
-                ds.shape_id.astype(str).values, fillvalues_to_nan(ds[variable_id].values)
-            ):
-                region = region_value.strip()
-                trend = float(trend_value)
-                if region not in metric_args[MetricCV.DIMENSIONS.value]["region"]:
-                    metric_args[MetricCV.DIMENSIONS.value]["region"][region] = {}
-                metric_args[MetricCV.RESULTS.value][variable_id][region] = {"trend": trend}
+            dataset_collection = next(iter(execution_dataset.values()))
+            for source_id in dataset_collection.source_id.unique():
+                select = source_id == np.array([s.strip() for s in ds.dataset.values.astype(str).tolist()])
+                ds.isel(dim0=select)
+                variable_id = next(iter(ds.data_vars.keys()))
+                metric_args[MetricCV.DIMENSIONS.value]["variable_id"][variable_id] = {}
+                metric_args[MetricCV.RESULTS.value][variable_id] = {}
+                for region_value, trend_value in zip(
+                    ds.shape_id.astype(str).values, fillvalues_to_nan(ds[variable_id].values)
+                ):
+                    region = region_value.strip()
+                    trend = float(trend_value)
+                    if region not in metric_args[MetricCV.DIMENSIONS.value]["region"]:
+                        metric_args[MetricCV.DIMENSIONS.value]["region"][region] = {}
+                    metric_args[MetricCV.RESULTS.value][variable_id][region] = {"trend": trend}
 
         return CMECMetric.model_validate(metric_args), CMECOutput.model_validate(output_args)

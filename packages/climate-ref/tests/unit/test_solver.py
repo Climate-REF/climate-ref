@@ -80,6 +80,59 @@ class TestMetricSolver:
         assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
 
 
+class TestExtractCoveredDatasetsWithDataCatalog:
+    """Test that extract_covered_datasets triggers finalization when given a DataCatalog."""
+
+    def test_finalise_called_for_unfinalised_groups(self):
+        """When a DataCatalog has unfinalised data, finalise() is called per group."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+
+        mock_catalog.finalise.assert_called()
+        assert len(result) == 1
+        # The finalized group should have finalised=True
+        group_df = next(iter(result.values()))
+        assert group_df["finalised"].all()
+
+    def test_finalise_not_called_for_raw_dataframe(self):
+        """When a raw DataFrame is passed, no finalization is attempted."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=None,
+        )
+
+        # Should work without error - no finalise call attempted on a raw DataFrame
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+
 @pytest.mark.parametrize(
     "requirement,data_catalog,expected",
     [

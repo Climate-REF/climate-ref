@@ -229,6 +229,10 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
                 logger.exception(f"Error finalising dataset at {path}")
                 continue
 
+        # Convert start_time/end_time strings from the complete parser to datetime objects
+        datasets["start_time"] = parse_datetime(datasets["start_time"])
+        datasets["end_time"] = parse_datetime(datasets["end_time"])
+
         # Apply fixes (branch time cleaning, parent_variant_label, etc.)
         datasets = _apply_fixes(datasets)
 

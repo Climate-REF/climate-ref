@@ -127,6 +127,40 @@ class TestCMIP6Adapter:
                 check_like=True,
             )
 
+    def test_finalise_datasets(self, config, sample_data_dir):
+        """Test that DRS-ingested (unfinalised) datasets get finalised with full metadata."""
+        config.cmip6_parser = "drs"
+
+        with Database.from_config(config, run_migrations=True) as database:
+            # Ingest via DRS parser (fast, no file I/O, finalised=False)
+            adapter = CMIP6DatasetAdapter(config=config)
+            drs_catalog = adapter.find_local_datasets(sample_data_dir / "CMIP6")
+            assert (~drs_catalog["finalised"]).all(), "DRS parser should produce unfinalised datasets"
+
+            with database.session.begin():
+                for _instance_id, data_catalog_dataset in drs_catalog.groupby(adapter.slug_column):
+                    adapter.register_dataset(database, data_catalog_dataset)
+
+            # Load catalog from DB - should be unfinalised
+            db_catalog = adapter.load_catalog(database)
+            assert not db_catalog["finalised"].any(), "DB catalog should have unfinalised datasets"
+
+            # Pick a small subset to finalise (just one instance_id)
+            target_instance = db_catalog["instance_id"].iloc[0]
+            subset = db_catalog[db_catalog["instance_id"] == target_instance].copy()
+
+            # Finalise the subset
+            with database.session.begin():
+                result = adapter.finalise_datasets(database, subset)
+
+            # Verify the result is finalised and has full metadata
+            assert result["finalised"].all(), "Finalised datasets should have finalised=True"
+
+            # The complete parser fills in fields that DRS leaves as NA
+            # (e.g. frequency should be populated from the file, not just inferred)
+            assert result["source_id"].notna().all()
+            assert result["experiment_id"].notna().all()
+
     @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
     def test_load_local_datasets(self, config, cmip6_parser, sample_data_dir, catalog_regression):
         # Set the parser in the config

@@ -503,3 +503,104 @@ class TestIngestDatasets:
         assert stats2.datasets_unchanged == 1
         assert stats2.files_added == 0
         assert stats2.files_unchanged == 1
+
+    def test_ingest_datasets_with_directory(self, monkeypatch, test_db, tmp_path):
+        """Test ingest_datasets with directory finds and validates datasets."""
+        adapter, config, db = test_db
+
+        # Create a directory with .nc files
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test1.nc").touch()
+        (data_dir / "test2.nc").touch()
+
+        # Create mock data catalog that find_local_datasets will return
+        mock_df = _mk_df(
+            rows=[
+                {
+                    "path": str(data_dir / "test1.nc"),
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+                {
+                    "path": str(data_dir / "test2.nc"),
+                    "start_time": pd.Timestamp("2002-01-01"),
+                    "end_time": pd.Timestamp("2002-12-31"),
+                },
+            ]
+        )
+
+        # Patch find_local_datasets to return our mock catalog
+        monkeypatch.setattr(adapter, "find_local_datasets", lambda d: mock_df)
+
+        stats = ingest_datasets(adapter, data_dir, config, db)
+
+        assert stats.datasets_created == 1
+        assert stats.files_added == 2
+
+    def test_ingest_datasets_empty_after_validation(self, monkeypatch, test_db, tmp_path):
+        """Test ingest_datasets raises ValueError when catalog is empty after validation."""
+        adapter, config, db = test_db
+
+        # Create a directory with .nc files
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        # Mock find_local_datasets to return a non-empty catalog
+        mock_df = _mk_df(
+            rows=[
+                {
+                    "path": str(data_dir / "test.nc"),
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ]
+        )
+        monkeypatch.setattr(adapter, "find_local_datasets", lambda d: mock_df)
+
+        # Mock validate_data_catalog to return empty DataFrame (all invalid)
+        monkeypatch.setattr(adapter, "validate_data_catalog", lambda df, **kwargs: pd.DataFrame())
+
+        with pytest.raises(ValueError, match="No valid datasets found"):
+            ingest_datasets(adapter, data_dir, config, db)
+
+    def test_ingest_datasets_updated_state(self, monkeypatch, test_db):
+        """Test that ingest_datasets correctly tracks updated datasets."""
+        adapter, config, db = test_db
+
+        # First create a dataset
+        df1 = _mk_df(
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ]
+        )
+        stats1 = ingest_datasets(adapter, None, config, db, data_catalog=df1)
+        assert stats1.datasets_created == 1
+
+        # Now update with additional file (triggers UPDATED state)
+        df2 = _mk_df(
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+                {
+                    "path": "f2.nc",
+                    "start_time": pd.Timestamp("2002-01-01"),
+                    "end_time": pd.Timestamp("2002-12-31"),
+                },
+            ]
+        )
+        stats2 = ingest_datasets(adapter, None, config, db, data_catalog=df2)
+
+        assert stats2.datasets_created == 0
+        assert stats2.datasets_updated == 1
+        assert stats2.datasets_unchanged == 0
+        assert stats2.files_added == 1
+        assert stats2.files_unchanged == 1

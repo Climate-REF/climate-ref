@@ -129,6 +129,8 @@ filename = "sqlite://climate_ref.db"
 
     def test_defaults(self, monkeypatch, mocker):
         monkeypatch.setenv("REF_CONFIGURATION", "test")
+        # Clear any externally set env vars that would affect the test
+        monkeypatch.delenv("REF_SOFTWARE_ROOT", raising=False)
         mocker.patch("climate_ref.config.importlib.resources.files", return_value=Path("pycmec"))
         mocker.patch(
             "climate_ref.config.importlib.metadata.entry_points",

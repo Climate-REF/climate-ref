@@ -532,6 +532,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                             "source_id": "ERA-5",
                             "variable_id": [
                                 "psl",
+                                "tas",
                                 "ua",
                             ],
                         },

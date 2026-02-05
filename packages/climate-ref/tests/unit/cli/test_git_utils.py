@@ -1,8 +1,11 @@
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
-from git import InvalidGitRepositoryError
+import pytest
+import pytest_mock
+from git import InvalidGitRepositoryError, Repo
 
-from climate_ref.cli._git_utils import collect_regression_file_info, get_git_status, get_repo_for_path
+from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_for_path
 
 
 class TestGetRepoForPath:
@@ -26,40 +29,77 @@ class TestGetRepoForPath:
             mock_repo_cls.assert_called_once_with(tmp_path, search_parent_directories=True)
 
 
-class TestGetGitStatus:
-    """Tests for get_git_status function."""
+class TestCollectRegressionFileInfo:
+    """Tests for collect_regression_file_info function."""
 
-    def test_returns_new_for_untracked_file(self, tmp_path):
+    @pytest.fixture
+    def regression_dir(self, tmp_path: Path) -> Path:
+        path = tmp_path / "regression"
+        path.mkdir()
+        return path
+
+    @pytest.fixture
+    def mock_repo(
+        self,
+        mocker: pytest_mock.MockerFixture,
+        regression_dir: Path,
+    ) -> pytest_mock.MockType:
+        repo = mocker.create_autospec(Repo, instance=True)
+        repo.working_dir = str(regression_dir)
+        repo.untracked_files = []
+        repo.index.diff.return_value = []
+        return repo
+
+    def test_returns_new_for_untracked_file(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test returns 'new' for untracked files."""
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
         mock_repo.untracked_files = ["test_file.txt"]
 
-        file_path = tmp_path / "test_file.txt"
+        file_path = regression_dir / "test_file.txt"
+        file_path.touch()
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "new"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "new",
+                "is_large": False,
+                "rel_path": file_path.name,
+                "size": 0,
+            }
+        ]
 
-    def test_returns_staged_for_staged_changes(self, tmp_path):
+    def test_returns_staged_for_staged_changes(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test returns 'staged' for files in the index diff with HEAD."""
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
-        mock_repo.untracked_files = []
-
         mock_diff_item = MagicMock()
         mock_diff_item.a_path = "staged_file.txt"
         mock_repo.index.diff.return_value = [mock_diff_item]
 
-        file_path = tmp_path / "staged_file.txt"
+        file_path = regression_dir / "staged_file.txt"
+        file_path.touch()
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "staged"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "staged",
+                "is_large": False,
+                "rel_path": file_path.name,
+                "size": 0,
+            }
+        ]
 
-    def test_returns_modified_for_unstaged_changes(self, tmp_path):
+    def test_returns_modified_for_unstaged_changes(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test returns 'modified' for unstaged changes."""
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
-        mock_repo.untracked_files = []
 
         # No staged changes
         def diff_side_effect(arg):
@@ -73,74 +113,109 @@ class TestGetGitStatus:
 
         mock_repo.index.diff.side_effect = diff_side_effect
 
-        file_path = tmp_path / "modified_file.txt"
+        file_path = regression_dir / "modified_file.txt"
+        file_path.touch()
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "modified"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "modified",
+                "is_large": False,
+                "rel_path": file_path.name,
+                "size": 0,
+            }
+        ]
 
-    def test_returns_tracked_for_clean_tracked_file(self, tmp_path):
+    def test_returns_tracked_for_clean_tracked_file(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test returns 'tracked' for clean tracked files."""
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
-        mock_repo.untracked_files = []
-        mock_repo.index.diff.return_value = []  # No changes
+        file_path = regression_dir / "tracked_file.txt"
+        file_path.touch()
 
-        file_path = tmp_path / "tracked_file.txt"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "tracked",
+                "is_large": False,
+                "rel_path": file_path.name,
+                "size": 0,
+            }
+        ]
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "tracked"
-
-    def test_returns_untracked_when_ls_files_fails(self, tmp_path):
+    def test_returns_untracked_when_ls_files_fails(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test returns 'untracked' when ls-files raises exception."""
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
-        mock_repo.untracked_files = []
-        mock_repo.index.diff.return_value = []
         mock_repo.git.ls_files.side_effect = Exception("File not tracked")
 
-        file_path = tmp_path / "untracked_file.txt"
+        file_path = regression_dir / "untracked_file.txt"
+        file_path.touch()
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "untracked"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "untracked",
+                "is_large": False,
+                "rel_path": file_path.name,
+                "size": 0,
+            }
+        ]
 
-    def test_returns_unknown_when_relative_path_fails(self, tmp_path):
+    def test_returns_unknown_when_relative_path_fails(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test returns 'unknown' when file path cannot be made relative."""
-        mock_repo = MagicMock()
         mock_repo.working_dir = "/completely/different/path"
 
-        file_path = tmp_path / "some_file.txt"
+        file_path = regression_dir / "some_file.txt"
+        file_path.touch()
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "unknown"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "unknown",
+                "is_large": False,
+                "rel_path": file_path.name,
+                "size": 0,
+            }
+        ]
 
-    def test_handles_nested_directory_path(self, tmp_path):
+    def test_handles_nested_directory_path(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test correctly handles files in nested directories."""
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
         mock_repo.untracked_files = ["subdir/nested/file.txt"]
 
-        file_path = tmp_path / "subdir" / "nested" / "file.txt"
+        file_path = regression_dir / "subdir" / "nested" / "file.txt"
+        file_path.parent.mkdir(parents=True)
+        file_path.touch()
 
-        result = get_git_status(file_path, mock_repo)
-        assert result == "new"
+        result = collect_regression_file_info(regression_dir, mock_repo, 1024)
+        assert result == [
+            {
+                "git_status": "new",
+                "is_large": False,
+                "rel_path": file_path.relative_to(regression_dir).as_posix(),
+                "size": 0,
+            }
+        ]
 
-
-class TestCollectRegressionFileInfo:
-    """Tests for collect_regression_file_info function."""
-
-    def test_returns_empty_list_for_empty_directory(self, tmp_path):
+    def test_returns_empty_list_for_empty_directory(self, regression_dir: Path) -> None:
         """Test returns empty list when directory has no files."""
-        regression_dir = tmp_path / "regression"
-        regression_dir.mkdir()
-
         result = collect_regression_file_info(regression_dir, None, 1024)
         assert result == []
 
-    def test_collects_file_info_without_repo(self, tmp_path):
+    def test_collects_file_info_without_repo(self, regression_dir: Path) -> None:
         """Test collects file info when no repo is provided."""
-        regression_dir = tmp_path / "regression"
-        regression_dir.mkdir()
-
         # Create test files
         (regression_dir / "small.txt").write_text("small")
         (regression_dir / "large.txt").write_text("x" * 2000)
@@ -160,16 +235,14 @@ class TestCollectRegressionFileInfo:
         assert large_file["is_large"] is True
         assert large_file["git_status"] == "unknown"
 
-    def test_collects_file_info_with_repo(self, tmp_path):
+    def test_collects_file_info_with_repo(
+        self,
+        regression_dir: Path,
+        mock_repo: pytest_mock.MockType,
+    ) -> None:
         """Test collects file info with git status when repo provided."""
-        regression_dir = tmp_path / "regression"
-        regression_dir.mkdir()
-
         (regression_dir / "file.txt").write_text("content")
-
-        mock_repo = MagicMock()
-        mock_repo.working_dir = str(tmp_path)
-        mock_repo.untracked_files = ["regression/file.txt"]
+        mock_repo.untracked_files = ["file.txt"]
 
         result = collect_regression_file_info(regression_dir, mock_repo, 1000)
 
@@ -177,9 +250,8 @@ class TestCollectRegressionFileInfo:
         assert result[0]["rel_path"] == "file.txt"
         assert result[0]["git_status"] == "new"
 
-    def test_handles_nested_files(self, tmp_path):
+    def test_handles_nested_files(self, regression_dir: Path) -> None:
         """Test handles files in nested directories."""
-        regression_dir = tmp_path / "regression"
         subdir = regression_dir / "subdir"
         subdir.mkdir(parents=True)
 
@@ -190,9 +262,8 @@ class TestCollectRegressionFileInfo:
         assert len(result) == 1
         assert result[0]["rel_path"] == "subdir/nested.txt"
 
-    def test_excludes_directories(self, tmp_path):
+    def test_excludes_directories(self, regression_dir: Path) -> None:
         """Test excludes directories from results."""
-        regression_dir = tmp_path / "regression"
         subdir = regression_dir / "subdir"
         subdir.mkdir(parents=True)
 
@@ -203,11 +274,8 @@ class TestCollectRegressionFileInfo:
         assert len(result) == 1
         assert result[0]["rel_path"] == "file.txt"
 
-    def test_size_threshold_boundary(self, tmp_path):
+    def test_size_threshold_boundary(self, regression_dir: Path) -> None:
         """Test size threshold at exact boundary."""
-        regression_dir = tmp_path / "regression"
-        regression_dir.mkdir()
-
         (regression_dir / "exact.txt").write_text("x" * 100)
 
         # At threshold - should not be large

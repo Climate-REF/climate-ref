@@ -129,6 +129,8 @@ filename = "sqlite://climate_ref.db"
 
     def test_defaults(self, monkeypatch, mocker):
         monkeypatch.setenv("REF_CONFIGURATION", "test")
+        # Clear any externally set env vars that would affect the test
+        monkeypatch.delenv("REF_SOFTWARE_ROOT", raising=False)
         mocker.patch("climate_ref.config.importlib.resources.files", return_value=Path("pycmec"))
         mocker.patch(
             "climate_ref.config.importlib.metadata.entry_points",
@@ -223,7 +225,7 @@ filename = "sqlite://climate_ref.db"
     )
     def test_executor_build_config(self, mocker, config, db):
         mock_executor = mocker.MagicMock(spec=Executor)
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=mock_executor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=mock_executor)
 
         executor = config.executor.build(config, db)
         assert executor == mock_executor.return_value
@@ -235,7 +237,7 @@ filename = "sqlite://climate_ref.db"
     )
     def test_executor_build_extra_config(self, mocker, config, db):
         mock_executor = mocker.MagicMock(spec=Executor)
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=mock_executor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=mock_executor)
 
         config.executor = evolve(config.executor, config={"extra": 1})
 
@@ -249,7 +251,7 @@ filename = "sqlite://climate_ref.db"
         class NotAnExecutor:
             def __init__(self, **kwargs): ...
 
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=NotAnExecutor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=NotAnExecutor)
 
         match = r"Expected an Executor, got <class '.*\.NotAnExecutor'>"
         with pytest.raises(InvalidExecutorException, match=match):

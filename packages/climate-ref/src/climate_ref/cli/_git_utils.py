@@ -1,7 +1,7 @@
 """Git utilities for CLI commands."""
 
 from pathlib import Path
-from typing import Any
+from typing import TypedDict
 
 from git import InvalidGitRepositoryError, Repo
 
@@ -26,54 +26,20 @@ def get_repo_for_path(path: Path) -> Repo | None:
         return None
 
 
-def get_git_status(file_path: Path, repo: Repo) -> str:
-    """
-    Get git status for a file using GitPython.
+class FileInfo(TypedDict):
+    """Information about a file in the regression directory."""
 
-    Parameters
-    ----------
-    file_path
-        Absolute path to the file
-    repo
-        GitPython Repo object
-
-    Returns
-    -------
-    :
-        Status string: "new", "staged", "modified", "tracked", "untracked", or "unknown"
-    """
-    try:
-        rel_path = str(file_path.relative_to(repo.working_dir))
-
-        # Check if untracked
-        if rel_path in repo.untracked_files:
-            return "new"
-
-        # Check staged changes (index vs HEAD)
-        staged_files = {item.a_path for item in repo.index.diff("HEAD")}
-        if rel_path in staged_files:
-            return "staged"
-
-        # Check unstaged changes (working tree vs index)
-        unstaged_files = {item.a_path for item in repo.index.diff(None)}
-        if rel_path in unstaged_files:
-            return "modified"
-
-        # Check if file is tracked
-        try:
-            repo.git.ls_files("--error-unmatch", rel_path)
-            return "tracked"
-        except Exception:
-            return "untracked"
-    except Exception:
-        return "unknown"
+    rel_path: str
+    size: int
+    is_large: bool
+    git_status: str
 
 
 def collect_regression_file_info(
     regression_dir: Path,
     repo: Repo | None,
     size_threshold_bytes: int,
-) -> list[dict[str, Any]]:
+) -> list[FileInfo]:
     """
     Collect file information from a regression directory.
 
@@ -94,19 +60,50 @@ def collect_regression_file_info(
     files = sorted(regression_dir.rglob("*"))
     files = [f for f in files if f.is_file()]
 
-    file_info: list[dict[str, Any]] = []
+    file_info: list[FileInfo] = []
     for file_path in files:
         size = file_path.stat().st_size
         rel_path = str(file_path.relative_to(regression_dir))
-        git_status = get_git_status(file_path, repo) if repo else "unknown"
-
         file_info.append(
             {
                 "rel_path": rel_path,
                 "size": size,
                 "is_large": size > size_threshold_bytes,
-                "git_status": git_status,
+                "git_status": "unknown",
             }
         )
+    if not repo or repo.working_dir != str(regression_dir):
+        return file_info
+
+    # Read the current status of the repository just once.
+    untracked_files = set(repo.untracked_files)
+    staged_files = {item.a_path for item in repo.index.diff("HEAD")}
+    unstaged_files = {item.a_path for item in repo.index.diff(None)}
+
+    # Update the git status of each file.
+    for item in file_info:
+        rel_path = item["rel_path"]
+
+        # Check if untracked
+        if rel_path in untracked_files:
+            item["git_status"] = "new"
+            continue
+
+        # Check staged changes (index vs HEAD)
+        if rel_path in staged_files:
+            item["git_status"] = "staged"
+            continue
+
+        # Check unstaged changes (working tree vs index)
+        if rel_path in unstaged_files:
+            item["git_status"] = "modified"
+            continue
+
+        # Check if file is tracked
+        try:
+            repo.git.ls_files("--error-unmatch", rel_path)
+            item["git_status"] = "tracked"
+        except Exception:
+            item["git_status"] = "untracked"
 
     return file_info

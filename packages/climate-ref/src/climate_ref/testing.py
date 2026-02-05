@@ -14,6 +14,7 @@ from pathlib import Path
 from attrs import define
 from loguru import logger
 
+from climate_ref import SAMPLE_DATA_VERSION
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models import Execution, ExecutionGroup
@@ -37,7 +38,7 @@ def _determine_test_directory() -> Path | None:
 
 TEST_DATA_DIR = _determine_test_directory()
 """Path to the centralised test data directory (for sample data)."""
-SAMPLE_DATA_VERSION = "v0.7.4"
+# SAMPLE_DATA_VERSION is imported from climate_ref to avoid circular imports
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:

@@ -9,7 +9,6 @@ from dataclasses import dataclass
 from typing import Annotated
 from urllib.parse import quote
 
-import pandas as pd
 import typer
 from loguru import logger
 from rich.console import Group
@@ -97,6 +96,8 @@ def list_groups(  # noqa: PLR0913
 
     The output will be in a tabular format.
     """
+    import pandas as pd
+
     session = ctx.obj.database.session
     console = ctx.obj.console
 
@@ -187,7 +188,7 @@ def list_groups(  # noqa: PLR0913
 
 
 @app.command()
-def delete_groups(  # noqa: PLR0912, PLR0913
+def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
     ctx: typer.Context,
     diagnostic: Annotated[
         list[str] | None,
@@ -239,6 +240,8 @@ def delete_groups(  # noqa: PLR0912, PLR0913
 
     Filters can be combined using AND logic across filter types and OR logic within a filter type.
     """
+    import pandas as pd
+
     session = ctx.obj.database.session
     console = ctx.obj.console
 
@@ -409,6 +412,8 @@ def _execution_panel(execution_group: ExecutionGroup) -> Panel:
 
 
 def _datasets_panel(result: Execution) -> Panel:
+    import pandas as pd
+
     datasets = result.datasets
 
     datasets_df = pd.DataFrame(

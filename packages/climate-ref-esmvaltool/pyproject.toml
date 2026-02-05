@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-esmvaltool"
-version = "0.9.0"
+version = "0.9.1"
 description = "ESMValTool diagnostic provider for the Rapid Evaluation Framework"
 readme = "README.md"
 authors = [

@@ -15,14 +15,9 @@ import typer
 from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
-from climate_ref.database import ModelState
-from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models import Dataset
-from climate_ref.provider_registry import ProviderRegistry
-from climate_ref.solver import solve_required_executions
-from climate_ref.testing import fetch_sample_data
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.source_types import SourceDatasetType
 
 app = typer.Typer(help=__doc__)
 
@@ -47,6 +42,8 @@ def list_(
 
     The data catalog is sorted by the date that the dataset was ingested (first = newest).
     """
+    from climate_ref.datasets import get_dataset_adapter
+
     database = ctx.obj.database
 
     adapter = get_dataset_adapter(source_type.value)
@@ -84,6 +81,8 @@ def list_columns(
     If a configuration directory is provided,
     the configuration will attempt to load from the specified directory.
     """
+    from climate_ref.datasets import get_dataset_adapter
+
     database = ctx.obj.database
 
     adapter = get_dataset_adapter(source_type.value)
@@ -113,6 +112,8 @@ def ingest(  # noqa
 
     A table of the datasets will be printed to the console at the end of the operation.
     """
+    from climate_ref.datasets import get_dataset_adapter, ingest_datasets
+
     config = ctx.obj.config
     db = ctx.obj.database
     console = ctx.obj.console
@@ -134,8 +135,8 @@ def ingest(  # noqa
             continue
 
         # TODO: This assumes that all datasets are nc files.
-        # THis is true for CMIP6 and obs4MIPs but may not be true for other dataset types in the future.
-        if not _dir.rglob("*.nc"):
+        # This is true for CMIP6 and obs4MIPs but may not be true for other dataset types in the future.
+        if not list(_dir.rglob("*.nc")):
             logger.error(f"No .nc files found in {_dir}")
             continue
 
@@ -146,24 +147,19 @@ def ingest(  # noqa
             logger.error(f"Error ingesting datasets from {_dir}: {e}")
             continue
 
+        if data_catalog.empty:
+            logger.warning(f"No valid datasets found in {_dir}")
+            continue
+
         logger.info(
             f"Found {len(data_catalog)} files for {len(data_catalog[adapter.slug_column].unique())} datasets"
         )
         pretty_print_df(adapter.pretty_subset(data_catalog), console=console)
 
-        # track stats for a given directory
-        num_created_datasets = 0
-        num_updated_datasets = 0
-        num_unchanged_datasets = 0
-        num_created_files = 0
-        num_updated_files = 0
-        num_removed_files = 0
-        num_unchanged_files = 0
-
-        for instance_id, data_catalog_dataset in data_catalog.groupby(adapter.slug_column):
-            logger.debug(f"Processing dataset {instance_id}")
-            with db.session.begin():
-                if dry_run:
+        if dry_run:
+            # In dry_run mode, just report what would be saved
+            for instance_id in data_catalog[adapter.slug_column].unique():
+                with db.session.begin():
                     dataset = (
                         db.session.query(Dataset)
                         .filter_by(slug=instance_id, dataset_type=source_type)
@@ -171,31 +167,16 @@ def ingest(  # noqa
                     )
                     if not dataset:
                         logger.info(f"Would save dataset {instance_id} to the database")
-                else:
-                    results = adapter.register_dataset(config, db, data_catalog_dataset)
-
-                    if results.dataset_state == ModelState.CREATED:
-                        num_created_datasets += 1
-                    elif results.dataset_state == ModelState.UPDATED:
-                        num_updated_datasets += 1
-                    else:
-                        num_unchanged_datasets += 1
-                    num_created_files += len(results.files_added)
-                    num_updated_files += len(results.files_updated)
-                    num_removed_files += len(results.files_removed)
-                    num_unchanged_files += len(results.files_unchanged)
-
-        if not dry_run:
-            ingestion_msg = (
-                f"Datasets: {num_created_datasets}/{num_updated_datasets}/{num_unchanged_datasets}"
-                " (created/updated/unchanged), "
-                f"Files: "
-                f"{num_created_files}/{num_updated_files}/{num_removed_files}/{num_unchanged_files}"
-                " (created/updated/removed/unchanged)"
+        else:
+            # Use shared ingestion logic with pre-validated catalog
+            stats = ingest_datasets(
+                adapter, None, config, db, data_catalog=data_catalog, skip_invalid=skip_invalid
             )
-            logger.info(ingestion_msg)
+            stats.log_summary()
 
     if solve:
+        from climate_ref.solver import solve_required_executions
+
         solve_required_executions(
             config=config,
             db=db,
@@ -217,6 +198,8 @@ def _fetch_sample_data(
     This operation may fail if the test data directory does not exist,
     as is the case for non-source-based installations.
     """
+    from climate_ref.testing import fetch_sample_data
+
     # TODO: Remove
     fetch_sample_data(force_cleanup=force_cleanup, symlink=symlink)
 
@@ -251,6 +234,8 @@ def fetch_data(  # noqa: PLR0913
     These datasets have been verified to have open licenses
     and are in the process of being added to Obs4MIPs.
     """
+    from climate_ref.provider_registry import ProviderRegistry
+
     config = ctx.obj.config
     db = ctx.obj.database
 

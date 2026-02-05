@@ -106,7 +106,7 @@ class TestFetchAndBuildCatalog:
         mock_fetcher = MagicMock()
         mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame()
 
-        with patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher):
+        with patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher):
             with pytest.raises(DatasetResolutionError):
                 _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -115,10 +115,10 @@ class TestFetchAndBuildCatalog:
         mock_datasets = MagicMock()
 
         with (
-            patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
-            patch("climate_ref.cli.test_cases.CMIP6DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
             patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None),
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
         ):
             result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -134,11 +134,11 @@ class TestFetchAndBuildCatalog:
         mock_paths.catalog = test_case_dir / "catalog.yaml"
 
         with (
-            patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
-            patch("climate_ref.cli.test_cases.CMIP6DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
             patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths),
-            patch("climate_ref.cli.test_cases.save_datasets_to_yaml", return_value=True) as mock_save,
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths),
+            patch("climate_ref_core.testing.save_datasets_to_yaml", return_value=True) as mock_save,
         ):
             _, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -169,10 +169,10 @@ class TestFetchAndBuildCatalog:
         mock_datasets = MagicMock()
 
         with (
-            patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher),
-            patch("climate_ref.cli.test_cases.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
             patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None),
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
         ):
             result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -190,7 +190,7 @@ class TestFetchAndBuildCatalog:
             }
         )
 
-        with patch("climate_ref.cli.test_cases.ESGFFetcher", return_value=mock_fetcher):
+        with patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher):
             with pytest.raises(DatasetResolutionError, match="No datasets found"):
                 _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -412,7 +412,7 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None)
 
         # Without paths, the test case fails and we get exit code 1
         invoke_cli(
@@ -442,8 +442,8 @@ class TestRunTestCaseCommand:
             return_value=mock_registry,
         )
         mocker.patch("climate_ref.cli.test_cases._fetch_and_build_catalog", return_value=(MagicMock(), True))
-        mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=None)
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--fetch"],
@@ -514,9 +514,9 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
-        mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
@@ -560,9 +560,9 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
-        mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
@@ -597,9 +597,9 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
-        mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
@@ -657,10 +657,10 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
-        mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref.cli.test_cases.get_catalog_hash", return_value="abc123")
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value="abc123")
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"],
@@ -711,9 +711,9 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases.TestCasePaths.from_diagnostic", return_value=mock_paths)
-        mocker.patch("climate_ref.cli.test_cases.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.cli.test_cases.TestCaseRunner", return_value=mock_runner)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],

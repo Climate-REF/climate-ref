@@ -41,11 +41,11 @@ from climate_ref._config_helpers import (
 from climate_ref.constants import CONFIG_FILENAME
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import InvalidExecutorException
-from climate_ref_core.executor import Executor, import_executor_cls
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
+    from climate_ref_core.executor import Executor
 
 env_prefix = "REF"
 """
@@ -183,7 +183,7 @@ class ExecutorConfig:
     These options will be passed to the executor class when it is created.
     """
 
-    def build(self, config: "Config", database: "Database") -> Executor:
+    def build(self, config: "Config", database: "Database") -> "Executor":
         """
         Create an instance of the executor
 
@@ -192,6 +192,10 @@ class ExecutorConfig:
         :
             An executor that can be used to run diagnostics
         """
+        # Import lazily to avoid loading heavy dependencies (pandas, xarray)
+        # at module load time - these are only needed when actually running diagnostics
+        from climate_ref_core.executor import Executor, import_executor_cls  # noqa: PLC0415
+
         ExecutorCls = import_executor_cls(self.executor)
         kwargs = {
             "config": config,

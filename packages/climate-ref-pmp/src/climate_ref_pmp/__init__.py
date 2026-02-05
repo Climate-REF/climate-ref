@@ -7,7 +7,7 @@ from __future__ import annotations
 import importlib.metadata
 import os
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pooch
 from loguru import logger
@@ -74,6 +74,47 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
     def get_data_path(self) -> Path | None:
         """Get the path where PMP data is cached."""
         return Path(pooch.os_cache("climate_ref"))
+
+    def ingest_data(self, config: Config, db: Any) -> None:
+        """
+        Ingest PMP climatology data into the database.
+
+        This registers the climatology datasets so they can be used by diagnostics.
+
+        Note: This method requires the climate-ref package to be installed.
+        When using climate-ref-pmp standalone (without climate-ref), ingestion
+        will be skipped with a warning message.
+        """
+        try:
+            from climate_ref.datasets import ingest_datasets  # noqa: PLC0415
+            from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter  # noqa: PLC0415
+        except ImportError:
+            logger.info(
+                f"Skipping {self.slug} data ingestion: climate-ref package not installed. "
+                "Run `ref datasets ingest --source-type pmp-climatology` manually if needed."
+            )
+            return
+
+        data_path = self.get_data_path()
+        if data_path is None or not data_path.exists():
+            logger.warning(
+                f"PMP data path does not exist. Run `ref providers setup --provider {self.slug}` first."
+            )
+            return
+
+        # Find the pmp-climatology subdirectory
+        climatology_path = data_path / "PMP_obs4MIPsClims"
+        if not climatology_path.exists():
+            logger.warning(f"PMP climatology data not found at {climatology_path}")
+            return
+
+        adapter = PMPClimatologyDatasetAdapter()
+
+        try:
+            stats = ingest_datasets(adapter, climatology_path, config, db, skip_invalid=True)
+            stats.log_summary("PMP climatology ingestion complete:")
+        except ValueError as e:
+            logger.warning(f"No valid PMP climatology datasets found: {e}")
 
 
 provider = PMPDiagnosticProvider("PMP", __version__)

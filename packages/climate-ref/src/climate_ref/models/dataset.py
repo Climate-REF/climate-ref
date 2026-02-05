@@ -305,6 +305,14 @@ class CMIP7Dataset(Dataset):
     parent_variant_label: Mapped[str] = mapped_column(nullable=True)
     """String - parent variant label"""
 
+    # Additional Mandatory Attributes
+    license_id: Mapped[str] = mapped_column(nullable=True)
+    """CV - e.g., "CC-BY-4.0", "CC0-1.0" """
+
+    # Conditionally Required Attributes
+    external_variables: Mapped[str] = mapped_column(nullable=True)
+    """Space-separated list of cell measure variable names (when cell_measures are specified)"""
+
     # Variable Metadata (optional, useful for display)
     standard_name: Mapped[str] = mapped_column(nullable=True)
     """CF standard name"""

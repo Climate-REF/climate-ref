@@ -7,13 +7,14 @@ This module provides a solver to determine which diagnostics need to be calculat
 import itertools
 import pathlib
 import typing
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pandas as pd
 from attrs import define, frozen
 from loguru import logger
 
 from climate_ref.config import Config
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import (
     CMIP6DatasetAdapter,
@@ -114,16 +115,25 @@ class DiagnosticExecution:
 
 
 def extract_covered_datasets(
-    data_catalog: pd.DataFrame, requirement: DataRequirement
+    data_catalog: pd.DataFrame | DataCatalog, requirement: DataRequirement
 ) -> dict[Selector, pd.DataFrame]:
     """
     Determine the different diagnostic executions that should be performed with the current data catalog
     """
-    if len(data_catalog) == 0:
+    # Resolve the DataCatalog to a DataFrame for filtering, but keep the
+    # original reference for finalization calls later.
+    if isinstance(data_catalog, DataCatalog):
+        data_catalog_source: DataCatalog | None = data_catalog
+        catalog_df: pd.DataFrame = data_catalog.to_frame()
+    else:
+        data_catalog_source = None
+        catalog_df = data_catalog
+
+    if len(catalog_df) == 0:
         logger.error(f"No datasets found in the data catalog: {requirement.source_type.value}")
         return {}
 
-    subset = requirement.apply_filters(data_catalog)
+    subset = requirement.apply_filters(catalog_df)
 
     if len(subset) == 0:
         logger.debug(f"No datasets found for requirement {requirement}")
@@ -143,7 +153,12 @@ def extract_covered_datasets(
             group_keys: Selector = ()
         else:
             group_keys = tuple(zip(requirement.group_by, name))
-        constrained_group = _process_group_constraints(data_catalog, group, requirement)
+
+        # Finalise unfinalised datasets in this group before applying constraints.
+        # This ensures that time-range constraints have access to full metadata.
+        finalized_group = data_catalog_source.finalise(group) if data_catalog_source is not None else group
+
+        constrained_group = _process_group_constraints(catalog_df, finalized_group, requirement)
 
         if constrained_group is not None:
             results[group_keys] = constrained_group
@@ -164,7 +179,9 @@ def _process_group_constraints(
 
 
 def solve_executions(
-    data_catalog: dict[SourceDatasetType, pd.DataFrame], diagnostic: Diagnostic, provider: DiagnosticProvider
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+    diagnostic: Diagnostic,
+    provider: DiagnosticProvider,
 ) -> typing.Generator["DiagnosticExecution", None, None]:
     """
     Calculate the diagnostic executions that need to be performed for a given diagnostic
@@ -233,7 +250,7 @@ def solve_executions(
 
 
 def _solve_from_data_requirements(
-    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
     data_requirements: Sequence[DataRequirement],
     provider: DiagnosticProvider,
@@ -329,7 +346,7 @@ class ExecutionSolver:
     """
 
     provider_registry: ProviderRegistry
-    data_catalog: dict[SourceDatasetType, pd.DataFrame]
+    data_catalog: dict[SourceDatasetType, DataCatalog]
 
     @staticmethod
     def build_from_db(config: Config, db: Database) -> "ExecutionSolver":
@@ -349,10 +366,12 @@ class ExecutionSolver:
         return ExecutionSolver(
             provider_registry=ProviderRegistry.build_from_config(config, db),
             data_catalog={
-                SourceDatasetType.CMIP6: CMIP6DatasetAdapter().load_catalog(db),
-                SourceDatasetType.CMIP7: CMIP7DatasetAdapter().load_catalog(db),
-                SourceDatasetType.obs4MIPs: Obs4MIPsDatasetAdapter().load_catalog(db),
-                SourceDatasetType.PMPClimatology: PMPClimatologyDatasetAdapter().load_catalog(db),
+                SourceDatasetType.CMIP6: DataCatalog(database=db, adapter=CMIP6DatasetAdapter(config=config)),
+                SourceDatasetType.CMIP7: DataCatalog(database=db, adapter=CMIP7DatasetAdapter()),
+                SourceDatasetType.obs4MIPs: DataCatalog(database=db, adapter=Obs4MIPsDatasetAdapter()),
+                SourceDatasetType.PMPClimatology: DataCatalog(
+                    database=db, adapter=PMPClimatologyDatasetAdapter()
+                ),
             },
         )
 

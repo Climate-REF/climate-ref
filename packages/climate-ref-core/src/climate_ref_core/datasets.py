@@ -2,50 +2,17 @@
 Dataset management and filtering
 """
 
-import enum
-import functools
 import hashlib
 from collections.abc import Collection, Iterable, Iterator
-from typing import Any, Self
+from typing import Any
 
 import pandas as pd
 from attrs import field, frozen
 
-Selector = tuple[tuple[str, str], ...]
-"""
-Type describing the key used to identify a group of datasets
+# Import and re-export from source_types for backward compatibility
+from climate_ref_core.source_types import Selector, SourceDatasetType
 
-This is a tuple of tuples, where each inner tuple contains a metadata and dimension value
-that was used to group the datasets together.
-
-This type must be hashable, as it is used as a key in a dictionary.
-"""
-
-
-class SourceDatasetType(enum.Enum):
-    """
-    Types of supported source datasets
-    """
-
-    CMIP6 = "cmip6"
-    CMIP7 = "cmip7"
-    obs4MIPs = "obs4mips"
-    PMPClimatology = "pmp-climatology"
-
-    @classmethod
-    @functools.lru_cache(maxsize=1)
-    def ordered(
-        cls,
-    ) -> list[Self]:
-        """
-        Order in alphabetical order according to their value
-
-        Returns
-        -------
-        :
-            Ordered list of dataset types
-        """
-        return sorted(cls, key=lambda x: x.value)
+__all__ = ["Selector", "SourceDatasetType"]
 
 
 def _clean_facets(raw_values: dict[str, str | Collection[str]]) -> dict[str, tuple[str, ...]]:

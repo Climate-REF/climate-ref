@@ -165,7 +165,7 @@ class TestIngest:
 
 class TestFetchSampleData:
     def test_fetch_defaults(self, mocker, invoke_cli):
-        mock_fetch = mocker.patch("climate_ref.cli.datasets.fetch_sample_data")
+        mock_fetch = mocker.patch("climate_ref.testing.fetch_sample_data")
         invoke_cli(
             [
                 "datasets",
@@ -176,7 +176,7 @@ class TestFetchSampleData:
         mock_fetch.assert_called_once_with(force_cleanup=False, symlink=False)
 
     def test_fetch(self, mocker, invoke_cli):
-        mock_fetch = mocker.patch("climate_ref.cli.datasets.fetch_sample_data")
+        mock_fetch = mocker.patch("climate_ref.testing.fetch_sample_data")
         invoke_cli(
             [
                 "datasets",

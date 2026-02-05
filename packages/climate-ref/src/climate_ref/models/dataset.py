@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from climate_ref.models.base import Base
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.source_types import SourceDatasetType
 
 
 class Dataset(Base):

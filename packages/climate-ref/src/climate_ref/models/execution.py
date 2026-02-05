@@ -13,11 +13,11 @@ from climate_ref.models.dataset import Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.mixins import CreatedUpdatedMixin, DimensionMixin
 from climate_ref.models.provider import Provider
-from climate_ref_core.datasets import ExecutionDatasetCollection
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
     from climate_ref.models.metric_value import MetricValue
+    from climate_ref_core.datasets import ExecutionDatasetCollection
 
 
 class ExecutionGroup(CreatedUpdatedMixin, Base):
@@ -183,7 +183,7 @@ class Execution(CreatedUpdatedMixin, Base):
     The datasets used in this execution
     """
 
-    def register_datasets(self, db: "Database", execution_dataset: ExecutionDatasetCollection) -> None:
+    def register_datasets(self, db: "Database", execution_dataset: "ExecutionDatasetCollection") -> None:
         """
         Register the datasets used in the diagnostic calculation with the execution
         """

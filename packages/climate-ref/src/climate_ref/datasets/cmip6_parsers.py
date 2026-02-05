@@ -12,6 +12,48 @@ from ecgtools.parsers.cmip import parse_cmip6_using_directories  # type: ignore
 from ecgtools.parsers.utilities import extract_attr_with_regex  # type: ignore
 from loguru import logger
 
+# Mapping from CMIP6 table_id to frequency
+# This allows the DRS parser to infer frequency without opening netCDF files.
+# See https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/CMIP6/
+# Future: replace with ESG Voc controlled vocabulary integration
+TABLE_ID_TO_FREQUENCY: dict[str, str] = {
+    "Amon": "mon",
+    "Omon": "mon",
+    "Lmon": "mon",
+    "LImon": "mon",
+    "SImon": "mon",
+    "AERmon": "mon",
+    "CFmon": "mon",
+    "Emon": "mon",
+    "Ofx": "fx",
+    "fx": "fx",
+    "day": "day",
+    "Eday": "day",
+    "CFday": "day",
+    "Oyr": "yr",
+    "Eyr": "yr",
+    "3hr": "3hr",
+    "E3hr": "3hr",
+    "CF3hr": "3hr",
+    "6hrLev": "6hr",
+    "6hrPlev": "6hr",
+    "6hrPlevPt": "6hr",
+    "1hr": "1hr",
+    "Oclim": "monC",
+    "Aclim": "monC",
+    "Efx": "fx",
+    "Lfx": "fx",
+    "SIfx": "fx",
+    "AERfx": "fx",
+    "EdayZ": "day",
+    "AmonZ": "mon",
+    "EmonZ": "mon",
+    "Oday": "day",
+    "OmonC": "monC",
+    "IyrAnt": "yr",
+    "IyrGre": "yr",
+}
+
 
 def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
     """
@@ -185,5 +227,10 @@ def parse_cmip6_drs(file: str, **kwargs: Any) -> dict[str, Any]:
         info["end_time"] = end_time
 
     info["finalised"] = False
+
+    # Infer frequency from table_id when available
+    table_id = info.get("table_id")
+    if table_id:
+        info["frequency"] = TABLE_ID_TO_FREQUENCY.get(table_id)
 
     return info

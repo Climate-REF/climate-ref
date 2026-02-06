@@ -8,7 +8,6 @@ import pathlib
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-import pandas as pd
 from attrs import field, frozen
 
 from climate_ref_core.constraints import GroupConstraint
@@ -19,6 +18,8 @@ from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from climate_ref_core.providers import CommandLineDiagnosticProvider, DiagnosticProvider
     from climate_ref_core.testing import TestDataSpecification
 
@@ -367,6 +368,8 @@ class DataRequirement:
         :
             Filtered data catalog
         """
+        import pandas as pd  # noqa: PLC0415
+
         if not self.filters or any(not f.facets for f in self.filters):
             return data_catalog
 

@@ -5,7 +5,7 @@ from sqlalchemy import ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from climate_ref.models.base import Base
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.source_types import SourceDatasetType
 
 
 class Dataset(Base):
@@ -304,6 +304,14 @@ class CMIP7Dataset(Dataset):
 
     parent_variant_label: Mapped[str] = mapped_column(nullable=True)
     """String - parent variant label"""
+
+    # Additional Mandatory Attributes
+    license_id: Mapped[str] = mapped_column(nullable=True)
+    """CV - e.g., "CC-BY-4.0", "CC0-1.0" """
+
+    # Conditionally Required Attributes
+    external_variables: Mapped[str] = mapped_column(nullable=True)
+    """Space-separated list of cell measure variable names (when cell_measures are specified)"""
 
     # Variable Metadata (optional, useful for display)
     standard_name: Mapped[str] = mapped_column(nullable=True)

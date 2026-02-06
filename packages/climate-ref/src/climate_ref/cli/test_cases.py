@@ -5,11 +5,12 @@ These commands are intended for developers working on diagnostics and require
 a source checkout of the project with test data directories available.
 """
 
+from __future__ import annotations
+
 import shutil
 from pathlib import Path
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
-import pandas as pd
 import typer
 from loguru import logger
 from rich.console import Console
@@ -18,32 +19,21 @@ from rich.table import Table
 from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_for_path
 from climate_ref.cli._utils import format_size
 from climate_ref.config import Config
-from climate_ref.datasets import (
-    CMIP6DatasetAdapter,
-    CMIP7DatasetAdapter,
-    DatasetAdapter,
-    Obs4MIPsDatasetAdapter,
-    PMPClimatologyDatasetAdapter,
-)
-from climate_ref.provider_registry import ProviderRegistry
-from climate_ref.solver import solve_executions
-from climate_ref.testing import TestCaseRunner
-from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
-from climate_ref_core.diagnostics import Diagnostic
-from climate_ref_core.esgf import ESGFFetcher
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
-from climate_ref_core.testing import (
-    TestCase,
-    TestCasePaths,
-    catalog_changed_since_regression,
-    get_catalog_hash,
-    load_datasets_from_yaml,
-    save_datasets_to_yaml,
-)
+
+if TYPE_CHECKING:
+    import pandas as pd
+
+    from climate_ref.datasets import DatasetAdapter
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
+    from climate_ref_core.diagnostics import Diagnostic
+    from climate_ref_core.testing import TestCase
+
 
 app = typer.Typer(help=__doc__)
 
@@ -62,6 +52,8 @@ def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> p
     pd.DataFrame
         DataFrame catalog of datasets with metadata and paths
     """
+    import pandas as pd
+
     # Collect unique parent directories since the adapter scans directories
     parent_dirs = list({fp.parent for fp in file_paths})
 
@@ -92,6 +84,8 @@ def _solve_test_case(
     Runs the solver to determine which datasets from the catalog
     satisfy the diagnostic's requirements.
     """
+    from climate_ref.solver import solve_executions
+
     executions = list(solve_executions(data_catalog, diagnostic, diagnostic.provider))
 
     if not executions:
@@ -133,6 +127,16 @@ def _fetch_and_build_catalog(
     :
         Tuple of (datasets, catalog_was_written)
     """
+    from climate_ref.datasets import (
+        CMIP6DatasetAdapter,
+        CMIP7DatasetAdapter,
+        Obs4MIPsDatasetAdapter,
+        PMPClimatologyDatasetAdapter,
+    )
+    from climate_ref_core.datasets import SourceDatasetType
+    from climate_ref_core.esgf import ESGFFetcher
+    from climate_ref_core.testing import TestCasePaths, save_datasets_to_yaml
+
     fetcher = ESGFFetcher()
 
     # Fetch all requests - returns DataFrame with metadata + paths
@@ -222,6 +226,9 @@ def fetch_test_data(  # noqa: PLR0912, PLR0915
         ref test-cases fetch --diagnostic ecs  # Fetch ECS diagnostic data
         ref test-cases fetch --only-missing    # Skip test cases with existing catalogs
     """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.testing import TestCasePaths
+
     config = ctx.obj.config
     db = ctx.obj.database
 
@@ -318,6 +325,9 @@ def list_cases(
     Shows which test cases are defined for each diagnostic and their descriptions.
     Also shows whether catalog and regression data exist for each test case.
     """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.testing import TestCasePaths
+
     config = ctx.obj.config
     db = ctx.obj.database
     console = ctx.obj.console
@@ -479,6 +489,13 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
 
     Returns True if successful, False otherwise.
     """
+    from climate_ref.testing import TestCaseRunner
+    from climate_ref_core.testing import (
+        TestCasePaths,
+        get_catalog_hash,
+        load_datasets_from_yaml,
+    )
+
     provider_slug = diag.provider.slug
     diagnostic_slug = diag.slug
     test_case_name = tc.name
@@ -645,6 +662,12 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         ref test-cases run --provider pmp --only-missing # Skip test cases with regression data
         ref test-cases run --provider pmp --if-changed   # Only run if catalog changed
     """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.testing import (
+        TestCasePaths,
+        catalog_changed_since_regression,
+    )
+
     config: Config = ctx.obj.config
     db = ctx.obj.database
     console: Console = ctx.obj.console

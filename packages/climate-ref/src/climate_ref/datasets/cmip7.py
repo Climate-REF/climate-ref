@@ -85,6 +85,10 @@ def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
                 "parent_source_id": attrs.get("parent_source_id"),
                 "parent_time_units": attrs.get("parent_time_units"),
                 "parent_variant_label": attrs.get("parent_variant_label"),
+                # Additional mandatory attributes
+                "license_id": attrs.get("license_id"),
+                # Conditionally required attributes
+                "external_variables": attrs.get("external_variables"),
                 # Variable metadata
                 "standard_name": standard_name,
                 "long_name": long_name,
@@ -132,6 +136,10 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "mip_era",
         "realm",
         "nominal_resolution",
+        # Additional mandatory attributes
+        "license_id",
+        # Conditionally required attributes
+        "external_variables",
         # Parent info
         "branch_time_in_child",
         "branch_time_in_parent",
@@ -153,8 +161,10 @@ class CMIP7DatasetAdapter(DatasetAdapter):
 
     version_metadata = "version"
 
-    # CMIP7 DRS: activity_id/institution_id/source_id/experiment_id/variant_label/
-    #            region/frequency/variable_id/branding_suffix/grid_label
+    # CMIP7 DRS directory structure (MIP-DRS7 spec):
+    #   <drs_specs>/<mip_era>/<activity_id>/<institution_id>/.../<grid_label>/<version>
+    # The leading drs_specs and mip_era are fixed values ("MIP-DRS7" and "CMIP7")
+    # and are omitted here. They are added as the "CMIP7." prefix when building instance_id.
     dataset_id_metadata = (
         "activity_id",
         "institution_id",

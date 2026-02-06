@@ -221,23 +221,14 @@ def solve_executions(
         for requirement_collection in diagnostic.data_requirements:
             if not isinstance(requirement_collection, Sequence):
                 raise TypeError(f"Expected a sequence of DataRequirement, got {type(requirement_collection)}")
-            try:
-                # Check if all required source types are available
-                for req in requirement_collection:
-                    if isinstance(req, DataRequirement) and req.source_type not in data_catalog:
-                        raise InvalidDiagnosticException(
-                            diagnostic, f"No data catalog for source type {req.source_type}"
-                        )
-                # Buffer executions to check if any were actually produced
-                executions = list(
-                    _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
-                )
-                if executions:
-                    any_matched = True
-                    yield from executions
-            except InvalidDiagnosticException:
-                # This requirement set doesn't match available data, try the next one
-                continue
+            # Buffer executions to check if any were actually produced
+            # _solve_from_data_requirements returns empty if source types are missing
+            executions = list(
+                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
+            )
+            if executions:
+                any_matched = True
+                yield from executions
         if not any_matched:
             available = ", ".join(str(s) for s in data_catalog.keys())
             raise InvalidDiagnosticException(
@@ -262,9 +253,11 @@ def _solve_from_data_requirements(
         if not isinstance(requirement, DataRequirement):
             raise TypeError(f"Expected a DataRequirement, got {type(requirement)}")
         if requirement.source_type not in data_catalog:
-            raise InvalidDiagnosticException(
-                diagnostic, f"No data catalog for source type {requirement.source_type}"
+            logger.debug(
+                f"No data catalog for source type {requirement.source_type} of "
+                f"{provider.slug} diagnostic {diagnostic.slug}"
             )
+            return
 
         dataset_groups[requirement.source_type] = extract_covered_datasets(
             data_catalog[requirement.source_type], requirement

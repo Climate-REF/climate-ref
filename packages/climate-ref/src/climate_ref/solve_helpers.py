@@ -108,6 +108,7 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
 
     catalog_files = {
         SourceDatasetType.CMIP6: "cmip6_catalog.parquet",
+        SourceDatasetType.CMIP7: "cmip7_catalog.parquet",
         SourceDatasetType.obs4MIPs: "obs4mips_catalog.parquet",
         SourceDatasetType.PMPClimatology: "pmp_climatology_catalog.parquet",
     }

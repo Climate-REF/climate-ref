@@ -201,14 +201,11 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             Updated DataFrame with full metadata extracted from files
         """
         unfinalised = datasets[datasets["finalised"] == False]  # noqa: E712
-        if unfinalised.empty:
-            return datasets
 
-        logger.info(f"Finalising {len(unfinalised)} unfinalised CMIP6 datasets")
-
+        updated_indices = []
         for idx, row in unfinalised.iterrows():
-            path = row.get("path")
-            if not path:
+            path = row["path"]
+            if pd.isna(path):
                 logger.warning(f"No path for dataset at index {idx}, skipping")
                 continue
 
@@ -224,27 +221,75 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
                         datasets.at[idx, key] = value
 
                 datasets.at[idx, "finalised"] = True
+                updated_indices.append(idx)
 
             except Exception:
                 logger.exception(f"Error finalising dataset at {path}")
                 continue
 
-        # Convert start_time/end_time strings from the complete parser to datetime objects
-        datasets["start_time"] = parse_datetime(datasets["start_time"])
-        datasets["end_time"] = parse_datetime(datasets["end_time"])
+        if updated_indices:
+            # Convert start_time/end_time strings from the complete parser to datetime objects
+            datasets["start_time"] = parse_datetime(datasets["start_time"])
+            datasets["end_time"] = parse_datetime(datasets["end_time"])
 
-        # Apply fixes (branch time cleaning, parent_variant_label, etc.)
-        datasets = _apply_fixes(datasets)
+            # Apply fixes (branch time cleaning, parent_variant_label, etc.)
+            datasets = _apply_fixes(datasets)
 
-        # Persist finalised datasets back to the database
-        finalised_mask = datasets["finalised"] == True  # noqa: E712
-        for idx, row in datasets[finalised_mask & unfinalised.index.isin(datasets.index)].iterrows():
-            slug = row.get(self.slug_column)
-            if slug:
-                data_catalog_dataset = datasets[datasets[self.slug_column] == slug]
-                try:
-                    self.register_dataset(db=db, data_catalog_dataset=data_catalog_dataset)
-                except Exception:
-                    logger.exception(f"Error persisting finalised dataset {slug}")
+        self._persist_finalised_metadata(db, datasets, unfinalised.index)
 
         return datasets
+
+    def _persist_finalised_metadata(
+        self, db: Database, datasets: pd.DataFrame, unfinalised_index: pd.Index
+    ) -> None:
+        """
+        Persist finalised metadata back to the database.
+
+        We update records directly rather than calling register_dataset,
+        because the solver passes a group subset that may not contain all
+        files for the dataset, which would trigger a "removing files" error.
+
+        Parameters
+        ----------
+        db
+            Database instance
+        datasets
+            DataFrame with updated metadata
+        unfinalised_index
+            Index of rows that were originally unfinalised
+        """
+        finalised_mask = datasets["finalised"] == True  # noqa: E712
+        originally_unfinalised = datasets.index.isin(unfinalised_index)
+        seen_slugs: set[str] = set()
+        for idx, row in datasets[finalised_mask & originally_unfinalised].iterrows():
+            slug = row.get(self.slug_column)
+            if not slug or slug in seen_slugs:
+                continue
+            seen_slugs.add(slug)
+
+            try:
+                with db.session.begin():
+                    dataset_record = (
+                        db.session.query(CMIP6Dataset).filter(CMIP6Dataset.instance_id == slug).one_or_none()
+                    )
+                    if dataset_record is None:
+                        continue
+
+                    # Update dataset-level metadata from the first finalised row
+                    for col in self.dataset_specific_metadata:
+                        if col in datasets.columns:
+                            val = row.get(col)
+                            if val is not None and hasattr(dataset_record, col):
+                                setattr(dataset_record, col, val)
+                    dataset_record.finalised = True
+
+                    # Update file start_time/end_time for files in this subset
+                    subset = datasets[datasets[self.slug_column] == slug]
+                    file_times = {
+                        str(r["path"]): (r["start_time"], r["end_time"]) for _, r in subset.iterrows()
+                    }
+                    for f in dataset_record.files:  # type: ignore[attr-defined]
+                        if f.path in file_times:
+                            f.start_time, f.end_time = file_times[f.path]
+            except Exception:
+                logger.exception(f"Error persisting finalised dataset {slug}")

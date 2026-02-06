@@ -138,7 +138,7 @@ def test_db(monkeypatch):
     config = Config.default()
     db = Database("sqlite:///:memory:")
     db.migrate(config)
-    yield adapter, config, db
+    yield adapter, db
     db.close()
 
 
@@ -158,7 +158,7 @@ def _mk_df(instance_id="CESM2.tas.gn", rows=None):
 
 
 def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
-    adapter, _config, db = test_db
+    adapter, db = test_db
 
     df = _mk_df(
         rows=[
@@ -202,7 +202,7 @@ def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
 
 
 def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db):
-    adapter, _config, db = test_db
+    adapter, db = test_db
 
     # First, create initial dataset with existing files
     initial_df = _mk_df(
@@ -266,7 +266,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
 
 
 def test_register_dataset_raises_on_removal(monkeypatch, test_db):
-    adapter, _config, db = test_db
+    adapter, db = test_db
 
     # First, create initial dataset with files
     initial_df = _mk_df(
@@ -304,7 +304,7 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
 
 
 def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
-    adapter, _config, db = test_db
+    adapter, db = test_db
 
     df = pd.concat(
         [
@@ -339,7 +339,7 @@ def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
 
 def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     """Test that changes to dataset metadata are properly captured and result in UPDATED state"""
-    adapter, _config, db = test_db
+    adapter, db = test_db
 
     # First, create initial dataset with original metadata
     df = _mk_df(
@@ -433,25 +433,25 @@ class TestIngestDatasets:
     """Tests for the ingest_datasets shared function."""
 
     def test_ingest_datasets_directory_not_exists(self, test_db):
-        adapter, _config, db = test_db
+        adapter, db = test_db
         with pytest.raises(ValueError, match="does not exist"):
             ingest_datasets(adapter, Path("/nonexistent/path"), db)
 
     def test_ingest_datasets_no_nc_files(self, test_db, tmp_path):
-        adapter, _config, db = test_db
+        adapter, db = test_db
         empty_dir = tmp_path / "empty"
         empty_dir.mkdir()
         with pytest.raises(ValueError, match=r"No \.nc files found"):
             ingest_datasets(adapter, empty_dir, db)
 
     def test_ingest_datasets_requires_directory_or_catalog(self, test_db):
-        adapter, _config, db = test_db
+        adapter, db = test_db
         with pytest.raises(ValueError, match="Either directory or data_catalog must be provided"):
             ingest_datasets(adapter, None, db)
 
     def test_ingest_datasets_with_pre_validated_catalog(self, monkeypatch, test_db):
         """Test that ingest_datasets works with a pre-validated data catalog."""
-        adapter, _config, db = test_db
+        adapter, db = test_db
 
         df = _mk_df(
             rows=[
@@ -481,7 +481,7 @@ class TestIngestDatasets:
 
     def test_ingest_datasets_idempotent(self, monkeypatch, test_db):
         """Test that calling ingest_datasets twice is idempotent."""
-        adapter, _config, db = test_db
+        adapter, db = test_db
 
         df = _mk_df(
             rows=[
@@ -507,7 +507,7 @@ class TestIngestDatasets:
 
     def test_ingest_datasets_with_directory(self, monkeypatch, test_db, tmp_path):
         """Test ingest_datasets with directory finds and validates datasets."""
-        adapter, _config, db = test_db
+        adapter, db = test_db
 
         # Create a directory with .nc files
         data_dir = tmp_path / "data"
@@ -541,7 +541,7 @@ class TestIngestDatasets:
 
     def test_ingest_datasets_empty_after_validation(self, monkeypatch, test_db, tmp_path):
         """Test ingest_datasets raises ValueError when catalog is empty after validation."""
-        adapter, _config, db = test_db
+        adapter, db = test_db
 
         # Create a directory with .nc files
         data_dir = tmp_path / "data"
@@ -568,7 +568,7 @@ class TestIngestDatasets:
 
     def test_ingest_datasets_updated_state(self, monkeypatch, test_db):
         """Test that ingest_datasets correctly tracks updated datasets."""
-        adapter, _config, db = test_db
+        adapter, db = test_db
 
         # First create a dataset
         df1 = _mk_df(

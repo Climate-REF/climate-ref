@@ -1,0 +1,194 @@
+INFO    [3144924] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [3144924] Package versions
+INFO    [3144924] ----------------
+INFO    [3144924] ESMValCore: 2.13.0
+INFO    [3144924] ESMValTool: 2.14.0.dev65+gf5214c924
+INFO    [3144924] ----------------
+INFO    [3144924] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/climate_ref/esmvaltool_config_dir (ESMVALTOOL_CONFIG_DIR environment variable)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [3144924] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260205_082436/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260205_082436/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260205_082436/run/cmor_log.txt
+INFO    [3144924] Starting the Earth System Model Evaluation Tool at time: 2026-02-05 08:24:37 UTC
+INFO    [3144924] ----------------------------------------------------------------------
+INFO    [3144924] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [3144924] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260205_082436/run
+INFO    [3144924] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260205_082436/work
+INFO    [3144924] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260205_082436/preproc
+INFO    [3144924] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260205_082436/plots
+INFO    [3144924] ----------------------------------------------------------------------
+INFO    [3144924] Running tasks using at most 256 processes
+INFO    [3144924] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [3144924] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [3144924] Creating tasks from recipe
+INFO    [3144924] Creating tasks for diagnostic tas_trends
+INFO    [3144924] Creating diagnostic task tas_trends/plot
+INFO    [3144924] Creating preprocessor task tas_trends/tas
+INFO    [3144924] Creating preprocessor 'trend_tas' task for variable 'tas'
+INFO    [3144924] Found input files for Dataset: tas, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [3144924] PreprocessingTask tas_trends/tas created.
+INFO    [3144924] Creating tasks for diagnostic pr_trends
+INFO    [3144924] Creating diagnostic task pr_trends/plot
+INFO    [3144924] Creating preprocessor task pr_trends/pr
+INFO    [3144924] Creating preprocessor 'trend_pr' task for variable 'pr'
+INFO    [3144924] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [3144924] PreprocessingTask pr_trends/pr created.
+INFO    [3144924] Creating tasks for diagnostic psl_trends
+INFO    [3144924] Creating diagnostic task psl_trends/plot
+INFO    [3144924] Creating preprocessor task psl_trends/psl
+INFO    [3144924] Creating preprocessor 'trend_psl' task for variable 'psl'
+INFO    [3144924] Found input files for Dataset: psl, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [3144924] PreprocessingTask psl_trends/psl created.
+INFO    [3144924] Creating tasks for diagnostic ua200_trends
+INFO    [3144924] Creating diagnostic task ua200_trends/plot
+INFO    [3144924] Creating preprocessor task ua200_trends/ua
+INFO    [3144924] Creating preprocessor 'trend_ua200' task for variable 'ua'
+INFO    [3144924] Found input files for Dataset: ua, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [3144924] PreprocessingTask ua200_trends/ua created.
+INFO    [3144924] Creating tasks for diagnostic hus200_trends
+INFO    [3144924] Creating diagnostic task hus200_trends/plot
+INFO    [3144924] Creating preprocessor task hus200_trends/hus
+INFO    [3144924] Creating preprocessor 'trend_hus200' task for variable 'hus'
+INFO    [3144924] Found input files for Dataset: hus, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacella, fx
+INFO    [3144924] PreprocessingTask hus200_trends/hus created.
+INFO    [3144924] These tasks will be executed: ua200_trends/plot, pr_trends/pr, psl_trends/plot, pr_trends/plot, tas_trends/tas, hus200_trends/hus, ua200_trends/ua, tas_trends/plot, psl_trends/psl, hus200_trends/plot
+INFO    [3144924] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260205_082436/run/recipe_filled.yml
+INFO    [3144924] Using Dask distributed scheduler (address: tcp://127.0.0.1:37555, dashboard link: http://127.0.0.1:8787/status)
+INFO    [3144924] Running 10 tasks using 10 processes
+INFO    [3145690] Starting task tas_trends/tas in process [3145690]
+INFO    [3145694] Starting task psl_trends/psl in process [3145694]
+INFO    [3145692] Starting task pr_trends/pr in process [3145692]
+INFO    [3145698] Starting task hus200_trends/hus in process [3145698]
+INFO    [3145696] Starting task ua200_trends/ua in process [3145696]
+INFO    [3144924] Progress: 5 tasks running, 5 tasks waiting for ancestors, 0/10 done
+INFO    [3145694] Computing and saving data for preprocessing task psl_trends/psl
+INFO    [3145694] psl_trends/psl                [########################################] | 100% Completed | 2.51 s
+INFO    [3145698] Computing and saving data for preprocessing task hus200_trends/hus
+INFO    [3145694] Successfully completed task psl_trends/psl (priority 5) in 0:00:03.570147
+INFO    [3144924] Progress: 4 tasks running, 5 tasks waiting for ancestors, 1/10 done
+INFO    [3144924] Progress: 5 tasks running, 4 tasks waiting for ancestors, 1/10 done
+INFO    [3145700] Starting task psl_trends/plot in process [3145700]
+INFO    [3145700] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260205_082436/run/psl_trends/plot/settings.yml']
+INFO    [3145700] Writing output to <OUTPUT_DIR>/executions/recipe_20260205_082436/work/psl_trends/plot
+INFO    [3145700] Writing plots to <OUTPUT_DIR>/executions/recipe_20260205_082436/plots/psl_trends/plot
+INFO    [3145700] Writing log to <OUTPUT_DIR>/executions/recipe_20260205_082436/run/psl_trends/plot/log.txt
+INFO    [3145700] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260205_082436/run/psl_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260205_082436/run/psl_trends/plot/settings.yml
+INFO    [3145698] hus200_trends/hus             [########################################] | 100% Completed | 1.32 s
+INFO    [3145696] Computing and saving data for preprocessing task ua200_trends/ua
+INFO    [3145698] Successfully completed task hus200_trends/hus (priority 9) in 0:00:04.992174
+INFO    [3144924] Progress: 4 tasks running, 4 tasks waiting for ancestors, 2/10 done
+INFO    [3144924] Progress: 5 tasks running, 3 tasks waiting for ancestors, 2/10 done
+INFO    [3145702] Starting task hus200_trends/plot in process [3145702]
+INFO    [3145702] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260205_082436/run/hus200_trends/plot/settings.yml']
+INFO    [3145702] Writing output to <OUTPUT_DIR>/executions/recipe_20260205_082436/work/hus200_trends/plot
+INFO    [3145702] Writing plots to <OUTPUT_DIR>/executions/recipe_20260205_082436/plots/hus200_trends/plot
+INFO    [3145702] Writing log to <OUTPUT_DIR>/executions/recipe_20260205_082436/run/hus200_trends/plot/log.txt
+INFO    [3145702] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260205_082436/run/hus200_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260205_082436/run/hus200_trends/plot/settings.yml
+INFO    [3145696] ua200_trends/ua               [########################################] | 100% Completed | 1.34 s
+INFO    [3145692] Computing and saving data for preprocessing task pr_trends/pr
+INFO    [3145696] Successfully completed task ua200_trends/ua (priority 7) in 0:00:06.444030
+INFO    [3144924] Progress: 4 tasks running, 3 tasks waiting for ancestors, 3/10 done
+INFO    [3144924] Progress: 5 tasks running, 2 tasks waiting for ancestors, 3/10 done
+INFO    [3145704] Starting task ua200_trends/plot in process [3145704]
+INFO    [3145704] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260205_082436/run/ua200_trends/plot/settings.yml']
+INFO    [3145704] Writing output to <OUTPUT_DIR>/executions/recipe_20260205_082436/work/ua200_trends/plot
+INFO    [3145704] Writing plots to <OUTPUT_DIR>/executions/recipe_20260205_082436/plots/ua200_trends/plot
+INFO    [3145704] Writing log to <OUTPUT_DIR>/executions/recipe_20260205_082436/run/ua200_trends/plot/log.txt
+INFO    [3145704] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260205_082436/run/ua200_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260205_082436/run/ua200_trends/plot/settings.yml
+INFO    [3145692] pr_trends/pr                  [########################################] | 100% Completed | 2.33 s
+INFO    [3145690] Computing and saving data for preprocessing task tas_trends/tas
+INFO    [3145692] Successfully completed task pr_trends/pr (priority 3) in 0:00:08.876770
+INFO    [3144924] Progress: 4 tasks running, 2 tasks waiting for ancestors, 4/10 done
+INFO    [3144924] Progress: 5 tasks running, 1 tasks waiting for ancestors, 4/10 done
+INFO    [3145706] Starting task pr_trends/plot in process [3145706]
+INFO    [3145706] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260205_082436/run/pr_trends/plot/settings.yml']
+INFO    [3145706] Writing output to <OUTPUT_DIR>/executions/recipe_20260205_082436/work/pr_trends/plot
+INFO    [3145706] Writing plots to <OUTPUT_DIR>/executions/recipe_20260205_082436/plots/pr_trends/plot
+INFO    [3145706] Writing log to <OUTPUT_DIR>/executions/recipe_20260205_082436/run/pr_trends/plot/log.txt
+INFO    [3145706] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260205_082436/run/pr_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260205_082436/run/pr_trends/plot/settings.yml
+INFO    [3145690] tas_trends/tas                [########################################] | 100% Completed | 1.31 s
+INFO    [3145690] Successfully completed task tas_trends/tas (priority 1) in 0:00:10.298557
+INFO    [3145700] Maximum memory used (estimate): 0.5 GB
+INFO    [3145700] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [3144924] Progress: 4 tasks running, 1 tasks waiting for ancestors, 5/10 done
+INFO    [3145708] Starting task tas_trends/plot in process [3145708]
+INFO    [3145708] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py', '<OUTPUT_DIR>/executions/recipe_20260205_082436/run/tas_trends/plot/settings.yml']
+INFO    [3145708] Writing output to <OUTPUT_DIR>/executions/recipe_20260205_082436/work/tas_trends/plot
+INFO    [3145708] Writing plots to <OUTPUT_DIR>/executions/recipe_20260205_082436/plots/tas_trends/plot
+INFO    [3145708] Writing log to <OUTPUT_DIR>/executions/recipe_20260205_082436/run/tas_trends/plot/log.txt
+INFO    [3145708] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260205_082436/run/tas_trends/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_diag.py <OUTPUT_DIR>/executions/recipe_20260205_082436/run/tas_trends/plot/settings.yml
+INFO    [3144924] Progress: 5 tasks running, 0 tasks waiting for ancestors, 5/10 done
+INFO    [3145700] Successfully completed task psl_trends/plot (priority 4) in 0:00:06.862198
+INFO    [3144924] Progress: 4 tasks running, 0 tasks waiting for ancestors, 6/10 done
+INFO    [3145702] Maximum memory used (estimate): 0.5 GB
+INFO    [3145702] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [3145702] Successfully completed task hus200_trends/plot (priority 8) in 0:00:06.764776
+INFO    [3144924] Progress: 3 tasks running, 0 tasks waiting for ancestors, 7/10 done
+INFO    [3145704] Maximum memory used (estimate): 0.5 GB
+INFO    [3145704] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [3145704] Successfully completed task ua200_trends/plot (priority 6) in 0:00:06.778711
+INFO    [3144924] Progress: 2 tasks running, 0 tasks waiting for ancestors, 8/10 done
+INFO    [3145706] Maximum memory used (estimate): 0.5 GB
+INFO    [3145706] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [3145708] Maximum memory used (estimate): 0.4 GB
+INFO    [3145708] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [3145706] Successfully completed task pr_trends/plot (priority 2) in 0:00:07.840047
+INFO    [3145708] Successfully completed task tas_trends/plot (priority 0) in 0:00:06.745668
+INFO    [3144924] Progress: 1 tasks running, 0 tasks waiting for ancestors, 9/10 done
+INFO    [3144924] Progress: 0 tasks running, 0 tasks waiting for ancestors, 10/10 done
+INFO    [3144924] Successfully completed all tasks.
+INFO    [3144924] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260205_082436/run/recipe_filled.yml
+INFO    [3144924] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260205_082436/index.html
+INFO    [3144924] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.2 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-576dafa24b336710f1e2eed04664e691aa3ebc33/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260205_082436
+Then visit http://localhost:31415 in your browser
+INFO    [3144924] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.2 with your SSH server name
+INFO    [3144924] Ending the Earth System Model Evaluation Tool at time: 2026-02-05 08:25:01 UTC
+INFO    [3144924] Time for running the recipe was: 0:00:24.053289
+INFO    [3144924] Maximum memory used (estimate): 25.3 GB
+INFO    [3144924] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [3144924] Removing `preproc` directory containing preprocessed data
+INFO    [3144924] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [3144924] Run was successful

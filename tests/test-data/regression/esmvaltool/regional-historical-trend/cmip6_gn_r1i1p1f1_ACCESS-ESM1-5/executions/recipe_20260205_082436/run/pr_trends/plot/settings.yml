@@ -1,0 +1,33 @@
+seaborn_func: barplot
+reset_index: true
+write_netcdf: true
+seaborn_kwargs:
+  x: shape_id
+  y: pr
+  hue: dataset
+add_aux_coords: true
+facets_as_columns:
+- dataset
+legend_title: Data
+plot_object_methods:
+  set_xlabel: region
+  set_ylabel: pr trend [mm kg m-3 day-1 yr-1]
+seaborn_settings:
+  style: ticks
+  rc:
+    figure.figsize:
+    - 28
+    - 6
+suptitle: Trend in Precipitation
+recipe: recipe.yml
+version: 2.13.0
+script: plot
+run_dir: <OUTPUT_DIR>/executions/recipe_20260205_082436/run/pr_trends/plot
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260205_082436/plots/pr_trends/plot
+work_dir: <OUTPUT_DIR>/executions/recipe_20260205_082436/work/pr_trends/plot
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/b/b381141/auxiliary_data
+scheduler_address: tcp://127.0.0.1:37555
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260205_082436/preproc/pr_trends/pr/metadata.yml

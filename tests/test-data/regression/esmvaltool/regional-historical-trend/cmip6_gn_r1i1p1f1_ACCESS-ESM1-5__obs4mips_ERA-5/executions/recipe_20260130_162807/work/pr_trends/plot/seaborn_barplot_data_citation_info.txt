@@ -1,5 +1,0 @@
-Follow the links below to find more information about CMIP6 data:
-- https://cera-www.dkrz.de/WDCC/ui/cerasearch/cmip6?input=CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical
-
-Additional data citation information was found, for which no entry is available in the bibtex file:
-- Huffman et al. 1997, http://dx.doi.org/10.1175/1520-0477(1997)078<0005:TGPCPG>2.0.CO;2; Adler et al. 2003, http://dx.doi.org/10.1175/1525-7541(2003)004<1147:TVGPCP>2.0.CO;2; Huffman et al. 2009, http://dx.doi.org/10.1029/2009GL040000; Adler et al. 2016, Global Precipitation Climatology Project (GPCP) Monthly Analysis: Climate Algorithm Theoretical Basis Document (C-ATBD)

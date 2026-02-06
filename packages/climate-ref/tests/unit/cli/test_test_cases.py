@@ -8,6 +8,7 @@ from climate_ref.cli.test_cases import (
     _build_catalog,
     _fetch_and_build_catalog,
     _find_diagnostic,
+    _solve_test_case,
 )
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
@@ -70,6 +71,46 @@ def mock_test_case():
 
 class TestBuildCatalog:
     """Tests for _build_catalog function."""
+
+    def test_successful_catalog_build(self):
+        """Test successful catalog build with matching files."""
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "path": ["/path/to/tas.nc", "/path/to/pr.nc"],
+                "variable_id": ["tas", "pr"],
+            }
+        )
+
+        file_paths = [Path("/path/to/tas.nc")]
+        result = _build_catalog(mock_adapter, file_paths)
+
+        # Only the matching file should be in the result
+        assert len(result) == 1
+        assert result.iloc[0]["variable_id"] == "tas"
+
+    def test_multiple_parent_dirs(self):
+        """Test catalog build with files from multiple parent directories."""
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.side_effect = [
+            pd.DataFrame(
+                {
+                    "path": ["/dir1/tas.nc"],
+                    "variable_id": ["tas"],
+                }
+            ),
+            pd.DataFrame(
+                {
+                    "path": ["/dir2/pr.nc"],
+                    "variable_id": ["pr"],
+                }
+            ),
+        ]
+
+        file_paths = [Path("/dir1/tas.nc"), Path("/dir2/pr.nc")]
+        result = _build_catalog(mock_adapter, file_paths)
+
+        assert len(result) == 2
 
     def test_empty_df_after_filtering(self, caplog):
         """Test warning when no matching files found after filtering."""
@@ -721,3 +762,331 @@ class TestRunTestCaseCommand:
         assert result.exit_code == 0
         # Without --force-regen, baseline should be unchanged
         assert baseline_file.read_text() == '{"existing": "baseline"}'
+
+    def test_run_with_only_missing_skips_existing(self, invoke_cli, mocker, tmp_path):
+        """Test run command with --only-missing skips test cases with existing regression data."""
+        mock_tc = MagicMock()
+        mock_tc.name = "default"
+        mock_tc.description = "test"
+        mock_spec = MagicMock()
+        mock_spec.test_cases = [mock_tc]
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        # Set up paths with existing regression data
+        regression_dir = tmp_path / "regression"
+        regression_dir.mkdir()
+
+        mock_paths = MagicMock()
+        mock_paths.regression = regression_dir  # exists() returns True
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+
+        # With --only-missing, test case should be skipped and exit 0
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--only-missing"],
+            expected_exit_code=0,
+        )
+        assert "No test cases found" in result.stderr or "skipped" in result.stderr.lower()
+
+    def test_run_with_if_changed_skips_unchanged(self, invoke_cli, mocker, tmp_path):
+        """Test run command with --if-changed skips test cases with unchanged catalogs."""
+        mock_tc = MagicMock()
+        mock_tc.name = "default"
+        mock_tc.description = "test"
+        mock_spec = MagicMock()
+        mock_spec.test_cases = [mock_tc]
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mock_paths = MagicMock()
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        # Catalog not changed since regression
+        mocker.patch("climate_ref_core.testing.catalog_changed_since_regression", return_value=False)
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--if-changed"],
+            expected_exit_code=0,
+        )
+        assert "No test cases found" in result.stderr
+
+
+class TestFetchAndBuildCatalogSourceTypes:
+    """Tests for _fetch_and_build_catalog with different source types."""
+
+    def test_cmip7_data_returned(self, mock_diagnostic, mock_test_case):
+        """Test with CMIP7 data returns properly grouped catalog."""
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame(
+            {
+                "source_type": ["CMIP7"],
+                "source_id": ["ACCESS-ESM1-5"],
+                "variable_id": ["tas"],
+                "path": ["/path/to/tas.nc"],
+            }
+        )
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "instance_id": ["CMIP7.test.tas"],
+                "source_id": ["ACCESS-ESM1-5"],
+                "variable_id": ["tas"],
+                "path": ["/path/to/tas.nc"],
+            }
+        )
+        mock_datasets = MagicMock()
+
+        with (
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.CMIP7DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+        ):
+            result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
+
+        assert result is mock_datasets
+        assert written is False
+
+    def test_pmp_climatology_data_returned(self, mock_diagnostic, mock_test_case):
+        """Test with PMPClimatology data returns properly grouped catalog."""
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame(
+            {
+                "source_type": ["PMPClimatology"],
+                "source_id": ["obs-clim"],
+                "variable_id": ["pr"],
+                "path": ["/path/to/pr.nc"],
+            }
+        )
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "instance_id": ["PMPClim.test.pr"],
+                "source_id": ["obs-clim"],
+                "variable_id": ["pr"],
+                "path": ["/path/to/pr.nc"],
+            }
+        )
+        mock_datasets = MagicMock()
+
+        with (
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.PMPClimatologyDatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+        ):
+            result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
+
+        assert result is mock_datasets
+        assert written is False
+
+    def test_force_flag_passed_to_save(self, tmp_path, mock_diagnostic, mock_test_case):
+        """Test that force=True is passed to save_datasets_to_yaml."""
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame(
+            {
+                "source_type": ["CMIP6"],
+                "source_id": ["ACCESS-ESM1-5"],
+                "variable_id": ["tas"],
+                "path": ["/path/to/tas.nc"],
+            }
+        )
+        mock_adapter = MagicMock()
+        mock_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.tas"],
+                "source_id": ["ACCESS-ESM1-5"],
+                "variable_id": ["tas"],
+                "path": ["/path/to/tas.nc"],
+            }
+        )
+        mock_datasets = MagicMock()
+        mock_paths = MagicMock()
+        mock_paths.catalog = tmp_path / "catalog.yaml"
+
+        with (
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths),
+            patch("climate_ref_core.testing.save_datasets_to_yaml", return_value=True) as mock_save,
+        ):
+            _fetch_and_build_catalog(mock_diagnostic, mock_test_case, force=True)
+
+        mock_save.assert_called_once_with(mock_datasets, mock_paths.catalog, force=True)
+
+    def test_mixed_source_types(self, mock_diagnostic, mock_test_case):
+        """Test with mixed CMIP6 and obs4MIPs data."""
+        mock_fetcher = MagicMock()
+        mock_fetcher.fetch_for_test_case.return_value = pd.DataFrame(
+            {
+                "source_type": ["CMIP6", "obs4MIPs"],
+                "source_id": ["ACCESS-ESM1-5", "ERA-5"],
+                "variable_id": ["tas", "tas"],
+                "path": ["/path/to/cmip6_tas.nc", "/path/to/obs_tas.nc"],
+            }
+        )
+        mock_cmip6_adapter = MagicMock()
+        mock_cmip6_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.test.tas"],
+                "source_id": ["ACCESS-ESM1-5"],
+                "variable_id": ["tas"],
+                "path": ["/path/to/cmip6_tas.nc"],
+            }
+        )
+        mock_obs_adapter = MagicMock()
+        mock_obs_adapter.find_local_datasets.return_value = pd.DataFrame(
+            {
+                "instance_id": ["obs4MIPs.test.tas"],
+                "source_id": ["ERA-5"],
+                "variable_id": ["tas"],
+                "path": ["/path/to/obs_tas.nc"],
+            }
+        )
+        mock_datasets = MagicMock()
+
+        with (
+            patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
+            patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_cmip6_adapter),
+            patch("climate_ref.datasets.Obs4MIPsDatasetAdapter", return_value=mock_obs_adapter),
+            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
+            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+        ):
+            result, _written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
+
+        assert result is mock_datasets
+
+
+class TestSolveTestCase:
+    """Tests for _solve_test_case function."""
+
+    def test_solve_returns_first_execution(self):
+        """Test that _solve_test_case returns datasets from the first execution."""
+        mock_datasets = MagicMock()
+        mock_execution = MagicMock()
+        mock_execution.datasets = mock_datasets
+
+        mock_diag = MagicMock()
+        mock_diag.slug = "test-diag"
+        mock_diag.provider = MagicMock(slug="test-provider")
+
+        with patch(
+            "climate_ref.solver.solve_executions",
+            return_value=iter([mock_execution]),
+        ):
+            result = _solve_test_case(mock_diag, {})
+
+        assert result is mock_datasets
+
+    def test_solve_no_executions_raises_error(self):
+        """Test that _solve_test_case raises ValueError when no executions found."""
+        mock_diag = MagicMock()
+        mock_diag.slug = "test-diag"
+        mock_diag.provider = MagicMock(slug="test-provider")
+
+        with patch(
+            "climate_ref.solver.solve_executions",
+            return_value=iter([]),
+        ):
+            with pytest.raises(ValueError, match="No valid executions found"):
+                _solve_test_case(mock_diag, {})
+
+
+class TestFetchTestDataCommandEdgeCases:
+    """Additional edge case tests for fetch test data CLI command."""
+
+    def test_fetch_nonexistent_provider(self, invoke_cli):
+        """Test fetch command with non-existent provider exits with error."""
+        result = invoke_cli(
+            ["test-cases", "fetch", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+        assert "not configured" in result.stderr
+
+    def test_fetch_no_diagnostics_with_spec(self, invoke_cli, mocker):
+        """Test fetch command when no diagnostics have test_data_spec."""
+        mock_diag = MagicMock(slug="no-spec", test_data_spec=None)
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "fetch", "--provider", "example"],
+            expected_exit_code=0,
+        )
+        assert "No diagnostics with test_data_spec found" in result.stderr
+
+
+class TestListCasesCommandEdgeCases:
+    """Additional edge case tests for list test cases CLI command."""
+
+    def test_list_nonexistent_provider(self, invoke_cli):
+        """Test list command with non-existent provider exits with error."""
+        invoke_cli(
+            ["test-cases", "list", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+
+    def test_list_with_test_cases_and_paths(self, invoke_cli, mocker, tmp_path):
+        """Test list shows catalog and regression status correctly."""
+        # Create a test case with paths
+        catalog_path = tmp_path / "catalog.yaml"
+        catalog_path.touch()
+        regression_path = tmp_path / "regression"
+        # Don't create regression_path - simulates missing regression data
+
+        mock_paths = MagicMock()
+        mock_paths.catalog = catalog_path
+        mock_paths.regression = regression_path
+
+        mock_request = MagicMock(slug="req1", source_type="CMIP6")
+
+        # Use a real object for the test case to avoid MagicMock rendering issues
+        mock_tc = MagicMock()
+        mock_tc.name = "default"
+        mock_tc.description = "A test case"
+        mock_tc.requests = [mock_request]
+
+        mock_spec = MagicMock()
+        mock_spec.test_cases = [mock_tc]
+
+        mock_diag = MagicMock()
+        mock_diag.slug = "test-diag"
+        mock_diag.test_data_spec = mock_spec
+
+        mock_provider = MagicMock()
+        mock_provider.slug = "test-provider"
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+
+        result = invoke_cli(["test-cases", "list"])
+        assert result.exit_code == 0
+        assert "test-provider" in result.stdout
+        assert "test-diag" in result.stdout

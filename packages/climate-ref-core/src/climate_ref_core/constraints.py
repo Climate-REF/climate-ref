@@ -271,7 +271,7 @@ class AddSupplementaryDataset:
             A constraint to include a supplementary variable.
 
         """
-        kwargs = {
+        kwargs: dict[SourceDatasetType, dict[str, tuple[str, ...]]] = {
             SourceDatasetType.CMIP6: {
                 "matching_facets": (
                     "source_id",
@@ -283,14 +283,30 @@ class AddSupplementaryDataset:
                     "member_id",
                     "version",
                 ),
-            }
+            },
+            SourceDatasetType.CMIP7: {
+                "matching_facets": (
+                    "source_id",
+                    "grid_label",
+                ),
+                "optional_matching_facets": (
+                    "experiment_id",
+                    "variant_label",  # CMIP7 uses variant_label instead of member_id
+                ),
+            },
         }
-        variable_facet = {
+        variable_facet: dict[SourceDatasetType, str] = {
             SourceDatasetType.CMIP6: "variable_id",
+            SourceDatasetType.CMIP7: "variable_id",
         }
 
         supplementary_facets = {variable_facet[source_type]: variable}
-        return cls(supplementary_facets, **kwargs[source_type])
+        source_kwargs = kwargs[source_type]
+        return cls(
+            supplementary_facets,
+            matching_facets=source_kwargs["matching_facets"],
+            optional_matching_facets=source_kwargs["optional_matching_facets"],
+        )
 
 
 @frozen

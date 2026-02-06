@@ -11,7 +11,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -129,22 +129,39 @@ def format_cmec_metric_bundle(dataset: xr.Dataset) -> dict[str, Any]:
 
 class GlobalMeanTimeseries(Diagnostic):
     """
-    Calculate the annual mean global mean timeseries for a dataset
+    Calculate the annual mean global mean timeseries for a dataset.
+
+    Supports both CMIP6 and CMIP7 datasets via alternative data requirements.
     """
 
     name = "Global Mean Timeseries"
     slug = "global-mean-timeseries"
 
+    # This is an "OR" condition between the two options.
+    # The diagnostic can be executed if either of these data requirements are met.
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
-            # Run the diagnostic on each unique combination of model, variable, experiment, and variant
-            group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
-            constraints=(
-                # Add cell areas to the groups
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
-                RequireContiguousTimerange(group_by=("instance_id",)),
+        # Option 1: CMIP6 data
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
+                group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
+                constraints=(
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                ),
+            ),
+        ),
+        # Option 2: CMIP7 data
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
+                group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
+                constraints=(
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                ),
             ),
         ),
     )
@@ -179,28 +196,53 @@ class GlobalMeanTimeseries(Diagnostic):
                     ),
                 ),
             ),
+            TestCase(
+                name="cmip7",
+                description="CMIP7 test case with converted historical tas from ACCESS-ESM1-5",
+                requests=(
+                    CMIP7Request(
+                        slug="example-tas-cmip7",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "tas",
+                            "variant_label": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                    CMIP7Request(
+                        slug="example-areacella-cmip7",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "areacella",
+                            "variant_label": "r1i1p1f1",
+                            "table_id": "fx",
+                        },
+                    ),
+                ),
+            ),
         ),
     )
 
+    def _get_source_type(self, definition: ExecutionDefinition) -> SourceDatasetType:
+        """Determine which source type is present in the datasets."""
+        if SourceDatasetType.CMIP7 in definition.datasets:
+            return SourceDatasetType.CMIP7
+        return SourceDatasetType.CMIP6
+
     def execute(self, definition: ExecutionDefinition) -> None:
         """
-        Run a diagnostic
+        Run a diagnostic.
 
         Parameters
         ----------
         definition
             A description of the information needed for this execution of the diagnostic
-
-        Returns
-        -------
-        :
-            The result of running the diagnostic.
         """
-        # This is where one would hook into however they want to run
-        # their benchmarking packages.
-        # cmec-driver, python calls, subprocess calls all would work
-
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        source_type = self._get_source_type(definition)
+        input_datasets = definition.datasets[source_type]
 
         result = calculate_annual_mean_timeseries(input_files=input_datasets.path.to_list())
         # Drop time_bnds to avoid xarray cftime bounds encoding regression (xarray >= 2025.11.0)
@@ -210,14 +252,15 @@ class GlobalMeanTimeseries(Diagnostic):
 
     def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:
         """
-        Create a result object from the output of the diagnostic
+        Create a result object from the output of the diagnostic.
         """
         time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
         ds = xr.open_dataset(
             definition.output_directory / "annual_mean_global_mean_timeseries.nc", decode_times=time_coder
         )
 
-        input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
+        source_type = self._get_source_type(definition)
+        input_selectors = definition.datasets[source_type].selector_dict()
 
         cmec_metric_bundle = CMECMetric(**format_cmec_metric_bundle(ds)).prepend_dimensions(
             {

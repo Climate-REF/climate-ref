@@ -379,8 +379,9 @@ class ILAMBStandard(Diagnostic):
 
                 # Split the metric into metric and region if possible
                 if "_" in str_name:
-                    dimensions["metric"] = str_name.split("_")[0]
-                    dimensions["region"] = str_name.split("_")[1]
+                    metric_name, region_name = str_name.split("_", maxsplit=1)
+                    dimensions["metric"] = metric_name
+                    dimensions["region"] = region_name
                 else:
                     dimensions["region"] = "None"
 

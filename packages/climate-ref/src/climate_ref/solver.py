@@ -35,6 +35,7 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition
+from climate_ref_core.exceptions import InvalidDiagnosticException
 from climate_ref_core.providers import DiagnosticProvider
 
 
@@ -197,12 +198,26 @@ def solve_executions(
             provider,
         )
     elif isinstance(first_item, Sequence):
-        # We have a sequence of collections of data requirements
+        # We have a sequence of collections of data requirements (OR logic)
+        # Try each requirement collection and yield from those that have matching data
+        any_matched = False
         for requirement_collection in diagnostic.data_requirements:
             if not isinstance(requirement_collection, Sequence):
                 raise TypeError(f"Expected a sequence of DataRequirement, got {type(requirement_collection)}")
-            yield from _solve_from_data_requirements(
-                data_catalog, diagnostic, requirement_collection, provider
+            # Buffer executions to check if any were actually produced
+            # _solve_from_data_requirements returns empty if source types are missing
+            executions = list(
+                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
+            )
+            if executions:
+                any_matched = True
+                yield from executions
+        if not any_matched:
+            available = ", ".join(str(s) for s in data_catalog.keys())
+            raise InvalidDiagnosticException(
+                diagnostic,
+                f"No data catalog matches any of the diagnostic's data requirements. "
+                f"Available source types: {available}",
             )
     else:
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")
@@ -355,7 +370,12 @@ class ExecutionSolver:
                 if not matches_filter(diagnostic, filters):
                     logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
                     continue
-                yield from solve_executions(self.data_catalog, diagnostic, provider)
+                try:
+                    yield from solve_executions(self.data_catalog, diagnostic, provider)
+                except InvalidDiagnosticException as e:
+                    # Skip diagnostics that don't have matching data
+                    logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
+                    continue
 
 
 def solve_required_executions(  # noqa: PLR0912, PLR0913

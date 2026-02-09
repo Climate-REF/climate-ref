@@ -67,7 +67,14 @@ jobs:
       id: semantic-version
       run: |
         CHART_VERSION=$(yq -r '.version' helm/Chart.yaml)
-        LOCAL_SEGMENT=+pr-${{ github.event.pull_request.number }}
+        if [ "${{ github.event_name }}" = "pull_request" ]; then
+          LOCAL_SEGMENT=+pr-${{ github.event.pull_request.number }}
+        elif [ "${{ github.ref_type }}" = "tag" ]; then
+          LOCAL_SEGMENT=""
+        else
+          SHORT_SHA=$(echo "${{ github.sha }}" | cut -c1-7)
+          LOCAL_SEGMENT=+${SHORT_SHA}
+        fi
         GENERATED_VERSION=${CHART_VERSION}${LOCAL_SEGMENT}
         yq -Y -i ".version = \"$GENERATED_VERSION\"" helm/Chart.yaml
         echo "generated-semver=$GENERATED_VERSION" >> $GITHUB_OUTPUT

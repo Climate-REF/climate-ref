@@ -221,3 +221,106 @@ class TestProvidersSetup:
 
         result = invoke_cli(["providers", "setup", "--validate-only"], expected_exit_code=1)
         assert "invalid" in result.stdout
+
+
+class TestProvidersShow:
+    def test_show_example_provider(self, config, invoke_cli):
+        """Test show command displays diagnostic info (default list format)."""
+        result = invoke_cli(["providers", "show", "--provider", "example"])
+        assert result.exit_code == 0
+        assert "Global" in result.stdout
+        assert "global-mean-timeseries" in result.stdout
+        # Default is list format, shows detailed fields
+        assert "Facets:" in result.stdout
+        assert "Source type:" in result.stdout
+        # Should show variables
+        assert "tas" in result.stdout
+
+    def test_show_nonexistent_provider(self, config, invoke_cli):
+        """Test show command exits with code 1 for unknown provider."""
+        invoke_cli(
+            ["providers", "show", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+
+    def test_show_displays_or_options(self, config, invoke_cli):
+        """Test show command displays OR-logic options for the example provider."""
+        result = invoke_cli(["providers", "show", "--provider", "example"])
+        assert result.exit_code == 0
+        # Example provider has OR-logic (CMIP6 and CMIP7 options)
+        assert "Option 1" in result.stdout
+        assert "Option 2" in result.stdout
+
+    def test_show_empty_provider(self, config, invoke_cli, mocker):
+        """Test show command handles provider with no diagnostics."""
+        mock_provider = mocker.MagicMock(spec=DiagnosticProvider)
+        mock_provider.slug = "empty"
+        mock_provider.name = "Empty"
+        mock_provider.version = "0.0.0"
+        mock_provider.diagnostics.return_value = []
+
+        mock_registry = mocker.MagicMock(spec=ProviderRegistry)
+        mock_registry.providers = [mock_provider]
+        mock_registry.get.return_value = mock_provider
+        mocker.patch.object(ProviderRegistry, "build_from_config", return_value=mock_registry)
+
+        result = invoke_cli(["providers", "show", "--provider", "empty"])
+        assert result.exit_code == 0
+        assert "no registered diagnostics" in result.stdout
+
+    def test_show_list_format(self, config, invoke_cli):
+        """Test show command with --format list displays detailed output."""
+        result = invoke_cli(["providers", "show", "--provider", "example", "--format", "list"])
+        assert result.exit_code == 0
+        # List format shows provider name and version
+        assert "Example" in result.stdout
+        # List format shows slug, facets, group by
+        assert "global-mean-timeseries" in result.stdout
+        assert "Facets:" in result.stdout
+        assert "Group by:" in result.stdout
+        assert "Source type:" in result.stdout
+        assert "Variables:" in result.stdout
+
+    def test_show_table_format_explicit(self, config, invoke_cli):
+        """Test show command with --format table displays table output."""
+        result = invoke_cli(["providers", "show", "--provider", "example", "--format", "table"])
+        assert result.exit_code == 0
+        assert "global-mean-timeseries" in result.stdout
+        assert "cmip6" in result.stdout
+
+    def test_show_table_columns_filter(self, config, invoke_cli):
+        """Test show command with --columns filters table output."""
+        result = invoke_cli(
+            [
+                "providers",
+                "show",
+                "--provider",
+                "example",
+                "--format",
+                "table",
+                "--columns",
+                "diagnostic",
+                "--columns",
+                "variables",
+            ]
+        )
+        assert result.exit_code == 0
+        assert "tas" in result.stdout
+        # Filtered columns should not include slug
+        assert "slug" not in result.stdout.lower().split("\n")[0]
+
+    def test_show_table_columns_invalid(self, config, invoke_cli):
+        """Test show command with invalid --columns exits with error."""
+        invoke_cli(
+            [
+                "providers",
+                "show",
+                "--provider",
+                "example",
+                "--format",
+                "table",
+                "--columns",
+                "nonexistent",
+            ],
+            expected_exit_code=1,
+        )

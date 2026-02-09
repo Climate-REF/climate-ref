@@ -71,8 +71,10 @@ class DataCatalog:
         )
         result = self.adapter.finalise_datasets(self.database, subset)
 
-        # Update the cached DataFrame with the finalised data
-        if self._df is not None:
-            self._df.update(result)
+        # Invalidate the cached DataFrame so the next to_frame() call
+        # reloads from DB with correct finalised metadata.
+        # In-place cache updates are unreliable because _apply_fixes()
+        # can change the DataFrame's index structure.
+        self._df = None
 
         return result

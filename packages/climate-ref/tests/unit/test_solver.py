@@ -11,6 +11,8 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.config import ExecutorConfig
 from climate_ref.data_catalog import DataCatalog
+from climate_ref.database import Database
+from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
 from climate_ref.models import Execution
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
@@ -1206,3 +1208,55 @@ def test_extract_covered_datasets_no_matching_filter():
     )
     result = extract_covered_datasets(data_catalog, requirement)
     assert result == {}
+
+
+def _build_solver_for_parser(config, sample_data_dir, parser_type, tmp_path, providers):
+    """Helper: ingest sample data with the given parser and return a solver."""
+    config.cmip6_parser = parser_type
+
+    db_path = tmp_path / f"bench_{parser_type}.db"
+    db = Database(f"sqlite:///{db_path}")
+    db.migrate(config)
+
+    # Ingest CMIP6
+    adapter = CMIP6DatasetAdapter(config=config)
+    ingest_datasets(adapter, sample_data_dir / "CMIP6", db, skip_invalid=True)
+
+    # Ingest obs4MIPs + obs4REF
+    obs_adapter = Obs4MIPsDatasetAdapter()
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4MIPs", db, skip_invalid=True)
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4REF", db, skip_invalid=True)
+
+    # Register providers
+    with db.session.begin():
+        for p in providers:
+            _register_provider(db, p)
+
+    solver = ExecutionSolver.build_from_db(config, db)
+    solver.provider_registry = ProviderRegistry(providers=providers)
+    return solver, db
+
+
+def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_dir, prepare_db, tmp_path):
+    """DRS (lazy) and complete parsers must produce the same solver executions."""
+    providers = [pmp_provider, esmvaltool_provider, ilamb_provider]
+
+    solver_complete, db_complete = _build_solver_for_parser(
+        config, sample_data_dir, "complete", tmp_path, providers
+    )
+    solver_drs, db_drs = _build_solver_for_parser(config, sample_data_dir, "drs", tmp_path, providers)
+
+    try:
+        complete_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_complete.solve())
+        drs_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_drs.solve())
+
+        assert len(complete_executions) == len(drs_executions), (
+            f"Complete parser found {len(complete_executions)} executions "
+            f"but DRS parser found {len(drs_executions)}.\n"
+            f"Only in complete: {set(complete_executions) - set(drs_executions)}\n"
+            f"Only in DRS: {set(drs_executions) - set(complete_executions)}"
+        )
+        assert complete_executions == drs_executions
+    finally:
+        db_complete.close()
+        db_drs.close()

@@ -166,5 +166,8 @@ packages/*/NOTICE
 # User-specific catalog paths (test data)
 *.paths.yaml
 
+# Debug log files
+**/main_log_debug.txt
+
 # Helm dependencies
 helm/charts/*

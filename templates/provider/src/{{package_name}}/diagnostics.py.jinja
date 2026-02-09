@@ -1,0 +1,63 @@
+"""
+Diagnostics for the {{ provider_name }} provider.
+"""
+
+from climate_ref_core.datasets import FacetFilter, SourceDatasetType
+from climate_ref_core.diagnostics import (
+    DataRequirement,
+    Diagnostic,
+    ExecutionDefinition,
+    ExecutionResult,
+)
+from climate_ref_core.pycmec.metric import CMECMetric
+from climate_ref_core.pycmec.output import CMECOutput
+
+
+class ExampleDiagnostic(Diagnostic):
+    """
+    An example diagnostic for {{ provider_name }}.
+
+    Replace this with your actual diagnostic implementation.
+    """
+
+    name = "Example"
+    slug = "example"
+
+    data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": ("tas",)}),),
+            group_by=("source_id", "experiment_id", "variant_label"),
+        ),
+    )
+
+    facets = ("source_id", "experiment_id", "variant_label", "region", "metric", "statistic")
+
+    def execute(self, definition: ExecutionDefinition) -> None:
+        """Run the diagnostic calculation."""
+        # Implement your diagnostic logic here
+        pass
+
+    def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:
+        """Build the result from diagnostic output."""
+        cmec_metric = CMECMetric(
+            **{
+                "DIMENSIONS": {
+                    "json_structure": ["region", "metric", "statistic"],
+                    "region": {"global": {}},
+                    "metric": {"tas": {}},
+                    "statistic": {"mean": {}},
+                },
+                "RESULTS": {
+                    "global": {"tas": {"mean": 0.0}},
+                },
+            }
+        )
+
+        cmec_output = CMECOutput.create_template()
+
+        return ExecutionResult.build_from_output_bundle(
+            definition,
+            cmec_output_bundle=cmec_output,
+            cmec_metric_bundle=cmec_metric,
+        )

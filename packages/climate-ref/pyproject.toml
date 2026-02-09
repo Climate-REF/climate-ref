@@ -65,6 +65,13 @@ providers = [
     "climate-ref-pmp>=0.5.0",
     "climate-ref-ilamb>=0.5.0",
 ]
+test = [
+    "pytest>=9.0.0",
+    "pytest-mock>=3.12",
+]
+
+[project.entry-points."pytest11"]
+climate_ref = "climate_ref.conftest_plugin"
 
 [project.scripts]
 ref = "climate_ref.cli:app"

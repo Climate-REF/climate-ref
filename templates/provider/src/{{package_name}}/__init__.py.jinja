@@ -1,0 +1,24 @@
+"""
+{{ description }}
+"""
+
+import importlib.metadata
+
+{% if uses_conda -%}
+from climate_ref_core.providers import CondaDiagnosticProvider
+{%- else -%}
+from climate_ref_core.providers import DiagnosticProvider
+{%- endif %}
+
+from {{ package_name }}.diagnostics import ExampleDiagnostic
+
+__version__ = importlib.metadata.version("climate-ref-{{ provider_slug }}")
+
+{% if uses_conda -%}
+provider = CondaDiagnosticProvider("{{ provider_name }}", __version__)
+{%- else -%}
+provider = DiagnosticProvider("{{ provider_name }}", __version__)
+{%- endif %}
+
+# Register diagnostics
+provider.register(ExampleDiagnostic())

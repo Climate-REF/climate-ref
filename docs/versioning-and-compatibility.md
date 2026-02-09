@@ -60,12 +60,15 @@ This matrix will be updated as versions evolve.
 Every provider repository runs a **compatibility CI job** that tests
 against multiple versions of `climate-ref-core`:
 
-1. **Minimum supported version** -- the lower bound in the dependency pin
-2. **Latest release** -- the newest published version on PyPI
-3. **Development (`main`)** -- the latest commit on `climate-ref-core` main branch
+1. **Current branch core** -- the version of `climate-ref-core` from the
+   branch/PR that triggered the workflow
+2. **Development (`main`)** -- the latest commit on the `climate-ref-core`
+   `main` branch
 
-This catches breaking changes before they reach users. See
-`.github/workflows/provider-compat.yml` for the workflow definition.
+This catches breaking changes before they reach users. Provider repositories
+may extend their own CI matrices to also exercise the minimum supported
+version and latest PyPI release if desired. See
+`.github/workflows/provider-compat.yml` for the shared workflow definition.
 
 ## API Stability
 

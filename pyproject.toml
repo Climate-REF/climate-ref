@@ -130,7 +130,6 @@ exclude = [
     "stubs",
     "tests",
     "conftest.py",
-    "conftest_plugin",
     "climate_ref_pmp/drivers",
 ]
 mypy_path = "stubs"

@@ -21,7 +21,7 @@ jobs:
         run: uv python install {% raw %}${{ matrix.python-version }}{% endraw %}
 
       - name: Install dependencies
-        run: uv sync --python {% raw %}${{ matrix.python-version }}{% endraw %}
+        run: uv sync --python {% raw %}${{ matrix.python-version }}{% endraw %} --all-extras
 
       - name: Run tests
         run: uv run pytest tests/ -v
@@ -35,7 +35,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Ruff check
         run: uv run ruff check src/ tests/
@@ -52,7 +52,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Mypy
         run: uv run mypy src/
@@ -74,7 +74,7 @@ jobs:
         uses: astral-sh/setup-uv@v5
 
       - name: Install dependencies
-        run: uv sync
+        run: uv sync --all-extras
 
       - name: Install climate-ref-core (dev)
         if: matrix.core-version == 'dev'

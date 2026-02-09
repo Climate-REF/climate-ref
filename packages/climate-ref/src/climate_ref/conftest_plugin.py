@@ -32,9 +32,9 @@ import os
 import re
 import shutil
 import tempfile
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 
 import pandas as pd
 import pytest
@@ -63,20 +63,20 @@ from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
 
 
-def pytest_configure(config):
+def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line("markers", "slow: mark test as slow to run")
     config.addinivalue_line("markers", "docker: mark test requires docker to run")
     config.addinivalue_line("markers", "requires_esgf_data: mark test requires ESGF test data")
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     """Add custom CLI options."""
     parser.addoption("--slow", action="store_true", help="include tests marked slow")
     parser.addoption("--no-docker", action="store_true", help="skip docker tests")
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config: pytest.Config, items: list[pytest.Item]) -> None:
     """Skip slow/docker tests unless opted in."""
     if not config.getoption("--slow"):
         skip_slow = pytest.mark.skip(reason="need --slow option to run")
@@ -91,7 +91,7 @@ def pytest_collection_modifyitems(config, items):
 
 
 @pytest.fixture(scope="session")
-def tmp_path_session():
+def tmp_path_session() -> Iterator[Path]:
     """Session-scoped temporary directory."""
     with tempfile.TemporaryDirectory() as tmpdir:
         yield Path(tmpdir)
@@ -101,8 +101,8 @@ def tmp_path_session():
 def caplog(caplog: LogCaptureFixture) -> Iterator[LogCaptureFixture]:
     """Capture logs from the loguru default logger."""
 
-    def filter_(record):
-        return record["level"].no >= caplog.handler.level
+    def filter_(record: dict[str, Any]) -> bool:
+        return bool(record["level"].no >= caplog.handler.level)
 
     add_log_handler(sink=caplog.handler, level=0, format="{message}", filter=filter_)
     yield caplog
@@ -127,19 +127,19 @@ def test_data_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def sample_data_dir(test_data_dir) -> Path:
+def sample_data_dir(test_data_dir: Path) -> Path:
     """Path to the sample data directory."""
     return test_data_dir / "sample-data"
 
 
 @pytest.fixture(scope="session")
-def regression_data_dir(test_data_dir) -> Path:
+def regression_data_dir(test_data_dir: Path) -> Path:
     """Path to the regression data directory."""
     return test_data_dir / "regression"
 
 
 @pytest.fixture(scope="session")
-def esgf_solve_catalog(test_data_dir) -> dict[SourceDatasetType, pd.DataFrame] | None:
+def esgf_solve_catalog(test_data_dir: Path) -> dict[SourceDatasetType, pd.DataFrame] | None:
     """Load ESGF metadata catalog for solve tests."""
     catalog_dir = test_data_dir / "esgf-catalog"
     if not catalog_dir.exists():
@@ -159,7 +159,7 @@ def esgf_solve_catalog(test_data_dir) -> dict[SourceDatasetType, pd.DataFrame] |
 
 
 @pytest.fixture
-def run_test_case(config: Config):
+def run_test_case(config: Config) -> object:
     """
     Fixture for running diagnostic test cases.
 
@@ -168,7 +168,12 @@ def run_test_case(config: Config):
     runner = TestCaseRunner(config=config, datasets=None)
 
     class PytestTestCaseRunner:
-        def run(self, diagnostic, test_case_name="default", output_dir=None):
+        def run(
+            self,
+            diagnostic: Diagnostic,
+            test_case_name: str = "default",
+            output_dir: Path | None = None,
+        ) -> ExecutionResult:
             try:
                 return runner.run(diagnostic, test_case_name, output_dir)
             except TestCaseError as e:
@@ -178,7 +183,7 @@ def run_test_case(config: Config):
     return PytestTestCaseRunner()
 
 
-@pytest.fixture(autouse=True, scope="session")
+@pytest.fixture(scope="session")
 def sample_data() -> None:
     """Download sample data if not already present."""
     if os.environ.get("REF_TEST_DATA_DIR"):
@@ -190,14 +195,14 @@ def sample_data() -> None:
 
 
 @pytest.fixture(scope="session")
-def cmip6_data_catalog(sample_data_dir) -> pd.DataFrame:
+def cmip6_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
     """CMIP6 sample data catalog."""
     adapter = CMIP6DatasetAdapter()
     return adapter.find_local_datasets(sample_data_dir / "CMIP6")
 
 
 @pytest.fixture(scope="session")
-def obs4mips_data_catalog(sample_data_dir) -> pd.DataFrame:
+def obs4mips_data_catalog(sample_data: None, sample_data_dir: Path) -> pd.DataFrame:
     """obs4MIPs sample data catalog."""
     adapter = Obs4MIPsDatasetAdapter()
     obs4ref = adapter.find_local_datasets(sample_data_dir / "obs4REF")
@@ -206,7 +211,9 @@ def obs4mips_data_catalog(sample_data_dir) -> pd.DataFrame:
 
 
 @pytest.fixture(scope="session")
-def data_catalog(cmip6_data_catalog, obs4mips_data_catalog):
+def data_catalog(
+    cmip6_data_catalog: pd.DataFrame, obs4mips_data_catalog: pd.DataFrame
+) -> dict[SourceDatasetType, pd.DataFrame]:
     """Provide combined data catalog with CMIP6 and obs4MIPs sources."""
     return {
         SourceDatasetType.CMIP6: cmip6_data_catalog,
@@ -214,8 +221,8 @@ def data_catalog(cmip6_data_catalog, obs4mips_data_catalog):
     }
 
 
-@pytest.fixture(autouse=True)
-def config(tmp_path, monkeypatch, request) -> Config:
+@pytest.fixture
+def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> Config:
     """Per-test Config with isolated directories."""
     root_output_dir = Path(os.environ.get("REF_TEST_OUTPUT", tmp_path / "climate_ref"))
     dir_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", request.node.name)
@@ -234,7 +241,7 @@ def config(tmp_path, monkeypatch, request) -> Config:
 
 
 @pytest.fixture
-def invoke_cli(monkeypatch):
+def invoke_cli(monkeypatch: pytest.MonkeyPatch) -> Callable[..., Result]:
     """Invoke the REF CLI and verify exit code."""
     runner = CliRunner(mix_stderr=False)
 
@@ -295,7 +302,7 @@ class FailedDiagnostic(Diagnostic):
 
 
 @pytest.fixture
-def provider(tmp_path, config) -> DiagnosticProvider:
+def provider(tmp_path: Path, config: Config) -> DiagnosticProvider:
     """Create a mock provider with mock and failed diagnostics registered."""
     provider = DiagnosticProvider("mock_provider", "v0.1.0")
     provider.register(MockDiagnostic())  # type: ignore
@@ -305,13 +312,13 @@ def provider(tmp_path, config) -> DiagnosticProvider:
 
 
 @pytest.fixture
-def mock_diagnostic(provider) -> MockDiagnostic:
+def mock_diagnostic(provider: DiagnosticProvider) -> MockDiagnostic:
     """Return the mock diagnostic from the mock provider."""
     return cast(MockDiagnostic, provider.get("mock"))
 
 
 @pytest.fixture
-def definition_factory(tmp_path: Path, config):
+def definition_factory(tmp_path: Path, config: Config) -> Callable[..., ExecutionDefinition]:
     """Create ExecutionDefinition instances for testing."""
 
     def _create_definition(
@@ -323,7 +330,7 @@ def definition_factory(tmp_path: Path, config):
         pmp_climatology: DatasetCollection | None = None,
     ) -> ExecutionDefinition:
         if execution_dataset_collection is None:
-            datasets = {}
+            datasets: dict[SourceDatasetType | str, DatasetCollection] = {}
             if cmip6:
                 datasets[SourceDatasetType.CMIP6] = cmip6
             if obs4mips:
@@ -336,7 +343,7 @@ def definition_factory(tmp_path: Path, config):
             diagnostic=diagnostic,
             key="key",
             datasets=execution_dataset_collection,
-            root_directory=config.paths.scratch,  # type: ignore
+            root_directory=config.paths.scratch,
             output_directory=config.paths.scratch / "output_fragment",
         )
 
@@ -344,7 +351,11 @@ def definition_factory(tmp_path: Path, config):
 
 
 @pytest.fixture
-def metric_definition(definition_factory, cmip6_data_catalog, mock_diagnostic) -> ExecutionDefinition:
+def metric_definition(
+    definition_factory: Callable[..., ExecutionDefinition],
+    cmip6_data_catalog: pd.DataFrame,
+    mock_diagnostic: MockDiagnostic,
+) -> ExecutionDefinition:
     """Create an ExecutionDefinition with a selected CMIP6 dataset for metric tests."""
     selected_dataset = cmip6_data_catalog[
         cmip6_data_catalog["instance_id"].isin(
@@ -383,7 +394,7 @@ class ExecutionRegression:
         "*.xml",
     )
 
-    def _replace_file(self, file: Path, replacements: dict[str, str]):
+    def _replace_file(self, file: Path, replacements: dict[str, str]) -> None:
         with open(file, encoding="utf-8") as f:
             content = f.read()
             for key, value in replacements.items():
@@ -395,13 +406,13 @@ class ExecutionRegression:
         """Return the regression data path for the given key."""
         return self.regression_data_dir / self.diagnostic.provider.slug / self.diagnostic.slug / key
 
-    def replace_references(self, output_dir: Path, replacements: dict[str, str]):
+    def replace_references(self, output_dir: Path, replacements: dict[str, str]) -> None:
         """Replace any references to local directories with a placeholder."""
         for glob in self.sanitised_file_globs:
             for file in output_dir.rglob(glob):
                 self._replace_file(file, replacements)
 
-    def hydrate_output_directory(self, output_dir: Path, replacements):
+    def hydrate_output_directory(self, output_dir: Path, replacements: dict[str, str]) -> None:
         """Replace any references to the placeholder with the actual output directory."""
         for glob in self.sanitised_file_globs:
             for file in output_dir.rglob(glob):
@@ -424,7 +435,9 @@ class ExecutionRegression:
 
 
 @pytest.fixture
-def execution_regression(request, regression_data_dir, test_data_dir):
+def execution_regression(
+    request: pytest.FixtureRequest, regression_data_dir: Path, test_data_dir: Path
+) -> Callable[[Diagnostic], ExecutionRegression]:
     """Create ExecutionRegression instances for a diagnostic."""
 
     def _regression(diagnostic: Diagnostic) -> ExecutionRegression:
@@ -494,7 +507,13 @@ class DiagnosticValidator:
 
 
 @pytest.fixture
-def diagnostic_validation(config, mocker, provider, data_catalog, execution_regression):
+def diagnostic_validation(
+    config: Config,
+    mocker: Any,
+    provider: DiagnosticProvider,
+    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+    execution_regression: Callable[[Diagnostic], ExecutionRegression],
+) -> Callable[[Diagnostic], DiagnosticValidator]:
     """Create DiagnosticValidator instances for testing."""
     mocker.patch.object(Execution, "execution_group")
 
@@ -504,7 +523,7 @@ def diagnostic_validation(config, mocker, provider, data_catalog, execution_regr
             config=config,
             diagnostic=diagnostic,
             data_catalog=data_catalog,
-            execution_regression=execution_regression(diagnostic=diagnostic),  # type: ignore
+            execution_regression=execution_regression(diagnostic),
         )
 
     return _create_validator

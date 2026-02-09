@@ -51,11 +51,11 @@ jobs:
         run: uv python install ${{ matrix.python-version }}
 
       - name: Install dependencies
-        run: uv sync --python ${{ matrix.python-version }}
+        run: uv sync --python ${{ matrix.python-version }} --dev --all-extras --locked
 
       - name: Run provider tests
+        continue-on-error: true
         run: |
           uv run pytest packages/${{ matrix.provider }}/tests/ \
             -x -q \
-            --ignore=packages/${{ matrix.provider }}/tests/integration \
-            || echo "::warning::Provider ${{ matrix.provider }} tests failed"
+            --ignore=packages/${{ matrix.provider }}/tests/integration

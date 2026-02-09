@@ -426,17 +426,14 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         The version of the provider.
     slug
         A slugified version of the name.
-    repo
-        URL of the git repository to install a development version of the package from.
-    tag_or_commit
-        Tag or commit to install from the `repo` repository.
 
     Attributes
     ----------
     env_vars
         Environment variables to set when running commands in the conda environment.
-    url
-        URL to install a development version of the package from.
+    pip_packages
+        Pip packages to install (as URLs) with ``--no-deps``
+        after creating the conda environment.
 
     """
 
@@ -445,13 +442,11 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         name: str,
         version: str,
         slug: str | None = None,
-        repo: str | None = None,
-        tag_or_commit: str | None = None,
     ) -> None:
         super().__init__(name, version, slug)
         self._conda_exe: Path | None = None
         self._prefix: Path | None = None
-        self.url = f"git+{repo}@{tag_or_commit}" if repo and tag_or_commit else None
+        self.pip_packages: list[str] = []
         self.env_vars: dict[str, str] = os.environ.copy()
 
     @property
@@ -551,8 +546,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """
         with self.get_environment_file() as file:
             suffix = hashlib.sha1(file.read_bytes(), usedforsecurity=False)
-            if self.url is not None:
-                suffix.update(bytes(self.url, encoding="utf-8"))
+            for pkg in self.pip_packages:
+                suffix.update(bytes(pkg, encoding="utf-8"))
         return self.prefix / f"{self.slug}-{suffix.hexdigest()}"
 
     def create_env(self) -> None:
@@ -578,8 +573,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.debug(f"Running {' '.join(cmd)}")
             subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
 
-            if self.url is not None:
-                logger.info(f"Installing development version of {self.slug} from {self.url}")
+            for pkg in self.pip_packages:
+                logger.info(f"Installing development version from {pkg}")
                 cmd = [
                     conda_exe,
                     "run",
@@ -588,7 +583,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     "pip",
                     "install",
                     "--no-deps",
-                    self.url,
+                    pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
                 subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603

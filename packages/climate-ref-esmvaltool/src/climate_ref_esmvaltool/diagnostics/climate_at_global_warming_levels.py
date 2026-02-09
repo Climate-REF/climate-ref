@@ -94,10 +94,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
                         facets={
                             "variable_id": variables,
                             "experiment_id": (
-                                "ssp126",
-                                "ssp245",
-                                "ssp370",
-                                "ssp585",
+                                # TODO: Redetermine the scenario naming for CMIP7 and update these accordingly
                             ),
                             "frequency": "mon",
                         },

@@ -40,6 +40,8 @@ nav:
       - Architecture: background/architecture.md
       - Explanation: background/explanation.md
       - Datasets: background/datasets.md
+      - API Surface: api-surface.md
+      - Versioning and Compatibility: versioning-and-compatibility.md
   - CLI: cli.md
   - API: api/
   - Development: development.md

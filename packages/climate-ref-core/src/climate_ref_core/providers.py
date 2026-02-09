@@ -19,7 +19,7 @@ from abc import abstractmethod
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import requests
 import yaml
@@ -30,9 +30,6 @@ from climate_ref_core.constraints import IgnoreFacets
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
-
-if TYPE_CHECKING:
-    from climate_ref.config import Config
 
 
 def _slugify(value: str) -> str:
@@ -69,7 +66,7 @@ class DiagnosticProvider:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """
         Configure the provider.
 
@@ -177,7 +174,7 @@ class DiagnosticProvider:
 
     def setup(
         self,
-        config: Config,
+        config: Any,
         *,
         db: Any = None,
         skip_env: bool = False,
@@ -212,7 +209,7 @@ class DiagnosticProvider:
             if db is not None:
                 self.ingest_data(config, db)
 
-    def setup_environment(self, config: Config) -> None:
+    def setup_environment(self, config: Any) -> None:
         """
         Set up the execution environment (e.g., conda environment).
 
@@ -228,7 +225,7 @@ class DiagnosticProvider:
         """
         pass
 
-    def fetch_data(self, config: Config) -> None:
+    def fetch_data(self, config: Any) -> None:
         """
         Fetch all data required for offline execution.
 
@@ -252,7 +249,7 @@ class DiagnosticProvider:
         """
         pass
 
-    def ingest_data(self, config: Config, db: Any) -> None:
+    def ingest_data(self, config: Any, db: Any) -> None:
         """
         Ingest fetched data into the database.
 
@@ -281,7 +278,7 @@ class DiagnosticProvider:
         """
         pass
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """
         Validate that the provider is ready for offline execution.
 
@@ -470,7 +467,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)
         self.prefix = config.paths.software / "conda"
@@ -642,11 +639,11 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.error(e.stdout)
             raise e
 
-    def setup_environment(self, config: Config) -> None:
+    def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""
         self.create_env()
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """Validate conda environment exists."""
         env_exists = self.env_path.exists()
         if not env_exists:

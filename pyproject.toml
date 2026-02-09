@@ -106,6 +106,8 @@ omit = [
     "*/migrations/*",
     # Skip the drivers as they can't be checked for coverage
     "*/drivers/*",
+    # Skip the pytest plugin (test infrastructure, not application code)
+    "*/conftest_plugin.py",
 ]
 
 [tool.mypy]

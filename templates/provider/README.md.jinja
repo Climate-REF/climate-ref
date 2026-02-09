@@ -1,0 +1,47 @@
+# climate-ref-{{ provider_slug }}
+
+{{ description }}
+
+## Installation
+
+```bash
+pip install climate-ref-{{ provider_slug }}
+```
+
+For development:
+
+```bash
+git clone https://github.com/{{ github_org }}/climate-ref-{{ provider_slug }}.git
+cd climate-ref-{{ provider_slug }}
+pip install -e ".[dev]"
+```
+
+## Usage
+
+This package is a diagnostic provider for the
+[Climate REF](https://github.com/Climate-REF/climate-ref).
+Once installed, it is automatically discovered via the `climate-ref.providers`
+entry point.
+
+```bash
+# Verify the provider is registered
+ref providers list
+```
+
+## Development
+
+```bash
+# Run tests
+pytest
+
+# Lint
+ruff check src/ tests/
+ruff format src/ tests/
+
+# Type check
+mypy src/
+```
+
+## License
+
+{{ license }}

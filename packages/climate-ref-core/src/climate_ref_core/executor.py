@@ -4,17 +4,13 @@ Executor interface for running diagnostics
 
 import importlib
 import shutil
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import DiagnosticError, InvalidExecutorException
 from climate_ref_core.logging import redirect_logs
-
-if TYPE_CHECKING:
-    # TODO: break this import cycle and move it into the execution definition
-    from climate_ref.models import Execution
 
 
 def execute_locally(
@@ -78,7 +74,7 @@ class Executor(Protocol):
     def run(
         self,
         definition: ExecutionDefinition,
-        execution: "Execution | None" = None,
+        execution: Any = None,
     ) -> None:
         """
         Execute a diagnostic with a given definition

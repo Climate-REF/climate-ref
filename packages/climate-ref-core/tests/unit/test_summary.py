@@ -590,6 +590,17 @@ class TestFormatDiagnosticMarkdown:
         assert "| **Experiments** |" in md
         assert "| **Group by** |" in md
 
+    def test_frequency_in_requirement_table(self):
+        """Diagnostics with frequency filters include Frequencies in the table."""
+        provider = DiagnosticProvider("Freq Provider", "1.0.0", slug="freq-provider")
+        provider.register(FrequencyDiagnostic())
+        diag = provider.get("frequency-test")
+        summary = summarize_diagnostic(diag)
+        md = format_diagnostic_markdown(summary)
+
+        assert "| **Frequencies** |" in md
+        assert "`mon`" in md
+
 
 class TestFormatProviderMarkdown:
     def test_basic_format(self, simple_provider):

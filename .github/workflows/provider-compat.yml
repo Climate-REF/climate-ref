@@ -25,6 +25,9 @@ on:
       - "packages/climate-ref/**"
       - ".github/workflows/provider-compat.yml"
 
+permissions:
+  contents: read
+
 jobs:
   provider-compat:
     runs-on: ubuntu-latest

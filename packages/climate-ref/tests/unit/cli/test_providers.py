@@ -1,5 +1,11 @@
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider
+from climate_ref_core.summary import (
+    DataRequirementSummary,
+    DiagnosticSummary,
+    ProviderSummary,
+    RequirementSetSummary,
+)
 
 
 class TestProvidersList:
@@ -308,6 +314,55 @@ class TestProvidersShow:
         assert "tas" in result.stdout
         # Filtered columns should not include slug
         assert "slug" not in result.stdout.lower().split("\n")[0]
+
+    def test_show_list_tables_and_frequencies(self, config, invoke_cli, mocker):
+        """Test show list format displays tables and frequencies when present."""
+        summary = ProviderSummary(
+            name="Detailed",
+            slug="detailed",
+            version="1.0.0",
+            diagnostics=(
+                DiagnosticSummary(
+                    name="Freq Diag",
+                    slug="freq-diag",
+                    provider_name="Detailed",
+                    provider_slug="detailed",
+                    facets=("source_id",),
+                    requirement_sets=(
+                        RequirementSetSummary(
+                            requirements=(
+                                DataRequirementSummary(
+                                    source_type="cmip6",
+                                    variables=("tas",),
+                                    experiments=("historical",),
+                                    tables=("Amon",),
+                                    frequencies=("mon",),
+                                    group_by=("source_id",),
+                                ),
+                            )
+                        ),
+                    ),
+                ),
+            ),
+        )
+
+        mock_provider = mocker.MagicMock(spec=DiagnosticProvider)
+        mock_provider.slug = "detailed"
+        mock_provider.name = "Detailed"
+        mock_provider.version = "1.0.0"
+
+        mock_registry = mocker.MagicMock(spec=ProviderRegistry)
+        mock_registry.providers = [mock_provider]
+        mock_registry.get.return_value = mock_provider
+        mocker.patch.object(ProviderRegistry, "build_from_config", return_value=mock_registry)
+        mocker.patch("climate_ref_core.summary.summarize_provider", return_value=summary)
+
+        result = invoke_cli(["providers", "show", "--provider", "detailed", "--format", "list"])
+        assert result.exit_code == 0
+        assert "Tables:" in result.stdout
+        assert "Amon" in result.stdout
+        assert "Frequencies:" in result.stdout
+        assert "mon" in result.stdout
 
     def test_show_table_columns_invalid(self, config, invoke_cli):
         """Test show command with invalid --columns exits with error."""

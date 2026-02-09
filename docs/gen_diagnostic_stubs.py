@@ -14,7 +14,8 @@ from loguru import logger
 
 from climate_ref_core.providers import import_provider
 from climate_ref_core.summary import (
-    collect_variables_by_experiment,
+    collect_by_source_type,
+    format_overview_markdown,
     format_provider_markdown,
     summarize_provider,
 )
@@ -52,11 +53,13 @@ def write_provider_pages(providers):
 
 
 def write_index_page(providers):
-    """Write the diagnostics index page with a table of providers."""
+    """Write the diagnostics index page combining provider table and overview."""
     lines = [
         "# Diagnostics",
         "",
         "Summary of diagnostic providers and their available diagnostics.",
+        "",
+        "## Providers",
         "",
         "| Provider | Slug | Version | Diagnostics |",
         "| --- | --- | --- | --- |",
@@ -69,37 +72,21 @@ def write_index_page(providers):
 
     lines.append("")
 
+    # Append the overview tables
+    tables = collect_by_source_type(providers)
+    overview_md = format_overview_markdown(tables)
+    # Skip the "# Diagnostics Overview" heading since we're embedding in the index page
+    overview_lines = overview_md.split("\n")
+    # Find the first "##" heading and include from there
+    for i, line in enumerate(overview_lines):
+        if line.startswith("## "):
+            lines.extend(overview_lines[i:])
+            break
+
     with mkdocs_gen_files.open("diagnostics/index.md", "w") as fh:
-        fh.write("\n".join(lines))
-
-
-def write_overview_page(providers):
-    """Write a cross-provider overview of variables by experiment."""
-    variables_by_experiment = collect_variables_by_experiment(providers)
-
-    lines = [
-        "# Diagnostics Overview",
-        "",
-        "Variables required across all diagnostic providers, grouped by experiment and source type.",
-        "",
-    ]
-
-    for experiment in sorted(variables_by_experiment.keys()):
-        source_types = variables_by_experiment[experiment]
-        exp_label = experiment if experiment != "*" else "Any experiment"
-        lines.append(f"## {exp_label}")
-        lines.append("")
-
-        for source_type in sorted(source_types.keys()):
-            variables = sorted(source_types[source_type])
-            lines.append(f"**{source_type}**: {', '.join(f'`{v}`' for v in variables)}")
-            lines.append("")
-
-    with mkdocs_gen_files.open("diagnostics/overview.md", "w") as fh:
         fh.write("\n".join(lines))
 
 
 providers = _load_providers()
 write_provider_pages(providers)
 write_index_page(providers)
-write_overview_page(providers)

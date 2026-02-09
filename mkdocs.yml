@@ -19,7 +19,10 @@ nav:
   - Configuration: configuration.md
   - Diagnostics:
       - diagnostics/index.md
-      - Overview: diagnostics/overview.md
+      - Example: diagnostics/example.md
+      - ESMValTool: diagnostics/esmvaltool.md
+      - PMP: diagnostics/pmp.md
+      - ILAMB: diagnostics/ilamb.md
   - Roadmap: roadmap.md
   - How-to guides:
       - how-to-guides/index.md

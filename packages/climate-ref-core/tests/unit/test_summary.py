@@ -8,10 +8,13 @@ from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.summary import (
+    DiagnosticReference,
     _extract_facet_values,
     _normalize_requirement_sets,
+    collect_by_source_type,
     collect_variables_by_experiment,
     format_diagnostic_markdown,
+    format_overview_markdown,
     format_provider_markdown,
     summarize_data_requirement,
     summarize_diagnostic,
@@ -394,6 +397,128 @@ class TestCollectVariablesByExperiment:
         assert result == {}
 
 
+class TestCollectBySourceType:
+    def test_single_provider(self, simple_provider):
+        result = collect_by_source_type([simple_provider])
+
+        assert len(result) == 1
+        assert result[0].source_type == "cmip6"
+        assert len(result[0].experiments) == 1
+        assert result[0].experiments[0].experiment == "historical"
+
+        var_ids = [v.variable_id for v in result[0].experiments[0].variables]
+        assert var_ids == ["pr", "tas"]
+
+    def test_multiple_providers(self, simple_provider, or_logic_provider):
+        result = collect_by_source_type([simple_provider, or_logic_provider])
+
+        source_types = {t.source_type for t in result}
+        assert source_types == {"cmip6", "cmip7"}
+
+        cmip6 = next(t for t in result if t.source_type == "cmip6")
+        cmip7 = next(t for t in result if t.source_type == "cmip7")
+
+        # OR logic diagnostic has no experiment filter -> "*"
+        cmip6_experiments = {e.experiment for e in cmip6.experiments}
+        assert "historical" in cmip6_experiments
+        assert "*" in cmip6_experiments
+
+        cmip7_experiments = {e.experiment for e in cmip7.experiments}
+        assert "*" in cmip7_experiments
+
+    def test_groups_by_experiment_within_source_type(self):
+        """MultiFilterDiagnostic has historical and ssp585 experiments."""
+        provider = DiagnosticProvider("MF", "1.0.0", slug="mf")
+        provider.register(MultiFilterDiagnostic())
+        result = collect_by_source_type([provider])
+
+        assert len(result) == 1
+        assert result[0].source_type == "cmip6"
+
+        experiments = {e.experiment for e in result[0].experiments}
+        assert experiments == {"historical", "ssp585"}
+
+    def test_diagnostics_tracked_per_variable(self, simple_provider):
+        result = collect_by_source_type([simple_provider])
+
+        hist = result[0].experiments[0]
+        tas_entry = next(v for v in hist.variables if v.variable_id == "tas")
+        assert len(tas_entry.diagnostics) == 1
+        ref = tas_entry.diagnostics[0]
+        assert isinstance(ref, DiagnosticReference)
+        assert ref.name == "Simple Diagnostic"
+        assert ref.slug == "simple-diagnostic"
+        assert ref.provider_slug == "test-provider"
+        assert ref.label == "Simple Diagnostic (test-provider)"
+
+    def test_empty_providers(self):
+        result = collect_by_source_type([])
+        assert result == []
+
+    def test_obs4mips_source_type(self):
+        provider = DiagnosticProvider("Obs", "1.0.0", slug="obs")
+        provider.register(MultiSourceDiagnostic())
+        result = collect_by_source_type([provider])
+
+        source_types = {t.source_type for t in result}
+        assert "obs4mips" in source_types
+        assert "cmip6" in source_types
+
+    def test_results_sorted(self, simple_provider, or_logic_provider):
+        """Source types, experiments, and variables are all sorted."""
+        result = collect_by_source_type([simple_provider, or_logic_provider])
+
+        # Source types sorted
+        assert [t.source_type for t in result] == sorted(t.source_type for t in result)
+
+        for table in result:
+            # Experiments sorted
+            assert [e.experiment for e in table.experiments] == sorted(
+                e.experiment for e in table.experiments
+            )
+            for exp in table.experiments:
+                # Variables sorted
+                assert [v.variable_id for v in exp.variables] == sorted(v.variable_id for v in exp.variables)
+
+
+class TestFormatOverviewMarkdown:
+    def test_basic_format(self, simple_provider):
+        tables = collect_by_source_type([simple_provider])
+        md = format_overview_markdown(tables)
+
+        assert "# Diagnostics Overview" in md
+        assert "## cmip6" in md
+        assert "### historical" in md
+        assert "| `tas`" in md
+        assert "| `pr`" in md
+
+    def test_cross_links_to_provider_pages(self, simple_provider):
+        tables = collect_by_source_type([simple_provider])
+        md = format_overview_markdown(tables)
+
+        assert "[Simple Diagnostic](test-provider.md#simple-diagnostic)" in md
+
+    def test_multiple_source_types(self, simple_provider, or_logic_provider):
+        tables = collect_by_source_type([simple_provider, or_logic_provider])
+        md = format_overview_markdown(tables)
+
+        assert "## cmip6" in md
+        assert "## cmip7" in md
+
+    def test_wildcard_experiment_label(self, or_logic_provider):
+        tables = collect_by_source_type([or_logic_provider])
+        md = format_overview_markdown(tables)
+
+        assert "### Any experiment" in md
+
+    def test_table_headers(self, simple_provider):
+        tables = collect_by_source_type([simple_provider])
+        md = format_overview_markdown(tables)
+
+        assert "| Variable | Diagnostics |" in md
+        assert "| --- | --- |" in md
+
+
 class TestFormatDiagnosticMarkdown:
     def test_basic_format(self, simple_provider):
         diag = simple_provider.get("simple-diagnostic")
@@ -408,22 +533,62 @@ class TestFormatDiagnosticMarkdown:
         assert "`pr`" in md
         assert "`historical`" in md
 
-    def test_or_logic_format_has_options(self, or_logic_provider):
-        diag = or_logic_provider.get("or-logic-diagnostic")
-        summary = summarize_diagnostic(diag)
-        md = format_diagnostic_markdown(summary)
-
-        assert "#### Option 1" in md
-        assert "#### Option 2" in md
-        assert "`cmip6`" in md
-        assert "`cmip7`" in md
-
-    def test_no_options_header_for_single_set(self, simple_provider):
+    def test_has_info_admonition(self, simple_provider):
         diag = simple_provider.get("simple-diagnostic")
         summary = summarize_diagnostic(diag)
         md = format_diagnostic_markdown(summary)
 
-        assert "#### Option" not in md
+        assert "/// admonition | `simple-diagnostic`" in md
+        assert "    type: info" in md
+        assert "**Source types**: `cmip6`" in md
+        assert "**Variables**: `pr`, `tas`" in md
+        assert "**Experiments**: `historical`" in md
+        assert "**Facets**:" in md
+        assert "///" in md
+
+    def test_admonition_aggregates_across_or_options(self, or_logic_provider):
+        diag = or_logic_provider.get("or-logic-diagnostic")
+        summary = summarize_diagnostic(diag)
+        md = format_diagnostic_markdown(summary)
+
+        # Should aggregate source types from both OR options
+        assert "**Source types**: `cmip6`, `cmip7`" in md
+        assert "**Variables**: `tas`" in md
+
+    def test_admonition_shows_any_for_no_experiments(self, or_logic_provider):
+        diag = or_logic_provider.get("or-logic-diagnostic")
+        summary = summarize_diagnostic(diag)
+        md = format_diagnostic_markdown(summary)
+
+        # OR logic diagnostic has no experiment filter
+        assert "**Experiments**: any" in md
+
+    def test_or_logic_format_has_tabs(self, or_logic_provider):
+        diag = or_logic_provider.get("or-logic-diagnostic")
+        summary = summarize_diagnostic(diag)
+        md = format_diagnostic_markdown(summary)
+
+        assert '=== "cmip6"' in md
+        assert '=== "cmip7"' in md
+        assert "`cmip6`" in md
+        assert "`cmip7`" in md
+
+    def test_no_tabs_for_single_set(self, simple_provider):
+        diag = simple_provider.get("simple-diagnostic")
+        summary = summarize_diagnostic(diag)
+        md = format_diagnostic_markdown(summary)
+
+        assert '=== "' not in md
+
+    def test_requirement_table_format(self, simple_provider):
+        diag = simple_provider.get("simple-diagnostic")
+        summary = summarize_diagnostic(diag)
+        md = format_diagnostic_markdown(summary)
+
+        assert "| **Source type** |" in md
+        assert "| **Variables** |" in md
+        assert "| **Experiments** |" in md
+        assert "| **Group by** |" in md
 
 
 class TestFormatProviderMarkdown:
@@ -436,6 +601,14 @@ class TestFormatProviderMarkdown:
         assert "`1.0.0`" in md
         assert "**Diagnostics**: 1" in md
         assert "### Simple Diagnostic" in md
+
+    def test_has_provider_admonition(self, simple_provider):
+        summary = summarize_provider(simple_provider)
+        md = format_provider_markdown(summary)
+
+        assert "/// admonition | Provider details" in md
+        assert "**Slug**: `test-provider`" in md
+        assert "**Version**: `1.0.0`" in md
 
     def test_multi_diagnostic_format(self, multi_provider):
         summary = summarize_provider(multi_provider)

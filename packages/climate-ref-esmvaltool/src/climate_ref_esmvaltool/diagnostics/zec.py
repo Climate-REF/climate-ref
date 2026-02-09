@@ -14,7 +14,11 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
+from climate_ref_esmvaltool.diagnostics.base import (
+    ESMValToolDiagnostic,
+    fillvalues_to_nan,
+    get_cmip_source_type,
+)
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -33,23 +37,46 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
         "esm-1pct-brch-1000PgC",
     )
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": ("tas",),
-                        "experiment_id": experiments,
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": ("tas",),
+                            "experiment_id": experiments,
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets("experiment_id", experiments),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets("experiment_id", experiments),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": ("tas",),
+                            "experiment_id": experiments,
+                            "frequency": "mon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets("experiment_id", experiments),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
             ),
         ),
     )
@@ -76,7 +103,8 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "esm-1pct-brch-1000PgC" and one for the "piControl"
         # experiment.
-        datasets = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])["tas"]["additional_datasets"]
+        cmip_source = get_cmip_source_type(input_files)
+        datasets = dataframe_to_recipe(input_files[cmip_source])["tas"]["additional_datasets"]
         base_dataset = next(ds for ds in datasets if ds["exp"] == "1pctCO2")
         dataset = next(ds for ds in datasets if ds["exp"] == "esm-1pct-brch-1000PgC")
         start = dataset["timerange"].split("/")[0]

@@ -14,7 +14,7 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -29,34 +29,70 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
     base_recipe = "ref/recipe_enso_basicclimatology.yml"
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": ("pr", "tauu"),
-                        "experiment_id": "historical",
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": ("pr", "tauu"),
+                            "experiment_id": "historical",
+                            "table_id": "Amon",
+                        },
+                    ),
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tos",
+                            "experiment_id": "historical",
+                            "table_id": "Omon",
+                        },
+                    ),
                 ),
-                FacetFilter(
-                    facets={
-                        "variable_id": "tos",
-                        "experiment_id": "historical",
-                        "table_id": "Omon",
-                    },
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets(
+                        "variable_id",
+                        (
+                            "pr",
+                            "tauu",
+                            "tos",
+                        ),
+                    ),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets(
-                    "variable_id",
-                    (
-                        "pr",
-                        "tauu",
-                        "tos",
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": ("pr", "tauu"),
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tos",
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets(
+                        "variable_id",
+                        (
+                            "pr",
+                            "tauu",
+                            "tos",
+                        ),
                     ),
                 ),
             ),
@@ -145,7 +181,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         recipe.pop("datasets")
         for diagnostic in recipe["diagnostics"].values():
             for variable in diagnostic["variables"].values():
@@ -164,23 +200,46 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     base_recipe = "ref/recipe_enso_characteristics.yml"
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "tos",
-                        "experiment_id": "historical",
-                        "table_id": "Omon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tos",
+                            "experiment_id": "historical",
+                            "table_id": "Omon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
+                    RequireFacets("variable_id", ("tos", "areacello")),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
-                RequireFacets("variable_id", ("tos", "areacello")),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tos",
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
+                    RequireFacets("variable_id", ("tos", "areacello")),
+                ),
             ),
         ),
     )
@@ -195,7 +254,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         recipe["datasets"] = recipe_variables["tos"]["additional_datasets"]
         # TODO: update the observational data requirement once available on ESGF.
         # Observations - use only one per run

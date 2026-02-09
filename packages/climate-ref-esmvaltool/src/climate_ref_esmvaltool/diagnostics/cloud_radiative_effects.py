@@ -10,7 +10,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
@@ -31,27 +31,54 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
         "rsutcs",
     )
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": "historical",
-                        "table_id": "Amon",
-                    }
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "historical",
+                            "table_id": "Amon",
+                        }
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1996, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets("variable_id", variables),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1996, 1),
-                    end=PartialDateTime(2014, 12),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        }
+                    ),
                 ),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets("variable_id", variables),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1996, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets("variable_id", variables),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
             ),
         ),
         # TODO: Use CERES-EBAF, ESACCI-CLOUD, and ISCCP-FH from obs4MIPs once available.
@@ -86,7 +113,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     @staticmethod
     def update_recipe(recipe: Recipe, input_files: dict[SourceDatasetType, pandas.DataFrame]) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         recipe_variables = {k: v for k, v in recipe_variables.items() if k != "areacella"}
 
         datasets = recipe_variables["rsut"]["additional_datasets"]

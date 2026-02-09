@@ -13,7 +13,7 @@ from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, S
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -28,42 +28,85 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
     base_recipe = "recipe_seaice_sensitivity.yml"
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "siconc",
-                        "experiment_id": "historical",
-                        "table_id": "SImon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "siconc",
+                            "experiment_id": "historical",
+                            "table_id": "SImon",
+                        },
+                    ),
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tas",
+                            "experiment_id": "historical",
+                            "table_id": "Amon",
+                        },
+                    ),
                 ),
-                FacetFilter(
-                    facets={
-                        "variable_id": "tas",
-                        "experiment_id": "historical",
-                        "table_id": "Amon",
-                    },
+                group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1979, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=("siconc", "tas"),
+                        group_by=("source_id", "member_id", "grid_label"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                    AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=("areacello",),
+                        group_by=("source_id", "grid_label"),
+                    ),
                 ),
             ),
-            group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1979, 1),
-                    end=PartialDateTime(2014, 12),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "siconc",
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tas",
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-                RequireFacets(
-                    "variable_id",
-                    required_facets=("siconc", "tas"),
-                    group_by=("source_id", "member_id", "grid_label"),
-                ),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
-                AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
-                RequireFacets(
-                    "variable_id",
-                    required_facets=("areacello",),
-                    group_by=("source_id", "grid_label"),
+                group_by=("experiment_id",),  # this does nothing, but group_by cannot be empty
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1979, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=("siconc", "tas"),
+                        group_by=("source_id", "variant_label", "grid_label"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                    AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=("areacello",),
+                        group_by=("source_id", "grid_label"),
+                    ),
                 ),
             ),
         ),
@@ -76,7 +119,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         datasets = recipe_variables["tas"]["additional_datasets"]
         for dataset in datasets:
             dataset.pop("mip")

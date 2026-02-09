@@ -9,7 +9,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
@@ -34,26 +34,52 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "siconc",
-                        "experiment_id": "historical",
-                        "table_id": "SImon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "siconc",
+                            "experiment_id": "historical",
+                            "table_id": "SImon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1979, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
+                    RequireFacets("variable_id", ("siconc", "areacello")),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1979, 1),
-                    end=PartialDateTime(2014, 12),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "siconc",
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-                AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
-                RequireFacets("variable_id", ("siconc", "areacello")),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1979, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
+                    RequireFacets("variable_id", ("siconc", "areacello")),
+                ),
             ),
         ),
         # TODO: Use OSI-450-nh and OSI-450-sh from obs4MIPs once available.
@@ -102,7 +128,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Update datasets
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         recipe["datasets"] = recipe_variables["siconc"]["additional_datasets"]
 
         # Use the timerange from the recipe, as defined in the variable.

@@ -25,6 +25,15 @@ from climate_ref_esmvaltool.recipe import load_recipe, prepare_climate_data
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
+def get_cmip_source_type(
+    input_files: dict[SourceDatasetType, pandas.DataFrame],
+) -> SourceDatasetType:
+    """Get the CMIP source type (CMIP6 or CMIP7) from input files."""
+    if SourceDatasetType.CMIP7 in input_files:
+        return SourceDatasetType.CMIP7
+    return SourceDatasetType.CMIP6
+
+
 def mask_fillvalues(array: np.ndarray) -> np.ma.MaskedArray:  # type: ignore[type-arg]
     """Convert netCDF4 fill values in an array to a mask."""
     # Workaround for https://github.com/pydata/xarray/issues/2742
@@ -140,11 +149,13 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         config = {
             "drs": {
                 "CMIP6": "ESGF",
+                "CMIP7": "ESGF",
                 "obs4MIPs": "ESGF",
             },
             "output_dir": str(definition.to_output_path("executions")),
             "rootpath": {
                 "CMIP6": str(climate_data),
+                "CMIP7": str(climate_data),
                 "obs4MIPs": str(climate_data),
             },
             "search_esgf": "never",
@@ -216,9 +227,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         output_args = CMECOutput.create_template()
 
         # Input selectors for the datasets used in the diagnostic.
-        # TODO: Better handling of multiple source types
         if SourceDatasetType.CMIP6 in definition.datasets:
             input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
+        elif SourceDatasetType.CMIP7 in definition.datasets:
+            input_selectors = definition.datasets[SourceDatasetType.CMIP7].selector_dict()
         elif SourceDatasetType.obs4MIPs in definition.datasets:
             input_selectors = definition.datasets[SourceDatasetType.obs4MIPs].selector_dict()
         else:

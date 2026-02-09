@@ -8,7 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
@@ -35,46 +35,98 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
         "variable_id",
     )
 
+    cmip7_matching_facets = (
+        "source_id",
+        "variant_label",
+        "grid_label",
+        "variable_id",
+    )
+
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": (
-                            "ssp126",
-                            "ssp245",
-                            "ssp370",
-                            "ssp585",
-                        ),
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": (
+                                "ssp126",
+                                "ssp245",
+                                "ssp370",
+                                "ssp585",
+                            ),
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("experiment_id",),
+                constraints=(
+                    AddSupplementaryDataset(
+                        supplementary_facets={"experiment_id": "historical"},
+                        matching_facets=matching_facets,
+                        optional_matching_facets=tuple(),
+                    ),
+                    RequireTimerange(
+                        group_by=matching_facets,
+                        start=PartialDateTime(year=1850, month=1),
+                        end=PartialDateTime(year=2100, month=12),
+                    ),
+                    RequireFacets(
+                        "experiment_id",
+                        required_facets=("historical",),
+                        group_by=matching_facets,
+                    ),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=variables,
+                        group_by=("experiment_id", "source_id", "member_id", "grid_label", "table_id"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("experiment_id",),
-            constraints=(
-                AddSupplementaryDataset(
-                    supplementary_facets={"experiment_id": "historical"},
-                    matching_facets=matching_facets,
-                    optional_matching_facets=tuple(),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": (
+                                "ssp126",
+                                "ssp245",
+                                "ssp370",
+                                "ssp585",
+                            ),
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-                RequireTimerange(
-                    group_by=matching_facets,
-                    start=PartialDateTime(year=1850, month=1),
-                    end=PartialDateTime(year=2100, month=12),
+                group_by=("experiment_id",),
+                constraints=(
+                    AddSupplementaryDataset(
+                        supplementary_facets={"experiment_id": "historical"},
+                        matching_facets=cmip7_matching_facets,
+                        optional_matching_facets=tuple(),
+                    ),
+                    RequireTimerange(
+                        group_by=cmip7_matching_facets,
+                        start=PartialDateTime(year=1850, month=1),
+                        end=PartialDateTime(year=2100, month=12),
+                    ),
+                    RequireFacets(
+                        "experiment_id",
+                        required_facets=("historical",),
+                        group_by=cmip7_matching_facets,
+                    ),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=variables,
+                        group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
-                RequireFacets(
-                    "experiment_id",
-                    required_facets=("historical",),
-                    group_by=matching_facets,
-                ),
-                RequireFacets(
-                    "variable_id",
-                    required_facets=variables,
-                    group_by=("experiment_id", "source_id", "member_id", "grid_label", "table_id"),
-                ),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
     )
@@ -87,18 +139,29 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Set up the datasets
+        cmip_source = get_cmip_source_type(input_files)
         diagnostics = recipe["diagnostics"]
         for diagnostic in diagnostics.values():
             diagnostic.pop("additional_datasets")
-        recipe_variables = dataframe_to_recipe(
-            input_files[SourceDatasetType.CMIP6],
-            group_by=(
+        group_by: tuple[str, ...]
+        if cmip_source == SourceDatasetType.CMIP7:
+            group_by = (
+                "source_id",
+                "variant_label",
+                "grid_label",
+                "variable_id",
+            )
+        else:
+            group_by = (
                 "source_id",
                 "member_id",
                 "grid_label",
                 "table_id",
                 "variable_id",
-            ),
+            )
+        recipe_variables = dataframe_to_recipe(
+            input_files[cmip_source],
+            group_by=group_by,
         )
         datasets = recipe_variables["tas"]["additional_datasets"]
         datasets = [ds for ds in datasets if ds["exp"] != "historical"]

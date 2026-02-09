@@ -14,7 +14,11 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
+from climate_ref_esmvaltool.diagnostics.base import (
+    ESMValToolDiagnostic,
+    fillvalues_to_nan,
+    get_cmip_source_type,
+)
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -39,32 +43,64 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         "piControl",
     )
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": experiments,
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": experiments,
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=variables,
+                        group_by=("source_id", "member_id", "grid_label", "experiment_id"),
+                    ),
+                    RequireFacets(
+                        "experiment_id",
+                        required_facets=experiments,
+                        group_by=("source_id", "member_id", "grid_label", "variable_id"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                RequireFacets(
-                    "variable_id",
-                    required_facets=variables,
-                    group_by=("source_id", "member_id", "grid_label", "experiment_id"),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": experiments,
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-                RequireFacets(
-                    "experiment_id",
-                    required_facets=experiments,
-                    group_by=("source_id", "member_id", "grid_label", "variable_id"),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=variables,
+                        group_by=("source_id", "variant_label", "grid_label", "experiment_id"),
+                    ),
+                    RequireFacets(
+                        "experiment_id",
+                        required_facets=experiments,
+                        group_by=("source_id", "variant_label", "grid_label", "variable_id"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
     )
@@ -112,8 +148,9 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "abrupt-4xCO2" and one for the "piControl"
         # experiment.
+        cmip_source = get_cmip_source_type(input_files)
         recipe_variables = dataframe_to_recipe(
-            input_files[SourceDatasetType.CMIP6],
+            input_files[cmip_source],
             equalize_timerange=True,
         )
         recipe["datasets"] = recipe_variables["tas"]["additional_datasets"]

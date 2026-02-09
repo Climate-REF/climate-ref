@@ -10,34 +10,62 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
 
-def get_cmip6_data_requirements(variables: tuple[str, ...]) -> tuple[DataRequirement, ...]:
-    """Create a data requirement for CMIP6 data."""
+def get_cmip_data_requirements(
+    variables: tuple[str, ...],
+) -> tuple[tuple[DataRequirement, ...], ...]:
+    """Create data requirements for CMIP6 and CMIP7 data."""
     return (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": "historical",
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "historical",
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "experiment_id", "member_id", "frequency", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1996, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireFacets("variable_id", variables),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("source_id", "experiment_id", "member_id", "frequency", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1996, 1),
-                    end=PartialDateTime(2014, 12),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                        },
+                    ),
                 ),
-                RequireFacets("variable_id", variables),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                group_by=("source_id", "experiment_id", "variant_label", "frequency", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1996, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    RequireFacets("variable_id", variables),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
             ),
         ),
     )
@@ -50,7 +78,8 @@ def update_recipe(
     var_y: str,
 ) -> None:
     """Update the recipe."""
-    recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+    cmip_source = get_cmip_source_type(input_files)
+    recipe_variables = dataframe_to_recipe(input_files[cmip_source])
     diagnostics = recipe["diagnostics"]
     diagnostic_name = f"plot_joint_{var_x}_{var_y}_model"
     diagnostic = diagnostics.pop(diagnostic_name)
@@ -61,7 +90,8 @@ def update_recipe(
     for dataset in datasets:
         dataset["timerange"] = "1996/2014"
     diagnostic["additional_datasets"] = datasets
-    suptitle = "CMIP6 {dataset} {ensemble} {grid} {timerange}".format(**datasets[0])
+    project = datasets[0]["project"]
+    suptitle = f"{project} {{dataset}} {{ensemble}} {{grid}} {{timerange}}".format(**datasets[0])
     diagnostic["scripts"]["plot"]["suptitle"] = suptitle
     diagnostic["scripts"]["plot"]["plot_filename"] = (
         f"jointplot_{var_x}_{var_y}_{suptitle.replace(' ', '_').replace('/', '-')}"
@@ -77,7 +107,7 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
     slug = "cloud-scatterplots-clt-swcre"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
     facets = ()
-    data_requirements = get_cmip6_data_requirements(("clt", "rsut", "rsutcs"))
+    data_requirements = get_cmip_data_requirements(("clt", "rsut", "rsutcs"))
     update_recipe = partial(update_recipe, var_x="clt", var_y="swcre")
 
 
@@ -90,7 +120,7 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     slug = "cloud-scatterplots-clwvi-pr"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
     facets = ()
-    data_requirements = get_cmip6_data_requirements(("clwvi", "pr"))
+    data_requirements = get_cmip_data_requirements(("clwvi", "pr"))
     update_recipe = partial(update_recipe, var_x="clwvi", var_y="pr")
 
 
@@ -103,7 +133,7 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
     slug = "cloud-scatterplots-clivi-lwcre"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
     facets = ()
-    data_requirements = get_cmip6_data_requirements(("clivi", "rlut", "rlutcs"))
+    data_requirements = get_cmip_data_requirements(("clivi", "rlut", "rlutcs"))
     update_recipe = partial(update_recipe, var_x="clivi", var_y="lwcre")
 
 
@@ -116,7 +146,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
     slug = "cloud-scatterplots-cli-ta"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
     facets = ()
-    data_requirements = get_cmip6_data_requirements(("cli", "ta"))
+    data_requirements = get_cmip_data_requirements(("cli", "ta"))
     update_recipe = partial(update_recipe, var_x="cli", var_y="ta")
 
 

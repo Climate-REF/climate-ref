@@ -24,6 +24,19 @@ FACETS = {
         "mip": "table_id",
         "short_name": "variable_id",
     },
+    "CMIP7": {
+        "activity": "activity_id",
+        "branding_suffix": "branding_suffix",
+        "dataset": "source_id",
+        "ensemble": "variant_label",
+        "exp": "experiment_id",
+        "frequency": "frequency",
+        "grid": "grid_label",
+        "institute": "institution_id",
+        "mip": "realm",
+        "region": "region",
+        "short_name": "variable_id",
+    },
     "obs4MIPs": {
         "dataset": "source_id",
         "frequency": "frequency",
@@ -208,6 +221,8 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
             subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
+        elif row.instance_id.startswith("CMIP7."):
+            subdirs = row.instance_id.split(".")
         else:
             subdirs = row.instance_id.split(".")
         tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name

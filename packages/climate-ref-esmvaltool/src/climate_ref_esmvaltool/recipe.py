@@ -231,4 +231,6 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
             subdirs = row.instance_id.split(".")
         tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
+        if tgt.is_symlink() or tgt.exists():
+            tgt.unlink()
         tgt.symlink_to(row.path)

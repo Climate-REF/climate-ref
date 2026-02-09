@@ -126,6 +126,17 @@ VARIABLE_BRANDING: dict[str, BrandingSuffix] = {
     "evspsbl": BrandingSuffix("tavg", "u", "hxy", "u"),
     "tauu": BrandingSuffix("tavg", "u", "hxy", "u"),
     "tauv": BrandingSuffix("tavg", "u", "hxy", "u"),
+    # Atmosphere 3D variables (all model levels)
+    "ta": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "ua": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "va": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "hus": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "hur": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "zg": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "wap": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "cl": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "cli": BrandingSuffix("tavg", "al", "hxy", "u"),
+    "clw": BrandingSuffix("tavg", "al", "hxy", "u"),
     # Ocean 2D variables
     "tos": BrandingSuffix("tavg", "d0m", "hxy", "sea"),
     "sos": BrandingSuffix("tavg", "d0m", "hxy", "sea"),

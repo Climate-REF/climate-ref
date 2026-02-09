@@ -2,7 +2,7 @@ import fnmatch
 from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import netCDF4
 import numpy as np
@@ -146,19 +146,49 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 climate_data_dir=climate_data,
             )
 
-        config = {
-            "drs": {
-                "CMIP6": "ESGF",
-                "CMIP7": "ESGF",
-                "obs4MIPs": "ESGF",
-            },
+        _local_source = "esmvalcore.io.local.LocalDataSource"
+        config: dict[str, Any] = {
             "output_dir": str(definition.to_output_path("executions")),
-            "rootpath": {
-                "CMIP6": str(climate_data),
-                "CMIP7": str(climate_data),
-                "obs4MIPs": str(climate_data),
+            "search_data": "quick",
+            "projects": {
+                "CMIP6": {
+                    "data": {
+                        "local": {
+                            "type": _local_source,
+                            "rootpath": str(climate_data),
+                            "dirname_template": (
+                                "{project}/{activity}/{institute}/{dataset}"
+                                "/{exp}/{ensemble}/{mip}/{short_name}/{grid}/{version}"
+                            ),
+                            "filename_template": ("{short_name}_{mip}_{dataset}_{exp}_{ensemble}_{grid}*.nc"),
+                        },
+                    },
+                },
+                "CMIP7": {
+                    "data": {
+                        "local": {
+                            "type": _local_source,
+                            "rootpath": str(climate_data),
+                            "dirname_template": (
+                                "{project}/{activity}/{institute}/{dataset}"
+                                "/{exp}/{ensemble}/{region}/{frequency}/{short_name}"
+                                "/{branding_suffix}/{grid}/{version}"
+                            ),
+                            "filename_template": "{short_name}_*.nc",
+                        },
+                    },
+                },
+                "obs4MIPs": {
+                    "data": {
+                        "local": {
+                            "type": _local_source,
+                            "rootpath": str(climate_data),
+                            "dirname_template": "{project}/{dataset}/{version}",
+                            "filename_template": "{short_name}_*.nc",
+                        },
+                    },
+                },
             },
-            "search_esgf": "never",
         }
 
         # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
@@ -171,27 +201,49 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 "`ref datasets fetch-data --registry esmvaltool`."
             )
         else:
-            config["drs"].update(  # type: ignore[attr-defined]
-                {
-                    "OBS": "default",
-                    "OBS6": "default",
-                    "native6": "default",
-                }
-            )
-            config["rootpath"].update(  # type: ignore[attr-defined]
-                {
-                    "OBS": str(data_dir / "OBS"),
-                    "OBS6": str(data_dir / "OBS"),
-                    "native6": str(data_dir / "native6"),
-                }
-            )
-            config["rootpath"]["obs4MIPs"] = [  # type: ignore[index]
-                config["rootpath"]["obs4MIPs"],  # type: ignore[index]
-                str(data_dir),
-            ]
+            config["projects"]["OBS"] = {
+                "data": {
+                    "local": {
+                        "type": _local_source,
+                        "rootpath": str(data_dir / "OBS"),
+                        "dirname_template": "Tier{tier}/{dataset}",
+                        "filename_template": (
+                            "{project}_{dataset}_{type}_{version}_{mip}_{short_name}[_.]*nc"
+                        ),
+                    },
+                },
+            }
+            config["projects"]["OBS6"] = {
+                "data": {
+                    "local": {
+                        "type": _local_source,
+                        "rootpath": str(data_dir / "OBS"),
+                        "dirname_template": "Tier{tier}/{dataset}",
+                        "filename_template": (
+                            "{project}_{dataset}_{type}_{version}_{mip}_{short_name}[_.]*nc"
+                        ),
+                    },
+                },
+            }
+            config["projects"]["native6"] = {
+                "data": {
+                    "local": {
+                        "type": _local_source,
+                        "rootpath": str(data_dir / "native6"),
+                        "dirname_template": "Tier{tier}/{dataset}/{version}/{frequency}/{short_name}",
+                        "filename_template": "*.nc",
+                    },
+                },
+            }
+            config["projects"]["obs4MIPs"]["data"]["esmvaltool"] = {
+                "type": _local_source,
+                "rootpath": str(data_dir),
+                "dirname_template": "{project}/{dataset}/{version}",
+                "filename_template": "{short_name}_*.nc",
+            }
 
         config_dir = definition.to_output_path("config")
-        config_dir.mkdir()
+        config_dir.mkdir(exist_ok=True)
         config_txt = yaml.safe_dump(config)
         logger.info(f"Using ESMValTool configuration:\n{config_txt}")
         with (config_dir / "config.yml").open("w", encoding="utf-8") as file:

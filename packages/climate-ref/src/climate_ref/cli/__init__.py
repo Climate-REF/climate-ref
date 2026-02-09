@@ -27,6 +27,7 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("providers", "list"),
+    ("providers", "show"),
     ("test-cases", "list"),
 }
 

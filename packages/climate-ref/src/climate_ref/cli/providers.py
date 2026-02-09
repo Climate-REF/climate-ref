@@ -3,12 +3,18 @@ Manage the REF providers.
 """
 
 import warnings
-from typing import Annotated
+from enum import Enum
+from typing import TYPE_CHECKING, Annotated
 
 import typer
 from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
+
+if TYPE_CHECKING:
+    from rich.console import Console
+
+    from climate_ref_core.summary import ProviderSummary
 
 app = typer.Typer(help=__doc__)
 
@@ -58,6 +64,115 @@ def list_(ctx: typer.Context) -> None:
         ]
     )
     pretty_print_df(results_df, console=console)
+
+
+class ShowFormat(str, Enum):
+    """Output format for the show command."""
+
+    table = "table"
+    list = "list"
+
+
+@app.command()
+def show(
+    ctx: typer.Context,
+    provider: Annotated[
+        str,
+        typer.Option(help="Slug of the provider to show diagnostics for."),
+    ],
+    output_format: Annotated[
+        ShowFormat,
+        typer.Option(
+            "--format",
+            help="Output format: 'table' for a compact table, 'list' for detailed per-diagnostic output.",
+        ),
+    ] = ShowFormat.table,
+) -> None:
+    """
+    Show diagnostics and data requirements for a provider.
+    """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.summary import summarize_provider
+
+    config = ctx.obj.config
+    db = ctx.obj.database
+    console = ctx.obj.console
+    provider_registry = ProviderRegistry.build_from_config(config, db)
+
+    try:
+        prov = provider_registry.get(provider)
+    except KeyError:
+        available = ", ".join([f'"{p.slug}"' for p in provider_registry.providers])
+        logger.error(f'Provider "{provider}" not available. Choose from: {available}')
+        raise typer.Exit(code=1)
+
+    summary = summarize_provider(prov)
+
+    if not summary.diagnostics:
+        console.print(f"Provider '{provider}' has no registered diagnostics.")
+        return
+
+    if output_format == ShowFormat.list:
+        _show_list(summary, console)
+    else:
+        _show_table(summary, console)
+
+
+def _show_table(summary: "ProviderSummary", console: "Console") -> None:
+    """Display provider summary as a compact table."""
+    import pandas as pd
+
+    rows = []
+    for diag in summary.diagnostics:
+        for set_idx, req_set in enumerate(diag.requirement_sets):
+            option_label = f"Option {set_idx + 1}" if len(diag.requirement_sets) > 1 else ""
+            for req in req_set.requirements:
+                rows.append(
+                    {
+                        "diagnostic": diag.name,
+                        "slug": diag.slug,
+                        "option": option_label,
+                        "source_type": req.source_type,
+                        "variables": ", ".join(req.variables) if req.variables else "*",
+                        "experiments": ", ".join(req.experiments) if req.experiments else "*",
+                        "tables": ", ".join(req.tables) if req.tables else "*",
+                    }
+                )
+
+    results_df = pd.DataFrame(rows)
+    pretty_print_df(results_df, console=console)
+
+
+def _show_list(summary: "ProviderSummary", console: "Console") -> None:
+    """Display provider summary as a detailed per-diagnostic list."""
+    from rich.panel import Panel
+    from rich.text import Text
+
+    console.print()
+    console.print(f"[bold]{summary.name}[/bold] (v{summary.version})")
+    console.print()
+
+    for diag in summary.diagnostics:
+        lines = Text()
+        lines.append(f"Slug: {diag.slug}\n")
+        lines.append(f"Facets: {', '.join(diag.facets)}\n")
+
+        for set_idx, req_set in enumerate(diag.requirement_sets):
+            if len(diag.requirement_sets) > 1:
+                lines.append(f"\nOption {set_idx + 1}:\n", style="bold")
+
+            for req in req_set.requirements:
+                lines.append(f"  Source type: {req.source_type}\n")
+                lines.append(f"  Variables:   {', '.join(req.variables) if req.variables else '*'}\n")
+                lines.append(f"  Experiments: {', '.join(req.experiments) if req.experiments else '*'}\n")
+                if req.tables:
+                    lines.append(f"  Tables:      {', '.join(req.tables)}\n")
+                if req.frequencies:
+                    lines.append(f"  Frequencies: {', '.join(req.frequencies)}\n")
+                if req.group_by:
+                    lines.append(f"  Group by:    {', '.join(req.group_by)}\n")
+
+        console.print(Panel(lines, title=diag.name, expand=False))
 
 
 @app.command(deprecated=True)

@@ -17,6 +17,9 @@ nav:
       - Solve: getting-started/04-solve.md
       - Visualise: getting-started/05-visualise.md
   - Configuration: configuration.md
+  - Diagnostics:
+      - diagnostics/index.md
+      - Overview: diagnostics/overview.md
   - Roadmap: roadmap.md
   - How-to guides:
       - how-to-guides/index.md
@@ -74,6 +77,7 @@ plugins:
       scripts:
         - docs/gen_doc_stubs.py
         - docs/gen_config_stubs.py
+        - docs/gen_diagnostic_stubs.py
   # Make the navigation easier to handle/auto-generate if we wish
   # https://oprypin.github.io/mkdocs-literate-nav/
   - literate-nav:
@@ -89,7 +93,7 @@ plugins:
       # Use filenames for titles
       ignore_h1_titles: True
       include: ["*.py"]
-      execute: true
+      execute: false
       # Toggle off for faster builds
       # execute: false
       allow_errors: false

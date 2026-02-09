@@ -84,9 +84,16 @@ def show(
         ShowFormat,
         typer.Option(
             "--format",
-            help="Output format: 'table' for a compact table, 'list' for detailed per-diagnostic output.",
+            help="Output format: 'list' for detailed per-diagnostic output, 'table' for a compact table.",
         ),
-    ] = ShowFormat.table,
+    ] = ShowFormat.list,
+    columns: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--columns",
+            help="Columns to include in table output (e.g. --columns diagnostic --columns variables).",
+        ),
+    ] = None,
 ) -> None:
     """
     Show diagnostics and data requirements for a provider.
@@ -115,10 +122,14 @@ def show(
     if output_format == ShowFormat.list:
         _show_list(summary, console)
     else:
-        _show_table(summary, console)
+        _show_table(summary, console, columns=columns)
 
 
-def _show_table(summary: "ProviderSummary", console: "Console") -> None:
+def _show_table(
+    summary: "ProviderSummary",
+    console: "Console",
+    columns: list[str] | None = None,
+) -> None:
     """Display provider summary as a compact table."""
     import pandas as pd
 
@@ -140,6 +151,16 @@ def _show_table(summary: "ProviderSummary", console: "Console") -> None:
                 )
 
     results_df = pd.DataFrame(rows)
+
+    if columns:
+        available = list(results_df.columns)
+        invalid = [c for c in columns if c not in available]
+        if invalid:
+            console.print(f"[red]Unknown columns: {', '.join(invalid)}[/red]")
+            console.print(f"Available columns: {', '.join(available)}")
+            raise typer.Exit(code=1)
+        results_df = results_df[columns]
+
     pretty_print_df(results_df, console=console)
 
 

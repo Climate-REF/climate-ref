@@ -225,13 +225,14 @@ class TestProvidersSetup:
 
 class TestProvidersShow:
     def test_show_example_provider(self, config, invoke_cli):
-        """Test show command displays diagnostic info for the example provider."""
+        """Test show command displays diagnostic info (default list format)."""
         result = invoke_cli(["providers", "show", "--provider", "example"])
         assert result.exit_code == 0
         assert "Global" in result.stdout
         assert "global-mean-timeseries" in result.stdout
-        # Should show source types
-        assert "cmip6" in result.stdout
+        # Default is list format, shows detailed fields
+        assert "Facets:" in result.stdout
+        assert "Source type:" in result.stdout
         # Should show variables
         assert "tas" in result.stdout
 
@@ -281,8 +282,45 @@ class TestProvidersShow:
         assert "Variables:" in result.stdout
 
     def test_show_table_format_explicit(self, config, invoke_cli):
-        """Test show command with --format table matches default output."""
+        """Test show command with --format table displays table output."""
         result = invoke_cli(["providers", "show", "--provider", "example", "--format", "table"])
         assert result.exit_code == 0
         assert "global-mean-timeseries" in result.stdout
         assert "cmip6" in result.stdout
+
+    def test_show_table_columns_filter(self, config, invoke_cli):
+        """Test show command with --columns filters table output."""
+        result = invoke_cli(
+            [
+                "providers",
+                "show",
+                "--provider",
+                "example",
+                "--format",
+                "table",
+                "--columns",
+                "diagnostic",
+                "--columns",
+                "variables",
+            ]
+        )
+        assert result.exit_code == 0
+        assert "tas" in result.stdout
+        # Filtered columns should not include slug
+        assert "slug" not in result.stdout.lower().split("\n")[0]
+
+    def test_show_table_columns_invalid(self, config, invoke_cli):
+        """Test show command with invalid --columns exits with error."""
+        invoke_cli(
+            [
+                "providers",
+                "show",
+                "--provider",
+                "example",
+                "--format",
+                "table",
+                "--columns",
+                "nonexistent",
+            ],
+            expected_exit_code=1,
+        )

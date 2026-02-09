@@ -15,7 +15,7 @@ import platformdirs
 import xarray as xr
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset
+from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset, create_cmip7_filename
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 
@@ -63,19 +63,26 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
     )
     drs_path.mkdir(parents=True, exist_ok=True)
 
-    # Create output filename
-    output_file = drs_path / cmip6_path.name
-
-    # Skip if already converted
-    if output_file.exists():
-        logger.debug(f"Using cached CMIP7 file: {output_file}")
-        return output_file
-
     # Convert the file
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
     with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
         ds_cmip7 = convert_cmip6_dataset(ds)
+
+        # Extract time range from the CMIP6 filename (e.g., "185001-201412")
+        stem = cmip6_path.stem
+        parts = stem.split("_")
+        time_range = parts[-1] if parts[-1][0].isdigit() else None
+
+        # Create CMIP7-style filename
+        cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range=time_range)
+        output_file = drs_path / cmip7_filename
+
+        # Skip if already converted
+        if output_file.exists():
+            logger.debug(f"Using cached CMIP7 file: {output_file}")
+            return output_file
+
         try:
             ds_cmip7.to_netcdf(output_file)
         except PermissionError:

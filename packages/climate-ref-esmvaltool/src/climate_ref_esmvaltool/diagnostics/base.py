@@ -174,7 +174,10 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                                 "/{exp}/{ensemble}/{region}/{frequency}/{short_name}"
                                 "/{branding_suffix}/{grid}/{version}"
                             ),
-                            "filename_template": "{short_name}_*.nc",
+                            "filename_template": (
+                                "{short_name}_{branding_suffix}_{frequency}_{region}"
+                                "_{grid}_{dataset}_{exp}_{ensemble}*.nc"
+                            ),
                         },
                     },
                 },

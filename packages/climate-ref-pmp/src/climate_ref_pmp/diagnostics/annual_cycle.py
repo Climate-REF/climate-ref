@@ -12,7 +12,9 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.pycmec.metric import remove_dimensions
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
 
 # =================================================================
@@ -20,7 +22,11 @@ from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, pr
 # =================================================================
 
 
-def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequirement, DataRequirement]:
+def make_data_requirement(
+    variable_id: str,
+    obs_source: str,
+    source_type: SourceDatasetType = SourceDatasetType.CMIP6,
+) -> tuple[DataRequirement, DataRequirement]:
     """
     Create a data requirement for the annual cycle diagnostic.
 
@@ -30,12 +36,20 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
         The variable ID to filter the data requirement.
     obs_source : str
         The observation source ID to filter the data requirement.
+    source_type : SourceDatasetType
+        The source dataset type for model data (CMIP6 or CMIP7).
 
     Returns
     -------
     DataRequirement
         A DataRequirement object containing the necessary filters and groupings.
     """
+    # CMIP7 uses variant_label instead of member_id
+    if source_type == SourceDatasetType.CMIP7:
+        group_by = ("variable_id", "source_id", "experiment_id", "variant_label", "grid_label")
+    else:
+        group_by = ("variable_id", "source_id", "experiment_id", "member_id", "grid_label")
+
     return (
         DataRequirement(
             source_type=SourceDatasetType.PMPClimatology,
@@ -43,7 +57,7 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
             group_by=("variable_id", "source_id"),
         ),
         DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
+            source_type=source_type,
             filters=(
                 FacetFilter(
                     facets={
@@ -53,7 +67,7 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
                     }
                 ),
             ),
-            group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
+            group_by=group_by,
         ),
     )
 
@@ -232,23 +246,78 @@ class AnnualCycle(CommandLineDiagnostic):
     data_requirements = (
         # ERA-5 as reference dataset, spatial 2-D variables
         make_data_requirement("ts", "ERA-5"),
+        make_data_requirement("ts", "ERA-5", SourceDatasetType.CMIP7),
         make_data_requirement("uas", "ERA-5"),
+        make_data_requirement("uas", "ERA-5", SourceDatasetType.CMIP7),
         make_data_requirement("vas", "ERA-5"),
+        make_data_requirement("vas", "ERA-5", SourceDatasetType.CMIP7),
         make_data_requirement("psl", "ERA-5"),
+        make_data_requirement("psl", "ERA-5", SourceDatasetType.CMIP7),
         # ERA-5 as reference dataset, spatial 3-D variables
         make_data_requirement("ta", "ERA-5"),
+        make_data_requirement("ta", "ERA-5", SourceDatasetType.CMIP7),
         make_data_requirement("ua", "ERA-5"),
+        make_data_requirement("ua", "ERA-5", SourceDatasetType.CMIP7),
         make_data_requirement("va", "ERA-5"),
+        make_data_requirement("va", "ERA-5", SourceDatasetType.CMIP7),
         make_data_requirement("zg", "ERA-5"),
+        make_data_requirement("zg", "ERA-5", SourceDatasetType.CMIP7),
         # Other reference datasets, spatial 2-D variables
         make_data_requirement("pr", "GPCP-Monthly-3-2"),
+        make_data_requirement("pr", "GPCP-Monthly-3-2", SourceDatasetType.CMIP7),
         make_data_requirement("rlds", "CERES-EBAF-4-2"),
+        make_data_requirement("rlds", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
         make_data_requirement("rlus", "CERES-EBAF-4-2"),
+        make_data_requirement("rlus", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
         make_data_requirement("rlut", "CERES-EBAF-4-2"),
+        make_data_requirement("rlut", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
         make_data_requirement("rsds", "CERES-EBAF-4-2"),
+        make_data_requirement("rsds", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
         make_data_requirement("rsdt", "CERES-EBAF-4-2"),
+        make_data_requirement("rsdt", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
         make_data_requirement("rsus", "CERES-EBAF-4-2"),
+        make_data_requirement("rsus", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
         make_data_requirement("rsut", "CERES-EBAF-4-2"),
+        make_data_requirement("rsut", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
+    )
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="cmip6",
+                description="Test with CMIP6 ts data and ERA-5 climatology",
+                requests=(
+                    CMIP6Request(
+                        slug="annual-cycle-cmip6-ts",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "ts",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="CMIP7 test case with converted historical ts from ACCESS-ESM1-5",
+                requests=(
+                    CMIP7Request(
+                        slug="annual-cycle-cmip7-ts",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "ts",
+                            "variant_label": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                ),
+            ),
+        ),
     )
 
     def __init__(self) -> None:

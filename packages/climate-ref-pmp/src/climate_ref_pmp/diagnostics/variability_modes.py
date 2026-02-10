@@ -12,6 +12,8 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_pmp_command, process_json_result
 
 
@@ -45,7 +47,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             obs_variable: str,
             model_variable: str,
             extra_experiments: str | tuple[str, ...] | list[str] = (),
-        ) -> tuple[DataRequirement, DataRequirement]:
+        ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
             filters = [
                 FacetFilter(
                     facets={
@@ -56,27 +58,125 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                 )
             ]
 
+            obs_requirement = DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (obs_variable,)}),),
+                group_by=("source_id", "variable_id"),
+            )
+            cmip6_requirement = DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=tuple(filters),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
+            )
+            cmip7_requirement = DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=tuple(filters),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+            )
+
             return (
-                DataRequirement(
-                    source_type=SourceDatasetType.obs4MIPs,
-                    filters=(
-                        FacetFilter(facets={"source_id": (obs_source,), "variable_id": (obs_variable,)}),
-                    ),
-                    group_by=("source_id", "variable_id"),
-                ),
-                DataRequirement(
-                    source_type=SourceDatasetType.CMIP6,
-                    filters=tuple(filters),
-                    group_by=("source_id", "experiment_id", "member_id", "grid_label"),
-                ),
+                (obs_requirement, cmip6_requirement),
+                (obs_requirement, cmip7_requirement),
             )
 
         if self.mode_id in self.ts_modes:
             self.parameter_file = "pmp_param_MoV-ts.py"
             self.data_requirements = _get_data_requirements("HadISST-1-1", "ts", "ts")
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="cmip6",
+                        description=f"Test {self.mode_id} with CMIP6 ts data and HadISST obs",
+                        requests=(
+                            Obs4MIPsRequest(
+                                slug=f"mov-{self.mode_id.lower()}-obs",
+                                facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
+                            ),
+                            CMIP6Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip6",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "ts",
+                                    "member_id": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                    TestCase(
+                        name="cmip7",
+                        description=f"CMIP7 test case for {self.mode_id}",
+                        requests=(
+                            Obs4MIPsRequest(
+                                slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
+                                facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
+                            ),
+                            CMIP7Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip7",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "ts",
+                                    "variant_label": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
         elif self.mode_id in self.psl_modes:
             self.parameter_file = "pmp_param_MoV-psl.py"
             self.data_requirements = _get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="cmip6",
+                        description=f"Test {self.mode_id} with CMIP6 psl data and 20CR obs",
+                        requests=(
+                            Obs4MIPsRequest(
+                                slug=f"mov-{self.mode_id.lower()}-obs",
+                                facets={"source_id": "20CR", "variable_id": "psl"},
+                            ),
+                            CMIP6Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip6",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "psl",
+                                    "member_id": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                    TestCase(
+                        name="cmip7",
+                        description=f"CMIP7 test case for {self.mode_id}",
+                        requests=(
+                            Obs4MIPsRequest(
+                                slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
+                                facets={"source_id": "20CR", "variable_id": "psl"},
+                            ),
+                            CMIP7Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip7",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "psl",
+                                    "variant_label": "r1i1p1f1",
+                                    "table_id": "Amon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
         else:
             raise ValueError(
                 f"Unknown mode_id '{self.mode_id}'. Must be one of {self.ts_modes + self.psl_modes}"

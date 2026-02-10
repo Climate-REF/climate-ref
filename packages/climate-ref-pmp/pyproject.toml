@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-pmp"
-version = "0.9.1"
+version = "0.10.0"
 description = "PMP diagnostic provider for the Rapid Evaluation Framework"
 readme = "README.md"
 authors = [

@@ -321,7 +321,7 @@ class AnnualCycle(CommandLineDiagnostic):
                             "experiment_id": "historical",
                             "variable_id": "ts",
                             "variant_label": "r1i1p1f1",
-                            "table_id": "Amon",
+                            "frequency": "mon",
                         },
                         time_span=("2000-01", "2014-12"),
                     ),

@@ -13,7 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import _get_resource, get_model_source_type, process_json_result
 
@@ -61,8 +61,10 @@ class ENSO(CommandLineDiagnostic):
                     name="cmip6",
                     description=f"Test {metrics_collection} with CMIP6 data",
                     requests=(
-                        Obs4MIPsRequest(
+                        RegistryRequest(
                             slug=f"enso-{self.slug}-obs",
+                            registry_name="obs4ref",
+                            source_type="obs4MIPs",
                             facets={
                                 "source_id": self.obs_sources,
                                 "variable_id": self.model_variables,
@@ -105,8 +107,10 @@ class ENSO(CommandLineDiagnostic):
                     name="cmip7",
                     description=f"CMIP7 test case for {metrics_collection}",
                     requests=(
-                        Obs4MIPsRequest(
+                        RegistryRequest(
                             slug=f"enso-{self.slug}-obs-cmip7",
+                            registry_name="obs4ref",
+                            source_type="obs4MIPs",
                             facets={
                                 "source_id": self.obs_sources,
                                 "variable_id": self.model_variables,

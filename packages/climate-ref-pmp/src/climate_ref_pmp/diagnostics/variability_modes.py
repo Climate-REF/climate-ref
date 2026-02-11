@@ -12,7 +12,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_pmp_command, get_model_source_type, process_json_result
 
@@ -88,8 +88,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                         name="cmip6",
                         description=f"Test {self.mode_id} with CMIP6 ts data and HadISST obs",
                         requests=(
-                            Obs4MIPsRequest(
+                            RegistryRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs",
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
                             CMIP6Request(
@@ -109,8 +111,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                         name="cmip7",
                         description=f"CMIP7 test case for {self.mode_id}",
                         requests=(
-                            Obs4MIPsRequest(
+                            RegistryRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                                 facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
                             ),
                             CMIP7Request(
@@ -137,7 +141,9 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                         name="cmip6",
                         description=f"Test {self.mode_id} with CMIP6 psl data and 20CR obs",
                         requests=(
-                            Obs4MIPsRequest(
+                            RegistryRequest(
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                                 slug=f"mov-{self.mode_id.lower()}-obs",
                                 facets={"source_id": "20CR", "variable_id": "psl"},
                             ),
@@ -158,7 +164,9 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                         name="cmip7",
                         description=f"CMIP7 test case for {self.mode_id}",
                         requests=(
-                            Obs4MIPsRequest(
+                            RegistryRequest(
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
                                 facets={"source_id": "20CR", "variable_id": "psl"},
                             ),

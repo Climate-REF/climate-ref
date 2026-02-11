@@ -243,7 +243,8 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
 @pytest.fixture
 def invoke_cli(monkeypatch: pytest.MonkeyPatch) -> Callable[..., Result]:
     """Invoke the REF CLI and verify exit code."""
-    runner = CliRunner(mix_stderr=False)
+    runner = CliRunner()
+    runner.mix_stderr = False
 
     def _invoke_cli(args: list[str], expected_exit_code: int = 0, always_log: bool = False) -> Result:
         monkeypatch.setenv("NO_COLOR", "1")

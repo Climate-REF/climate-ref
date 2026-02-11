@@ -14,7 +14,7 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import build_pmp_command, process_json_result
+from climate_ref_pmp.pmp_driver import build_pmp_command, get_model_source_type, process_json_result
 
 
 class ExtratropicalModesOfVariability(CommandLineDiagnostic):
@@ -195,10 +195,12 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         -------
             Command arguments to execute in the PMP environment
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
-        member_id = input_datasets["member_id"].unique()[0]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        member_id = input_datasets[member_id_col].unique()[0]
 
         logger.debug(f"input_datasets: {input_datasets}")
         logger.debug(f"source_id: {source_id}")
@@ -288,8 +290,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_files[0], png_files, data_files)
 
         # Add additional metadata to the metrics
-        input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
-        reference_selectors = definition.datasets[SourceDatasetType.obs4MIPs].selector_dict()
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
+        reference_datasets = definition.datasets[SourceDatasetType.obs4MIPs]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
         cmec_metric_bundle = cmec_metric_bundle.remove_dimensions(
             [
                 "model",
@@ -298,10 +302,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
-                "source_id": input_selectors["source_id"],
-                "member_id": input_selectors["member_id"],
-                "experiment_id": input_selectors["experiment_id"],
-                "reference_source_id": reference_selectors["source_id"],
+                "source_id": input_datasets["source_id"].unique()[0],
+                "member_id": input_datasets[member_id_col].unique()[0],
+                "experiment_id": input_datasets["experiment_id"].unique()[0],
+                "reference_source_id": reference_datasets["source_id"].unique()[0],
             }
         )
 

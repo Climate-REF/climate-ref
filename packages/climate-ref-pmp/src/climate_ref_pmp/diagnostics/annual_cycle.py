@@ -12,10 +12,15 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
+from climate_ref_pmp.pmp_driver import (
+    build_glob_pattern,
+    build_pmp_command,
+    get_model_source_type,
+    process_json_result,
+)
 
 # =================================================================
 # PMP diagnostics support functions for the annual cycle diagnostic
@@ -282,6 +287,11 @@ class AnnualCycle(CommandLineDiagnostic):
                 name="cmip6",
                 description="Test with CMIP6 ts data and ERA-5 climatology",
                 requests=(
+                    RegistryRequest(
+                        slug="annual-cycle-era5-ts",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "ts", "source_id": "ERA-5"},
+                    ),
                     CMIP6Request(
                         slug="annual-cycle-cmip6-ts",
                         facets={
@@ -299,6 +309,11 @@ class AnnualCycle(CommandLineDiagnostic):
                 name="cmip7",
                 description="CMIP7 test case with converted historical ts from ACCESS-ESM1-5",
                 requests=(
+                    RegistryRequest(
+                        slug="annual-cycle-era5-ts-cmip7",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "ts", "source_id": "ERA-5"},
+                    ),
                     CMIP7Request(
                         slug="annual-cycle-cmip7-ts",
                         facets={
@@ -319,7 +334,7 @@ class AnnualCycle(CommandLineDiagnostic):
         self.parameter_file_1 = "pmp_param_annualcycle_1-clims.py"
         self.parameter_file_2 = "pmp_param_annualcycle_2-metrics.py"
 
-    def build_cmds(self, definition: ExecutionDefinition) -> list[list[str]]:
+    def build_cmds(self, definition: ExecutionDefinition) -> list[list[str]]:  # noqa: PLR0915
         """
         Build the command to run the diagnostic
 
@@ -332,13 +347,16 @@ class AnnualCycle(CommandLineDiagnostic):
         -------
             Command arguments to execute in the PMP environment
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
 
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
-        member_id = input_datasets["member_id"].unique()[0]
         variable_id = input_datasets["variable_id"].unique()[0]
+        member_id = input_datasets[
+            "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        ].unique()[0]
 
         model_files_raw = input_datasets.path.to_list()
         if len(model_files_raw) == 1:
@@ -459,7 +477,8 @@ class AnnualCycle(CommandLineDiagnostic):
         -------
             Result of the diagnostic execution
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         variable_id = input_datasets["variable_id"].unique()[0]
 
         if variable_id in ["ua", "va", "ta"]:
@@ -497,15 +516,15 @@ class AnnualCycle(CommandLineDiagnostic):
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)
 
         # Add missing dimensions to the output
-        input_selectors = input_datasets.selector_dict()
-        reference_selectors = definition.datasets[SourceDatasetType.PMPClimatology].selector_dict()
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
         cmec_metric_bundle = cmec_metric_bundle.prepend_dimensions(
             {
-                "source_id": input_selectors["source_id"],
-                "member_id": input_selectors["member_id"],
-                "experiment_id": input_selectors["experiment_id"],
-                "variable_id": input_selectors["variable_id"],
-                "reference_source_id": reference_selectors["source_id"],
+                "source_id": input_datasets["source_id"].unique()[0],
+                "member_id": input_datasets[member_id_col].unique()[0],
+                "experiment_id": input_datasets["experiment_id"].unique()[0],
+                "variable_id": input_datasets["variable_id"].unique()[0],
+                "reference_source_id": reference_datasets["source_id"].unique()[0],
             }
         )
 

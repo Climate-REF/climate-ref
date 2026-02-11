@@ -15,7 +15,7 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import _get_resource, process_json_result
+from climate_ref_pmp.pmp_driver import _get_resource, get_model_source_type, process_json_result
 
 
 class ENSO(CommandLineDiagnostic):
@@ -212,11 +212,12 @@ class ENSO(CommandLineDiagnostic):
         # ------------------------------------------------
         # Get the input datasets information for the model
         # ------------------------------------------------
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
-        input_selectors = input_datasets.selector_dict()
-        source_id = input_selectors["source_id"]
-        member_id = input_selectors["member_id"]
-        experiment_id = input_selectors["experiment_id"]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
+        source_id = input_datasets["source_id"].unique()[0]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        member_id = input_datasets[member_id_col].unique()[0]
+        experiment_id = input_datasets["experiment_id"].unique()[0]
         variable_ids = set(input_datasets["variable_id"].unique()) - {"areacella", "sftlf"}
         mod_run = f"{source_id}_{member_id}"
 
@@ -309,10 +310,12 @@ class ENSO(CommandLineDiagnostic):
         -------
             Result of the diagnostic execution
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
-        member_id = input_datasets["member_id"].unique()[0]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        member_id = input_datasets[member_id_col].unique()[0]
         mc_name = self.metrics_collection
         pattern = f"{mc_name}_{source_id}_{experiment_id}_{member_id}"
 
@@ -330,7 +333,6 @@ class ENSO(CommandLineDiagnostic):
 
         cmec_output, cmec_metric = process_json_result(results_files[0], png_files, data_files)
 
-        input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
         cmec_metric_bundle = cmec_metric.remove_dimensions(
             [
                 "model",
@@ -338,10 +340,10 @@ class ENSO(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
-                "source_id": input_selectors["source_id"],
-                "member_id": input_selectors["member_id"],
-                "grid_label": input_selectors["grid_label"],
-                "experiment_id": input_selectors["experiment_id"],
+                "source_id": source_id,
+                "member_id": member_id,
+                "grid_label": input_datasets["grid_label"].unique()[0],
+                "experiment_id": experiment_id,
             }
         )
 

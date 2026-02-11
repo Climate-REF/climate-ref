@@ -25,10 +25,12 @@ from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, pr
 def make_data_requirement(
     variable_id: str,
     obs_source: str,
-    source_type: SourceDatasetType = SourceDatasetType.CMIP6,
-) -> tuple[DataRequirement, DataRequirement]:
+) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
     """
-    Create a data requirement for the annual cycle diagnostic.
+    Create data requirements for the annual cycle diagnostic.
+
+    Returns a pair of (obs, model) DataRequirement tuples for each supported
+    source type (CMIP6 and CMIP7).
 
     Parameters
     ----------
@@ -36,39 +38,42 @@ def make_data_requirement(
         The variable ID to filter the data requirement.
     obs_source : str
         The observation source ID to filter the data requirement.
-    source_type : SourceDatasetType
-        The source dataset type for model data (CMIP6 or CMIP7).
 
     Returns
     -------
-    DataRequirement
-        A DataRequirement object containing the necessary filters and groupings.
+    tuple[tuple[DataRequirement, DataRequirement], ...]
+        A tuple of (obs, model) DataRequirement pairs, one per source type.
     """
-    # CMIP7 uses variant_label instead of member_id
-    if source_type == SourceDatasetType.CMIP7:
-        group_by = ("variable_id", "source_id", "experiment_id", "variant_label", "grid_label")
-    else:
-        group_by = ("variable_id", "source_id", "experiment_id", "member_id", "grid_label")
+    obs_requirement = DataRequirement(
+        source_type=SourceDatasetType.PMPClimatology,
+        filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
+        group_by=("variable_id", "source_id"),
+    )
+
+    model_filters = (
+        FacetFilter(
+            facets={
+                "frequency": "mon",
+                "experiment_id": ("amip", "historical", "hist-GHG"),
+                "variable_id": (variable_id,),
+            }
+        ),
+    )
+
+    cmip6_requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=model_filters,
+        group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
+    )
+    cmip7_requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP7,
+        filters=model_filters,
+        group_by=("variable_id", "source_id", "experiment_id", "variant_label", "grid_label"),
+    )
 
     return (
-        DataRequirement(
-            source_type=SourceDatasetType.PMPClimatology,
-            filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
-            group_by=("variable_id", "source_id"),
-        ),
-        DataRequirement(
-            source_type=source_type,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "frequency": "mon",
-                        "experiment_id": ("amip", "historical", "hist-GHG"),
-                        "variable_id": (variable_id,),
-                    }
-                ),
-            ),
-            group_by=group_by,
-        ),
+        (obs_requirement, cmip6_requirement),
+        (obs_requirement, cmip7_requirement),
     )
 
 
@@ -243,42 +248,32 @@ class AnnualCycle(CommandLineDiagnostic):
         "season",
     )
 
-    data_requirements = (
+    _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
-        make_data_requirement("ts", "ERA-5"),
-        make_data_requirement("ts", "ERA-5", SourceDatasetType.CMIP7),
-        make_data_requirement("uas", "ERA-5"),
-        make_data_requirement("uas", "ERA-5", SourceDatasetType.CMIP7),
-        make_data_requirement("vas", "ERA-5"),
-        make_data_requirement("vas", "ERA-5", SourceDatasetType.CMIP7),
-        make_data_requirement("psl", "ERA-5"),
-        make_data_requirement("psl", "ERA-5", SourceDatasetType.CMIP7),
+        ("ts", "ERA-5"),
+        ("uas", "ERA-5"),
+        ("vas", "ERA-5"),
+        ("psl", "ERA-5"),
         # ERA-5 as reference dataset, spatial 3-D variables
-        make_data_requirement("ta", "ERA-5"),
-        make_data_requirement("ta", "ERA-5", SourceDatasetType.CMIP7),
-        make_data_requirement("ua", "ERA-5"),
-        make_data_requirement("ua", "ERA-5", SourceDatasetType.CMIP7),
-        make_data_requirement("va", "ERA-5"),
-        make_data_requirement("va", "ERA-5", SourceDatasetType.CMIP7),
-        make_data_requirement("zg", "ERA-5"),
-        make_data_requirement("zg", "ERA-5", SourceDatasetType.CMIP7),
+        ("ta", "ERA-5"),
+        ("ua", "ERA-5"),
+        ("va", "ERA-5"),
+        ("zg", "ERA-5"),
         # Other reference datasets, spatial 2-D variables
-        make_data_requirement("pr", "GPCP-Monthly-3-2"),
-        make_data_requirement("pr", "GPCP-Monthly-3-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rlds", "CERES-EBAF-4-2"),
-        make_data_requirement("rlds", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rlus", "CERES-EBAF-4-2"),
-        make_data_requirement("rlus", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rlut", "CERES-EBAF-4-2"),
-        make_data_requirement("rlut", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rsds", "CERES-EBAF-4-2"),
-        make_data_requirement("rsds", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rsdt", "CERES-EBAF-4-2"),
-        make_data_requirement("rsdt", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rsus", "CERES-EBAF-4-2"),
-        make_data_requirement("rsus", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
-        make_data_requirement("rsut", "CERES-EBAF-4-2"),
-        make_data_requirement("rsut", "CERES-EBAF-4-2", SourceDatasetType.CMIP7),
+        ("pr", "GPCP-Monthly-3-2"),
+        ("rlds", "CERES-EBAF-4-2"),
+        ("rlus", "CERES-EBAF-4-2"),
+        ("rlut", "CERES-EBAF-4-2"),
+        ("rsds", "CERES-EBAF-4-2"),
+        ("rsdt", "CERES-EBAF-4-2"),
+        ("rsus", "CERES-EBAF-4-2"),
+        ("rsut", "CERES-EBAF-4-2"),
+    )
+
+    data_requirements = tuple(
+        pair
+        for variable_id, obs_source in _variable_obs_pairs
+        for pair in make_data_requirement(variable_id, obs_source)
     )
 
     test_data_spec = TestDataSpecification(

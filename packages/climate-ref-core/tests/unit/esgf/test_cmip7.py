@@ -224,8 +224,9 @@ class TestConvertFileToCmip7:
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7.create_cmip7_filename")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_uses_cached_file(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_uses_cached_file(self, mock_cache_dir, mock_filename, mock_convert, mock_open, tmp_path):
         """Test that cached files are reused."""
         # Set up cache directory with existing file
         cache_dir = tmp_path / "cache"
@@ -257,25 +258,35 @@ class TestConvertFileToCmip7:
         )
         drs_path.mkdir(parents=True)
 
-        # Create a cached file
-        cached_file = drs_path / "test_input.nc"
+        # Create a cached file matching the expected filename
+        mock_filename.return_value = "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
+        cached_file = drs_path / mock_filename.return_value
         cached_file.touch()
 
-        cmip6_path = Path("/some/path/test_input.nc")
+        # Set up mock dataset so convert_cmip6_dataset returns something with attrs
+        mock_ds = MagicMock()
+        mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
+        mock_open.return_value.__exit__ = MagicMock(return_value=False)
+        mock_converted_ds = MagicMock()
+        mock_convert.return_value = mock_converted_ds
+
+        cmip6_path = tmp_path / "test_input.nc"
+        cmip6_path.touch()
         result = _convert_file_to_cmip7(cmip6_path, cmip7_facets)
 
         assert result == cached_file
-        mock_open.assert_not_called()  # Should not try to open the file
-        mock_convert.assert_not_called()  # Should not try to convert
+        mock_converted_ds.to_netcdf.assert_not_called()  # Should not write (cached)
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7.create_cmip7_filename")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_converts_new_file(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_converts_new_file(self, mock_cache_dir, mock_filename, mock_convert, mock_open, tmp_path):
         """Test that new files are converted."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
+        mock_filename.return_value = "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
 
         # Set up mocks - open_dataset is used as a context manager
         mock_ds = MagicMock()
@@ -313,12 +324,16 @@ class TestConvertFileToCmip7:
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7.create_cmip7_filename")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_handles_integer_facet_values(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_handles_integer_facet_values(
+        self, mock_cache_dir, mock_filename, mock_convert, mock_open, tmp_path
+    ):
         """Test that integer facet values are converted to strings."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
+        mock_filename.return_value = "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
 
         # Set up mocks
         mock_ds = MagicMock()
@@ -349,14 +364,17 @@ class TestConvertFileToCmip7:
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7.create_cmip7_filename")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
     def test_handles_permission_error_with_existing_file(
-        self, mock_cache_dir, mock_convert, mock_open, tmp_path
+        self, mock_cache_dir, mock_filename, mock_convert, mock_open, tmp_path
     ):
         """Test that permission errors are handled when file already exists."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
+        cmip7_fn = "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
+        mock_filename.return_value = cmip7_fn
 
         # Set up mocks
         mock_ds = MagicMock()
@@ -394,7 +412,7 @@ class TestConvertFileToCmip7:
             "v1",
         )
         drs_path.mkdir(parents=True)
-        existing_file = drs_path / "test_input.nc"
+        existing_file = drs_path / cmip7_fn
         existing_file.touch()
 
         # Should not raise, should return existing file
@@ -403,14 +421,16 @@ class TestConvertFileToCmip7:
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7.create_cmip7_filename")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
     def test_handles_permission_error_without_existing_file(
-        self, mock_cache_dir, mock_convert, mock_open, tmp_path
+        self, mock_cache_dir, mock_filename, mock_convert, mock_open, tmp_path
     ):
         """Test that permission errors are re-raised when file does not exist."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
+        mock_filename.return_value = "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
 
         mock_ds = MagicMock()
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
@@ -440,12 +460,16 @@ class TestConvertFileToCmip7:
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
+    @patch("climate_ref_core.esgf.cmip7.create_cmip7_filename")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_uses_default_facet_values(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_uses_default_facet_values(
+        self, mock_cache_dir, mock_filename, mock_convert, mock_open, tmp_path
+    ):
         """Test that default facet values are used when facets are missing."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
+        mock_filename.return_value = "tas_tavg-h2m-hxy-u_mon_glb_gn_unknown_historical_r1i1p1f1.nc"
 
         mock_ds = MagicMock()
         mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)

@@ -12,5 +12,6 @@
             "source.fixAll": "explicit"
         }
     },
-    "ruff.configuration": "${workspaceFolder}/ruff.toml"
+    "ruff.configuration": "${workspaceFolder}/ruff.toml",
+    "python.REPL.enableREPLSmartSend": false
 }

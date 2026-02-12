@@ -8,6 +8,10 @@ Variable branding, realm, and out_name mappings are sourced from the CMIP7 Data 
 (DReq v1.2.2.3) via a bundled JSON subset. Regenerate with::
 
     python scripts/extract-data-request-mappings.py
+
+The variable_id and table_id attributes are used to map the CMIP6 variable to its CMIP7 equivalent,
+and to determine the appropriate branding suffix and realm for the CMIP7 format.
+Grid information is not converted so the grid_labels may not be valid for CMIP7.
 """
 
 from __future__ import annotations
@@ -171,34 +175,6 @@ def get_branding_suffix(table_id: str, variable_id: str) -> BrandingSuffix:
     )
 
 
-def get_cmip7_out_name(table_id: str, variable_id: str) -> str:
-    """
-    Get the CMIP7 output variable name for a CMIP6 variable.
-
-    Some CMIP6 variables map to a different ``out_name`` in CMIP7
-    (e.g., ``tasmax`` -> ``tas``, ``tasmin`` -> ``tas``).
-
-    Parameters
-    ----------
-    table_id
-        CMIP6 table identifier (e.g., "Amon")
-    variable_id
-        CMIP6 variable ID (e.g., "tasmax")
-
-    Returns
-    -------
-    str
-        The CMIP7 out_name.
-
-    Raises
-    ------
-    KeyError
-        If the variable is not found in the Data Request mappings.
-    """
-    entry = _get_dreq_entry(table_id, variable_id)
-    return entry.out_name
-
-
 def get_cmip7_compound_name(table_id: str, variable_id: str) -> str:
     """
     Get the full CMIP7 compound name for a CMIP6 variable.
@@ -225,37 +201,6 @@ def get_cmip7_compound_name(table_id: str, variable_id: str) -> str:
     """
     entry = _get_dreq_entry(table_id, variable_id)
     return entry.cmip7_compound_name
-
-
-def get_cmip7_variable_name(table_id: str, variable_id: str) -> str:
-    """
-    Convert a CMIP6 variable name to CMIP7 branded format.
-
-    Parameters
-    ----------
-    table_id
-        CMIP6 table ID (e.g., "Amon")
-    variable_id
-        The CMIP6 variable ID (e.g., "tas")
-
-    Returns
-    -------
-    str
-        The CMIP7 variable name (e.g., "tas_tavg-h2m-hxy-u")
-
-    Raises
-    ------
-    KeyError
-        If the variable is not found in the Data Request mappings.
-    """
-    entry = _get_dreq_entry(table_id, variable_id)
-    branding = BrandingSuffix(
-        temporal_label=entry.temporal_label,
-        vertical_label=entry.vertical_label,
-        horizontal_label=entry.horizontal_label,
-        area_label=entry.area_label,
-    )
-    return f"{entry.out_name}_{branding}"
 
 
 def get_frequency_from_table(table_id: str) -> str:  # noqa: PLR0911
@@ -501,7 +446,13 @@ def convert_cmip6_dataset(
     """
     Convert a CMIP6 xarray Dataset to CMIP7 format in-memory.
 
-    The dataset must have ``table_id`` and ``variable_id`` in its global attributes.
+    This uses the cmip6 compound name (table_id.variable_id) to look up the appropriate CMIP7 branding suffix
+    and realm from the Data Request mappings.
+    It then updates the global attributes according to the CMIP7 Global Attributes.
+
+    This doesn't modify the values or coordinates,
+    but it does add a "cmip6_compound_name" attribute for reference.
+    This may not be a fully valid CMIP7 dataset due to the grid names.
 
     Parameters
     ----------

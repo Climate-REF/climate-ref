@@ -17,8 +17,6 @@ from climate_ref_core.cmip6_to_cmip7 import (
     create_cmip7_path,
     get_branding_suffix,
     get_cmip7_compound_name,
-    get_cmip7_out_name,
-    get_cmip7_variable_name,
     get_frequency_from_table,
     get_realm,
 )
@@ -260,29 +258,6 @@ class TestGetBrandingSuffixREFVariables:
         )
 
 
-class TestGetCmip7OutName:
-    """Test CMIP7 out_name mapping (variables that change name)."""
-
-    def test_tasmax_maps_to_tas(self):
-        assert get_cmip7_out_name("Amon", "tasmax") == "tas"
-
-    def test_tasmin_maps_to_tas(self):
-        assert get_cmip7_out_name("Amon", "tasmin") == "tas"
-
-    def test_tas_unchanged(self):
-        assert get_cmip7_out_name("Amon", "tas") == "tas"
-
-    def test_pr_unchanged(self):
-        assert get_cmip7_out_name("Amon", "pr") == "pr"
-
-    def test_tos_unchanged(self):
-        assert get_cmip7_out_name("Omon", "tos") == "tos"
-
-    def test_unknown_variable_raises(self):
-        with pytest.raises(KeyError, match="not found in Data Request"):
-            get_cmip7_out_name("Xmon", "totally_unknown")
-
-
 class TestGetCmip7CompoundName:
     """Test CMIP7 compound name lookup."""
 
@@ -306,21 +281,6 @@ class TestGetCmip7CompoundName:
     def test_unknown_raises(self):
         with pytest.raises(KeyError, match="not found in Data Request"):
             get_cmip7_compound_name("Xmon", "unknown_xyz")
-
-
-class TestGetCmip7VariableName:
-    def test_tas(self):
-        name = get_cmip7_variable_name("Amon", "tas")
-        assert name == "tas_tavg-h2m-hxy-u"
-
-    def test_pr(self):
-        name = get_cmip7_variable_name("Amon", "pr")
-        assert name == "pr_tavg-u-hxy-u"
-
-    def test_tasmax_uses_out_name(self):
-        """tasmax maps to out_name 'tas', so branded name uses 'tas'."""
-        name = get_cmip7_variable_name("Amon", "tasmax")
-        assert name == "tas_tmaxavg-h2m-hxy-u"
 
 
 class TestGetFrequencyFromTable:

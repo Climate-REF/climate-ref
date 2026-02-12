@@ -15,7 +15,7 @@ import platformdirs
 import xarray as xr
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset
+from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset, create_cmip7_filename
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 
@@ -62,7 +62,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         str(cmip7_facets.get("version", "v1")),
     )
     # Create output filename and check cache before opening the source file
-    output_file = drs_path / cmip6_path.name
+    output_file = drs_path / create_cmip7_filename(cmip7_facets)
 
     if output_file.exists():
         logger.debug(f"Using cached CMIP7 file: {output_file}")

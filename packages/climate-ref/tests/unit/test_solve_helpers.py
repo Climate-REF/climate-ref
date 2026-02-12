@@ -84,8 +84,8 @@ class TestWriteAndLoadCatalog:
 
 
 class TestSolveToResults:
-    def test_solve_to_results_example_provider(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_solve_to_results_example_provider(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         assert isinstance(results, list)
         assert len(results) > 0
 
@@ -97,13 +97,13 @@ class TestSolveToResults:
             assert "datasets" in r
             assert r["provider"] == "example"
 
-    def test_solve_to_results_sorted(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_solve_to_results_sorted(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         keys = [(r["provider"], r["diagnostic"], r["dataset_key"]) for r in results]
         assert keys == sorted(keys)
 
-    def test_solve_to_results_datasets_sorted(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_solve_to_results_datasets_sorted(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         for r in results:
             for instance_ids in r["datasets"].values():
                 assert instance_ids == sorted(instance_ids)
@@ -113,31 +113,31 @@ class TestFormatSolveResultsTable:
     def test_empty_results(self):
         assert format_solve_results_table([]) == "No executions found."
 
-    def test_format_contains_provider_and_diagnostic(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_format_contains_provider_and_diagnostic(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         table = format_solve_results_table(results)
         assert "example" in table
         assert "global-mean-timeseries" in table
         assert "Summary:" in table
         assert "executions" in table
 
-    def test_format_contains_dataset_keys(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_format_contains_dataset_keys(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         table = format_solve_results_table(results)
         for r in results:
             assert r["dataset_key"] in table
 
 
 class TestFormatSolveResultsJson:
-    def test_valid_json(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_valid_json(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         json_str = format_solve_results_json(results)
         parsed = json.loads(json_str)
         assert isinstance(parsed, list)
         assert len(parsed) == len(results)
 
-    def test_json_has_expected_keys(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_json_has_expected_keys(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         parsed = json.loads(format_solve_results_json(results))
         for entry in parsed:
             assert "provider" in entry
@@ -148,8 +148,8 @@ class TestFormatSolveResultsJson:
 
 
 class TestSolveResultsForRegression:
-    def test_regression_format(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_regression_format(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         regression = solve_results_for_regression(results)
         assert isinstance(regression, dict)
 
@@ -160,8 +160,8 @@ class TestSolveResultsForRegression:
                 assert isinstance(source_type, str)
                 assert isinstance(instance_ids, list)
 
-    def test_regression_keys_match_results(self, data_catalog):
-        results = solve_to_results(data_catalog, providers=[example_provider])
+    def test_regression_keys_match_results(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
         regression = solve_results_for_regression(results)
         result_keys = {r["dataset_key"] for r in results}
         assert set(regression.keys()) == result_keys

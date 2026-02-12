@@ -141,8 +141,26 @@ def regression_data_dir(test_data_dir: Path) -> Path:
 
 @pytest.fixture(scope="session")
 def esgf_solve_catalog(test_data_dir: Path) -> dict[SourceDatasetType, pd.DataFrame] | None:
-    """Load ESGF metadata catalog for solve tests."""
+    """Load ESGF metadata catalog for solve tests, if available."""
     return load_solve_catalog(test_data_dir / "esgf-catalog")
+
+
+@pytest.fixture(scope="session")
+def esgf_data_catalog(
+    esgf_solve_catalog: dict[SourceDatasetType, pd.DataFrame] | None,
+) -> dict[SourceDatasetType, pd.DataFrame]:
+    """
+    ESGF metadata catalog for tests that only need DataFrames, not actual files.
+
+    Uses pre-generated parquet catalogs from ``tests/test-data/esgf-catalog/``.
+    Fails if the catalog is not available (run ``scripts/generate_esgf_catalog.py``).
+    """
+    if esgf_solve_catalog is None:
+        pytest.fail(
+            "ESGF parquet catalog not found in tests/test-data/esgf-catalog/. "
+            "Run scripts/generate_esgf_catalog.py to generate it."
+        )
+    return esgf_solve_catalog
 
 
 @pytest.fixture

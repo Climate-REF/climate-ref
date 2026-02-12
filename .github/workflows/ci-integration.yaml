@@ -15,8 +15,29 @@ permissions:
   contents: read
 
 jobs:
+  populate-cache:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: "arc-climate-ref"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Populate shared cache
+        run: |
+          uv sync
+          uv run ref datasets fetch-sample-data
+          uv run ref datasets fetch-data --registry ilamb-test
+          uv run ref providers setup
+          uv run ref test-cases fetch
+
   tests-slow:
     if: github.repository == 'Climate-REF/climate-ref'
+    needs: [populate-cache]
     env:
       REF_TEST_OUTPUT: "test-outputs"
       PYTEST_ADDOPTS: "--slow"
@@ -55,6 +76,7 @@ jobs:
 
   test-cases:
     if: github.repository == 'Climate-REF/climate-ref'
+    needs: [populate-cache]
     runs-on: "arc-climate-ref"
     defaults:
       run:

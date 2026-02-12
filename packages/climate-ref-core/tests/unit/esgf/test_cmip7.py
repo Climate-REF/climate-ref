@@ -275,6 +275,8 @@ class TestConvertFileToCmip7:
         result = _convert_file_to_cmip7(cmip6_path, cmip7_facets)
 
         assert result == cached_file
+        mock_open.assert_not_called()  # Should not open source file (cached)
+        mock_convert.assert_not_called()  # Should not convert (cached)
         mock_converted_ds.to_netcdf.assert_not_called()  # Should not write (cached)
 
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")

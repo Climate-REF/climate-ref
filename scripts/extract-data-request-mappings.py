@@ -9,8 +9,8 @@ Usage
 -----
     uv run python scripts/extract-data-request-mappings.py
 
-We are suggested not to interact with the data request JSON directly,
-but in this case its simpler to filter and extract without to depend on the DReq software.
+We are advised not to interact with the data request JSON directly,
+but in this case it's simpler to filter and extract directly without depending on the DReq software.
 
 References
 ----------
@@ -102,7 +102,8 @@ INCLUDED_VARIABLES = {
 def download_dreq() -> dict:
     """Download the DReq release export JSON."""
     typer.echo(f"Downloading DReq from {typer.style(DATA_REQUEST_URL, dim=True)}")
-    with urllib.request.urlopen(DATA_REQUEST_URL) as resp:  # noqa: S310
+    _download_timeout = 60
+    with urllib.request.urlopen(DATA_REQUEST_URL, timeout=_download_timeout) as resp:  # noqa: S310
         data = json.loads(resp.read())
     # The top-level key is the version string
     version_key = next(iter(data.keys()))

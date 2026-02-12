@@ -64,8 +64,11 @@ def generate_catalog(
     catalog = pd.concat(frames, ignore_index=True)
 
     if strip_path_prefix and "path" in catalog.columns:
+        prefix = strip_path_prefix
         catalog["path"] = (
-            catalog["path"].astype(str).str.replace(strip_path_prefix, "{data_dir}", regex=False)
+            catalog["path"]
+            .astype(str)
+            .apply(lambda p: "{data_dir}" + p[len(prefix) :] if p.startswith(prefix) else p)
         )
 
     return catalog

@@ -16,9 +16,9 @@ import xarray as xr
 from loguru import logger
 
 from climate_ref_core.cmip6_to_cmip7 import (
-    _get_dreq_entry,
     convert_cmip6_dataset,
     create_cmip7_filename,
+    get_dreq_entry,
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
@@ -55,7 +55,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
     variable_id = cmip7_facets.get("variable_id")
     if table_id and variable_id and "branding_suffix" not in cmip7_facets:
         try:
-            entry = _get_dreq_entry(table_id, variable_id)
+            entry = get_dreq_entry(table_id, variable_id)
             cmip7_facets = {
                 **cmip7_facets,
                 "branding_suffix": entry.branding_suffix,
@@ -76,7 +76,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         str(cmip7_facets.get("experiment_id", "historical")),
         str(cmip7_facets.get("variant_label", "r1i1p1f1")),
         str(cmip7_facets.get("frequency", "mon")),
-        str(cmip7_facets.get("variable_id", "tas")),
+        str(cmip7_facets.get("out_name", cmip7_facets.get("variable_id", "tas"))),
         str(cmip7_facets.get("grid_label", "gn")),
         str(cmip7_facets.get("version", "v1")),
     )

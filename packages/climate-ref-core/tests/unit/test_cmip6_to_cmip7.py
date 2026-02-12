@@ -212,44 +212,43 @@ class TestGetBrandingSuffixREFVariables:
     @pytest.mark.parametrize(
         ("table_id", "variable_id", "expected_suffix"),
         [
-            ("Amon", "cli", "tavg-al-hxy-u"),
-            ("Amon", "clivi", "tavg-u-hxy-u"),
-            ("Amon", "clt", "tavg-u-hxy-u"),
-            ("Amon", "clwvi", "tavg-u-hxy-u"),
-            ("Amon", "fco2antt", "tavg-u-hxy-u"),
-            ("Amon", "hfls", "tavg-u-hxy-u"),
-            ("Amon", "hfss", "tavg-u-hxy-u"),
-            ("Amon", "hurs", "tavg-h2m-hxy-u"),
-            ("Amon", "hus", "tavg-p19-hxy-u"),
-            ("Amon", "pr", "tavg-u-hxy-u"),
-            ("Amon", "psl", "tavg-u-hxy-u"),
-            ("Amon", "rlds", "tavg-u-hxy-u"),
-            ("Amon", "rlus", "tavg-u-hxy-u"),
-            ("Amon", "rlut", "tavg-u-hxy-u"),
-            ("Amon", "rlutcs", "tavg-u-hxy-u"),
-            ("Amon", "rsds", "tavg-u-hxy-u"),
-            ("Amon", "rsdt", "tavg-u-hxy-u"),
-            ("Amon", "rsus", "tavg-u-hxy-u"),
-            ("Amon", "rsut", "tavg-u-hxy-u"),
-            ("Amon", "rsutcs", "tavg-u-hxy-u"),
-            ("Amon", "ta", "tavg-p19-hxy-air"),
-            ("Amon", "tas", "tavg-h2m-hxy-u"),
-            ("Amon", "tasmax", "tmaxavg-h2m-hxy-u"),
-            ("Amon", "tasmin", "tminavg-h2m-hxy-u"),
-            ("Amon", "tauu", "tavg-u-hxy-u"),
-            ("Amon", "ts", "tavg-u-hxy-u"),
-            ("Amon", "ua", "tavg-p19-hxy-air"),
-            ("Amon", "uas", "tavg-h10m-hxy-u"),
-            ("Amon", "va", "tavg-p19-hxy-air"),
-            ("Amon", "vas", "tavg-h10m-hxy-u"),
-            ("Amon", "zg", "tavg-p19-hxy-air"),
-            ("Emon", "vegFrac", "tavg-u-hxy-u"),
-            ("Lmon", "cVeg", "tavg-u-hxy-lnd"),
-            ("Lmon", "treeFrac", "tavg-u-hxy-u"),
-            ("Omon", "tos", "tavg-u-hxy-sea"),
-            ("SImon", "siconc", "tavg-u-hxy-u"),
+            pytest.param("Amon", "cli", "tavg-al-hxy-u", id="Amon_cli"),
+            pytest.param("Amon", "clivi", "tavg-u-hxy-u", id="Amon_clivi"),
+            pytest.param("Amon", "clt", "tavg-u-hxy-u", id="Amon_clt"),
+            pytest.param("Amon", "clwvi", "tavg-u-hxy-u", id="Amon_clwvi"),
+            pytest.param("Amon", "fco2antt", "tavg-u-hxy-u", id="Amon_fco2antt"),
+            pytest.param("Amon", "hfls", "tavg-u-hxy-u", id="Amon_hfls"),
+            pytest.param("Amon", "hfss", "tavg-u-hxy-u", id="Amon_hfss"),
+            pytest.param("Amon", "hurs", "tavg-h2m-hxy-u", id="Amon_hurs"),
+            pytest.param("Amon", "hus", "tavg-p19-hxy-u", id="Amon_hus"),
+            pytest.param("Amon", "pr", "tavg-u-hxy-u", id="Amon_pr"),
+            pytest.param("Amon", "psl", "tavg-u-hxy-u", id="Amon_psl"),
+            pytest.param("Amon", "rlds", "tavg-u-hxy-u", id="Amon_rlds"),
+            pytest.param("Amon", "rlus", "tavg-u-hxy-u", id="Amon_rlus"),
+            pytest.param("Amon", "rlut", "tavg-u-hxy-u", id="Amon_rlut"),
+            pytest.param("Amon", "rlutcs", "tavg-u-hxy-u", id="Amon_rlutcs"),
+            pytest.param("Amon", "rsds", "tavg-u-hxy-u", id="Amon_rsds"),
+            pytest.param("Amon", "rsdt", "tavg-u-hxy-u", id="Amon_rsdt"),
+            pytest.param("Amon", "rsus", "tavg-u-hxy-u", id="Amon_rsus"),
+            pytest.param("Amon", "rsut", "tavg-u-hxy-u", id="Amon_rsut"),
+            pytest.param("Amon", "rsutcs", "tavg-u-hxy-u", id="Amon_rsutcs"),
+            pytest.param("Amon", "ta", "tavg-p19-hxy-air", id="Amon_ta"),
+            pytest.param("Amon", "tas", "tavg-h2m-hxy-u", id="Amon_tas"),
+            pytest.param("Amon", "tasmax", "tmaxavg-h2m-hxy-u", id="Amon_tasmax"),
+            pytest.param("Amon", "tasmin", "tminavg-h2m-hxy-u", id="Amon_tasmin"),
+            pytest.param("Amon", "tauu", "tavg-u-hxy-u", id="Amon_tauu"),
+            pytest.param("Amon", "ts", "tavg-u-hxy-u", id="Amon_ts"),
+            pytest.param("Amon", "ua", "tavg-p19-hxy-air", id="Amon_ua"),
+            pytest.param("Amon", "uas", "tavg-h10m-hxy-u", id="Amon_uas"),
+            pytest.param("Amon", "va", "tavg-p19-hxy-air", id="Amon_va"),
+            pytest.param("Amon", "vas", "tavg-h10m-hxy-u", id="Amon_vas"),
+            pytest.param("Amon", "zg", "tavg-p19-hxy-air", id="Amon_zg"),
+            pytest.param("Emon", "vegFrac", "tavg-u-hxy-u", id="Emon_vegFrac"),
+            pytest.param("Lmon", "cVeg", "tavg-u-hxy-lnd", id="Lmon_cVeg"),
+            pytest.param("Lmon", "treeFrac", "tavg-u-hxy-u", id="Lmon_treeFrac"),
+            pytest.param("Omon", "tos", "tavg-u-hxy-sea", id="Omon_tos"),
+            pytest.param("SImon", "siconc", "tavg-u-hxy-u", id="SImon_siconc"),
         ],
-        ids=lambda x: x if isinstance(x, str) and "." not in x else "",
     )
     def test_ref_variable_branding(self, table_id: str, variable_id: str, expected_suffix: str):
         suffix = get_branding_suffix(table_id, variable_id)
@@ -671,6 +670,82 @@ class TestCreateCmip7FilenameFromConversion:
 
         filename = create_cmip7_filename(cmip7_attrs)
         assert filename.startswith("tas_tavg-h2m-hxy-u_")
+
+
+class TestDReqDrivenAttrsEdgeCases:
+    """Test DReq-driven attribute/filename logic for edge cases.
+
+    Covers variables where out_name != variable_id (e.g. tasmax -> tas)
+    and where region != 'glb' (e.g. ImonAnt.tas -> region='ata').
+    """
+
+    def test_tasmax_attrs_have_distinct_out_name(self):
+        """Amon.tasmax: out_name='tas' differs from variable_id='tasmax'."""
+        cmip6_attrs = {
+            "variable_id": "tasmax",
+            "table_id": "Amon",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "grid_label": "gn",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["variable_id"] == "tasmax"
+        assert cmip7_attrs["out_name"] == "tas"
+        assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
+        assert cmip7_attrs["branding_suffix"] == "tmaxavg-h2m-hxy-u"
+
+        # Filename must use out_name, not variable_id
+        filename = create_cmip7_filename(cmip7_attrs)
+        assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
+        assert "tasmax" not in filename
+
+        # Path must use out_name, not variable_id
+        path = create_cmip7_path(cmip7_attrs)
+        path_parts = path.split("/")
+        # out_name component is at position 9 in the DRS path
+        assert "tas" in path_parts
+        assert "tasmax" not in path_parts
+
+    def test_tasmin_attrs_have_distinct_out_name(self):
+        """Amon.tasmin: out_name='tas' differs from variable_id='tasmin'."""
+        cmip6_attrs = {
+            "variable_id": "tasmin",
+            "table_id": "Amon",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "grid_label": "gn",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["variable_id"] == "tasmin"
+        assert cmip7_attrs["out_name"] == "tas"
+        assert cmip7_attrs["branded_variable"] == "tas_tminavg-h2m-hxy-u"
+
+    def test_imonant_tas_has_non_glb_region(self):
+        """ImonAnt.tas: region='ata' (Antarctic), not 'glb'."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "ImonAnt",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "grid_label": "gn",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["region"] == "ata"
+
+        # Filename must reflect the non-glb region
+        filename = create_cmip7_filename(cmip7_attrs)
+        assert "_ata_" in filename
+        assert "_glb_" not in filename
+
+        # Path must also reflect the non-glb region
+        path = create_cmip7_path(cmip7_attrs)
+        assert "/ata/" in path
 
 
 class TestCreateCmip7Path:

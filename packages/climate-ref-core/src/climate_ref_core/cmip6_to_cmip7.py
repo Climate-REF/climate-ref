@@ -114,7 +114,7 @@ class BrandingSuffix:
         return f"{self.temporal_label}-{self.vertical_label}-{self.horizontal_label}-{self.area_label}"
 
 
-def _get_dreq_entry(table_id: str, variable_id: str) -> DReqVariableMapping:
+def get_dreq_entry(table_id: str, variable_id: str) -> DReqVariableMapping:
     """
     Look up a variable in the Data Request by compound name.
 
@@ -166,7 +166,7 @@ def get_branding_suffix(table_id: str, variable_id: str) -> BrandingSuffix:
     KeyError
         If the variable is not found in the Data Request mappings.
     """
-    entry = _get_dreq_entry(table_id, variable_id)
+    entry = get_dreq_entry(table_id, variable_id)
     return BrandingSuffix(
         temporal_label=entry.temporal_label,
         vertical_label=entry.vertical_label,
@@ -199,7 +199,7 @@ def get_cmip7_compound_name(table_id: str, variable_id: str) -> str:
     KeyError
         If the variable is not found in the Data Request mappings.
     """
-    entry = _get_dreq_entry(table_id, variable_id)
+    entry = get_dreq_entry(table_id, variable_id)
     return entry.cmip7_compound_name
 
 
@@ -257,7 +257,7 @@ def get_realm(table_id: str, variable_id: str) -> str:
     KeyError
         If the variable is not found in the Data Request mappings.
     """
-    entry = _get_dreq_entry(table_id, variable_id)
+    entry = get_dreq_entry(table_id, variable_id)
     return entry.realm
 
 
@@ -372,7 +372,7 @@ def convert_cmip6_to_cmip7_attrs(
     table_id: str = attrs["table_id"]
 
     # Get branding suffix and out_name from DReq
-    dreq_entry = _get_dreq_entry(table_id, variable_id)
+    dreq_entry = get_dreq_entry(table_id, variable_id)
     if branding is None:
         branding = BrandingSuffix(
             temporal_label=dreq_entry.temporal_label,
@@ -389,7 +389,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["parent_mip_era"] = attrs.get("parent_mip_era", "CMIP6")
 
     # New/updated CMIP7 attributes
-    attrs["region"] = cmip7_meta.region
+    attrs["region"] = dreq_entry.region
     attrs["drs_specs"] = cmip7_meta.drs_specs
     attrs["data_specs_version"] = cmip7_meta.data_specs_version
     attrs["product"] = cmip7_meta.product

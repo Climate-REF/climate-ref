@@ -15,7 +15,11 @@ import platformdirs
 import xarray as xr
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset, create_cmip7_filename
+from climate_ref_core.cmip6_to_cmip7 import (
+    _get_dreq_entry,
+    convert_cmip6_dataset,
+    create_cmip7_filename,
+)
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 
@@ -45,6 +49,16 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         Path to the converted CMIP7 file
     """
     cache_dir = _get_cmip7_cache_dir()
+
+    # Enrich facets with DReq metadata (branding_suffix, region) for filename construction
+    table_id = cmip7_facets.get("table_id")
+    variable_id = cmip7_facets.get("variable_id")
+    if table_id and variable_id and "branding_suffix" not in cmip7_facets:
+        try:
+            entry = _get_dreq_entry(table_id, variable_id)
+            cmip7_facets = {**cmip7_facets, "branding_suffix": entry.branding_suffix, "region": entry.region}
+        except KeyError:
+            logger.debug(f"No DReq entry for {table_id}.{variable_id}, using facets as-is")
 
     # Build CMIP7 DRS path
     # CMIP7 DRS: {activity_id}/{institution_id}/{source_id}/{experiment_id}/

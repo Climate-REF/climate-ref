@@ -1,0 +1,413 @@
+# Original CMIP7 QAQC is available at 
+# https://github.com/ESGF/cc-plugin-wcrp/blob/master/plugins/cmip7/resources/wcrp_config.toml
+# A few severity level adjusted for request from REF
+
+# ==============================================================================
+# CMIP7 Configuration FILE 
+# ==============================================================================
+project_name = "cmip7"
+project_version = "1.0"
+
+#------------------------------------------------------------------------------
+# == Data Reference Syntax checks
+# ------------------------------------------------------------------------------
+
+[drs.filename]
+severity = "H"
+
+[drs.directory]
+severity = "H"
+
+[drs.attributes_vs_directory]
+# Check PATH001
+severity = "H"
+
+[drs.filename_vs_directory]
+# Check PATH002 
+severity = "H"
+
+[file.format]
+severity = "H"
+expected_format = "HDF5"
+expected_data_model = "NETCDF4_CLASSIC"
+
+[file.compression]
+severity = "H"
+expected_complevel = 1
+expected_shuffle = true
+
+
+#------------------------------------------------------------------------------
+# Global Attributes checks 
+# ------------------------------------------------------------------------------
+
+[global_attributes.activity_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "activity"
+
+[global_attributes.area_label]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "area_label"
+
+[global_attributes.branded_variable]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "branded_variable"
+
+[global_attributes.branding_suffix]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "branding_suffix"
+
+[global_attributes.branch_time_in_child]
+severity = "H"
+value_type = "float"
+is_required = false
+
+[global_attributes.branch_time_in_parent]
+severity = "H"
+value_type = "float"
+is_required = false
+
+[global_attributes.cmip6_compound_name]
+severity = "L"
+value_type = "str"
+is_required = false
+constraint = ".*"
+
+[global_attributes.conventions]
+attribute_name = "Conventions"
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "conventions"
+
+[global_attributes.creation_date]
+severity = "L"
+value_type = "str"
+is_required = true
+cv_source_collection = "creation_date"
+
+[global_attributes.data_specs_version]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "data_specs_version"
+
+[global_attributes.drs_specs]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "drs_specs"
+
+[global_attributes.experiment]
+severity = "M"
+value_type = "str"
+is_required = false
+cv_source_collection = "experiment"
+cv_source_collection_key = "description"
+
+[global_attributes.experiment_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "experiment"
+
+[global_attributes.external_variables]
+severity = "H"
+value_type = "str"
+is_required = false
+cv_source_collection = "archive"
+
+# Index en INT pour éviter le crash ESGVOC
+[global_attributes.forcing_index]
+severity = "H"
+value_type = "int"
+is_required = true
+
+[global_attributes.frequency]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "frequency"
+
+[global_attributes.grid_label]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "grid_label"
+
+[global_attributes.horizontal_label]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "horizontal_label"
+
+[global_attributes.initialization_index]
+severity = "H"
+value_type = "int"
+is_required = true
+
+[global_attributes.institution]
+severity = "M"
+value_type = "str"
+is_required = false
+cv_source_collection = "institution"
+cv_source_collection_key = "description"
+
+[global_attributes.institution_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "institution"
+
+[global_attributes.license]
+severity = "L"
+value_type = "str"
+is_required = false
+constraint = ".*"
+
+[global_attributes.license_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "license"
+
+[global_attributes.mip_era]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "mip_era"
+
+[global_attributes.nominal_resolution]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "nominal_resolution"
+
+[global_attributes.parent_activity_id]
+severity = "H"
+value_type = "str"
+is_required = false
+cv_source_collection = "activity"
+
+[global_attributes.parent_experiment_id]
+severity = "H"
+value_type = "str"
+is_required = false
+cv_source_collection = "experiment"
+
+[global_attributes.parent_mip_era]
+severity = "H"
+value_type = "str"
+is_required = false
+cv_source_collection = "mip_era"
+
+[global_attributes.parent_source_id]
+severity = "H"
+value_type = "str"
+is_required = false
+cv_source_collection = "source"
+
+[global_attributes.parent_time_units]
+severity = "H"
+value_type = "str"
+is_required = false
+constraint = "^days since [0-9]{4}-[0-9]{2}-[0-9]{2}$"
+
+[global_attributes.parent_variant_label]
+severity = "H"
+value_type = "str"
+is_required = false
+cv_source_collection = "variant_label"
+
+[global_attributes.physics_index]
+severity = "H"
+value_type = "int"
+is_required = true
+
+[global_attributes.product]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "product"
+
+[global_attributes.realization_index]
+severity = "H"
+value_type = "int"
+is_required = true
+
+[global_attributes.realm]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "realm"
+
+[global_attributes.references]
+severity = "L"
+value_type = "str"
+is_required = false
+constraint = ".*"
+
+[global_attributes.region]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "region"
+
+[global_attributes.source]
+severity = "L"
+value_type = "str"
+is_required = false
+cv_source_collection = "source"
+cv_source_collection_key = "description"
+
+[global_attributes.source_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "source"
+
+[global_attributes.temporal_label]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "temporal_label"
+
+[global_attributes.title]
+severity = "L"
+value_type = "str"
+is_required = false
+constraint = ".*"
+
+[global_attributes.tracking_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "tracking_id"
+
+[global_attributes.variable_id]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "variable"
+
+[global_attributes.variant_info]
+severity = "L"
+value_type = "str"
+is_required = false
+constraint = ".*"
+
+[global_attributes.variant_label]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "variant_label"
+
+[global_attributes.vertical_label]
+severity = "H"
+value_type = "str"
+is_required = true
+cv_source_collection = "vertical_label"
+
+
+# ==============================================================================
+# == Geophysical variable metadata checks
+# ==============================================================================
+
+[variable.existence]
+severity = "H"
+
+[variable.type]
+severity = "H"
+
+[variable.dimensions]
+severity = "H"
+
+[variable.bnds_vertices]
+severity = "H"
+
+[variable.shape_bounds]
+# uniquement bounds value consistency
+severity = "H"
+
+[variable.time_checks]
+# time_range_vs_filename + time_bounds
+severity = "H"
+
+
+# ==============================================================================
+# == Variable attributes checks
+# ==============================================================================
+
+[variable.attributes.units]
+severity = "H"
+
+[variable.attributes.long_name]
+severity = "M"
+
+[variable.attributes.standard_name]
+severity = "H"
+
+[variable.attributes.cell_methods]
+severity = "M"
+
+[variable.attributes.cell_measures]
+severity = "M"
+
+[variable.attributes.description]
+severity = "L"
+
+# ==============================================================================
+# == Coordinates checks
+# ============================================================================
+[coordinates.auxiliary]
+severity = "H"
+
+[coordinates.bounds]
+severity = "H"
+
+[coordinates.properties]
+severity = "H"
+
+[coordinates.time.squareness]
+# Check TIME001
+severity = "H"
+calendar = ""
+ref_time_units = ""
+frequency = { subhr = "30m" }
+
+
+# ==============================================================================
+# == CMIP7 Output Requirements Checks
+# ==============================================================================
+[cmip7_output_requirements.calendar]
+enabled = true
+severity = "H"  # This is higher severity level than CMIP7
+
+# ==============================================================================
+# == Metadata Consistency Checks
+# ==============================================================================
+
+
+[consistency_checks.filename_vs_attributes]
+# Check ATTR005 
+severity = "H"
+
+[consistency_checks.experiment_details]
+# Check ATTR007 
+severity = "H"
+
+[consistency_checks.institution_details]
+# Check ATTR009 
+severity = "H"
+
+[consistency_checks.source_details]
+# Check ATTR010 
+severity = "H"

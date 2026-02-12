@@ -114,8 +114,8 @@ def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
     """
     Extract per-variable mappings from the DReq Variables table.
 
-    Returns a dict keyed by CMIP6 compound name (e.g. ``"Amon.tas"``)
-    with the global (``region=glb``) entry preferred when duplicates exist.
+    Returns a dict keyed by CMIP6 compound name (e.g. ``"Amon.tas"``).
+    Raises on duplicate compound names.
     """
     variables = dreq["Variables"]["records"]
 
@@ -135,8 +135,23 @@ def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
         out_name = parts[0] if parts else ""
         branding_suffix = parts[1] if len(parts) > 1 else ""
 
-        # Parse branding suffix components (format: temporal-vertical-horizontal-area)
-        temporal_label, vertical_label, horizontal_label, area_label = branding_suffix.split("-")
+        # Parse and validate branding suffix components (format: temporal-vertical-horizontal-area)
+        if not branding_suffix:
+            raise ValueError(
+                f"Missing branding suffix for record {_rec_id!r} "
+                f"(CMIP6 Compound Name: {cmip6_cn!r}, Branded Variable Name: {branded!r})"
+            )
+        suffix_parts = branding_suffix.split("-")
+        _expected_suffix_parts = 4
+        if len(suffix_parts) != _expected_suffix_parts or any(not p for p in suffix_parts):
+            raise ValueError(
+                "Unexpected branding suffix format for record "
+                f"{_rec_id!r} (CMIP6 Compound Name: {cmip6_cn!r}, "
+                f"Branded Variable Name: {branded!r}, "
+                f"branding_suffix: {branding_suffix!r}); "
+                "expected 'temporal-vertical-horizontal-area'."
+            )
+        temporal_label, vertical_label, horizontal_label, area_label = suffix_parts
 
         # Resolve realm from CMIP7 compound name (first component)
         cmip7_parts = cmip7_cn.split(".")
@@ -266,7 +281,7 @@ def main(
                 "CMIP6-to-CMIP7 variable mappings extracted from the CMIP7 Data Request. "
                 "Filtered to mon/fx tables and variables used by REF providers. "
                 "Keyed by CMIP6 compound name (table_id.variable_id). "
-                f"Regenerate with: uv run python scripts/{__file__} "
+                "Regenerate with: uv run python scripts/extract-data-request-mappings.py "
             ),
         },
         "variables": {k: v.to_dict() for k, v in sorted(filtered.items())},

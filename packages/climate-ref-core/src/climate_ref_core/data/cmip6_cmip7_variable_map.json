@@ -2,7 +2,7 @@
  "_metadata": {
   "source": "https://github.com/CMIP-Data-Request/CMIP7_DReq_Content/raw/refs/tags/v1.2.2.3/airtable_export/dreq_release_export.json",
   "data_request_version": "v1.2.2.3",
-  "description": "CMIP6-to-CMIP7 variable mappings extracted from the CMIP7 Data Request. Filtered to mon/fx tables and variables used by REF providers. Keyed by CMIP6 compound name (table_id.variable_id). Regenerate with: uv run python scripts//Users/jared/code/climate-ref/climate-ref-worktrees/split-repos/scripts/extract-data-request-mappings.py "
+  "description": "CMIP6-to-CMIP7 variable mappings extracted from the CMIP7 Data Request. Filtered to mon/fx tables and variables used by REF providers. Keyed by CMIP6 compound name (table_id.variable_id). Regenerate with: uv run python scripts/extract-data-request-mappings.py "
  },
  "variables": {
   "AERmon.ua": {

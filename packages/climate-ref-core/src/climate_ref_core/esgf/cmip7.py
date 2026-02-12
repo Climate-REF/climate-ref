@@ -61,15 +61,14 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         str(cmip7_facets.get("grid_label", "gn")),
         str(cmip7_facets.get("version", "v1")),
     )
-    drs_path.mkdir(parents=True, exist_ok=True)
-
-    # Create output filename
+    # Create output filename and check cache before opening the source file
     output_file = drs_path / cmip6_path.name
 
-    # Skip if already converted
     if output_file.exists():
         logger.debug(f"Using cached CMIP7 file: {output_file}")
         return output_file
+
+    drs_path.mkdir(parents=True, exist_ok=True)
 
     # Convert the file
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")

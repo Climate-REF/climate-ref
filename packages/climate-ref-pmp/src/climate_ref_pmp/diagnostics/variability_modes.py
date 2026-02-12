@@ -244,6 +244,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             "variability_mode": self.mode_id,
             "modpath": modpath,
             "modpath_lf": "none",
+            "mip": model_source_type.value,
             "exp": experiment_id,
             "realization": member_id,
             "modnames": source_id,
@@ -310,6 +311,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
+                "mip_id": model_source_type.value,
                 "source_id": input_datasets["source_id"].unique()[0],
                 "member_id": input_datasets[member_id_col].unique()[0],
                 "experiment_id": input_datasets["experiment_id"].unique()[0],

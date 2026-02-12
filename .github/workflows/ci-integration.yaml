@@ -36,8 +36,9 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run tests
         run: |
-          make virtual-environment
-          make fetch-test-data
+          uv sync
+          uv run ref datasets fetch-sample-data
+          uv run ref datasets fetch-data --registry ilamb-test
           uv run ref datasets fetch-data --registry ilamb --symlink
           uv run ref datasets fetch-data --registry iomb --symlink
           uv run ref datasets fetch-data --registry esmvaltool --symlink
@@ -66,8 +67,9 @@ jobs:
           python-version: "3.13"
       - name: Setup environment
         run: |
-          make virtual-environment
-          make fetch-test-data
+          uv sync
+          uv run ref datasets fetch-sample-data
+          uv run ref datasets fetch-data --registry ilamb-test
           uv run ref datasets fetch-data --registry ilamb --symlink
           uv run ref datasets fetch-data --registry iomb --symlink
           uv run ref datasets fetch-data --registry esmvaltool --symlink

@@ -1,0 +1,122 @@
+cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+  cmip6:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hurs.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tasmax.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Emon.vegFrac.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.cVeg.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.treeFrac.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
+cmip6_gn_r1i1p1f1_AWI-ESM-1-1-LR:
+  cmip6:
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Amon.hurs.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Amon.pr.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Amon.tas.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Amon.tasmax.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Emon.vegFrac.gn.v20200909
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Lmon.cVeg.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Lmon.treeFrac.gn.v20200909
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.fx.sftlf.gn.v20200909
+cmip6_gn_r1i1p1f1_CMCC-CM2-SR5:
+  cmip6:
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Amon.hurs.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Amon.pr.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Amon.tas.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Amon.tasmax.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Emon.vegFrac.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Lmon.cVeg.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Lmon.treeFrac.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.sftlf.gn.v20200616
+cmip6_gn_r1i1p1f1_CMCC-ESM2:
+  cmip6:
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Amon.hurs.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Amon.pr.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Amon.tas.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Amon.tasmax.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Emon.vegFrac.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Lmon.cVeg.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Lmon.treeFrac.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.sftlf.gn.v20210114
+cmip6_gn_r1i1p1f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.hurs.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.pr.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tasmax.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Emon.vegFrac.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Lmon.cVeg.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Lmon.treeFrac.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.sftlf.gn.v20190429
+cmip6_gn_r1i1p1f1_CanESM5-1:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Amon.hurs.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Amon.pr.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Amon.tasmax.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Emon.vegFrac.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Lmon.cVeg.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Lmon.treeFrac.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.fx.sftlf.gn.v20190429
+cmip6_gn_r1i1p1f1_MPI-ESM-1-2-HAM:
+  cmip6:
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Amon.hurs.gn.v20190628
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Amon.pr.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Amon.tas.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Amon.tasmax.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Emon.vegFrac.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Lmon.cVeg.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Lmon.treeFrac.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.fx.sftlf.gn.v20190627
+cmip6_gn_r1i1p1f1_MPI-ESM1-2-LR:
+  cmip6:
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Amon.hurs.gn.v20190815
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Amon.pr.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Amon.tas.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Amon.tasmax.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Emon.vegFrac.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Lmon.cVeg.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Lmon.treeFrac.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.fx.sftlf.gn.v20190710
+cmip6_gr1_r1i1p1f1_GFDL-ESM4:
+  cmip6:
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Amon.hurs.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Amon.pr.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Amon.tas.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Amon.tasmax.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Emon.vegFrac.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Lmon.cVeg.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Lmon.treeFrac.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.fx.sftlf.gr1.v20190726
+cmip6_gr_r1i1p1f1_EC-Earth3-Veg:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.hurs.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20200225
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20200225
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tasmax.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Emon.vegFrac.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Lmon.cVeg.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Lmon.treeFrac.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.fx.sftlf.gr.v20211207
+cmip6_gr_r1i1p1f1_EC-Earth3-Veg-LR:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Amon.hurs.gr.v20200217
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Amon.pr.gr.v20200217
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Amon.tas.gr.v20200217
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Amon.tasmax.gr.v20200217
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Emon.vegFrac.gr.v20201116
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Lmon.cVeg.gr.v20201116
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Lmon.treeFrac.gr.v20201116
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.fx.sftlf.gr.v20200217
+cmip6_gr_r1i1p1f1_IPSL-CM6A-LR:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Amon.hurs.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Amon.pr.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Amon.tas.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Amon.tasmax.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Emon.vegFrac.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Lmon.cVeg.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Lmon.treeFrac.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.fx.sftlf.gr.v20180803

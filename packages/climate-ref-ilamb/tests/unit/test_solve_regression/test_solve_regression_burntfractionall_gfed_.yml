@@ -1,0 +1,48 @@
+cmip6_historical_gn_r1i1p1f1_CESM2:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.sftlf.gn.v20190308
+cmip6_historical_gn_r1i1p1f1_CESM2-FV2:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.sftlf.gn.v20191120
+cmip6_historical_gn_r1i1p1f1_CESM2-WACCM:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190227
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.areacella.gn.v20190227
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.sftlf.gn.v20190227
+cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.sftlf.gn.v20191120
+cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5:
+  cmip6:
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.areacella.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.sftlf.gn.v20200616
+cmip6_historical_gn_r1i1p1f1_CMCC-ESM2:
+  cmip6:
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.areacella.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.sftlf.gn.v20210114
+cmip6_historical_gn_r1i1p1f1_NorESM2-LM:
+  cmip6:
+  - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20210818
+  - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.fx.areacella.gn.v20190815
+  - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.fx.sftlf.gn.v20191108
+cmip6_historical_gn_r1i1p1f1_NorESM2-MM:
+  cmip6:
+  - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20210818
+  - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.fx.areacella.gn.v20191108
+  - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.fx.sftlf.gn.v20191108
+cmip6_historical_gr_r1i1p1f1_EC-Earth3-CC:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.Lmon.burntFractionAll.gr.v20210113
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.fx.areacella.gr.v20210616
+cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1:
+  cmip6:
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.fx.areacella.gr.v20250328
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Lmon.burntFractionAll.gr.v20181206

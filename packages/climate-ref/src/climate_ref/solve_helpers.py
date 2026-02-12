@@ -52,8 +52,8 @@ def generate_catalog(
     for directory in directories:
         try:
             df = adapter.find_local_datasets(directory)
-        except Exception:
-            logger.debug(f"Skipping directory {directory}: no datasets found or parse error")
+        except (FileNotFoundError, OSError, ValueError) as exc:
+            logger.debug(f"Skipping directory {directory}: {exc}")
             continue
         if len(df) > 0:
             frames.append(df)
@@ -90,8 +90,8 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
     """
     Load parquet catalog files from a directory.
 
-    Looks for ``cmip6_catalog.parquet``, ``obs4mips_catalog.parquet``,
-    and ``pmp_climatology_catalog.parquet``.
+    Looks for ``cmip6_catalog.parquet``, ``cmip7_catalog.parquet``,
+    ``obs4mips_catalog.parquet``, and ``pmp_climatology_catalog.parquet``.
 
     Parameters
     ----------
@@ -251,18 +251,22 @@ def solve_results_for_regression(
     """
     Convert solve results to the dict format used by ``data_regression.check()``.
 
-    Produces ``{dataset_key: {source_type: [instance_id, ...]}}`` matching
-    the pattern in test_solver.py's ``test_solve_metrics``.
+    Produces ``{dataset_key: {source_type: [instance_id, ...]}}``
+    for use with ``data_regression.check()``.
+
+    When called with results filtered to a single diagnostic (recommended),
+    ``dataset_key`` is unique and no data is lost. If results span multiple
+    diagnostics, duplicate ``dataset_key`` values will overwrite earlier entries.
 
     Parameters
     ----------
     results
-        Results from :func:`solve_to_results`
+        Results from :func:`solve_to_results`, ideally filtered to one diagnostic
 
     Returns
     -------
     :
-        Dict keyed by dataset_key with source_type → instance_id list values
+        Dict keyed by ``dataset_key`` with source_type -> instance_id list values
     """
     output: dict[str, dict[str, list[str]]] = {}
     for r in results:

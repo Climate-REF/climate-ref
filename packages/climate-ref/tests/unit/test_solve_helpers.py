@@ -162,6 +162,20 @@ class TestSolveResultsForRegression:
 
     def test_regression_keys_match_results(self, esgf_data_catalog):
         results = solve_to_results(esgf_data_catalog, providers=[example_provider])
-        regression = solve_results_for_regression(results)
-        result_keys = {r["dataset_key"] for r in results}
+        # Filter to a single diagnostic to avoid key collisions
+        diagnostic_slug = results[0]["diagnostic"]
+        filtered = [r for r in results if r["diagnostic"] == diagnostic_slug]
+        regression = solve_results_for_regression(filtered)
+        result_keys = {r["dataset_key"] for r in filtered}
         assert set(regression.keys()) == result_keys
+
+    def test_regression_no_key_collisions_per_diagnostic(self, esgf_data_catalog):
+        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
+        # Within a single diagnostic, dataset_key should be unique
+        for diag_slug in {r["diagnostic"] for r in results}:
+            filtered = [r for r in results if r["diagnostic"] == diag_slug]
+            regression = solve_results_for_regression(filtered)
+            assert len(regression) == len(filtered), (
+                f"Key collision in diagnostic {diag_slug}: {len(filtered)} results "
+                f"produced only {len(regression)} regression keys"
+            )

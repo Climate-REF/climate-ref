@@ -15,36 +15,21 @@ Generate catalogs with::
 from __future__ import annotations
 
 import pytest
-from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_example import provider as example_provider
-from climate_ref_ilamb import provider as ilamb_provider
-from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.solve_helpers import solve_results_for_regression, solve_to_results
 
 
-class TestSolveRegressionExample:
-    """Regression test using the example provider."""
-
-    def test_example_provider(self, esgf_data_catalog, data_regression):
-        results = solve_to_results(esgf_data_catalog, providers=[example_provider])
-        regression = solve_results_for_regression(results)
-        data_regression.check(regression)
+@pytest.fixture(scope="module")
+def example_results(esgf_data_catalog):
+    return solve_to_results(esgf_data_catalog, providers=[example_provider])
 
 
 @pytest.mark.parametrize(
-    "provider_slug",
-    ["pmp", "esmvaltool", "ilamb"],
+    "diagnostic_slug",
+    [d.slug for d in example_provider.diagnostics()],
 )
-def test_solve_regression_per_provider(esgf_data_catalog, data_regression, provider_slug):
-    """Test each provider independently for finer-grained regression tracking."""
-    provider_map = {
-        "pmp": pmp_provider,
-        "esmvaltool": esmvaltool_provider,
-        "ilamb": ilamb_provider,
-    }
-
-    provider = provider_map[provider_slug]
-    results = solve_to_results(esgf_data_catalog, providers=[provider])
-    regression = solve_results_for_regression(results)
+def test_solve_regression(example_results, data_regression, diagnostic_slug):
+    filtered = [r for r in example_results if r["diagnostic"] == diagnostic_slug]
+    regression = solve_results_for_regression(filtered)
     data_regression.check(regression)

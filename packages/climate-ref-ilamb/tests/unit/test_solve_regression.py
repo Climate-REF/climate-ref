@@ -9,11 +9,13 @@ from __future__ import annotations
 import pytest
 from climate_ref_ilamb import provider as ilamb_provider
 
+from climate_ref.config import Config
 from climate_ref.solve_helpers import solve_results_for_regression, solve_to_results
 
 
 @pytest.fixture(scope="module")
 def ilamb_results(esgf_data_catalog):
+    ilamb_provider.configure(Config.default())
     return solve_to_results(esgf_data_catalog, providers=[ilamb_provider])
 
 

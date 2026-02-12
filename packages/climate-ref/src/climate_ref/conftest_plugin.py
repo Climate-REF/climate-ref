@@ -49,6 +49,7 @@ from climate_ref.config import Config, DiagnosticProviderConfig
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models import Execution
+from climate_ref.solve_helpers import load_solve_catalog
 from climate_ref.solver import solve_executions
 from climate_ref.testing import (
     TEST_DATA_DIR,
@@ -140,22 +141,28 @@ def regression_data_dir(test_data_dir: Path) -> Path:
 
 @pytest.fixture(scope="session")
 def esgf_solve_catalog(test_data_dir: Path) -> dict[SourceDatasetType, pd.DataFrame] | None:
-    """Load ESGF metadata catalog for solve tests."""
-    catalog_dir = test_data_dir / "esgf-catalog"
-    if not catalog_dir.exists():
-        return None
+    """Load ESGF metadata catalog for solve tests, if available."""
+    return load_solve_catalog(test_data_dir / "esgf-catalog")
 
-    result: dict[SourceDatasetType, pd.DataFrame] = {}
 
-    cmip6_path = catalog_dir / "cmip6_catalog.parquet"
-    if cmip6_path.exists():
-        result[SourceDatasetType.CMIP6] = pd.read_parquet(cmip6_path)
+@pytest.fixture(scope="session")
+def esgf_data_catalog(
+    esgf_solve_catalog: dict[SourceDatasetType, pd.DataFrame] | None,
+    test_data_dir: Path,
+) -> dict[SourceDatasetType, pd.DataFrame]:
+    """
+    ESGF metadata catalog for tests that only need DataFrames, not actual files.
 
-    obs4mips_path = catalog_dir / "obs4mips_catalog.parquet"
-    if obs4mips_path.exists():
-        result[SourceDatasetType.obs4MIPs] = pd.read_parquet(obs4mips_path)
-
-    return result if result else None
+    Uses pre-generated parquet catalogs from ``tests/test-data/esgf-catalog/``.
+    Fails if the catalog is not available (run ``scripts/generate_esgf_catalog.py``).
+    """
+    if esgf_solve_catalog is None:
+        expected_path = test_data_dir / "esgf-catalog"
+        pytest.fail(
+            f"ESGF parquet catalog not found in {expected_path}. "
+            "Run scripts/generate_esgf_catalog.py to generate it."
+        )
+    return esgf_solve_catalog
 
 
 @pytest.fixture

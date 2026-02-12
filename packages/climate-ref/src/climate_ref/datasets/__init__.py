@@ -18,6 +18,34 @@ from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref_core.datasets import SourceDatasetType
 
+# Pre-computed slug column lookup by source type.
+# TODO: This could be replaced with a constant at the moment
+SLUG_COLUMN_BY_SOURCE_TYPE: dict[SourceDatasetType, str] = {
+    SourceDatasetType.CMIP6: "instance_id",
+    SourceDatasetType.CMIP7: "instance_id",
+    SourceDatasetType.obs4MIPs: "instance_id",
+    SourceDatasetType.PMPClimatology: "instance_id",
+}
+
+
+def get_slug_column(source_type: SourceDatasetType | str) -> str:
+    """
+    Get the slug column name for a source dataset type.
+
+    Parameters
+    ----------
+    source_type
+        Source dataset type (enum or string value)
+
+    Returns
+    -------
+    :
+        The slug column name for the given source type
+    """
+    if isinstance(source_type, str):
+        source_type = SourceDatasetType(source_type)
+    return SLUG_COLUMN_BY_SOURCE_TYPE[source_type]
+
 
 @define
 class IngestionStats:
@@ -154,6 +182,7 @@ def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
 
 
 __all__ = [
+    "SLUG_COLUMN_BY_SOURCE_TYPE",
     "CMIP6DatasetAdapter",
     "CMIP7DatasetAdapter",
     "DatasetAdapter",
@@ -161,5 +190,6 @@ __all__ = [
     "Obs4MIPsDatasetAdapter",
     "PMPClimatologyDatasetAdapter",
     "get_dataset_adapter",
+    "get_slug_column",
     "ingest_datasets",
 ]

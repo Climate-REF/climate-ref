@@ -92,7 +92,11 @@ def apply_constraint(
     """
     updated_group = constraint.apply(dataframe, data_catalog)
     if updated_group.empty:
-        logger.debug(f"Constraint {constraint} not satisfied for {dataframe}")
+        logger.debug(
+            "Constraint {} not satisfied for {} rows",
+            constraint,
+            len(dataframe),
+        )
         return None
 
     return updated_group

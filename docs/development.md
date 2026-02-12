@@ -211,6 +211,55 @@ but we should try and write tests that don't change when new data becomes availa
 or to use [pytest-regressions](https://pytest-regressions.readthedocs.io/en/latest/api.html) to be able to
 regenerate the expected output files.
 
+### ESGF parquet catalogs
+
+Pre-generated parquet catalogs in `tests/test-data/esgf-catalog/` contain dataset metadata
+from a real ESGF archive without requiring actual data files on disk.
+These are used by tests that only need DataFrames for solver logic,
+avoiding the need to download sample data.
+
+```
+tests/test-data/esgf-catalog/
+├── cmip6_catalog.parquet             # ~96k CMIP6 entries
+├── obs4mips_catalog.parquet          # ~176 obs4MIPs entries
+└── pmp_climatology_catalog.parquet   # ~25 PMP climatology entries
+```
+
+Two test fixtures are available for tests that need data catalogs:
+
+| Fixture             | Source                    | Requires sample data download? |
+| ------------------- | ------------------------- | ------------------------------ |
+| `data_catalog`      | Scans sample data on disk | Yes                            |
+| `esgf_data_catalog` | Reads parquet catalogs    | No                             |
+
+Use `esgf_data_catalog` for tests that only need DataFrames (solver logic, constraint testing, formatting).
+Use `data_catalog` for tests that need actual files on disk (integration tests, diagnostic execution).
+
+To regenerate or extend the catalogs from a local ESGF archive:
+
+```bash
+python scripts/generate_esgf_catalog.py \
+    --cmip6-dir /path/to/CMIP6 \
+    --obs4mips-dir /path/to/obs4MIPs \
+    --pmp-climatology-dir /path/to/PMP_obs4MIPsClims \
+    --output-dir tests/test-data/esgf-catalog/ \
+    --strip-prefix /path/to/data/root
+```
+
+### Solver regression tests
+
+Solver regression tests in `packages/climate-ref/tests/unit/test_solve_regression.py`
+run the solver against the ESGF parquet catalogs for each provider
+and compare the output against YAML baselines.
+Any change to solver logic, constraints, or data requirements
+will produce a diff in these baseline files.
+
+To regenerate baselines after an intentional change:
+
+```bash
+uv run pytest packages/climate-ref/tests/unit/test_solve_regression.py --force-regen
+```
+
 ## Documentation
 
 Our documentation is written in Markdown and built using

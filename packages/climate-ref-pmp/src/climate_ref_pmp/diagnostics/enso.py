@@ -344,6 +344,7 @@ class ENSO(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
+                "mip_id": model_source_type.value,
                 "source_id": source_id,
                 "member_id": member_id,
                 "grid_label": input_datasets["grid_label"].unique()[0],

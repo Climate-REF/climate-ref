@@ -56,7 +56,12 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
     if table_id and variable_id and "branding_suffix" not in cmip7_facets:
         try:
             entry = _get_dreq_entry(table_id, variable_id)
-            cmip7_facets = {**cmip7_facets, "branding_suffix": entry.branding_suffix, "region": entry.region}
+            cmip7_facets = {
+                **cmip7_facets,
+                "branding_suffix": entry.branding_suffix,
+                "region": entry.region,
+                "out_name": entry.out_name,
+            }
         except KeyError:
             logger.debug(f"No DReq entry for {table_id}.{variable_id}, using facets as-is")
 

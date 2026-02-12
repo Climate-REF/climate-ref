@@ -578,6 +578,100 @@ class TestCreateCmip7Filename:
 
         assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_TestModel_piControl_r1i1p1f1.nc"
 
+    def test_out_name_used_over_variable_id(self):
+        """Test that out_name is used in filename instead of variable_id.
+
+        For variables like tasmax, the CMIP6 variable_id is 'tasmax' but the
+        CMIP7 out_name is 'tas'. The filename should use 'tas', not 'tasmax'.
+        """
+        attrs = {
+            "variable_id": "tasmax",
+            "out_name": "tas",
+            "branding_suffix": "tmaxavg-h2m-hxy-u",
+            "frequency": "mon",
+            "region": "glb",
+            "grid_label": "gn",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+        }
+        filename = create_cmip7_filename(attrs)
+
+        assert filename == "tas_tmaxavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
+        # Confirm variable_id is NOT in filename (out_name is used instead)
+        assert "tasmax" not in filename
+
+    def test_falls_back_to_variable_id_without_out_name(self):
+        """Test that variable_id is used when out_name is absent."""
+        attrs = {
+            "variable_id": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "frequency": "mon",
+            "region": "glb",
+            "grid_label": "gn",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+        }
+        filename = create_cmip7_filename(attrs)
+
+        assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
+
+
+class TestCreateCmip7FilenameFromConversion:
+    """Test filename generation from full conversion pipeline (end-to-end)."""
+
+    def test_tasmax_filename_uses_out_name(self):
+        """End-to-end: tasmax conversion produces filename with out_name=tas.
+
+        CMIP6 tasmax maps to CMIP7 out_name=tas with branding tmaxavg-h2m-hxy-u.
+        The variable_id attribute stays as 'tasmax' but the filename uses 'tas'.
+        """
+        cmip6_attrs = {
+            "variable_id": "tasmax",
+            "table_id": "Amon",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "realization_index": 1,
+            "initialization_index": 1,
+            "physics_index": 1,
+            "forcing_index": 1,
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        # variable_id stays as CMIP6 identity
+        assert cmip7_attrs["variable_id"] == "tasmax"
+        # out_name is the CMIP7 output name
+        assert cmip7_attrs["out_name"] == "tas"
+        # branded_variable uses out_name
+        assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
+
+        # Filename uses out_name, not variable_id
+        filename = create_cmip7_filename(cmip7_attrs)
+        assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
+        assert "tasmax" not in filename
+
+    def test_tas_filename_unchanged(self):
+        """End-to-end: tas conversion where out_name == variable_id."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "source_id": "ACCESS-ESM1-5",
+            "experiment_id": "historical",
+            "realization_index": 1,
+            "initialization_index": 1,
+            "physics_index": 1,
+            "forcing_index": 1,
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["variable_id"] == "tas"
+        assert cmip7_attrs["out_name"] == "tas"
+        assert cmip7_attrs["branded_variable"] == "tas_tavg-h2m-hxy-u"
+
+        filename = create_cmip7_filename(cmip7_attrs)
+        assert filename.startswith("tas_tavg-h2m-hxy-u_")
+
 
 class TestCreateCmip7Path:
     """Test CMIP7 directory path generation per MIP-DRS7 spec."""

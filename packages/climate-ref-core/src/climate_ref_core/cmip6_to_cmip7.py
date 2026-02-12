@@ -371,9 +371,15 @@ def convert_cmip6_to_cmip7_attrs(
 
     table_id: str = attrs["table_id"]
 
-    # Get branding suffix
+    # Get branding suffix and out_name from DReq
+    dreq_entry = _get_dreq_entry(table_id, variable_id)
     if branding is None:
-        branding = get_branding_suffix(table_id, variable_id)
+        branding = BrandingSuffix(
+            temporal_label=dreq_entry.temporal_label,
+            vertical_label=dreq_entry.vertical_label,
+            horizontal_label=dreq_entry.horizontal_label,
+            area_label=dreq_entry.area_label,
+        )
 
     # Create CMIP7 metadata
     cmip7_meta = CMIP7Metadata.from_branding(branding)
@@ -402,8 +408,11 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["area_label"] = cmip7_meta.area_label
     attrs["branding_suffix"] = cmip7_meta.branding_suffix
 
+    # Add out_name (CMIP7 output variable name, used in filenames/paths)
+    attrs["out_name"] = dreq_entry.out_name
+
     # Add branded_variable (required in CMIP7)
-    attrs["branded_variable"] = f"{variable_id}_{cmip7_meta.branding_suffix}"
+    attrs["branded_variable"] = f"{dreq_entry.out_name}_{cmip7_meta.branding_suffix}"
 
     # Convert variant indices from CMIP6 integer to CMIP7 string format
     if "realization_index" in attrs:
@@ -494,7 +503,12 @@ def create_cmip7_filename(
     Create a CMIP7 filename from attributes.
 
     The CMIP7 filename follows the MIP-DRS7 specification (V1.0):
-    <variable_id>_<branding_suffix>_<frequency>_<region>_<grid_label>_<source_id>_<experiment_id>_<variant_label>[_<timeRangeDD>].nc
+    <out_name>_<branding_suffix>_<frequency>_<region>_<grid_label>_<source_id>_<experiment_id>_<variant_label>[_<timeRangeDD>].nc
+
+    The first component uses ``out_name`` (the CMIP7 output variable name) rather than
+    ``variable_id`` (the CMIP6 identity). For most variables these are identical, but
+    for some (e.g. tasmax -> tas) they differ. Falls back to ``variable_id`` if
+    ``out_name`` is not present.
 
     Parameters
     ----------
@@ -526,7 +540,7 @@ def create_cmip7_filename(
     'tas_tavg-h2m-hxy-u_mon_glb_g13s_CanESM6-MR_historical_r2i1p1f1_190001-190912.nc'
     """
     components = [
-        attrs.get("variable_id", ""),
+        attrs.get("out_name", attrs.get("variable_id", "")),
         attrs.get("branding_suffix", ""),
         attrs.get("frequency", "mon"),
         attrs.get("region", "glb"),
@@ -551,7 +565,7 @@ def create_cmip7_path(attrs: dict[str, Any], version: str | None = None) -> str:
 
     The CMIP7 path follows the MIP-DRS7 specification (V1.0):
     <drs_specs>/<mip_era>/<activity_id>/<institution_id>/<source_id>/<experiment_id>/
-    <variant_label>/<region>/<frequency>/<variable_id>/<branding_suffix>/<grid_label>/<version>
+    <variant_label>/<region>/<frequency>/<out_name>/<branding_suffix>/<grid_label>/<version>
 
     Parameters
     ----------
@@ -597,7 +611,7 @@ def create_cmip7_path(attrs: dict[str, Any], version: str | None = None) -> str:
         attrs.get("variant_label", ""),
         attrs.get("region", "glb"),
         attrs.get("frequency", "mon"),
-        attrs.get("variable_id", ""),
+        attrs.get("out_name", attrs.get("variable_id", "")),
         attrs.get("branding_suffix", ""),
         attrs.get("grid_label", "gn"),
         version_str,

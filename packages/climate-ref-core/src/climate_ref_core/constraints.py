@@ -540,7 +540,7 @@ class AddParentDataset:
         all_parent_facets = sorted({*self.parent_facet_map.keys(), *self.parent_facet_map.values()})
 
         # Remove datasets that do not have all parent facets set.
-        valid_group = group[all_parent_facets].dropna(axis="columns")
+        valid_group = group[all_parent_facets].dropna(axis="index")
 
         # Add the parent datasets from the data catalog.
         select = pd.Series(False, index=data_catalog.index)

@@ -937,6 +937,26 @@ class TestAddParent:
                 [0],
                 [0, 2],
             ),
+            # Test that datasets with missing parent facets are excluded
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2", "esm-1pct-brch-1000PgC"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl", pd.NA],
+                        "parent_source_id": ["A", "A", pd.NA],
+                        "parent_variant_label": ["r1i1p1f1", "r1i1p1f1", pd.NA],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p2f1", "r1i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20220101", "v20210101"],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0, 2],
+                [0, 1],
+            ),
             # Test that the dataset is removed from the group if no parent is found
             (
                 pd.DataFrame(

@@ -1,9 +1,9 @@
-# Original CMIP7 QAQC is available at 
+# Original CMIP7 QAQC is available at
 # https://github.com/ESGF/cc-plugin-wcrp/blob/master/plugins/cmip7/resources/wcrp_config.toml
 # A few severity level adjusted for request from REF
 
 # ==============================================================================
-# CMIP7 Configuration FILE 
+# CMIP7 Configuration FILE
 # ==============================================================================
 project_name = "cmip7"
 project_version = "1.0"
@@ -23,7 +23,7 @@ severity = "H"
 severity = "H"
 
 [drs.filename_vs_directory]
-# Check PATH002 
+# Check PATH002
 severity = "H"
 
 [file.format]
@@ -38,7 +38,7 @@ expected_shuffle = true
 
 
 #------------------------------------------------------------------------------
-# Global Attributes checks 
+# Global Attributes checks
 # ------------------------------------------------------------------------------
 
 [global_attributes.activity_id]
@@ -397,18 +397,17 @@ severity = "H"  # This is higher severity level than CMIP7
 
 
 [consistency_checks.filename_vs_attributes]
-# Check ATTR005 
+# Check ATTR005
 severity = "H"
 
 [consistency_checks.experiment_details]
-# Check ATTR007 
+# Check ATTR007
 severity = "H"
 
 [consistency_checks.institution_details]
-# Check ATTR009 
+# Check ATTR009
 severity = "H"
 
 [consistency_checks.source_details]
-# Check ATTR010 
+# Check ATTR010
 severity = "H"
-

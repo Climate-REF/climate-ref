@@ -25,6 +25,8 @@ from importlib import resources
 from typing import TYPE_CHECKING, Any
 
 import attrs
+import cftime  # type: ignore[import-untyped]
+import pandas as pd
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -493,6 +495,40 @@ def convert_cmip6_dataset(
     ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs, variable_id=variable_id, branding=branding)
 
     return ds
+
+
+def format_cmip7_time_range(ds: xr.Dataset, frequency: str) -> str | None:
+    """
+    Format a CMIP7 time range string from a dataset's time coordinate.
+
+    Per the MIP-DRS7 spec, monthly data uses ``YYYYMM-YYYYMM`` format.
+    Fixed-frequency (``"fx"``) data has no time range.
+
+    Parameters
+    ----------
+    ds
+        xarray Dataset with a ``"time"`` coordinate
+    frequency
+        Frequency string (e.g., ``"mon"``, ``"fx"``)
+
+    Returns
+    -------
+    str or None
+        Formatted time range string, or ``None`` for fixed-frequency data
+        or datasets without a time coordinate.
+    """
+    if frequency == "fx" or "time" not in ds or len(ds["time"]) == 0:
+        return None
+
+    start = ds["time"].values[0]
+    end = ds["time"].values[-1]
+
+    def _strftime(t: Any) -> str:
+        if isinstance(t, cftime.datetime):
+            return str(t.strftime("%Y%m"))
+        return str(pd.Timestamp(t).strftime("%Y%m"))
+
+    return f"{_strftime(start)}-{_strftime(end)}"
 
 
 def create_cmip7_filename(

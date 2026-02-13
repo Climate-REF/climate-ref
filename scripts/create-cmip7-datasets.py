@@ -11,7 +11,12 @@ import typer
 import xarray as xr
 from loguru import logger
 
-from climate_ref_core.cmip6_to_cmip7 import convert_cmip6_dataset, create_cmip7_path
+from climate_ref_core.cmip6_to_cmip7 import (
+    convert_cmip6_dataset,
+    create_cmip7_filename,
+    create_cmip7_path,
+    format_cmip7_time_range,
+)
 
 app = typer.Typer()
 
@@ -49,8 +54,11 @@ def _convert_file(
         cmip7_dir = output_dir / cmip7_subpath
         cmip7_dir.mkdir(parents=True, exist_ok=True)
 
-        # Use original filename
-        cmip7_path = cmip7_dir / cmip6_path.name
+        # Build CMIP7 filename with time range
+        frequency = ds_cmip7.attrs.get("frequency", "mon")
+        time_range = format_cmip7_time_range(ds_cmip7, frequency)
+        cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range=time_range)
+        cmip7_path = cmip7_dir / cmip7_filename
 
         # Only write if file doesn't already exist
         if not cmip7_path.exists():

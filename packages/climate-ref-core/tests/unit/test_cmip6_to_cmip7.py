@@ -1,6 +1,7 @@
 """Tests for CMIP6 to CMIP7 format conversion."""
 
 import attrs
+import cftime
 import numpy as np
 import pytest
 import xarray as xr
@@ -15,6 +16,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     convert_variant_index,
     create_cmip7_filename,
     create_cmip7_path,
+    format_cmip7_time_range,
     get_branding_suffix,
     get_cmip7_compound_name,
     get_frequency_from_table,
@@ -806,3 +808,49 @@ class TestCreateCmip7Path:
         assert "/glb/" in path
         assert "/mon/" in path
         assert path.endswith("/gn/v1")
+
+
+class TestFormatCmip7TimeRange:
+    """Test time range formatting per MIP-DRS7 spec."""
+
+    def test_monthly_frequency(self):
+        """Monthly data uses YYYYMM-YYYYMM format."""
+        time = [cftime.DatetimeNoLeap(1990, 1, 16), cftime.DatetimeNoLeap(1999, 12, 16)]
+        ds = xr.Dataset({"tas": ("time", [1.0, 2.0])}, coords={"time": time})
+
+        result = format_cmip7_time_range(ds, "mon")
+        assert result == "199001-199912"
+
+    def test_fx_frequency_returns_none(self):
+        """Fixed-frequency data has no time range."""
+        ds = xr.Dataset({"areacella": (["lat", "lon"], np.zeros((3, 4)))})
+        result = format_cmip7_time_range(ds, "fx")
+        assert result is None
+
+    def test_no_time_coordinate_returns_none(self):
+        """Datasets without a time coordinate return None."""
+        ds = xr.Dataset({"sftlf": (["lat", "lon"], np.zeros((3, 4)))})
+        result = format_cmip7_time_range(ds, "mon")
+        assert result is None
+
+    def test_empty_time_coordinate_returns_none(self):
+        """Datasets with an empty time coordinate return None."""
+        ds = xr.Dataset({"tas": ("time", [])}, coords={"time": []})
+        result = format_cmip7_time_range(ds, "mon")
+        assert result is None
+
+    def test_numpy_datetime64(self):
+        """Works with numpy datetime64 time coordinates."""
+        time = np.array(["1950-01-15", "1950-12-15"], dtype="datetime64[ns]")
+        ds = xr.Dataset({"tas": ("time", [1.0, 2.0])}, coords={"time": time})
+
+        result = format_cmip7_time_range(ds, "mon")
+        assert result == "195001-195012"
+
+    def test_single_timestep(self):
+        """Single timestep produces start == end."""
+        time = [cftime.DatetimeNoLeap(2000, 6, 15)]
+        ds = xr.Dataset({"tas": ("time", [1.0])}, coords={"time": time})
+
+        result = format_cmip7_time_range(ds, "mon")
+        assert result == "200006-200006"

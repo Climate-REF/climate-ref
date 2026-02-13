@@ -158,26 +158,33 @@ def get_child_and_parent_dataset(
     parent_df = df[(df.experiment_id == parent_experiment)]
     child_df = df[(df.experiment_id != parent_experiment)]
 
+    if parent_df.empty:  # pragma: no branch
+        raise ValueError(f"No dataset found for parent experiment '{parent_experiment}'")
+    if child_df.empty:  # pragma: no branch
+        raise ValueError(f"No dataset found for child experiment (not '{parent_experiment}')")
+
     # Compute the start time of the child and parent datasets using the
     # branch_time_in_parent and branch_time_in_child attributes to compute the offset.
     # This ensures that the datasets are aligned correctly in time.
     parent_path = parent_df.path.min()
     child_path = child_df.path.min()
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    parent_ds = xr.open_dataset(parent_path, decode_times=time_coder)
-    child_ds = xr.open_dataset(child_path, decode_times=time_coder)
-    branch_time_in_parent = cftime.num2date(
-        child_ds.attrs["branch_time_in_parent"],
-        units=parent_ds.time.encoding["units"],
-        calendar=parent_ds.time.encoding.get("calendar", "standard"),
-    )
-    branch_time_in_child = cftime.num2date(
-        child_ds.attrs["branch_time_in_child"],
-        units=child_ds.time.encoding["units"],
-        calendar=child_ds.time.encoding.get("calendar", "standard"),
-    )
-    child_start = child_ds.time.values[0]
-    parent_start = branch_time_in_parent - branch_time_in_child + child_start
+    with (
+        xr.open_dataset(parent_path, decode_times=time_coder) as parent_ds,
+        xr.open_dataset(child_path, decode_times=time_coder) as child_ds,
+    ):
+        branch_time_in_parent = cftime.num2date(
+            child_ds.attrs["branch_time_in_parent"],
+            units=parent_ds.time.encoding["units"],
+            calendar=parent_ds.time.encoding.get("calendar", "standard"),
+        )
+        branch_time_in_child = cftime.num2date(
+            child_ds.attrs["branch_time_in_child"],
+            units=child_ds.time.encoding["units"],
+            calendar=child_ds.time.encoding.get("calendar", "standard"),
+        )
+        child_start = child_ds.time.values[0]
+        parent_start = branch_time_in_parent - branch_time_in_child + child_start
 
     # Create the datasets for use in the recipe.
     var_name = child_df.variable_id.iloc[0]

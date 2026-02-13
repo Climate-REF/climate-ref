@@ -194,9 +194,8 @@ def get_child_and_parent_dataset(
     return [child_dataset, parent_dataset]
 
 
-_ESMVALTOOL_COMMIT = "fa3e10ed09fc34d354f179a6a71aacd032d6ea9e"
-# _ESMVALTOOL_VERSION = f"2.13.0.dev148+g{_ESMVALTOOL_COMMIT[:9]}"
-_ESMVALTOOL_VERSION = "2.13.0"
+_ESMVALTOOL_COMMIT = "f5214c9242725fe9a4c3628f304917c7434b361d"
+_ESMVALTOOL_VERSION = f"2.13.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
 
 _RECIPES = pooch.create(
     path=pooch.os_cache("climate_ref_esmvaltool"),

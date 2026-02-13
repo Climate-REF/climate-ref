@@ -20,7 +20,7 @@ from climate_ref.datasets import (
     CMIP7DatasetAdapter,
     Obs4MIPsDatasetAdapter,
     PMPClimatologyDatasetAdapter,
-    get_dataset_adapter,
+    get_slug_column,
 )
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
@@ -255,7 +255,7 @@ def _solve_from_data_requirements(
                 {
                     source_type: DatasetCollection(
                         datasets=dataset_groups[source_type][selector],
-                        slug_column=get_dataset_adapter(source_type.value).slug_column,
+                        slug_column=get_slug_column(source_type),
                         selector=selector,
                     )
                     for source_type, selector in zip(dataset_groups.keys(), items)

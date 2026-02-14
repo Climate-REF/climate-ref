@@ -367,6 +367,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                 "project": "OBS6",
                 "type": "reanaly",
                 "tier": 2,
+                "mip": "Omon",
             }
         )
 

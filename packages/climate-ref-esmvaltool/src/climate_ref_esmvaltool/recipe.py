@@ -16,6 +16,30 @@ if TYPE_CHECKING:
     import pandas as pd
 
 
+# Mapping from CMIP6 MIP table names to CMIP7 realm names.
+# Base ESMValTool recipes use CMIP6 table names (Amon, Lmon, etc.) in the
+# diagnostics/variables section. When running with CMIP7 data, these need
+# to be rewritten to CMIP7 realm names (atmos, land, etc.).
+CMIP6_MIP_TO_CMIP7_REALM = {
+    "AERmon": "aerosol",
+    "AERday": "aerosol",
+    "Amon": "atmos",
+    "Aday": "atmos",
+    "CFmon": "atmos",
+    "CFday": "atmos",
+    "Emon": "land",
+    "Eday": "land",
+    "LImon": "landIce",
+    "Lmon": "land",
+    "Omon": "ocean",
+    "Oday": "ocean",
+    "OImon": "seaIce",
+    "SImon": "seaIce",
+    "SIday": "seaIce",
+    "fx": "atmos",
+    "Ofx": "ocean",
+}
+
 FACETS = {
     "CMIP6": {
         "activity": "activity_id",
@@ -25,6 +49,19 @@ FACETS = {
         "exp": "experiment_id",
         "grid": "grid_label",
         "mip": "table_id",
+        "short_name": "variable_id",
+    },
+    "CMIP7": {
+        "activity": "activity_id",
+        "branding_suffix": "branding_suffix",
+        "dataset": "source_id",
+        "ensemble": "variant_label",
+        "exp": "experiment_id",
+        "frequency": "frequency",
+        "grid": "grid_label",
+        "institute": "institution_id",
+        "mip": "realm",
+        "region": "region",
         "short_name": "variable_id",
     },
     "obs4MIPs": {
@@ -99,6 +136,38 @@ def as_facets(
     if timerange is not None:
         facets["timerange"] = timerange
     return facets
+
+
+def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
+    """Rewrite CMIP6 MIP table names to CMIP7 realm names in a recipe.
+
+    Base ESMValTool recipes have CMIP6 MIP table names (e.g. ``Amon``,
+    ``Lmon``) hardcoded in the diagnostics/variables section. When the recipe
+    uses CMIP7 data, these must be rewritten to CMIP7 realm names
+    (e.g. ``atmos``, ``land``).
+
+    Parameters
+    ----------
+    recipe
+        The recipe to update in place.
+    """
+    # Check if this is a CMIP7 recipe
+    is_cmip7 = any(ds.get("project") == "CMIP7" for ds in recipe.get("datasets", []))
+    if not is_cmip7:
+        for diag in recipe.get("diagnostics", {}).values():
+            if any(ds.get("project") == "CMIP7" for ds in diag.get("additional_datasets", [])):
+                is_cmip7 = True
+                break
+
+    if not is_cmip7:
+        return
+
+    for diag in recipe.get("diagnostics", {}).values():
+        for var_settings in diag.get("variables", {}).values():
+            if isinstance(var_settings, dict) and "mip" in var_settings:
+                old_mip = var_settings["mip"]
+                if old_mip in CMIP6_MIP_TO_CMIP7_REALM:
+                    var_settings["mip"] = CMIP6_MIP_TO_CMIP7_REALM[old_mip]
 
 
 def dataframe_to_recipe(
@@ -203,6 +272,10 @@ def get_child_and_parent_dataset(
 
 _ESMVALTOOL_COMMIT = "f5214c9242725fe9a4c3628f304917c7434b361d"
 _ESMVALTOOL_VERSION = f"2.13.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
+_ESMVALTOOL_URL = f"git+https://github.com/ESMValGroup/ESMValTool.git@{_ESMVALTOOL_COMMIT}"
+
+_ESMVALCORE_COMMIT = "71ab2196b602fe19409919265e12886ba09ba0f5"
+_ESMVALCORE_URL = f"git+https://github.com/ESMValGroup/ESMValCore.git@{_ESMVALCORE_COMMIT}"
 
 _RECIPES = pooch.create(
     path=pooch.os_cache("climate_ref_esmvaltool"),
@@ -265,8 +338,12 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
             subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
+        elif row.instance_id.startswith("CMIP7."):
+            subdirs = row.instance_id.split(".")
         else:
             subdirs = row.instance_id.split(".")
         tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
+        if tgt.is_symlink() or tgt.exists():
+            tgt.unlink()
         tgt.symlink_to(row.path)

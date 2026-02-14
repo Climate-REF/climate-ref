@@ -352,6 +352,52 @@ class TestCondaDiagnosticProvider:
             env={"existing_var": "existing_value"},
         )
 
+    def test_create_env_with_pip_packages(self, mocker, tmp_path, provider):
+        lockfile = tmp_path / "conda-lock.yml"
+        conda_exe = tmp_path / "conda" / "micromamba"
+        env_path = provider.prefix / "mock-env"
+
+        provider.pip_packages = [
+            "git+https://example.com/tool.git@abc123",
+            "git+https://example.com/core.git@def456",
+        ]
+
+        @contextmanager
+        def lockfile_context():
+            yield lockfile
+
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "get_environment_file",
+            create_autospec=True,
+            return_value=lockfile_context(),
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "get_conda_exe",
+            create_autospec=True,
+            return_value=conda_exe,
+        )
+        mocker.patch.object(
+            CondaDiagnosticProvider,
+            "env_path",
+            new_callable=mocker.PropertyMock,
+            return_value=env_path,
+        )
+
+        run = mocker.patch.object(
+            climate_ref_core.providers.subprocess,
+            "run",
+            create_autospec=True,
+        )
+
+        provider.create_env()
+
+        pip_install_calls = [c for c in run.call_args_list if "pip" in c.args[0]]
+        assert len(pip_install_calls) == 2
+        assert pip_install_calls[0].args[0][-1] == "git+https://example.com/tool.git@abc123"
+        assert pip_install_calls[1].args[0][-1] == "git+https://example.com/core.git@def456"
+
     def test_skip_create_env(self, mocker, caplog, provider):
         env_path = provider.prefix / "mock-env"
         env_path.mkdir(parents=True)

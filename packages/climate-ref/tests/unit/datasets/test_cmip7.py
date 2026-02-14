@@ -10,6 +10,7 @@ import xarray as xr
 
 from climate_ref.datasets.cmip7 import (
     CMIP7DatasetAdapter,
+    _add_branded_variable_name,
     parse_cmip7_file,
 )
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
@@ -335,6 +336,77 @@ class TestCMIP7ConvertedFile:
         # Verify all file_specific_metadata fields are present
         for field in adapter.file_specific_metadata:
             assert field in data_catalog.columns, f"Missing field: {field}"
+
+    def test_branded_variable_name_uses_out_name(self, cmip7_converted_file, config):
+        """Test that branded_variable_name uses out_name from DReq, not variable_id.
+
+        Converted CMIP7 files store branded_variable as an attribute using
+        out_name from the Data Request (e.g., 'tas_tmaxavg-h2m-hxy-u' for tasmax).
+        The catalog should use this attribute rather than computing
+        variable_id + '_' + branding_suffix (which would give 'tasmax_tmaxavg-h2m-hxy-u').
+        """
+        adapter = CMIP7DatasetAdapter(config=config)
+        data_catalog = adapter.find_local_datasets(cmip7_converted_file.parent)
+
+        assert len(data_catalog) == 1
+        row = data_catalog.iloc[0]
+
+        # The branded_variable_name should match the branded_variable attribute
+        # from the file (which uses out_name from DReq)
+        assert "branded_variable_name" in data_catalog.columns
+        assert row["branded_variable_name"] != ""
+
+        # Read the branded_variable attribute directly from the file to verify
+        result = parse_cmip7_file(str(cmip7_converted_file))
+        if result.get("branded_variable"):
+            assert row["branded_variable_name"] == result["branded_variable"]
+
+    def test_branded_variable_name_fallback(self):
+        """Test that branded_variable_name falls back to variable_id + branding_suffix."""
+        # Catalog without branded_variable column
+        catalog = pd.DataFrame(
+            {
+                "variable_id": ["tas", "pr"],
+                "branding_suffix": ["tavg-h2m-hxy-u", "tavg-u-hxy-u"],
+            }
+        )
+        result = _add_branded_variable_name(catalog)
+        assert result["branded_variable_name"].tolist() == ["tas_tavg-h2m-hxy-u", "pr_tavg-u-hxy-u"]
+
+    def test_branded_variable_name_prefers_file_attribute(self):
+        """Test that branded_variable from file is preferred over computed value.
+
+        When variable_id differs from out_name (e.g. tasmax vs tas),
+        the branded_variable attribute uses out_name which is correct.
+        """
+        catalog = pd.DataFrame(
+            {
+                "variable_id": ["tasmax", "pr"],
+                "branding_suffix": ["tmaxavg-h2m-hxy-u", "tavg-u-hxy-u"],
+                "branded_variable": ["tas_tmaxavg-h2m-hxy-u", "pr_tavg-u-hxy-u"],
+            }
+        )
+        result = _add_branded_variable_name(catalog)
+        # Should use branded_variable (out_name-based), not variable_id-based
+        assert result["branded_variable_name"].tolist() == [
+            "tas_tmaxavg-h2m-hxy-u",
+            "pr_tavg-u-hxy-u",
+        ]
+
+    def test_branded_variable_name_partial_fallback(self):
+        """Test fallback when some rows have branded_variable and some don't."""
+        catalog = pd.DataFrame(
+            {
+                "variable_id": ["tasmax", "pr"],
+                "branding_suffix": ["tmaxavg-h2m-hxy-u", "tavg-u-hxy-u"],
+                "branded_variable": ["tas_tmaxavg-h2m-hxy-u", ""],
+            }
+        )
+        result = _add_branded_variable_name(catalog)
+        assert result["branded_variable_name"].tolist() == [
+            "tas_tmaxavg-h2m-hxy-u",
+            "pr_tavg-u-hxy-u",
+        ]
 
     def test_validate_converted_catalog(self, cmip7_converted_dir, config):
         """Test that the converted file's catalog passes validation."""

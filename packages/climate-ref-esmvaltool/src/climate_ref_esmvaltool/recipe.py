@@ -328,6 +328,9 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
     climate_data_dir
         The directory where ESMValTool should look for input data.
     """
+    # Track which directories we've already cleaned to avoid redundant work
+    cleaned_dirs: set[Path] = set()
+
     for row in datasets.itertuples():
         if not isinstance(row.instance_id, str):  # pragma: no branch
             msg = f"Invalid instance_id encountered in {row}"
@@ -344,6 +347,15 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
             subdirs = row.instance_id.split(".")
         tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
+
+        # Remove any stale symlinks in the target directory to prevent
+        # ESMValCore from finding dangling symlinks from previous runs
+        if tgt.parent not in cleaned_dirs:
+            for existing in tgt.parent.iterdir():
+                if existing.is_symlink() and not existing.resolve().exists():
+                    existing.unlink()
+            cleaned_dirs.add(tgt.parent)
+
         if tgt.is_symlink() or tgt.exists():
             tgt.unlink()
         tgt.symlink_to(row.path)

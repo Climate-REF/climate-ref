@@ -6,7 +6,6 @@ from attrs import define
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
-from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.utils import validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
@@ -191,15 +190,13 @@ class DatasetAdapter(Protocol):
         return data_catalog
 
     def register_dataset(  # noqa: PLR0915
-        self, config: Config, db: Database, data_catalog_dataset: pd.DataFrame
+        self, db: Database, data_catalog_dataset: pd.DataFrame
     ) -> DatasetRegistrationResult:
         """
         Register a dataset in the database using the data catalog
 
         Parameters
         ----------
-        config
-            Configuration object
         db
             Database instance
         data_catalog_dataset

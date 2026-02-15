@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.resources
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -138,6 +139,39 @@ def as_facets(
     return facets
 
 
+def _iter_recipe_datasets(recipe: Recipe) -> Iterator[dict[str, Any]]:
+    """Yield every dataset dict from all levels of a recipe.
+
+    Datasets can appear at the top level (``recipe["datasets"]``),
+    the diagnostic level (``diag["additional_datasets"]``), or the
+    variable level (``variable["additional_datasets"]``).
+    """
+    yield from recipe.get("datasets", [])
+    for diag in recipe.get("diagnostics", {}).values():
+        yield from diag.get("additional_datasets", [])
+        for var_settings in diag.get("variables", {}).values():
+            if isinstance(var_settings, dict):
+                yield from var_settings.get("additional_datasets", [])
+
+
+def _rewrite_variable_mip(var_settings: dict[str, Any]) -> None:
+    """Rewrite the mip for a single variable from a CMIP6 table name to a CMIP7 realm.
+
+    Before overwriting the variable-level mip, the original CMIP6 value is
+    pinned onto any non-CMIP7 ``additional_datasets`` (e.g. OBS) that don't
+    already carry an explicit mip so they keep resolving correctly.
+    """
+    old_mip = var_settings.get("mip")
+    if old_mip is None or old_mip not in CMIP6_MIP_TO_CMIP7_REALM:
+        return
+
+    for ds in var_settings.get("additional_datasets", []):
+        if ds.get("project") != "CMIP7" and "mip" not in ds:
+            ds["mip"] = old_mip
+
+    var_settings["mip"] = CMIP6_MIP_TO_CMIP7_REALM[old_mip]
+
+
 def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
     """Rewrite CMIP6 MIP table names to CMIP7 realm names in a recipe.
 
@@ -151,23 +185,13 @@ def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
     recipe
         The recipe to update in place.
     """
-    # Check if this is a CMIP7 recipe
-    is_cmip7 = any(ds.get("project") == "CMIP7" for ds in recipe.get("datasets", []))
-    if not is_cmip7:
-        for diag in recipe.get("diagnostics", {}).values():
-            if any(ds.get("project") == "CMIP7" for ds in diag.get("additional_datasets", [])):
-                is_cmip7 = True
-                break
-
-    if not is_cmip7:
+    if not any(ds.get("project") == "CMIP7" for ds in _iter_recipe_datasets(recipe)):
         return
 
     for diag in recipe.get("diagnostics", {}).values():
         for var_settings in diag.get("variables", {}).values():
-            if isinstance(var_settings, dict) and "mip" in var_settings:
-                old_mip = var_settings["mip"]
-                if old_mip in CMIP6_MIP_TO_CMIP7_REALM:
-                    var_settings["mip"] = CMIP6_MIP_TO_CMIP7_REALM[old_mip]
+            if isinstance(var_settings, dict):
+                _rewrite_variable_mip(var_settings)
 
 
 def dataframe_to_recipe(

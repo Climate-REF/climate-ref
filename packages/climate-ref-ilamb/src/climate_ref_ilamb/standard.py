@@ -476,6 +476,11 @@ class ILAMBStandard(Diagnostic):
         cmip_source = _get_cmip_source_type(definition.datasets)
         model_datasets = definition.datasets[cmip_source].datasets
 
+        # CMIP7 uses variant_label instead of member_id; ilamb3 expects member_id
+        if cmip_source == SourceDatasetType.CMIP7 and "member_id" not in model_datasets.columns:
+            model_datasets = model_datasets.copy()
+            model_datasets["member_id"] = model_datasets["variant_label"]
+
         # Run ILAMB in a single-threaded mode to avoid issues with multithreading (#394)
         with dask.config.set(scheduler="synchronous"):
             run.run_single_block(

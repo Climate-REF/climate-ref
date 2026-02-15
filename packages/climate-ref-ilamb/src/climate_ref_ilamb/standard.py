@@ -8,22 +8,92 @@ import pandas as pd
 import pooch
 import xarray as xr
 from ilamb3 import run
+from loguru import logger
 
+from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
 from climate_ref_core.dataset_registry import dataset_registry_manager
-from climate_ref_core.datasets import FacetFilter, SourceDatasetType
+from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     DataRequirement,
     Diagnostic,
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
+from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_ilamb.datasets import (
     registry_to_collection,
 )
+
+# CMIP6 tables to search, ordered by likelihood for land vs ocean registries
+_LAND_TABLES = ("Lmon", "Emon", "LImon", "Amon", "CFmon", "AERmonZ", "EmonZ")
+_OCEAN_TABLES = ("Omon", "SImon", "Ofx")
+
+
+def _get_branded_variable_names(
+    variable_ids: tuple[str, ...],
+    registry_file: str,
+) -> tuple[str, ...]:
+    """
+    Look up CMIP7 branded variable names for a set of CMIP6 variable IDs.
+
+    Tries the most relevant CMIP6 tables based on registry type (land vs ocean).
+    Variables without a Data Request mapping are silently skipped.
+
+    Parameters
+    ----------
+    variable_ids
+        CMIP6 variable IDs to look up
+    registry_file
+        ILAMB registry name ("ilamb", "ilamb-test", or "iomb")
+
+    Returns
+    -------
+    :
+        Branded variable names found in the Data Request
+    """
+    tables = _LAND_TABLES if registry_file in ("ilamb", "ilamb-test") else _OCEAN_TABLES
+
+    branded: list[str] = []
+    for var_id in variable_ids:
+        for table in tables:
+            try:
+                entry = get_dreq_entry(table, var_id)
+                branded.append(entry.branded_variable_name)
+                break
+            except KeyError:
+                continue
+        else:
+            logger.debug(f"No CMIP7 branded variable name found for {var_id}")
+
+    return tuple(branded)
+
+
+def _get_cmip_source_type(
+    datasets: ExecutionDatasetCollection,
+) -> SourceDatasetType:
+    """Get the CMIP source type (CMIP6 or CMIP7) from available datasets."""
+    if SourceDatasetType.CMIP7 in datasets:
+        return SourceDatasetType.CMIP7
+    return SourceDatasetType.CMIP6
+
+
+def _get_selectors(datasets: ExecutionDatasetCollection) -> dict[str, str]:
+    """
+    Get selector dict from the CMIP source, normalizing CMIP7 facet names.
+
+    Renames ``variant_label`` to ``member_id`` so the CMEC output bundle
+    uses a consistent dimension name regardless of input MIP era.
+    """
+    cmip_source = _get_cmip_source_type(datasets)
+    selectors = datasets[cmip_source].selector_dict()
+    if "variant_label" in selectors and "member_id" not in selectors:
+        selectors["member_id"] = selectors.pop("variant_label")
+    return selectors
 
 
 def format_cmec_output_bundle(
@@ -194,69 +264,131 @@ class ILAMBStandard(Diagnostic):
         # REF stuff
         self.name = metric_name
         self.slug = self.name.lower().replace(" ", "-")
-        self.data_requirements = (
-            DataRequirement(
-                source_type=SourceDatasetType.CMIP6,
-                filters=(
-                    FacetFilter(
-                        facets={
-                            "variable_id": (
-                                self.variable_id,
-                                *ilamb_kwargs.get("alternate_vars", []),
-                                *ilamb_kwargs.get("related_vars", []),
-                                *ilamb_kwargs.get("relationships", {}).keys(),
-                            ),
-                            "frequency": "mon",
-                            "experiment_id": ("historical", "land-hist"),
-                            "table_id": (
-                                "AERmonZ",
-                                "Amon",
-                                "CFmon",
-                                "Emon",
-                                "EmonZ",
-                                "LImon",
-                                "Lmon",
-                                "Omon",
-                                "SImon",
-                            ),
-                        }
-                    ),
-                ),
-                constraints=(
-                    RequireFacets(
-                        "variable_id",
-                        (
-                            self.variable_id,
-                            *ilamb_kwargs.get("alternate_vars", []),
-                            *ilamb_kwargs.get("related_vars", []),
+
+        # Collect all variable IDs used by this diagnostic
+        all_variable_ids = (
+            self.variable_id,
+            *ilamb_kwargs.get("alternate_vars", []),
+            *ilamb_kwargs.get("related_vars", []),
+            *ilamb_kwargs.get("relationships", {}).keys(),
+        )
+
+        # Variables that the primary diagnostic requires (not relationship vars)
+        primary_variable_ids = (
+            self.variable_id,
+            *ilamb_kwargs.get("alternate_vars", []),
+            *ilamb_kwargs.get("related_vars", []),
+        )
+
+        # Look up CMIP7 branded variable names
+        branded_variable_names = _get_branded_variable_names(all_variable_ids, registry_file)
+
+        # Determine realm/region for CMIP7 filter based on registry
+        is_land = registry_file in ("ilamb", "ilamb-test")
+
+        # CMIP6 data requirement
+        cmip6_requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "variable_id": all_variable_ids,
+                        "frequency": "mon",
+                        "experiment_id": ("historical", "land-hist"),
+                        "table_id": (
+                            "AERmonZ",
+                            "Amon",
+                            "CFmon",
+                            "Emon",
+                            "EmonZ",
+                            "LImon",
+                            "Lmon",
+                            "Omon",
+                            "SImon",
                         ),
-                        operator="any",
-                    ),
-                    *(
-                        [
-                            RequireFacets(
-                                "variable_id",
-                                required_facets=tuple(ilamb_kwargs.get("relationships", {}).keys()),
-                            )
-                        ]
-                        if "relationships" in ilamb_kwargs
-                        else []
-                    ),
-                    *(
-                        (
-                            AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
-                            AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
-                        )
-                        if registry_file == "ilamb"
-                        else (
-                            AddSupplementaryDataset.from_defaults("volcello", SourceDatasetType.CMIP6),
-                            AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
-                            AddSupplementaryDataset.from_defaults("sftof", SourceDatasetType.CMIP6),
-                        )
-                    ),
+                    }
                 ),
-                group_by=("experiment_id", "source_id", "member_id", "grid_label"),
             ),
+            constraints=(
+                RequireFacets(
+                    "variable_id",
+                    primary_variable_ids,
+                    operator="any",
+                ),
+                *(
+                    [
+                        RequireFacets(
+                            "variable_id",
+                            required_facets=tuple(ilamb_kwargs.get("relationships", {}).keys()),
+                        )
+                    ]
+                    if "relationships" in ilamb_kwargs
+                    else []
+                ),
+                *(
+                    (
+                        AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                        AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
+                    )
+                    if is_land
+                    else (
+                        AddSupplementaryDataset.from_defaults("volcello", SourceDatasetType.CMIP6),
+                        AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
+                        AddSupplementaryDataset.from_defaults("sftof", SourceDatasetType.CMIP6),
+                    )
+                ),
+            ),
+            group_by=("experiment_id", "source_id", "member_id", "grid_label"),
+        )
+
+        # CMIP7 data requirement
+        cmip7_requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP7,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "branded_variable_name": branded_variable_names,
+                        "frequency": "mon",
+                        "experiment_id": ("historical", "land-hist"),
+                        "region": "glb",
+                    }
+                ),
+            ),
+            constraints=(
+                RequireFacets(
+                    "variable_id",
+                    primary_variable_ids,
+                    operator="any",
+                ),
+                *(
+                    [
+                        RequireFacets(
+                            "variable_id",
+                            required_facets=tuple(ilamb_kwargs.get("relationships", {}).keys()),
+                        )
+                    ]
+                    if "relationships" in ilamb_kwargs
+                    else []
+                ),
+                *(
+                    (
+                        AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                        AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
+                    )
+                    if is_land
+                    else (
+                        AddSupplementaryDataset.from_defaults("volcello", SourceDatasetType.CMIP7),
+                        AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
+                        AddSupplementaryDataset.from_defaults("sftof", SourceDatasetType.CMIP7),
+                    )
+                ),
+            ),
+            group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
+        )
+
+        self.data_requirements = (
+            (cmip6_requirement,),
+            (cmip7_requirement,),
         )
 
         self.facets = (
@@ -267,6 +399,64 @@ class ILAMBStandard(Diagnostic):
             "region",
             "metric",
             "statistic",
+        )
+
+        # Build test data spec for CMIP6 and CMIP7 test cases
+        supplementary_vars: list[str]
+        if is_land:
+            supplementary_vars = ["areacella", "sftlf"]
+        else:
+            supplementary_vars = ["volcello", "areacello", "sftof"]
+        test_variable_ids = sorted(set(all_variable_ids) | set(supplementary_vars))
+
+        # Build branded variable names for the test spec (include supplementary)
+        test_branded_names = sorted(
+            set(
+                _get_branded_variable_names(
+                    tuple(test_variable_ids),
+                    registry_file,
+                )
+            )
+        )
+
+        self.test_data_spec = TestDataSpecification(
+            test_cases=(
+                TestCase(
+                    name="cmip6",
+                    description="Test with CMIP6 data.",
+                    requests=(
+                        CMIP6Request(
+                            slug="cmip6",
+                            facets={
+                                "experiment_id": "historical",
+                                "source_id": "CanESM5",
+                                "variable_id": test_variable_ids,
+                                "frequency": ["fx", "mon"],
+                            },
+                            remove_ensembles=True,
+                        ),
+                    ),
+                ),
+                TestCase(
+                    name="cmip7",
+                    description="Test with CMIP7 data.",
+                    requests=(
+                        CMIP7Request(
+                            slug="cmip7",
+                            facets={
+                                "experiment_id": "historical",
+                                "source_id": "CanESM5",
+                                "variable_id": test_variable_ids,
+                                "branded_variable_name": test_branded_names,
+                                "variant_label": "r1i1p1f1",
+                                "frequency": ["fx", "mon"],
+                                "region": "glb",
+                            },
+                            remove_ensembles=True,
+                        ),
+                    ),
+                ),
+            )
         )
 
         # Setup ILAMB data and options
@@ -283,12 +473,15 @@ class ILAMBStandard(Diagnostic):
         _set_ilamb3_options(self.registry, self.registry_file)
         ref_datasets = self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column)
 
+        cmip_source = _get_cmip_source_type(definition.datasets)
+        model_datasets = definition.datasets[cmip_source].datasets
+
         # Run ILAMB in a single-threaded mode to avoid issues with multithreading (#394)
         with dask.config.set(scheduler="synchronous"):
             run.run_single_block(
                 self.slug,
                 ref_datasets,
-                definition.datasets[SourceDatasetType.CMIP6].datasets,
+                model_datasets,
                 definition.output_directory,
                 **self.ilamb_kwargs,
             )
@@ -311,7 +504,7 @@ class ILAMBStandard(Diagnostic):
         # be compatible with the REF system we will need to add the metadata
         # that is associated with the execution group, called the selector.
         df = _load_csv_and_merge(definition.output_directory)
-        selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
+        selectors = _get_selectors(definition.datasets)
 
         # TODO: Fix reference data once we are using the obs4MIPs dataset
         dataset_source = self.name.split("-")[1] if "-" in self.name else "None"

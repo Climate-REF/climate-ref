@@ -60,14 +60,15 @@ def _get_branded_variable_names(
 
     branded: list[str] = []
     for var_id in variable_ids:
+        found = False
         for table in tables:
             try:
                 entry = get_dreq_entry(table, var_id)
                 branded.append(entry.branded_variable_name)
-                break
+                found = True
             except KeyError:
                 continue
-        else:
+        if not found:
             logger.debug(f"No CMIP7 branded variable name found for {var_id}")
 
     return tuple(branded)
@@ -458,6 +459,27 @@ class ILAMBStandard(Diagnostic):
                                 "region": "glb",
                             },
                             remove_ensembles=True,
+                        ),
+                        # Separate request for volcello without variant_label
+                        # constraint. Some models (e.g. CanESM5) publish volcello
+                        # only for certain physics versions (p2), so the main
+                        # request pinned to r1i1p1f1 won't find it.
+                        *(
+                            (
+                                CMIP7Request(
+                                    slug="cmip7-volcello",
+                                    facets={
+                                        "experiment_id": "historical",
+                                        "source_id": test_source_id,
+                                        "variable_id": "volcello",
+                                        "frequency": "fx",
+                                        "region": "glb",
+                                    },
+                                    remove_ensembles=True,
+                                ),
+                            )
+                            if not is_land
+                            else ()
                         ),
                     ),
                 ),

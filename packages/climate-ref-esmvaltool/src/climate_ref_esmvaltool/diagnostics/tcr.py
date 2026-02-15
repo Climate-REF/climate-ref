@@ -8,7 +8,6 @@ from climate_ref_core.constraints import (
     AddSupplementaryDataset,
     RequireContiguousTimerange,
     RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -22,7 +21,7 @@ from climate_ref_esmvaltool.diagnostics.base import (
     fillvalues_to_nan,
     get_cmip_source_type,
 )
-from climate_ref_esmvaltool.recipe import dataframe_to_recipe, get_child_and_parent_dataset
+from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -77,7 +76,6 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireOverlappingTimerange(group_by=("instance_id",)),
                     RequireFacets("experiment_id", experiments),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
@@ -168,21 +166,14 @@ class TransientClimateResponse(ESMValToolDiagnostic):
         # datasets, one for the "1pctCO2" and one for the "piControl"
         # experiment.
         cmip_source = get_cmip_source_type(input_files)
-        if cmip_source == SourceDatasetType.CMIP6:
-            df = input_files[SourceDatasetType.CMIP6]
-            recipe["datasets"] = get_child_and_parent_dataset(
-                df[df.variable_id == "tas"],
-                parent_experiment="piControl",
-                child_duration_in_years=140,
-                parent_offset_in_years=0,
-                parent_duration_in_years=140,
-            )
-        else:
-            recipe_variables = dataframe_to_recipe(
-                input_files[cmip_source],
-                equalize_timerange=True,
-            )
-            recipe["datasets"] = recipe_variables["tas"]["additional_datasets"]
+        df = input_files[cmip_source]
+        recipe["datasets"] = get_child_and_parent_dataset(
+            df[df.variable_id == "tas"],
+            parent_experiment="piControl",
+            child_duration_in_years=140,
+            parent_offset_in_years=0,
+            parent_duration_in_years=140,
+        )
 
         # Remove keys from the recipe that are only used for YAML anchors
         keys_to_remove = [

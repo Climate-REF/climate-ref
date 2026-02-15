@@ -85,7 +85,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                                 "rsut_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ),
-                            "experiment_id": experiments,
+                            "experiment_id": "abrupt-4xCO2",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -93,17 +93,13 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                 ),
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
-                    RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP7),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
                     RequireFacets(
                         "variable_id",
                         required_facets=variables,
                         group_by=("source_id", "variant_label", "grid_label", "experiment_id"),
-                    ),
-                    RequireFacets(
-                        "experiment_id",
-                        required_facets=experiments,
-                        group_by=("source_id", "variant_label", "grid_label", "variable_id"),
                     ),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),

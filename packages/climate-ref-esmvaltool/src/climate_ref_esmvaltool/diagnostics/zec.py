@@ -8,7 +8,6 @@ from climate_ref_core.constraints import (
     AddSupplementaryDataset,
     RequireContiguousTimerange,
     RequireFacets,
-    RequireOverlappingTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -22,7 +21,7 @@ from climate_ref_esmvaltool.diagnostics.base import (
     fillvalues_to_nan,
     get_cmip_source_type,
 )
-from climate_ref_esmvaltool.recipe import dataframe_to_recipe, get_child_and_parent_dataset
+from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -77,7 +76,6 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireOverlappingTimerange(group_by=("instance_id",)),
                     RequireFacets("experiment_id", experiments),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
@@ -151,25 +149,14 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
         # datasets, one for the "esm-1pct-brch-1000PgC" and one for the "1pctCO2"
         # experiment.
         cmip_source = get_cmip_source_type(input_files)
-        if cmip_source == SourceDatasetType.CMIP6:
-            df = input_files[SourceDatasetType.CMIP6]
-            child_dataset, parent_dataset = get_child_and_parent_dataset(
-                df[df.variable_id == "tas"],
-                parent_experiment="1pctCO2",
-                child_duration_in_years=100,
-                parent_offset_in_years=-10,
-                parent_duration_in_years=20,
-            )
-        else:
-            datasets = dataframe_to_recipe(input_files[cmip_source])["tas"]["additional_datasets"]
-            parent_dataset = next(ds for ds in datasets if ds["exp"] == "1pctCO2")
-            child_dataset = next(ds for ds in datasets if ds["exp"] == "esm-1pct-brch-1000PgC")
-            timerange = child_dataset["timerange"]
-            assert isinstance(timerange, str)
-            start = timerange.split("/")[0]
-            base_start = f"{int(start[:4]) - 10:04d}{start[4:]}"
-            base_end = f"{int(start[:4]) + 10:04d}{start[4:]}"
-            parent_dataset["timerange"] = f"{base_start}/{base_end}"
+        df = input_files[cmip_source]
+        child_dataset, parent_dataset = get_child_and_parent_dataset(
+            df[df.variable_id == "tas"],
+            parent_experiment="1pctCO2",
+            child_duration_in_years=100,
+            parent_offset_in_years=-10,
+            parent_duration_in_years=20,
+        )
 
         variables = recipe["diagnostics"]["zec"]["variables"]
         variables["tas_base"] = {

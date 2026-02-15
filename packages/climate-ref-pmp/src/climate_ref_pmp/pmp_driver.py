@@ -8,8 +8,38 @@ from typing import Any
 from loguru import logger
 from rich.pretty import pretty_repr
 
+from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.diagnostics import ExecutionDefinition
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+
+#: Model source types in order of preference
+MODEL_SOURCE_TYPES = (SourceDatasetType.CMIP7, SourceDatasetType.CMIP6)
+
+
+def get_model_source_type(definition: ExecutionDefinition) -> SourceDatasetType:
+    """
+    Determine which model source type is present in the execution datasets.
+
+    Parameters
+    ----------
+    definition
+        The execution definition containing the datasets.
+
+    Returns
+    -------
+    SourceDatasetType
+        The model source type (CMIP7 or CMIP6).
+
+    Raises
+    ------
+    KeyError
+        If neither CMIP6 nor CMIP7 datasets are present.
+    """
+    for source_type in MODEL_SOURCE_TYPES:
+        if source_type in definition.datasets:
+            return source_type
+    raise KeyError(f"No model datasets found. Expected one of {MODEL_SOURCE_TYPES}")
 
 
 def _remove_nested_key(data: dict[str, Any], key: str) -> dict[str, Any]:

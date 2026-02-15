@@ -13,7 +13,9 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_pmp.pmp_driver import _get_resource, process_json_result
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
+from climate_ref_pmp.pmp_driver import _get_resource, get_model_source_type, process_json_result
 
 
 class ENSO(CommandLineDiagnostic):
@@ -53,10 +55,107 @@ class ENSO(CommandLineDiagnostic):
 
         self.data_requirements = self._get_data_requirements(experiments)
 
+        self.test_data_spec = TestDataSpecification(
+            test_cases=(
+                TestCase(
+                    name="cmip6",
+                    description=f"Test {metrics_collection} with CMIP6 data",
+                    requests=(
+                        RegistryRequest(
+                            slug=f"enso-{self.slug}-obs",
+                            registry_name="obs4ref",
+                            source_type="obs4MIPs",
+                            facets={
+                                "source_id": self.obs_sources,
+                                "variable_id": self.model_variables,
+                            },
+                        ),
+                        CMIP6Request(
+                            slug=f"enso-{self.slug}-cmip6",
+                            facets={
+                                "source_id": "ACCESS-ESM1-5",
+                                "experiment_id": "historical",
+                                "variable_id": self.model_variables,
+                                "member_id": "r1i1p1f1",
+                                "table_id": "Amon",
+                            },
+                            time_span=("2000-01", "2014-12"),
+                        ),
+                        CMIP6Request(
+                            slug=f"enso-{self.slug}-areacella",
+                            facets={
+                                "source_id": "ACCESS-ESM1-5",
+                                "experiment_id": "historical",
+                                "variable_id": "areacella",
+                                "member_id": "r1i1p1f1",
+                                "table_id": "fx",
+                            },
+                        ),
+                        CMIP6Request(
+                            slug=f"enso-{self.slug}-sftlf",
+                            facets={
+                                "source_id": "ACCESS-ESM1-5",
+                                "experiment_id": "historical",
+                                "variable_id": "sftlf",
+                                "member_id": "r1i1p1f1",
+                                "table_id": "fx",
+                            },
+                        ),
+                    ),
+                ),
+                TestCase(
+                    name="cmip7",
+                    description=f"CMIP7 test case for {metrics_collection}",
+                    requests=(
+                        RegistryRequest(
+                            slug=f"enso-{self.slug}-obs-cmip7",
+                            registry_name="obs4ref",
+                            source_type="obs4MIPs",
+                            facets={
+                                "source_id": self.obs_sources,
+                                "variable_id": self.model_variables,
+                            },
+                        ),
+                        CMIP7Request(
+                            slug=f"enso-{self.slug}-cmip7",
+                            facets={
+                                "source_id": "ACCESS-ESM1-5",
+                                "experiment_id": "historical",
+                                "variable_id": self.model_variables,
+                                "variant_label": "r1i1p1f1",
+                                "frequency": "mon",
+                            },
+                            time_span=("2000-01", "2014-12"),
+                        ),
+                        CMIP7Request(
+                            slug=f"enso-{self.slug}-areacella-cmip7",
+                            facets={
+                                "source_id": "ACCESS-ESM1-5",
+                                "experiment_id": "historical",
+                                "variable_id": "areacella",
+                                "variant_label": "r1i1p1f1",
+                                "frequency": "fx",
+                            },
+                        ),
+                        CMIP7Request(
+                            slug=f"enso-{self.slug}-sftlf-cmip7",
+                            facets={
+                                "source_id": "ACCESS-ESM1-5",
+                                "experiment_id": "historical",
+                                "variable_id": "sftlf",
+                                "variant_label": "r1i1p1f1",
+                                "frequency": "fx",
+                            },
+                        ),
+                    ),
+                ),
+            ),
+        )
+
     def _get_data_requirements(
         self,
         experiments: Collection[str] = ("historical",),
-    ) -> tuple[DataRequirement, DataRequirement]:
+    ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
         filters = [
             FacetFilter(
                 facets={
@@ -67,23 +166,35 @@ class ENSO(CommandLineDiagnostic):
             )
         ]
 
+        obs_requirement = DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(
+                FacetFilter(facets={"source_id": self.obs_sources, "variable_id": self.model_variables}),
+            ),
+            group_by=("activity_id",),
+        )
+        cmip6_requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=tuple(filters),
+            group_by=("source_id", "experiment_id", "member_id", "grid_label"),
+            constraints=(
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
+            ),
+        )
+        cmip7_requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP7,
+            filters=tuple(filters),
+            group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+            constraints=(
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
+            ),
+        )
+
         return (
-            DataRequirement(
-                source_type=SourceDatasetType.obs4MIPs,
-                filters=(
-                    FacetFilter(facets={"source_id": self.obs_sources, "variable_id": self.model_variables}),
-                ),
-                group_by=("activity_id",),
-            ),
-            DataRequirement(
-                source_type=SourceDatasetType.CMIP6,
-                filters=tuple(filters),
-                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
-                constraints=(
-                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
-                    AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
-                ),
-            ),
+            (obs_requirement, cmip6_requirement),
+            (obs_requirement, cmip7_requirement),
         )
 
     def build_cmd(self, definition: ExecutionDefinition) -> Iterable[str]:
@@ -105,11 +216,12 @@ class ENSO(CommandLineDiagnostic):
         # ------------------------------------------------
         # Get the input datasets information for the model
         # ------------------------------------------------
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
-        input_selectors = input_datasets.selector_dict()
-        source_id = input_selectors["source_id"]
-        member_id = input_selectors["member_id"]
-        experiment_id = input_selectors["experiment_id"]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
+        source_id = input_datasets["source_id"].unique()[0]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        member_id = input_datasets[member_id_col].unique()[0]
+        experiment_id = input_datasets["experiment_id"].unique()[0]
         variable_ids = set(input_datasets["variable_id"].unique()) - {"areacella", "sftlf"}
         mod_run = f"{source_id}_{member_id}"
 
@@ -202,10 +314,12 @@ class ENSO(CommandLineDiagnostic):
         -------
             Result of the diagnostic execution
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
-        member_id = input_datasets["member_id"].unique()[0]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        member_id = input_datasets[member_id_col].unique()[0]
         mc_name = self.metrics_collection
         pattern = f"{mc_name}_{source_id}_{experiment_id}_{member_id}"
 
@@ -223,7 +337,6 @@ class ENSO(CommandLineDiagnostic):
 
         cmec_output, cmec_metric = process_json_result(results_files[0], png_files, data_files)
 
-        input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
         cmec_metric_bundle = cmec_metric.remove_dimensions(
             [
                 "model",
@@ -231,10 +344,11 @@ class ENSO(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
-                "source_id": input_selectors["source_id"],
-                "member_id": input_selectors["member_id"],
-                "grid_label": input_selectors["grid_label"],
-                "experiment_id": input_selectors["experiment_id"],
+                "mip_id": model_source_type.value,
+                "source_id": source_id,
+                "member_id": member_id,
+                "grid_label": input_datasets["grid_label"].unique()[0],
+                "experiment_id": experiment_id,
             }
         )
 

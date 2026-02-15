@@ -9,19 +9,25 @@ from pydantic import BaseModel, field_validator, model_validator
 Value = float | int
 
 
-class SeriesDefinition(BaseModel):
+class FileDefinition(BaseModel):
     """
-    A definition of a 1-d array with an associated index and additional dimensions.
+    A definition of an output file with associated additional dimensions.
     """
 
     file_pattern: str
     """A glob pattern to match files that contain the series values."""
 
-    sel: dict[str, Any] | None = None
-    """A dictionary of selection criteria to apply with :meth:`xarray.Dataset.sel` after loading the file."""
-
     dimensions: dict[str, str]
     """Key, value pairs that identify the dimensions of the metric."""
+
+
+class SeriesDefinition(FileDefinition):
+    """
+    A definition of a 1-d array with an associated index and additional dimensions.
+    """
+
+    sel: dict[str, Any] | None = None
+    """A dictionary of selection criteria to apply with :meth:`xarray.Dataset.sel` after loading the file."""
 
     values_name: str
     """The name of the variable in the file that contains the values of the series."""

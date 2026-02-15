@@ -13,7 +13,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -201,6 +201,18 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     )
 
     facets = ()
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/anncyc-{region}/allplots/*_{var_name}_*.png",
+            dimensions={
+                "region": region,
+                "variable_id": var_name,
+                "statistic": "mean",
+            },
+        )
+        for var_name in variables
+        for region in REGIONS
+    )
     series = tuple(
         SeriesDefinition(
             file_pattern=f"anncyc-{region}/allplots/*_{var_name}_*.nc",
@@ -404,6 +416,19 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         ),
     )
 
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/{diagnostic}-{region}/allplots/*_{var_name}_*.png",
+            dimensions={
+                "region": region,
+                "variable_id": var_name,
+                "statistic": ("mean" if diagnostic == "timeseries_abs" else "mean anomaly"),
+            },
+        )
+        for var_name in variables
+        for region in REGIONS
+        for diagnostic in ["timeseries_abs", "timeseries"]
+    )
     series = tuple(
         SeriesDefinition(
             file_pattern=f"{diagnostic}-{region}/allplots/*_{var_name}_*.nc",
@@ -545,6 +570,25 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
     )
 
     facets = ("grid_label", "member_id", "source_id", "variable_id", "region", "metric")
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/{var_name}_trends/plot/seaborn_barplot.png",
+            dimensions={
+                "variable_id": var_name,
+                "statistic": "trend",
+            },
+        )
+        for var_name in ("hus200", "pr", "psl", "tas", "ua200")
+    ) + tuple(
+        FileDefinition(
+            file_pattern=f"work/{var_name}_trends/plot/seaborn_barplot.nc",
+            dimensions={
+                "variable_id": var_name,
+                "statistic": "trend",
+            },
+        )
+        for var_name in ("hus200", "pr", "psl", "tas", "ua200")
+    )
 
     @staticmethod
     def update_recipe(

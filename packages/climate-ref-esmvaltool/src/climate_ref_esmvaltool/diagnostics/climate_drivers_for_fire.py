@@ -8,6 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -73,6 +74,20 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
         ),
     )
     facets = ()
+    files = (
+        FileDefinition(
+            file_pattern="plots/fire_evaluation/fire_evaluation/burnt_fraction_*.png",
+            dimensions={"statistic": "burnt fraction"},
+        ),
+        FileDefinition(
+            file_pattern="plots/fire_evaluation/fire_evaluation/fire_weather_control_*.png",
+            dimensions={"statistic": "fire weather control"},
+        ),
+        FileDefinition(
+            file_pattern="plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_*.png",
+            dimensions={"statistic": "fuel load continuity control"},
+        ),
+    )
 
     @staticmethod
     def update_recipe(

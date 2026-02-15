@@ -8,7 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -59,6 +59,25 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
         # TODO: Use OSI-450-nh and OSI-450-sh from obs4MIPs once available.
     )
     facets = ()
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/siarea_min/allplots/timeseries_sea_ice_area_{region}_*.png",
+            dimensions={
+                "region": REGIONS[region],
+                "statistic": f"{MONTHS[region]} sea ice area",
+            },
+        )
+        for region in REGIONS
+    ) + tuple(
+        FileDefinition(
+            file_pattern=f"plots/siarea_seas/allplots/annual_cycle_sea_ice_area_{region}_*.png",
+            dimensions={
+                "region": REGIONS[region],
+                "statistic": "20-year average seasonal cycle of the sea ice area",
+            },
+        )
+        for region in REGIONS
+    )
     series = tuple(
         SeriesDefinition(
             file_pattern=f"siarea_min/allplots/timeseries_sea_ice_area_{region}_*.nc",

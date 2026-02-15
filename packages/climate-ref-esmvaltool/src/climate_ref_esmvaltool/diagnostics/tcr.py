@@ -10,7 +10,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
@@ -57,6 +57,18 @@ class TransientClimateResponse(ESMValToolDiagnostic):
             values_name="tas_anomaly",
             index_name="time",
             attributes=[],
+        ),
+    )
+    files = (
+        FileDefinition(
+            file_pattern="plots/tcr/calculate/*.png",
+            dimensions={
+                "statistic": "global annual mean tas anomaly relative to linear fit of piControl run",
+            },
+        ),
+        FileDefinition(
+            file_pattern="work/tcr/calculate/tcr.nc",
+            dimensions={"metric": "tcr"},
         ),
     )
 

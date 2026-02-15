@@ -10,6 +10,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
@@ -79,6 +80,16 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip6_data_requirements(("clt", "rsut", "rsutcs"))
     update_recipe = partial(update_recipe, var_x="clt", var_y="swcre")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_clt_swcre_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clt_swcre_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+    )
 
 
 class CloudScatterplotClwviPr(ESMValToolDiagnostic):
@@ -92,6 +103,16 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip6_data_requirements(("clwvi", "pr"))
     update_recipe = partial(update_recipe, var_x="clwvi", var_y="pr")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_clwvi_pr_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clwvi_pr_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+    )
 
 
 class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
@@ -105,6 +126,16 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip6_data_requirements(("clivi", "rlut", "rlutcs"))
     update_recipe = partial(update_recipe, var_x="clivi", var_y="lwcre")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_clivi_lwcre_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clivi_lwcre_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+    )
 
 
 class CloudScatterplotCliTa(ESMValToolDiagnostic):
@@ -118,6 +149,16 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip6_data_requirements(("cli", "ta"))
     update_recipe = partial(update_recipe, var_x="cli", var_y="ta")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_cli_ta_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_cli_ta_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+    )
 
 
 class CloudScatterplotsReference(ESMValToolDiagnostic):
@@ -129,6 +170,40 @@ class CloudScatterplotsReference(ESMValToolDiagnostic):
     slug = "cloud-scatterplots-reference"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
     facets = ()
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_cli_ta_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+        FileDefinition(
+            file_pattern="plots/plot_joint_clivi_lwcre_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+        FileDefinition(
+            file_pattern="plots/plot_joint_clt_swcre_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+        FileDefinition(
+            file_pattern="plots/plot_joint_clwvi_pr_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_cli_ta_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clivi_lwcre_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clt_swcre_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clwvi_pr_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,

@@ -11,13 +11,17 @@
       "filename": "executions/recipe_20260130_164014/work/zec/zec/zec.nc",
       "long_name": "",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "zec"
+      }
     },
     "executions/recipe_20260130_164014/work/zec/zec/zec_50.nc": {
       "filename": "executions/recipe_20260130_164014/work/zec/zec/zec_50.nc",
       "long_name": "",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "metric": "zec"
+      }
     }
   },
   "plots": {
@@ -25,13 +29,17 @@
       "filename": "executions/recipe_20260130_164014/plots/zec/zec/zec_50_barplot.png",
       "long_name": "Barplot of ZEC_50",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "zec"
+      }
     },
     "executions/recipe_20260130_164014/plots/zec/zec/zec_timeseries_all_models.png": {
       "filename": "executions/recipe_20260130_164014/plots/zec/zec/zec_timeseries_all_models.png",
       "long_name": "ZEC timeseries",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "zec"
+      }
     }
   },
   "html": {

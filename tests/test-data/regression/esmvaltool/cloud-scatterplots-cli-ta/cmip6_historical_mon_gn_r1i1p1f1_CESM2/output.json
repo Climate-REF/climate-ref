@@ -11,19 +11,25 @@
       "filename": "executions/recipe_20260130_162325/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_cli_histogram.nc",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     },
     "executions/recipe_20260130_162325/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_cli_ta_histogram.nc": {
       "filename": "executions/recipe_20260130_162325/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_cli_ta_histogram.nc",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     },
     "executions/recipe_20260130_162325/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_ta_histogram.nc": {
       "filename": "executions/recipe_20260130_162325/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_ta_histogram.nc",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     }
   },
   "plots": {
@@ -31,7 +37,9 @@
       "filename": "executions/recipe_20260130_162325/plots/plot_joint_cli_ta_model/plot/png/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     }
   },
   "html": {

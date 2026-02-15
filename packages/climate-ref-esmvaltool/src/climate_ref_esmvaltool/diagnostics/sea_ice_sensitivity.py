@@ -11,6 +11,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
@@ -69,6 +70,19 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
         ),
     )
     facets = ("experiment_id", "source_id", "region", "metric")
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/{region}/sea_ice_sensitivity_script/png/*.png",
+            dimensions={"region": region},
+        )
+        for region in ("arctic", "antarctic")
+    ) + tuple(
+        FileDefinition(
+            file_pattern=f"work/{region}/sea_ice_sensitivity_script/plotted_values.csv",
+            dimensions={"region": region},
+        )
+        for region in ("arctic", "antarctic")
+    )
 
     @staticmethod
     def update_recipe(

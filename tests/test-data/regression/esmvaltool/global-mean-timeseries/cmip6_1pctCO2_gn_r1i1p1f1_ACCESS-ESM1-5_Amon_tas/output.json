@@ -11,7 +11,11 @@
       "filename": "executions/recipe_20260130_162750/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc",
       "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "annual mean",
+        "variable_id": "tas",
+        "region": "global"
+      }
     }
   },
   "plots": {
@@ -19,7 +23,11 @@
       "filename": "executions/recipe_20260130_162750/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png",
       "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "annual mean",
+        "variable_id": "tas",
+        "region": "global"
+      }
     }
   },
   "html": {

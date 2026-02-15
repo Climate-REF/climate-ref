@@ -259,6 +259,11 @@ class ILAMBStandard(Diagnostic):
             ilamb_kwargs["sources"] = sources
         if "relationships" not in ilamb_kwargs:
             ilamb_kwargs["relationships"] = {}
+
+        # Allow per-diagnostic override of the test source_id
+        # (not all variables are available from CanESM5)
+        test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
+
         self.ilamb_kwargs = ilamb_kwargs
 
         # REF stuff
@@ -429,7 +434,7 @@ class ILAMBStandard(Diagnostic):
                             slug="cmip6",
                             facets={
                                 "experiment_id": "historical",
-                                "source_id": "CanESM5",
+                                "source_id": test_source_id,
                                 "variable_id": test_variable_ids,
                                 "frequency": ["fx", "mon"],
                             },
@@ -445,7 +450,7 @@ class ILAMBStandard(Diagnostic):
                             slug="cmip7",
                             facets={
                                 "experiment_id": "historical",
-                                "source_id": "CanESM5",
+                                "source_id": test_source_id,
                                 "variable_id": test_variable_ids,
                                 "branded_variable_name": test_branded_names,
                                 "variant_label": "r1i1p1f1",
@@ -480,6 +485,21 @@ class ILAMBStandard(Diagnostic):
         if cmip_source == SourceDatasetType.CMIP7 and "member_id" not in model_datasets.columns:
             model_datasets = model_datasets.copy()
             model_datasets["member_id"] = model_datasets["variant_label"]
+
+        # When both a 3D primary variable (e.g. thetao) and its 2D alternate
+        # (e.g. tos) are present, drop the primary so ilamb3 uses the alternate.
+        # This avoids two problems with merging datasets of different time ranges:
+        # 1) time_bnds gets NaN-filled for the shorter variable's missing steps,
+        #    corrupting the time frequency calculation in ilamb3
+        # 2) The 3D variable may not cover the reference period (e.g. thetao
+        #    covers 1850-1860 but WOA2023 reference covers 2005-2014)
+        # The alternate surface variable is equivalent after select_depth and
+        # typically has full temporal coverage.
+        alternate_vars = self.ilamb_kwargs.get("alternate_vars", [])
+        if alternate_vars:
+            available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
+            if available_alternates and self.variable_id in model_datasets["variable_id"].values:
+                model_datasets = model_datasets[model_datasets["variable_id"] != self.variable_id]
 
         # Run ILAMB in a single-threaded mode to avoid issues with multithreading (#394)
         with dask.config.set(scheduler="synchronous"):

@@ -86,6 +86,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                             "experiment_id": "esm-1pctCO2",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                     FacetFilter(
@@ -94,6 +95,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                             "experiment_id": "esm-piControl",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -121,7 +123,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                         slug="cmip6",
                         facets={
                             "experiment_id": ["esm-1pctCO2", "esm-piControl"],
-                            "source_id": "CanESM5",
+                            "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
                             "frequency": ["fx", "mon"],
                         },
@@ -137,7 +139,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": ["esm-1pctCO2", "esm-piControl"],
-                            "source_id": "CanESM5",
+                            "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
                             "branded_variable_name": [
                                 "areacella_ti-u-hxy-u",

@@ -70,6 +70,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                             "experiment_id": experiments,
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -106,7 +107,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                         slug="cmip6",
                         facets={
                             "experiment_id": ["1pctCO2", "esm-1pct-brch-1000PgC"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-5",
                             "variable_id": ["areacella", "tas"],
                             "frequency": ["fx", "mon"],
                         },
@@ -122,7 +123,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": ["1pctCO2", "esm-1pct-brch-1000PgC"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-5",
                             "variable_id": ["areacella", "tas"],
                             "branded_variable_name": [
                                 "areacella_ti-u-hxy-u",

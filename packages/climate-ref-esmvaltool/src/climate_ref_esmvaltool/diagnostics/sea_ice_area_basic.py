@@ -70,6 +70,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "seaIce",
                         },
                     ),
                 ),

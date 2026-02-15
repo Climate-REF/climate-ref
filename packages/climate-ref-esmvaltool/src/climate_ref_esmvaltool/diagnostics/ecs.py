@@ -88,6 +88,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "abrupt-4xCO2",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),

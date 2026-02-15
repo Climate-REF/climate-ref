@@ -99,6 +99,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
                             ),
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),

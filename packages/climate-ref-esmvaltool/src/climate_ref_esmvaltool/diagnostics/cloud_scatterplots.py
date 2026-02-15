@@ -27,6 +27,7 @@ def get_cmip_data_requirements(
         "experiment_id": "historical",
         "frequency": "mon",
         "region": "glb",
+        "realm": "atmos",
     }
     if branded_variable_names is not None:
         cmip7_facets["branded_variable_name"] = branded_variable_names
@@ -107,6 +108,9 @@ def update_recipe(
             else:
                 # For derived variables, use the first available dataset
                 var_settings["additional_datasets"] = datasets
+        # Remove diagnostic-level additional_datasets to avoid CMIP6 reference datasets
+        # being merged with CMIP7 per-variable datasets
+        diagnostic.pop("additional_datasets", None)
     else:
         diagnostic["additional_datasets"] = datasets
 
@@ -327,7 +331,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                         slug="cmip6",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
+                            "source_id": "CESM2",
                             "variable_id": ["areacella", "cli", "ta"],
                             "frequency": ["fx", "mon"],
                         },
@@ -344,8 +348,9 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
+                            "source_id": "CESM2",
                             "variable_id": ["areacella", "cli", "ta"],
+                            "table_id": ["fx", "Amon"],
                             "branded_variable_name": [
                                 "areacella_ti-u-hxy-u",
                                 "cli_tavg-al-hxy-u",

@@ -88,10 +88,23 @@ INCLUDED_VARIABLES = {
     "clwvi",
     # Ocean / sea ice
     "siconc",
+    "so",
+    "sos",
+    "thetao",
     "tos",
+    "msftmz",
     # Land / carbon
+    "burntFractionAll",
+    "cSoil",
     "cVeg",
     "fco2antt",
+    "gpp",
+    "lai",
+    "mrro",
+    "mrsol",
+    "mrsos",
+    "nbp",
+    "snc",
     "treeFrac",
     "vegFrac",
     # Geopotential

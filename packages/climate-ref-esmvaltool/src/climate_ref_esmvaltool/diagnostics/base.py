@@ -101,11 +101,17 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The path to the written recipe.
         """
+        recipe_dir = None
+        if (env_path := definition.diagnostic.provider.env_path).exists():  # type: ignore[attr-defined]
+            # Use the recipe from the conda environment if available.
+            subdir = Path("lib").joinpath("python*", "site-packages", "esmvaltool", "recipes")
+            if recipe_dirs := sorted(env_path.glob(str(subdir))):
+                recipe_dir = recipe_dirs[-1]
+        recipe = load_recipe(self.base_recipe, recipe_dir)
         input_files = {
             project: dataset_collection.datasets
             for project, dataset_collection in definition.datasets.items()
         }
-        recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
         recipe_txt = yaml.safe_dump(recipe, sort_keys=False)
         logger.info(f"Using ESMValTool recipe:\n{recipe_txt}")

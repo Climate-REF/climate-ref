@@ -49,7 +49,19 @@ def test_build_cmd(mocker, tmp_path, metric_definition, mock_diagnostic, data_di
     assert cmd == ["esmvaltool", "run", f"--config-dir={config_dir}", f"{recipe}"]
     assert (output_dir / "climate_data").is_dir()
     config = yaml.safe_load((config_dir / "config.yml").read_text(encoding="utf-8"))
-    assert len(config["rootpath"]) == 5 if data_dir_exists else 1
+    assert config["search_data"] == "quick"
+    if data_dir_exists:
+        assert len(config["projects"]) == 6
+        assert "OBS" in config["projects"]
+        assert "OBS6" in config["projects"]
+        assert "native6" in config["projects"]
+        # obs4MIPs should have both local and esmvaltool data sources
+        assert "esmvaltool" in config["projects"]["obs4MIPs"]["data"]
+    else:
+        assert len(config["projects"]) == 3
+    assert "CMIP6" in config["projects"]
+    assert "CMIP7" in config["projects"]
+    assert "obs4MIPs" in config["projects"]
 
 
 def test_build_metric_result(metric_definition, mock_diagnostic):

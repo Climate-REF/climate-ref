@@ -602,5 +602,12 @@ class AddParentDataset:
                 "variable_id": "variable_id",
                 "grid_label": "grid_label",
             },
+            SourceDatasetType.CMIP7: {
+                "source_id": "parent_source_id",
+                "experiment_id": "parent_experiment_id",
+                "variant_label": "parent_variant_label",
+                "variable_id": "variable_id",
+                "grid_label": "grid_label",
+            },
         }
         return cls(parent_facet_map=parent_facet_options[source_type])

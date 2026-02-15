@@ -19,7 +19,7 @@ from climate_ref_core.dataset_registry import (
 )
 from climate_ref_core.providers import CondaDiagnosticProvider
 from climate_ref_esmvaltool._version import __version__
-from climate_ref_esmvaltool.recipe import _ESMVALTOOL_COMMIT
+from climate_ref_esmvaltool.recipe import _ESMVALCORE_URL, _ESMVALTOOL_URL
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
@@ -63,9 +63,8 @@ class ESMValToolProvider(CondaDiagnosticProvider):
 provider = ESMValToolProvider(
     "ESMValTool",
     __version__,
-    repo="https://github.com/ESMValGroup/ESMValTool.git",
-    tag_or_commit=_ESMVALTOOL_COMMIT,
 )
+provider.pip_packages = [_ESMVALTOOL_URL, _ESMVALCORE_URL]
 
 # Register the diagnostics.
 for _diagnostic_cls_name in climate_ref_esmvaltool.diagnostics.__all__:

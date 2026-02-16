@@ -46,7 +46,7 @@ class DReqVariableMapping:
     variable_id: str
     cmip6_compound_name: str
     cmip7_compound_name: str
-    branded_variable_name: str
+    branded_variable: str
     out_name: str
     branding_suffix: str
     temporal_label: str

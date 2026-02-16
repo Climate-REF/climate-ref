@@ -66,7 +66,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": experiments,
                             "frequency": "mon",
                             "region": "glb",
@@ -83,7 +83,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     series = (
         SeriesDefinition(
             file_pattern="tcr/calculate/{source_id}*.nc",
@@ -136,7 +136,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                             "experiment_id": ["1pctCO2", "piControl"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ],

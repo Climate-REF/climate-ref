@@ -126,7 +126,7 @@ class CMIP7Request:
 
     # CMIP7-only facets that should not be passed to CMIP6 ESGF searches
     cmip7_only_facets: ClassVar[set[str]] = {
-        "branded_variable_name",
+        "branded_variable",
         "region",
     }
 
@@ -142,7 +142,7 @@ class CMIP7Request:
         "table_id",  # Used for mapping to CMIP6
         "version",
         "region",
-        "branded_variable_name",
+        "branded_variable",
     )
 
     def __init__(
@@ -194,7 +194,7 @@ class CMIP7Request:
 
         This is the single location for DReq enrichment: it adds
         ``region``, ``branding_suffix``, ``out_name``, and
-        ``branded_variable_name`` from the Data Request when available.
+        ``branded_variable`` from the Data Request when available.
         """
         cmip7_row = dict(cmip6_row)
 
@@ -230,7 +230,7 @@ class CMIP7Request:
                 cmip7_row["region"] = entry.region
                 cmip7_row["branding_suffix"] = entry.branding_suffix
                 cmip7_row["out_name"] = entry.out_name
-                cmip7_row["branded_variable_name"] = f"{entry.out_name}_{entry.branding_suffix}"
+                cmip7_row["branded_variable"] = f"{entry.out_name}_{entry.branding_suffix}"
             except KeyError:
                 logger.debug(
                     f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"

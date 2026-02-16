@@ -78,7 +78,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "siconc_tavg-u-hxy-u",
+                            "branded_variable": "siconc_tavg-u-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
@@ -87,7 +87,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                     ),
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
@@ -162,7 +162,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "areacello", "siconc", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "areacello_ti-u-hxy-u",
                                 "siconc_tavg-u-hxy-u",

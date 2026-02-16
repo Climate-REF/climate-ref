@@ -66,7 +66,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "siconc_tavg-u-hxy-u",
+                            "branded_variable": "siconc_tavg-u-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
@@ -173,7 +173,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacello", "siconc"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacello_ti-u-hxy-u",
                                 "siconc_tavg-u-hxy-u",
                             ],

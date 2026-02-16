@@ -79,7 +79,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "rlut_tavg-u-hxy-u",
                                 "rsdt_tavg-u-hxy-u",
                                 "rsut_tavg-u-hxy-u",
@@ -162,7 +162,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                             "experiment_id": ["abrupt-4xCO2", "piControl"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "rlut", "rsdt", "rsut", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "rlut_tavg-u-hxy-u",
                                 "rsdt_tavg-u-hxy-u",

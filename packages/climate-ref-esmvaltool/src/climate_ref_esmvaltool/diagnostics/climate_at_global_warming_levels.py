@@ -187,7 +187,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             #                 "experiment_id": ["ssp245", "historical"],
             #                 "source_id": "CanESM5",
             #                 "variable_id": ["areacella", "pr", "tas"],
-            #                 "branded_variable_name": [
+            #                 "branded_variable": [
             #                     "areacella_ti-u-hxy-u",
             #                     "pr_tavg-u-hxy-u",
             #                     "tas_tavg-h2m-hxy-u",

@@ -66,7 +66,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": experiments,
                             "frequency": "mon",
                             "region": "glb",
@@ -83,7 +83,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     series = (
         SeriesDefinition(
             file_pattern="work/zec/zec/zec.nc",
@@ -135,7 +135,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                             "experiment_id": ["1pctCO2", "esm-1pct-brch-1000PgC"],
                             "source_id": "ACCESS-ESM1-5",
                             "variable_id": ["areacella", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ],

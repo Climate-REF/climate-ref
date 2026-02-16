@@ -38,7 +38,7 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "region": "glb",
                         }
                     ),
@@ -110,7 +110,7 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
                         facets={
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ],

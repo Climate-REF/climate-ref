@@ -21,7 +21,7 @@ from climate_ref_esmvaltool.types import Recipe
 
 def get_cmip_data_requirements(
     variables: tuple[str, ...],
-    branded_variable_names: tuple[str, ...] | None = None,
+    branded_variables: tuple[str, ...] | None = None,
 ) -> tuple[tuple[DataRequirement, ...], ...]:
     """Create data requirements for CMIP6 and CMIP7 data."""
     cmip7_facets: dict[str, str | Collection[str]] = {
@@ -30,8 +30,8 @@ def get_cmip_data_requirements(
         "region": "glb",
         "realm": "atmos",
     }
-    if branded_variable_names is not None:
-        cmip7_facets["branded_variable_name"] = branded_variable_names
+    if branded_variables is not None:
+        cmip7_facets["branded_variable"] = branded_variables
     return (
         (
             DataRequirement(
@@ -134,7 +134,7 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clt", "rsut", "rsutcs"),
-        branded_variable_names=("clt_tavg-u-hxy-u", "rsut_tavg-u-hxy-u", "rsutcs_tavg-u-hxy-u"),
+        branded_variables=("clt_tavg-u-hxy-u", "rsut_tavg-u-hxy-u", "rsutcs_tavg-u-hxy-u"),
     )
     update_recipe = partial(update_recipe, var_x="clt", var_y="swcre")
     files = (
@@ -176,7 +176,7 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "clt", "rsut", "rsutcs"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "clt_tavg-u-hxy-u",
                                 "rsut_tavg-u-hxy-u",
@@ -206,7 +206,7 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clwvi", "pr"),
-        branded_variable_names=("clwvi_tavg-u-hxy-u", "pr_tavg-u-hxy-u"),
+        branded_variables=("clwvi_tavg-u-hxy-u", "pr_tavg-u-hxy-u"),
     )
     update_recipe = partial(update_recipe, var_x="clwvi", var_y="pr")
     files = (
@@ -248,7 +248,7 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "clwvi", "pr"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "clwvi_tavg-u-hxy-u",
                                 "pr_tavg-u-hxy-u",
@@ -277,7 +277,7 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clivi", "rlut", "rlutcs"),
-        branded_variable_names=("clivi_tavg-u-hxy-u", "rlut_tavg-u-hxy-u", "rlutcs_tavg-u-hxy-u"),
+        branded_variables=("clivi_tavg-u-hxy-u", "rlut_tavg-u-hxy-u", "rlutcs_tavg-u-hxy-u"),
     )
     update_recipe = partial(update_recipe, var_x="clivi", var_y="lwcre")
     files = (
@@ -319,7 +319,7 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "clivi", "rlut", "rlutcs"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "clivi_tavg-u-hxy-u",
                                 "rlut_tavg-u-hxy-u",
@@ -349,7 +349,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("cli", "ta"),
-        branded_variable_names=("cli_tavg-al-hxy-u", "ta_tavg-p19-hxy-air"),
+        branded_variables=("cli_tavg-al-hxy-u", "ta_tavg-p19-hxy-air"),
     )
     update_recipe = partial(update_recipe, var_x="cli", var_y="ta")
     files = (
@@ -392,7 +392,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                             "source_id": "CESM2",
                             "variable_id": ["areacella", "cli", "ta"],
                             "table_id": ["fx", "Amon"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "cli_tavg-al-hxy-u",
                                 "ta_tavg-p19-hxy-air",

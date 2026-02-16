@@ -80,7 +80,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "fco2antt_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ),
@@ -92,7 +92,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                     ),
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": "esm-piControl",
                             "frequency": "mon",
                             "region": "glb",
@@ -110,7 +110,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     # TODO: the ESMValTool diagnostic script does not save the data for the timeseries.
     series = tuple()
     files = (
@@ -152,7 +152,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                             "experiment_id": ["esm-1pctCO2", "esm-piControl"],
                             "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "fco2antt_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",

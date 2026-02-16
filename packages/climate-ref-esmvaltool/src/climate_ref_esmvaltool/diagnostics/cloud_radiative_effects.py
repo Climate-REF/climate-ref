@@ -64,7 +64,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "rlut_tavg-u-hxy-u",
                                 "rlutcs_tavg-u-hxy-u",
                                 "rsut_tavg-u-hxy-u",
@@ -171,7 +171,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "rlut", "rlutcs", "rsut", "rsutcs"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "rlut_tavg-u-hxy-u",
                                 "rlutcs_tavg-u-hxy-u",

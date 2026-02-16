@@ -130,7 +130,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
                                 "psl_tavg-u-hxy-u",
@@ -218,7 +218,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                             "experiment_id": ["historical"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", *variables],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
@@ -403,7 +403,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
                                 "psl_tavg-u-hxy-u",
@@ -492,7 +492,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                             "experiment_id": ["historical"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", *variables],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
@@ -612,7 +612,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
                                 "psl_tavg-u-hxy-u",
@@ -701,7 +701,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                             "experiment_id": ["historical"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", *variables],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
@@ -741,7 +741,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         ),
     )
 
-    facets = ("grid_label", "member_id", "source_id", "variable_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "variable_id", "region", "metric")
     files = tuple(
         FileDefinition(
             file_pattern=f"plots/{var_name}_trends/plot/seaborn_barplot.png",

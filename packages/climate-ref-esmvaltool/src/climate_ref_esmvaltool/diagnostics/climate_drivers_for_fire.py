@@ -82,7 +82,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         {
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "hurs_tavg-h2m-hxy-u",
                                 "pr_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
@@ -96,7 +96,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     ),
                     FacetFilter(
                         {
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "cVeg_tavg-u-hxy-lnd",
                                 "treeFrac_tavg-u-hxy-u",
                             ),
@@ -108,7 +108,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     ),
                     FacetFilter(
                         {
-                            "branded_variable_name": "vegFrac_tavg-u-hxy-u",
+                            "branded_variable": "vegFrac_tavg-u-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
@@ -204,7 +204,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "treeFrac",
                                 "vegFrac",
                             ],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "cVeg_tavg-u-hxy-lnd",
                                 "hurs_tavg-h2m-hxy-u",
                                 "pr_tavg-u-hxy-u",

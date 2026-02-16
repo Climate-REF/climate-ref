@@ -71,7 +71,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "pr_tavg-u-hxy-u",
                                 "tauu_tavg-u-hxy-u",
                             ),
@@ -83,7 +83,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                     ),
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tos_tavg-u-hxy-sea",
+                            "branded_variable": "tos_tavg-u-hxy-sea",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
@@ -264,7 +264,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["pr", "tauu", "tos"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "pr_tavg-u-hxy-u",
                                 "tauu_tavg-u-hxy-u",
                                 "tos_tavg-u-hxy-sea",
@@ -332,7 +332,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tos_tavg-u-hxy-sea",
+                            "branded_variable": "tos_tavg-u-hxy-sea",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
@@ -398,7 +398,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacello", "tos"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacello_ti-u-hxy-u",
                                 "tos_tavg-u-hxy-sea",
                             ],

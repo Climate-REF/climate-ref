@@ -166,7 +166,7 @@ def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
             variable_id=variable_id,
             cmip6_compound_name=cmip6_cn,
             cmip7_compound_name=cmip7_cn,
-            branded_variable_name=branded,
+            branded_variable=branded,
             out_name=out_name,
             branding_suffix=branding_suffix,
             temporal_label=temporal_label,
@@ -244,7 +244,7 @@ def print_summary(mappings: dict[str, DReqVariableMapping]) -> None:
                 m = mappings[cn]
                 typer.echo(
                     f"    {typer.style(cn, fg=typer.colors.GREEN)}: "
-                    f"{m.branded_variable_name}  "
+                    f"{m.branded_variable}  "
                     f"(realm={typer.style(m.realm, fg=typer.colors.MAGENTA)})"
                 )
 

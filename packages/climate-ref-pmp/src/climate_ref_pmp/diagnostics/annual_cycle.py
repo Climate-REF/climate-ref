@@ -91,7 +91,7 @@ def make_data_requirement(
     cmip7_filters = (
         FacetFilter(
             facets={
-                "branded_variable_name": (_BRANDED_VARIABLE_NAMES[variable_id],),
+                "branded_variable": (_BRANDED_VARIABLE_NAMES[variable_id],),
                 "experiment_id": ("amip", "historical", "hist-GHG"),
                 "frequency": "mon",
                 "realm": "atmos",
@@ -356,7 +356,7 @@ class AnnualCycle(CommandLineDiagnostic):
                             "source_id": "ACCESS-ESM1-5",
                             "experiment_id": "historical",
                             "variable_id": "ts",
-                            "branded_variable_name": "ts_tavg-u-hxy-u",
+                            "branded_variable": "ts_tavg-u-hxy-u",
                             "variant_label": "r1i1p1f1",
                             "frequency": "mon",
                             "region": "glb",

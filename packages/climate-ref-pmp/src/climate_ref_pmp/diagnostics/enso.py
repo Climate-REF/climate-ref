@@ -143,7 +143,7 @@ class ENSO(CommandLineDiagnostic):
                                 "source_id": "ACCESS-ESM1-5",
                                 "experiment_id": "historical",
                                 "variable_id": self.model_variables,
-                                "branded_variable_name": tuple(
+                                "branded_variable": tuple(
                                     _BRANDED_VARIABLE_NAMES[v] for v in self.model_variables
                                 ),
                                 "variant_label": "r1i1p1f1",
@@ -158,7 +158,7 @@ class ENSO(CommandLineDiagnostic):
                                 "source_id": "ACCESS-ESM1-5",
                                 "experiment_id": "historical",
                                 "variable_id": "areacella",
-                                "branded_variable_name": "areacella_ti-u-hxy-u",
+                                "branded_variable": "areacella_ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
                                 "region": "glb",
@@ -170,7 +170,7 @@ class ENSO(CommandLineDiagnostic):
                                 "source_id": "ACCESS-ESM1-5",
                                 "experiment_id": "historical",
                                 "variable_id": "sftlf",
-                                "branded_variable_name": "sftlf_ti-u-hxy-u",
+                                "branded_variable": "sftlf_ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
                                 "region": "glb",
@@ -198,7 +198,7 @@ class ENSO(CommandLineDiagnostic):
         cmip7_filters = [
             FacetFilter(
                 facets={
-                    "branded_variable_name": tuple(_BRANDED_VARIABLE_NAMES[v] for v in self.model_variables),
+                    "branded_variable": tuple(_BRANDED_VARIABLE_NAMES[v] for v in self.model_variables),
                     "experiment_id": tuple(experiments),
                     "frequency": "mon",
                     "realm": "atmos",

@@ -415,6 +415,54 @@ class TestAddSupplementaryDataset:
         expected = data_catalog.iloc[expected_rows]
         assert_frame_equal(result, expected)
 
+    def test_duplicate_supplementary_index(self):
+        """Test that duplicate index labels on supplementary rows don't cause errors.
+
+        Reproduces a bug where the data catalog has multiple file entries for
+        the same supplementary dataset (e.g. areacella with two time-range rows),
+        resulting in duplicate index values. The ``|=`` operation in ``apply()``
+        would fail with ``ValueError: cannot reindex on an axis with duplicate labels``
+        when ``select`` (indexed over all supplementary candidates) and ``match``
+        (a subset) have mismatched label sets with duplicates.
+        """
+        data_catalog = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "areacella", "areacella", "areacella"],
+                "source_id": ["A"] * 5,
+                "grid_label": ["gn"] * 5,
+                "table_id": ["Amon", "Amon", "fx", "fx", "fx"],
+                "experiment_id": [
+                    "1pctCO2",
+                    "piControl",
+                    # The duplicate-index areacella rows match the first tas
+                    # dataset on experiment_id, making them the best match.
+                    # The third areacella matches the second tas dataset.
+                    "1pctCO2",
+                    "1pctCO2",
+                    "piControl",
+                ],
+                "member_id": ["r1i1p1f1"] * 5,
+                "version": ["v1"] * 5,
+            },
+            # Duplicate index 300 for the 1pctCO2 areacella rows, plus a
+            # distinct index 400 for the piControl areacella. The select
+            # Series gets index [300, 300, 400] while match for the first
+            # dataset has index [300, 300] — the label mismatch with
+            # duplicates triggers the reindex failure on |=.
+            index=[100, 200, 300, 300, 400],
+        )
+        group = data_catalog[data_catalog["variable_id"] == "tas"]
+        result = self.constraint.apply(group=group, data_catalog=data_catalog)
+
+        # Both tas rows plus all three areacella rows
+        expected = pd.concat(
+            [
+                data_catalog.iloc[[0, 1]],
+                data_catalog.iloc[[2, 3, 4]],
+            ]
+        )
+        assert_frame_equal(result, expected)
+
 
 class TestPartialDateTime:
     @pytest.mark.parametrize(

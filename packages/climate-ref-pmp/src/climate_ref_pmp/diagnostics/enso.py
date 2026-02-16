@@ -36,7 +36,15 @@ class ENSO(CommandLineDiagnostic):
     Calculate the ENSO performance metrics for a dataset
     """
 
-    facets = ("source_id", "member_id", "grid_label", "experiment_id", "metric", "reference_datasets")
+    facets = (
+        "mip_id",
+        "source_id",
+        "member_id",
+        "grid_label",
+        "experiment_id",
+        "metric",
+        "reference_datasets",
+    )
 
     def __init__(self, metrics_collection: str, experiments: Collection[str] = ("historical",)) -> None:
         self.name = metrics_collection

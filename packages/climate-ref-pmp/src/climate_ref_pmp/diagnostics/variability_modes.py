@@ -32,6 +32,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
     facets = (
+        "mip_id",
         "source_id",
         "member_id",
         "experiment_id",
@@ -307,7 +308,11 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         -------
             Result of the diagnostic execution
         """
-        results_files = list(definition.output_directory.glob("*_cmec.json"))
+        model_source_type = get_model_source_type(definition)
+        mip = model_source_type.value
+
+        # Use mip-scoped glob to avoid matching files from other MIP runs
+        results_files = list(definition.output_directory.glob(f"*_{mip}_*_cmec.json"))
         if len(results_files) != 1:  # pragma: no cover
             logger.warning(f"A single cmec output file not found: {results_files}")
             return ExecutionResult.build_from_failure(definition)
@@ -319,9 +324,6 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
 
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_files[0], png_files, data_files)
-
-        # Add additional metadata to the metrics
-        model_source_type = get_model_source_type(definition)
         input_datasets = definition.datasets[model_source_type]
         reference_datasets = definition.datasets[SourceDatasetType.obs4MIPs]
         member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"

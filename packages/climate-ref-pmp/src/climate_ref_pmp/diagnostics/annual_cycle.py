@@ -278,6 +278,7 @@ class AnnualCycle(CommandLineDiagnostic):
     name = "Annual Cycle"
     slug = "annual-cycle"
     facets = (
+        "mip_id",
         "source_id",
         "member_id",
         "experiment_id",

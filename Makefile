@@ -69,35 +69,35 @@ test-ref:  ## run the tests
 	uv run --package climate-ref \
 		coverage run --append --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-core
 test-core:  ## run the tests
 	uv run --package climate-ref-core \
 		coverage run --append --source=packages/climate-ref-core/src \
 		-m pytest packages/climate-ref-core \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-celery
 test-celery:  ## run the tests
 	uv run --package climate-ref-celery \
 		coverage run --append --source=packages/climate-ref-celery/src \
 		-m pytest packages/climate-ref-celery \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-example
 test-diagnostic-example:  ## run the tests
 	uv run --package climate-ref-example \
 		coverage run --append --source=packages/climate-ref-example/src \
 		-m pytest packages/climate-ref-example \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-esmvaltool
 test-diagnostic-esmvaltool:  ## run the tests
 	uv run --package climate-ref-esmvaltool \
 		coverage run --append --source=packages/climate-ref-esmvaltool/src \
 		-m pytest packages/climate-ref-esmvaltool \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-ilamb
 test-diagnostic-ilamb:  ## run the tests
@@ -105,26 +105,26 @@ test-diagnostic-ilamb:  ## run the tests
 	uv run --package climate-ref-ilamb \
 		coverage run --append --source=packages/climate-ref-ilamb/src \
 		-m pytest packages/climate-ref-ilamb \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-pmp
 test-diagnostic-pmp:  ## run the tests
 	uv run --package climate-ref-pmp \
 		coverage run --append --source=packages/climate-ref-pmp/src \
 		-m pytest packages/climate-ref-pmp \
-		-r a -v --doctest-modules
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-integration
 test-integration:  ## run the integration tests
 	uv run \
 		pytest tests \
-		-r a -v
+		-r a -v --durations=20
 
 .PHONY: test-integration-slow
 test-integration-slow:  ## run the integration tests, including the slow tests which may take a while
 	uv run \
 		pytest tests --slow \
-		-r a -v
+		-r a -v --durations=20
 
 .PHONY: test-diagnostics
 test-diagnostics: test-diagnostic-example test-diagnostic-esmvaltool test-diagnostic-ilamb test-diagnostic-pmp

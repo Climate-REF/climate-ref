@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -71,21 +71,23 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "pr_tavg-u-hxy-u",
                                 "tauu_tavg-u-hxy-u",
                             ),
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tos_tavg-u-hxy-sea",
+                            "branded_variable": "tos_tavg-u-hxy-sea",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "ocean",
                         },
                     ),
                 ),
@@ -106,6 +108,58 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
         ),
     )
     facets = ()
+
+    files = (
+        tuple(
+            FileDefinition(
+                file_pattern=f"plots/diagnostic_metrics/plot_script/png/*_eq_{var_name}_bias.png",
+                dimensions={
+                    "statistic": (
+                        f"zonal bias in the time-mean {var_name} structure across the equatorial Pacific"
+                    ),
+                },
+            )
+            for var_name in ("pr", "sst", "tauu")
+        )
+        + tuple(
+            FileDefinition(
+                file_pattern=f"plots/diagnostic_metrics/plot_script/png/*_eq_{var_name}_seacycle.png",
+                dimensions={
+                    "statistic": (
+                        "zonal bias in the amplitude of the mean seasonal cycle of "
+                        f"{var_name} in the equatorial Pacific"
+                    ),
+                },
+            )
+            for var_name in ("pr", "sst", "tauu")
+        )
+        + (
+            FileDefinition(
+                file_pattern="plots/diagnostic_metrics/plot_script/png/*_pr_double.png",
+                dimensions={
+                    "statistic": "meridional bias in the time-mean pr structure across the eastern Pacific",
+                },
+            ),
+            FileDefinition(
+                file_pattern="plots/diagnostic_metrics/plot_script/png/*_pr_double_seacycle.png",
+                dimensions={
+                    "statistic": (
+                        "meridional bias in the amplitude of the mean seasonal "
+                        "pr cycle in the eastern Pacific"
+                    ),
+                },
+            ),
+        )
+        + tuple(
+            FileDefinition(
+                file_pattern=f"plots/diagnostic_level2/plot_script/png/*_{var_name}_map_*.png",
+                dimensions={
+                    "variable_id": "tos" if var_name == "tos" else var_name,
+                },
+            )
+            for var_name in ("pr", "tauu", "tos")
+        )
+    )
 
     series = (
         tuple(
@@ -210,7 +264,7 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["pr", "tauu", "tos"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "pr_tavg-u-hxy-u",
                                 "tauu_tavg-u-hxy-u",
                                 "tos_tavg-u-hxy-sea",
@@ -278,10 +332,11 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tos_tavg-u-hxy-sea",
+                            "branded_variable": "tos_tavg-u-hxy-sea",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "ocean",
                         },
                     ),
                 ),
@@ -299,6 +354,21 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     # ENSO pattern and lifecycle are series, but the ESMValTool diagnostic
     # script does not save the values used in the figure.
     series = tuple()
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/diagnostic_metrics/plot_script/png/*_{metric}.png",
+            dimensions={"metric": metric},
+        )
+        for metric in (
+            "09pattern",
+            "10lifecycle",
+            "11amplitude",
+            "12seasonality",
+            "13asymmetry",
+            "14duration",
+            "15diversity",
+        )
+    )
 
     test_data_spec = TestDataSpecification(
         test_cases=(
@@ -328,7 +398,7 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacello", "tos"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacello_ti-u-hxy-u",
                                 "tos_tavg-u-hxy-sea",
                             ],

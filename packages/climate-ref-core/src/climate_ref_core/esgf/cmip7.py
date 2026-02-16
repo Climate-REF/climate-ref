@@ -55,8 +55,12 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
     # CMIP7 DRS: {activity_id}/{institution_id}/{source_id}/{experiment_id}/
     #            {variant_label}/{frequency}/{variable_id}/{grid_label}/{version}
     # Ensure all facet values are strings (some may be integers from metadata)
+    # CMIP6 activity_id can contain multiple activities separated by spaces
+    # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
+    activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
+    version = str(cmip7_facets.get("version", "v1"))
     drs_path = cache_dir / Path(
-        str(cmip7_facets.get("activity_id", "CMIP")),
+        activity_id,
         str(cmip7_facets.get("institution_id", "unknown")),
         str(cmip7_facets.get("source_id", "unknown")),
         str(cmip7_facets.get("experiment_id", "historical")),
@@ -64,7 +68,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         str(cmip7_facets.get("frequency", "mon")),
         str(cmip7_facets.get("out_name", cmip7_facets.get("variable_id", "tas"))),
         str(cmip7_facets.get("grid_label", "gn")),
-        str(cmip7_facets.get("version", "v1")),
+        version,
     )
 
     drs_path.mkdir(parents=True, exist_ok=True)
@@ -82,6 +86,11 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
             return output_file
 
         ds_cmip7 = convert_cmip6_dataset(ds)
+
+        # Ensure version and sanitized activity_id are in the file attributes
+        # so that parse_cmip7_file can extract them for instance_id construction
+        ds_cmip7.attrs["version"] = version
+        ds_cmip7.attrs["activity_id"] = activity_id
 
         try:
             ds_cmip7.to_netcdf(output_file)
@@ -117,7 +126,7 @@ class CMIP7Request:
 
     # CMIP7-only facets that should not be passed to CMIP6 ESGF searches
     cmip7_only_facets: ClassVar[set[str]] = {
-        "branded_variable_name",
+        "branded_variable",
         "region",
     }
 
@@ -133,7 +142,7 @@ class CMIP7Request:
         "table_id",  # Used for mapping to CMIP6
         "version",
         "region",
-        "branded_variable_name",
+        "branded_variable",
     )
 
     def __init__(
@@ -185,7 +194,7 @@ class CMIP7Request:
 
         This is the single location for DReq enrichment: it adds
         ``region``, ``branding_suffix``, ``out_name``, and
-        ``branded_variable_name`` from the Data Request when available.
+        ``branded_variable`` from the Data Request when available.
         """
         cmip7_row = dict(cmip6_row)
 
@@ -195,6 +204,11 @@ class CMIP7Request:
 
         # Add CMIP7-specific metadata
         cmip7_row["mip_era"] = "CMIP7"
+
+        # CMIP6 activity_id can contain multiple activities separated by spaces
+        # (e.g. "C4MIP CDRMIP"). Use only the first activity for CMIP7.
+        if "activity_id" in cmip7_row and " " in str(cmip7_row["activity_id"]):
+            cmip7_row["activity_id"] = str(cmip7_row["activity_id"]).split()[0]
 
         # Map table_id to frequency if not present
         if "frequency" not in cmip7_row and "table_id" in cmip7_row:
@@ -216,7 +230,7 @@ class CMIP7Request:
                 cmip7_row["region"] = entry.region
                 cmip7_row["branding_suffix"] = entry.branding_suffix
                 cmip7_row["out_name"] = entry.out_name
-                cmip7_row["branded_variable_name"] = f"{entry.out_name}_{entry.branding_suffix}"
+                cmip7_row["branded_variable"] = f"{entry.out_name}_{entry.branding_suffix}"
             except KeyError:
                 logger.debug(
                     f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"

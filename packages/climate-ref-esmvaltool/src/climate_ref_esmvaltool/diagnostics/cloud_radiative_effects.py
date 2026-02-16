@@ -10,7 +10,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
@@ -64,7 +64,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "rlut_tavg-u-hxy-u",
                                 "rlutcs_tavg-u-hxy-u",
                                 "rsut_tavg-u-hxy-u",
@@ -73,6 +73,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         }
                     ),
                 ),
@@ -93,6 +94,29 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
     )
 
     facets = ()
+    files = (
+        tuple(
+            FileDefinition(
+                file_pattern=f"plots/plot_profiles/plot/variable_vs_lat_{var_name}_*.png",
+                dimensions={"variable_id": var_name, "statistic": "zonal mean"},
+            )
+            for var_name in ["lwcre", "swcre"]
+        )
+        + tuple(
+            FileDefinition(
+                file_pattern=f"plots/plot_maps/plot/map_{var_name}_*.png",
+                dimensions={"variable_id": var_name, "statistic": "climatology map"},
+            )
+            for var_name in ["lwcre", "swcre"]
+        )
+        + tuple(
+            FileDefinition(
+                file_pattern=f"work/plot_maps/plot/map_{var_name}_*.nc",
+                dimensions={"variable_id": var_name, "statistic": "climatology map"},
+            )
+            for var_name in ["lwcre", "swcre"]
+        )
+    )
     series = tuple(
         SeriesDefinition(
             file_pattern=f"plot_profiles/plot/variable_vs_lat_{var_name}_*.nc",
@@ -147,7 +171,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "rlut", "rlutcs", "rsut", "rsutcs"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "rlut_tavg-u-hxy-u",
                                 "rlutcs_tavg-u-hxy-u",

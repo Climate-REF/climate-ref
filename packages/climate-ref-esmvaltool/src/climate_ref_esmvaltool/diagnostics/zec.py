@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -66,10 +66,11 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": experiments,
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -82,7 +83,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     series = (
         SeriesDefinition(
             file_pattern="work/zec/zec/zec.nc",
@@ -93,6 +94,16 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
             values_name="zec",
             index_name="time",
             attributes=[],
+        ),
+    )
+    files = (
+        FileDefinition(
+            file_pattern="plots/zec/zec/*.png",
+            dimensions={"statistic": "zec"},
+        ),
+        FileDefinition(
+            file_pattern="work/zec/zec/zec_50.nc",
+            dimensions={"metric": "zec"},
         ),
     )
 
@@ -106,7 +117,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                         slug="cmip6",
                         facets={
                             "experiment_id": ["1pctCO2", "esm-1pct-brch-1000PgC"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-5",
                             "variable_id": ["areacella", "tas"],
                             "frequency": ["fx", "mon"],
                         },
@@ -122,9 +133,9 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": ["1pctCO2", "esm-1pct-brch-1000PgC"],
-                            "source_id": "CanESM5",
+                            "source_id": "ACCESS-ESM1-5",
                             "variable_id": ["areacella", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ],

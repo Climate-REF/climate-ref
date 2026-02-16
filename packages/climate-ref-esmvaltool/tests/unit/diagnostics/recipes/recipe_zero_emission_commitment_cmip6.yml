@@ -21,6 +21,7 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
   anomaly_base:
     area_statistics:
       operator: mean

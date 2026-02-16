@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -66,10 +66,11 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": experiments,
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -82,7 +83,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     series = (
         SeriesDefinition(
             file_pattern="tcr/calculate/{source_id}*.nc",
@@ -92,6 +93,18 @@ class TransientClimateResponse(ESMValToolDiagnostic):
             values_name="tas_anomaly",
             index_name="time",
             attributes=[],
+        ),
+    )
+    files = (
+        FileDefinition(
+            file_pattern="plots/tcr/calculate/*.png",
+            dimensions={
+                "statistic": "global annual mean tas anomaly relative to linear fit of piControl run",
+            },
+        ),
+        FileDefinition(
+            file_pattern="work/tcr/calculate/tcr.nc",
+            dimensions={"metric": "tcr"},
         ),
     )
 
@@ -123,7 +136,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                             "experiment_id": ["1pctCO2", "piControl"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ],

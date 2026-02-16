@@ -9,6 +9,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
@@ -81,7 +82,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         {
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "hurs_tavg-h2m-hxy-u",
                                 "pr_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
@@ -90,25 +91,28 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         }
                     ),
                     FacetFilter(
                         {
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "cVeg_tavg-u-hxy-lnd",
                                 "treeFrac_tavg-u-hxy-u",
                             ),
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "land",
                         }
                     ),
                     FacetFilter(
                         {
-                            "branded_variable_name": "vegFrac_tavg-u-hxy-u",
+                            "branded_variable": "vegFrac_tavg-u-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "land",
                         }
                     ),
                 ),
@@ -138,6 +142,20 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
         ),
     )
     facets = ()
+    files = (
+        FileDefinition(
+            file_pattern="plots/fire_evaluation/fire_evaluation/burnt_fraction_*.png",
+            dimensions={"statistic": "burnt fraction"},
+        ),
+        FileDefinition(
+            file_pattern="plots/fire_evaluation/fire_evaluation/fire_weather_control_*.png",
+            dimensions={"statistic": "fire weather control"},
+        ),
+        FileDefinition(
+            file_pattern="plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_*.png",
+            dimensions={"statistic": "fuel load continuity control"},
+        ),
+    )
 
     test_data_spec = TestDataSpecification(
         test_cases=(
@@ -186,7 +204,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "treeFrac",
                                 "vegFrac",
                             ],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "cVeg_tavg-u-hxy-lnd",
                                 "hurs_tavg-h2m-hxy-u",
                                 "pr_tavg-u-hxy-u",

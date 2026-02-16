@@ -21,7 +21,12 @@ from climate_ref_core.diagnostics import (
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
-from climate_ref_esmvaltool.recipe import load_recipe, prepare_climate_data, rewrite_mip_for_cmip7
+from climate_ref_esmvaltool.recipe import (
+    fix_annual_statistics_keep_year,
+    load_recipe,
+    prepare_climate_data,
+    rewrite_mip_for_cmip7,
+)
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -117,6 +122,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
         rewrite_mip_for_cmip7(recipe)
+        fix_annual_statistics_keep_year(recipe)
         recipe_txt = yaml.safe_dump(recipe, sort_keys=False)
         logger.info(f"Using ESMValTool recipe:\n{recipe_txt}")
         recipe_path = definition.to_output_path("recipe.yml")
@@ -277,7 +283,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The resulting diagnostic.
         """
-        result_dir = next(definition.to_output_path("executions").glob("*"))
+        result_dir = max(definition.to_output_path("executions").glob("*"))
 
         metric_args = CMECMetric.create_template()
         output_args = CMECOutput.create_template()
@@ -302,6 +308,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             for filename in metadata:
                 caption = metadata[filename].get("caption", "")
                 relative_path = definition.as_relative_path(filename)
+                for file_def in (*definition.diagnostic.files, *definition.diagnostic.series):
+                    if fnmatch.fnmatch(
+                        str(relative_path),
+                        f"executions/*/{file_def.file_pattern.format(**input_selectors)}",
+                    ):
+                        dimensions = file_def.dimensions
+                        break
+                else:
+                    dimensions = {}
                 if relative_path.suffix in plot_suffixes:
                     key = OutputCV.PLOTS.value
                 else:
@@ -310,10 +325,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     OutputCV.FILENAME.value: f"{relative_path}",
                     OutputCV.LONG_NAME.value: caption,
                     OutputCV.DESCRIPTION.value: "",
+                    OutputCV.DIMENSIONS.value: dimensions,
                 }
                 series.extend(
                     self._extract_series_from_file(
-                        definition, filename, relative_path, caption=caption, input_selectors=input_selectors
+                        definition,
+                        filename,
+                        relative_path,
+                        caption=caption,
+                        input_selectors=input_selectors,
                     )
                 )
 

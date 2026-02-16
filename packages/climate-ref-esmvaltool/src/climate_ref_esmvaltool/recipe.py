@@ -314,6 +314,34 @@ with importlib.resources.files("climate_ref_esmvaltool").joinpath("recipes.txt")
     _RECIPES.load_registry(_buffer)
 
 
+def fix_annual_statistics_keep_year(recipe: Recipe) -> None:
+    """Add ``keep_group_coordinates: true`` to every ``annual_statistics`` step.
+
+    ESMValCore changed ``annual_statistics`` to remove the ``year``
+    coordinate by default (``keep_group_coordinates=False``).  Several
+    ESMValTool diagnostic scripts still rely on the coordinate being
+    present, so we patch the recipe to preserve it.
+
+    Remove this workaround once ESMValCore restores the old default or
+    the affected diagnostic scripts are updated.
+
+    Parameters
+    ----------
+    recipe
+        The recipe to update in place.
+    """
+    for preprocessor in recipe.get("preprocessors", {}).values():
+        if isinstance(preprocessor, dict) and "annual_statistics" in preprocessor:
+            annual = preprocessor["annual_statistics"]
+            if isinstance(annual, dict):
+                annual.setdefault("keep_group_coordinates", True)
+            else:
+                preprocessor["annual_statistics"] = {
+                    "operator": annual if isinstance(annual, str) else "mean",
+                    "keep_group_coordinates": True,
+                }
+
+
 def load_recipe(recipe: str) -> Recipe:
     """Load a recipe.
 

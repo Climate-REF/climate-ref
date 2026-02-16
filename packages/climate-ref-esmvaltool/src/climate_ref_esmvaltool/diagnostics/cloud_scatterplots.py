@@ -12,6 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
@@ -20,16 +21,17 @@ from climate_ref_esmvaltool.types import Recipe
 
 def get_cmip_data_requirements(
     variables: tuple[str, ...],
-    branded_variable_names: tuple[str, ...] | None = None,
+    branded_variables: tuple[str, ...] | None = None,
 ) -> tuple[tuple[DataRequirement, ...], ...]:
     """Create data requirements for CMIP6 and CMIP7 data."""
     cmip7_facets: dict[str, str | Collection[str]] = {
         "experiment_id": "historical",
         "frequency": "mon",
         "region": "glb",
+        "realm": "atmos",
     }
-    if branded_variable_names is not None:
-        cmip7_facets["branded_variable_name"] = branded_variable_names
+    if branded_variables is not None:
+        cmip7_facets["branded_variable"] = branded_variables
     return (
         (
             DataRequirement(
@@ -107,6 +109,9 @@ def update_recipe(
             else:
                 # For derived variables, use the first available dataset
                 var_settings["additional_datasets"] = datasets
+        # Remove diagnostic-level additional_datasets to avoid CMIP6 reference datasets
+        # being merged with CMIP7 per-variable datasets
+        diagnostic.pop("additional_datasets", None)
     else:
         diagnostic["additional_datasets"] = datasets
 
@@ -129,9 +134,19 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clt", "rsut", "rsutcs"),
-        branded_variable_names=("clt_tavg-u-hxy-u", "rsut_tavg-u-hxy-u", "rsutcs_tavg-u-hxy-u"),
+        branded_variables=("clt_tavg-u-hxy-u", "rsut_tavg-u-hxy-u", "rsutcs_tavg-u-hxy-u"),
     )
     update_recipe = partial(update_recipe, var_x="clt", var_y="swcre")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_clt_swcre_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clt_swcre_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+    )
     test_data_spec = TestDataSpecification(
         test_cases=(
             TestCase(
@@ -161,7 +176,7 @@ class CloudScatterplotCltSwcre(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "clt", "rsut", "rsutcs"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "clt_tavg-u-hxy-u",
                                 "rsut_tavg-u-hxy-u",
@@ -191,9 +206,19 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clwvi", "pr"),
-        branded_variable_names=("clwvi_tavg-u-hxy-u", "pr_tavg-u-hxy-u"),
+        branded_variables=("clwvi_tavg-u-hxy-u", "pr_tavg-u-hxy-u"),
     )
     update_recipe = partial(update_recipe, var_x="clwvi", var_y="pr")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_clwvi_pr_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clwvi_pr_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+    )
     test_data_spec = TestDataSpecification(
         test_cases=(
             TestCase(
@@ -223,7 +248,7 @@ class CloudScatterplotClwviPr(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "clwvi", "pr"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "clwvi_tavg-u-hxy-u",
                                 "pr_tavg-u-hxy-u",
@@ -252,9 +277,19 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("clivi", "rlut", "rlutcs"),
-        branded_variable_names=("clivi_tavg-u-hxy-u", "rlut_tavg-u-hxy-u", "rlutcs_tavg-u-hxy-u"),
+        branded_variables=("clivi_tavg-u-hxy-u", "rlut_tavg-u-hxy-u", "rlutcs_tavg-u-hxy-u"),
     )
     update_recipe = partial(update_recipe, var_x="clivi", var_y="lwcre")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_clivi_lwcre_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clivi_lwcre_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+    )
     test_data_spec = TestDataSpecification(
         test_cases=(
             TestCase(
@@ -284,7 +319,7 @@ class CloudScatterplotCliviLwcre(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "clivi", "rlut", "rlutcs"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "clivi_tavg-u-hxy-u",
                                 "rlut_tavg-u-hxy-u",
@@ -314,9 +349,19 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
     facets = ()
     data_requirements = get_cmip_data_requirements(
         ("cli", "ta"),
-        branded_variable_names=("cli_tavg-al-hxy-u", "ta_tavg-p19-hxy-air"),
+        branded_variables=("cli_tavg-al-hxy-u", "ta_tavg-p19-hxy-air"),
     )
     update_recipe = partial(update_recipe, var_x="cli", var_y="ta")
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_cli_ta_model/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_cli_ta_model/plot/*.nc",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+    )
     test_data_spec = TestDataSpecification(
         test_cases=(
             TestCase(
@@ -327,7 +372,7 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                         slug="cmip6",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
+                            "source_id": "CESM2",
                             "variable_id": ["areacella", "cli", "ta"],
                             "frequency": ["fx", "mon"],
                         },
@@ -344,9 +389,10 @@ class CloudScatterplotCliTa(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": "historical",
-                            "source_id": "CanESM5",
+                            "source_id": "CESM2",
                             "variable_id": ["areacella", "cli", "ta"],
-                            "branded_variable_name": [
+                            "table_id": ["fx", "Amon"],
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "cli_tavg-al-hxy-u",
                                 "ta_tavg-p19-hxy-air",
@@ -373,6 +419,40 @@ class CloudScatterplotsReference(ESMValToolDiagnostic):
     slug = "cloud-scatterplots-reference"
     base_recipe = "ref/recipe_ref_scatterplot.yml"
     facets = ()
+    files = (
+        FileDefinition(
+            file_pattern="plots/plot_joint_cli_ta_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+        FileDefinition(
+            file_pattern="plots/plot_joint_clivi_lwcre_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+        FileDefinition(
+            file_pattern="plots/plot_joint_clt_swcre_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+        FileDefinition(
+            file_pattern="plots/plot_joint_clwvi_pr_ref/plot/png/*.png",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_cli_ta_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of cli vs ta"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clivi_lwcre_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clivi vs lwcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clt_swcre_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clt vs swcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/plot_joint_clwvi_pr_ref/plot/*.nc",
+            dimensions={"statistic": "joint histogram of clwvi vs pr"},
+        ),
+    )
     data_requirements = (
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,

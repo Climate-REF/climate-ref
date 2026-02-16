@@ -13,7 +13,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -79,7 +79,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "rlut_tavg-u-hxy-u",
                                 "rsdt_tavg-u-hxy-u",
                                 "rsut_tavg-u-hxy-u",
@@ -88,6 +88,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "abrupt-4xCO2",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -116,6 +117,20 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
             values_name="rtnt_anomaly",
             index_name="tas_anomaly",
             attributes=[],
+        ),
+    )
+    files = (
+        FileDefinition(
+            file_pattern="plots/ecs/calculate/*.png",
+            dimensions={"statistic": "global annual mean anomaly of rtnt vs tas"},
+        ),
+        FileDefinition(
+            file_pattern="work/ecs/calculate/ecs.nc",
+            dimensions={"metric": "ecs"},
+        ),
+        FileDefinition(
+            file_pattern="work/ecs/calculate/lambda.nc",
+            dimensions={"metric": "lambda"},
         ),
     )
 
@@ -147,7 +162,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
                             "experiment_id": ["abrupt-4xCO2", "piControl"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "rlut", "rsdt", "rsut", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "rlut_tavg-u-hxy-u",
                                 "rsdt_tavg-u-hxy-u",

@@ -12,6 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -77,18 +78,20 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "siconc_tavg-u-hxy-u",
+                            "branded_variable": "siconc_tavg-u-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "seaIce",
                         },
                     ),
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -116,6 +119,19 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
         ),
     )
     facets = ("experiment_id", "source_id", "region", "metric")
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/{region}/sea_ice_sensitivity_script/png/*.png",
+            dimensions={"region": region},
+        )
+        for region in ("arctic", "antarctic")
+    ) + tuple(
+        FileDefinition(
+            file_pattern=f"work/{region}/sea_ice_sensitivity_script/plotted_values.csv",
+            dimensions={"region": region},
+        )
+        for region in ("arctic", "antarctic")
+    )
 
     test_data_spec = TestDataSpecification(
         test_cases=(
@@ -146,7 +162,7 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", "areacello", "siconc", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "areacello_ti-u-hxy-u",
                                 "siconc_tavg-u-hxy-u",

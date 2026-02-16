@@ -16,7 +16,6 @@ import xarray as xr
 from ecgtools import Builder
 
 from climate_ref.config import Config
-from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP7Dataset
@@ -112,47 +111,6 @@ def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
         }
 
 
-def _add_branded_variable_name(catalog: pd.DataFrame) -> pd.DataFrame:
-    """
-    Add branded_variable_name as a derived column to a CMIP7 catalog.
-
-    Uses the ``branded_variable`` attribute from the file when available
-    (which uses ``out_name`` from the Data Request). Falls back to
-    ``{variable_id}_{branding_suffix}`` when the attribute is not present.
-
-    Parameters
-    ----------
-    catalog
-        CMIP7 data catalog DataFrame with ``variable_id`` and ``branding_suffix`` columns
-
-    Returns
-    -------
-    :
-        DataFrame with ``branded_variable_name`` column added
-    """
-    if "branded_variable" in catalog.columns:
-        # Use the branded_variable attribute from the file (uses out_name from DReq)
-        has_branded = catalog["branded_variable"].notna() & (catalog["branded_variable"] != "")
-        if has_branded.any():
-            catalog["branded_variable_name"] = catalog["branded_variable"]
-            # Fall back to computed value where branded_variable is missing
-            if (
-                not has_branded.all()
-                and "variable_id" in catalog.columns
-                and "branding_suffix" in catalog.columns
-            ):
-                catalog.loc[~has_branded, "branded_variable_name"] = (
-                    catalog.loc[~has_branded, "variable_id"]
-                    + "_"
-                    + catalog.loc[~has_branded, "branding_suffix"]
-                )
-            return catalog
-
-    if "variable_id" in catalog.columns and "branding_suffix" in catalog.columns:
-        catalog["branded_variable_name"] = catalog["variable_id"] + "_" + catalog["branding_suffix"]
-    return catalog
-
-
 class CMIP7DatasetAdapter(DatasetAdapter):
     """
     Adapter for CMIP7 datasets
@@ -197,6 +155,8 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # Derived
+        "branded_variable",
         # Unique identifier
         slug_column,
     )
@@ -287,16 +247,7 @@ class CMIP7DatasetAdapter(DatasetAdapter):
             for column in missing_columns:
                 datasets[column] = pd.NA
 
-        # Add branded_variable_name as a derived column: {variable_id}_{branding_suffix}
-        datasets = _add_branded_variable_name(datasets)
+        # Add branded_variable for the raw catalog (before DB ingestion)
+        datasets["branded_variable"] = datasets["variable_id"] + "_" + datasets["branding_suffix"]
 
         return datasets
-
-    def load_catalog(
-        self, db: Database, include_files: bool = True, limit: int | None = None
-    ) -> pd.DataFrame:
-        """
-        Load the CMIP7 data catalog with branded_variable_name derived column.
-        """
-        catalog = super().load_catalog(db, include_files=include_files, limit=limit)
-        return _add_branded_variable_name(catalog)

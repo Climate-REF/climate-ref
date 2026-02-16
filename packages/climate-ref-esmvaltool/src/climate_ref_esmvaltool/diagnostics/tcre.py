@@ -12,6 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -79,21 +80,23 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable_name": (
+                            "branded_variable": (
                                 "fco2antt_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ),
                             "experiment_id": "esm-1pctCO2",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                     FacetFilter(
                         facets={
-                            "branded_variable_name": "tas_tavg-h2m-hxy-u",
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
                             "experiment_id": "esm-piControl",
                             "frequency": "mon",
                             "region": "glb",
+                            "realm": "atmos",
                         },
                     ),
                 ),
@@ -107,9 +110,19 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     # TODO: the ESMValTool diagnostic script does not save the data for the timeseries.
     series = tuple()
+    files = (
+        FileDefinition(
+            file_pattern="plots/tcre/calculate_tcre/*.png",
+            dimensions={"statistic": "tcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/tcre/calculate_tcre/tcre.nc",
+            dimensions={"metric": "tcre"},
+        ),
+    )
 
     test_data_spec = TestDataSpecification(
         test_cases=(
@@ -121,7 +134,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                         slug="cmip6",
                         facets={
                             "experiment_id": ["esm-1pctCO2", "esm-piControl"],
-                            "source_id": "CanESM5",
+                            "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
                             "frequency": ["fx", "mon"],
                         },
@@ -137,9 +150,9 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                         slug="cmip7",
                         facets={
                             "experiment_id": ["esm-1pctCO2", "esm-piControl"],
-                            "source_id": "CanESM5",
+                            "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
-                            "branded_variable_name": [
+                            "branded_variable": [
                                 "areacella_ti-u-hxy-u",
                                 "fco2antt_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",

@@ -41,7 +41,7 @@ class TestDReqDataLoading:
         assert entry.variable_id == "tas"
         assert entry.cmip6_compound_name == "Amon.tas"
         assert entry.cmip7_compound_name != ""
-        assert entry.branded_variable_name != ""
+        assert entry.branded_variable != ""
         assert entry.out_name == "tas"
         assert entry.branding_suffix != ""
         assert entry.temporal_label != ""
@@ -62,7 +62,7 @@ class TestDReqVariableMapping:
             variable_id="tas",
             cmip6_compound_name="Amon.tas",
             cmip7_compound_name="atmos.tas.tavg-h2m-hxy-u.mon.glb",
-            branded_variable_name="tas_tavg-h2m-hxy-u",
+            branded_variable="tas_tavg-h2m-hxy-u",
             out_name="tas",
             branding_suffix="tavg-h2m-hxy-u",
             temporal_label="tavg",
@@ -87,7 +87,7 @@ class TestDReqVariableMapping:
             "variable_id": "tos",
             "cmip6_compound_name": "Omon.tos",
             "cmip7_compound_name": "ocean.tos.tavg-u-hxy-sea.mon.glb",
-            "branded_variable_name": "tos_tavg-u-hxy-sea",
+            "branded_variable": "tos_tavg-u-hxy-sea",
             "out_name": "tos",
             "branding_suffix": "tavg-u-hxy-sea",
             "temporal_label": "tavg",

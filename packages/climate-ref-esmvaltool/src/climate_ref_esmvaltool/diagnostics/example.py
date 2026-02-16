@@ -4,7 +4,7 @@ from climate_ref_core.constraints import AddSupplementaryDataset, RequireContigu
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
@@ -61,11 +61,25 @@ class GlobalMeanTimeseries(ESMValToolDiagnostic):
     facets = ()
     series = (
         SeriesDefinition(
-            file_pattern="timeseries/script1/*.nc",
-            dimensions={"statistic": "tas annual global mean"},
+            file_pattern="work/timeseries/script1/*.nc",
+            dimensions={
+                "statistic": "annual mean",
+                "variable_id": "tas",
+                "region": "global",
+            },
             values_name="tas",
             index_name="time",
             attributes=[],
+        ),
+    )
+    files = (
+        FileDefinition(
+            file_pattern="plots/timeseries/script1/png/*.png",
+            dimensions={
+                "statistic": "annual mean",
+                "variable_id": "tas",
+                "region": "global",
+            },
         ),
     )
 

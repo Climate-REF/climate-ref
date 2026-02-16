@@ -13,7 +13,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -117,6 +117,20 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
             values_name="rtnt_anomaly",
             index_name="tas_anomaly",
             attributes=[],
+        ),
+    )
+    files = (
+        FileDefinition(
+            file_pattern="plots/ecs/calculate/*.png",
+            dimensions={"statistic": "global annual mean anomaly of rtnt vs tas"},
+        ),
+        FileDefinition(
+            file_pattern="work/ecs/calculate/ecs.nc",
+            dimensions={"metric": "ecs"},
+        ),
+        FileDefinition(
+            file_pattern="work/ecs/calculate/lambda.nc",
+            dimensions={"metric": "lambda"},
         ),
     )
 

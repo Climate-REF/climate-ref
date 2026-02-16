@@ -12,6 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -112,6 +113,16 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     facets = ("grid_label", "member_id", "source_id", "region", "metric")
     # TODO: the ESMValTool diagnostic script does not save the data for the timeseries.
     series = tuple()
+    files = (
+        FileDefinition(
+            file_pattern="plots/tcre/calculate_tcre/*.png",
+            dimensions={"statistic": "tcre"},
+        ),
+        FileDefinition(
+            file_pattern="work/tcre/calculate_tcre/tcre.nc",
+            dimensions={"metric": "tcre"},
+        ),
+    )
 
     test_data_spec = TestDataSpecification(
         test_cases=(

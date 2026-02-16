@@ -1,4 +1,6 @@
-import pandas
+from pathlib import Path
+
+import pandas as pd
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
@@ -6,13 +8,16 @@ from climate_ref_core.constraints import (
     RequireFacets,
     RequireTimerange,
 )
-from climate_ref_core.datasets import FacetFilter, SourceDatasetType
+from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.metric_values.typing import FileDefinition
+from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
+from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
-from climate_ref_esmvaltool.types import Recipe
+from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
 class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
@@ -130,7 +135,27 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ()
+    facets = ("experiment_id", "global warming level", "metric")
+
+    files = tuple(
+        FileDefinition(
+            file_pattern=f"plots/gwl_mean_plots_{var_name}/plot_gwl_stats/*.png",
+            dimensions={
+                "statistic": "mean",
+                "variable_id": var_name,
+            },
+        )
+        for var_name in variables
+    ) + tuple(
+        FileDefinition(
+            file_pattern=f"work/gwl_mean_plots_{var_name}/plot_gwl_stats/*.nc",
+            dimensions={
+                "statistic": "mean",
+                "variable_id": var_name,
+            },
+        )
+        for var_name in variables
+    )
 
     test_data_spec = TestDataSpecification(
         test_cases=(
@@ -182,7 +207,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
     @staticmethod
     def update_recipe(
         recipe: Recipe,
-        input_files: dict[SourceDatasetType, pandas.DataFrame],
+        input_files: dict[SourceDatasetType, pd.DataFrame],
     ) -> None:
         """Update the recipe."""
         # Set up the datasets
@@ -234,3 +259,37 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             "preprocessor": "multi_model_gwl_stats",
             "timerange": "2000/2100",
         }
+
+    @staticmethod
+    def format_result(
+        result_dir: Path,
+        execution_dataset: ExecutionDatasetCollection,
+        metric_args: MetricBundleArgs,
+        output_args: OutputBundleArgs,
+    ) -> tuple[CMECMetric, CMECOutput]:
+        """Format the result."""
+        metric_args[MetricCV.DIMENSIONS.value] = {
+            "json_structure": [
+                "global warming level",
+                "metric",
+            ],
+            "global warming level": {},
+            "metric": {"exceedance_year": {}},
+        }
+
+        df = pd.read_csv(
+            result_dir
+            / "work"
+            / "calculate_gwl_exceedance_years"
+            / "gwl_exceedance_calculation"
+            / "GWL_exceedance_years.csv"
+        )
+        for row in df.itertuples(index=False):
+            gwl = str(row.GWL)
+            if gwl not in metric_args[MetricCV.DIMENSIONS.value]["global warming level"]:
+                metric_args[MetricCV.DIMENSIONS.value]["global warming level"][gwl] = {}
+            metric_args[MetricCV.RESULTS.value][gwl] = {
+                "exceedance_year": int(str(row.Exceedance_Year)),
+            }
+
+        return CMECMetric.model_validate(metric_args), CMECOutput.model_validate(output_args)

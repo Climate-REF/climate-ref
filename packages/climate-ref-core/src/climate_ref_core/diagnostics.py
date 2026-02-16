@@ -13,7 +13,7 @@ from attrs import field, frozen
 from climate_ref_core.constraints import GroupConstraint
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.metric_values import SeriesMetricValue
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -528,6 +528,7 @@ class Diagnostic(AbstractDiagnostic):
     """
 
     series: Sequence[SeriesDefinition] = tuple()
+    files: Sequence[FileDefinition] = tuple()
     test_data_spec: TestDataSpecification | None = None
 
     def __init__(self) -> None:

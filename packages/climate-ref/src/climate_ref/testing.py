@@ -1,21 +1,31 @@
 """
-Testing utilities
+Testing utilities for running and validating diagnostic test cases.
+
+This module provides:
+- Path resolution for package-local test data (catalogs, regression data)
+- Sample data fetching utilities
+- TestCaseRunner for executing diagnostics with test data
+- Result validation helpers
 """
 
 import shutil
 from pathlib import Path
 
+from attrs import define
 from loguru import logger
 
+from climate_ref import SAMPLE_DATA_VERSION
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.executor import handle_execution_result
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
-from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
+from climate_ref_core.datasets import ExecutionDatasetCollection
+from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
-from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
+from climate_ref_core.testing import (
+    validate_cmec_bundles,
+)
 
 
 def _determine_test_directory() -> Path | None:
@@ -27,7 +37,8 @@ def _determine_test_directory() -> Path | None:
 
 
 TEST_DATA_DIR = _determine_test_directory()
-SAMPLE_DATA_VERSION = "v0.7.4"
+"""Path to the centralised test data directory (for sample data)."""
+# SAMPLE_DATA_VERSION is imported from climate_ref to avoid circular imports
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:
@@ -76,13 +87,16 @@ def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> Non
         fh.write(SAMPLE_DATA_VERSION)
 
 
-def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionResult) -> None:
+def validate_result(
+    diagnostic: Diagnostic, config: Config, result: ExecutionResult
+) -> None:  # pragma: no cover
     """
     Asserts the correctness of the result of a diagnostic execution
 
     This should only be used by the test suite as it will create a fake
     database entry for the diagnostic execution result.
     """
+    # TODO: Remove this function once we have moved to using RegressionValidator
     # Add a fake execution/execution group in the Database
     database = Database.from_config(config)
     execution_group = ExecutionGroup(
@@ -101,16 +115,105 @@ def validate_result(diagnostic: Diagnostic, config: Config, result: ExecutionRes
 
     assert result.successful
 
-    # Validate bundles
-    metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-    CMECMetric.model_validate(metric_bundle)
-    bundle_dimensions = tuple(metric_bundle.DIMENSIONS.root["json_structure"])
-    assert diagnostic.facets == bundle_dimensions
-    CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+    # Validate CMEC bundles
+    validate_cmec_bundles(diagnostic, result)
 
     # Create a fake log file if one doesn't exist
     if not result.to_output_path("out.log").exists():
         result.to_output_path("out.log").touch()
 
-    # This checks if the bundles are valid
+    # Import late to avoid importing executors,
+    # some of which have on-import side effects, at package load time
+    from climate_ref.executor import handle_execution_result  # noqa: PLC0415
+
+    # Process and store the result
     handle_execution_result(config, database=database, execution=execution, result=result)
+
+
+@define
+class TestCaseRunner:
+    """
+    Helper class for running diagnostic test cases.
+
+    This runner handles:
+    - Running the diagnostic with pre-resolved datasets
+    - Setting up the execution definition
+    """
+
+    config: Config
+    datasets: ExecutionDatasetCollection | None = None
+
+    def run(
+        self,
+        diagnostic: Diagnostic,
+        test_case_name: str = "default",
+        output_dir: Path | None = None,
+        clean: bool = False,
+    ) -> ExecutionResult:
+        """
+        Run a specific test case for a diagnostic.
+
+        Parameters
+        ----------
+        diagnostic
+            The diagnostic to run
+        test_case_name
+            Name of the test case to run (default: "default")
+        output_dir
+            Optional output directory for results
+        clean
+            If True, delete the output directory before running
+
+        Returns
+        -------
+        ExecutionResult
+            The result of running the diagnostic
+
+        Raises
+        ------
+        NoTestDataSpecError
+            If the diagnostic has no test_data_spec
+        TestCaseNotFoundError
+            If the test case doesn't exist
+        DatasetResolutionError
+            If datasets cannot be resolved
+        """
+        if diagnostic.test_data_spec is None:
+            raise NoTestDataSpecError(f"Diagnostic {diagnostic.slug} has no test_data_spec")
+
+        if not diagnostic.test_data_spec.has_case(test_case_name):
+            raise TestCaseNotFoundError(
+                f"Test case {test_case_name!r} not found. Available: {diagnostic.test_data_spec.case_names}"
+            )
+
+        if self.datasets is None:
+            raise DatasetResolutionError(
+                "No datasets provided. Run 'ref test-cases fetch' first to build the catalog."
+            )
+
+        # Determine output directory
+        if output_dir is None:
+            output_dir = (
+                self.config.paths.results
+                / "test-cases"
+                / diagnostic.provider.slug
+                / diagnostic.slug
+                / test_case_name
+            )
+
+        if clean and output_dir.exists():
+            shutil.rmtree(output_dir)
+
+        output_dir.mkdir(parents=True, exist_ok=True)
+
+        # Create execution definition
+        definition = ExecutionDefinition(
+            diagnostic=diagnostic,
+            key=f"test-{test_case_name}",
+            datasets=self.datasets,
+            output_directory=output_dir,
+            root_directory=output_dir.parent,
+        )
+
+        # Run the diagnostic
+        return diagnostic.run(definition)

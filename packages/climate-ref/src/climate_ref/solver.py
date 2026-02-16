@@ -15,10 +15,13 @@ from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database
-from climate_ref.datasets import get_dataset_adapter
-from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
-from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
+from climate_ref.datasets import (
+    CMIP6DatasetAdapter,
+    CMIP7DatasetAdapter,
+    Obs4MIPsDatasetAdapter,
+    PMPClimatologyDatasetAdapter,
+    get_slug_column,
+)
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
@@ -130,7 +133,7 @@ def extract_covered_datasets(
         # Use a single group
         groups = [((), subset)]
     else:
-        groups = list(subset.groupby(list(requirement.group_by)))
+        groups = list(subset.groupby(list(requirement.group_by)))  # type: ignore[arg-type]
 
     results = {}
 
@@ -195,12 +198,26 @@ def solve_executions(
             provider,
         )
     elif isinstance(first_item, Sequence):
-        # We have a sequence of collections of data requirements
+        # We have a sequence of collections of data requirements (OR logic)
+        # Try each requirement collection and yield from those that have matching data
+        any_matched = False
         for requirement_collection in diagnostic.data_requirements:
             if not isinstance(requirement_collection, Sequence):
                 raise TypeError(f"Expected a sequence of DataRequirement, got {type(requirement_collection)}")
-            yield from _solve_from_data_requirements(
-                data_catalog, diagnostic, requirement_collection, provider
+            # Buffer executions to check if any were actually produced
+            # _solve_from_data_requirements returns empty if source types are missing
+            executions = list(
+                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
+            )
+            if executions:
+                any_matched = True
+                yield from executions
+        if not any_matched:
+            available = ", ".join(str(s) for s in data_catalog.keys())
+            raise InvalidDiagnosticException(
+                diagnostic,
+                f"No data catalog matches any of the diagnostic's data requirements. "
+                f"Available source types: {available}",
             )
     else:
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")
@@ -219,9 +236,11 @@ def _solve_from_data_requirements(
         if not isinstance(requirement, DataRequirement):
             raise TypeError(f"Expected a DataRequirement, got {type(requirement)}")
         if requirement.source_type not in data_catalog:
-            raise InvalidDiagnosticException(
-                diagnostic, f"No data catalog for source type {requirement.source_type}"
+            logger.debug(
+                f"No data catalog for source type {requirement.source_type} of "
+                f"{provider.slug} diagnostic {diagnostic.slug}"
             )
+            return
 
         dataset_groups[requirement.source_type] = extract_covered_datasets(
             data_catalog[requirement.source_type], requirement
@@ -236,7 +255,7 @@ def _solve_from_data_requirements(
                 {
                     source_type: DatasetCollection(
                         datasets=dataset_groups[source_type][selector],
-                        slug_column=get_dataset_adapter(source_type.value).slug_column,
+                        slug_column=get_slug_column(source_type),
                         selector=selector,
                     )
                     for source_type, selector in zip(dataset_groups.keys(), items)
@@ -324,6 +343,7 @@ class ExecutionSolver:
             provider_registry=ProviderRegistry.build_from_config(config, db),
             data_catalog={
                 SourceDatasetType.CMIP6: CMIP6DatasetAdapter().load_catalog(db),
+                SourceDatasetType.CMIP7: CMIP7DatasetAdapter().load_catalog(db),
                 SourceDatasetType.obs4MIPs: Obs4MIPsDatasetAdapter().load_catalog(db),
                 SourceDatasetType.PMPClimatology: PMPClimatologyDatasetAdapter().load_catalog(db),
             },
@@ -350,7 +370,12 @@ class ExecutionSolver:
                 if not matches_filter(diagnostic, filters):
                     logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
                     continue
-                yield from solve_executions(self.data_catalog, diagnostic, provider)
+                try:
+                    yield from solve_executions(self.data_catalog, diagnostic, provider)
+                except InvalidDiagnosticException as e:
+                    # Skip diagnostics that don't have matching data
+                    logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
+                    continue
 
 
 def solve_required_executions(  # noqa: PLR0912, PLR0913

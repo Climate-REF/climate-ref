@@ -8,18 +8,20 @@ import pathlib
 from collections.abc import Iterable, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
-import pandas as pd
 from attrs import field, frozen
 
 from climate_ref_core.constraints import GroupConstraint
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.metric_values import SeriesMetricValue
-from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
+    import pandas as pd
+
     from climate_ref_core.providers import CommandLineDiagnosticProvider, DiagnosticProvider
+    from climate_ref_core.testing import TestDataSpecification
 
 
 def ensure_relative_path(path: pathlib.Path | str, root_directory: pathlib.Path) -> pathlib.Path:
@@ -366,6 +368,8 @@ class DataRequirement:
         :
             Filtered data catalog
         """
+        import pandas as pd  # noqa: PLC0415
+
         if not self.filters or any(not f.facets for f in self.filters):
             return data_catalog
 
@@ -459,6 +463,14 @@ class AbstractDiagnostic(Protocol):
     The provider that provides the diagnostic.
     """
 
+    test_data_spec: TestDataSpecification | None
+    """
+    Optional specification of test data and test cases for this diagnostic.
+
+    If provided, defines how to fetch test data from ESGF
+    and what test cases are available for testing this diagnostic.
+    """
+
     def execute(self, definition: ExecutionDefinition) -> None:
         """
         Execute the diagnostic on the given configuration.
@@ -516,6 +528,8 @@ class Diagnostic(AbstractDiagnostic):
     """
 
     series: Sequence[SeriesDefinition] = tuple()
+    files: Sequence[FileDefinition] = tuple()
+    test_data_spec: TestDataSpecification | None = None
 
     def __init__(self) -> None:
         super().__init__()

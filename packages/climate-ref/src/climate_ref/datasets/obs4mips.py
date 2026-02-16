@@ -10,7 +10,7 @@ from ecgtools import Builder
 from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter
-from climate_ref.datasets.cmip6 import _parse_datetime
+from climate_ref.datasets.utils import parse_datetime
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset
 
 
@@ -182,8 +182,8 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
 
         # Convert the start_time and end_time columns to datetime objects
         # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
-        datasets["start_time"] = _parse_datetime(datasets["start_time"])
-        datasets["end_time"] = _parse_datetime(datasets["end_time"])
+        datasets["start_time"] = parse_datetime(datasets["start_time"])
+        datasets["end_time"] = parse_datetime(datasets["end_time"])
 
         drs_items = [
             *self.dataset_id_metadata,

@@ -1,0 +1,496 @@
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311646] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311648] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198001-198012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198001-198012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_197901-197912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_197901-197912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198101-198112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198101-198112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198001-198012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198001-198012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198201-198212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198201-198212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198101-198112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198101-198112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198301-198312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198301-198312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198201-198212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198201-198212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198401-198412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198401-198412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198301-198312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198301-198312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198501-198512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198501-198512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198601-198612.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198601-198612.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198401-198412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198401-198412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198701-198712.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198701-198712.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198501-198512.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198501-198512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198801-198812.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198801-198812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198601-198612.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198601-198612.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198901-198912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_198901-198912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198701-198712.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198701-198712.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199001-199012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199001-199012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198801-198812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198801-198812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198901-198912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_198901-198912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199101-199112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199101-199112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199001-199012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199001-199012.nc)
+WARNING [2311646] There were warnings in variable sic:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199201-199212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199201-199212.nc)
+WARNING [2311648] There were warnings in variable sic:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199101-199112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199101-199112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199301-199312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199301-199312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199401-199412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199401-199412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199201-199212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199201-199212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199301-199312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199301-199312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311646] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_fx_areacello.nc)
+WARNING [2311646] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_fx_areacello.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199401-199412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199401-199412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311648] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_fx_areacello.nc)
+WARNING [2311648] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_fx_areacello.nc)
+WARNING [2311646] There were warnings in variable areacello:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199501-199512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311648] There were warnings in variable areacello:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199601-199612.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199701-199712.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199801-199812.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199901-199912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200001-200012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200101-200112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200201-200212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200301-200312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200401-200412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200501-200512.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200601-200612.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200701-200712.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200801-200812.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_200901-200912.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201001-201012.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201101-201112.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201201-201212.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201301-201312.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311650] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311652] Cannot guess bounds for coordinate sic: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201401-201412.nc)
+WARNING [2311650] There were warnings in variable sic:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311652] There were warnings in variable sic:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311650] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_fx_areacello.nc)
+WARNING [2311650] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_fx_areacello.nc)
+WARNING [2311650] There were warnings in variable areacello:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 
+WARNING [2311652] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'longitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_fx_areacello.nc)
+WARNING [2311652] Cannot guess bounds for coordinate areacello: Multi-dimensional coordinate not supported: 'latitude'
+(for file /home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_fx_areacello.nc)
+WARNING [2311652] There were warnings in variable areacello:
+ Coordinate lon from var lon does not have bounds
+ Coordinate lat from var lat does not have bounds
+loaded from file 

@@ -1,0 +1,148 @@
+INFO    [2311564] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2311564] Package versions
+INFO    [2311564] ----------------
+INFO    [2311564] ESMValCore: 2.13.0
+INFO    [2311564] ESMValTool: 2.13.0
+INFO    [2311564] ----------------
+INFO    [2311564] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2311564] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_163843/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_163843/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_163843/run/cmor_log.txt
+INFO    [2311564] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:38:43 UTC
+INFO    [2311564] ----------------------------------------------------------------------
+INFO    [2311564] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2311564] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_163843/run
+INFO    [2311564] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_163843/work
+INFO    [2311564] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc
+INFO    [2311564] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_163843/plots
+INFO    [2311564] ----------------------------------------------------------------------
+INFO    [2311564] Running tasks using at most 10 processes
+INFO    [2311564] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2311564] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2311564] Creating tasks from recipe
+INFO    [2311564] Creating tasks for diagnostic siarea_seas
+INFO    [2311564] Creating diagnostic task siarea_seas/allplots
+INFO    [2311564] Creating preprocessor task siarea_seas/sea_ice_area_nh
+INFO    [2311564] Creating preprocessor 'pp_nh' task for variable 'sea_ice_area_nh'
+INFO    [2311564] Found input files for Dataset: siconc, SImon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20200817, supplementaries: areacello, Ofx, v20191115
+INFO    [2311564] Found input files for Dataset: siconc, OImon, OBS, OSI-450-nh, historical, r1i1p1f1, gr, v3, supplementaries: areacello, fx
+INFO    [2311564] PreprocessingTask siarea_seas/sea_ice_area_nh created.
+INFO    [2311564] Creating preprocessor task siarea_seas/sea_ice_area_sh
+INFO    [2311564] Creating preprocessor 'pp_sh' task for variable 'sea_ice_area_sh'
+INFO    [2311564] Found input files for Dataset: siconc, SImon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20200817, supplementaries: areacello, Ofx, v20191115
+INFO    [2311564] Found input files for Dataset: siconc, OImon, OBS, OSI-450-sh, historical, r1i1p1f1, gr, v3, supplementaries: areacello, fx
+INFO    [2311564] PreprocessingTask siarea_seas/sea_ice_area_sh created.
+INFO    [2311564] Creating tasks for diagnostic siarea_min
+INFO    [2311564] Creating diagnostic task siarea_min/allplots
+INFO    [2311564] Creating preprocessor task siarea_min/sea_ice_area_nh_sep
+INFO    [2311564] Creating preprocessor 'pp_nh_sep' task for variable 'sea_ice_area_nh_sep'
+INFO    [2311564] Found input files for Dataset: siconc, SImon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20200817, supplementaries: areacello, Ofx, v20191115
+INFO    [2311564] Found input files for Dataset: siconc, OImon, OBS, OSI-450-nh, historical, r1i1p1f1, gr, v3, supplementaries: areacello, fx
+INFO    [2311564] PreprocessingTask siarea_min/sea_ice_area_nh_sep created.
+INFO    [2311564] Creating preprocessor task siarea_min/sea_ice_area_sh_feb
+INFO    [2311564] Creating preprocessor 'pp_sh_feb' task for variable 'sea_ice_area_sh_feb'
+INFO    [2311564] Found input files for Dataset: siconc, SImon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20200817, supplementaries: areacello, Ofx, v20191115
+INFO    [2311564] Found input files for Dataset: siconc, OImon, OBS, OSI-450-sh, historical, r1i1p1f1, gr, v3, supplementaries: areacello, fx
+INFO    [2311564] PreprocessingTask siarea_min/sea_ice_area_sh_feb created.
+INFO    [2311564] These tasks will be executed: siarea_seas/sea_ice_area_sh, siarea_min/sea_ice_area_nh_sep, siarea_seas/sea_ice_area_nh, siarea_min/allplots, siarea_seas/allplots, siarea_min/sea_ice_area_sh_feb
+INFO    [2311564] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_163843/run/recipe_filled.yml
+INFO    [2311564] Using Dask distributed scheduler (address: tcp://127.0.0.1:40415, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2311564] Running 6 tasks using 6 processes
+INFO    [2311648] Starting task siarea_seas/sea_ice_area_sh in process [2311648]
+INFO    [2311646] Starting task siarea_seas/sea_ice_area_nh in process [2311646]
+INFO    [2311650] Starting task siarea_min/sea_ice_area_nh_sep in process [2311650]
+INFO    [2311652] Starting task siarea_min/sea_ice_area_sh_feb in process [2311652]
+INFO    [2311564] Progress: 4 tasks running, 2 tasks waiting for ancestors, 0/6 done
+INFO    [2311646] Computing and saving data for preprocessing task siarea_seas/sea_ice_area_nh
+INFO    [2311646] siarea_seas/sea_ice_area_nh   [########################################] | 100% Completed | 1.20 s
+INFO    [2311648] Computing and saving data for preprocessing task siarea_seas/sea_ice_area_sh
+INFO    [2311646] Successfully completed task siarea_seas/sea_ice_area_nh (priority 1) in 0:00:07.420137
+INFO    [2311564] Progress: 3 tasks running, 2 tasks waiting for ancestors, 1/6 done
+INFO    [2311648] siarea_seas/sea_ice_area_sh   [########################################] | 100% Completed | 3.03 s
+INFO    [2311650] Computing and saving data for preprocessing task siarea_min/sea_ice_area_nh_sep
+INFO    [2311648] Successfully completed task siarea_seas/sea_ice_area_sh (priority 2) in 0:00:10.458131
+INFO    [2311564] Progress: 2 tasks running, 2 tasks waiting for ancestors, 2/6 done
+INFO    [2311654] Starting task siarea_seas/allplots in process [2311654]
+INFO    [2311654] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/multi_datasets.py', '<OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_seas/allplots/settings.yml']
+INFO    [2311654] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_163843/work/siarea_seas/allplots
+INFO    [2311654] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots
+INFO    [2311654] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_seas/allplots/log.txt
+INFO    [2311654] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_seas/allplots; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/multi_datasets.py <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_seas/allplots/settings.yml
+INFO    [2311564] Progress: 3 tasks running, 1 tasks waiting for ancestors, 2/6 done
+INFO    [2311650] siarea_min/sea_ice_area_nh_sep [########################################] | 100% Completed | 1.07 s
+INFO    [2311652] Computing and saving data for preprocessing task siarea_min/sea_ice_area_sh_feb
+INFO    [2311650] Successfully completed task siarea_min/sea_ice_area_nh_sep (priority 4) in 0:00:11.535876
+INFO    [2311564] Progress: 2 tasks running, 1 tasks waiting for ancestors, 3/6 done
+INFO    [2311652] siarea_min/sea_ice_area_sh_feb [########################################] | 100% Completed | 1.07 s
+INFO    [2311652] Successfully completed task siarea_min/sea_ice_area_sh_feb (priority 5) in 0:00:12.593009
+INFO    [2311564] Progress: 1 tasks running, 1 tasks waiting for ancestors, 4/6 done
+INFO    [2311656] Starting task siarea_min/allplots in process [2311656]
+INFO    [2311656] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/multi_datasets.py', '<OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_min/allplots/settings.yml']
+INFO    [2311656] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_163843/work/siarea_min/allplots
+INFO    [2311656] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_min/allplots
+INFO    [2311656] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_min/allplots/log.txt
+INFO    [2311656] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_min/allplots; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/multi_datasets.py <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_min/allplots/settings.yml
+INFO    [2311564] Progress: 2 tasks running, 0 tasks waiting for ancestors, 4/6 done
+INFO    [2311654] Maximum memory used (estimate): 0.4 GB
+INFO    [2311654] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2311654] Successfully completed task siarea_seas/allplots (priority 0) in 0:00:06.610920
+INFO    [2311564] Progress: 1 tasks running, 0 tasks waiting for ancestors, 5/6 done
+INFO    [2311656] Maximum memory used (estimate): 0.4 GB
+INFO    [2311656] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2311656] Successfully completed task siarea_min/allplots (priority 3) in 0:00:05.545553
+INFO    [2311564] Progress: 0 tasks running, 0 tasks waiting for ancestors, 6/6 done
+INFO    [2311564] Successfully completed all tasks.
+INFO    [2311564] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_163843/run/recipe_filled.yml
+INFO    [2311564] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_163843/index.html
+INFO    [2311564] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_163843
+Then visit http://localhost:31415 in your browser
+INFO    [2311564] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2311564] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:39:08 UTC
+INFO    [2311564] Time for running the recipe was: 0:00:24.526266
+INFO    [2311564] Maximum memory used (estimate): 4.0 GB
+INFO    [2311564] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2311564] Removing `preproc` directory containing preprocessed data
+INFO    [2311564] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+WARNING [2311564] Input data is not (fully) CMOR-compliant, see <OUTPUT_DIR>/executions/recipe_20260130_163843/run/cmor_log.txt for details
+INFO    [2311564] Run was successful

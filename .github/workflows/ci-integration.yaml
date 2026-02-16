@@ -11,6 +11,9 @@ on:
   schedule:
     - cron: '2 15 * * *'
 
+permissions:
+  contents: read
+
 jobs:
   tests-slow:
     if: github.repository == 'Climate-REF/climate-ref'
@@ -27,7 +30,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}
@@ -39,12 +42,44 @@ jobs:
           uv run ref datasets fetch-data --registry iomb --symlink
           uv run ref datasets fetch-data --registry esmvaltool --symlink
           uv run ref providers create-env
-          uv run pytest packages tests --slow --no-docker -r a -v
+          uv run pytest packages tests --slow --no-docker -m "not test_cases" -r a -v
       # Upload the scratch and executions directories as artifacts
       - name: Upload scratch artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: always()
         with:
           name: integration-output-${{ matrix.python-version }}
           path: ${{ env.REF_TEST_OUTPUT }}
+          retention-days: 7
+
+  test-cases:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: "self-hosted"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Setup environment
+        run: |
+          make virtual-environment
+          make fetch-test-data
+          uv run ref datasets fetch-data --registry ilamb --symlink
+          uv run ref datasets fetch-data --registry iomb --symlink
+          uv run ref datasets fetch-data --registry esmvaltool --symlink
+          uv run ref providers create-env
+          # This ensures the data for the test cases are available
+          uv run ref test-cases fetch
+      - name: Run test cases
+        run: uv run pytest packages -m test_cases --slow -v -r a
+      - name: Upload test case outputs
+        uses: actions/upload-artifact@v6
+        if: always()
+        with:
+          name: test-case-outputs
+          path: ~/.climate-ref/results/
           retention-days: 7

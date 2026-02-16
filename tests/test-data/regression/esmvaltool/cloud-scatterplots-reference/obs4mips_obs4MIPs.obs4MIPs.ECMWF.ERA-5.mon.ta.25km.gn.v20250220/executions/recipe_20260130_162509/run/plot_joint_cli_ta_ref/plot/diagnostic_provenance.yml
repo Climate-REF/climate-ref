@@ -1,0 +1,50 @@
+? <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_cli_ta_ref/plot/png/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015.png
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_cli_ta_ref/cli/OBS_CALIPSO-ICECLOUD_sat_1-00_Amon_cli_2007-2015.nc
+  - <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_cli_ta_ref/ta/obs4MIPs_ERA-5_ta_2007-2015.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta)
+    (CALIPSO-ICECLOUD / ERA-5 2007/2015)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_cli_ta_ref/cli/OBS_CALIPSO-ICECLOUD_sat_1-00_Amon_cli_2007-2015.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta)
+    (CALIPSO-ICECLOUD / ERA-5 2007/2015)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_ta_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_cli_ta_ref/cli/OBS_CALIPSO-ICECLOUD_sat_1-00_Amon_cli_2007-2015.nc
+  - <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_cli_ta_ref/ta/obs4MIPs_ERA-5_ta_2007-2015.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta)
+    (CALIPSO-ICECLOUD / ERA-5 2007/2015)
+  plot_types:
+  - histogram
+? <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_ta_histogram.nc
+: ancestors:
+  - <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_cli_ta_ref/ta/obs4MIPs_ERA-5_ta_2007-2015.nc
+  authors:
+  - lauer_axel
+  - bock_lisa
+  - schlund_manuel
+  - andela_bouwe
+  caption: Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta)
+    (CALIPSO-ICECLOUD / ERA-5 2007/2015)
+  plot_types:
+  - histogram

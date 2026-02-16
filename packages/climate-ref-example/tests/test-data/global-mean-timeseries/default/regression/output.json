@@ -1,0 +1,14 @@
+{
+  "index": "index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "cmec_output.log"
+  },
+  "data": {},
+  "plots": {},
+  "html": {},
+  "metrics": null,
+  "diagnostics": {}
+}

@@ -12,17 +12,53 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.pycmec.metric import remove_dimensions
-from climate_ref_pmp.pmp_driver import build_glob_pattern, build_pmp_command, process_json_result
+from climate_ref_core.testing import TestCase, TestDataSpecification
+from climate_ref_pmp.pmp_driver import (
+    build_glob_pattern,
+    build_pmp_command,
+    get_model_source_type,
+    process_json_result,
+)
 
 # =================================================================
 # PMP diagnostics support functions for the annual cycle diagnostic
 # =================================================================
 
+# CMIP7 branded variable names (from CMIP7 Data Request)
+_BRANDED_VARIABLE_NAMES: dict[str, str] = {
+    # Surface 2D variables
+    "ts": "ts_tavg-u-hxy-u",
+    "psl": "psl_tavg-u-hxy-u",
+    "pr": "pr_tavg-u-hxy-u",
+    "rlds": "rlds_tavg-u-hxy-u",
+    "rlus": "rlus_tavg-u-hxy-u",
+    "rlut": "rlut_tavg-u-hxy-u",
+    "rsds": "rsds_tavg-u-hxy-u",
+    "rsdt": "rsdt_tavg-u-hxy-u",
+    "rsus": "rsus_tavg-u-hxy-u",
+    "rsut": "rsut_tavg-u-hxy-u",
+    # Near-surface height variables
+    "uas": "uas_tavg-h10m-hxy-u",
+    "vas": "vas_tavg-h10m-hxy-u",
+    # 3D atmospheric variables on pressure levels
+    "ta": "ta_tavg-p19-hxy-air",
+    "ua": "ua_tavg-p19-hxy-air",
+    "va": "va_tavg-p19-hxy-air",
+    "zg": "zg_tavg-p19-hxy-air",
+}
 
-def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequirement, DataRequirement]:
+
+def make_data_requirement(
+    variable_id: str,
+    obs_source: str,
+) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
     """
-    Create a data requirement for the annual cycle diagnostic.
+    Create data requirements for the annual cycle diagnostic.
+
+    Returns a pair of (obs, model) DataRequirement tuples for each supported
+    source type (CMIP6 and CMIP7).
 
     Parameters
     ----------
@@ -33,28 +69,51 @@ def make_data_requirement(variable_id: str, obs_source: str) -> tuple[DataRequir
 
     Returns
     -------
-    DataRequirement
-        A DataRequirement object containing the necessary filters and groupings.
+    tuple[tuple[DataRequirement, DataRequirement], ...]
+        A tuple of (obs, model) DataRequirement pairs, one per source type.
     """
+    obs_requirement = DataRequirement(
+        source_type=SourceDatasetType.PMPClimatology,
+        filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
+        group_by=("variable_id", "source_id"),
+    )
+
+    cmip6_filters = (
+        FacetFilter(
+            facets={
+                "frequency": "mon",
+                "experiment_id": ("amip", "historical", "hist-GHG"),
+                "variable_id": (variable_id,),
+            }
+        ),
+    )
+
+    cmip7_filters = (
+        FacetFilter(
+            facets={
+                "branded_variable": (_BRANDED_VARIABLE_NAMES[variable_id],),
+                "experiment_id": ("amip", "historical", "hist-GHG"),
+                "frequency": "mon",
+                "realm": "atmos",
+                "region": "glb",
+            }
+        ),
+    )
+
+    cmip6_requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=cmip6_filters,
+        group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
+    )
+    cmip7_requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP7,
+        filters=cmip7_filters,
+        group_by=("variable_id", "source_id", "experiment_id", "variant_label", "grid_label"),
+    )
+
     return (
-        DataRequirement(
-            source_type=SourceDatasetType.PMPClimatology,
-            filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (variable_id,)}),),
-            group_by=("variable_id", "source_id"),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "frequency": "mon",
-                        "experiment_id": ("amip", "historical", "hist-GHG"),
-                        "variable_id": (variable_id,),
-                    }
-                ),
-            ),
-            group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
-        ),
+        (obs_requirement, cmip6_requirement),
+        (obs_requirement, cmip7_requirement),
     )
 
 
@@ -219,6 +278,7 @@ class AnnualCycle(CommandLineDiagnostic):
     name = "Annual Cycle"
     slug = "annual-cycle"
     facets = (
+        "mip_id",
         "source_id",
         "member_id",
         "experiment_id",
@@ -229,33 +289,90 @@ class AnnualCycle(CommandLineDiagnostic):
         "season",
     )
 
-    data_requirements = (
+    _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
-        make_data_requirement("ts", "ERA-5"),
-        make_data_requirement("uas", "ERA-5"),
-        make_data_requirement("vas", "ERA-5"),
-        make_data_requirement("psl", "ERA-5"),
+        ("ts", "ERA-5"),
+        ("uas", "ERA-5"),
+        ("vas", "ERA-5"),
+        ("psl", "ERA-5"),
         # ERA-5 as reference dataset, spatial 3-D variables
-        make_data_requirement("ta", "ERA-5"),
-        make_data_requirement("ua", "ERA-5"),
-        make_data_requirement("va", "ERA-5"),
-        make_data_requirement("zg", "ERA-5"),
+        ("ta", "ERA-5"),
+        ("ua", "ERA-5"),
+        ("va", "ERA-5"),
+        ("zg", "ERA-5"),
         # Other reference datasets, spatial 2-D variables
-        make_data_requirement("pr", "GPCP-Monthly-3-2"),
-        make_data_requirement("rlds", "CERES-EBAF-4-2"),
-        make_data_requirement("rlus", "CERES-EBAF-4-2"),
-        make_data_requirement("rlut", "CERES-EBAF-4-2"),
-        make_data_requirement("rsds", "CERES-EBAF-4-2"),
-        make_data_requirement("rsdt", "CERES-EBAF-4-2"),
-        make_data_requirement("rsus", "CERES-EBAF-4-2"),
-        make_data_requirement("rsut", "CERES-EBAF-4-2"),
+        ("pr", "GPCP-Monthly-3-2"),
+        ("rlds", "CERES-EBAF-4-2"),
+        ("rlus", "CERES-EBAF-4-2"),
+        ("rlut", "CERES-EBAF-4-2"),
+        ("rsds", "CERES-EBAF-4-2"),
+        ("rsdt", "CERES-EBAF-4-2"),
+        ("rsus", "CERES-EBAF-4-2"),
+        ("rsut", "CERES-EBAF-4-2"),
+    )
+
+    data_requirements = tuple(
+        pair
+        for variable_id, obs_source in _variable_obs_pairs
+        for pair in make_data_requirement(variable_id, obs_source)
+    )
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="cmip6",
+                description="Test with CMIP6 ts data and ERA-5 climatology",
+                requests=(
+                    RegistryRequest(
+                        slug="annual-cycle-era5-ts",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "ts", "source_id": "ERA-5"},
+                    ),
+                    CMIP6Request(
+                        slug="annual-cycle-cmip6-ts",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "ts",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="CMIP7 test case with converted historical ts from ACCESS-ESM1-5",
+                requests=(
+                    RegistryRequest(
+                        slug="annual-cycle-era5-ts-cmip7",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "ts", "source_id": "ERA-5"},
+                    ),
+                    CMIP7Request(
+                        slug="annual-cycle-cmip7-ts",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "ts",
+                            "branded_variable": "ts_tavg-u-hxy-u",
+                            "variant_label": "r1i1p1f1",
+                            "frequency": "mon",
+                            "region": "glb",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                ),
+            ),
+        ),
     )
 
     def __init__(self) -> None:
         self.parameter_file_1 = "pmp_param_annualcycle_1-clims.py"
         self.parameter_file_2 = "pmp_param_annualcycle_2-metrics.py"
 
-    def build_cmds(self, definition: ExecutionDefinition) -> list[list[str]]:
+    def build_cmds(self, definition: ExecutionDefinition) -> list[list[str]]:  # noqa: PLR0915
         """
         Build the command to run the diagnostic
 
@@ -268,13 +385,16 @@ class AnnualCycle(CommandLineDiagnostic):
         -------
             Command arguments to execute in the PMP environment
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
 
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
-        member_id = input_datasets["member_id"].unique()[0]
         variable_id = input_datasets["variable_id"].unique()[0]
+        member_id = input_datasets[
+            "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        ].unique()[0]
 
         model_files_raw = input_datasets.path.to_list()
         if len(model_files_raw) == 1:
@@ -395,7 +515,8 @@ class AnnualCycle(CommandLineDiagnostic):
         -------
             Result of the diagnostic execution
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         variable_id = input_datasets["variable_id"].unique()[0]
 
         if variable_id in ["ua", "va", "ta"]:
@@ -433,15 +554,15 @@ class AnnualCycle(CommandLineDiagnostic):
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)
 
         # Add missing dimensions to the output
-        input_selectors = input_datasets.selector_dict()
-        reference_selectors = definition.datasets[SourceDatasetType.PMPClimatology].selector_dict()
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
         cmec_metric_bundle = cmec_metric_bundle.prepend_dimensions(
             {
-                "source_id": input_selectors["source_id"],
-                "member_id": input_selectors["member_id"],
-                "experiment_id": input_selectors["experiment_id"],
-                "variable_id": input_selectors["variable_id"],
-                "reference_source_id": reference_selectors["source_id"],
+                "source_id": input_datasets["source_id"].unique()[0],
+                "member_id": input_datasets[member_id_col].unique()[0],
+                "experiment_id": input_datasets["experiment_id"].unique()[0],
+                "variable_id": input_datasets["variable_id"].unique()[0],
+                "reference_source_id": reference_datasets["source_id"].unique()[0],
             }
         )
 

@@ -15,8 +15,9 @@
       "experiment_id": "1pctCO2",
       "grid_label": "gn",
       "member_id": "r1i1p1f1",
+      "region": "global",
       "source_id": "ACCESS-ESM1-5",
-      "statistic": "tas annual global mean",
+      "statistic": "annual mean",
       "table_id": "Amon",
       "variable_id": "tas"
     },

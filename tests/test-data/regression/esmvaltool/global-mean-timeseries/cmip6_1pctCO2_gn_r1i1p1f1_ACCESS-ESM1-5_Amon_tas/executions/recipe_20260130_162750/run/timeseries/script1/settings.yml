@@ -1,0 +1,18 @@
+quickplot:
+  plot_type: plot
+recipe: recipe.yml
+version: 2.13.0
+script: script1
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162750/run/timeseries/script1
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162750/plots/timeseries/script1
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162750/work/timeseries/script1
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+themes:
+- phys
+realms:
+- atmos
+scheduler_address: tcp://127.0.0.1:32821
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162750/preproc/timeseries/tas/metadata.yml

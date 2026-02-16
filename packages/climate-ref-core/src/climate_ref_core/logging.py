@@ -13,13 +13,14 @@ import os
 import sys
 from collections.abc import Generator
 from pathlib import Path
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import pooch
 from loguru import logger
 from rich.pretty import pretty_repr
 
-from climate_ref_core.diagnostics import ExecutionDefinition
+if TYPE_CHECKING:
+    from climate_ref_core.diagnostics import ExecutionDefinition
 
 EXECUTION_LOG_FILENAME = "out.log"
 """
@@ -165,7 +166,7 @@ def remove_log_handler() -> None:
 
 
 @contextlib.contextmanager
-def redirect_logs(definition: ExecutionDefinition, log_level: str) -> Generator[None, None, None]:
+def redirect_logs(definition: "ExecutionDefinition", log_level: str) -> Generator[None, None, None]:
     """
     Temporarily redirect log output to a file.
 

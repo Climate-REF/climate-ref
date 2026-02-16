@@ -1,0 +1,230 @@
+INFO    [2305650] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2305650] Package versions
+INFO    [2305650] ----------------
+INFO    [2305650] ESMValCore: 2.13.0
+INFO    [2305650] ESMValTool: 2.13.0
+INFO    [2305650] ----------------
+INFO    [2305650] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2305650] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_162555/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162555/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162555/run/cmor_log.txt
+INFO    [2305650] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:25:56 UTC
+INFO    [2305650] ----------------------------------------------------------------------
+INFO    [2305650] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2305650] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_162555/run
+INFO    [2305650] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162555/work
+INFO    [2305650] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc
+INFO    [2305650] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162555/plots
+INFO    [2305650] ----------------------------------------------------------------------
+INFO    [2305650] Running tasks using at most 10 processes
+INFO    [2305650] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2305650] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2305650] Creating tasks from recipe
+INFO    [2305650] Creating tasks for diagnostic diagnostic_metrics
+INFO    [2305650] Creating diagnostic task diagnostic_metrics/plot_script
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/pr_double
+INFO    [2305650] Creating preprocessor 'ITCZ_bias' task for variable 'pr_double'
+INFO    [2305650] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+INFO    [2305650] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/pr_double created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/eq_pr_bias
+INFO    [2305650] Creating preprocessor 'eq_bias' task for variable 'eq_pr_bias'
+INFO    [2305650] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+INFO    [2305650] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/eq_pr_bias created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/eq_sst_bias
+INFO    [2305650] Creating preprocessor 'eq_bias' task for variable 'eq_sst_bias'
+INFO    [2305650] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2305650] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/eq_sst_bias created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/eq_tauu_bias
+INFO    [2305650] Creating preprocessor 'eq_bias' task for variable 'eq_tauu_bias'
+INFO    [2305650] Found input files for Dataset: tauu, Amon, OBS6, TROPFLUX, v1
+INFO    [2305650] Found input files for Dataset: tauu, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/eq_tauu_bias created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/pr_double_seacycle
+INFO    [2305650] Creating preprocessor 'ITCZ_sea_cycle' task for variable 'pr_double_seacycle'
+INFO    [2305650] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+INFO    [2305650] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/pr_double_seacycle created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/eq_pr_seacycle
+INFO    [2305650] Creating preprocessor 'eq_sea_cycle' task for variable 'eq_pr_seacycle'
+INFO    [2305650] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+INFO    [2305650] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/eq_pr_seacycle created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/eq_sst_seacycle
+INFO    [2305650] Creating preprocessor 'eq_sea_cycle' task for variable 'eq_sst_seacycle'
+INFO    [2305650] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2305650] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/eq_sst_seacycle created.
+INFO    [2305650] Creating preprocessor task diagnostic_metrics/eq_tauu_seacycle
+INFO    [2305650] Creating preprocessor 'eq_sea_cycle' task for variable 'eq_tauu_seacycle'
+INFO    [2305650] Found input files for Dataset: tauu, Amon, OBS6, TROPFLUX, v1
+INFO    [2305650] Found input files for Dataset: tauu, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_metrics/eq_tauu_seacycle created.
+INFO    [2305650] Creating tasks for diagnostic diagnostic_level2
+INFO    [2305650] Creating diagnostic task diagnostic_level2/plot_script
+INFO    [2305650] Creating preprocessor task diagnostic_level2/pr_bias
+INFO    [2305650] Creating preprocessor 'map_bias_level2' task for variable 'pr_bias'
+INFO    [2305650] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+INFO    [2305650] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_level2/pr_bias created.
+INFO    [2305650] Creating preprocessor task diagnostic_level2/pr_seacycle
+INFO    [2305650] Creating preprocessor 'map_sea_cyclel2' task for variable 'pr_seacycle'
+INFO    [2305650] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, v20180519
+INFO    [2305650] Found input files for Dataset: pr, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_level2/pr_seacycle created.
+INFO    [2305650] Creating preprocessor task diagnostic_level2/sst_bias
+INFO    [2305650] Creating preprocessor 'map_bias_level2' task for variable 'sst_bias'
+INFO    [2305650] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2305650] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_level2/sst_bias created.
+INFO    [2305650] Creating preprocessor task diagnostic_level2/tauu_bias
+INFO    [2305650] Creating preprocessor 'map_bias_level2' task for variable 'tauu_bias'
+INFO    [2305650] Found input files for Dataset: tauu, Amon, OBS6, TROPFLUX, v1
+INFO    [2305650] Found input files for Dataset: tauu, Amon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2305650] PreprocessingTask diagnostic_level2/tauu_bias created.
+INFO    [2305650] These tasks will be executed: diagnostic_metrics/eq_tauu_seacycle, diagnostic_level2/tauu_bias, diagnostic_metrics/plot_script, diagnostic_level2/pr_bias, diagnostic_level2/pr_seacycle, diagnostic_level2/sst_bias, diagnostic_metrics/eq_tauu_bias, diagnostic_metrics/eq_pr_seacycle, diagnostic_metrics/eq_pr_bias, diagnostic_metrics/eq_sst_seacycle, diagnostic_level2/plot_script, diagnostic_metrics/pr_double, diagnostic_metrics/pr_double_seacycle, diagnostic_metrics/eq_sst_bias
+INFO    [2305650] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162555/run/recipe_filled.yml
+INFO    [2305650] Using Dask distributed scheduler (address: tcp://127.0.0.1:43899, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2305650] Running 14 tasks using 10 processes
+INFO    [2305731] Starting task diagnostic_metrics/eq_pr_bias in process [2305731]
+INFO    [2305733] Starting task diagnostic_metrics/eq_sst_bias in process [2305733]
+INFO    [2305737] Starting task diagnostic_metrics/pr_double_seacycle in process [2305737]
+INFO    [2305739] Starting task diagnostic_metrics/eq_pr_seacycle in process [2305739]
+INFO    [2305741] Starting task diagnostic_metrics/eq_sst_seacycle in process [2305741]
+INFO    [2305745] Starting task diagnostic_level2/pr_bias in process [2305745]
+INFO    [2305729] Starting task diagnostic_metrics/pr_double in process [2305729]
+INFO    [2305743] Starting task diagnostic_metrics/eq_tauu_seacycle in process [2305743]
+INFO    [2305747] Starting task diagnostic_level2/pr_seacycle in process [2305747]
+INFO    [2305735] Starting task diagnostic_metrics/eq_tauu_bias in process [2305735]
+INFO    [2305650] Progress: 10 tasks running, 4 tasks waiting for ancestors, 0/14 done
+INFO    [2305729] Computing and saving data for preprocessing task diagnostic_metrics/pr_double
+INFO    [2305729] diagnostic_metrics/pr_double  [########################################] | 100% Completed | 1.05 s
+INFO    [2305731] Computing and saving data for preprocessing task diagnostic_metrics/eq_pr_bias
+INFO    [2305729] Successfully completed task diagnostic_metrics/pr_double (priority 1) in 0:00:01.781643
+INFO    [2305650] Progress: 9 tasks running, 4 tasks waiting for ancestors, 1/14 done
+INFO    [2305729] Starting task diagnostic_level2/sst_bias in process [2305729]
+INFO    [2305650] Progress: 10 tasks running, 3 tasks waiting for ancestors, 1/14 done
+INFO    [2305731] diagnostic_metrics/eq_pr_bias [########################################] | 100% Completed | 1.03 s
+INFO    [2305745] Computing and saving data for preprocessing task diagnostic_level2/pr_bias
+INFO    [2305731] Successfully completed task diagnostic_metrics/eq_pr_bias (priority 2) in 0:00:02.816124
+INFO    [2305650] Progress: 9 tasks running, 3 tasks waiting for ancestors, 2/14 done
+INFO    [2305731] Starting task diagnostic_level2/tauu_bias in process [2305731]
+INFO    [2305650] Progress: 10 tasks running, 2 tasks waiting for ancestors, 2/14 done
+INFO    [2305745] diagnostic_level2/pr_bias     [########################################] | 100% Completed | 1.06 s
+INFO    [2305747] Computing and saving data for preprocessing task diagnostic_level2/pr_seacycle
+INFO    [2305745] Successfully completed task diagnostic_level2/pr_bias (priority 10) in 0:00:03.877256
+INFO    [2305650] Progress: 9 tasks running, 2 tasks waiting for ancestors, 3/14 done
+INFO    [2305747] diagnostic_level2/pr_seacycle [########################################] | 100% Completed | 1.06 s
+INFO    [2305739] Computing and saving data for preprocessing task diagnostic_metrics/eq_pr_seacycle
+INFO    [2305747] Successfully completed task diagnostic_level2/pr_seacycle (priority 11) in 0:00:04.943191
+INFO    [2305650] Progress: 8 tasks running, 2 tasks waiting for ancestors, 4/14 done
+INFO    [2305739] diagnostic_metrics/eq_pr_seacycle [########################################] | 100% Completed | 1.06 s
+INFO    [2305735] Computing and saving data for preprocessing task diagnostic_metrics/eq_tauu_bias
+INFO    [2305739] Successfully completed task diagnostic_metrics/eq_pr_seacycle (priority 6) in 0:00:06.010228
+INFO    [2305650] Progress: 7 tasks running, 2 tasks waiting for ancestors, 5/14 done
+INFO    [2305735] diagnostic_metrics/eq_tauu_bias [########################################] | 100% Completed | 1.01 s
+INFO    [2305737] Computing and saving data for preprocessing task diagnostic_metrics/pr_double_seacycle
+INFO    [2305735] Successfully completed task diagnostic_metrics/eq_tauu_bias (priority 4) in 0:00:07.005502
+INFO    [2305650] Progress: 6 tasks running, 2 tasks waiting for ancestors, 6/14 done
+INFO    [2305737] diagnostic_metrics/pr_double_seacycle [########################################] | 100% Completed | 1.02 s
+INFO    [2305743] Computing and saving data for preprocessing task diagnostic_metrics/eq_tauu_seacycle
+INFO    [2305737] Successfully completed task diagnostic_metrics/pr_double_seacycle (priority 5) in 0:00:08.048180
+INFO    [2305650] Progress: 5 tasks running, 2 tasks waiting for ancestors, 7/14 done
+INFO    [2305743] diagnostic_metrics/eq_tauu_seacycle [########################################] | 100% Completed | 1.06 s
+INFO    [2305741] Computing and saving data for preprocessing task diagnostic_metrics/eq_sst_seacycle
+INFO    [2305743] Successfully completed task diagnostic_metrics/eq_tauu_seacycle (priority 8) in 0:00:09.110613
+INFO    [2305650] Progress: 4 tasks running, 2 tasks waiting for ancestors, 8/14 done
+INFO    [2305741] diagnostic_metrics/eq_sst_seacycle [########################################] | 100% Completed | 1.02 s
+INFO    [2305733] Computing and saving data for preprocessing task diagnostic_metrics/eq_sst_bias
+INFO    [2305741] Successfully completed task diagnostic_metrics/eq_sst_seacycle (priority 7) in 0:00:10.132537
+INFO    [2305650] Progress: 3 tasks running, 2 tasks waiting for ancestors, 9/14 done
+INFO    [2305733] diagnostic_metrics/eq_sst_bias [########################################] | 100% Completed | 1.06 s
+INFO    [2305729] Computing and saving data for preprocessing task diagnostic_level2/sst_bias
+INFO    [2305733] Successfully completed task diagnostic_metrics/eq_sst_bias (priority 3) in 0:00:11.199905
+INFO    [2305650] Progress: 2 tasks running, 2 tasks waiting for ancestors, 10/14 done
+INFO    [2305745] Starting task diagnostic_metrics/plot_script in process [2305745]
+INFO    [2305745] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/enso_metrics/climatology_diagnostic1.py', '<OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_metrics/plot_script/settings.yml']
+INFO    [2305745] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script
+INFO    [2305745] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script
+INFO    [2305745] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_metrics/plot_script/log.txt
+INFO    [2305745] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_metrics/plot_script; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/enso_metrics/climatology_diagnostic1.py <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_metrics/plot_script/settings.yml
+INFO    [2305650] Progress: 3 tasks running, 1 tasks waiting for ancestors, 10/14 done
+INFO    [2305729] diagnostic_level2/sst_bias    [########################################] | 100% Completed | 1.06 s
+INFO    [2305731] Computing and saving data for preprocessing task diagnostic_level2/tauu_bias
+INFO    [2305729] Successfully completed task diagnostic_level2/sst_bias (priority 12) in 0:00:10.358746
+INFO    [2305650] Progress: 2 tasks running, 1 tasks waiting for ancestors, 11/14 done
+INFO    [2305731] diagnostic_level2/tauu_bias   [########################################] | 100% Completed | 1.01 s
+INFO    [2305731] Successfully completed task diagnostic_level2/tauu_bias (priority 13) in 0:00:10.272053
+INFO    [2305650] Progress: 1 tasks running, 1 tasks waiting for ancestors, 12/14 done
+INFO    [2305747] Starting task diagnostic_level2/plot_script in process [2305747]
+INFO    [2305747] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/enso_metrics/climatology_diagnosticlevel2.py', '<OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_level2/plot_script/settings.yml']
+INFO    [2305747] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_level2/plot_script
+INFO    [2305747] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_level2/plot_script
+INFO    [2305747] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_level2/plot_script/log.txt
+INFO    [2305747] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_level2/plot_script; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/enso_metrics/climatology_diagnosticlevel2.py <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_level2/plot_script/settings.yml
+INFO    [2305650] Progress: 2 tasks running, 0 tasks waiting for ancestors, 12/14 done
+INFO    [2305745] Maximum memory used (estimate): 0.5 GB
+INFO    [2305745] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305745] Successfully completed task diagnostic_metrics/plot_script (priority 0) in 0:00:12.634737
+INFO    [2305650] Progress: 1 tasks running, 0 tasks waiting for ancestors, 13/14 done
+INFO    [2305747] Maximum memory used (estimate): 0.5 GB
+INFO    [2305747] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305747] Successfully completed task diagnostic_level2/plot_script (priority 9) in 0:00:12.521661
+INFO    [2305650] Progress: 0 tasks running, 0 tasks waiting for ancestors, 14/14 done
+INFO    [2305650] Successfully completed all tasks.
+INFO    [2305650] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162555/run/recipe_filled.yml
+INFO    [2305650] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162555/index.html
+INFO    [2305650] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_162555
+Then visit http://localhost:31415 in your browser
+INFO    [2305650] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2305650] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:26:26 UTC
+INFO    [2305650] Time for running the recipe was: 0:00:30.183411
+INFO    [2305650] Maximum memory used (estimate): 5.7 GB
+INFO    [2305650] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305650] Removing `preproc` directory containing preprocessed data
+INFO    [2305650] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+WARNING [2305650] Input data is not (fully) CMOR-compliant, see <OUTPUT_DIR>/executions/recipe_20260130_162555/run/cmor_log.txt for details
+INFO    [2305650] Run was successful

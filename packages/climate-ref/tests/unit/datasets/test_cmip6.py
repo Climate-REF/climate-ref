@@ -8,15 +8,14 @@ from climate_ref.database import Database
 from climate_ref.datasets.cmip6 import (
     CMIP6DatasetAdapter,
     _apply_fixes,
-    _clean_branch_time,
-    _parse_datetime,
 )
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
+from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 
 
-def test_parse_datetime():
+def testparse_datetime():
     pd.testing.assert_series_equal(
-        _parse_datetime(pd.Series(["2021-01-01 00:00:00", "1850-01-17 00:29:59.999993", None])),
+        parse_datetime(pd.Series(["2021-01-01 00:00:00", "1850-01-17 00:29:59.999993", None])),
         pd.Series(
             [datetime.datetime(2021, 1, 1, 0, 0), datetime.datetime(1850, 1, 17, 0, 29, 59, 999993), None],
             dtype="object",
@@ -32,11 +31,11 @@ def test_parse_exception(parsing_func):
     assert "TRACEBACK" in result
 
 
-def test_clean_branch_time():
+def testclean_branch_time():
     inp = pd.Series(["0D", "12", "12.0", "12.000", "12.0000", "12.00000", None, np.nan])
     exp = pd.Series([0.0, 12.0, 12.0, 12.0, 12.0, 12.0, np.nan, np.nan])
 
-    pd.testing.assert_series_equal(_clean_branch_time(inp), exp)
+    pd.testing.assert_series_equal(clean_branch_time(inp), exp)
 
 
 class TestCMIP6Adapter:
@@ -64,11 +63,11 @@ class TestCMIP6Adapter:
         adapter = CMIP6DatasetAdapter()
         data_catalog = adapter.load_catalog(db_seeded)
         target_ds = "CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115"
-        target_metadata = data_catalog[data_catalog["instance_id"] == target_ds]
+        target_metadata = data_catalog[data_catalog["instance_id"] == target_ds].copy()
 
         # Make an old version
-        target_metadata.version = "v20000101"
-        target_metadata.instance_id = target_ds.replace("v20191115", "v20000101")
+        target_metadata.loc[:, "version"] = "v20000101"
+        target_metadata.loc[:, "instance_id"] = target_ds.replace("v20191115", "v20000101")
         with db_seeded.session.begin():
             adapter.register_dataset(config, db_seeded, target_metadata)
 
@@ -79,9 +78,9 @@ class TestCMIP6Adapter:
         )
 
         # Make a new version
-        target_metadata.version = "v20230101"
+        target_metadata.loc[:, "version"] = "v20230101"
         new_instance_id = target_ds.replace("v20191115", "v20230101")
-        target_metadata.instance_id = new_instance_id
+        target_metadata.loc[:, "instance_id"] = new_instance_id
         with db_seeded.session.begin():
             adapter.register_dataset(config, db_seeded, target_metadata)
 
@@ -92,42 +91,46 @@ class TestCMIP6Adapter:
         assert new_instance_id in latest_instance_ids
 
     @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
-    def test_round_trip(self, cmip6_parser, config, sample_data_dir):
+    def test_round_trip(self, cmip6_parser, config, cmip6_local_catalogs):
         config.cmip6_parser = cmip6_parser
+        catalog = cmip6_local_catalogs[cmip6_parser]
 
-        database = Database.from_config(config, run_migrations=True)
-        catalog = CMIP6DatasetAdapter(config=config).find_local_datasets(sample_data_dir / "CMIP6")
+        with Database.from_config(config, run_migrations=True) as database:
+            # Indexes and ordering may be different
+            adapter = CMIP6DatasetAdapter()
+            with database.session.begin():
+                for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
+                    adapter.register_dataset(config, database, data_catalog_dataset)
 
-        # Indexes and ordering may be different
-        adapter = CMIP6DatasetAdapter()
-        with database.session.begin():
-            for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
-                adapter.register_dataset(config, database, data_catalog_dataset)
+            local_data_catalog = (
+                catalog.drop(columns=["time_range"])
+                .sort_values(["instance_id", "start_time"])
+                .reset_index(drop=True)
+            )
 
-        local_data_catalog = (
-            catalog.drop(columns=["time_range"])
-            .sort_values(["instance_id", "start_time"])
-            .reset_index(drop=True)
-        )
+            db_data_catalog = (
+                adapter.load_catalog(database)
+                .sort_values(["instance_id", "start_time"])
+                .reset_index(drop=True)
+            )
 
-        db_data_catalog = (
-            adapter.load_catalog(database).sort_values(["instance_id", "start_time"]).reset_index(drop=True)
-        )
+            # Normalize null values - convert None to np.nan for consistent comparison
+            # Opt into future pandas behavior to avoid deprecation warnings
+            with pd.option_context("future.no_silent_downcasting", True):
+                local_normalized = local_data_catalog.fillna(np.nan).infer_objects()
+                db_normalized = db_data_catalog.fillna(np.nan).infer_objects()
 
-        pd.testing.assert_frame_equal(
-            local_data_catalog.infer_objects(),
-            db_data_catalog.replace({None: np.nan}).infer_objects(),
-            check_like=True,
-        )
+            pd.testing.assert_frame_equal(
+                local_normalized,
+                db_normalized,
+                check_like=True,
+            )
 
     @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
-    def test_load_local_datasets(self, config, cmip6_parser, sample_data_dir, catalog_regression):
-        # Set the parser in the config
+    def test_load_local_datasets(self, config, cmip6_parser, catalog_regression, cmip6_local_catalogs):
         config.cmip6_parser = cmip6_parser
-
-        # Parse the local datasets
         adapter = CMIP6DatasetAdapter(config=config)
-        data_catalog = adapter.find_local_datasets(sample_data_dir / "CMIP6")
+        data_catalog = cmip6_local_catalogs[cmip6_parser]
 
         if cmip6_parser == "complete":
             assert data_catalog["finalised"].all()

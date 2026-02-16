@@ -141,18 +141,17 @@ def test_database_cvs(config, mocker):
     mock_register_cv = mocker.patch.object(MetricValue, "register_cv_dimensions")
     mock_cv = mocker.patch.object(CV, "load_from_file", return_value=cv)
 
-    db = Database.from_config(config, run_migrations=True)
+    with Database.from_config(config, run_migrations=True) as db:
+        # CV is loaded once during a migration and once with each call to _add_dimension_columns
+        assert mock_cv.call_count == 3
+        mock_cv.assert_called_with(config.paths.dimensions_cv)
+        mock_register_cv.assert_called_once_with(mock_cv.return_value)
 
-    # CV is loaded once during a migration and once with each call to _add_dimension_columns
-    assert mock_cv.call_count == 3
-    mock_cv.assert_called_with(config.paths.dimensions_cv)
-    mock_register_cv.assert_called_once_with(mock_cv.return_value)
-
-    # Verify that the dimensions have automatically been created
-    inspector = inspect(db._engine)
-    existing_columns = [c["name"] for c in inspector.get_columns("metric_value")]
-    for dimension in cv.dimensions:
-        assert dimension.name in existing_columns
+        # Verify that the dimensions have automatically been created
+        inspector = inspect(db._engine)
+        existing_columns = [c["name"] for c in inspector.get_columns("metric_value")]
+        for dimension in cv.dimensions:
+            assert dimension.name in existing_columns
 
 
 def test_create_backup(tmp_path):
@@ -224,7 +223,8 @@ def test_migrate_creates_backup(tmp_path, config):
     config.db.max_backups = 2
 
     # Create database instance and run migrations
-    Database.from_config(config, run_migrations=True)
+    db = Database.from_config(config, run_migrations=True)
+    db.close()
 
     # Verify backup was created
     backup_dir = db_path.parent / "backups"
@@ -238,7 +238,8 @@ def test_migrate_no_backup_for_memory_db(config):
     config.db.database_url = "sqlite:///:memory:"
 
     # Create database instance and run migrations
-    Database.from_config(config, run_migrations=True)
+    db = Database.from_config(config, run_migrations=True)
+    db.close()
 
     # Verify no backup directory was created
     assert not (Path("backups")).exists()
@@ -255,3 +256,51 @@ def test_migrate_no_backup_for_postgres(config):
 
     # Verify no backup directory was created
     assert not (Path("backups")).exists()
+
+
+def test_migrate_skip_backup(tmp_path, config):
+    """Test that skip_backup=True prevents backup creation."""
+    # Create a test database
+    db_path = tmp_path / "climate_ref.db"
+
+    # Configure the database URL to point to our test database
+    config.db.database_url = f"sqlite:///{db_path}"
+    config.db.max_backups = 2
+
+    # Create database instance with skip_backup=True
+    db = Database.from_config(config, run_migrations=True, skip_backup=True)
+    db.close()
+
+    # Verify no backup was created
+    backup_dir = db_path.parent / "backups"
+    assert not backup_dir.exists() or len(list(backup_dir.glob("climate_ref_*.db"))) == 0
+
+
+def test_from_config_skip_backup_parameter(tmp_path, config, mocker):
+    """Test that from_config passes skip_backup to migrate."""
+    db_path = tmp_path / "climate_ref.db"
+    config.db.database_url = f"sqlite:///{db_path}"
+
+    # Mock _create_backup to verify it's not called
+    mock_backup = mocker.patch("climate_ref.database._create_backup")
+
+    db = Database.from_config(config, run_migrations=True, skip_backup=True)
+    db.close()
+
+    # Backup should not have been called
+    mock_backup.assert_not_called()
+
+
+def test_from_config_creates_backup_by_default(tmp_path, config, mocker):
+    """Test that from_config creates backup by default (skip_backup=False)."""
+    db_path = tmp_path / "climate_ref.db"
+    config.db.database_url = f"sqlite:///{db_path}"
+
+    # Mock _create_backup to verify it is called
+    mock_backup = mocker.patch("climate_ref.database._create_backup")
+
+    db = Database.from_config(config, run_migrations=True, skip_backup=False)
+    db.close()
+
+    # Backup should have been called
+    mock_backup.assert_called_once()

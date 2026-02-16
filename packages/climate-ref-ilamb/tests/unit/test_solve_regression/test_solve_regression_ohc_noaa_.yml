@@ -1,0 +1,51 @@
+cmip6_historical_gn_r1i1p1f1_AWI-CM-1-1-MR:
+  cmip6:
+  - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.historical.r1i1p1f1.Ofx.areacello.gn.v20181218
+  - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.historical.r1i1p1f1.Omon.thetao.gn.v20181218
+cmip6_historical_gn_r1i1p1f1_AWI-ESM-1-1-LR:
+  cmip6:
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.historical.r1i1p1f1.Omon.thetao.gn.v20200212
+cmip6_historical_gn_r1i1p1f1_BCC-CSM2-MR:
+  cmip6:
+  - CMIP6.CMIP.BCC.BCC-CSM2-MR.historical.r1i1p1f1.Omon.thetao.gn.v20181126
+cmip6_historical_gn_r1i1p1f1_BCC-ESM1:
+  cmip6:
+  - CMIP6.CMIP.BCC.BCC-ESM1.historical.r1i1p1f1.Omon.thetao.gn.v20181129
+cmip6_historical_gn_r1i1p1f1_CAMS-CSM1-0:
+  cmip6:
+  - CMIP6.CMIP.CAMS.CAMS-CSM1-0.historical.r1i1p1f1.Omon.thetao.gn.v20190708
+cmip6_historical_gn_r1i1p1f1_CAS-ESM2-0:
+  cmip6:
+  - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Ofx.areacello.gn.v20201228
+  - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Ofx.volcello.gn.v20201228
+  - CMIP6.CMIP.CAS.CAS-ESM2-0.historical.r1i1p1f1.Omon.thetao.gn.v20201228
+cmip6_historical_gn_r1i1p1f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.sftof.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Omon.thetao.gn.v20190429
+cmip6_historical_gn_r1i1p1f1_CanESM5-1:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Ofx.volcello.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Omon.thetao.gn.v20190429
+cmip6_historical_gn_r1i1p1f1_FGOALS-f3-L:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Ofx.areacello.gn.v20190918
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Ofx.volcello.gn.v20190918
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.historical.r1i1p1f1.Omon.thetao.gn.v20191007
+cmip6_historical_gn_r1i1p1f1_FGOALS-g3:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Ofx.areacello.gn.v20200917
+  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Ofx.volcello.gn.v20200917
+  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.Omon.thetao.gn.v20191012
+cmip6_historical_gn_r1i1p1f1_TaiESM1:
+  cmip6:
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Ofx.areacello.gn.v20210212
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Ofx.volcello.gn.v20210212
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Omon.thetao.gn.v20200630
+cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Ofx.areacello.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Ofx.sftof.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Omon.thetao.gn.v20190429

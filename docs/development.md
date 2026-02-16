@@ -1,4 +1,5 @@
 [](){#development-reference}
+
 # Development
 
 Notes for developers. If you want to get involved, please do!
@@ -67,16 +68,19 @@ uv run ref datasets ingest --source-type obs4mips $PWD/tests/test-data/sample-da
 Additional reference datasets can be fetched by following the instructions [here](getting-started/02-download-datasets.md).
 The Obs4REF step is not required as we have already ingested these datasets above.
 
-### Creating provider environments
+### Setting up providers
 
 The REF uses a number of different providers to run the diagnostics.
-Some of these providers may require an additional conda environment to be created before running.
+Providers may require conda environments and reference data to be set up before running.
 
 ```bash
-uv run ref providers create-env
+uv run ref providers setup
 ```
 
-The created environments and their locations can be viewed using the command:
+This command creates conda environments and fetches any required reference data.
+All operations are idempotent, so it's safe to run multiple times.
+
+The installed providers and their status can be viewed using:
 
 ```bash
 uv run ref providers list
@@ -113,49 +117,34 @@ for package in packages/climate-ref*; do
 done
 ```
 
-### Installing metric provider dependencies
+### Advanced provider setup
 
 /// admonition | Windows support
    type: warning
 
-Window's doesn't support some of the packages required by the metrics providers,
+Window's doesn't support some of the packages required by the diagnostic providers,
 so we only support MacOS and Linux.
 Windows users are recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
 or a Linux VM if they wish to use the REF.
 
 ///
 
-Some metric providers can use their own conda environments.
-The REF can manage these for you,
-using a bundled version of [micromamba](https://github.com/mamba-org/micromamba-releases).
-
-The conda environments for the registered providers can be created with the following command:
-
-```bash
-ref --log-level=info providers create-env
-```
-
-A new environment will be created automatically for each conda-based metric provider when it is first used,
-if one does not already exist.
-This can cause issues if the environment is created on a node that doesn't have internet access,
-or if a race condition occurs when multiple processes try to create the environment at the same time.
-
-
 /// admonition | Note
 
 The PMP conda environment is not yet available for arm-based MacOS users,
 so the automatic installation process will fail.
 
-Arm-based MacOS users can use the following command to create the conda environment manually:
+Arm-based MacOS users can use the following command to set up the PMP provider manually:
 
 ```bash
-MAMBA_PLATFORM=osx-64 uv run ref providers create-env --provider pmp
+MAMBA_PLATFORM=osx-64 uv run ref providers setup --provider pmp
 ```
 
 ///
 
+#### Updating conda-lock files
 
-To update a conda-lock file, run for example:
+To update a conda-lock file for a provider, run for example:
 
 ```bash
 uvx conda-lock -p linux-64 -p osx-64 -p osx-arm64 -f packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements/environment.yml
@@ -181,7 +170,7 @@ make mypy
 make test
 ```
 
-If you require executing a specific diagnostic, you manually invoke `pytest` as follows for `ilamb's `gpp-fluxnet2015` diagnostic:
+If you require executing a specific diagnostic, you manually invoke `pytest` as follows for `ilamb's`gpp-fluxnet2015` diagnostic:
 
 ```bash
 pytest --slow -k gpp-fluxnet2015
@@ -221,6 +210,55 @@ Some other manual tweaks may be required to get the test suite to pass,
 but we should try and write tests that don't change when new data becomes available,
 or to use [pytest-regressions](https://pytest-regressions.readthedocs.io/en/latest/api.html) to be able to
 regenerate the expected output files.
+
+### ESGF parquet catalogs
+
+Pre-generated parquet catalogs in `tests/test-data/esgf-catalog/` contain dataset metadata
+from a real ESGF archive without requiring actual data files on disk.
+These are used by tests that only need DataFrames for solver logic,
+avoiding the need to download sample data.
+
+```
+tests/test-data/esgf-catalog/
+├── cmip6_catalog.parquet             # ~96k CMIP6 entries
+├── obs4mips_catalog.parquet          # ~176 obs4MIPs entries
+└── pmp_climatology_catalog.parquet   # ~25 PMP climatology entries
+```
+
+Two test fixtures are available for tests that need data catalogs:
+
+| Fixture             | Source                    | Requires sample data download? |
+| ------------------- | ------------------------- | ------------------------------ |
+| `data_catalog`      | Scans sample data on disk | Yes                            |
+| `esgf_data_catalog` | Reads parquet catalogs    | No                             |
+
+Use `esgf_data_catalog` for tests that only need DataFrames (solver logic, constraint testing, formatting).
+Use `data_catalog` for tests that need actual files on disk (integration tests, diagnostic execution).
+
+To regenerate or extend the catalogs from a local ESGF archive:
+
+```bash
+python scripts/generate_esgf_catalog.py \
+    --cmip6-dir /path/to/CMIP6 \
+    --obs4mips-dir /path/to/obs4MIPs \
+    --pmp-climatology-dir /path/to/PMP_obs4MIPsClims \
+    --output-dir tests/test-data/esgf-catalog/ \
+    --strip-prefix /path/to/data/root
+```
+
+### Solver regression tests
+
+Solver regression tests in `packages/climate-ref/tests/unit/test_solve_regression.py`
+run the solver against the ESGF parquet catalogs for each provider
+and compare the output against YAML baselines.
+Any change to solver logic, constraints, or data requirements
+will produce a diff in these baseline files.
+
+To regenerate baselines after an intentional change:
+
+```bash
+uv run pytest packages/climate-ref/tests/unit/test_solve_regression.py --force-regen
+```
 
 ## Documentation
 
@@ -317,7 +355,9 @@ The alembic docs on [batch mode](https://alembic.sqlalchemy.org/en/latest/batch.
 It may be useful to add postgres/sqlite specific blocks to the autogenerated revisions.
 ``
 if batch_op.get_context().dialect.name == "postgresql":
-   # Postgresql specific code
+
+# Postgresql specific code
+
 ``
 
 A postgreSQL-specific test is part of the integration test suite.
@@ -338,6 +378,7 @@ uv run alembic -c packages/climate-ref/src/climate_ref/alembic.ini \
 ```
 
 [](){releasing-reference}
+
 ## Releasing
 
 Releasing is semi-automated via a CI job.
@@ -345,9 +386,9 @@ The CI job requires the type of version bump
 that will be performed to be manually specified.
 The supported bump types are:
 
-* `major`
-* `minor`
-* `patch`
+- `major`
+- `minor`
+- `patch`
 
 We don't yet support pre-release versions,
 but this is something that we will consider in the future.
@@ -367,7 +408,6 @@ The steps required are the following:
    announcements etc.) then hit 'Publish release'.
    This triggers the [deploy workflow](https://github.com/Climate-REF/climate-ref/actions/workflows/deploy.yaml).
    This workflow deploys the built wheels and source distributions from the release to PyPI.
-
 
 1. That's it, release done, make noise on social media of choice, do whatever
    else

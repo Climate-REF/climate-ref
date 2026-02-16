@@ -2,9 +2,10 @@ import re
 from pathlib import Path
 
 import pytest
+from rich.console import Console
 
 from climate_ref import __version__
-from climate_ref.cli import build_app
+from climate_ref.cli import CLIContext, build_app
 from climate_ref_core import __version__ as __core_version__
 
 
@@ -96,7 +97,7 @@ def test_config_directory_append(config, invoke_cli):
 
 @pytest.fixture()
 def expected_groups() -> set[str]:
-    return {"config", "datasets", "executions", "providers", "celery"}
+    return {"config", "datasets", "executions", "providers", "celery", "test-cases"}
 
 
 def test_build_app(expected_groups):
@@ -118,3 +119,56 @@ def test_build_app_without_celery(mocker, expected_groups):
 
     assert ["solve"] == registered_commands
     assert set(registered_groups) == expected_groups - {"celery"}
+
+
+def test_cli_context_lazy_database(config, mocker):
+    """Test that CLIContext creates database lazily on first access."""
+    # Mock Database.from_config to verify it's called lazily
+    mock_from_config = mocker.patch("climate_ref.cli.Database.from_config")
+    mock_db = mocker.MagicMock()
+    mock_from_config.return_value = mock_db
+
+    # Create context - database should NOT be created yet
+    ctx = CLIContext(config=config, console=Console())
+    mock_from_config.assert_not_called()
+
+    # Access database - NOW it should be created
+    db = ctx.database
+    mock_from_config.assert_called_once_with(config, skip_backup=False)
+    assert db is mock_db
+
+    # Second access should return same instance, not create new one
+    db2 = ctx.database
+    assert db2 is mock_db
+    mock_from_config.assert_called_once()  # Still only called once
+
+
+def test_cli_context_skip_backup(config, mocker):
+    """Test that CLIContext passes skip_backup to Database.from_config."""
+    mock_from_config = mocker.patch("climate_ref.cli.Database.from_config")
+    mock_db = mocker.MagicMock()
+    mock_from_config.return_value = mock_db
+
+    # Create context with skip_backup=True
+    ctx = CLIContext(config=config, console=Console(), skip_backup=True)
+    _ = ctx.database
+
+    mock_from_config.assert_called_once_with(config, skip_backup=True)
+
+
+def test_cli_context_close_without_database(config):
+    """Test that CLIContext.close() works when database was never accessed."""
+    ctx = CLIContext(config=config, console=Console())
+    # Should not raise even though database was never created
+    ctx.close()
+
+
+def test_config_list_skips_database(invoke_cli, mocker):
+    """Test that 'config list' doesn't access the database."""
+    mock_from_config = mocker.patch("climate_ref.cli.Database.from_config")
+
+    result = invoke_cli(["config", "list"])
+    assert result.exit_code == 0
+
+    # Database should not have been created for config list
+    mock_from_config.assert_not_called()

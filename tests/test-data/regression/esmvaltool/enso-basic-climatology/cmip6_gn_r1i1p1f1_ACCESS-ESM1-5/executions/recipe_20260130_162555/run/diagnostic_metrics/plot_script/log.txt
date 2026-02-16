@@ -1,0 +1,1207 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot_script with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: eq_bias
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: kg m-2 s-1
+    variable_group: eq_pr_bias
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+  : alias: obs4MIPs
+    dataset: GPCP-V2.3
+    diagnostic: diagnostic_metrics
+    end_year: 2017
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+    frequency: mon
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm: []
+    preprocessor: eq_bias
+    project: obs4MIPs
+    recipe_dataset_index: 0
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1979
+    tier: 1
+    timerange: 1979/2017
+    units: kg m-2 s-1
+    variable_group: eq_pr_bias
+    version: v20180519
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: eq_sea_cycle
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: kg m-2 s-1
+    variable_group: eq_pr_seacycle
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+  : alias: obs4MIPs
+    dataset: GPCP-V2.3
+    diagnostic: diagnostic_metrics
+    end_year: 2017
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+    frequency: mon
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm: []
+    preprocessor: eq_sea_cycle
+    project: obs4MIPs
+    recipe_dataset_index: 0
+    short_name: pr
+    standard_name: precipitation_flux
+    start_year: 1979
+    tier: 1
+    timerange: 1979/2017
+    units: kg m-2 s-1
+    variable_group: eq_pr_seacycle
+    version: v20180519
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Sea Surface Temperature
+    mip: Omon
+    modeling_realm:
+    - ocean
+    preprocessor: eq_bias
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: tos
+    standard_name: sea_surface_temperature
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: degC
+    variable_group: eq_sst_bias
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos_1979-2018.nc
+  : alias: OBS6
+    dataset: TROPFLUX
+    diagnostic: diagnostic_metrics
+    end_year: 2018
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos_1979-2018.nc
+    frequency: mon
+    long_name: Sea Surface Temperature
+    mip: Omon
+    modeling_realm:
+    - ocean
+    preprocessor: eq_bias
+    project: OBS6
+    recipe_dataset_index: 0
+    short_name: tos
+    standard_name: sea_surface_temperature
+    start_year: 1979
+    tier: 2
+    timerange: 1979/2018
+    type: reanaly
+    units: degC
+    variable_group: eq_sst_bias
+    version: v1
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Sea Surface Temperature
+    mip: Omon
+    modeling_realm:
+    - ocean
+    preprocessor: eq_sea_cycle
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: tos
+    standard_name: sea_surface_temperature
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: degC
+    variable_group: eq_sst_seacycle
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc
+  : alias: OBS6
+    dataset: TROPFLUX
+    diagnostic: diagnostic_metrics
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc
+    frequency: mon
+    long_name: Sea Surface Temperature
+    mip: Omon
+    modeling_realm:
+    - ocean
+    preprocessor: eq_sea_cycle
+    project: OBS6
+    recipe_dataset_index: 0
+    short_name: tos
+    standard_name: sea_surface_temperature
+    tier: 2
+    type: reanaly
+    units: degC
+    variable_group: eq_sst_seacycle
+    version: v1
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Surface Downward Eastward Wind Stress
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: eq_bias
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: tauu
+    standard_name: surface_downward_eastward_stress
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: Pa
+    variable_group: eq_tauu_bias
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc
+  : alias: OBS6
+    dataset: TROPFLUX
+    diagnostic: diagnostic_metrics
+    end_year: 2018
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc
+    frequency: mon
+    long_name: Surface Downward Eastward Wind Stress
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: eq_bias
+    project: OBS6
+    recipe_dataset_index: 0
+    short_name: tauu
+    standard_name: surface_downward_eastward_stress
+    start_year: 1979
+    tier: 2
+    timerange: 1979/2018
+    type: reanaly
+    units: Pa
+    variable_group: eq_tauu_bias
+    version: v1
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Surface Downward Eastward Wind Stress
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: eq_sea_cycle
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: tauu
+    standard_name: surface_downward_eastward_stress
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: Pa
+    variable_group: eq_tauu_seacycle
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc
+  : alias: OBS6
+    dataset: TROPFLUX
+    diagnostic: diagnostic_metrics
+    end_year: 2018
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc
+    frequency: mon
+    long_name: Surface Downward Eastward Wind Stress
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: eq_sea_cycle
+    project: OBS6
+    recipe_dataset_index: 0
+    short_name: tauu
+    standard_name: surface_downward_eastward_stress
+    start_year: 1979
+    tier: 2
+    timerange: 1979/2018
+    type: reanaly
+    units: Pa
+    variable_group: eq_tauu_seacycle
+    version: v1
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: ITCZ_bias
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: pr
+    standard_name: lwe_precipitation_rate
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: mm/day
+    variable_group: pr_double
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+  : alias: obs4MIPs
+    dataset: GPCP-V2.3
+    diagnostic: diagnostic_metrics
+    end_year: 2017
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+    frequency: mon
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm: []
+    preprocessor: ITCZ_bias
+    project: obs4MIPs
+    recipe_dataset_index: 0
+    short_name: pr
+    standard_name: lwe_precipitation_rate
+    start_year: 1979
+    tier: 1
+    timerange: 1979/2017
+    units: mm/day
+    variable_group: pr_double
+    version: v20180519
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    diagnostic: diagnostic_metrics
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: ITCZ_sea_cycle
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: pr
+    standard_name: lwe_precipitation_rate
+    start_year: 1850
+    timerange: 18500116T120000/20141216T120000
+    units: mm/day
+    variable_group: pr_double_seacycle
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+  : alias: obs4MIPs
+    dataset: GPCP-V2.3
+    diagnostic: diagnostic_metrics
+    end_year: 2017
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc
+    frequency: mon
+    long_name: Precipitation
+    mip: Amon
+    modeling_realm: []
+    preprocessor: ITCZ_sea_cycle
+    project: obs4MIPs
+    recipe_dataset_index: 0
+    short_name: pr
+    standard_name: lwe_precipitation_rate
+    start_year: 1979
+    tier: 1
+    timerange: 1979/2017
+    units: mm/day
+    variable_group: pr_double_seacycle
+    version: v20180519
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162555/run/diagnostic_metrics/plot_script
+scheduler_address: tcp://127.0.0.1:43899
+script: plot_script
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script
+INFO:climatology_diagnostic1.py:eq_pr_bias : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'eq_bias',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'pr',
+  'standard_name': 'precipitation_flux',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'kg m-2 s-1',
+  'variable_group': 'eq_pr_bias',
+  'version': 'v20191115'},
+ {'alias': 'obs4MIPs',
+  'dataset': 'GPCP-V2.3',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2017,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+  'frequency': 'mon',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': [],
+  'preprocessor': 'eq_bias',
+  'project': 'obs4MIPs',
+  'recipe_dataset_index': 0,
+  'short_name': 'pr',
+  'standard_name': 'precipitation_flux',
+  'start_year': 1979,
+  'tier': 1,
+  'timerange': '1979/2017',
+  'units': 'kg m-2 s-1',
+  'variable_group': 'eq_pr_bias',
+  'version': 'v20180519'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'eq_bias',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'pr',
+ 'standard_name': 'precipitation_flux',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'kg m-2 s-1',
+ 'variable_group': 'eq_pr_bias',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: GPCP-V2.3 - Precipitation
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_bias.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Precipitation
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_eq_pr_bias.nc
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_pr_bias.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'obs4MIPs',
+ 'dataset': 'GPCP-V2.3',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2017,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_bias/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': [],
+ 'preprocessor': 'eq_bias',
+ 'project': 'obs4MIPs',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'pr',
+ 'standard_name': 'precipitation_flux',
+ 'start_year': 1979,
+ 'tier': 1,
+ 'timerange': '1979/2017',
+ 'units': 'kg m-2 s-1',
+ 'variable_group': 'eq_pr_bias',
+ 'version': 'v20180519'}
+INFO:climatology_diagnostic1.py:eq_pr_seacycle : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'eq_sea_cycle',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'pr',
+  'standard_name': 'precipitation_flux',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'kg m-2 s-1',
+  'variable_group': 'eq_pr_seacycle',
+  'version': 'v20191115'},
+ {'alias': 'obs4MIPs',
+  'dataset': 'GPCP-V2.3',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2017,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+  'frequency': 'mon',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': [],
+  'preprocessor': 'eq_sea_cycle',
+  'project': 'obs4MIPs',
+  'recipe_dataset_index': 0,
+  'short_name': 'pr',
+  'standard_name': 'precipitation_flux',
+  'start_year': 1979,
+  'tier': 1,
+  'timerange': '1979/2017',
+  'units': 'kg m-2 s-1',
+  'variable_group': 'eq_pr_seacycle',
+  'version': 'v20180519'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'eq_sea_cycle',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'pr',
+ 'standard_name': 'precipitation_flux',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'kg m-2 s-1',
+ 'variable_group': 'eq_pr_seacycle',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: GPCP-V2.3 - Precipitation
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/cube.py:4447: IrisUserWarning: Collapsing spatial coordinate 'latitude' without weighting
+  warnings.warn(
+
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_seacycle.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Precipitation
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/cube.py:4447: IrisUserWarning: Collapsing spatial coordinate 'latitude' without weighting
+  warnings.warn(
+
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_eq_pr_seacycle.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_pr_seacycle.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'obs4MIPs',
+ 'dataset': 'GPCP-V2.3',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2017,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_pr_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': [],
+ 'preprocessor': 'eq_sea_cycle',
+ 'project': 'obs4MIPs',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'pr',
+ 'standard_name': 'precipitation_flux',
+ 'start_year': 1979,
+ 'tier': 1,
+ 'timerange': '1979/2017',
+ 'units': 'kg m-2 s-1',
+ 'variable_group': 'eq_pr_seacycle',
+ 'version': 'v20180519'}
+INFO:climatology_diagnostic1.py:eq_sst_bias : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Sea Surface Temperature',
+  'mip': 'Omon',
+  'modeling_realm': ['ocean'],
+  'preprocessor': 'eq_bias',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'tos',
+  'standard_name': 'sea_surface_temperature',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'degC',
+  'variable_group': 'eq_sst_bias',
+  'version': 'v20191115'},
+ {'alias': 'OBS6',
+  'dataset': 'TROPFLUX',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2018,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos_1979-2018.nc',
+  'frequency': 'mon',
+  'long_name': 'Sea Surface Temperature',
+  'mip': 'Omon',
+  'modeling_realm': ['ocean'],
+  'preprocessor': 'eq_bias',
+  'project': 'OBS6',
+  'recipe_dataset_index': 0,
+  'short_name': 'tos',
+  'standard_name': 'sea_surface_temperature',
+  'start_year': 1979,
+  'tier': 2,
+  'timerange': '1979/2018',
+  'type': 'reanaly',
+  'units': 'degC',
+  'variable_group': 'eq_sst_bias',
+  'version': 'v1'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Sea Surface Temperature',
+ 'mip': 'Omon',
+ 'modeling_realm': ['ocean'],
+ 'preprocessor': 'eq_bias',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'tos',
+ 'standard_name': 'sea_surface_temperature',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'degC',
+ 'variable_group': 'eq_sst_bias',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: TROPFLUX - Sea Surface Temperature
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_bias.nc
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Sea Surface Temperature
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_eq_sst_bias.nc
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_sst_bias.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'OBS6',
+ 'dataset': 'TROPFLUX',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2018,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_bias/OBS6_TROPFLUX_reanaly_v1_Omon_tos_1979-2018.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Surface Temperature',
+ 'mip': 'Omon',
+ 'modeling_realm': ['ocean'],
+ 'preprocessor': 'eq_bias',
+ 'project': 'OBS6',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'tos',
+ 'standard_name': 'sea_surface_temperature',
+ 'start_year': 1979,
+ 'tier': 2,
+ 'timerange': '1979/2018',
+ 'type': 'reanaly',
+ 'units': 'degC',
+ 'variable_group': 'eq_sst_bias',
+ 'version': 'v1'}
+INFO:climatology_diagnostic1.py:eq_sst_seacycle : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Sea Surface Temperature',
+  'mip': 'Omon',
+  'modeling_realm': ['ocean'],
+  'preprocessor': 'eq_sea_cycle',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'tos',
+  'standard_name': 'sea_surface_temperature',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'degC',
+  'variable_group': 'eq_sst_seacycle',
+  'version': 'v20191115'},
+ {'alias': 'OBS6',
+  'dataset': 'TROPFLUX',
+  'diagnostic': 'diagnostic_metrics',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc',
+  'frequency': 'mon',
+  'long_name': 'Sea Surface Temperature',
+  'mip': 'Omon',
+  'modeling_realm': ['ocean'],
+  'preprocessor': 'eq_sea_cycle',
+  'project': 'OBS6',
+  'recipe_dataset_index': 0,
+  'short_name': 'tos',
+  'standard_name': 'sea_surface_temperature',
+  'tier': 2,
+  'type': 'reanaly',
+  'units': 'degC',
+  'variable_group': 'eq_sst_seacycle',
+  'version': 'v1'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/CMIP6_ACCESS-ESM1-5_Omon_historical_r1i1p1f1_tos_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Sea Surface Temperature',
+ 'mip': 'Omon',
+ 'modeling_realm': ['ocean'],
+ 'preprocessor': 'eq_sea_cycle',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'tos',
+ 'standard_name': 'sea_surface_temperature',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'degC',
+ 'variable_group': 'eq_sst_seacycle',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: TROPFLUX - Sea Surface Temperature
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/cube.py:4447: IrisUserWarning: Collapsing spatial coordinate 'latitude' without weighting
+  warnings.warn(
+
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_seacycle.nc
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Sea Surface Temperature
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/cube.py:4447: IrisUserWarning: Collapsing spatial coordinate 'latitude' without weighting
+  warnings.warn(
+
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_eq_sst_seacycle.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_sst_seacycle.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'OBS6',
+ 'dataset': 'TROPFLUX',
+ 'diagnostic': 'diagnostic_metrics',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_sst_seacycle/OBS6_TROPFLUX_reanaly_v1_Omon_tos.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Surface Temperature',
+ 'mip': 'Omon',
+ 'modeling_realm': ['ocean'],
+ 'preprocessor': 'eq_sea_cycle',
+ 'project': 'OBS6',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'tos',
+ 'standard_name': 'sea_surface_temperature',
+ 'tier': 2,
+ 'type': 'reanaly',
+ 'units': 'degC',
+ 'variable_group': 'eq_sst_seacycle',
+ 'version': 'v1'}
+INFO:climatology_diagnostic1.py:eq_tauu_bias : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Surface Downward Eastward Wind Stress',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'eq_bias',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'tauu',
+  'standard_name': 'surface_downward_eastward_stress',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'Pa',
+  'variable_group': 'eq_tauu_bias',
+  'version': 'v20191115'},
+ {'alias': 'OBS6',
+  'dataset': 'TROPFLUX',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2018,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc',
+  'frequency': 'mon',
+  'long_name': 'Surface Downward Eastward Wind Stress',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'eq_bias',
+  'project': 'OBS6',
+  'recipe_dataset_index': 0,
+  'short_name': 'tauu',
+  'standard_name': 'surface_downward_eastward_stress',
+  'start_year': 1979,
+  'tier': 2,
+  'timerange': '1979/2018',
+  'type': 'reanaly',
+  'units': 'Pa',
+  'variable_group': 'eq_tauu_bias',
+  'version': 'v1'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Surface Downward Eastward Wind Stress',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'eq_bias',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'tauu',
+ 'standard_name': 'surface_downward_eastward_stress',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'Pa',
+ 'variable_group': 'eq_tauu_bias',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: TROPFLUX - Surface Downward Eastward Wind Stress
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_bias.nc
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Surface Downward Eastward Wind Stress
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_eq_tauu_bias.nc
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_tauu_bias.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'OBS6',
+ 'dataset': 'TROPFLUX',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2018,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_bias/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Surface Downward Eastward Wind Stress',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'eq_bias',
+ 'project': 'OBS6',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'tauu',
+ 'standard_name': 'surface_downward_eastward_stress',
+ 'start_year': 1979,
+ 'tier': 2,
+ 'timerange': '1979/2018',
+ 'type': 'reanaly',
+ 'units': 'Pa',
+ 'variable_group': 'eq_tauu_bias',
+ 'version': 'v1'}
+INFO:climatology_diagnostic1.py:eq_tauu_seacycle : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Surface Downward Eastward Wind Stress',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'eq_sea_cycle',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'tauu',
+  'standard_name': 'surface_downward_eastward_stress',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'Pa',
+  'variable_group': 'eq_tauu_seacycle',
+  'version': 'v20191115'},
+ {'alias': 'OBS6',
+  'dataset': 'TROPFLUX',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2018,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc',
+  'frequency': 'mon',
+  'long_name': 'Surface Downward Eastward Wind Stress',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'eq_sea_cycle',
+  'project': 'OBS6',
+  'recipe_dataset_index': 0,
+  'short_name': 'tauu',
+  'standard_name': 'surface_downward_eastward_stress',
+  'start_year': 1979,
+  'tier': 2,
+  'timerange': '1979/2018',
+  'type': 'reanaly',
+  'units': 'Pa',
+  'variable_group': 'eq_tauu_seacycle',
+  'version': 'v1'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_tauu_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Surface Downward Eastward Wind Stress',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'eq_sea_cycle',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'tauu',
+ 'standard_name': 'surface_downward_eastward_stress',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'Pa',
+ 'variable_group': 'eq_tauu_seacycle',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: TROPFLUX - Surface Downward Eastward Wind Stress
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/cube.py:4447: IrisUserWarning: Collapsing spatial coordinate 'latitude' without weighting
+  warnings.warn(
+
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_seacycle.nc
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Surface Downward Eastward Wind Stress
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/cube.py:4447: IrisUserWarning: Collapsing spatial coordinate 'latitude' without weighting
+  warnings.warn(
+
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_eq_tauu_seacycle.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_eq_tauu_seacycle.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'OBS6',
+ 'dataset': 'TROPFLUX',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2018,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/eq_tauu_seacycle/OBS6_TROPFLUX_reanaly_v1_Amon_tauu_1979-2018.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Surface Downward Eastward Wind Stress',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'eq_sea_cycle',
+ 'project': 'OBS6',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'tauu',
+ 'standard_name': 'surface_downward_eastward_stress',
+ 'start_year': 1979,
+ 'tier': 2,
+ 'timerange': '1979/2018',
+ 'type': 'reanaly',
+ 'units': 'Pa',
+ 'variable_group': 'eq_tauu_seacycle',
+ 'version': 'v1'}
+INFO:climatology_diagnostic1.py:pr_double : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'ITCZ_bias',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'pr',
+  'standard_name': 'lwe_precipitation_rate',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'mm/day',
+  'variable_group': 'pr_double',
+  'version': 'v20191115'},
+ {'alias': 'obs4MIPs',
+  'dataset': 'GPCP-V2.3',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2017,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+  'frequency': 'mon',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': [],
+  'preprocessor': 'ITCZ_bias',
+  'project': 'obs4MIPs',
+  'recipe_dataset_index': 0,
+  'short_name': 'pr',
+  'standard_name': 'lwe_precipitation_rate',
+  'start_year': 1979,
+  'tier': 1,
+  'timerange': '1979/2017',
+  'units': 'mm/day',
+  'variable_group': 'pr_double',
+  'version': 'v20180519'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'ITCZ_bias',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'pr',
+ 'standard_name': 'lwe_precipitation_rate',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'mm/day',
+ 'variable_group': 'pr_double',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: GPCP-V2.3 - Precipitation
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double.nc
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Precipitation
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_pr_double.nc
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_pr_double.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'obs4MIPs',
+ 'dataset': 'GPCP-V2.3',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2017,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': [],
+ 'preprocessor': 'ITCZ_bias',
+ 'project': 'obs4MIPs',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'pr',
+ 'standard_name': 'lwe_precipitation_rate',
+ 'start_year': 1979,
+ 'tier': 1,
+ 'timerange': '1979/2017',
+ 'units': 'mm/day',
+ 'variable_group': 'pr_double',
+ 'version': 'v20180519'}
+INFO:climatology_diagnostic1.py:pr_double_seacycle : 2, [{'activity': 'CMIP',
+  'alias': 'CMIP6',
+  'dataset': 'ACCESS-ESM1-5',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2014,
+  'ensemble': 'r1i1p1f1',
+  'exp': 'historical',
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+  'frequency': 'mon',
+  'grid': 'gn',
+  'institute': 'CSIRO',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': ['atmos'],
+  'preprocessor': 'ITCZ_sea_cycle',
+  'project': 'CMIP6',
+  'recipe_dataset_index': 1,
+  'short_name': 'pr',
+  'standard_name': 'lwe_precipitation_rate',
+  'start_year': 1850,
+  'timerange': '18500116T120000/20141216T120000',
+  'units': 'mm/day',
+  'variable_group': 'pr_double_seacycle',
+  'version': 'v20191115'},
+ {'alias': 'obs4MIPs',
+  'dataset': 'GPCP-V2.3',
+  'diagnostic': 'diagnostic_metrics',
+  'end_year': 2017,
+  'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+  'frequency': 'mon',
+  'long_name': 'Precipitation',
+  'mip': 'Amon',
+  'modeling_realm': [],
+  'preprocessor': 'ITCZ_sea_cycle',
+  'project': 'obs4MIPs',
+  'recipe_dataset_index': 0,
+  'short_name': 'pr',
+  'standard_name': 'lwe_precipitation_rate',
+  'start_year': 1979,
+  'tier': 1,
+  'timerange': '1979/2017',
+  'units': 'mm/day',
+  'variable_group': 'pr_double_seacycle',
+  'version': 'v20180519'}]
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'activity': 'CMIP',
+ 'alias': 'CMIP6',
+ 'dataset': 'ACCESS-ESM1-5',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2014,
+ 'ensemble': 'r1i1p1f1',
+ 'exp': 'historical',
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_pr_gn_18500116T120000-20141216T120000.nc',
+ 'frequency': 'mon',
+ 'grid': 'gn',
+ 'institute': 'CSIRO',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': ['atmos'],
+ 'preprocessor': 'ITCZ_sea_cycle',
+ 'project': 'CMIP6',
+ 'recipe_dataset_index': 1,
+ 'short_name': 'pr',
+ 'standard_name': 'lwe_precipitation_rate',
+ 'start_year': 1850,
+ 'timerange': '18500116T120000/20141216T120000',
+ 'units': 'mm/day',
+ 'variable_group': 'pr_double_seacycle',
+ 'version': 'v20191115'}
+INFO:climatology_diagnostic1.py:dataset: GPCP-V2.3 - Precipitation
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double_seacycle.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:climatology_diagnostic1.py:dataset: ACCESS-ESM1-5 - Precipitation
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/work/diagnostic_metrics/plot_script/ACCESS-ESM1-5_pr_double_seacycle.nc
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/iris/fileformats/netcdf/saver.py:2458: IrisCfSaveWarning: 'history' is being added as CF data variable attribute, but 'history' should only be a CF global attribute.
+  warnings.warn(msg, category=iris.warnings.IrisCfSaveWarning)
+
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162555/plots/diagnostic_metrics/plot_script/png/ACCESS-ESM1-5_pr_double_seacycle.png
+INFO:climatology_diagnostic1.py:iterate though datasets
+ {'alias': 'obs4MIPs',
+ 'dataset': 'GPCP-V2.3',
+ 'diagnostic': 'diagnostic_metrics',
+ 'end_year': 2017,
+ 'filename': '<OUTPUT_DIR>/executions/recipe_20260130_162555/preproc/diagnostic_metrics/pr_double_seacycle/obs4MIPs_GPCP-V2.3_pr_1979-2017.nc',
+ 'frequency': 'mon',
+ 'long_name': 'Precipitation',
+ 'mip': 'Amon',
+ 'modeling_realm': [],
+ 'preprocessor': 'ITCZ_sea_cycle',
+ 'project': 'obs4MIPs',
+ 'recipe_dataset_index': 0,
+ 'short_name': 'pr',
+ 'standard_name': 'lwe_precipitation_rate',
+ 'start_year': 1979,
+ 'tier': 1,
+ 'timerange': '1979/2017',
+ 'units': 'mm/day',
+ 'variable_group': 'pr_double_seacycle',
+ 'version': 'v20180519'}
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

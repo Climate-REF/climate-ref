@@ -1,0 +1,111 @@
+documentation:
+  title: 'Transient Climate Response to Cumulative CO2 Emissions (TCRE).
+
+    '
+  description: 'Calculate Transient Climate Response to Cumulative CO2 Emissions (TCRE).
+
+    '
+  authors:
+  - schlund_manuel
+  maintainer:
+  - schlund_manuel
+  references:
+  - sanderson24gmd
+  domains:
+  - global
+  realms:
+  - atmos
+  themes:
+  - carbon
+  - bgphys
+datasets_target_exp:
+- project: CMIP6
+  dataset: MPI-ESM1-2-LR
+  ensemble: r1i1p1f1
+  grid: gn
+  timerange: 1850/1914
+datasets_control_exp:
+- project: CMIP6
+  dataset: MPI-ESM1-2-LR
+  ensemble: r1i1p1f1
+  grid: gn
+  timerange: 1850/1914
+preprocessors:
+  global_annual_mean_anomaly:
+    custom_order: true
+    area_statistics:
+      operator: mean
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+  global_cumulative_sum:
+    custom_order: true
+    area_statistics:
+      operator: sum
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+    cumulative_sum:
+      coord: time
+      weights: true
+    convert_units:
+      units: Pg
+diagnostics:
+  tcre:
+    variables:
+      tas_esm-1pctCO2:
+        short_name: tas
+        preprocessor: global_annual_mean_anomaly
+        additional_datasets:
+        - project: CMIP6
+          activity: C4MIP CDRMIP
+          dataset: MPI-ESM1-2-LR
+          ensemble: r1i1p1f1
+          institute: MPI-M
+          exp: esm-1pctCO2
+          grid: gn
+          mip: Amon
+          timerange: 1850/1914
+      tas_esm-piControl:
+        short_name: tas
+        preprocessor: global_annual_mean_anomaly
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: MPI-ESM1-2-LR
+          ensemble: r1i1p1f1
+          institute: MPI-M
+          exp: esm-piControl
+          grid: gn
+          mip: Amon
+          timerange: 1850/1914
+      fco2antt:
+        preprocessor: global_cumulative_sum
+        additional_datasets:
+        - project: CMIP6
+          activity: C4MIP CDRMIP
+          dataset: MPI-ESM1-2-LR
+          ensemble: r1i1p1f1
+          institute: MPI-M
+          exp: esm-1pctCO2
+          grid: gn
+          mip: Amon
+          timerange: 1850/1914
+    scripts:
+      calculate_tcre:
+        script: climate_metrics/tcre.py
+        calc_tcre_period:
+        - 45
+        - 65
+        caption: "Global annual mean near-surface air temperature anomaly \u0394T\
+          \ vs.\nglobal annual cumulative CO2 emissions E of the emission-driven 1%\n\
+          CO2 increase per year experiment for model MPI-ESM1-2-LR (ensemble\nmember\
+          \ r1i1p1f1). The transient climate response to cumulative CO2\nEmissions\
+          \ (TCRE) is defined as the 20-year average \u0394T centered at\nthe time\
+          \ where cumulative CO2 emissions E reach 1000 PgC.\n"
+        exp_target: esm-1pctCO2
+        legend_kwargs: false
+        pyplot_kwargs:
+          title: MPI-ESM1-2-LR (ensemble member r1i1p1f1)
+          xlabel: E [PgC]
+          ylabel: "\u0394T [K]"

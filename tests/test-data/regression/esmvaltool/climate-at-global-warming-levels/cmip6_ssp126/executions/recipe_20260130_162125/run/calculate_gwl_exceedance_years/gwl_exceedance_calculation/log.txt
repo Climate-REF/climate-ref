@@ -1,0 +1,69 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script gwl_exceedance_calculation with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+gwls:
+- 1.5
+- 2.0
+- 3.0
+- 4.0
+- 5.0
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/calculate_gwl_exceedance_years/tas_anomaly/CMIP6_ACCESS-ESM1-5_Amon_ssp126-historical_r1i1p1f1_tas_gn_1850-2100.nc
+  : activity:
+    - ScenarioMIP
+    - CMIP
+    alias: ACCESS-ESM1-5
+    dataset: ACCESS-ESM1-5
+    diagnostic: calculate_gwl_exceedance_years
+    end_year: 2100
+    ensemble: r1i1p1f1
+    exp: ssp126-historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/calculate_gwl_exceedance_years/tas_anomaly/CMIP6_ACCESS-ESM1-5_Amon_ssp126-historical_r1i1p1f1_tas_gn_1850-2100.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: calculate_anomalies
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 1850
+    timerange: 1850/2100
+    units: K
+    variable_group: tas_anomaly
+    version:
+    - v20191115
+    - v20210318
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162125/preproc/calculate_gwl_exceedance_years/tas_anomaly/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/plots/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/run/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+scheduler_address: tcp://127.0.0.1:42497
+script: gwl_exceedance_calculation
+version: 2.13.0
+window_size: 21
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162125/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162125/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162125/plots/calculate_gwl_exceedance_years/gwl_exceedance_calculation
+INFO:calculate_gwl_exceedance_years:Processing CMIP6 ssp126-historical ACCESS-ESM1-5 r1i1p1f1 
+INFO:calculate_gwl_exceedance_years:Start and end years and averaging over  2000 2100 21 
+INFO:calculate_gwl_exceedance_years:GWL temperature 1.5
+INFO:calculate_gwl_exceedance_years:Size of array (101,) 
+INFO:calculate_gwl_exceedance_years:Exceedance year 2031 
+INFO:calculate_gwl_exceedance_years:GWL temperature 2.0
+INFO:calculate_gwl_exceedance_years:Size of array (101,) 
+INFO:calculate_gwl_exceedance_years:Exceedance year 2074 
+INFO:calculate_gwl_exceedance_years:GWL temperature 3.0
+INFO:calculate_gwl_exceedance_years:Size of array (101,) 
+INFO:calculate_gwl_exceedance_years:GWL temperature 4.0
+INFO:calculate_gwl_exceedance_years:Size of array (101,) 
+INFO:calculate_gwl_exceedance_years:GWL temperature 5.0
+INFO:calculate_gwl_exceedance_years:Size of array (101,) 
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

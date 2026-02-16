@@ -7,7 +7,7 @@ This was a deliberate decision to make it easy to make the framework easy to ins
 Some of the [diagnostic providers](nutshell.md) require additional dependencies in order to run an execution.
 For these providers, the REF can automatically create a new Conda environment and install the required dependencies in this standalone environment.
 Each of these provider-specific environments are decoupled to allow for potentially incompatible dependencies.
-This uses a bundled version of the [micromamba](https://github.com/mamba-org/micromamba-releases)
+This uses a bundled version of [micromamba](https://github.com/mamba-org/micromamba-releases)
 to create and manage the environments so no additional dependencies are required.
 
 /// admonition | HPC Users
@@ -26,6 +26,7 @@ pip install "climate-ref[aft-providers]"
 ///
 
 ## Installing `climate-ref`
+
 ### PyPI
 
 You can install `climate-ref` using `pip`:
@@ -65,7 +66,7 @@ The conda-forge packages are a work in progress and are not yet available.
 See [#80](https://github.com/Climate-REF/climate-ref/issues/80) for more information.
 ///
 
-We intend on providing a recipe on conda-force. Once complete you can install `climate-ref` using `mamba` or `conda`:
+We intend on providing a recipe on conda-forge. Once complete you can install `climate-ref` using `mamba` or `conda`:
 
 ```bash
 mamba install -c conda-forge climate-ref
@@ -74,7 +75,6 @@ conda install -c conda-forge climate-ref
 
 A modern alternative to using `conda` as package a manager is [Pixi](https://pixi.sh/dev/).
 Pixi uses the same packages as `conda` but is faster and can create reproducible environments out of the box.
-
 
 ### Docker
 
@@ -96,7 +96,7 @@ If you want to use the latest development version, you can build the Docker imag
 ```bash
 git clone https://github.com/Climate-REF/climate-ref.git
 cd climate-ref
-docker-compose build
+docker build
 ```
 
 If you require the full-stack of services recommended for a production deployment, you can use the `docker-compose` file to start the services.
@@ -120,33 +120,46 @@ make virtual-environment
 See the [development documentation](development.md) for more information on how to contribute to the project.
 
 [](){#provider-dependencies}
-## Installing metric provider dependencies
+
+## Setting up diagnostic providers
 
 /// admonition | Windows support
     type: warning
 
-Window's doesn't support some of the packages required by the [diagnostic providers](nutshell.md),
+Windows doesn't support some of the packages required by the [diagnostic providers](nutshell.md),
 so we only support MacOS and Linux.
 Windows users are recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
 or a Linux VM if they wish to use the REF.
 
 ///
 
-Some metric providers can use their own conda environments.
-The REF can manage these for you,
-using a bundled version of [micromamba](https://github.com/mamba-org/micromamba-releases).
+Diagnostic providers may require additional setup before they can be used:
 
-The conda environments for the registered providers can be created with the following command:
+* **Conda environments**: Some providers run diagnostics in isolated conda environments
+* **Reference data**: Some providers need to download reference datasets or auxiliary files
+
+The REF can manage all of this for you with a single command:
 
 ```bash
-ref providers create-env
+ref providers setup
 ```
 
-A new environment will be created automatically for each conda-based metric provider when it is first used,
-if one does not already exist.
-This can cause issues if the environment is created on a node that doesn't have internet access,
-or if a race condition occurs when multiple processes try to create the environment at the same time.
+This command:
 
+1. Creates conda environments for providers that need them (using bundled [micromamba](https://github.com/mamba-org/micromamba-releases))
+2. Downloads any required reference data to the local cache
+3. Performs any additional provider-specific setup
+
+All operations are idempotent, so it's safe to run multiple times.
+
+/// admonition | HPC users
+    type: tip
+
+If you're running the REF on an HPC system where compute nodes don't have internet access,
+run `ref providers setup` on a login node before submitting jobs.
+This ensures all environments and data are available for offline execution.
+
+///
 
 /// admonition | Note
 
@@ -156,13 +169,31 @@ so the automatic installation process will fail.
 Arm-based MacOS users can use the following command to create the conda environment manually:
 
 ```bash
-MAMBA_PLATFORM=osx-64 ref providers create-env --provider pmp
+MAMBA_PLATFORM=osx-64 ref providers setup --provider pmp
 ```
 
 ///
 
-The created environments and their locations can be viewed using the command:
+The installed providers and their status can be viewed using:
 
 ```bash
 ref providers list
+```
+
+### Advanced options
+
+For fine-grained control, you can use additional flags:
+
+```bash
+# Setup only a specific provider
+ref providers setup --provider esmvaltool
+
+# Skip environment creation (only fetch data)
+ref providers setup --skip-env
+
+# Skip data fetching (only create environments)
+ref providers setup --skip-data
+
+# Validate setup without running it
+ref providers setup --validate-only
 ```

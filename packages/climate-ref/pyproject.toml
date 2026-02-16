@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref"
-version = "0.8.0"
+version = "0.10.0"
 description = "Application which runs the CMIP Rapid Evaluation Framework"
 readme = "README.md"
 authors = [
@@ -41,6 +41,7 @@ dependencies = [
     "ecgtools>=2024.7.31",
     "platformdirs>=4.3.6",
     "tqdm>=4.67.1",
+    "gitpython>=3.1.0",
     # parsl doesn't support Windows yet
     # We don't target Windows either, but this __might__ allow Windows users to install the package
     'parsl>=2025.5.19; sys_platform != "win32"'
@@ -64,6 +65,13 @@ providers = [
     "climate-ref-pmp>=0.5.0",
     "climate-ref-ilamb>=0.5.0",
 ]
+test = [
+    "pytest>=9.0.0",
+    "pytest-mock>=3.12",
+]
+
+[project.entry-points."pytest11"]
+climate_ref = "climate_ref.conftest_plugin"
 
 [project.scripts]
 ref = "climate_ref.cli:app"

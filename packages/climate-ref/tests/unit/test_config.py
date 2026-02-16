@@ -129,6 +129,8 @@ filename = "sqlite://climate_ref.db"
 
     def test_defaults(self, monkeypatch, mocker):
         monkeypatch.setenv("REF_CONFIGURATION", "test")
+        # Clear any externally set env vars that would affect the test
+        monkeypatch.delenv("REF_SOFTWARE_ROOT", raising=False)
         mocker.patch("climate_ref.config.importlib.resources.files", return_value=Path("pycmec"))
         mocker.patch(
             "climate_ref.config.importlib.metadata.entry_points",
@@ -223,7 +225,7 @@ filename = "sqlite://climate_ref.db"
     )
     def test_executor_build_config(self, mocker, config, db):
         mock_executor = mocker.MagicMock(spec=Executor)
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=mock_executor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=mock_executor)
 
         executor = config.executor.build(config, db)
         assert executor == mock_executor.return_value
@@ -235,7 +237,7 @@ filename = "sqlite://climate_ref.db"
     )
     def test_executor_build_extra_config(self, mocker, config, db):
         mock_executor = mocker.MagicMock(spec=Executor)
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=mock_executor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=mock_executor)
 
         config.executor = evolve(config.executor, config={"extra": 1})
 
@@ -249,7 +251,7 @@ filename = "sqlite://climate_ref.db"
         class NotAnExecutor:
             def __init__(self, **kwargs): ...
 
-        mocker.patch("climate_ref.config.import_executor_cls", return_value=NotAnExecutor)
+        mocker.patch("climate_ref_core.executor.import_executor_cls", return_value=NotAnExecutor)
 
         match = r"Expected an Executor, got <class '.*\.NotAnExecutor'>"
         with pytest.raises(InvalidExecutorException, match=match):
@@ -291,6 +293,22 @@ def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
     result = mocker.MagicMock(status_code=404, content=b"{}")
     result.raise_for_status.side_effect = requests.RequestException
     mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
+
+    path = _get_default_ignore_datasets_file()
+    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert path.parent.exists()
+    assert path.read_text(encoding="utf-8") == ""
+
+
+def test_get_default_ignore_datasets_file_network_error(mocker, tmp_path):
+    """Test that network errors during requests.get() are handled gracefully."""
+    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+    # Simulate network error (e.g., no network access in offline/HPC environment)
+    mocker.patch.object(
+        climate_ref.config.requests,
+        "get",
+        side_effect=requests.exceptions.ConnectionError("Network unreachable"),
+    )
 
     path = _get_default_ignore_datasets_file()
     assert path == tmp_path / "default_ignore_datasets.yaml"

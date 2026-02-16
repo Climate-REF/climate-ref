@@ -1,9 +1,7 @@
 from __future__ import annotations
 
 import warnings
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
 from ecgtools import Builder
@@ -12,34 +10,8 @@ from loguru import logger
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
+from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP6Dataset
-
-
-def _parse_datetime(dt_str: pd.Series[str]) -> pd.Series[datetime | Any]:
-    """
-    Pandas tries to coerce everything to their own datetime format, which is not what we want here.
-    """
-
-    def _inner(date_string: str | None) -> datetime | None:
-        if not date_string or pd.isnull(date_string):
-            return None
-
-        # Try to parse the date string with and without milliseconds
-        for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"):
-            try:
-                return datetime.strptime(date_string, fmt)
-            except ValueError:
-                continue
-
-        # If all parsing attempts fail, log an error and return None
-        logger.error(f"Failed to parse date string: {date_string}")
-        return None
-
-    return pd.Series(
-        [_inner(dt) for dt in dt_str],
-        index=dt_str.index,
-        dtype="object",
-    )
 
 
 def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
@@ -53,22 +25,16 @@ def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
     if "parent_variant_label" in data_catalog:
         data_catalog = (
             data_catalog.groupby("instance_id")
-            .apply(_fix_parent_variant_label, include_groups=False)
+            .apply(_fix_parent_variant_label, include_groups=False)  # type: ignore[call-overload]
             .reset_index(level="instance_id")
         )
 
     if "branch_time_in_child" in data_catalog:
-        data_catalog["branch_time_in_child"] = _clean_branch_time(data_catalog["branch_time_in_child"])
+        data_catalog["branch_time_in_child"] = clean_branch_time(data_catalog["branch_time_in_child"])
     if "branch_time_in_parent" in data_catalog:
-        data_catalog["branch_time_in_parent"] = _clean_branch_time(data_catalog["branch_time_in_parent"])
+        data_catalog["branch_time_in_parent"] = clean_branch_time(data_catalog["branch_time_in_parent"])
 
     return data_catalog
-
-
-def _clean_branch_time(branch_time: pd.Series[str]) -> pd.Series[float]:
-    # EC-Earth3 uses "D" as a suffix for the branch_time_in_child and branch_time_in_parent columns
-    # Handle missing values (these result in nan values)
-    return pd.to_numeric(branch_time.astype(str).str.replace("D", ""), errors="coerce")
 
 
 class CMIP6DatasetAdapter(DatasetAdapter):
@@ -191,8 +157,8 @@ class CMIP6DatasetAdapter(DatasetAdapter):
 
         # Convert the start_time and end_time columns to datetime objects
         # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
-        datasets["start_time"] = _parse_datetime(datasets["start_time"])
-        datasets["end_time"] = _parse_datetime(datasets["end_time"])
+        datasets["start_time"] = parse_datetime(datasets["start_time"])
+        datasets["end_time"] = parse_datetime(datasets["end_time"])
 
         drs_items = [
             *self.dataset_id_metadata,

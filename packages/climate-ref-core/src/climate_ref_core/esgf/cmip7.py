@@ -66,7 +66,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         str(cmip7_facets.get("experiment_id", "historical")),
         str(cmip7_facets.get("variant_label", "r1i1p1f1")),
         str(cmip7_facets.get("frequency", "mon")),
-        str(cmip7_facets.get("out_name", cmip7_facets.get("variable_id", "tas"))),
+        str(cmip7_facets.get("variable_id", "tas")),
         str(cmip7_facets.get("grid_label", "gn")),
         version,
     )
@@ -192,8 +192,8 @@ class CMIP7Request:
     def _convert_to_cmip7_metadata(self, cmip6_row: dict[str, Any]) -> dict[str, Any]:
         """Convert CMIP6 metadata to CMIP7 format.
 
-        This is the single location for DReq enrichment: it adds
-        ``region``, ``branding_suffix``, ``out_name``, and
+        This is the single location for DReq enrichment: it updates
+        ``variable_id`` and adds ``region``, ``branding_suffix``, and
         ``branded_variable`` from the Data Request when available.
         """
         cmip7_row = dict(cmip6_row)
@@ -228,9 +228,9 @@ class CMIP7Request:
             try:
                 entry = get_dreq_entry(table_id, variable_id)
                 cmip7_row["region"] = entry.region
+                cmip7_row["variable_id"] = entry.branded_variable.split("_")[0]
                 cmip7_row["branding_suffix"] = entry.branding_suffix
-                cmip7_row["out_name"] = entry.out_name
-                cmip7_row["branded_variable"] = f"{entry.out_name}_{entry.branding_suffix}"
+                cmip7_row["branded_variable"] = entry.branded_variable
             except KeyError:
                 logger.debug(
                     f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"

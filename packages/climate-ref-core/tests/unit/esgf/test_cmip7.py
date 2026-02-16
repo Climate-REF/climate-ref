@@ -251,7 +251,6 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
-            "out_name": "tas",
             "branding_suffix": "tavg-h2m-hxy-u",
             "region": "glb",
         }
@@ -309,7 +308,6 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
-            "out_name": "tas",
             "branding_suffix": "tavg-h2m-hxy-u",
             "region": "glb",
         }
@@ -401,7 +399,6 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
-            "out_name": "tas",
             "branding_suffix": "tavg-h2m-hxy-u",
             "region": "glb",
         }
@@ -460,7 +457,6 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
-            "out_name": "tas",
             "branding_suffix": "tavg-h2m-hxy-u",
             "region": "glb",
         }

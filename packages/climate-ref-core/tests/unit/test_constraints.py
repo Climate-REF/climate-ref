@@ -48,6 +48,23 @@ class TestRequireFacets:
         expected_data = data if expected else empty
         assert_frame_equal(self.constraint.apply(data, empty), expected_data)
 
+    @pytest.mark.parametrize(
+        "data, expected",
+        [
+            (pd.DataFrame(columns=["variable_id", "path"]), False),
+            (pd.DataFrame({"variable_id": ["tas", "tos"], "path": ["tas.nc", "tos.nc"]}), True),
+        ],
+    )
+    def test_apply_any(self, data, expected):
+        constraint = RequireFacets(
+            dimension="variable_id",
+            required_facets=("tas", "pr"),
+            operator="any",
+        )
+        empty = data.loc[[]]
+        expected_data = data if expected else empty
+        assert_frame_equal(constraint.apply(data, empty), expected_data)
+
     def test_invalid_dimension(self):
         data = pd.DataFrame({"invalid": ["tas", "pr"], "path": ["tas.nc", "pr.nc"]})
         with pytest.raises(KeyError):

@@ -34,7 +34,7 @@ _LAND_TABLES = ("Lmon", "Emon", "LImon", "Amon", "CFmon", "AERmonZ", "EmonZ")
 _OCEAN_TABLES = ("Omon", "SImon", "Ofx")
 
 
-def _get_branded_variable_names(
+def _get_branded_variable(
     variable_ids: tuple[str, ...],
     registry_file: str,
 ) -> tuple[str, ...]:
@@ -64,7 +64,7 @@ def _get_branded_variable_names(
         for table in tables:
             try:
                 entry = get_dreq_entry(table, var_id)
-                branded.append(entry.branded_variable_name)
+                branded.append(entry.branded_variable)
                 found = True
             except KeyError:
                 continue
@@ -287,7 +287,7 @@ class ILAMBStandard(Diagnostic):
         )
 
         # Look up CMIP7 branded variable names
-        branded_variable_names = _get_branded_variable_names(all_variable_ids, registry_file)
+        branded_variables = _get_branded_variable(all_variable_ids, registry_file)
 
         # Determine realm/region for CMIP7 filter based on registry
         is_land = registry_file in ("ilamb", "ilamb-test")
@@ -353,7 +353,7 @@ class ILAMBStandard(Diagnostic):
             filters=(
                 FacetFilter(
                     facets={
-                        "branded_variable_name": branded_variable_names,
+                        "branded_variable": branded_variables,
                         "frequency": "mon",
                         "experiment_id": ("historical", "land-hist"),
                         "region": "glb",
@@ -418,7 +418,7 @@ class ILAMBStandard(Diagnostic):
         # Build branded variable names for the test spec (include supplementary)
         test_branded_names = sorted(
             set(
-                _get_branded_variable_names(
+                _get_branded_variable(
                     tuple(test_variable_ids),
                     registry_file,
                 )
@@ -453,7 +453,7 @@ class ILAMBStandard(Diagnostic):
                                 "experiment_id": "historical",
                                 "source_id": test_source_id,
                                 "variable_id": test_variable_ids,
-                                "branded_variable_name": test_branded_names,
+                                "branded_variable": test_branded_names,
                                 "variant_label": "r1i1p1f1",
                                 "frequency": ["fx", "mon"],
                                 "region": "glb",

@@ -91,6 +91,7 @@ preprocessors:
   annual_mean:
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
   pp_arctic_sept_sea_ice:
     extract_time:
       start_day: 1
@@ -120,6 +121,7 @@ preprocessors:
       end_year: 2014
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     extract_region:
       start_longitude: 0
       end_longitude: 360
@@ -141,6 +143,7 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
 diagnostics:
   arctic:
     description: Plots September sea ice sensitivity above 0 latitude in millions

@@ -336,6 +336,17 @@ class TestCMIP7ConvertedFile:
         for field in adapter.file_specific_metadata:
             assert field in data_catalog.columns, f"Missing field: {field}"
 
+    def test_branded_variable_derived(self, cmip7_converted_file, config):
+        """Test that branded_variable is derived as variable_id + branding_suffix."""
+        adapter = CMIP7DatasetAdapter(config=config)
+        data_catalog = adapter.find_local_datasets(cmip7_converted_file.parent)
+
+        assert len(data_catalog) == 1
+        row = data_catalog.iloc[0]
+
+        assert "branded_variable" in data_catalog.columns
+        assert row["branded_variable"] == f"{row['variable_id']}_{row['branding_suffix']}"
+
     def test_validate_converted_catalog(self, cmip7_converted_dir, config):
         """Test that the converted file's catalog passes validation."""
         adapter = CMIP7DatasetAdapter(config=config)

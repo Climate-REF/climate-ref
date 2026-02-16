@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.resources
+from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -16,6 +17,30 @@ if TYPE_CHECKING:
     import pandas as pd
 
 
+# Mapping from CMIP6 MIP table names to CMIP7 realm names.
+# Base ESMValTool recipes use CMIP6 table names (Amon, Lmon, etc.) in the
+# diagnostics/variables section. When running with CMIP7 data, these need
+# to be rewritten to CMIP7 realm names (atmos, land, etc.).
+CMIP6_MIP_TO_CMIP7_REALM = {
+    "AERmon": "aerosol",
+    "AERday": "aerosol",
+    "Amon": "atmos",
+    "Aday": "atmos",
+    "CFmon": "atmos",
+    "CFday": "atmos",
+    "Emon": "land",
+    "Eday": "land",
+    "LImon": "landIce",
+    "Lmon": "land",
+    "Omon": "ocean",
+    "Oday": "ocean",
+    "OImon": "seaIce",
+    "SImon": "seaIce",
+    "SIday": "seaIce",
+    "fx": "atmos",
+    "Ofx": "ocean",
+}
+
 FACETS = {
     "CMIP6": {
         "activity": "activity_id",
@@ -25,6 +50,19 @@ FACETS = {
         "exp": "experiment_id",
         "grid": "grid_label",
         "mip": "table_id",
+        "short_name": "variable_id",
+    },
+    "CMIP7": {
+        "activity": "activity_id",
+        "branding_suffix": "branding_suffix",
+        "dataset": "source_id",
+        "ensemble": "variant_label",
+        "exp": "experiment_id",
+        "frequency": "frequency",
+        "grid": "grid_label",
+        "institute": "institution_id",
+        "mip": "realm",
+        "region": "region",
         "short_name": "variable_id",
     },
     "obs4MIPs": {
@@ -99,6 +137,61 @@ def as_facets(
     if timerange is not None:
         facets["timerange"] = timerange
     return facets
+
+
+def _iter_recipe_datasets(recipe: Recipe) -> Iterator[dict[str, Any]]:
+    """Yield every dataset dict from all levels of a recipe.
+
+    Datasets can appear at the top level (``recipe["datasets"]``),
+    the diagnostic level (``diag["additional_datasets"]``), or the
+    variable level (``variable["additional_datasets"]``).
+    """
+    yield from recipe.get("datasets", [])
+    for diag in recipe.get("diagnostics", {}).values():
+        yield from diag.get("additional_datasets", [])
+        for var_settings in diag.get("variables", {}).values():
+            if isinstance(var_settings, dict):
+                yield from var_settings.get("additional_datasets", [])
+
+
+def _rewrite_variable_mip(var_settings: dict[str, Any]) -> None:
+    """Rewrite the mip for a single variable from a CMIP6 table name to a CMIP7 realm.
+
+    Before overwriting the variable-level mip, the original CMIP6 value is
+    pinned onto any non-CMIP7 ``additional_datasets`` (e.g. OBS) that don't
+    already carry an explicit mip so they keep resolving correctly.
+    """
+    old_mip = var_settings.get("mip")
+    if old_mip is None or old_mip not in CMIP6_MIP_TO_CMIP7_REALM:
+        return
+
+    for ds in var_settings.get("additional_datasets", []):
+        if ds.get("project") != "CMIP7" and "mip" not in ds:
+            ds["mip"] = old_mip
+
+    var_settings["mip"] = CMIP6_MIP_TO_CMIP7_REALM[old_mip]
+
+
+def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
+    """Rewrite CMIP6 MIP table names to CMIP7 realm names in a recipe.
+
+    Base ESMValTool recipes have CMIP6 MIP table names (e.g. ``Amon``,
+    ``Lmon``) hardcoded in the diagnostics/variables section. When the recipe
+    uses CMIP7 data, these must be rewritten to CMIP7 realm names
+    (e.g. ``atmos``, ``land``).
+
+    Parameters
+    ----------
+    recipe
+        The recipe to update in place.
+    """
+    if not any(ds.get("project") == "CMIP7" for ds in _iter_recipe_datasets(recipe)):
+        return
+
+    for diag in recipe.get("diagnostics", {}).values():
+        for var_settings in diag.get("variables", {}).values():
+            if isinstance(var_settings, dict):
+                _rewrite_variable_mip(var_settings)
 
 
 def dataframe_to_recipe(
@@ -203,6 +296,10 @@ def get_child_and_parent_dataset(
 
 _ESMVALTOOL_COMMIT = "f5214c9242725fe9a4c3628f304917c7434b361d"
 _ESMVALTOOL_VERSION = f"2.13.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
+_ESMVALTOOL_URL = f"git+https://github.com/ESMValGroup/ESMValTool.git@{_ESMVALTOOL_COMMIT}"
+
+_ESMVALCORE_COMMIT = "da81d5f67158f3d2603831b56ab6b4fb8a388d86"
+_ESMVALCORE_URL = f"git+https://github.com/ESMValGroup/ESMValCore.git@{_ESMVALCORE_COMMIT}"
 
 _RECIPES = pooch.create(
     path=pooch.os_cache("climate_ref_esmvaltool"),
@@ -215,6 +312,34 @@ _RECIPES = pooch.create(
 )
 with importlib.resources.files("climate_ref_esmvaltool").joinpath("recipes.txt").open("rb") as _buffer:
     _RECIPES.load_registry(_buffer)
+
+
+def fix_annual_statistics_keep_year(recipe: Recipe) -> None:
+    """Add ``keep_group_coordinates: true`` to every ``annual_statistics`` step.
+
+    ESMValCore changed ``annual_statistics`` to remove the ``year``
+    coordinate by default (``keep_group_coordinates=False``).  Several
+    ESMValTool diagnostic scripts still rely on the coordinate being
+    present, so we patch the recipe to preserve it.
+
+    Remove this workaround once ESMValCore restores the old default or
+    the affected diagnostic scripts are updated.
+
+    Parameters
+    ----------
+    recipe
+        The recipe to update in place.
+    """
+    for preprocessor in recipe.get("preprocessors", {}).values():
+        if isinstance(preprocessor, dict) and "annual_statistics" in preprocessor:
+            annual = preprocessor["annual_statistics"]
+            if isinstance(annual, dict):
+                annual.setdefault("keep_group_coordinates", True)
+            else:
+                preprocessor["annual_statistics"] = {
+                    "operator": annual if isinstance(annual, str) else "mean",
+                    "keep_group_coordinates": True,
+                }
 
 
 def load_recipe(recipe: str) -> Recipe:
@@ -255,6 +380,9 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
     climate_data_dir
         The directory where ESMValTool should look for input data.
     """
+    # Track which directories we've already cleaned to avoid redundant work
+    cleaned_dirs: set[Path] = set()
+
     for row in datasets.itertuples():
         if not isinstance(row.instance_id, str):  # pragma: no branch
             msg = f"Invalid instance_id encountered in {row}"
@@ -265,8 +393,21 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
             subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
+        elif row.instance_id.startswith("CMIP7."):
+            subdirs = row.instance_id.split(".")
         else:
             subdirs = row.instance_id.split(".")
         tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
         tgt.parent.mkdir(parents=True, exist_ok=True)
+
+        # Remove any stale symlinks in the target directory to prevent
+        # ESMValCore from finding dangling symlinks from previous runs
+        if tgt.parent not in cleaned_dirs:
+            for existing in tgt.parent.iterdir():
+                if existing.is_symlink() and not existing.resolve().exists():
+                    existing.unlink()
+            cleaned_dirs.add(tgt.parent)
+
+        if tgt.is_symlink() or tgt.exists():
+            tgt.unlink()
         tgt.symlink_to(row.path)

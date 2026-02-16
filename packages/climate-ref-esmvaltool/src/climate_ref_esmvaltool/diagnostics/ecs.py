@@ -12,11 +12,17 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
-from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset
+from climate_ref_core.testing import TestCase, TestDataSpecification
+from climate_ref_esmvaltool.diagnostics.base import (
+    ESMValToolDiagnostic,
+    fillvalues_to_nan,
+    get_cmip_source_type,
+)
+from climate_ref_esmvaltool.recipe import dataframe_to_recipe, get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -35,30 +41,69 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         "rsut",
         "tas",
     )
+    experiments = (
+        "abrupt-4xCO2",
+        "piControl",
+    )
 
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": variables,
-                        "experiment_id": "abrupt-4xCO2",
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": variables,
+                            "experiment_id": "abrupt-4xCO2",
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=variables,
+                        group_by=("source_id", "member_id", "grid_label", "experiment_id"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireOverlappingTimerange(group_by=("instance_id",)),
-                AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireFacets(
-                    "variable_id",
-                    required_facets=variables,
-                    group_by=("source_id", "member_id", "grid_label", "experiment_id"),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "branded_variable": (
+                                "rlut_tavg-u-hxy-u",
+                                "rsdt_tavg-u-hxy-u",
+                                "rsut_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                            ),
+                            "experiment_id": "abrupt-4xCO2",
+                            "frequency": "mon",
+                            "region": "glb",
+                            "realm": "atmos",
+                        },
+                    ),
                 ),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireOverlappingTimerange(group_by=("instance_id",)),
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP7),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireFacets(
+                        "variable_id",
+                        required_facets=variables,
+                        group_by=("source_id", "variant_label", "grid_label", "experiment_id"),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
             ),
         ),
     )
@@ -87,6 +132,52 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
             file_pattern="work/ecs/calculate/lambda.nc",
             dimensions={"metric": "lambda"},
         ),
+    )
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="cmip6",
+                description="Test with CMIP6 data.",
+                requests=(
+                    CMIP6Request(
+                        slug="cmip6",
+                        facets={
+                            "experiment_id": ["abrupt-4xCO2", "piControl"],
+                            "source_id": "CanESM5",
+                            "variable_id": ["areacella", "rlut", "rsdt", "rsut", "tas"],
+                            "frequency": ["fx", "mon"],
+                        },
+                        remove_ensembles=True,
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["abrupt-4xCO2", "piControl"],
+                            "source_id": "CanESM5",
+                            "variable_id": ["areacella", "rlut", "rsdt", "rsut", "tas"],
+                            "branded_variable": [
+                                "areacella_ti-u-hxy-u",
+                                "rlut_tavg-u-hxy-u",
+                                "rsdt_tavg-u-hxy-u",
+                                "rsut_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
+                    ),
+                ),
+            ),
+        )
     )
 
     @staticmethod
@@ -120,14 +211,30 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "abrupt-4xCO2" and one for the "piControl"
         # experiment.
-        df = input_files[SourceDatasetType.CMIP6]
-        recipe["datasets"] = get_child_and_parent_dataset(
-            df[df.variable_id == "tas"],
-            parent_experiment="piControl",
-            child_duration_in_years=150,
-            parent_offset_in_years=0,
-            parent_duration_in_years=150,
-        )
+        cmip_source = get_cmip_source_type(input_files)
+        if cmip_source == SourceDatasetType.CMIP6:
+            df = input_files[SourceDatasetType.CMIP6]
+            recipe["datasets"] = get_child_and_parent_dataset(
+                df[df.variable_id == "tas"],
+                parent_experiment="piControl",
+                child_duration_in_years=150,
+                parent_offset_in_years=0,
+                parent_duration_in_years=150,
+            )
+        else:
+            # CMIP7: use per-variable additional_datasets to preserve correct branding_suffix
+            recipe_variables = dataframe_to_recipe(
+                input_files[cmip_source],
+                equalize_timerange=True,
+            )
+            recipe["datasets"] = []
+            for var_name, var_settings in recipe["diagnostics"]["ecs"]["variables"].items():
+                short_name = var_settings.get("short_name", var_name)
+                if short_name in recipe_variables:
+                    var_settings["additional_datasets"] = recipe_variables[short_name]["additional_datasets"]
+                elif var_name == "rtnt":
+                    # rtnt is derived from rlut, rsdt, rsut - use rlut's dataset
+                    var_settings["additional_datasets"] = recipe_variables["rlut"]["additional_datasets"]
 
         # Remove keys from the recipe that are only used for YAML anchors
         keys_to_remove = [

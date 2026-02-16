@@ -21,6 +21,7 @@ from climate_ref.cli._utils import format_size
 from climate_ref.config import Config
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
+    InvalidDiagnosticException,
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
@@ -505,8 +506,10 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
         logger.info(f"Fetching test data for {provider_slug}/{diagnostic_slug}/{test_case_name}")
         try:
             datasets, _ = _fetch_and_build_catalog(diag, tc)
-        except DatasetResolutionError as e:
-            logger.error(f"Failed to fetch data for {provider_slug}/{diagnostic_slug}/{test_case_name}: {e}")
+        except (DatasetResolutionError, InvalidDiagnosticException) as e:
+            logger.exception(
+                f"Failed to fetch data for {provider_slug}/{diagnostic_slug}/{test_case_name}: {e}"
+            )
             return False
     else:
         paths = TestCasePaths.from_diagnostic(diag, test_case_name)

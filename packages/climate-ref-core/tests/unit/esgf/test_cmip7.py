@@ -222,17 +222,24 @@ class TestGetCmip7CacheDir:
 class TestConvertFileToCmip7:
     """Tests for _convert_file_to_cmip7 function."""
 
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_uses_cached_file(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
-        """Test that cached files are reused without opening source file."""
+    def test_uses_cached_file(self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path):
+        """Test that cached files are reused without converting."""
         # Set up cache directory with existing file
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
 
-        # Facets include table_id so DReq lookup enriches branding_suffix/region
+        # Set up mock for open_dataset context manager
+        mock_ds = MagicMock()
+        mock_open.return_value.__enter__ = MagicMock(return_value=mock_ds)
+        mock_open.return_value.__exit__ = MagicMock(return_value=False)
+
+        # Facets must include DReq-enriched fields (enrichment happens upstream
+        # in _convert_to_cmip7_metadata before calling _convert_file_to_cmip7)
         cmip7_facets = {
             "activity_id": "CMIP",
             "institution_id": "CSIRO",
@@ -244,6 +251,9 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
+            "out_name": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "region": "glb",
         }
         drs_path = cache_dir / Path(
             "CMIP",
@@ -268,13 +278,14 @@ class TestConvertFileToCmip7:
         result = _convert_file_to_cmip7(cmip6_path, cmip7_facets)
 
         assert result == cached_file
-        mock_open.assert_not_called()  # Should not open source file (cached)
+        mock_open.assert_called_once()  # Dataset is opened to derive time range
         mock_convert.assert_not_called()  # Should not convert (cached)
 
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_converts_new_file(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_converts_new_file(self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path):
         """Test that new files are converted with correct DReq-derived filename."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
@@ -298,6 +309,9 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
+            "out_name": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "region": "glb",
         }
 
         # Create input file
@@ -316,10 +330,13 @@ class TestConvertFileToCmip7:
         assert "ACCESS-ESM1-5" in str(result)
         assert result.name == "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
 
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_handles_integer_facet_values(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_handles_integer_facet_values(
+        self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path
+    ):
         """Test that integer facet values are converted to strings in DRS path."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
@@ -353,11 +370,12 @@ class TestConvertFileToCmip7:
         result = _convert_file_to_cmip7(input_file, cmip7_facets)
         assert isinstance(result, Path)
 
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
     def test_handles_permission_error_with_existing_file(
-        self, mock_cache_dir, mock_convert, mock_open, tmp_path
+        self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path
     ):
         """Test that permission errors are handled when file already exists."""
         cache_dir = tmp_path / "cache"
@@ -383,6 +401,9 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
+            "out_name": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "region": "glb",
         }
 
         input_file = tmp_path / "test_input.nc"
@@ -409,11 +430,12 @@ class TestConvertFileToCmip7:
         result = _convert_file_to_cmip7(input_file, cmip7_facets)
         assert result == existing_file
 
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
     def test_handles_permission_error_without_existing_file(
-        self, mock_cache_dir, mock_convert, mock_open, tmp_path
+        self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path
     ):
         """Test that permission errors are re-raised when file does not exist."""
         cache_dir = tmp_path / "cache"
@@ -438,6 +460,9 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": "v1",
+            "out_name": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "region": "glb",
         }
 
         input_file = tmp_path / "test_input.nc"
@@ -447,10 +472,13 @@ class TestConvertFileToCmip7:
         with pytest.raises(PermissionError, match="Permission denied"):
             _convert_file_to_cmip7(input_file, cmip7_facets)
 
+    @patch("climate_ref_core.esgf.cmip7.format_cmip7_time_range", return_value=None)
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_uses_default_facet_values(self, mock_cache_dir, mock_convert, mock_open, tmp_path):
+    def test_uses_default_facet_values(
+        self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path
+    ):
         """Test that default facet values are used when facets are missing."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()

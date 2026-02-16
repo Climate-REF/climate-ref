@@ -18,6 +18,7 @@ from loguru import logger
 from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_dataset,
     create_cmip7_filename,
+    format_cmip7_time_range,
     get_dreq_entry,
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
@@ -50,27 +51,16 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
     """
     cache_dir = _get_cmip7_cache_dir()
 
-    # Enrich facets with DReq metadata (branding_suffix, region) for filename construction
-    table_id = cmip7_facets.get("table_id")
-    variable_id = cmip7_facets.get("variable_id")
-    if table_id and variable_id and "branding_suffix" not in cmip7_facets:
-        try:
-            entry = get_dreq_entry(table_id, variable_id)
-            cmip7_facets = {
-                **cmip7_facets,
-                "branding_suffix": entry.branding_suffix,
-                "region": entry.region,
-                "out_name": entry.out_name,
-            }
-        except KeyError:
-            logger.debug(f"No DReq entry for {table_id}.{variable_id}, using facets as-is")
-
     # Build CMIP7 DRS path
     # CMIP7 DRS: {activity_id}/{institution_id}/{source_id}/{experiment_id}/
     #            {variant_label}/{frequency}/{variable_id}/{grid_label}/{version}
     # Ensure all facet values are strings (some may be integers from metadata)
+    # CMIP6 activity_id can contain multiple activities separated by spaces
+    # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
+    activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
+    version = str(cmip7_facets.get("version", "v1"))
     drs_path = cache_dir / Path(
-        str(cmip7_facets.get("activity_id", "CMIP")),
+        activity_id,
         str(cmip7_facets.get("institution_id", "unknown")),
         str(cmip7_facets.get("source_id", "unknown")),
         str(cmip7_facets.get("experiment_id", "historical")),
@@ -78,22 +68,30 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         str(cmip7_facets.get("frequency", "mon")),
         str(cmip7_facets.get("out_name", cmip7_facets.get("variable_id", "tas"))),
         str(cmip7_facets.get("grid_label", "gn")),
-        str(cmip7_facets.get("version", "v1")),
+        version,
     )
-    # Create output filename and check cache before opening the source file
-    output_file = drs_path / create_cmip7_filename(cmip7_facets)
-
-    if output_file.exists():
-        logger.debug(f"Using cached CMIP7 file: {output_file}")
-        return output_file
 
     drs_path.mkdir(parents=True, exist_ok=True)
 
-    # Convert the file
+    # Convert the file and derive the time range from the dataset
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
     with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
+        frequency = str(cmip7_facets.get("frequency", "mon"))
+        time_range = format_cmip7_time_range(ds, frequency)
+        output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
+
+        if output_file.exists():
+            logger.debug(f"Using cached CMIP7 file: {output_file}")
+            return output_file
+
         ds_cmip7 = convert_cmip6_dataset(ds)
+
+        # Ensure version and sanitized activity_id are in the file attributes
+        # so that parse_cmip7_file can extract them for instance_id construction
+        ds_cmip7.attrs["version"] = version
+        ds_cmip7.attrs["activity_id"] = activity_id
+
         try:
             ds_cmip7.to_netcdf(output_file)
         except PermissionError:
@@ -126,6 +124,12 @@ class CMIP7Request:
         "variant_label": "member_id",
     }
 
+    # CMIP7-only facets that should not be passed to CMIP6 ESGF searches
+    cmip7_only_facets: ClassVar[set[str]] = {
+        "branded_variable",
+        "region",
+    }
+
     available_facets = (
         "activity_id",
         "institution_id",
@@ -137,6 +141,8 @@ class CMIP7Request:
         "frequency",
         "table_id",  # Used for mapping to CMIP6
         "version",
+        "region",
+        "branded_variable",
     )
 
     def __init__(
@@ -175,13 +181,21 @@ class CMIP7Request:
         """Convert CMIP7 facets to CMIP6 facets for fetching."""
         cmip6_facets = {}
         for key, value in cmip7_facets.items():
+            # Skip CMIP7-only facets that don't exist in CMIP6 ESGF
+            if key in self.cmip7_only_facets:
+                continue
             # Map CMIP7 facet names to CMIP6
             cmip6_key = self.facet_mapping.get(key, key)
             cmip6_facets[cmip6_key] = value
         return cmip6_facets
 
     def _convert_to_cmip7_metadata(self, cmip6_row: dict[str, Any]) -> dict[str, Any]:
-        """Convert CMIP6 metadata to CMIP7 format."""
+        """Convert CMIP6 metadata to CMIP7 format.
+
+        This is the single location for DReq enrichment: it adds
+        ``region``, ``branding_suffix``, ``out_name``, and
+        ``branded_variable`` from the Data Request when available.
+        """
         cmip7_row = dict(cmip6_row)
 
         # Map member_id to variant_label
@@ -190,6 +204,11 @@ class CMIP7Request:
 
         # Add CMIP7-specific metadata
         cmip7_row["mip_era"] = "CMIP7"
+
+        # CMIP6 activity_id can contain multiple activities separated by spaces
+        # (e.g. "C4MIP CDRMIP"). Use only the first activity for CMIP7.
+        if "activity_id" in cmip7_row and " " in str(cmip7_row["activity_id"]):
+            cmip7_row["activity_id"] = str(cmip7_row["activity_id"]).split()[0]
 
         # Map table_id to frequency if not present
         if "frequency" not in cmip7_row and "table_id" in cmip7_row:
@@ -201,6 +220,21 @@ class CMIP7Request:
                 "Omon": "mon",
             }
             cmip7_row["frequency"] = table_to_freq.get(cmip7_row["table_id"], "mon")
+
+        # Enrich with DReq metadata (single canonical location)
+        table_id = cmip7_row.get("table_id")
+        variable_id = cmip7_row.get("variable_id")
+        if table_id and variable_id:
+            try:
+                entry = get_dreq_entry(table_id, variable_id)
+                cmip7_row["region"] = entry.region
+                cmip7_row["branding_suffix"] = entry.branding_suffix
+                cmip7_row["out_name"] = entry.out_name
+                cmip7_row["branded_variable"] = f"{entry.out_name}_{entry.branding_suffix}"
+            except KeyError:
+                logger.debug(
+                    f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"
+                )
 
         return cmip7_row
 
@@ -232,18 +266,17 @@ class CMIP7Request:
         for _, row in cmip6_df.iterrows():
             row_dict: dict[str, Any] = {str(k): v for k, v in row.to_dict().items()}
 
+            # Build CMIP7 facets for this row (includes DReq enrichment)
+            cmip7_row = self._convert_to_cmip7_metadata(row_dict)
+
             # Get file paths and convert them
             files = row_dict.get("files", [])
             converted_files = []
-
-            # Build CMIP7 facets for this row
-            cmip7_facets = self._convert_to_cmip7_metadata(row_dict)
-
             for file_path in files:
                 cmip6_path = Path(file_path)
                 if cmip6_path.exists():
                     try:
-                        cmip7_path = _convert_file_to_cmip7(cmip6_path, cmip7_facets)
+                        cmip7_path = _convert_file_to_cmip7(cmip6_path, cmip7_row)
                         converted_files.append(str(cmip7_path))
                     except Exception as e:
                         logger.warning(f"Failed to convert {cmip6_path.name}: {e}")
@@ -252,7 +285,6 @@ class CMIP7Request:
                     logger.warning(f"CMIP6 file not found: {file_path}")
 
             if converted_files:
-                cmip7_row = self._convert_to_cmip7_metadata(row_dict)
                 cmip7_row["files"] = converted_files
                 converted_rows.append(cmip7_row)
 

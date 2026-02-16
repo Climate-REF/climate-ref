@@ -37,12 +37,14 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
   global_cumulative_sum:
     custom_order: true
     area_statistics:
       operator: sum
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     cumulative_sum:
       coord: time
       weights: true

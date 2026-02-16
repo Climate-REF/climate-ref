@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, Obs4MIPsRequest
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
@@ -126,6 +126,36 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         ),
         (
             DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "branded_variable": (
+                                "hus_tavg-p19-hxy-u",
+                                "pr_tavg-u-hxy-u",
+                                "psl_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                                "ua_tavg-p19-hxy-air",
+                            ),
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                            "realm": "atmos",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2009, 12),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
+            ),
+        ),
+        (
+            DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
                 filters=(
                     FacetFilter(
@@ -172,6 +202,33 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                             "frequency": ["fx", "mon"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", *variables],
+                        },
+                        remove_ensembles=True,
+                        time_span=("1980", "2009"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "CanESM5",
+                            "variable_id": ["areacella", *variables],
+                            "branded_variable": [
+                                "areacella_ti-u-hxy-u",
+                                "hus_tavg-p19-hxy-u",
+                                "pr_tavg-u-hxy-u",
+                                "psl_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                                "ua_tavg-p19-hxy-air",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2009"),
@@ -279,7 +336,7 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
                 datasets = []
                 if short_name in recipe_variables:
                     dataset = copy.deepcopy(recipe_variables[short_name]["additional_datasets"][0])
-                    dataset.pop("timerange")
+                    dataset.pop("timerange", None)
                     datasets.append(dataset)
                 if project == "obs4MIPs" and short_name in extra_datasets:
                     datasets.extend(copy.deepcopy(extra_datasets[short_name]))
@@ -342,6 +399,37 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         ),
         (
             DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "branded_variable": (
+                                "hus_tavg-p19-hxy-u",
+                                "pr_tavg-u-hxy-u",
+                                "psl_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                                "ua_tavg-p19-hxy-air",
+                            ),
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                            "region": "glb",
+                            "realm": "atmos",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2014, 12),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
+            ),
+        ),
+        (
+            DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
                 filters=(
                     FacetFilter(
@@ -388,6 +476,33 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                             "frequency": ["fx", "mon"],
                             "source_id": "CanESM5",
                             "variable_id": ["areacella", *variables],
+                        },
+                        remove_ensembles=True,
+                        time_span=("1980", "2014"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "CanESM5",
+                            "variable_id": ["areacella", *variables],
+                            "branded_variable": [
+                                "areacella_ti-u-hxy-u",
+                                "hus_tavg-p19-hxy-u",
+                                "pr_tavg-u-hxy-u",
+                                "psl_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                                "ua_tavg-p19-hxy-air",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2014"),
@@ -493,6 +608,36 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         ),
         (
             DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "branded_variable": (
+                                "hus_tavg-p19-hxy-u",
+                                "pr_tavg-u-hxy-u",
+                                "psl_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                                "ua_tavg-p19-hxy-air",
+                            ),
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                            "realm": "atmos",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(1980, 1),
+                        end=PartialDateTime(2009, 12),
+                    ),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
+            ),
+        ),
+        (
+            DataRequirement(
                 source_type=SourceDatasetType.obs4MIPs,
                 filters=(
                     FacetFilter(
@@ -547,6 +692,33 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                 ),
             ),
             TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "CanESM5",
+                            "variable_id": ["areacella", *variables],
+                            "branded_variable": [
+                                "areacella_ti-u-hxy-u",
+                                "hus_tavg-p19-hxy-u",
+                                "pr_tavg-u-hxy-u",
+                                "psl_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                                "ua_tavg-p19-hxy-air",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
+                        time_span=("1980", "2009"),
+                    ),
+                ),
+            ),
+            TestCase(
                 name="obs4mips",
                 description="Test with obs4MIPs data.",
                 requests=(
@@ -569,7 +741,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         ),
     )
 
-    facets = ("grid_label", "member_id", "source_id", "variable_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "variable_id", "region", "metric")
     files = tuple(
         FileDefinition(
             file_pattern=f"plots/{var_name}_trends/plot/seaborn_barplot.png",
@@ -641,7 +813,7 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
                 datasets = []
                 if short_name in recipe_variables:
                     dataset = recipe_variables[short_name]["additional_datasets"][0]
-                    dataset.pop("timerange")
+                    dataset.pop("timerange", None)
                     datasets.append(dataset)
                 if project == "obs4MIPs" and short_name in extra_datasets:
                     datasets.extend(extra_datasets[short_name])

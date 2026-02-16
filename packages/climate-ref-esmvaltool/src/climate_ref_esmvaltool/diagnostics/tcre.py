@@ -11,10 +11,16 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
+from climate_ref_core.testing import TestCase, TestDataSpecification
+from climate_ref_esmvaltool.diagnostics.base import (
+    ESMValToolDiagnostic,
+    fillvalues_to_nan,
+    get_cmip_source_type,
+)
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe, get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
@@ -28,41 +34,83 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     slug = "transient-climate-response-emissions"
     base_recipe = "recipe_tcre.yml"
 
+    variables = (
+        "tas",
+        "fco2antt",
+    )
+
     data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "tas",
-                        "experiment_id": "esm-1pctCO2",
-                        "table_id": "Amon",
-                    },
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "variable_id": "tas",
+                            "experiment_id": "esm-1pctCO2",
+                            "table_id": "Amon",
+                        },
+                    ),
+                ),
+                group_by=("source_id", "member_id", "grid_label"),
+                constraints=(
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
+                    AddSupplementaryDataset(
+                        supplementary_facets={
+                            "variable_id": "fco2antt",
+                            "experiment_id": "esm-1pctCO2",
+                        },
+                        matching_facets=(
+                            "source_id",
+                            "member_id",
+                            "table_id",
+                            "grid_label",
+                        ),
+                        optional_matching_facets=("version",),
+                    ),
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireFacets("variable_id", ("tas", "fco2antt")),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
-                AddSupplementaryDataset(
-                    supplementary_facets={
-                        "variable_id": "fco2antt",
-                        "experiment_id": "esm-1pctCO2",
-                    },
-                    matching_facets=(
-                        "source_id",
-                        "member_id",
-                        "table_id",
-                        "grid_label",
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "branded_variable": (
+                                "fco2antt_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                            ),
+                            "experiment_id": "esm-1pctCO2",
+                            "frequency": "mon",
+                            "region": "glb",
+                            "realm": "atmos",
+                        },
                     ),
-                    optional_matching_facets=("version",),
+                    FacetFilter(
+                        facets={
+                            "branded_variable": "tas_tavg-h2m-hxy-u",
+                            "experiment_id": "esm-piControl",
+                            "frequency": "mon",
+                            "region": "glb",
+                            "realm": "atmos",
+                        },
+                    ),
                 ),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-                RequireFacets("variable_id", ("tas", "fco2antt")),
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
+                group_by=("source_id", "variant_label", "grid_label"),
+                constraints=(
+                    RequireContiguousTimerange(group_by=("instance_id",)),
+                    RequireFacets("experiment_id", ("esm-1pctCO2", "esm-piControl")),
+                    RequireFacets("variable_id", variables),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
             ),
         ),
     )
-    facets = ("grid_label", "member_id", "source_id", "region", "metric")
+    facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
     # TODO: the ESMValTool diagnostic script does not save the data for the timeseries.
     series = tuple()
     files = (
@@ -76,6 +124,50 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         ),
     )
 
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="cmip6",
+                description="Test with CMIP6 data.",
+                requests=(
+                    CMIP6Request(
+                        slug="cmip6",
+                        facets={
+                            "experiment_id": ["esm-1pctCO2", "esm-piControl"],
+                            "source_id": "MPI-ESM1-2-LR",
+                            "variable_id": ["areacella", "fco2antt", "tas"],
+                            "frequency": ["fx", "mon"],
+                        },
+                        remove_ensembles=True,
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["esm-1pctCO2", "esm-piControl"],
+                            "source_id": "MPI-ESM1-2-LR",
+                            "variable_id": ["areacella", "fco2antt", "tas"],
+                            "branded_variable": [
+                                "areacella_ti-u-hxy-u",
+                                "fco2antt_tavg-u-hxy-u",
+                                "tas_tavg-h2m-hxy-u",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
+                    ),
+                ),
+            ),
+        )
+    )
+
     @staticmethod
     def update_recipe(
         recipe: Recipe,
@@ -85,7 +177,8 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         # Prepare updated datasets section in recipe. It contains three
         # datasets, "tas" and "fco2antt" for the "esm-1pctCO2" and just "tas"
         # for the "esm-piControl" experiment.
-        df = input_files[SourceDatasetType.CMIP6]
+        cmip_source = get_cmip_source_type(input_files)
+        df = input_files[cmip_source]
         tas_esm_1pctCO2, tas_esm_piControl = get_child_and_parent_dataset(
             df[df.variable_id == "tas"],
             parent_experiment="esm-piControl",
@@ -94,6 +187,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
             parent_duration_in_years=65,
         )
         recipe_variables = dataframe_to_recipe(df[df.variable_id == "fco2antt"])
+
         fco2antt_esm_1pctCO2 = next(
             ds for ds in recipe_variables["fco2antt"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
         )

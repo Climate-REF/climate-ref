@@ -283,7 +283,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The resulting diagnostic.
         """
-        result_dir = next(definition.to_output_path("executions").glob("*"))
+        result_dir = max(definition.to_output_path("executions").glob("*"))
 
         metric_args = CMECMetric.create_template()
         output_args = CMECOutput.create_template()

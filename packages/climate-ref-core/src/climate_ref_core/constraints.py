@@ -225,6 +225,13 @@ class AddSupplementaryDataset:
         mask = data_catalog[list(supplementary_facets)].isin(supplementary_facets).all(axis="columns")
         supplementary_group = data_catalog[mask]
         if not supplementary_group.empty:
+            # Save the original index and reset to a unique RangeIndex.
+            # The data catalog index can contain duplicate labels (e.g. multiple
+            # file entries for the same dataset) which causes pandas ``|=`` to
+            # fail with "cannot reindex on an axis with duplicate labels".
+            original_index = supplementary_group.index.copy()
+            supplementary_group = supplementary_group.reset_index(drop=True)
+
             matching_facets = list(self.matching_facets)
             facets = matching_facets + list(self.optional_matching_facets)
             datasets = group[facets].drop_duplicates()
@@ -249,6 +256,8 @@ class AddSupplementaryDataset:
                     select |= (supplementaries[facets] == first_supplementary_dataset).all(axis="columns")
 
             supplementary_group = supplementary_group[select]
+            # Restore the original index so downstream concatenation is consistent
+            supplementary_group.index = original_index[list(select)]
 
         return pd.concat([group, supplementary_group])
 

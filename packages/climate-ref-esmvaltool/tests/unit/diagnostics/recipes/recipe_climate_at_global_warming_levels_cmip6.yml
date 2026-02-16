@@ -19,6 +19,7 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     anomalies:
       period: full
       reference:
@@ -47,6 +48,7 @@ preprocessors:
       end_day: 31
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     regrid:
       target_grid: 1x1
       scheme: linear

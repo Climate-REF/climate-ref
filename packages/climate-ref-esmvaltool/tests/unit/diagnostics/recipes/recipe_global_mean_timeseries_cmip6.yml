@@ -24,6 +24,7 @@ preprocessors:
       scheme: linear
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     multi_model_statistics:
       statistics:
       - mean
@@ -35,6 +36,7 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     convert_units:
       units: degrees_C
 diagnostics:

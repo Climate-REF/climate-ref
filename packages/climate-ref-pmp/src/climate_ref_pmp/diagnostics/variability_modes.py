@@ -16,6 +16,12 @@ from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import build_pmp_command, get_model_source_type, process_json_result
 
+# CMIP7 branded variable names (from CMIP7 Data Request)
+_BRANDED_VARIABLE_NAMES: dict[str, str] = {
+    "ts": "ts_tavg-u-hxy-u",
+    "psl": "psl_tavg-u-hxy-u",
+}
+
 
 class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     """
@@ -48,12 +54,24 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             model_variable: str,
             extra_experiments: str | tuple[str, ...] | list[str] = (),
         ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
-            filters = [
+            cmip6_filters = [
                 FacetFilter(
                     facets={
                         "frequency": "mon",
                         "experiment_id": ("historical", "hist-GHG", *extra_experiments),
                         "variable_id": model_variable,
+                    }
+                )
+            ]
+
+            cmip7_filters = [
+                FacetFilter(
+                    facets={
+                        "branded_variable_name": (_BRANDED_VARIABLE_NAMES[model_variable],),
+                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
+                        "frequency": "mon",
+                        "realm": "atmos",
+                        "region": "glb",
                     }
                 )
             ]
@@ -65,12 +83,12 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             )
             cmip6_requirement = DataRequirement(
                 source_type=SourceDatasetType.CMIP6,
-                filters=tuple(filters),
+                filters=tuple(cmip6_filters),
                 group_by=("source_id", "experiment_id", "member_id", "grid_label"),
             )
             cmip7_requirement = DataRequirement(
                 source_type=SourceDatasetType.CMIP7,
-                filters=tuple(filters),
+                filters=tuple(cmip7_filters),
                 group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
             )
 
@@ -123,8 +141,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                     "source_id": "ACCESS-ESM1-5",
                                     "experiment_id": "historical",
                                     "variable_id": "ts",
+                                    "branded_variable_name": "ts_tavg-u-hxy-u",
                                     "variant_label": "r1i1p1f1",
                                     "frequency": "mon",
+                                    "region": "glb",
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),
@@ -176,8 +196,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                                     "source_id": "ACCESS-ESM1-5",
                                     "experiment_id": "historical",
                                     "variable_id": "psl",
+                                    "branded_variable_name": "psl_tavg-u-hxy-u",
                                     "variant_label": "r1i1p1f1",
                                     "frequency": "mon",
+                                    "region": "glb",
                                 },
                                 time_span=("2000-01", "2014-12"),
                             ),

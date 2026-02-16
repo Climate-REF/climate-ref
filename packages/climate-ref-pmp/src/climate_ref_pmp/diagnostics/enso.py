@@ -17,6 +17,19 @@ from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import _get_resource, get_model_source_type, process_json_result
 
+# CMIP7 branded variable names (from CMIP7 Data Request)
+_BRANDED_VARIABLE_NAMES: dict[str, str] = {
+    "pr": "pr_tavg-u-hxy-u",
+    "ts": "ts_tavg-u-hxy-u",
+    "tauu": "tauu_tavg-u-hxy-u",
+    "hfls": "hfls_tavg-u-hxy-u",
+    "hfss": "hfss_tavg-u-hxy-u",
+    "rlds": "rlds_tavg-u-hxy-u",
+    "rlus": "rlus_tavg-u-hxy-u",
+    "rsds": "rsds_tavg-u-hxy-u",
+    "rsus": "rsus_tavg-u-hxy-u",
+}
+
 
 class ENSO(CommandLineDiagnostic):
     """
@@ -122,8 +135,12 @@ class ENSO(CommandLineDiagnostic):
                                 "source_id": "ACCESS-ESM1-5",
                                 "experiment_id": "historical",
                                 "variable_id": self.model_variables,
+                                "branded_variable_name": tuple(
+                                    _BRANDED_VARIABLE_NAMES[v] for v in self.model_variables
+                                ),
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "mon",
+                                "region": "glb",
                             },
                             time_span=("2000-01", "2014-12"),
                         ),
@@ -133,8 +150,10 @@ class ENSO(CommandLineDiagnostic):
                                 "source_id": "ACCESS-ESM1-5",
                                 "experiment_id": "historical",
                                 "variable_id": "areacella",
+                                "branded_variable_name": "areacella_ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
+                                "region": "glb",
                             },
                         ),
                         CMIP7Request(
@@ -143,8 +162,10 @@ class ENSO(CommandLineDiagnostic):
                                 "source_id": "ACCESS-ESM1-5",
                                 "experiment_id": "historical",
                                 "variable_id": "sftlf",
+                                "branded_variable_name": "sftlf_ti-u-hxy-u",
                                 "variant_label": "r1i1p1f1",
                                 "frequency": "fx",
+                                "region": "glb",
                             },
                         ),
                     ),
@@ -156,12 +177,24 @@ class ENSO(CommandLineDiagnostic):
         self,
         experiments: Collection[str] = ("historical",),
     ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
-        filters = [
+        cmip6_filters = [
             FacetFilter(
                 facets={
                     "frequency": "mon",
                     "experiment_id": tuple(experiments),
                     "variable_id": self.model_variables,
+                }
+            )
+        ]
+
+        cmip7_filters = [
+            FacetFilter(
+                facets={
+                    "branded_variable_name": tuple(_BRANDED_VARIABLE_NAMES[v] for v in self.model_variables),
+                    "experiment_id": tuple(experiments),
+                    "frequency": "mon",
+                    "realm": "atmos",
+                    "region": "glb",
                 }
             )
         ]
@@ -175,7 +208,7 @@ class ENSO(CommandLineDiagnostic):
         )
         cmip6_requirement = DataRequirement(
             source_type=SourceDatasetType.CMIP6,
-            filters=tuple(filters),
+            filters=tuple(cmip6_filters),
             group_by=("source_id", "experiment_id", "member_id", "grid_label"),
             constraints=(
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
@@ -184,7 +217,7 @@ class ENSO(CommandLineDiagnostic):
         )
         cmip7_requirement = DataRequirement(
             source_type=SourceDatasetType.CMIP7,
-            filters=tuple(filters),
+            filters=tuple(cmip7_filters),
             group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
             constraints=(
                 AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),

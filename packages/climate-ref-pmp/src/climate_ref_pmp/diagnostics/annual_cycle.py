@@ -26,6 +26,29 @@ from climate_ref_pmp.pmp_driver import (
 # PMP diagnostics support functions for the annual cycle diagnostic
 # =================================================================
 
+# CMIP7 branded variable names (from CMIP7 Data Request)
+_BRANDED_VARIABLE_NAMES: dict[str, str] = {
+    # Surface 2D variables
+    "ts": "ts_tavg-u-hxy-u",
+    "psl": "psl_tavg-u-hxy-u",
+    "pr": "pr_tavg-u-hxy-u",
+    "rlds": "rlds_tavg-u-hxy-u",
+    "rlus": "rlus_tavg-u-hxy-u",
+    "rlut": "rlut_tavg-u-hxy-u",
+    "rsds": "rsds_tavg-u-hxy-u",
+    "rsdt": "rsdt_tavg-u-hxy-u",
+    "rsus": "rsus_tavg-u-hxy-u",
+    "rsut": "rsut_tavg-u-hxy-u",
+    # Near-surface height variables
+    "uas": "uas_tavg-h10m-hxy-u",
+    "vas": "vas_tavg-h10m-hxy-u",
+    # 3D atmospheric variables on pressure levels
+    "ta": "ta_tavg-p19-hxy-air",
+    "ua": "ua_tavg-p19-hxy-air",
+    "va": "va_tavg-p19-hxy-air",
+    "zg": "zg_tavg-p19-hxy-air",
+}
+
 
 def make_data_requirement(
     variable_id: str,
@@ -55,7 +78,7 @@ def make_data_requirement(
         group_by=("variable_id", "source_id"),
     )
 
-    model_filters = (
+    cmip6_filters = (
         FacetFilter(
             facets={
                 "frequency": "mon",
@@ -65,14 +88,26 @@ def make_data_requirement(
         ),
     )
 
+    cmip7_filters = (
+        FacetFilter(
+            facets={
+                "branded_variable_name": (_BRANDED_VARIABLE_NAMES[variable_id],),
+                "experiment_id": ("amip", "historical", "hist-GHG"),
+                "frequency": "mon",
+                "realm": "atmos",
+                "region": "glb",
+            }
+        ),
+    )
+
     cmip6_requirement = DataRequirement(
         source_type=SourceDatasetType.CMIP6,
-        filters=model_filters,
+        filters=cmip6_filters,
         group_by=("variable_id", "source_id", "experiment_id", "member_id", "grid_label"),
     )
     cmip7_requirement = DataRequirement(
         source_type=SourceDatasetType.CMIP7,
-        filters=model_filters,
+        filters=cmip7_filters,
         group_by=("variable_id", "source_id", "experiment_id", "variant_label", "grid_label"),
     )
 
@@ -320,8 +355,10 @@ class AnnualCycle(CommandLineDiagnostic):
                             "source_id": "ACCESS-ESM1-5",
                             "experiment_id": "historical",
                             "variable_id": "ts",
+                            "branded_variable_name": "ts_tavg-u-hxy-u",
                             "variant_label": "r1i1p1f1",
                             "frequency": "mon",
+                            "region": "glb",
                         },
                         time_span=("2000-01", "2014-12"),
                     ),

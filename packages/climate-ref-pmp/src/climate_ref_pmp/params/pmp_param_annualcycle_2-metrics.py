@@ -1,4 +1,3 @@
-import datetime
 import os
 
 #
@@ -35,8 +34,7 @@ regrid_method_ocn = "linear"
 
 # Templates for climatology files
 # %(param) will subsitute param with values in this file
-date = datetime.datetime.now().strftime("%Y%m%d")
-filename_template = f"cmip5.historical.%(model_version).r1i1p1.mon.%(variable).198101-200512.AC.v{date}.nc"
+filename_template = "cmip5.historical.%(model_version).r1i1p1.mon.%(variable).198101-200512.AC.v20200426.nc"
 
 # filename template for landsea masks ('sftlf')
 sftlf_filename_template = "sftlf_%(model_version).nc"

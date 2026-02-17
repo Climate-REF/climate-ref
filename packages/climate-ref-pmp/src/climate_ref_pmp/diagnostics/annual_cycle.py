@@ -426,10 +426,14 @@ class AnnualCycle(CommandLineDiagnostic):
         # Model
         data_name = f"{source_id}_{experiment_id}_{member_id}"
         data_path = model_files
+
+        date_timestamp = datetime.datetime.now().strftime("%Y%m%d")
+
         params = {
             "vars": variable_id,
             "infile": data_path,
             "outfile": f"{output_directory_path}/{variable_id}_{data_name}_clims.nc",
+            "version": date_timestamp,
         }
 
         cmds.append(
@@ -457,8 +461,6 @@ class AnnualCycle(CommandLineDiagnostic):
         with open(f"{output_directory_path}/obs_dict.json", "w") as f:
             json.dump(obs_dict, f)
 
-        date = datetime.datetime.now().strftime("%Y%m%d")
-
         if variable_id in ["ua", "va", "ta"]:
             levels = ["200", "850"]
         elif variable_id in ["zg"]:
@@ -484,7 +486,7 @@ class AnnualCycle(CommandLineDiagnostic):
             "test_data_path": output_directory_path,
             "test_data_set": source_id,
             "realization": member_id,
-            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date}.nc",
+            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date_timestamp}.nc",
             "metrics_output_path": output_directory_path,
             "cmec": "",
         }

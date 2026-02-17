@@ -131,7 +131,7 @@ def test_annual_cycle_diagnostic(
     parameter_file = _get_resource(
         "climate_ref_pmp.params", "pmp_param_annualcycle_1-clims.py", use_resources=True
     )
-    datecode = datetime.datetime.now().strftime("%Y%m%d")
+    date_stamp = datetime.datetime.now().strftime("%Y%m%d")
 
     definition.output_directory.mkdir(parents=True)
 
@@ -151,6 +151,8 @@ def test_annual_cycle_diagnostic(
         str(expected_input_filename),
         "--outfile",
         f"{output_dir}/{variable_id}_{source_id}_historical_{member_id}_clims.nc",
+        "--version",
+        date_stamp,
     ]
 
     # Check the second command
@@ -173,7 +175,7 @@ def test_annual_cycle_diagnostic(
         "--realization",
         member_id,
         "--filename_template",
-        f"%(variable)_{source_id}_historical_{member_id}_clims.198101-200512.AC.v{datecode}.nc",
+        f"%(variable)_{source_id}_historical_{member_id}_clims.198101-200512.AC.v{date_stamp}.nc",
         "--metrics_output_path",
         str(output_dir),
         "--cmec",

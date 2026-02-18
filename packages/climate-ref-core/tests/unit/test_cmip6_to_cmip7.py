@@ -569,7 +569,7 @@ class TestCreateCmip7Filename:
 
 class TestCMIP7AttrsEdgeCases:
     @pytest.mark.parametrize(
-        "variable_id,branding_suffix",
+        "cmip6_variable_id,branding_suffix",
         [
             ("tasmax", "tmaxavg-h2m-hxy-u"),
             ("tasmin", "tminavg-h2m-hxy-u"),
@@ -583,6 +583,8 @@ class TestCMIP7AttrsEdgeCases:
             "experiment_id": "historical",
             "variant_label": "r1i1p1f1",
             "grid_label": "gn",
+            "activity_id": "CMIP",
+            "institution_id": "CSIRO",
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
@@ -611,6 +613,8 @@ class TestCMIP7AttrsEdgeCases:
             "experiment_id": "historical",
             "variant_label": "r1i1p1f1",
             "grid_label": "gn",
+            "activity_id": "CMIP",
+            "institution_id": "CSIRO",
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 

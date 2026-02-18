@@ -18,8 +18,10 @@ from loguru import logger
 from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_dataset,
     create_cmip7_filename,
+    create_cmip7_path,
     format_cmip7_time_range,
     get_dreq_entry,
+    get_frequency_from_table,
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
@@ -51,25 +53,21 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
     """
     cache_dir = _get_cmip7_cache_dir()
 
-    # Build CMIP7 DRS path
-    # CMIP7 DRS: {activity_id}/{institution_id}/{source_id}/{experiment_id}/
-    #            {variant_label}/{frequency}/{variable_id}/{grid_label}/{version}
-    # Ensure all facet values are strings (some may be integers from metadata)
     # CMIP6 activity_id can contain multiple activities separated by spaces
     # (e.g. "C4MIP CDRMIP"). Use only the first activity for the DRS path.
     activity_id = str(cmip7_facets.get("activity_id", "CMIP")).split()[0]
     version = str(cmip7_facets.get("version", "v1"))
-    drs_path = cache_dir / Path(
-        activity_id,
-        str(cmip7_facets.get("institution_id", "unknown")),
-        str(cmip7_facets.get("source_id", "unknown")),
-        str(cmip7_facets.get("experiment_id", "historical")),
-        str(cmip7_facets.get("variant_label", "r1i1p1f1")),
-        str(cmip7_facets.get("frequency", "mon")),
-        str(cmip7_facets.get("variable_id", "tas")),
-        str(cmip7_facets.get("grid_label", "gn")),
-        version,
-    )
+
+    # Build CMIP7 DRS path using the standard MIP-DRS7 path builder.
+    # Provide defaults for fields that may not be in facets.
+    path_facets = {
+        "drs_specs": "MIP-DRS7",
+        "mip_era": "CMIP7",
+        "institution_id": "unknown",
+        **cmip7_facets,
+        "activity_id": activity_id,
+    }
+    drs_path = cache_dir / create_cmip7_path(path_facets, version)
 
     drs_path.mkdir(parents=True, exist_ok=True)
 
@@ -171,9 +169,6 @@ class CMIP7Request:
         self.remove_ensembles = remove_ensembles
         self.time_span = time_span
 
-        # Store CMIP7 facets
-        self._cmip7_facets = dict(facets)
-
         # Create corresponding CMIP6 facets
         self._cmip6_facets = self._convert_to_cmip6_facets(facets)
 
@@ -190,7 +185,7 @@ class CMIP7Request:
         return cmip6_facets
 
     def _convert_to_cmip7_metadata(self, cmip6_row: dict[str, Any]) -> dict[str, Any]:
-        """Convert CMIP6 metadata to CMIP7 format.
+        """Convert a subset of CMIP6 metadata to CMIP7 format.
 
         This is the single location for DReq enrichment: it updates
         ``variable_id`` and adds ``region``, ``branding_suffix``, and
@@ -212,23 +207,16 @@ class CMIP7Request:
 
         # Map table_id to frequency if not present
         if "frequency" not in cmip7_row and "table_id" in cmip7_row:
-            table_to_freq = {
-                "Amon": "mon",
-                "day": "day",
-                "fx": "fx",
-                "Oyr": "yr",
-                "Omon": "mon",
-            }
-            cmip7_row["frequency"] = table_to_freq.get(cmip7_row["table_id"], "mon")
+            cmip7_row["frequency"] = get_frequency_from_table(cmip7_row["table_id"])
 
-        # Enrich with DReq metadata (single canonical location)
+        # Enrich with DReq metadata
         table_id = cmip7_row.get("table_id")
         variable_id = cmip7_row.get("variable_id")
         if table_id and variable_id:
             try:
                 entry = get_dreq_entry(table_id, variable_id)
                 cmip7_row["region"] = entry.region
-                cmip7_row["variable_id"] = entry.branded_variable.split("_")[0]
+                cmip7_row["variable_id"] = entry.variable_id
                 cmip7_row["branding_suffix"] = entry.branding_suffix
                 cmip7_row["branded_variable"] = entry.branded_variable
             except KeyError:
@@ -262,6 +250,8 @@ class CMIP7Request:
             return cmip6_df
 
         # Convert each file and update metadata
+        # The returned DataFrame does not need to have the complete set of CMIP7 metadata
+        # Datasets will be re-read during DB ingestion during the tests
         converted_rows = []
         for _, row in cmip6_df.iterrows():
             row_dict: dict[str, Any] = {str(k): v for k, v in row.to_dict().items()}

@@ -579,29 +579,6 @@ class TestCreateCmip7Filename:
 
         assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_TestModel_piControl_r1i1p1f1.nc"
 
-    def test_out_name_used_over_variable_id(self):
-        """Test that out_name is used in filename instead of variable_id.
-
-        For variables like tasmax, the CMIP6 variable_id is 'tasmax' but the
-        CMIP7 out_name is 'tas'. The filename should use 'tas', not 'tasmax'.
-        """
-        attrs = {
-            "variable_id": "tasmax",
-            "out_name": "tas",
-            "branding_suffix": "tmaxavg-h2m-hxy-u",
-            "frequency": "mon",
-            "region": "glb",
-            "grid_label": "gn",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "variant_label": "r1i1p1f1",
-        }
-        filename = create_cmip7_filename(attrs)
-
-        assert filename == "tas_tmaxavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
-        # Confirm variable_id is NOT in filename (out_name is used instead)
-        assert "tasmax" not in filename
-
     def test_falls_back_to_variable_id_without_out_name(self):
         """Test that variable_id is used when out_name is absent."""
         attrs = {
@@ -640,14 +617,12 @@ class TestCreateCmip7FilenameFromConversion:
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
-        # variable_id stays as CMIP6 identity
-        assert cmip7_attrs["variable_id"] == "tasmax"
-        # out_name is the CMIP7 output name
-        assert cmip7_attrs["out_name"] == "tas"
-        # branded_variable uses out_name
+        # variable_id is updated
+        assert cmip7_attrs["variable_id"] == "tas"
+        # branded_variable uses updated variable_id
         assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
 
-        # Filename uses out_name, not variable_id
+        # Filename uses variable_id
         filename = create_cmip7_filename(cmip7_attrs)
         assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
         assert "tasmax" not in filename
@@ -667,7 +642,6 @@ class TestCreateCmip7FilenameFromConversion:
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
         assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["out_name"] == "tas"
         assert cmip7_attrs["branded_variable"] == "tas_tavg-h2m-hxy-u"
 
         filename = create_cmip7_filename(cmip7_attrs)
@@ -693,20 +667,19 @@ class TestDReqDrivenAttrsEdgeCases:
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
-        assert cmip7_attrs["variable_id"] == "tasmax"
-        assert cmip7_attrs["out_name"] == "tas"
+        assert cmip7_attrs["variable_id"] == "tas"
         assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
         assert cmip7_attrs["branding_suffix"] == "tmaxavg-h2m-hxy-u"
 
-        # Filename must use out_name, not variable_id
+        # Filename must use variable_id
         filename = create_cmip7_filename(cmip7_attrs)
         assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
         assert "tasmax" not in filename
 
-        # Path must use out_name, not variable_id
+        # Path must use variable_id
         path = create_cmip7_path(cmip7_attrs)
         path_parts = path.split("/")
-        # out_name component is at position 9 in the DRS path
+        # variable_id component is at position 9 in the DRS path
         assert "tas" in path_parts
         assert "tasmax" not in path_parts
 
@@ -722,8 +695,7 @@ class TestDReqDrivenAttrsEdgeCases:
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
-        assert cmip7_attrs["variable_id"] == "tasmin"
-        assert cmip7_attrs["out_name"] == "tas"
+        assert cmip7_attrs["variable_id"] == "tas"
         assert cmip7_attrs["branded_variable"] == "tas_tminavg-h2m-hxy-u"
 
     def test_imonant_tas_has_non_glb_region(self):

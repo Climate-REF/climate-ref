@@ -182,7 +182,7 @@ def get_cmip7_compound_name(table_id: str, variable_id: str) -> str:
     Get the full CMIP7 compound name for a CMIP6 variable.
 
     The CMIP7 compound name has the format:
-    ``<realm>.<out_name>.<branding_suffix>.<frequency>.<region>``
+    ``<realm>.<variable_id>.<branding_suffix>.<frequency>.<region>``
 
     Parameters
     ----------
@@ -391,6 +391,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["parent_mip_era"] = attrs.get("parent_mip_era", "CMIP6")
 
     # New/updated CMIP7 attributes
+    attrs["variable_id"] = dreq_entry.branded_variable.split("_")[0]
     attrs["region"] = dreq_entry.region
     attrs["drs_specs"] = cmip7_meta.drs_specs
     attrs["data_specs_version"] = cmip7_meta.data_specs_version
@@ -409,9 +410,6 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["horizontal_label"] = cmip7_meta.horizontal_label
     attrs["area_label"] = cmip7_meta.area_label
     attrs["branding_suffix"] = cmip7_meta.branding_suffix
-
-    # Add out_name (CMIP7 output variable name, used in filenames/paths)
-    attrs["out_name"] = dreq_entry.out_name
 
     # Add branded_variable (required in CMIP7)
     attrs["branded_variable"] = f"{dreq_entry.out_name}_{cmip7_meta.branding_suffix}"
@@ -483,7 +481,6 @@ def convert_cmip6_dataset(
     # Determine the primary variable (skip coordinates/bounds)
     data_vars = [str(v) for v in ds.data_vars if not str(v).endswith("_bnds") and v not in ds.coords]
 
-    # Convert global attributes
     variable_id = ds.attrs.get("variable_id")
     if variable_id is None and data_vars:
         variable_id = data_vars[0]
@@ -491,6 +488,12 @@ def convert_cmip6_dataset(
         raise ValueError("Cannot determine variable_id for branding.")
 
     table_id = ds.attrs["table_id"]
+
+    # Use the CMIP7 variable name
+    dreq_entry = get_dreq_entry(table_id, variable_id)
+    ds = ds.rename({data_vars[0]: dreq_entry.out_name})
+
+    # Convert global attributes
     branding = get_branding_suffix(table_id, variable_id)
     ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs, variable_id=variable_id, branding=branding)
 
@@ -539,12 +542,11 @@ def create_cmip7_filename(
     Create a CMIP7 filename from attributes.
 
     The CMIP7 filename follows the MIP-DRS7 specification (V1.0):
-    <out_name>_<branding_suffix>_<frequency>_<region>_<grid_label>_<source_id>_<experiment_id>_<variant_label>[_<timeRangeDD>].nc
+    <variable_id>_<branding_suffix>_<frequency>_<region>_<grid_label>_<source_id>_<experiment_id>_<variant_label>[_<timeRangeDD>].nc
 
-    The first component uses ``out_name`` (the CMIP7 output variable name) rather than
-    ``variable_id`` (the CMIP6 identity). For most variables these are identical, but
-    for some (e.g. tasmax -> tas) they differ. Falls back to ``variable_id`` if
-    ``out_name`` is not present.
+    Note that ``variable_id`` in CMIP7 may differ from CMIP6. For example,
+    the CMIP6 "tasmax" variable maps to "tas" in CMIP7 because the "max" part
+    is now captured in the branding suffix.
 
     Parameters
     ----------
@@ -576,7 +578,7 @@ def create_cmip7_filename(
     'tas_tavg-h2m-hxy-u_mon_glb_g13s_CanESM6-MR_historical_r2i1p1f1_190001-190912.nc'
     """
     components = [
-        attrs.get("out_name", attrs.get("variable_id", "")),
+        attrs.get("variable_id", ""),
         attrs.get("branding_suffix", ""),
         attrs.get("frequency", "mon"),
         attrs.get("region", "glb"),
@@ -601,7 +603,7 @@ def create_cmip7_path(attrs: dict[str, Any], version: str | None = None) -> str:
 
     The CMIP7 path follows the MIP-DRS7 specification (V1.0):
     <drs_specs>/<mip_era>/<activity_id>/<institution_id>/<source_id>/<experiment_id>/
-    <variant_label>/<region>/<frequency>/<out_name>/<branding_suffix>/<grid_label>/<version>
+    <variant_label>/<region>/<frequency>/<variable_id>/<branding_suffix>/<grid_label>/<version>
 
     Parameters
     ----------
@@ -647,7 +649,7 @@ def create_cmip7_path(attrs: dict[str, Any], version: str | None = None) -> str:
         attrs.get("variant_label", ""),
         attrs.get("region", "glb"),
         attrs.get("frequency", "mon"),
-        attrs.get("out_name", attrs.get("variable_id", "")),
+        attrs.get("variable_id", ""),
         attrs.get("branding_suffix", ""),
         attrs.get("grid_label", "gn"),
         version_str,

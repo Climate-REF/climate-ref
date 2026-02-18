@@ -156,10 +156,22 @@ class RequireFacets:
         groups = [group] if not self.group_by else (g[1] for g in group.groupby(list(self.group_by)))
         for subgroup in groups:
             if not op(value in subgroup[self.dimension].values for value in self.required_facets):
-                logger.debug(
-                    f"Constraint {self} not satisfied because required facet values "
-                    f"not found for group {', '.join(subgroup['path'])}"
-                )
+                if self.operator == "all":
+                    missing_values = [
+                        f"'{value}'"
+                        for value in self.required_facets
+                        if value not in subgroup[self.dimension].values
+                    ]
+                    logger.debug(
+                        f"Constraint {self} not satisfied because required facet values "
+                        f"{', '.join(missing_values)} not found for group "
+                        f"{', '.join(sorted(subgroup['path']))}"
+                    )
+                else:
+                    logger.debug(
+                        f"Constraint {self} not satisfied because none of the required facet values "
+                        f"were found for group {', '.join(sorted(subgroup['path']))}"
+                    )
                 select.loc[subgroup.index] = False
         return group[select]
 

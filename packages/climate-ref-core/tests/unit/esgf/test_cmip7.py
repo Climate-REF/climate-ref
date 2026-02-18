@@ -215,7 +215,7 @@ class TestGetCmip7CacheDir:
     def test_path_contains_climate_ref(self):
         """Test that path contains climate-ref identifier."""
         result = _get_cmip7_cache_dir()
-        assert "climate-ref" in str(result)
+        assert "climate_ref" in str(result)
         assert "cmip7-converted" in str(result)
 
 

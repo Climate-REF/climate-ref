@@ -30,7 +30,7 @@ def _get_cmip7_cache_dir() -> Path:
     """Get the cache directory for converted CMIP7 files."""
     # Use platform-appropriate cache directory for climate-ref
     # This avoids polluting the intake-esgf cache with converted files
-    cache_dir = Path(platformdirs.user_cache_dir("climate-ref")) / "cmip7-converted"
+    cache_dir = Path(platformdirs.user_cache_dir("climate_ref")) / "cmip7-converted"
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
 
@@ -91,6 +91,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         ds_cmip7.attrs["activity_id"] = activity_id
 
         try:
+            logger.info(f"Writing translated CMIP7 file: {output_file}")
             ds_cmip7.to_netcdf(output_file)
         except PermissionError:
             # If we can't write but file exists (race condition or permission issue), use it

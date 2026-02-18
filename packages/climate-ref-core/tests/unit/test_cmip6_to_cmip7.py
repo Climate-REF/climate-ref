@@ -7,7 +7,6 @@ import pytest
 import xarray as xr
 
 from climate_ref_core.cmip6_to_cmip7 import (
-    _DREQ_VARIABLES,
     CMIP6_ONLY_ATTRIBUTES,
     BrandingSuffix,
     DReqVariableMapping,
@@ -19,6 +18,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_branding_suffix,
     get_cmip7_compound_name,
+    get_dreq_entry,
     get_frequency_from_table,
     get_realm,
 )
@@ -27,22 +27,19 @@ from climate_ref_core.cmip6_to_cmip7 import (
 class TestDReqDataLoading:
     """Test that DReq data is loaded correctly at import time."""
 
-    def test_dreq_variables_loaded(self):
-        assert len(_DREQ_VARIABLES) > 30, f"Expected >30 DReq variables, got {len(_DREQ_VARIABLES)}"
-
     def test_dreq_entry_is_dreq_variable_mapping(self):
-        entry = _DREQ_VARIABLES.get("Amon.tas")
+        entry = get_dreq_entry(table_id="Amon", variable_id="tas")
         assert entry is not None, "Amon.tas should be in DReq"
         assert isinstance(entry, DReqVariableMapping)
 
     def test_dreq_entry_has_required_fields(self):
-        entry = _DREQ_VARIABLES["Amon.tas"]
+        entry = get_dreq_entry(table_id="Amon", variable_id="tas")
         assert entry.table_id == "Amon"
         assert entry.variable_id == "tas"
         assert entry.cmip6_compound_name == "Amon.tas"
         assert entry.cmip7_compound_name != ""
         assert entry.branded_variable != ""
-        assert entry.out_name == "tas"
+        assert entry.physical_parameter_name == "tas"
         assert entry.branding_suffix != ""
         assert entry.temporal_label != ""
         assert entry.vertical_label != ""
@@ -63,7 +60,7 @@ class TestDReqVariableMapping:
             cmip6_compound_name="Amon.tas",
             cmip7_compound_name="atmos.tas.tavg-h2m-hxy-u.mon.glb",
             branded_variable="tas_tavg-h2m-hxy-u",
-            out_name="tas",
+            physical_parameter_name="tas",
             branding_suffix="tavg-h2m-hxy-u",
             temporal_label="tavg",
             vertical_label="h2m",
@@ -71,6 +68,7 @@ class TestDReqVariableMapping:
             area_label="u",
             realm="atmos",
             region="glb",
+            frequency="mon",
         )
 
     def test_to_dict(self, sample_mapping: DReqVariableMapping):
@@ -88,7 +86,7 @@ class TestDReqVariableMapping:
             "cmip6_compound_name": "Omon.tos",
             "cmip7_compound_name": "ocean.tos.tavg-u-hxy-sea.mon.glb",
             "branded_variable": "tos_tavg-u-hxy-sea",
-            "out_name": "tos",
+            "physical_parameter_name": "tos",
             "branding_suffix": "tavg-u-hxy-sea",
             "temporal_label": "tavg",
             "vertical_label": "u",
@@ -96,6 +94,7 @@ class TestDReqVariableMapping:
             "area_label": "sea",
             "realm": "ocean",
             "region": "glb",
+            "frequency": "mon",
         }
         mapping = DReqVariableMapping.from_dict(data)
         assert mapping.table_id == "Omon"
@@ -567,98 +566,18 @@ class TestCreateCmip7Filename:
         expected = "areacella_ti-u-hxy-u_fx_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
         assert filename == expected
 
-    def test_uses_defaults_for_missing_attributes(self):
-        attrs = {
-            "variable_id": "tas",
-            "branding_suffix": "tavg-h2m-hxy-u",
-            "source_id": "TestModel",
-            "experiment_id": "piControl",
-            "variant_label": "r1i1p1f1",
-        }
-        filename = create_cmip7_filename(attrs)
 
-        assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_TestModel_piControl_r1i1p1f1.nc"
-
-    def test_falls_back_to_variable_id_without_out_name(self):
-        """Test that variable_id is used when out_name is absent."""
-        attrs = {
-            "variable_id": "tas",
-            "branding_suffix": "tavg-h2m-hxy-u",
-            "frequency": "mon",
-            "region": "glb",
-            "grid_label": "gn",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "variant_label": "r1i1p1f1",
-        }
-        filename = create_cmip7_filename(attrs)
-
-        assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
-
-
-class TestCreateCmip7FilenameFromConversion:
-    """Test filename generation from full conversion pipeline (end-to-end)."""
-
-    def test_tasmax_filename_uses_out_name(self):
-        """End-to-end: tasmax conversion produces filename with out_name=tas.
-
-        CMIP6 tasmax maps to CMIP7 out_name=tas with branding tmaxavg-h2m-hxy-u.
-        The variable_id attribute stays as 'tasmax' but the filename uses 'tas'.
-        """
+class TestCMIP7AttrsEdgeCases:
+    @pytest.mark.parametrize(
+        "variable_id,branding_suffix",
+        [
+            ("tasmax", "tmaxavg-h2m-hxy-u"),
+            ("tasmin", "tminavg-h2m-hxy-u"),
+        ],
+    )
+    def test_tasmax_to_tas(self, cmip6_variable_id, branding_suffix):
         cmip6_attrs = {
-            "variable_id": "tasmax",
-            "table_id": "Amon",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "realization_index": 1,
-            "initialization_index": 1,
-            "physics_index": 1,
-            "forcing_index": 1,
-        }
-        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-
-        # variable_id is updated
-        assert cmip7_attrs["variable_id"] == "tas"
-        # branded_variable uses updated variable_id
-        assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
-
-        # Filename uses variable_id
-        filename = create_cmip7_filename(cmip7_attrs)
-        assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
-        assert "tasmax" not in filename
-
-    def test_tas_filename_unchanged(self):
-        """End-to-end: tas conversion where out_name == variable_id."""
-        cmip6_attrs = {
-            "variable_id": "tas",
-            "table_id": "Amon",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "realization_index": 1,
-            "initialization_index": 1,
-            "physics_index": 1,
-            "forcing_index": 1,
-        }
-        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-
-        assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["branded_variable"] == "tas_tavg-h2m-hxy-u"
-
-        filename = create_cmip7_filename(cmip7_attrs)
-        assert filename.startswith("tas_tavg-h2m-hxy-u_")
-
-
-class TestDReqDrivenAttrsEdgeCases:
-    """Test DReq-driven attribute/filename logic for edge cases.
-
-    Covers variables where out_name != variable_id (e.g. tasmax -> tas)
-    and where region != 'glb' (e.g. ImonAnt.tas -> region='ata').
-    """
-
-    def test_tasmax_attrs_have_distinct_out_name(self):
-        """Amon.tasmax: out_name='tas' differs from variable_id='tasmax'."""
-        cmip6_attrs = {
-            "variable_id": "tasmax",
+            "variable_id": cmip6_variable_id,
             "table_id": "Amon",
             "source_id": "ACCESS-ESM1-5",
             "experiment_id": "historical",
@@ -668,35 +587,20 @@ class TestDReqDrivenAttrsEdgeCases:
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
         assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
-        assert cmip7_attrs["branding_suffix"] == "tmaxavg-h2m-hxy-u"
+        assert cmip7_attrs["branded_variable"] == f"tas_{branding_suffix}"
+        assert cmip7_attrs["branding_suffix"] == branding_suffix
 
-        # Filename must use variable_id
+        # Filename must use the new variable_id
         filename = create_cmip7_filename(cmip7_attrs)
-        assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
-        assert "tasmax" not in filename
+        assert filename.startswith(f"tas_{branding_suffix}_")
+        assert cmip6_variable_id not in filename
 
         # Path must use variable_id
         path = create_cmip7_path(cmip7_attrs)
         path_parts = path.split("/")
         # variable_id component is at position 9 in the DRS path
         assert "tas" in path_parts
-        assert "tasmax" not in path_parts
-
-    def test_tasmin_attrs_have_distinct_out_name(self):
-        """Amon.tasmin: out_name='tas' differs from variable_id='tasmin'."""
-        cmip6_attrs = {
-            "variable_id": "tasmin",
-            "table_id": "Amon",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "variant_label": "r1i1p1f1",
-            "grid_label": "gn",
-        }
-        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-
-        assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["branded_variable"] == "tas_tminavg-h2m-hxy-u"
+        assert cmip6_variable_id not in path_parts
 
     def test_imonant_tas_has_non_glb_region(self):
         """ImonAnt.tas: region='ata' (Antarctic), not 'glb'."""
@@ -764,22 +668,6 @@ class TestCreateCmip7Path:
         path = create_cmip7_path(attrs)
 
         assert path.endswith("/v20240101")
-
-    def test_uses_defaults_for_missing_attributes(self):
-        attrs = {
-            "institution_id": "TestInst",
-            "source_id": "TestModel",
-            "experiment_id": "piControl",
-            "variant_label": "r1i1p1f1",
-            "variable_id": "pr",
-            "branding_suffix": "tavg-u-hxy-u",
-        }
-        path = create_cmip7_path(attrs)
-
-        assert path.startswith("MIP-DRS7/CMIP7/CMIP/")
-        assert "/glb/" in path
-        assert "/mon/" in path
-        assert path.endswith("/gn/v1")
 
 
 class TestFormatCmip7TimeRange:

@@ -32,18 +32,3 @@ amoc-RAPID:
   sources:
     # TODO: Update to use the obs4REF equiv
     amoc: ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc
-
-ohc-NOAA:
-  sources:
-    ohc: ilamb/NOAA/ohc_yr_OHC_BE_gm_200506-202406.nc
-  related_vars:
-  - thetao
-  - volcello
-  transforms:
-  - select_depth:
-      vmin: 0
-      vmax: 2000
-  - ocean_heat_content:
-      reference_year: 2005
-  analyses:
-  - accumulate

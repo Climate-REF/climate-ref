@@ -501,8 +501,18 @@ class ILAMBStandard(Diagnostic):
         Run the ILAMB standard analysis.
         """
         _set_ilamb3_options(self.registry, self.registry_file)
-        ref_datasets = self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column)
-
+        # ilamb3 just needs a dataframe where the index column is the dataset
+        # identifier found in our configure files. So we concat the obs4REF
+        # registries to the ilamb one so that any key may be used from either.
+        # Eventually this should be removed and we use ingested data as a
+        # DataRequirement but supporting both styles simultaneously is not
+        # trivial.
+        ref_datasets = pd.concat(
+            [
+                self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column),
+                registry_to_collection(dataset_registry_manager["obs4ref"]).datasets.set_index("key"),
+            ]
+        )
         cmip_source = _get_cmip_source_type(definition.datasets)
         model_datasets = definition.datasets[cmip_source].datasets
 

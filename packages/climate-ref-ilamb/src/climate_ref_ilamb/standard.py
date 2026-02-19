@@ -256,9 +256,9 @@ class ILAMBStandard(Diagnostic):
         **ilamb_kwargs: Any,
     ):
         # Setup the diagnostic
-        if len(sources) != 1:
-            raise ValueError("Only single source ILAMB diagnostics have been implemented.")
-        self.variable_id = next(iter(sources.keys()))
+        # if len(sources) != 1:
+        #    raise ValueError("Only single source ILAMB diagnostics have been implemented.")
+        self.variable_id = ilamb_kwargs.get("analysis_variable", next(iter(sources.keys())))
         if "sources" not in ilamb_kwargs:  # pragma: no cover
             ilamb_kwargs["sources"] = sources
         if "relationships" not in ilamb_kwargs:

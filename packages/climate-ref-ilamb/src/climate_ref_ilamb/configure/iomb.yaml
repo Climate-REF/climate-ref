@@ -2,7 +2,7 @@ registry: iomb
 
 thetao-WOA2023-surface:
   sources:
-    # TODO: Update to use the obs4REF equiv
+    # NOTE: obs4REF equiv starts beyond historical, cannot use for CMIP6
     thetao: ilamb/WOA/thetao_mon_WOA_A5B4_gn_200501-201412.nc
   variable_cmap: Reds
   transforms:
@@ -13,7 +13,7 @@ thetao-WOA2023-surface:
 
 so-WOA2023-surface:
   sources:
-    # TODO: Update to use the obs4REF equiv
+    # NOTE: obs4REF equiv starts beyond historical, cannot use for CMIP6
     so: ilamb/WOA/so_mon_WOA_A5B4_gn_200501-201412.nc
   transforms:
   - select_depth:
@@ -30,5 +30,5 @@ amoc-RAPID:
   transforms:
   - msftmz_to_rapid
   sources:
-    # TODO: Update to use the obs4REF equiv
+    # obs4REF equiv does not work, changes `depth` to `olevel` and removed the depth bounds
     amoc: ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc

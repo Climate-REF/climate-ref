@@ -2,10 +2,9 @@ registry: ilamb
 
 gpp-WECANN:
   sources:
-    # TODO: Update to use the obs4REF equiv
-    gpp: ilamb/gpp/WECANN/gpp.nc
+    gpp: obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/20250516/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
   relationships:
-    pr: ilamb/pr/GPCPv2.3/pr.nc
+    pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
     tas: ilamb/tas/CRU4.02/tas.nc
   variable_cmap: Greens
 
@@ -16,8 +15,7 @@ gpp-FLUXNET2015:
 
 mrro-LORA:
   sources:
-    # TODO: Update to use the obs4REF equiv
-    mrro: ilamb/mrro/LORA/LORA.nc
+    mrro: obs4REF/ARCCSS/LORA-1-1/mon/mrro/gn/20250516/mrro_mon_LORA-1-1_REF_gn_198001-201212.nc
   variable_cmap: Blues
 
 mrsos-WangMao:
@@ -45,8 +43,10 @@ nbp-Hoffman:
   analyses:
   - nbp
   sources:
-    # TODO: Update to use the obs4REF equiv
-    nbp: ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
+    nbp: obs4REF/UCI-ORNL/Hoffman/yr/nbp/gm/20250516/nbp_yr_Hoffman_REF_gm_185007-201007.nc
+  transforms:
+  - integrate_space:
+      varname: nbp
 
 snc-ESACCI:
   sources:

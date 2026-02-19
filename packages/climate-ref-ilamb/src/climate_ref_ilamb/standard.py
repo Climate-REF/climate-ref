@@ -536,6 +536,11 @@ class ILAMBStandard(Diagnostic):
             if available_alternates and self.variable_id in model_datasets["variable_id"].values:
                 model_datasets = model_datasets[model_datasets["variable_id"] != self.variable_id]
 
+        # In ilamb3, this is run with all the models that we know about to
+        # create different colors. For REF this will at least make the model
+        # line color not be black
+        run.set_model_colors(model_datasets)  # type: ignore
+
         # Run ILAMB in a single-threaded mode to avoid issues with multithreading (#394)
         with dask.config.set(scheduler="synchronous"):
             run.run_single_block(

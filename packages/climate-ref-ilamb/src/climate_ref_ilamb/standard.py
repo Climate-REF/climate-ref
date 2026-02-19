@@ -539,7 +539,7 @@ class ILAMBStandard(Diagnostic):
         # In ilamb3, this is run with all the models that we know about to
         # create different colors. For REF this will at least make the model
         # line color not be black
-        run.set_model_colors(model_datasets)  # type: ignore
+        run.set_model_colors(model_datasets)
 
         # Run ILAMB in a single-threaded mode to avoid issues with multithreading (#394)
         with dask.config.set(scheduler="synchronous"):

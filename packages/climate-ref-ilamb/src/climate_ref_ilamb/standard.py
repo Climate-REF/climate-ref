@@ -228,6 +228,9 @@ def _set_ilamb3_options(registry: pooch.Pooch, registry_file: str) -> None:
     # source_id/member_id/grid_label at a time, relax the groupby option here so
     # these measures are part of the dataframe in ilamb3.
     ilamb3.conf.set(comparison_groupby=["source_id", "grid_label"])
+    # You can control how models are known in the results, drop some facets for
+    # legibility.
+    ilamb3.conf.set(model_name_facets=["source_id"])
 
 
 def _load_csv_and_merge(output_directory: Path) -> pd.DataFrame:

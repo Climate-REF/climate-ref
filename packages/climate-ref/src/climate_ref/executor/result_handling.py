@@ -209,11 +209,13 @@ def handle_execution_result(
             f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}"
         )
         execution.mark_failed()
+        execution.execution_group.dirty = False
         return
 
     if not result.successful or result.metric_bundle_filename is None:
         logger.error(f"{execution} failed")
         execution.mark_failed()
+        execution.execution_group.dirty = False
         return
 
     logger.info(f"{execution} successful")

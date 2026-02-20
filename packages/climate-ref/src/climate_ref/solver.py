@@ -388,6 +388,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
     one_per_provider: bool = False,
     one_per_diagnostic: bool = False,
     filters: SolveFilterOptions | None = None,
+    rerun_failed: bool = False,
 ) -> None:
     """
     Solve for executions that require recalculation
@@ -469,7 +470,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
                 f"provider_count={provider_count}"
             )
 
-            if execution_group.should_run(definition.datasets.hash):
+            if execution_group.should_run(definition.datasets.hash, rerun_failed=rerun_failed):
                 if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
                     logger.info(
                         f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"

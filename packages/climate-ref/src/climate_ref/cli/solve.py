@@ -16,7 +16,14 @@ def solve(  # noqa: PLR0913
         bool,
         typer.Option(help="Solve the newly identified executions"),
     ] = True,
-    timeout: int = typer.Option(60, help="Timeout in seconds for the solve operation"),
+    timeout: int = typer.Option(60, help="Timeout in seconds for waiting on executions to complete"),
+    wait: Annotated[
+        bool,
+        typer.Option(
+            help="Wait for executions to complete before exiting. "
+            "Use --no-wait to queue executions and exit immediately."
+        ),
+    ] = True,
     one_per_provider: bool = typer.Option(
         False, help="Limit to one execution per provider. This is useful for testing"
     ),
@@ -41,6 +48,13 @@ def solve(  # noqa: PLR0913
             "Multiple values can be provided"
         ),
     ] = None,
+    rerun_failed: Annotated[
+        bool,
+        typer.Option(
+            help="Re-run all previously failed executions, even if the execution group is not dirty. "
+            "By default, failed executions are only retried if explicitly flagged dirty."
+        ),
+    ] = False,
 ) -> None:
     """
     Solve for executions that require recalculation
@@ -67,8 +81,9 @@ def solve(  # noqa: PLR0913
         db=db,
         dry_run=dry_run,
         execute=execute,
-        timeout=timeout,
+        timeout=timeout if wait else 0,
         one_per_provider=one_per_provider,
         one_per_diagnostic=one_per_diagnostic,
         filters=filters,
+        rerun_failed=rerun_failed,
     )

@@ -212,6 +212,7 @@ def test_handle_execution_result_failed(config, db, mock_execution_result, mock_
     handle_execution_result(config, db, mock_execution_result, result)
 
     mock_execution_result.mark_failed.assert_called_once()
+    assert not mock_execution_result.execution_group.dirty
 
 
 def test_handle_execution_result_missing_file(config, db, mock_execution_result, mock_definition):

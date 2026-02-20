@@ -248,16 +248,19 @@ class AddSupplementaryDataset:
             facets = matching_facets + list(self.optional_matching_facets)
             datasets = group[facets].drop_duplicates()
             select = pd.Series(False, index=supplementary_group.index)
-            for i in range(len(datasets)):
-                dataset = datasets.iloc[i]
-                # Restrict the supplementary datasets to those that match the main dataset.
+            for _, main_group_df in datasets.groupby(matching_facets):
+                # Restrict the supplementary datasets to those that match this group.
+                first_row = main_group_df.iloc[0]
                 supplementaries = supplementary_group[
-                    (supplementary_group[matching_facets] == dataset[matching_facets]).all(axis="columns")
+                    (supplementary_group[matching_facets] == first_row[matching_facets]).all(axis="columns")
                 ]
                 if not supplementaries.empty:
-                    # Select the best matching supplementary dataset based on the optional matching facets.
-                    scores = (supplementaries[facets] == dataset).sum(axis="columns")
-                    supplementaries = supplementaries[scores == scores.max()]
+                    # Score each candidate against ALL main datasets in this group, take max score.
+                    best_scores = pd.Series(0, index=supplementaries.index, dtype=int)
+                    for i in range(len(main_group_df)):
+                        scores = (supplementaries[facets] == main_group_df.iloc[i]).sum(axis="columns")
+                        best_scores = best_scores.combine(scores, max)
+                    supplementaries = supplementaries[best_scores == best_scores.max()]
                     if "version" in supplementaries.columns:
                         # Select the latest version if there are multiple matches
                         supplementaries = supplementaries[

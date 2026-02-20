@@ -156,7 +156,8 @@ jobs:
         kubectl exec deployment/test-ref-orchestrator -- ref -v datasets ingest --source-type obs4mips /ref/sample-data/obs4REF
     - name: Simple Solve
       run: |
-        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 360 --one-per-provider
+        # TODO: The duration of this may depend on which tasks are picked up
+        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 720 --one-per-provider
     - name: Capture Worker Logs on Failure
       if: failure()
       run: |

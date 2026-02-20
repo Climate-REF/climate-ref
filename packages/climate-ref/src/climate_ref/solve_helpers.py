@@ -121,7 +121,10 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
     for source_type, filename in catalog_files.items():
         path = catalog_dir / filename
         if path.exists():
-            result[source_type] = pd.read_parquet(path)
+            catalog = pd.read_parquet(path)
+            # Apply the same version deduplication as DatasetAdapter.load_catalog()
+            adapter = get_dataset_adapter(source_type.value)
+            result[source_type] = adapter.filter_latest_versions(catalog)
 
     return result if result else None
 

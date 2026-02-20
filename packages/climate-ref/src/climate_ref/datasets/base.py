@@ -382,6 +382,35 @@ class DatasetAdapter(Protocol):
 
         return result
 
+    def filter_latest_versions(self, catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Filter a data catalog to only include the latest version of each dataset
+
+        Groups by ``dataset_id_metadata`` and keeps only the rows where the version
+        matches the maximum version within each group (lexicographic comparison).
+
+        Parameters
+        ----------
+        catalog
+            Data catalog to filter
+
+        Returns
+        -------
+        :
+            Filtered data catalog with only the latest version of each dataset
+        """
+        if catalog.empty or not self.dataset_id_metadata:
+            return catalog
+
+        # Get the latest version for each dataset group
+        # Uses transform to compute max version per group, then filters rows matching the max
+        # This assumes version can be sorted lexicographically
+        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
+            self.version_metadata
+        ].transform("max")
+
+        return catalog[catalog[self.version_metadata] == max_version_per_group]
+
     def _get_dataset_files(self, db: Database, limit: int | None = None) -> pd.DataFrame:
         dataset_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
 
@@ -450,11 +479,4 @@ class DatasetAdapter(Protocol):
         if catalog.empty:
             return pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
 
-        # Get the latest version for each dataset group
-        # Uses transform to compute max version per group, then filters rows matching the max
-        # This assumes version can be sorted lexicographically
-        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
-            self.version_metadata
-        ].transform("max")
-
-        return catalog[catalog[self.version_metadata] == max_version_per_group]
+        return self.filter_latest_versions(catalog)

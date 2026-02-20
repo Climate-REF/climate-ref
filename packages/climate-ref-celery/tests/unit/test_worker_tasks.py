@@ -71,6 +71,10 @@ def test_handle_failure_marks_execution_failed(config):
     execution = db.session.get(Execution, execution.id)
     assert execution.successful is False
 
+    # System-level failures (worker crash, OOM, time limit) should leave
+    # dirty=True so the execution is retried on the next solve
+    assert execution.execution_group.dirty is True
+
 
 def test_handle_failure_missing_execution(config):
     Database.from_config(config, run_migrations=True)

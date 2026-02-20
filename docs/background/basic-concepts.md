@@ -101,6 +101,17 @@ then an example execution group would be `cmip6_historical_ACCESS-ESM1-5`.
 This enables us to determine if the results for the execution group are up to date,
 so if the metric is evaluated for the most up-to-date version of the input datasets.
 
+Each execution group tracks a **dirty flag** that indicates whether the group needs to be rerun.
+A group is dirty when first created, and the flag is cleared when an execution completes successfully
+or fails due to a **diagnostic error** (a bug in the diagnostic logic).
+**System errors** (out-of-memory, disk full, worker crash) leave the dirty flag set
+so the execution is automatically retried on the next solve.
+When new data is ingested that changes the input datasets for a group,
+the dataset hash will change and the solver will schedule a new execution regardless of the dirty flag.
+Diagnostic failures are not automatically retried --
+operators can explicitly flag groups for retry using `ref executions flag-dirty`
+or use `ref solve --rerun-failed` to retry all failures in bulk.
+
 The required execution groups and executions are stored in a database,
 along with the datasets that are required for each execution.
 

@@ -875,13 +875,15 @@ def test_solve_with_one_per_provider(
 def test_solve_with_one_per_diagnostic(
     db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor
 ):
-    # Create a mock solver that "solves" to create multiple executions with the same diagnostic
+    # Create a mock solver that "solves" to create multiple executions with the same diagnostic.
+    # The second execution has the same dataset hash as the first, so the in-progress guard
+    # in should_run will skip it (the first execution has successful=None).
     solver = mock.MagicMock(spec=ExecutionSolver)
     solver.solve.return_value = [mock_metric_execution, mock_metric_execution]
-    with caplog.at_level("INFO"):
+    with caplog.at_level("DEBUG"):
         solve_required_executions(db_seeded, solver=solver, one_per_diagnostic=True)
 
-    assert "Skipping execution due to one-of check" in caplog.text
+    assert "already has an in-progress execution" in caplog.text
 
     # Check that a result is created
     assert db_seeded.session.query(Execution).count() == 1

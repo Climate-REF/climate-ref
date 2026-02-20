@@ -39,7 +39,6 @@ class TestDReqDataLoading:
         assert entry.cmip6_compound_name == "Amon.tas"
         assert entry.cmip7_compound_name != ""
         assert entry.branded_variable != ""
-        assert entry.physical_parameter_name == "tas"
         assert entry.branding_suffix != ""
         assert entry.temporal_label != ""
         assert entry.vertical_label != ""
@@ -60,7 +59,6 @@ class TestDReqVariableMapping:
             cmip6_compound_name="Amon.tas",
             cmip7_compound_name="atmos.tas.tavg-h2m-hxy-u.mon.glb",
             branded_variable="tas_tavg-h2m-hxy-u",
-            physical_parameter_name="tas",
             branding_suffix="tavg-h2m-hxy-u",
             temporal_label="tavg",
             vertical_label="h2m",
@@ -86,7 +84,6 @@ class TestDReqVariableMapping:
             "cmip6_compound_name": "Omon.tos",
             "cmip7_compound_name": "ocean.tos.tavg-u-hxy-sea.mon.glb",
             "branded_variable": "tos_tavg-u-hxy-sea",
-            "physical_parameter_name": "tos",
             "branding_suffix": "tavg-u-hxy-sea",
             "temporal_label": "tavg",
             "vertical_label": "u",

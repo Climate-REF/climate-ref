@@ -47,7 +47,6 @@ class DReqVariableMapping:
     cmip6_compound_name: str
     cmip7_compound_name: str
     branded_variable: str
-    physical_parameter_name: str
     branding_suffix: str
     temporal_label: str
     vertical_label: str
@@ -454,7 +453,7 @@ def convert_cmip6_dataset(
 
     # Use the CMIP7 variable name
     dreq_entry = get_dreq_entry(table_id, variable_id)
-    ds = ds.rename({data_vars[0]: dreq_entry.physical_parameter_name})
+    ds = ds.rename({data_vars[0]: dreq_entry.variable_id})
 
     # Convert global attributes
     ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs)

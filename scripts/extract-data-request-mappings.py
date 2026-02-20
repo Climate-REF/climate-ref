@@ -186,7 +186,6 @@ def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
             cmip6_compound_name=cmip6_cn,
             cmip7_compound_name=rec["cmip7_compound_name"],
             branded_variable=branded,
-            physical_parameter_name=rec["physical_parameter_name"],
             branding_suffix=branding_suffix,
             temporal_label=temporal_label,
             vertical_label=vertical_label,

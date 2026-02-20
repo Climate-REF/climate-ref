@@ -21,6 +21,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     get_dreq_entry,
     get_frequency_from_table,
     get_realm,
+    parse_variant_label,
 )
 
 
@@ -323,6 +324,61 @@ class TestGetRealm:
             get_realm("Amon", "totally_unknown_xyz")
 
 
+class TestParseVariantLabel:
+    """Test parsing variant labels into component indexes."""
+
+    @pytest.mark.parametrize(
+        ("variant_label", "expected"),
+        [
+            pytest.param(
+                "r1i1p1f1",
+                {"realization_index": 1, "initialization_index": 1, "physics_index": 1, "forcing_index": 1},
+                id="all_ones",
+            ),
+            pytest.param(
+                "r3i2p4f5",
+                {"realization_index": 3, "initialization_index": 2, "physics_index": 4, "forcing_index": 5},
+                id="all_non_one",
+            ),
+            pytest.param(
+                "r1i1p1f2",
+                {"realization_index": 1, "initialization_index": 1, "physics_index": 1, "forcing_index": 2},
+                id="only_forcing_non_one",
+            ),
+            pytest.param(
+                "r10i1p1f1",
+                {"realization_index": 10, "initialization_index": 1, "physics_index": 1, "forcing_index": 1},
+                id="large_realization",
+            ),
+            pytest.param(
+                "r1i1p2f1",
+                {"realization_index": 1, "initialization_index": 1, "physics_index": 2, "forcing_index": 1},
+                id="only_physics_non_one",
+            ),
+            pytest.param(
+                "r6i3p1f2",
+                {"realization_index": 6, "initialization_index": 3, "physics_index": 1, "forcing_index": 2},
+                id="mixed_non_one",
+            ),
+        ],
+    )
+    def test_parse_variant_label(self, variant_label, expected):
+        result = parse_variant_label(variant_label)
+        assert result == expected
+
+    def test_invalid_variant_label_raises(self):
+        with pytest.raises(ValueError, match="Cannot parse variant label"):
+            parse_variant_label("invalid")
+
+    def test_empty_string_raises(self):
+        with pytest.raises(ValueError, match="Cannot parse variant label"):
+            parse_variant_label("")
+
+    def test_partial_label_raises(self):
+        with pytest.raises(ValueError, match="Cannot parse variant label"):
+            parse_variant_label("r1i1p1")
+
+
 class TestConvertVariantIndex:
     """Test CMIP6 integer index to CMIP7 string format conversion."""
 
@@ -336,6 +392,8 @@ class TestConvertVariantIndex:
             pytest.param("1", "r", "r1", id="str_numeric"),
             pytest.param("r1", "r", "r1", id="str_with_prefix_r"),
             pytest.param("i2", "i", "i2", id="str_with_prefix_i"),
+            pytest.param(np.int32(3), "r", "r3", id="numpy_int32"),
+            pytest.param(np.int64(5), "f", "f5", id="numpy_int64"),
         ],
     )
     def test_index_conversion(self, value, prefix, expected):
@@ -451,6 +509,133 @@ class TestConvertCmip6ToCmip7Attrs:
         assert cmip7_attrs["grid_label"] == "gn"
         assert "variant_label" in cmip7_attrs
 
+    @pytest.mark.parametrize(
+        ("variant_label", "realization", "initialization", "physics", "forcing"),
+        [
+            pytest.param("r1i1p1f2", "r1", "i1", "p1", "f2", id="forcing_2"),
+            pytest.param("r2i1p1f1", "r2", "i1", "p1", "f1", id="realization_2"),
+            pytest.param("r3i2p4f5", "r3", "i2", "p4", "f5", id="all_non_one"),
+            pytest.param("r10i1p1f1", "r10", "i1", "p1", "f1", id="large_realization"),
+            pytest.param("r1i1p2f1", "r1", "i1", "p2", "f1", id="physics_2"),
+            pytest.param("r6i3p1f2", "r6", "i3", "p1", "f2", id="mixed"),
+        ],
+    )
+    def test_variant_label_preserved_when_individual_indexes_missing(
+        self, variant_label, realization, initialization, physics, forcing
+    ):
+        """When individual indexes are absent, variant_label must be parsed, not defaulted to 1."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "variant_label": variant_label,
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["realization_index"] == realization
+        assert cmip7_attrs["initialization_index"] == initialization
+        assert cmip7_attrs["physics_index"] == physics
+        assert cmip7_attrs["forcing_index"] == forcing
+        assert cmip7_attrs["variant_label"] == f"{realization}{initialization}{physics}{forcing}"
+
+    def test_individual_indexes_override_variant_label(self):
+        """When both individual indexes and variant_label are present, indexes take priority."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "variant_label": "r1i1p1f1",
+            "realization_index": 3,
+            "initialization_index": 2,
+            "physics_index": 4,
+            "forcing_index": 5,
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["realization_index"] == "r3"
+        assert cmip7_attrs["initialization_index"] == "i2"
+        assert cmip7_attrs["physics_index"] == "p4"
+        assert cmip7_attrs["forcing_index"] == "f5"
+        assert cmip7_attrs["variant_label"] == "r3i2p4f5"
+
+    def test_numpy_int_indexes(self):
+        """netCDF attributes often return numpy integers, not Python ints."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "realization_index": np.int64(3),
+            "initialization_index": np.int32(2),
+            "physics_index": np.int64(1),
+            "forcing_index": np.int32(4),
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["realization_index"] == "r3"
+        assert cmip7_attrs["initialization_index"] == "i2"
+        assert cmip7_attrs["physics_index"] == "p1"
+        assert cmip7_attrs["forcing_index"] == "f4"
+        assert cmip7_attrs["variant_label"] == "r3i2p1f4"
+
+    def test_no_variant_label_no_indexes_defaults_to_one(self):
+        """When neither variant_label nor individual indexes are present, default to 1."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["variant_label"] == "r1i1p1f1"
+
+    def test_realistic_cmip6_attrs_non_default_forcing(self):
+        """Simulate a real CMIP6 file with forcing_index=2 (e.g., ACCESS-ESM1-5 r1i1p1f2)."""
+        cmip6_attrs = {
+            "Conventions": "CF-1.7 CMIP-6.2",
+            "activity_id": "ScenarioMIP",
+            "experiment_id": "ssp126",
+            "forcing_index": 2,
+            "frequency": "mon",
+            "grid_label": "gn",
+            "initialization_index": 1,
+            "institution_id": "CSIRO",
+            "mip_era": "CMIP6",
+            "physics_index": 1,
+            "realization_index": 1,
+            "source_id": "ACCESS-ESM1-5",
+            "table_id": "Amon",
+            "variable_id": "tas",
+            "variant_label": "r1i1p1f2",
+            "member_id": "r1i1p1f2",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["forcing_index"] == "f2"
+        assert cmip7_attrs["variant_label"] == "r1i1p1f2"
+        assert cmip7_attrs["realization_index"] == "r1"
+
+    def test_realistic_cmip6_attrs_multiple_non_default(self):
+        """Simulate a real CMIP6 file with multiple non-default indexes (e.g., r6i1p1f2)."""
+        cmip6_attrs = {
+            "Conventions": "CF-1.7 CMIP-6.2",
+            "activity_id": "CMIP",
+            "experiment_id": "historical",
+            "forcing_index": 2,
+            "frequency": "mon",
+            "grid_label": "gn",
+            "initialization_index": 1,
+            "institution_id": "MOHC",
+            "mip_era": "CMIP6",
+            "physics_index": 1,
+            "realization_index": 6,
+            "source_id": "UKESM1-0-LL",
+            "table_id": "Amon",
+            "variable_id": "tas",
+            "variant_label": "r6i1p1f2",
+            "member_id": "r6i1p1f2",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["forcing_index"] == "f2"
+        assert cmip7_attrs["realization_index"] == "r6"
+        assert cmip7_attrs["variant_label"] == "r6i1p1f2"
+
     def test_missing_table_id_raises(self):
         """table_id is required for conversion."""
         with pytest.raises(KeyError):
@@ -526,6 +711,55 @@ class TestConvertCmip6Dataset:
         # DReq says Amon.hus -> p19, not al
         assert ds_cmip7.attrs["vertical_label"] == "p19"
         assert ds_cmip7.attrs["branding_suffix"] == "tavg-p19-hxy-u"
+
+    def test_preserves_non_default_indexes_from_ds_attrs(self):
+        """Dataset with non-1 indexes must preserve them through conversion."""
+        rng = np.random.default_rng(42)
+        ds = xr.Dataset(
+            {"tas": (["time", "lat", "lon"], rng.random((3, 3, 4)))},
+            coords={"time": np.arange(3), "lat": np.linspace(-90, 90, 3), "lon": np.linspace(0, 360, 4)},
+            attrs={
+                "variable_id": "tas",
+                "table_id": "Amon",
+                "source_id": "UKESM1-0-LL",
+                "experiment_id": "historical",
+                "variant_label": "r6i1p1f2",
+                "realization_index": 6,
+                "initialization_index": 1,
+                "physics_index": 1,
+                "forcing_index": 2,
+                "institution_id": "MOHC",
+                "grid_label": "gn",
+                "Conventions": "CF-1.7 CMIP-6.2",
+            },
+        )
+        ds_cmip7 = convert_cmip6_dataset(ds)
+
+        assert ds_cmip7.attrs["realization_index"] == "r6"
+        assert ds_cmip7.attrs["forcing_index"] == "f2"
+        assert ds_cmip7.attrs["variant_label"] == "r6i1p1f2"
+
+    def test_variant_label_only_no_individual_indexes_in_ds(self):
+        """Dataset with only variant_label (no individual indexes) must still get correct variant."""
+        rng = np.random.default_rng(42)
+        ds = xr.Dataset(
+            {"tas": (["time", "lat", "lon"], rng.random((3, 3, 4)))},
+            coords={"time": np.arange(3), "lat": np.linspace(-90, 90, 3), "lon": np.linspace(0, 360, 4)},
+            attrs={
+                "variable_id": "tas",
+                "table_id": "Amon",
+                "source_id": "ACCESS-ESM1-5",
+                "experiment_id": "ssp126",
+                "variant_label": "r1i1p1f2",
+                "institution_id": "CSIRO",
+                "grid_label": "gn",
+                "Conventions": "CF-1.7 CMIP-6.2",
+            },
+        )
+        ds_cmip7 = convert_cmip6_dataset(ds)
+
+        assert ds_cmip7.attrs["forcing_index"] == "f2"
+        assert ds_cmip7.attrs["variant_label"] == "r1i1p1f2"
 
 
 class TestCreateCmip7Filename:

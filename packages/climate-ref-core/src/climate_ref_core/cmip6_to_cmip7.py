@@ -268,6 +268,37 @@ def get_realm(table_id: str, variable_id: str) -> str:
     return entry.realm
 
 
+def parse_variant_label(variant_label: str) -> dict[str, int]:
+    """
+    Parse a CMIP6 variant label into its component indexes.
+
+    Parameters
+    ----------
+    variant_label
+        Variant label string (e.g., "r1i1p1f1", "r3i2p4f5")
+
+    Returns
+    -------
+    dict
+        Dictionary with keys ``realization_index``, ``initialization_index``,
+        ``physics_index``, ``forcing_index`` mapped to their integer values.
+
+    Raises
+    ------
+    ValueError
+        If the variant label does not match the expected pattern.
+    """
+    match = re.match(r"r(\d+)i(\d+)p(\d+)f(\d+)", variant_label)
+    if not match:
+        raise ValueError(f"Cannot parse variant label: {variant_label!r}")
+    return {
+        "realization_index": int(match.group(1)),
+        "initialization_index": int(match.group(2)),
+        "physics_index": int(match.group(3)),
+        "forcing_index": int(match.group(4)),
+    }
+
+
 def convert_variant_index(value: int | str, prefix: str) -> str:
     """
     Convert CMIP6 numeric variant index to CMIP7 string format.
@@ -278,7 +309,7 @@ def convert_variant_index(value: int | str, prefix: str) -> str:
     Parameters
     ----------
     value
-        The index value (int or str)
+        The index value (int, numpy integer, or str)
     prefix
         The prefix to use ("r", "i", "p", or "f")
 
@@ -287,9 +318,7 @@ def convert_variant_index(value: int | str, prefix: str) -> str:
     str
         The CMIP7 format index (e.g., "r1", "i1", "p1", "f1")
     """
-    if isinstance(value, int):
-        return f"{prefix}{value}"
-    elif isinstance(value, str):
+    if isinstance(value, str):
         # Already has prefix
         if value.startswith(prefix):
             return value
@@ -299,7 +328,10 @@ def convert_variant_index(value: int | str, prefix: str) -> str:
         except ValueError:
             return f"{prefix}{value}"
 
-    return f"{prefix}1"  # type: ignore
+    try:
+        return f"{prefix}{int(value)}"
+    except (TypeError, ValueError):
+        return f"{prefix}1"
 
 
 @dataclass
@@ -378,18 +410,32 @@ def convert_cmip6_to_cmip7_attrs(
     # Add branded_variable (required in CMIP7)
     attrs["branded_variable"] = dreq_entry.branded_variable
 
-    # Convert variant indices from CMIP6 integer to CMIP7 string format
-    attrs["realization_index"] = convert_variant_index(attrs.get("realization_index", 1), "r")
-    attrs["initialization_index"] = convert_variant_index(attrs.get("initialization_index", 1), "i")
-    attrs["physics_index"] = convert_variant_index(attrs.get("physics_index", 1), "p")
-    attrs["forcing_index"] = convert_variant_index(attrs.get("forcing_index", 1), "f")
+    # Convert variant indices from CMIP6 integer to CMIP7 string format.
+    # If individual indexes are missing, parse them from variant_label
+    parsed_indices: dict[str, int] = {}
+    variant_label = attrs.get("variant_label")
+    if variant_label:
+        try:
+            parsed_indices = parse_variant_label(variant_label)
+        except ValueError:
+            pass
+
+    for index_name, prefix in [
+        ("realization_index", "r"),
+        ("initialization_index", "i"),
+        ("physics_index", "p"),
+        ("forcing_index", "f"),
+    ]:
+        raw = attrs.get(index_name, parsed_indices.get(index_name, 1))
+        attrs[index_name] = convert_variant_index(raw, prefix)
 
     # Rebuild variant_label from converted indices
-    r = attrs.get("realization_index", "r1")
-    i = attrs.get("initialization_index", "i1")
-    p = attrs.get("physics_index", "p1")
-    f = attrs.get("forcing_index", "f1")
-    attrs["variant_label"] = f"{r}{i}{p}{f}"
+    attrs["variant_label"] = (
+        f"{attrs['realization_index']}"
+        f"{attrs['initialization_index']}"
+        f"{attrs['physics_index']}"
+        f"{attrs['forcing_index']}"
+    )
 
     # Store legacy CMIP6 compound name for reference
     attrs["cmip6_compound_name"] = dreq_entry.cmip6_compound_name

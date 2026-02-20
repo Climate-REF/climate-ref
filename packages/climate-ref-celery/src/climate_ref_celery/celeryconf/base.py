@@ -29,6 +29,25 @@ worker_concurrency = int(os.environ.get("CELERY_WORKER_CONCURRENCY", get_availab
 # Higher values cause multiple tasks to be lost/redelivered on a worker crash.
 worker_prefetch_multiplier = int(os.environ.get("CELERY_WORKER_PREFETCH_MULTIPLIER", 1))  # noqa: PLW1508
 
+# Recycle worker processes after N tasks to prevent memory leaks from
+# scientific Python libraries (numpy, xarray, netCDF4).
+_max_tasks = os.environ.get("CELERY_WORKER_MAX_TASKS_PER_CHILD")
+worker_max_tasks_per_child = int(_max_tasks) if _max_tasks is not None else None
+
+# Hard memory cap per worker process (in KB). Workers exceeding this are
+# replaced cleanly instead of being OOM-killed by the OS.
+_max_memory = os.environ.get("CELERY_WORKER_MAX_MEMORY_PER_CHILD")
+worker_max_memory_per_child = int(_max_memory) if _max_memory is not None else None
+
+# With task_acks_late=True,
+# if the Redis connection drops the running task can never ack.
+# The broker redelivers after visibility_timeout, causing duplicate execution.
+# This kills the task on connection loss so we get a clean redeliver instead of a duplicate.
+worker_cancel_long_running_tasks_on_connection_loss = True
+
+# Emit task events so monitoring tools like Flower can track execution.
+worker_send_task_events = True
+
 # Acknowledge tasks AFTER execution completes, not when they are received.
 # If a worker crashes mid-task the message returns to the broker for redelivery.
 task_acks_late = True
@@ -53,6 +72,14 @@ task_soft_time_limit = int(os.environ.get("CELERY_TASK_SOFT_TIME_LIMIT", int(5.5
 
 # Expire results after 48 hours to prevent unbounded Redis memory growth.
 result_expires = int(os.environ.get("CELERY_RESULT_EXPIRES", 48 * 60 * 60))  # noqa: PLW1508
+
+# Store extended result metadata (task name, args, worker, retries, queue)
+# for post-mortem debugging of failed runs.
+result_extended = True
+
+# Retry result backend operations on transient Redis errors
+# with exponential backoff instead of silently losing results.
+result_backend_always_retry = True
 
 # visibility_timeout MUST be >= task_time_limit.
 #

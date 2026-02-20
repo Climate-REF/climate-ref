@@ -205,15 +205,21 @@ We need to be resiliant to workers failing.
 | `CELERY_WORKER_PREFETCH_MULTIPLIER` | Tasks prefetched per worker process              | `1`                 |
 | `CELERY_WORKER_CONCURRENCY`         | Worker processes per pod                         | CPU count           |
 | `CELERY_RESULT_EXPIRES`             | Result expiry in seconds                         | `172800` (48 hours) |
+| `CELERY_WORKER_MAX_TASKS_PER_CHILD` | Recycle worker after N tasks (memory leak guard) | None (no limit)     |
+| `CELERY_WORKER_MAX_MEMORY_PER_CHILD`| Max resident memory per worker in KB             | None (no limit)     |
 
 The following settings are always enabled in `base.py` and cannot be overridden via
 environment variables:
 
-| Setting                      | Value  | Purpose                                                |
-| ---------------------------- | ------ | ------------------------------------------------------ |
-| `task_acks_late`             | `True` | ACK after execution so crashed tasks are redelivered   |
-| `task_reject_on_worker_lost` | `True` | SIGKILL causes redelivery instead of silent loss       |
-| `task_track_started`         | `True` | Distinguish "not started" from "worker died" in Flower |
+| Setting                                              | Value  | Purpose                                                         |
+| ---------------------------------------------------- | ------ | --------------------------------------------------------------- |
+| `task_acks_late`                                     | `True` | ACK after execution so crashed tasks are redelivered            |
+| `task_reject_on_worker_lost`                         | `True` | SIGKILL causes redelivery instead of silent loss                |
+| `task_track_started`                                 | `True` | Distinguish "not started" from "worker died" in Flower          |
+| `worker_cancel_long_running_tasks_on_connection_loss`| `True` | Kill tasks on broker disconnect to prevent duplicate execution  |
+| `worker_send_task_events`                            | `True` | Emit task events for Flower monitoring                          |
+| `result_extended`                                    | `True` | Store extra metadata (task name, args, worker) with results     |
+| `result_backend_always_retry`                        | `True` | Retry result storage on transient Redis errors                  |
 
 #### Per-Provider Time Limits
 

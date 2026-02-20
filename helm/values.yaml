@@ -80,6 +80,14 @@ defaults:
     REF_EXECUTOR: climate_ref_celery.executor.CeleryExecutor
     # Set HOME to writable location to fix intake-esgf and ilamb3 config directory creation
     HOME: /tmp
+    # Celery reliability tuning (uncomment to override base.py defaults)
+    # CELERY_TASK_TIME_LIMIT: "21600"          # Hard kill after 6 hours
+    # CELERY_TASK_SOFT_TIME_LIMIT: "19800"     # Soft limit at 5.5 hours
+    # CELERY_VISIBILITY_TIMEOUT: "21600"       # Must be >= CELERY_TASK_TIME_LIMIT
+    # CELERY_WORKER_PREFETCH_MULTIPLIER: "1"
+    # CELERY_RESULT_EXPIRES: "172800"          # 48 hours
+    # CELERY_WORKER_MAX_TASKS_PER_CHILD: "50"  # Recycle workers to prevent memory leaks
+    # CELERY_WORKER_MAX_MEMORY_PER_CHILD: "2097152"  # 2 GB cap per worker process (in KB)
 
   replicaCount: 1
 
@@ -129,8 +137,9 @@ defaults:
   affinity: {}
 
 # Map of instances to deploy, where the key is the instance name and the value
-# is any provider-specific overrides. If no overrides are provided, the provider
-# will be deployed with the defaults above.
+# is any provider-specific overrides.
+#
+#  If no overrides are provided, the provider will be deployed with the defaults above.
 #
 # Per-provider time limits can be set via env overrides. For example:
 #   esmvaltool:

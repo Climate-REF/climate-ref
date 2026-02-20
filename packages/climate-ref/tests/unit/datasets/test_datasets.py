@@ -378,6 +378,97 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     assert dataset.grid_label == "gr2"
 
 
+class TestFilterLatestVersions:
+    """Tests for DatasetAdapter.filter_latest_versions."""
+
+    def test_keeps_latest_version_per_group(self):
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP"] * 4,
+                "institution_id": ["NCAR"] * 4,
+                "source_id": ["CESM2"] * 4,
+                "experiment_id": ["historical"] * 4,
+                "member_id": ["r1i1p1f1"] * 4,
+                "table_id": ["Amon"] * 4,
+                "variable_id": ["tas", "tas", "pr", "pr"],
+                "grid_label": ["gn"] * 4,
+                "version": ["v20200101", "v20210601", "v20200101", "v20210601"],
+                "instance_id": [
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v20200101",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v20210601",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20200101",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20210601",
+                ],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+
+        assert len(result) == 2
+        assert set(result["version"]) == {"v20210601"}
+        assert set(result["variable_id"]) == {"tas", "pr"}
+
+    def test_keeps_all_when_no_duplicates(self):
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP", "CMIP"],
+                "institution_id": ["NCAR", "NCAR"],
+                "source_id": ["CESM2", "CESM2"],
+                "experiment_id": ["historical", "historical"],
+                "member_id": ["r1i1p1f1", "r1i1p1f1"],
+                "table_id": ["Amon", "Amon"],
+                "variable_id": ["tas", "pr"],
+                "grid_label": ["gn", "gn"],
+                "version": ["v20210601", "v20210601"],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+        assert len(result) == 2
+
+    def test_handles_empty_catalog(self):
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame()
+
+        result = adapter.filter_latest_versions(catalog)
+        assert result.empty
+
+    def test_handles_multiple_files_per_dataset(self):
+        """Multiple files (rows) for the same dataset version should all be kept."""
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP"] * 4,
+                "institution_id": ["NCAR"] * 4,
+                "source_id": ["CESM2"] * 4,
+                "experiment_id": ["historical"] * 4,
+                "member_id": ["r1i1p1f1"] * 4,
+                "table_id": ["Amon"] * 4,
+                "variable_id": ["tas"] * 4,
+                "grid_label": ["gn"] * 4,
+                "version": ["v20200101", "v20200101", "v20210601", "v20210601"],
+                "path": ["old_1.nc", "old_2.nc", "new_1.nc", "new_2.nc"],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+
+        assert len(result) == 2
+        assert set(result["path"]) == {"new_1.nc", "new_2.nc"}
+        assert set(result["version"]) == {"v20210601"}
+
+    def test_no_dataset_id_metadata_returns_unfiltered(self):
+        """Adapters with empty dataset_id_metadata should return the catalog as-is."""
+        adapter = MockDatasetAdapter()
+        adapter.dataset_id_metadata = ()
+        catalog = pd.DataFrame({"version": ["v1", "v2"], "variable_id": ["tas", "tas"]})
+
+        result = adapter.filter_latest_versions(catalog)
+        assert len(result) == 2
+
+
 class TestIngestionStats:
     """Tests for IngestionStats dataclass."""
 

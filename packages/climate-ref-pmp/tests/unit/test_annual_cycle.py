@@ -152,7 +152,7 @@ def test_annual_cycle_diagnostic(
         "--outfile",
         f"{output_dir}/{variable_id}_{source_id}_historical_{member_id}_clims.nc",
         "--version",
-        date_stamp,
+        f"v{date_stamp}",
     ]
 
     # Check the second command

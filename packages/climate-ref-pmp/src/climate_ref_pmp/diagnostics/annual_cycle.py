@@ -427,13 +427,13 @@ class AnnualCycle(CommandLineDiagnostic):
         data_name = f"{source_id}_{experiment_id}_{member_id}"
         data_path = model_files
 
-        date_timestamp = datetime.datetime.now().strftime("%Y%m%d")
+        date_stamp = datetime.datetime.now().strftime("%Y%m%d")
 
         params = {
             "vars": variable_id,
             "infile": data_path,
             "outfile": f"{output_directory_path}/{variable_id}_{data_name}_clims.nc",
-            "version": date_timestamp,
+            "version": f"v{date_stamp}",
         }
 
         cmds.append(
@@ -486,7 +486,7 @@ class AnnualCycle(CommandLineDiagnostic):
             "test_data_path": output_directory_path,
             "test_data_set": source_id,
             "realization": member_id,
-            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date_timestamp}.nc",
+            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date_stamp}.nc",
             "metrics_output_path": output_directory_path,
             "cmec": "",
         }

@@ -64,14 +64,22 @@ An execution group is automatically marked dirty when:
 - It is **first created** (no executions have been run yet)
 - **New data is ingested** that changes the set of input datasets
 
-An execution group is marked **not dirty** when an execution **completes**,
-regardless of whether it succeeded or failed.
-This prevents failed executions from being retried indefinitely with the same data.
+### System errors vs diagnostic errors
 
-### Retrying failed executions
+When an execution fails, the system distinguishes between two types of failure:
 
-If a diagnostic fails, it will not be retried on subsequent solves unless you take action.
-There are several ways to retry:
+- **System errors** (out-of-memory, disk full, worker crash): The dirty flag is **left set**,
+  so the execution will be automatically retried on the next `ref solve`.
+  These failures are transient and may succeed when conditions change.
+- **Diagnostic errors** (logic bugs, invalid data handling): The dirty flag is **cleared**,
+  preventing the same failing diagnostic from being retried indefinitely with the same data.
+
+Successful executions also clear the dirty flag.
+
+### Retrying failed diagnostics
+
+If a diagnostic fails due to a logic error, it will not be retried on subsequent solves
+unless you take action. There are several ways to retry:
 
 **Retry specific groups** using `flag-dirty`:
 

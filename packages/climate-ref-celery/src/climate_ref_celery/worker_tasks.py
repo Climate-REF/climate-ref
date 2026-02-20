@@ -52,6 +52,10 @@ def handle_failure(task_id: str, execution_id: int) -> None:
     It marks the corresponding ``Execution`` row as failed
     so it does not remain in an indeterminate state.
 
+    Since this callback is triggered by infrastructure-level failures
+    (worker crash, OOM kill, time limit), the execution group's dirty flag
+    is left as-is so the execution will be retried on the next solve.
+
     Parameters
     ----------
     task_id
@@ -59,7 +63,10 @@ def handle_failure(task_id: str, execution_id: int) -> None:
     execution_id
         The unique identifier for the diagnostic execution
     """
-    logger.error(f"Task {task_id} failed for execution {execution_id}")
+    logger.error(
+        f"Task {task_id} failed for execution {execution_id} "
+        f"(system-level failure, will be retried on next solve)"
+    )
 
     config = Config.default()
     db = Database.from_config(config, run_migrations=False)
@@ -72,4 +79,6 @@ def handle_failure(task_id: str, execution_id: int) -> None:
             return
 
         execution.mark_failed()
-        logger.info(f"Marked execution {execution_id} as failed")
+        # Deliberately not clearing dirty - this is a system-level failure
+        # (worker killed, OOM, time limit) so the execution should be retried
+        logger.info(f"Marked execution {execution_id} as failed (retryable)")

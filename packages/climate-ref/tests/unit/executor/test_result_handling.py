@@ -206,13 +206,48 @@ def test_handle_execution_result_with_files(config, mock_execution_result, mocke
     db.session.add.assert_called_with(mock_result_output.return_value)
 
 
-def test_handle_execution_result_failed(config, db, mock_execution_result, mock_definition):
-    result = ExecutionResult(definition=mock_definition, successful=False, metric_bundle_filename=None)
+def test_handle_execution_result_diagnostic_failure(config, db, mock_execution_result, mock_definition):
+    """A diagnostic logic error should clear dirty so the execution is not retried"""
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=False
+    )
 
     handle_execution_result(config, db, mock_execution_result, result)
 
     mock_execution_result.mark_failed.assert_called_once()
     assert not mock_execution_result.execution_group.dirty
+
+
+def test_handle_execution_result_system_failure(config, db, mock_execution_result, mock_definition):
+    """A system error (e.g. OOM) should leave dirty=True so the execution is retried"""
+    mock_execution_result.execution_group.dirty = True
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=True
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    assert mock_execution_result.execution_group.dirty
+
+
+def test_handle_execution_result_missing_log_file_leaves_dirty(
+    config, db, mock_execution_result, mocker, definition_factory
+):
+    """Missing log file suggests the process was killed, so dirty should remain True"""
+    definition = definition_factory(diagnostic=mocker.Mock())
+    # Do NOT create the log file
+    definition.output_directory.mkdir(parents=True, exist_ok=True)
+
+    mock_execution_result.execution_group.dirty = True
+    result = ExecutionResult(
+        definition=definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    assert mock_execution_result.execution_group.dirty
 
 
 def test_handle_execution_result_missing_file(config, db, mock_execution_result, mock_definition):

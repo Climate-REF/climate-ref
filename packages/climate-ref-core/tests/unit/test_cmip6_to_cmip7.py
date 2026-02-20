@@ -2,6 +2,7 @@
 
 import attrs
 import cftime
+import netCDF4
 import numpy as np
 import pytest
 import xarray as xr
@@ -22,6 +23,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     get_frequency_from_table,
     get_realm,
     parse_variant_label,
+    suppress_bounds_coordinates,
 )
 
 
@@ -949,3 +951,82 @@ class TestFormatCmip7TimeRange:
 
         result = format_cmip7_time_range(ds, "mon")
         assert result == "200006-200006"
+
+
+class TestSuppressBoundsCoordinates:
+    """Test that suppress_bounds_coordinates prevents spurious coordinates on bounds variables."""
+
+    def test_sets_encoding_on_bnds_variables(self):
+        ds = xr.Dataset(
+            {
+                "tas": (["time", "lat", "lon"], np.zeros((3, 2, 4))),
+                "time_bnds": (["time", "bnds"], np.zeros((3, 2))),
+                "lat_bnds": (["lat", "bnds"], np.zeros((2, 2))),
+                "lon_bnds": (["lon", "bnds"], np.zeros((4, 2))),
+            },
+        )
+        suppress_bounds_coordinates(ds)
+
+        assert ds["time_bnds"].encoding["coordinates"] is None
+        assert ds["lat_bnds"].encoding["coordinates"] is None
+        assert ds["lon_bnds"].encoding["coordinates"] is None
+
+    def test_does_not_modify_non_bounds_variables(self):
+        ds = xr.Dataset(
+            {
+                "tas": (["time"], np.zeros(3)),
+                "time_bnds": (["time", "bnds"], np.zeros((3, 2))),
+            },
+        )
+        suppress_bounds_coordinates(ds)
+
+        assert "coordinates" not in ds["tas"].encoding
+
+    def test_no_op_when_no_bounds(self):
+        ds = xr.Dataset({"tas": (["time"], np.zeros(3))})
+        suppress_bounds_coordinates(ds)
+        assert "coordinates" not in ds["tas"].encoding
+
+    def test_returns_dataset_for_chaining(self):
+        ds = xr.Dataset({"tas": (["time"], np.zeros(3))})
+        result = suppress_bounds_coordinates(ds)
+        assert result is ds
+
+    def test_netcdf_roundtrip_no_spurious_coordinates_on_bounds(self, tmp_path):
+        """Verify that suppress_bounds_coordinates prevents xarray from adding
+        a ``coordinates`` attribute to bounds variables when a scalar coordinate
+        (e.g. ``height``) is present in the dataset."""
+        time_vals = [cftime.DatetimeNoLeap(1850, m, 16) for m in range(1, 4)]
+        time_bnds_vals = np.array([[0, 1], [1, 2], [2, 3]], dtype=np.float64)
+
+        ds = xr.Dataset(
+            {
+                "tas": (["time", "lat", "lon"], np.ones((3, 2, 4))),
+                "time_bnds": (["time", "bnds"], time_bnds_vals),
+            },
+            coords={
+                "time": time_vals,
+                "lat": [0.0, 1.0],
+                "lon": [0.0, 1.0, 2.0, 3.0],
+                "height": 2.0,
+            },
+        )
+
+        out_path = tmp_path / "test_bounds.nc"
+        suppress_bounds_coordinates(ds)
+        ds.to_netcdf(out_path)
+
+        # Re-read the raw file (no xarray decoding) to inspect attributes
+
+        with netCDF4.Dataset(out_path) as nc:
+            time_bnds_var = nc.variables["time_bnds"]
+            bnds_attrs = {a: time_bnds_var.getncattr(a) for a in time_bnds_var.ncattrs()}
+            assert "coordinates" not in bnds_attrs, (
+                f"time_bnds should not have a 'coordinates' attribute, got: {bnds_attrs}"
+            )
+
+            # The data variable *should* still reference height
+            tas_var = nc.variables["tas"]
+            tas_attrs = {a: tas_var.getncattr(a) for a in tas_var.ncattrs()}
+            assert "coordinates" in tas_attrs, "tas should have a 'coordinates' attribute"
+            assert "height" in tas_attrs["coordinates"]

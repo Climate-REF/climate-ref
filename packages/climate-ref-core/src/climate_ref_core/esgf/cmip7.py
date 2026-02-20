@@ -22,6 +22,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_dreq_entry,
     get_frequency_from_table,
+    suppress_bounds_coordinates,
 )
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
@@ -92,6 +93,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
 
         try:
             logger.info(f"Writing translated CMIP7 file: {output_file}")
+            suppress_bounds_coordinates(ds_cmip7)
             ds_cmip7.to_netcdf(output_file)
         except PermissionError:
             # If we can't write but file exists (race condition or permission issue), use it

@@ -32,6 +32,33 @@ if TYPE_CHECKING:
     import xarray as xr
 
 
+def suppress_bounds_coordinates(ds: xr.Dataset) -> xr.Dataset:
+    """
+    Prevent xarray from adding spurious ``coordinates`` attributes to bounds variables.
+
+    When a dataset contains scalar coordinates (e.g. ``height``),
+    xarray's CF encoder adds a ``coordinates`` attribute to *every* variable,
+    including bounds variables like ``time_bnds``.
+    Call this on a dataset before :meth:`xarray.Dataset.to_netcdf`.
+
+    Parameters
+    ----------
+    ds
+        The dataset about to be written.  Modified in place.
+
+    Returns
+    -------
+    xr.Dataset
+        The same dataset, for chaining.
+    """
+    for name in ds:
+        if str(name).endswith("_bnds"):
+            # Setting encoding["coordinates"] to None tells xarray's CF encoder
+            # to skip auto-adding a coordinates attribute for this variable.
+            ds[name].encoding["coordinates"] = None
+    return ds
+
+
 @attrs.frozen
 class DReqVariableMapping:
     """

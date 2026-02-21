@@ -228,6 +228,9 @@ def _set_ilamb3_options(registry: pooch.Pooch, registry_file: str) -> None:
     # source_id/member_id/grid_label at a time, relax the groupby option here so
     # these measures are part of the dataframe in ilamb3.
     ilamb3.conf.set(comparison_groupby=["source_id", "grid_label"])
+    # You can control how models are known in the results, drop some facets for
+    # legibility.
+    ilamb3.conf.set(model_name_facets=["source_id"])
 
 
 def _load_csv_and_merge(output_directory: Path) -> pd.DataFrame:
@@ -253,9 +256,9 @@ class ILAMBStandard(Diagnostic):
         **ilamb_kwargs: Any,
     ):
         # Setup the diagnostic
-        if len(sources) != 1:
-            raise ValueError("Only single source ILAMB diagnostics have been implemented.")
-        self.variable_id = next(iter(sources.keys()))
+        # if len(sources) != 1:
+        #    raise ValueError("Only single source ILAMB diagnostics have been implemented.")
+        self.variable_id = ilamb_kwargs.get("analysis_variable", next(iter(sources.keys())))
         if "sources" not in ilamb_kwargs:  # pragma: no cover
             ilamb_kwargs["sources"] = sources
         if "relationships" not in ilamb_kwargs:
@@ -498,8 +501,18 @@ class ILAMBStandard(Diagnostic):
         Run the ILAMB standard analysis.
         """
         _set_ilamb3_options(self.registry, self.registry_file)
-        ref_datasets = self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column)
-
+        # ilamb3 just needs a dataframe where the index column is the dataset
+        # identifier found in our configure files. So we concat the obs4REF
+        # registries to the ilamb one so that any key may be used from either.
+        # Eventually this should be removed and we use ingested data as a
+        # DataRequirement but supporting both styles simultaneously is not
+        # trivial.
+        ref_datasets = pd.concat(
+            [
+                self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column),
+                registry_to_collection(dataset_registry_manager["obs4ref"]).datasets.set_index("key"),
+            ]
+        )
         cmip_source = _get_cmip_source_type(definition.datasets)
         model_datasets = definition.datasets[cmip_source].datasets
 
@@ -522,6 +535,11 @@ class ILAMBStandard(Diagnostic):
             available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
             if available_alternates and self.variable_id in model_datasets["variable_id"].values:
                 model_datasets = model_datasets[model_datasets["variable_id"] != self.variable_id]
+
+        # In ilamb3, this is run with all the models that we know about to
+        # create different colors. For REF this will at least make the model
+        # line color not be black
+        run.set_model_colors(model_datasets)
 
         # Run ILAMB in a single-threaded mode to avoid issues with multithreading (#394)
         with dask.config.set(scheduler="synchronous"):

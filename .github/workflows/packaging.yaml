@@ -127,41 +127,6 @@ jobs:
         kubectl describe pod -l app.kubernetes.io/component=pmp
         echo ""
         kubectl logs -l app.kubernetes.io/component=pmp
-    - name: Verify Workers Online
-      run: |
-        kubectl port-forward svc/test-ref-flower 5555:5555 &
-        PF_PID=$!
-
-        echo "=== Flower /healthcheck ==="
-        for i in $(seq 1 30); do
-          if curl -sf http://localhost:5555/healthcheck; then
-            break
-          fi
-          echo "Waiting for port-forward... ($i/30)"
-          sleep 2
-        done
-        echo ""
-
-        echo "=== Checking broker queues ==="
-        BROKER=$(curl -sf http://localhost:5555/broker)
-
-        FAILED=0
-        for queue in celery esmvaltool pmp ilamb example; do
-          if echo "$BROKER" | grep -q "id=\"${queue}\""; then
-            echo "OK: ${queue} queue present"
-          else
-            echo "FAIL: ${queue} queue not found"
-            FAILED=1
-          fi
-        done
-
-        kill $PF_PID || true
-        if [ "$FAILED" -eq 1 ]; then
-          echo "Not all expected queues are registered with the broker"
-          echo "Broker response:"
-          echo "$BROKER"
-          exit 1
-        fi
     - name: Run Migrations
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref config list
@@ -173,6 +138,60 @@ jobs:
         # Fetch data for providers except esmvaltool (ERA5 data is too large for CI)
         kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider pmp
         kubectl exec deployment/test-ref-orchestrator -- ref providers setup --provider ilamb
+    - name: Verify Workers Online
+      run: |
+        kubectl port-forward svc/test-ref-flower 5555:5555 &
+        PF_PID=$!
+
+        echo "=== Flower /healthcheck ==="
+        HEALTHY=0
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:5555/healthcheck; then
+            HEALTHY=1
+            break
+          fi
+          echo "Waiting for port-forward... ($i/30)"
+          sleep 2
+        done
+        if [ "$HEALTHY" -eq 0 ]; then
+          echo "Flower healthcheck failed after 30 attempts"
+          kill $PF_PID || true
+          exit 1
+        fi
+        echo ""
+
+        echo "=== Checking broker queues ==="
+        FAILED=1
+        for attempt in $(seq 1 15); do
+          BROKER=$(curl -sf http://localhost:5555/broker)
+
+          MISSING=0
+          for queue in celery esmvaltool pmp ilamb example; do
+            if ! echo "$BROKER" | grep -q "id=\"${queue}\""; then
+              MISSING=1
+              break
+            fi
+          done
+
+          if [ "$MISSING" -eq 0 ]; then
+            echo "All expected queues found"
+            for queue in celery esmvaltool pmp ilamb example; do
+              echo "OK: ${queue} queue present"
+            done
+            FAILED=0
+            break
+          fi
+          echo "Waiting for broker queues... ($attempt/15)"
+          sleep 4
+        done
+
+        kill $PF_PID || true
+        if [ "$FAILED" -eq 1 ]; then
+          echo "Not all expected queues are registered with the broker after 60s"
+          echo "Broker response:"
+          echo "$BROKER"
+          exit 1
+        fi
     - name: Fetch Test Data
       run: |
         kubectl exec deployment/test-ref-orchestrator -- ref datasets fetch-data --registry sample-data --output-directory /ref/sample-data

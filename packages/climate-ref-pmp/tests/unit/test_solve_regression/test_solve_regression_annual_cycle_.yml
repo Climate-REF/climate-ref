@@ -1799,13 +1799,11 @@ cmip6_historical_gn_r1i1p1f1_NESM3_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gn_r1i1p1f1_NorCPM1_pr__pmp-climatology_GPCP-Monthly-3-2_pr:
   cmip6:
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.pr.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.pr.gn.v20200724
   pmp-climatology:
   - obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20250211
 cmip6_historical_gn_r1i1p1f1_NorCPM1_psl__pmp-climatology_ERA-5_psl:
   cmip6:
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.psl.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.psl.gn.v20200724
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250224
@@ -3923,7 +3921,6 @@ cmip6_historical_gr1_r1i1p1f1_KIOST-ESM_pr__pmp-climatology_GPCP-Monthly-3-2_pr:
   - obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20250211
 cmip6_historical_gr1_r1i1p1f1_KIOST-ESM_psl__pmp-climatology_ERA-5_psl:
   cmip6:
-  - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.psl.gr1.v20191106
   - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.psl.gr1.v20210601
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250224
@@ -4962,13 +4959,11 @@ cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg-LR_ts__pmp-climatology_ERA-5_ts:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
 cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg_pr__pmp-climatology_GPCP-Monthly-3-2_pr:
   cmip6:
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20211207
   pmp-climatology:
   - obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-Monthly-3-2.mon.pr.50km.gn.v20250211
 cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg_psl__pmp-climatology_ERA-5_psl:
   cmip6:
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.psl.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.psl.gr.v20211207
   pmp-climatology:
   - obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.psl.25km.gn.v20250224

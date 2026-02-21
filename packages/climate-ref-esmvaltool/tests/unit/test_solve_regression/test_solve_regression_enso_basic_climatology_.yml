@@ -160,7 +160,6 @@ cmip6_gn_r1i1p1f1_NESM3:
   - CMIP6.CMIP.NUIST.NESM3.historical.r1i1p1f1.Omon.tos.gn.v20190703
 cmip6_gn_r1i1p1f1_NorCPM1:
   cmip6:
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.pr.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.pr.gn.v20200724
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.tauu.gn.v20200724
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Omon.tos.gn.v20200724

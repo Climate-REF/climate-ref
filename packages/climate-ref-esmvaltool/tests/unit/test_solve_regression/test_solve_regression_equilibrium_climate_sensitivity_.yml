@@ -63,7 +63,6 @@ cmip6_gn_r1i1p1f1_ACCESS-CM2:
   - CMIP6.CMIP.CSIRO-ARCCSS.ACCESS-CM2.piControl.r1i1p1f1.Amon.rsdt.gn.v20191112
   - CMIP6.CMIP.CSIRO-ARCCSS.ACCESS-CM2.piControl.r1i1p1f1.Amon.rsut.gn.v20191112
   - CMIP6.CMIP.CSIRO-ARCCSS.ACCESS-CM2.piControl.r1i1p1f1.Amon.tas.gn.v20191112
-  - CMIP6.DAMIP.CSIRO-ARCCSS.ACCESS-CM2.hist-GHG.r1i1p1f1.fx.areacella.gn.v20201120
 cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
   cmip6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191115
@@ -75,7 +74,6 @@ cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsdt.gn.v20210316
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsut.gn.v20210316
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316
-  - CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.fx.areacella.gn.v20200615
 cmip6_gn_r1i1p1f1_AWI-CM-1-1-MR:
   cmip6:
   - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191015
@@ -163,7 +161,6 @@ cmip6_gn_r1i1p1f1_CESM2-WACCM:
   - CMIP6.CMIP.NCAR.CESM2-WACCM.piControl.r1i1p1f1.Amon.tas.gn.v20190320
 cmip6_gn_r1i1p1f1_CESM2-WACCM-FV2:
   cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.1pctCO2.r1i1p1f1.fx.areacella.gn.v20200226
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.abrupt-4xCO2.r1i1p1f1.Amon.rlut.gn.v20200403
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.abrupt-4xCO2.r1i1p1f1.Amon.rsdt.gn.v20200403
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20200403
@@ -301,7 +298,6 @@ cmip6_gn_r1i1p1f1_IITM-ESM:
   - CMIP6.CMIP.CCCR-IITM.IITM-ESM.piControl.r1i1p1f1.Amon.tas.gn.v20191120
 cmip6_gn_r1i1p1f1_MIROC6:
   cmip6:
-  - CMIP6.CMIP.MIROC.MIROC6.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190311
   - CMIP6.CMIP.MIROC.MIROC6.abrupt-4xCO2.r1i1p1f1.Amon.rlut.gn.v20190705
   - CMIP6.CMIP.MIROC.MIROC6.abrupt-4xCO2.r1i1p1f1.Amon.rsdt.gn.v20190705
   - CMIP6.CMIP.MIROC.MIROC6.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20190705
@@ -599,7 +595,6 @@ cmip6_gn_r2i1p1f1_ACCESS-ESM1-5:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r2i1p1f1.Amon.rsdt.gn.v20200901
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r2i1p1f1.Amon.rsut.gn.v20200901
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r2i1p1f1.Amon.tas.gn.v20200901
-  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.fx.areacella.gn.v20191128
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rlut.gn.v20210316
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsdt.gn.v20210316
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsut.gn.v20210316
@@ -756,7 +751,6 @@ cmip6_gr1_r1i1p1f1_INM-CM4-8:
   - CMIP6.CMIP.INM.INM-CM4-8.piControl.r1i1p1f1.Amon.tas.gr1.v20190605
 cmip6_gr1_r1i1p1f1_INM-CM5-0:
   cmip6:
-  - CMIP6.CMIP.INM.INM-CM5-0.1pctCO2.r1i1p1f1.fx.areacella.gr1.v20190820
   - CMIP6.CMIP.INM.INM-CM5-0.abrupt-4xCO2.r1i1p1f1.Amon.rlut.gr1.v20190610
   - CMIP6.CMIP.INM.INM-CM5-0.abrupt-4xCO2.r1i1p1f1.Amon.rsdt.gr1.v20190610
   - CMIP6.CMIP.INM.INM-CM5-0.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gr1.v20190610
@@ -990,7 +984,6 @@ cmip6_gr_r2i1p1f1_E3SM-2-0:
   - CMIP6.CMIP.E3SM-Project.E3SM-2-0.abrupt-4xCO2.r2i1p1f1.Amon.rsdt.gr.v20220830
   - CMIP6.CMIP.E3SM-Project.E3SM-2-0.abrupt-4xCO2.r2i1p1f1.Amon.rsut.gr.v20220830
   - CMIP6.CMIP.E3SM-Project.E3SM-2-0.abrupt-4xCO2.r2i1p1f1.Amon.tas.gr.v20220830
-  - CMIP6.CMIP.E3SM-Project.E3SM-2-0.historical.r2i1p1f1.fx.areacella.gr.v20220913
   - CMIP6.CMIP.E3SM-Project.E3SM-2-0.piControl.r1i1p1f1.Amon.rlut.gr.v20220913
   - CMIP6.CMIP.E3SM-Project.E3SM-2-0.piControl.r1i1p1f1.Amon.rsdt.gr.v20220913
   - CMIP6.CMIP.E3SM-Project.E3SM-2-0.piControl.r1i1p1f1.Amon.rsut.gr.v20220913
@@ -1050,7 +1043,6 @@ cmip6_gr_r3i1p1f1_IPSL-CM6A-LR:
   - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.piControl.r1i1p1f1.Amon.tas.gr.v20200326
 cmip6_gr_r3i1p1f2_CNRM-ESM2-1:
   cmip6:
-  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.1pctCO2.r1i1p1f2.fx.areacella.gr.v20181018
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.abrupt-4xCO2.r3i1p1f2.Amon.rlut.gr.v20190208
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.abrupt-4xCO2.r3i1p1f2.Amon.rsdt.gr.v20190208
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.abrupt-4xCO2.r3i1p1f2.Amon.rsut.gr.v20190208

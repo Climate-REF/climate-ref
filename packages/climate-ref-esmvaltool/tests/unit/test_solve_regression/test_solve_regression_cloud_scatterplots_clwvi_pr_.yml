@@ -242,7 +242,6 @@ cmip6_historical_mon_gr_r1i1p1f1_EC-Earth3-Veg:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.clwvi.gr.v20211207
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20211207
 cmip6_historical_mon_gr_r1i1p1f1_EC-Earth3-Veg-LR:
   cmip6:

@@ -280,7 +280,7 @@ class TestAddSupplementaryDataset:
                         "version": ["v20210316", "v20220101", "v20210316", "v20210316"],
                     }
                 ),
-                [0, 2, 1, 3],
+                [0, 2, 1],
             ),
         ],
     )
@@ -471,13 +471,8 @@ class TestAddSupplementaryDataset:
         group = data_catalog[data_catalog["variable_id"] == "tas"]
         result = self.constraint.apply(group=group, data_catalog=data_catalog)
 
-        # Both tas rows plus all three areacella rows
-        expected = pd.concat(
-            [
-                data_catalog.iloc[[0, 1]],
-                data_catalog.iloc[[2, 3, 4]],
-            ]
-        )
+        # Both tas rows plus the 1pctCO2 areacella rows (best max-score, first-group tiebreak)
+        expected = data_catalog.iloc[[0, 1, 2, 3]]
         assert_frame_equal(result, expected)
 
 

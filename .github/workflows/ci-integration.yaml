@@ -48,6 +48,7 @@ jobs:
     env:
       REF_TEST_OUTPUT: "test-outputs"
       PYTEST_ADDOPTS: "--slow"
+      TQDM_DISABLE: "1"
     strategy:
       fail-fast: false
       matrix:
@@ -65,13 +66,6 @@ jobs:
       - name: Run tests
         run: |
           uv sync
-          uv run ref datasets fetch-sample-data
-          uv run ref datasets fetch-data --registry ilamb-test
-          uv run ref datasets fetch-data --registry ilamb --symlink
-          uv run ref datasets fetch-data --registry iomb --symlink
-          uv run ref datasets fetch-data --registry esmvaltool --symlink
-          uv run ref providers create-env
-          uv run pytest packages tests --slow --no-docker -m "not test_cases" -r a -v
       # Upload the scratch and executions directories as artifacts
       - name: Upload scratch artifacts
         uses: actions/upload-artifact@v6
@@ -97,14 +91,6 @@ jobs:
       - name: Setup environment
         run: |
           uv sync
-          uv run ref datasets fetch-sample-data
-          uv run ref datasets fetch-data --registry ilamb-test
-          uv run ref datasets fetch-data --registry ilamb --symlink
-          uv run ref datasets fetch-data --registry iomb --symlink
-          uv run ref datasets fetch-data --registry esmvaltool --symlink
-          uv run ref providers create-env
-          # This ensures the data for the test cases are available
-          uv run ref test-cases fetch
       - name: Run test cases
         run: uv run pytest packages -m test_cases --slow -v -r a
       - name: Upload test case outputs

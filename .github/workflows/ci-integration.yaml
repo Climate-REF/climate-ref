@@ -44,7 +44,6 @@ jobs:
           uv run ref datasets fetch-sample-data
           uv run ref datasets fetch-data --registry ilamb-test
           uv run ref providers setup
-          uv run ref test-cases fetch || echo "Some fetches failed"
 
   tests-slow:
     if: github.repository == 'Climate-REF/climate-ref'
@@ -98,7 +97,9 @@ jobs:
         run: |
           uv sync
       - name: Run test cases
-        run: uv run pytest packages -m test_cases --slow -v -r a
+        run: |
+          uv run ref test-cases fetch || echo "Some fetches failed"
+          uv run pytest packages -m test_cases --slow -v -r a
       - name: Upload test case outputs
         uses: actions/upload-artifact@v6
         if: always()

@@ -133,7 +133,13 @@ jobs:
         PF_PID=$!
 
         echo "=== Flower /healthcheck ==="
-        curl -sf http://localhost:5555/healthcheck
+        for i in $(seq 1 30); do
+          if curl -sf http://localhost:5555/healthcheck; then
+            break
+          fi
+          echo "Waiting for port-forward... ($i/30)"
+          sleep 2
+        done
         echo ""
 
         echo "=== Checking broker queues ==="

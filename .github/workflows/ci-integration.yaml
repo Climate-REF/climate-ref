@@ -1,4 +1,13 @@
-name: Integration tests
+# These tests run on self-hosted runners with access to a shared cache of datasets and software.
+# This allows us to run the full suite of tests,
+# including slow integration tests that require large datasets and/or long runtimes.
+#
+# The following environment variables have been configured to point to shared cache locations on the runner:
+#
+# REF_DATASET_CACHE_DIR: /data/cache/datasets
+# REF_SOFTWARE_ROOT: /data/cache/software
+#
+# The ~/.esgf directory is also configured to point to a shared cache location downloaded ESGF datasets.
 
 on:
   # Allow manual triggering of this workflow
@@ -15,16 +24,39 @@ permissions:
   contents: read
 
 jobs:
+  populate-cache:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: "arc-climate-ref"
+    env:
+      TQDM_DISABLE: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Populate shared cache
+        run: |
+          uv sync
+          uv run ref datasets fetch-sample-data
+          uv run ref datasets fetch-data --registry ilamb-test
+          uv run ref providers setup
+
   tests-slow:
     if: github.repository == 'Climate-REF/climate-ref'
+    needs: [populate-cache]
     env:
       REF_TEST_OUTPUT: "test-outputs"
       PYTEST_ADDOPTS: "--slow"
+      TQDM_DISABLE: "1"
     strategy:
       fail-fast: false
       matrix:
         python-version: [ "3.11", "3.13" ]
-    runs-on: "self-hosted"
+    runs-on: "arc-climate-ref"
     defaults:
       run:
         shell: bash
@@ -36,12 +68,7 @@ jobs:
           python-version: ${{ matrix.python-version }}
       - name: Run tests
         run: |
-          make virtual-environment
-          make fetch-test-data
-          uv run ref datasets fetch-data --registry ilamb --symlink
-          uv run ref datasets fetch-data --registry iomb --symlink
-          uv run ref datasets fetch-data --registry esmvaltool --symlink
-          uv run ref providers create-env
+          uv sync
           uv run pytest packages tests --slow --no-docker -m "not test_cases" -r a -v
       # Upload the scratch and executions directories as artifacts
       - name: Upload scratch artifacts
@@ -54,7 +81,10 @@ jobs:
 
   test-cases:
     if: github.repository == 'Climate-REF/climate-ref'
-    runs-on: "self-hosted"
+    needs: [populate-cache]
+    runs-on: "arc-climate-ref"
+    env:
+      TQDM_DISABLE: "1"
     defaults:
       run:
         shell: bash
@@ -64,18 +94,11 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
-      - name: Setup environment
-        run: |
-          make virtual-environment
-          make fetch-test-data
-          uv run ref datasets fetch-data --registry ilamb --symlink
-          uv run ref datasets fetch-data --registry iomb --symlink
-          uv run ref datasets fetch-data --registry esmvaltool --symlink
-          uv run ref providers create-env
-          # This ensures the data for the test cases are available
-          uv run ref test-cases fetch
       - name: Run test cases
-        run: uv run pytest packages -m test_cases --slow -v -r a
+        run: |
+          uv sync
+          uv run ref test-cases fetch || echo "Some fetches failed"
+          uv run pytest packages -m test_cases --slow -v -r a
       - name: Upload test case outputs
         uses: actions/upload-artifact@v6
         if: always()

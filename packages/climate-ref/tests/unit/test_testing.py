@@ -4,17 +4,19 @@ Tests for the test harness fixtures.
 
 from unittest.mock import MagicMock, patch
 
+import pandas as pd
 import pytest
 
 from climate_ref.testing import (
     TestCaseRunner,
 )
-from climate_ref_core.datasets import ExecutionDatasetCollection
+from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
+from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_core.testing import (
     TestCase,
     TestCasePaths,
@@ -159,6 +161,23 @@ class TestTestCaseRunnerClass:
         mock_diagnostic.run.assert_called_once()
         execution_definition = mock_diagnostic.run.call_args[0][0]
         assert execution_definition.datasets == mock_datasets
+
+    def test_run_without_paths(self, config, tmp_path):
+        """Test running with explicit datasets provided to runner."""
+        mock_datasets = ExecutionDatasetCollection(
+            {
+                # No 'path' column in the datasets DataFrame
+                SourceDatasetType.CMIP6: DatasetCollection(
+                    datasets=pd.DataFrame([{"instance_id": "test-instance"}]), slug_column="instance_id"
+                )
+            }
+        )
+        runner = TestCaseRunner(config=config, datasets=mock_datasets)
+
+        mock_diagnostic = MagicMock()
+
+        with pytest.raises(DatasetResolutionError, match="missing the required 'path' column"):
+            runner.run(mock_diagnostic, "default", output_dir=tmp_path)
 
 
 class TestTestCaseRunnerPytestFixture:

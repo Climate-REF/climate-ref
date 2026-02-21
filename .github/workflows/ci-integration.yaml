@@ -69,6 +69,7 @@ jobs:
       - name: Run tests
         run: |
           uv sync
+          uv run pytest packages tests --slow --no-docker -m "not test_cases" -r a -v
       # Upload the scratch and executions directories as artifacts
       - name: Upload scratch artifacts
         uses: actions/upload-artifact@v6
@@ -93,11 +94,9 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
-      - name: Setup environment
-        run: |
-          uv sync
       - name: Run test cases
         run: |
+          uv sync
           uv run ref test-cases fetch || echo "Some fetches failed"
           uv run pytest packages -m test_cases --slow -v -r a
       - name: Upload test case outputs

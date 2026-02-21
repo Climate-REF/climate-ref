@@ -8,3 +8,5 @@ metadata:
 data:
   celeryconfig.py: |
     {{- .Values.flower.celeryConfig | nindent 4 }}
+
+    print("Loaded celeryconfig")

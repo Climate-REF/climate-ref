@@ -6,6 +6,8 @@
 #
 # REF_DATASET_CACHE_DIR: /data/cache/datasets
 # REF_SOFTWARE_ROOT: /data/cache/software
+#
+# The ~/.esgf directory is also configured to point to a shared cache location downloaded ESGF datasets.
 
 on:
   # Allow manual triggering of this workflow

@@ -328,9 +328,6 @@ class CMIP7Dataset(Dataset):
     instance_id: Mapped[str] = mapped_column(index=True)
     """CMIP7 DRS format unique identifier"""
 
-    # TODO: Review whether branded_variable should use the file's branded_variable
-    # attribute (which uses out_name from the Data Request) instead of variable_id.
-    # Currently out_name == variable_id for all known CMIP7 variables except for tasmin/tasmax
     @hybrid_property
     def branded_variable(self) -> str:
         """Return branded variable: ``{variable_id}_{branding_suffix}``."""

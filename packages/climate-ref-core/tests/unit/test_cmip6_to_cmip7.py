@@ -2,12 +2,12 @@
 
 import attrs
 import cftime
+import netCDF4
 import numpy as np
 import pytest
 import xarray as xr
 
 from climate_ref_core.cmip6_to_cmip7 import (
-    _DREQ_VARIABLES,
     CMIP6_ONLY_ATTRIBUTES,
     BrandingSuffix,
     DReqVariableMapping,
@@ -19,30 +19,29 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_branding_suffix,
     get_cmip7_compound_name,
+    get_dreq_entry,
     get_frequency_from_table,
     get_realm,
+    parse_variant_label,
+    suppress_bounds_coordinates,
 )
 
 
 class TestDReqDataLoading:
     """Test that DReq data is loaded correctly at import time."""
 
-    def test_dreq_variables_loaded(self):
-        assert len(_DREQ_VARIABLES) > 30, f"Expected >30 DReq variables, got {len(_DREQ_VARIABLES)}"
-
     def test_dreq_entry_is_dreq_variable_mapping(self):
-        entry = _DREQ_VARIABLES.get("Amon.tas")
+        entry = get_dreq_entry(table_id="Amon", variable_id="tas")
         assert entry is not None, "Amon.tas should be in DReq"
         assert isinstance(entry, DReqVariableMapping)
 
     def test_dreq_entry_has_required_fields(self):
-        entry = _DREQ_VARIABLES["Amon.tas"]
+        entry = get_dreq_entry(table_id="Amon", variable_id="tas")
         assert entry.table_id == "Amon"
         assert entry.variable_id == "tas"
         assert entry.cmip6_compound_name == "Amon.tas"
         assert entry.cmip7_compound_name != ""
         assert entry.branded_variable != ""
-        assert entry.out_name == "tas"
         assert entry.branding_suffix != ""
         assert entry.temporal_label != ""
         assert entry.vertical_label != ""
@@ -63,7 +62,6 @@ class TestDReqVariableMapping:
             cmip6_compound_name="Amon.tas",
             cmip7_compound_name="atmos.tas.tavg-h2m-hxy-u.mon.glb",
             branded_variable="tas_tavg-h2m-hxy-u",
-            out_name="tas",
             branding_suffix="tavg-h2m-hxy-u",
             temporal_label="tavg",
             vertical_label="h2m",
@@ -71,6 +69,7 @@ class TestDReqVariableMapping:
             area_label="u",
             realm="atmos",
             region="glb",
+            frequency="mon",
         )
 
     def test_to_dict(self, sample_mapping: DReqVariableMapping):
@@ -88,7 +87,6 @@ class TestDReqVariableMapping:
             "cmip6_compound_name": "Omon.tos",
             "cmip7_compound_name": "ocean.tos.tavg-u-hxy-sea.mon.glb",
             "branded_variable": "tos_tavg-u-hxy-sea",
-            "out_name": "tos",
             "branding_suffix": "tavg-u-hxy-sea",
             "temporal_label": "tavg",
             "vertical_label": "u",
@@ -96,6 +94,7 @@ class TestDReqVariableMapping:
             "area_label": "sea",
             "realm": "ocean",
             "region": "glb",
+            "frequency": "mon",
         }
         mapping = DReqVariableMapping.from_dict(data)
         assert mapping.table_id == "Omon"
@@ -327,6 +326,61 @@ class TestGetRealm:
             get_realm("Amon", "totally_unknown_xyz")
 
 
+class TestParseVariantLabel:
+    """Test parsing variant labels into component indexes."""
+
+    @pytest.mark.parametrize(
+        ("variant_label", "expected"),
+        [
+            pytest.param(
+                "r1i1p1f1",
+                {"realization_index": 1, "initialization_index": 1, "physics_index": 1, "forcing_index": 1},
+                id="all_ones",
+            ),
+            pytest.param(
+                "r3i2p4f5",
+                {"realization_index": 3, "initialization_index": 2, "physics_index": 4, "forcing_index": 5},
+                id="all_non_one",
+            ),
+            pytest.param(
+                "r1i1p1f2",
+                {"realization_index": 1, "initialization_index": 1, "physics_index": 1, "forcing_index": 2},
+                id="only_forcing_non_one",
+            ),
+            pytest.param(
+                "r10i1p1f1",
+                {"realization_index": 10, "initialization_index": 1, "physics_index": 1, "forcing_index": 1},
+                id="large_realization",
+            ),
+            pytest.param(
+                "r1i1p2f1",
+                {"realization_index": 1, "initialization_index": 1, "physics_index": 2, "forcing_index": 1},
+                id="only_physics_non_one",
+            ),
+            pytest.param(
+                "r6i3p1f2",
+                {"realization_index": 6, "initialization_index": 3, "physics_index": 1, "forcing_index": 2},
+                id="mixed_non_one",
+            ),
+        ],
+    )
+    def test_parse_variant_label(self, variant_label, expected):
+        result = parse_variant_label(variant_label)
+        assert result == expected
+
+    def test_invalid_variant_label_raises(self):
+        with pytest.raises(ValueError, match="Cannot parse variant label"):
+            parse_variant_label("invalid")
+
+    def test_empty_string_raises(self):
+        with pytest.raises(ValueError, match="Cannot parse variant label"):
+            parse_variant_label("")
+
+    def test_partial_label_raises(self):
+        with pytest.raises(ValueError, match="Cannot parse variant label"):
+            parse_variant_label("r1i1p1")
+
+
 class TestConvertVariantIndex:
     """Test CMIP6 integer index to CMIP7 string format conversion."""
 
@@ -340,6 +394,8 @@ class TestConvertVariantIndex:
             pytest.param("1", "r", "r1", id="str_numeric"),
             pytest.param("r1", "r", "r1", id="str_with_prefix_r"),
             pytest.param("i2", "i", "i2", id="str_with_prefix_i"),
+            pytest.param(np.int32(3), "r", "r3", id="numpy_int32"),
+            pytest.param(np.int64(5), "f", "f5", id="numpy_int64"),
         ],
     )
     def test_index_conversion(self, value, prefix, expected):
@@ -455,6 +511,133 @@ class TestConvertCmip6ToCmip7Attrs:
         assert cmip7_attrs["grid_label"] == "gn"
         assert "variant_label" in cmip7_attrs
 
+    @pytest.mark.parametrize(
+        ("variant_label", "realization", "initialization", "physics", "forcing"),
+        [
+            pytest.param("r1i1p1f2", "r1", "i1", "p1", "f2", id="forcing_2"),
+            pytest.param("r2i1p1f1", "r2", "i1", "p1", "f1", id="realization_2"),
+            pytest.param("r3i2p4f5", "r3", "i2", "p4", "f5", id="all_non_one"),
+            pytest.param("r10i1p1f1", "r10", "i1", "p1", "f1", id="large_realization"),
+            pytest.param("r1i1p2f1", "r1", "i1", "p2", "f1", id="physics_2"),
+            pytest.param("r6i3p1f2", "r6", "i3", "p1", "f2", id="mixed"),
+        ],
+    )
+    def test_variant_label_preserved_when_individual_indexes_missing(
+        self, variant_label, realization, initialization, physics, forcing
+    ):
+        """When individual indexes are absent, variant_label must be parsed, not defaulted to 1."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "variant_label": variant_label,
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["realization_index"] == realization
+        assert cmip7_attrs["initialization_index"] == initialization
+        assert cmip7_attrs["physics_index"] == physics
+        assert cmip7_attrs["forcing_index"] == forcing
+        assert cmip7_attrs["variant_label"] == f"{realization}{initialization}{physics}{forcing}"
+
+    def test_individual_indexes_override_variant_label(self):
+        """When both individual indexes and variant_label are present, indexes take priority."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "variant_label": "r1i1p1f1",
+            "realization_index": 3,
+            "initialization_index": 2,
+            "physics_index": 4,
+            "forcing_index": 5,
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["realization_index"] == "r3"
+        assert cmip7_attrs["initialization_index"] == "i2"
+        assert cmip7_attrs["physics_index"] == "p4"
+        assert cmip7_attrs["forcing_index"] == "f5"
+        assert cmip7_attrs["variant_label"] == "r3i2p4f5"
+
+    def test_numpy_int_indexes(self):
+        """netCDF attributes often return numpy integers, not Python ints."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+            "realization_index": np.int64(3),
+            "initialization_index": np.int32(2),
+            "physics_index": np.int64(1),
+            "forcing_index": np.int32(4),
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["realization_index"] == "r3"
+        assert cmip7_attrs["initialization_index"] == "i2"
+        assert cmip7_attrs["physics_index"] == "p1"
+        assert cmip7_attrs["forcing_index"] == "f4"
+        assert cmip7_attrs["variant_label"] == "r3i2p1f4"
+
+    def test_no_variant_label_no_indexes_defaults_to_one(self):
+        """When neither variant_label nor individual indexes are present, default to 1."""
+        cmip6_attrs = {
+            "variable_id": "tas",
+            "table_id": "Amon",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["variant_label"] == "r1i1p1f1"
+
+    def test_realistic_cmip6_attrs_non_default_forcing(self):
+        """Simulate a real CMIP6 file with forcing_index=2 (e.g., ACCESS-ESM1-5 r1i1p1f2)."""
+        cmip6_attrs = {
+            "Conventions": "CF-1.7 CMIP-6.2",
+            "activity_id": "ScenarioMIP",
+            "experiment_id": "ssp126",
+            "forcing_index": 2,
+            "frequency": "mon",
+            "grid_label": "gn",
+            "initialization_index": 1,
+            "institution_id": "CSIRO",
+            "mip_era": "CMIP6",
+            "physics_index": 1,
+            "realization_index": 1,
+            "source_id": "ACCESS-ESM1-5",
+            "table_id": "Amon",
+            "variable_id": "tas",
+            "variant_label": "r1i1p1f2",
+            "member_id": "r1i1p1f2",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["forcing_index"] == "f2"
+        assert cmip7_attrs["variant_label"] == "r1i1p1f2"
+        assert cmip7_attrs["realization_index"] == "r1"
+
+    def test_realistic_cmip6_attrs_multiple_non_default(self):
+        """Simulate a real CMIP6 file with multiple non-default indexes (e.g., r6i1p1f2)."""
+        cmip6_attrs = {
+            "Conventions": "CF-1.7 CMIP-6.2",
+            "activity_id": "CMIP",
+            "experiment_id": "historical",
+            "forcing_index": 2,
+            "frequency": "mon",
+            "grid_label": "gn",
+            "initialization_index": 1,
+            "institution_id": "MOHC",
+            "mip_era": "CMIP6",
+            "physics_index": 1,
+            "realization_index": 6,
+            "source_id": "UKESM1-0-LL",
+            "table_id": "Amon",
+            "variable_id": "tas",
+            "variant_label": "r6i1p1f2",
+            "member_id": "r6i1p1f2",
+        }
+        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
+
+        assert cmip7_attrs["forcing_index"] == "f2"
+        assert cmip7_attrs["realization_index"] == "r6"
+        assert cmip7_attrs["variant_label"] == "r6i1p1f2"
+
     def test_missing_table_id_raises(self):
         """table_id is required for conversion."""
         with pytest.raises(KeyError):
@@ -531,6 +714,55 @@ class TestConvertCmip6Dataset:
         assert ds_cmip7.attrs["vertical_label"] == "p19"
         assert ds_cmip7.attrs["branding_suffix"] == "tavg-p19-hxy-u"
 
+    def test_preserves_non_default_indexes_from_ds_attrs(self):
+        """Dataset with non-1 indexes must preserve them through conversion."""
+        rng = np.random.default_rng(42)
+        ds = xr.Dataset(
+            {"tas": (["time", "lat", "lon"], rng.random((3, 3, 4)))},
+            coords={"time": np.arange(3), "lat": np.linspace(-90, 90, 3), "lon": np.linspace(0, 360, 4)},
+            attrs={
+                "variable_id": "tas",
+                "table_id": "Amon",
+                "source_id": "UKESM1-0-LL",
+                "experiment_id": "historical",
+                "variant_label": "r6i1p1f2",
+                "realization_index": 6,
+                "initialization_index": 1,
+                "physics_index": 1,
+                "forcing_index": 2,
+                "institution_id": "MOHC",
+                "grid_label": "gn",
+                "Conventions": "CF-1.7 CMIP-6.2",
+            },
+        )
+        ds_cmip7 = convert_cmip6_dataset(ds)
+
+        assert ds_cmip7.attrs["realization_index"] == "r6"
+        assert ds_cmip7.attrs["forcing_index"] == "f2"
+        assert ds_cmip7.attrs["variant_label"] == "r6i1p1f2"
+
+    def test_variant_label_only_no_individual_indexes_in_ds(self):
+        """Dataset with only variant_label (no individual indexes) must still get correct variant."""
+        rng = np.random.default_rng(42)
+        ds = xr.Dataset(
+            {"tas": (["time", "lat", "lon"], rng.random((3, 3, 4)))},
+            coords={"time": np.arange(3), "lat": np.linspace(-90, 90, 3), "lon": np.linspace(0, 360, 4)},
+            attrs={
+                "variable_id": "tas",
+                "table_id": "Amon",
+                "source_id": "ACCESS-ESM1-5",
+                "experiment_id": "ssp126",
+                "variant_label": "r1i1p1f2",
+                "institution_id": "CSIRO",
+                "grid_label": "gn",
+                "Conventions": "CF-1.7 CMIP-6.2",
+            },
+        )
+        ds_cmip7 = convert_cmip6_dataset(ds)
+
+        assert ds_cmip7.attrs["forcing_index"] == "f2"
+        assert ds_cmip7.attrs["variant_label"] == "r1i1p1f2"
+
 
 class TestCreateCmip7Filename:
     """Test CMIP7 filename generation per MIP-DRS7 spec."""
@@ -567,136 +799,43 @@ class TestCreateCmip7Filename:
         expected = "areacella_ti-u-hxy-u_fx_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
         assert filename == expected
 
-    def test_uses_defaults_for_missing_attributes(self):
-        attrs = {
-            "variable_id": "tas",
-            "branding_suffix": "tavg-h2m-hxy-u",
-            "source_id": "TestModel",
-            "experiment_id": "piControl",
-            "variant_label": "r1i1p1f1",
-        }
-        filename = create_cmip7_filename(attrs)
 
-        assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_TestModel_piControl_r1i1p1f1.nc"
-
-    def test_falls_back_to_variable_id_without_out_name(self):
-        """Test that variable_id is used when out_name is absent."""
-        attrs = {
-            "variable_id": "tas",
-            "branding_suffix": "tavg-h2m-hxy-u",
-            "frequency": "mon",
-            "region": "glb",
-            "grid_label": "gn",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "variant_label": "r1i1p1f1",
-        }
-        filename = create_cmip7_filename(attrs)
-
-        assert filename == "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
-
-
-class TestCreateCmip7FilenameFromConversion:
-    """Test filename generation from full conversion pipeline (end-to-end)."""
-
-    def test_tasmax_filename_uses_out_name(self):
-        """End-to-end: tasmax conversion produces filename with out_name=tas.
-
-        CMIP6 tasmax maps to CMIP7 out_name=tas with branding tmaxavg-h2m-hxy-u.
-        The variable_id attribute stays as 'tasmax' but the filename uses 'tas'.
-        """
+class TestCMIP7AttrsEdgeCases:
+    @pytest.mark.parametrize(
+        "cmip6_variable_id,branding_suffix",
+        [
+            ("tasmax", "tmaxavg-h2m-hxy-u"),
+            ("tasmin", "tminavg-h2m-hxy-u"),
+        ],
+    )
+    def test_tasmax_to_tas(self, cmip6_variable_id, branding_suffix):
         cmip6_attrs = {
-            "variable_id": "tasmax",
-            "table_id": "Amon",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "realization_index": 1,
-            "initialization_index": 1,
-            "physics_index": 1,
-            "forcing_index": 1,
-        }
-        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-
-        # variable_id is updated
-        assert cmip7_attrs["variable_id"] == "tas"
-        # branded_variable uses updated variable_id
-        assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
-
-        # Filename uses variable_id
-        filename = create_cmip7_filename(cmip7_attrs)
-        assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
-        assert "tasmax" not in filename
-
-    def test_tas_filename_unchanged(self):
-        """End-to-end: tas conversion where out_name == variable_id."""
-        cmip6_attrs = {
-            "variable_id": "tas",
-            "table_id": "Amon",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "realization_index": 1,
-            "initialization_index": 1,
-            "physics_index": 1,
-            "forcing_index": 1,
-        }
-        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-
-        assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["branded_variable"] == "tas_tavg-h2m-hxy-u"
-
-        filename = create_cmip7_filename(cmip7_attrs)
-        assert filename.startswith("tas_tavg-h2m-hxy-u_")
-
-
-class TestDReqDrivenAttrsEdgeCases:
-    """Test DReq-driven attribute/filename logic for edge cases.
-
-    Covers variables where out_name != variable_id (e.g. tasmax -> tas)
-    and where region != 'glb' (e.g. ImonAnt.tas -> region='ata').
-    """
-
-    def test_tasmax_attrs_have_distinct_out_name(self):
-        """Amon.tasmax: out_name='tas' differs from variable_id='tasmax'."""
-        cmip6_attrs = {
-            "variable_id": "tasmax",
+            "variable_id": cmip6_variable_id,
             "table_id": "Amon",
             "source_id": "ACCESS-ESM1-5",
             "experiment_id": "historical",
             "variant_label": "r1i1p1f1",
             "grid_label": "gn",
+            "activity_id": "CMIP",
+            "institution_id": "CSIRO",
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
         assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["branded_variable"] == "tas_tmaxavg-h2m-hxy-u"
-        assert cmip7_attrs["branding_suffix"] == "tmaxavg-h2m-hxy-u"
+        assert cmip7_attrs["branded_variable"] == f"tas_{branding_suffix}"
+        assert cmip7_attrs["branding_suffix"] == branding_suffix
 
-        # Filename must use variable_id
+        # Filename must use the new variable_id
         filename = create_cmip7_filename(cmip7_attrs)
-        assert filename.startswith("tas_tmaxavg-h2m-hxy-u_")
-        assert "tasmax" not in filename
+        assert filename.startswith(f"tas_{branding_suffix}_")
+        assert cmip6_variable_id not in filename
 
         # Path must use variable_id
         path = create_cmip7_path(cmip7_attrs)
         path_parts = path.split("/")
         # variable_id component is at position 9 in the DRS path
         assert "tas" in path_parts
-        assert "tasmax" not in path_parts
-
-    def test_tasmin_attrs_have_distinct_out_name(self):
-        """Amon.tasmin: out_name='tas' differs from variable_id='tasmin'."""
-        cmip6_attrs = {
-            "variable_id": "tasmin",
-            "table_id": "Amon",
-            "source_id": "ACCESS-ESM1-5",
-            "experiment_id": "historical",
-            "variant_label": "r1i1p1f1",
-            "grid_label": "gn",
-        }
-        cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
-
-        assert cmip7_attrs["variable_id"] == "tas"
-        assert cmip7_attrs["branded_variable"] == "tas_tminavg-h2m-hxy-u"
+        assert cmip6_variable_id not in path_parts
 
     def test_imonant_tas_has_non_glb_region(self):
         """ImonAnt.tas: region='ata' (Antarctic), not 'glb'."""
@@ -707,6 +846,8 @@ class TestDReqDrivenAttrsEdgeCases:
             "experiment_id": "historical",
             "variant_label": "r1i1p1f1",
             "grid_label": "gn",
+            "activity_id": "CMIP",
+            "institution_id": "CSIRO",
         }
         cmip7_attrs = convert_cmip6_to_cmip7_attrs(cmip6_attrs)
 
@@ -766,22 +907,6 @@ class TestCreateCmip7Path:
 
         assert path.endswith("/v20240101")
 
-    def test_uses_defaults_for_missing_attributes(self):
-        attrs = {
-            "institution_id": "TestInst",
-            "source_id": "TestModel",
-            "experiment_id": "piControl",
-            "variant_label": "r1i1p1f1",
-            "variable_id": "pr",
-            "branding_suffix": "tavg-u-hxy-u",
-        }
-        path = create_cmip7_path(attrs)
-
-        assert path.startswith("MIP-DRS7/CMIP7/CMIP/")
-        assert "/glb/" in path
-        assert "/mon/" in path
-        assert path.endswith("/gn/v1")
-
 
 class TestFormatCmip7TimeRange:
     """Test time range formatting per MIP-DRS7 spec."""
@@ -827,3 +952,82 @@ class TestFormatCmip7TimeRange:
 
         result = format_cmip7_time_range(ds, "mon")
         assert result == "200006-200006"
+
+
+class TestSuppressBoundsCoordinates:
+    """Test that suppress_bounds_coordinates prevents spurious coordinates on bounds variables."""
+
+    def test_sets_encoding_on_bnds_variables(self):
+        ds = xr.Dataset(
+            {
+                "tas": (["time", "lat", "lon"], np.zeros((3, 2, 4))),
+                "time_bnds": (["time", "bnds"], np.zeros((3, 2))),
+                "lat_bnds": (["lat", "bnds"], np.zeros((2, 2))),
+                "lon_bnds": (["lon", "bnds"], np.zeros((4, 2))),
+            },
+        )
+        suppress_bounds_coordinates(ds)
+
+        assert ds["time_bnds"].encoding["coordinates"] is None
+        assert ds["lat_bnds"].encoding["coordinates"] is None
+        assert ds["lon_bnds"].encoding["coordinates"] is None
+
+    def test_does_not_modify_non_bounds_variables(self):
+        ds = xr.Dataset(
+            {
+                "tas": (["time"], np.zeros(3)),
+                "time_bnds": (["time", "bnds"], np.zeros((3, 2))),
+            },
+        )
+        suppress_bounds_coordinates(ds)
+
+        assert "coordinates" not in ds["tas"].encoding
+
+    def test_no_op_when_no_bounds(self):
+        ds = xr.Dataset({"tas": (["time"], np.zeros(3))})
+        suppress_bounds_coordinates(ds)
+        assert "coordinates" not in ds["tas"].encoding
+
+    def test_returns_dataset_for_chaining(self):
+        ds = xr.Dataset({"tas": (["time"], np.zeros(3))})
+        result = suppress_bounds_coordinates(ds)
+        assert result is ds
+
+    def test_netcdf_roundtrip_no_spurious_coordinates_on_bounds(self, tmp_path):
+        """Verify that suppress_bounds_coordinates prevents xarray from adding
+        a ``coordinates`` attribute to bounds variables when a scalar coordinate
+        (e.g. ``height``) is present in the dataset."""
+        time_vals = [cftime.DatetimeNoLeap(1850, m, 16) for m in range(1, 4)]
+        time_bnds_vals = np.array([[0, 1], [1, 2], [2, 3]], dtype=np.float64)
+
+        ds = xr.Dataset(
+            {
+                "tas": (["time", "lat", "lon"], np.ones((3, 2, 4))),
+                "time_bnds": (["time", "bnds"], time_bnds_vals),
+            },
+            coords={
+                "time": time_vals,
+                "lat": [0.0, 1.0],
+                "lon": [0.0, 1.0, 2.0, 3.0],
+                "height": 2.0,
+            },
+        )
+
+        out_path = tmp_path / "test_bounds.nc"
+        suppress_bounds_coordinates(ds)
+        ds.to_netcdf(out_path)
+
+        # Re-read the raw file (no xarray decoding) to inspect attributes
+
+        with netCDF4.Dataset(out_path) as nc:
+            time_bnds_var = nc.variables["time_bnds"]
+            bnds_attrs = {a: time_bnds_var.getncattr(a) for a in time_bnds_var.ncattrs()}
+            assert "coordinates" not in bnds_attrs, (
+                f"time_bnds should not have a 'coordinates' attribute, got: {bnds_attrs}"
+            )
+
+            # The data variable *should* still reference height
+            tas_var = nc.variables["tas"]
+            tas_attrs = {a: tas_var.getncattr(a) for a in tas_var.ncattrs()}
+            assert "coordinates" in tas_attrs, "tas should have a 'coordinates' attribute"
+            assert "height" in tas_attrs["coordinates"]

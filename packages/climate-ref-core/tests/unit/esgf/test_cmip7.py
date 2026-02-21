@@ -215,7 +215,7 @@ class TestGetCmip7CacheDir:
     def test_path_contains_climate_ref(self):
         """Test that path contains climate-ref identifier."""
         result = _get_cmip7_cache_dir()
-        assert "climate-ref" in str(result)
+        assert "climate_ref" in str(result)
         assert "cmip7-converted" in str(result)
 
 
@@ -254,14 +254,20 @@ class TestConvertFileToCmip7:
             "branding_suffix": "tavg-h2m-hxy-u",
             "region": "glb",
         }
+        # MIP-DRS7 path: drs_specs/mip_era/activity/institution/source/experiment/
+        #                variant/region/frequency/variable/branding/grid/version
         drs_path = cache_dir / Path(
+            "MIP-DRS7",
+            "CMIP7",
             "CMIP",
             "CSIRO",
             "ACCESS-ESM1-5",
             "historical",
             "r1i1p1f1",
+            "glb",
             "mon",
             "tas",
+            "tavg-h2m-hxy-u",
             "gn",
             "v1",
         )
@@ -347,7 +353,7 @@ class TestConvertFileToCmip7:
         mock_converted_ds = MagicMock()
         mock_convert.return_value = mock_converted_ds
 
-        # Use integer values for some facets; include table_id for DReq enrichment
+        # Use integer values for some facets; include all required fields
         cmip7_facets = {
             "activity_id": "CMIP",
             "institution_id": 123,  # Integer value
@@ -359,6 +365,8 @@ class TestConvertFileToCmip7:
             "table_id": "Amon",
             "grid_label": "gn",
             "version": 1,  # Integer value
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "region": "glb",
         }
 
         input_file = tmp_path / "test_input.nc"
@@ -409,13 +417,17 @@ class TestConvertFileToCmip7:
         # Pre-create the output directory and file (simulating race condition)
         cmip7_fn = "tas_tavg-h2m-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc"
         drs_path = cache_dir / Path(
+            "MIP-DRS7",
+            "CMIP7",
             "CMIP",
             "CSIRO",
             "ACCESS-ESM1-5",
             "historical",
             "r1i1p1f1",
+            "glb",
             "mon",
             "tas",
+            "tavg-h2m-hxy-u",
             "gn",
             "v1",
         )
@@ -472,10 +484,8 @@ class TestConvertFileToCmip7:
     @patch("climate_ref_core.esgf.cmip7.xr.open_dataset")
     @patch("climate_ref_core.esgf.cmip7.convert_cmip6_dataset")
     @patch("climate_ref_core.esgf.cmip7._get_cmip7_cache_dir")
-    def test_uses_default_facet_values(
-        self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path
-    ):
-        """Test that default facet values are used when facets are missing."""
+    def test_raises_if_missing(self, mock_cache_dir, mock_convert, mock_open, mock_time_range, tmp_path):
+        """Test that empty facets raises KeyError from create_cmip7_path."""
         cache_dir = tmp_path / "cache"
         cache_dir.mkdir()
         mock_cache_dir.return_value = cache_dir
@@ -486,19 +496,14 @@ class TestConvertFileToCmip7:
         mock_converted_ds = MagicMock()
         mock_convert.return_value = mock_converted_ds
 
-        # Empty facets - should use all defaults (no DReq enrichment without table_id/variable_id)
+        # Empty facets - create_cmip7_path will fail on missing required keys
         cmip7_facets: dict[str, str] = {}
 
         input_file = tmp_path / "test_input.nc"
         input_file.touch()
 
-        result = _convert_file_to_cmip7(input_file, cmip7_facets)
-
-        # Check default DRS path structure
-        assert "CMIP" in str(result)  # default activity_id
-        assert "unknown" in str(result)  # default institution_id/source_id
-        assert "historical" in str(result)  # default experiment_id
-        assert "r1i1p1f1" in str(result)  # default variant_label
+        with pytest.raises(KeyError):
+            _convert_file_to_cmip7(input_file, cmip7_facets)
 
 
 class TestCMIP7RequestMetadataEdgeCases:

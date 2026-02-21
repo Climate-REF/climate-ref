@@ -327,6 +327,15 @@ def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
             selector=selector,
         )
 
+    # Validate that all non-empty collections have the required 'path' column
+    for src_type, collection in collections.items():
+        if len(collection.datasets) > 0 and "path" not in collection.datasets.columns:
+            raise ValueError(
+                f"Datasets for '{src_type}' are missing the required 'path' column. "
+                f"Run 'ref test-cases fetch' to download test data and generate "
+                f"the paths file ({paths_file})."
+            )
+
     return ExecutionDatasetCollection(collections)
 
 

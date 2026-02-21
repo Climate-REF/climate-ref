@@ -338,7 +338,7 @@ cmip6:
         assert len(collection.datasets) == 0
 
     def test_load_without_paths_file(self, tmp_path):
-        """Test loading YAML when paths file does not exist."""
+        """Test loading YAML when paths file does not exist raises ValueError."""
         yaml_content = """
 cmip6:
   slug_column: instance_id
@@ -354,14 +354,8 @@ cmip6:
         paths_file = tmp_path / "test.paths.yaml"
         assert not paths_file.exists()
 
-        loaded = load_datasets_from_yaml(yaml_path)
-
-        collection = loaded[SourceDatasetType.CMIP6]
-        assert len(collection.datasets) == 1
-        # No path should be set since paths file doesn't exist
-        assert "path" not in collection.datasets.columns or pd.isna(
-            collection.datasets.iloc[0].get("path", None)
-        )
+        with pytest.raises(ValueError, match="missing the required 'path' column"):
+            load_datasets_from_yaml(yaml_path)
 
     def test_save_stores_hash_in_metadata(self, tmp_path):
         """Test that save_datasets_to_yaml stores hash in _metadata section."""
@@ -479,6 +473,7 @@ cmip6:
   datasets:
     - instance_id: CMIP6.test
       variable_id: tas
+      path: /path/to/file.nc
 """
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)

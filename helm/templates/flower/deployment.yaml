@@ -17,6 +17,7 @@ spec:
     metadata:
       annotations:
         checksum/config: {{ include (print $.Template.BasePath "/flower/secret.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/flower/configmap.yaml") . | sha256sum }}
       {{- with .Values.flower.podAnnotations }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
@@ -44,6 +45,11 @@ spec:
         {{- end }}
         image: "{{ .Values.flower.image.repository }}:{{ .Values.flower.image.tag }}"
         imagePullPolicy: {{ .Values.flower.image.pullPolicy }}
+        env:
+        - name: CELERY_CONFIG_MODULE
+          value: celeryconfig
+        - name: PYTHONPATH
+          value: /flower-config
         envFrom:
         - secretRef:
             name: {{ include "ref.fullname" . }}-flower
@@ -58,12 +64,18 @@ spec:
         resources:
           {{- toYaml . | nindent 12 }}
         {{- end }}
-        {{- with .Values.flower.volumeMounts }}
         volumeMounts:
+        - name: flower-config
+          mountPath: /flower-config
+          readOnly: true
+        {{- with .Values.flower.volumeMounts }}
           {{- toYaml . | nindent 12 }}
         {{- end }}
-      {{- with .Values.flower.volumes }}
       volumes:
+      - name: flower-config
+        configMap:
+          name: {{ include "ref.fullname" . }}-flower-config
+      {{- with .Values.flower.volumes }}
         {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.flower.nodeSelector }}

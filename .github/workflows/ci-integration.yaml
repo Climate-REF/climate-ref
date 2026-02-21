@@ -27,6 +27,8 @@ jobs:
   populate-cache:
     if: github.repository == 'Climate-REF/climate-ref'
     runs-on: "arc-climate-ref"
+    env:
+      TQDM_DISABLE: "1"
     defaults:
       run:
         shell: bash
@@ -81,6 +83,8 @@ jobs:
     if: github.repository == 'Climate-REF/climate-ref'
     needs: [populate-cache]
     runs-on: "arc-climate-ref"
+    env:
+      TQDM_DISABLE: "1"
     defaults:
       run:
         shell: bash

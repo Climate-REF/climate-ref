@@ -155,8 +155,6 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
-        # Derived
-        "branded_variable",
         # Unique identifier
         slug_column,
     )

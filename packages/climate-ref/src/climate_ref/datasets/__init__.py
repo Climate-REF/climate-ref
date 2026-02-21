@@ -9,7 +9,6 @@ import pandas as pd
 from attrs import define
 from loguru import logger
 
-from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
@@ -72,10 +71,9 @@ class IngestionStats:
         )
 
 
-def ingest_datasets(  # noqa: PLR0913
+def ingest_datasets(
     adapter: DatasetAdapter,
     directory: Path | None,
-    config: Config,
     db: Database,
     *,
     data_catalog: pd.DataFrame | None = None,
@@ -93,8 +91,6 @@ def ingest_datasets(  # noqa: PLR0913
         The dataset adapter to use for parsing and registering datasets
     directory
         Directory containing the datasets to ingest. Can be None if data_catalog is provided.
-    config
-        Application configuration
     db
         Database instance
     data_catalog
@@ -139,7 +135,7 @@ def ingest_datasets(  # noqa: PLR0913
     for instance_id, data_catalog_dataset in data_catalog.groupby(adapter.slug_column):
         logger.debug(f"Processing dataset {instance_id}")
         with db.session.begin():
-            results = adapter.register_dataset(config, db, data_catalog_dataset)
+            results = adapter.register_dataset(db, data_catalog_dataset)
 
             if results.dataset_state == ModelState.CREATED:
                 stats.datasets_created += 1

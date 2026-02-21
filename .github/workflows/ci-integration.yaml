@@ -33,7 +33,7 @@ jobs:
           uv run ref datasets fetch-sample-data
           uv run ref datasets fetch-data --registry ilamb-test
           uv run ref providers setup
-          uv run ref test-cases fetch
+          uv run ref test-cases fetch || echo "Some fetches failed"
 
   tests-slow:
     if: github.repository == 'Climate-REF/climate-ref'

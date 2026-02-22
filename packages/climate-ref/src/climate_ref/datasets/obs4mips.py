@@ -6,10 +6,10 @@ from typing import Any
 
 import pandas as pd
 import xarray as xr
-from ecgtools import Builder
 from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.utils import parse_datetime
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset
 
@@ -69,14 +69,15 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:  # noqa: PLR0912
             # Set the default of # of vertical levels to 1
             vertical_levels = 1
             start_time, end_time = None, None
-            try:
-                vertical_levels = ds[ds.cf["vertical"].name].size
-            except (KeyError, AttributeError, ValueError):
-                ...
-            try:
-                start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
-            except (KeyError, AttributeError, ValueError):
-                ...
+            for dim_name in ("lev", "plev", "olevel", "height", "depth", "level", "altitude"):
+                if dim_name in ds.dims:
+                    vertical_levels = ds.sizes[dim_name]
+                    break
+            if "time" in ds:
+                time = ds["time"]
+                if len(time) > 0:
+                    start_time = str(time.values[0])
+                    end_time = str(time.values[-1])
 
             info["vertical_levels"] = vertical_levels
             info["start_time"] = start_time
@@ -168,20 +169,19 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
-        builder = Builder(
+        datasets = build_catalog(
             paths=[str(file_or_directory)],
-            depth=10,
+            parsing_func=parse_obs4mips,
             include_patterns=["*.nc"],
-            joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-        ).build(parsing_func=parse_obs4mips)
-
-        datasets = builder.df
+            depth=10,
+            n_jobs=self.n_jobs,
+        )
         if datasets.empty:
             logger.error("No datasets found")
             raise ValueError("No obs4MIPs-compliant datasets found")
 
         # Convert the start_time and end_time columns to datetime objects
-        # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
+        # We don't know the calendar used in the dataset
         datasets["start_time"] = parse_datetime(datasets["start_time"])
         datasets["end_time"] = parse_datetime(datasets["end_time"])
 

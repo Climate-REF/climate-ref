@@ -4,12 +4,13 @@ CMIP6 parser functions for extracting metadata from netCDF files
 Additional non-official DRS's may be added in the future.
 """
 
+import math
+import re
 import traceback
+from pathlib import Path
 from typing import Any
 
 import xarray as xr
-from ecgtools.parsers.cmip import parse_cmip6_using_directories  # type: ignore
-from ecgtools.parsers.utilities import extract_attr_with_regex  # type: ignore
 from loguru import logger
 
 # Mapping from CMIP6 table_id to frequency
@@ -53,6 +54,115 @@ TABLE_ID_TO_FREQUENCY: dict[str, str] = {
     "IyrAnt": "yr",
     "IyrGre": "yr",
 }
+
+
+def extract_attr_with_regex(
+    input_str: str,
+    regex: str,
+    strip_chars: str | None = None,
+    ignore_case: bool = True,
+) -> str | None:
+    """
+    Extract an attribute from a string using a regex pattern
+
+    If multiple matches are found, the longest match is returned.
+
+    Parameters
+    ----------
+    input_str
+        String to search
+    regex
+        Regular expression pattern
+    strip_chars
+        Characters to strip from the match
+    ignore_case
+        Whether to ignore case when matching
+
+    Returns
+    -------
+    :
+        The longest match, or None if no match is found
+    """
+    flags = re.IGNORECASE if ignore_case else 0
+    matches: list[str] = re.findall(regex, input_str, flags)
+    if matches:
+        match = max(matches, key=len)
+        return match.strip(strip_chars) if strip_chars else match.strip()
+    return None
+
+
+def parse_cmip6_using_directories(file: str) -> dict[str, Any]:
+    """
+    Extract attributes of a file using information from CMIP6 DRS
+
+    The CMIP6 filename convention uses ``_`` as a delimiter between fields.
+    Fields may contain ``-`` internally but never ``_``.
+
+    Filename format::
+
+        <variable_id>_<table_id>_<source_id>_<experiment_id>_<member_id>_<grid_label>[_<time_range>].nc
+
+    For time-invariant fields the time_range segment is omitted.
+
+    Parameters
+    ----------
+    file
+        Path to the CMIP6 file
+
+    Returns
+    -------
+    :
+        Dictionary with extracted metadata, or INVALID_ASSET dict on failure
+    """
+    filepath = Path(file)
+    stem = filepath.stem  # strip .nc
+    parts = stem.split("_")
+
+    try:
+        if len(parts) == 7:  # noqa: PLR2004
+            variable_id, table_id, source_id, experiment_id, member_id, grid_label, time_range = parts
+        elif len(parts) == 6:  # noqa: PLR2004
+            variable_id, table_id, source_id, experiment_id, member_id, grid_label = parts
+            time_range = None
+        else:
+            return {"INVALID_ASSET": file, "TRACEBACK": f"Cannot parse filename: {stem}"}
+
+        fileparts: dict[str, Any] = {
+            "variable_id": variable_id,
+            "table_id": table_id,
+            "source_id": source_id,
+            "experiment_id": experiment_id,
+            "member_id": member_id,
+            "grid_label": grid_label,
+        }
+        if time_range is not None:
+            fileparts["time_range"] = time_range
+
+        # Extract directory-based metadata
+        parent = str(filepath.parent)
+        parent_split = parent.split(f"/{source_id}/")
+        part_1 = parent_split[0].strip("/").split("/")
+        grid_label_from_dir = parent.split(f"/{variable_id}/")[1].strip("/").split("/")[0]
+        fileparts["grid_label"] = grid_label_from_dir
+        fileparts["activity_id"] = part_1[-2]
+        fileparts["institution_id"] = part_1[-1]
+
+        version_regex = r"v\d{4}\d{2}\d{2}|v\d{1}"
+        version = extract_attr_with_regex(parent, regex=version_regex) or "v0"
+        fileparts["version"] = version
+        fileparts["path"] = file
+
+        # Handle DCPP sub-experiments where member_id starts with 's'
+        if fileparts["member_id"].startswith("s"):
+            fileparts["dcpp_init_year"] = float(fileparts["member_id"].split("-")[0][1:])
+            fileparts["member_id"] = fileparts["member_id"].split("-")[-1]
+        else:
+            fileparts["dcpp_init_year"] = math.nan
+
+    except Exception:
+        return {"INVALID_ASSET": file, "TRACEBACK": traceback.format_exc()}
+
+    return fileparts
 
 
 def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
@@ -150,21 +260,22 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
 
             # Set the default of # of vertical levels to 1
             vertical_levels = 1
-            start_time, end_time = None, None
             init_year = None
-            try:
-                vertical_levels = ds[ds.cf["vertical"].name].size
-            except (KeyError, AttributeError, ValueError):
-                ...
+            for dim_name in ("lev", "plev", "olevel", "height", "depth", "level", "altitude"):
+                if dim_name in ds.dims:
+                    vertical_levels = ds.sizes[dim_name]
+                    break
 
-            try:
-                start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
-            except (KeyError, AttributeError, ValueError):
-                ...
+            start_time, end_time = None, None
+            if "time" in ds:
+                time = ds["time"]
+                if len(time) > 0:
+                    start_time = str(time.values[0])
+                    end_time = str(time.values[-1])
             if info.get("sub_experiment_id"):  # pragma: no branch
-                init_year = extract_attr_with_regex(info["sub_experiment_id"], r"\d{4}")
-                if init_year:  # pragma: no cover
-                    init_year = int(init_year)
+                init_year_str = extract_attr_with_regex(str(info["sub_experiment_id"]), r"\d{4}")
+                if init_year_str:  # pragma: no cover
+                    init_year = int(init_year_str)
             info["vertical_levels"] = vertical_levels
             info["init_year"] = init_year
             info["start_time"] = start_time

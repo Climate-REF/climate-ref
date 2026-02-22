@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
 
 import pandas as pd
-from ecgtools import Builder
 from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
+from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
@@ -144,21 +143,18 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         """
         parsing_function = self.get_parsing_function()
 
-        with warnings.catch_warnings():
-            # Ignore the DeprecationWarning from xarray
-            warnings.simplefilter("ignore", DeprecationWarning)
+        datasets = build_catalog(
+            paths=[str(file_or_directory)],
+            parsing_func=parsing_function,
+            include_patterns=["*.nc"],
+            depth=10,
+            n_jobs=self.n_jobs,
+        )
 
-            builder = Builder(
-                paths=[str(file_or_directory)],
-                depth=10,
-                include_patterns=["*.nc"],
-                joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-            ).build(parsing_func=parsing_function)
-
-        datasets: pd.DataFrame = builder.df.drop(["init_year"], axis=1)
+        datasets = datasets.drop(["init_year"], axis=1)
 
         # Convert the start_time and end_time columns to datetime objects
-        # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
+        # We don't know the calendar used in the dataset (#542)
         datasets["start_time"] = parse_datetime(datasets["start_time"])
         datasets["end_time"] = parse_datetime(datasets["end_time"])
 

@@ -753,7 +753,7 @@ class TestValidateCmecBundles:
         mock_result.output_bundle_filename = Path("output.json")
         mock_result.to_output_path = lambda f: output_dir / f
 
-        with pytest.raises(AssertionError, match="don't match diagnostic facets"):
+        with pytest.raises(AssertionError, match="are not a subset of diagnostic facets"):
             validate_cmec_bundles(mock_diagnostic, mock_result)
 
 

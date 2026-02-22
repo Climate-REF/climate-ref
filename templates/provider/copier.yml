@@ -1,0 +1,56 @@
+# Copier template for creating a new Climate REF diagnostic provider repository.
+#
+# Usage:
+#   copier copy templates/provider /path/to/new-provider
+#
+# Or from a remote location:
+#   copier copy gh:Climate-REF/climate-ref --vcs-ref=main --directory=templates/provider /path/to/new-provider
+
+_min_copier_version: "9.0.0"
+
+provider_name:
+  type: str
+  help: "Human-readable provider name (e.g., 'ESMValTool', 'PMP', 'ILAMB')"
+
+provider_slug:
+  type: str
+  help: "URL/package-safe slug (e.g., 'esmvaltool', 'pmp', 'ilamb')"
+  default: "{{ provider_name | lower | replace(' ', '-') }}"
+
+package_name:
+  type: str
+  help: "Python package name (e.g., 'climate_ref_esmvaltool')"
+  default: "climate_ref_{{ provider_slug | replace('-', '_') }}"
+
+description:
+  type: str
+  help: "One-line description of the provider"
+  default: "{{ provider_name }} diagnostic provider for the Climate REF"
+
+author_name:
+  type: str
+  help: "Primary author name"
+
+author_email:
+  type: str
+  help: "Primary author email"
+
+github_org:
+  type: str
+  help: "GitHub organisation"
+  default: "Climate-REF"
+
+min_core_version:
+  type: str
+  help: "Minimum climate-ref-core version"
+  default: "0.9.0"
+
+uses_conda:
+  type: bool
+  help: "Does the provider require a conda environment?"
+  default: false
+
+license:
+  type: str
+  help: "License identifier"
+  default: "Apache-2.0"

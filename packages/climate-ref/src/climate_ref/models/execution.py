@@ -75,29 +75,61 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
         back_populates="execution_group", order_by="Execution.created_at"
     )
 
-    def should_run(self, dataset_hash: str) -> bool:
+    def should_run(self, dataset_hash: str, rerun_failed: bool = False) -> bool:
         """
         Check if the diagnostic execution group needs to be executed.
 
-        The diagnostic execution group should be run if:
+        The dirty flag is the primary signal for whether an execution group needs to be rerun.
+        It is set when the group is created or when new data is available,
+        and cleared when an execution completes (whether successful or not).
+        Manual intervention (``flag-dirty``, ``fail-running``) can set it back to True.
 
-        * the execution group is marked as dirty
+        The execution group should be run if:
+
         * no executions have been performed ever
         * the dataset hash is different from the last run
+        * the execution group is marked as dirty
+        * ``rerun_failed=True`` is passed and the last execution failed
+
+        The execution group should NOT be run if:
+
+        * an execution with the same dataset hash is already in progress
+        * the last execution failed and the group is not dirty
+          (use ``rerun_failed=True`` or ``flag-dirty`` to retry)
         """
         if not self.executions:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} was never executed")
             return True
 
-        if self.executions[-1].dataset_hash != dataset_hash:
+        last_execution = self.executions[-1]
+
+        if last_execution.dataset_hash != dataset_hash:
             logger.debug(
                 f"Execution group {self.diagnostic.slug}/{self.key} hash mismatch:"
-                f" {self.executions[-1].dataset_hash} != {dataset_hash}"
+                f" {last_execution.dataset_hash} != {dataset_hash}"
             )
             return True
 
+        # Don't submit duplicate tasks for an execution that is already in progress
+        # Stuck tasks can be cleaned up with the `fail-running` command
+        if last_execution.successful is None:
+            logger.debug(
+                f"Execution group {self.diagnostic.slug}/{self.key} "
+                f"already has an in-progress execution with hash {dataset_hash}"
+            )
+            return False
+
+        # Dirty flag is the primary signal for rerunning existing jobs
         if self.dirty:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} is dirty")
+            return True
+
+        # Re-run all failed executions if explicitly requested
+        if last_execution.successful is False and rerun_failed:
+            logger.debug(
+                f"Execution group {self.diagnostic.slug}/{self.key} "
+                f"last execution failed, rerunning (rerun_failed=True)"
+            )
             return True
 
         return False
@@ -153,7 +185,7 @@ class Execution(CreatedUpdatedMixin, Base):
     This is used to verify if an existing diagnostic execution has been run with the same datasets.
     """
 
-    successful: Mapped[bool] = mapped_column(nullable=True, index=True)
+    successful: Mapped[bool | None] = mapped_column(nullable=True, index=True)
     """
     Was the run successful
     """

@@ -17,41 +17,100 @@ jobs:
       - name: pre-commit
         run: make pre-commit
 
-  tests:
-    env:
-      REF_TEST_OUTPUT: "test-outputs"
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ "ubuntu-latest" ]
-        python-version: [ "3.13" ]
-    runs-on: "${{ matrix.os }}"
+  tests-core:
+    runs-on: ubuntu-latest
     defaults:
       run:
-        # This might be needed for Windows and doesn't seem to affect unix-based systems
-        # so we include it. If you have better proof of whether this is needed or not,
-        # feel free to update.
         shell: bash
     steps:
       - name: Check out repository
         uses: actions/checkout@v6
       - uses: ./.github/actions/setup
         with:
-          python-version: ${{ matrix.python-version }}
-      - name: Run tests
+          python-version: "3.13"
+      - name: Fetch sample data
+        run: uv run ref datasets fetch-sample-data
+      - name: Test core
         run: |
-          make fetch-test-data
-          make test
+          echo "::group::test-core"
+          time make test-core
+          echo "::endgroup::"
+      - name: Test ref
+        run: |
+          echo "::group::test-ref"
+          time make test-ref
+          echo "::endgroup::"
+      - name: Test celery
+        run: |
+          echo "::group::test-celery"
+          time make test-celery
+          echo "::endgroup::"
+      - name: Test integration
+        run: |
+          echo "::group::test-integration"
+          time make test-integration
+          echo "::endgroup::"
+      - name: Coverage report
+        run: |
+          uv run coverage report
           uv run coverage xml
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v5
+        with:
+          flags: core
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  tests-providers:
+    env:
+      REF_TEST_OUTPUT: "test-outputs"
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Fetch test data
+        run: make fetch-test-data
+      - name: Test example provider
+        run: |
+          echo "::group::test-diagnostic-example"
+          time make test-diagnostic-example
+          echo "::endgroup::"
+      - name: Test ESMValTool provider
+        run: |
+          echo "::group::test-diagnostic-esmvaltool"
+          time make test-diagnostic-esmvaltool
+          echo "::endgroup::"
+      - name: Test ILAMB provider
+        run: |
+          echo "::group::test-diagnostic-ilamb"
+          time make test-diagnostic-ilamb
+          echo "::endgroup::"
+      - name: Test PMP provider
+        run: |
+          echo "::group::test-diagnostic-pmp"
+          time make test-diagnostic-pmp
+          echo "::endgroup::"
+      - name: Coverage report
+        run: |
+          uv run coverage report
+          uv run coverage xml
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v5
+        with:
+          flags: providers
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload scratch artifacts
         uses: actions/upload-artifact@v6
         if: always()
         with:
-          name: test-output-${{ matrix.python-version }}
+          name: test-output-providers
           path: ${{ env.REF_TEST_OUTPUT }}
           retention-days: 7
 

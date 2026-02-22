@@ -19,7 +19,7 @@ from abc import abstractmethod
 from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 import requests
 import yaml
@@ -30,9 +30,6 @@ from climate_ref_core.constraints import IgnoreFacets
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
-
-if TYPE_CHECKING:
-    from climate_ref.config import Config
 
 
 def _slugify(value: str) -> str:
@@ -69,7 +66,7 @@ class DiagnosticProvider:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """
         Configure the provider.
 
@@ -177,7 +174,7 @@ class DiagnosticProvider:
 
     def setup(
         self,
-        config: Config,
+        config: Any,
         *,
         db: Any = None,
         skip_env: bool = False,
@@ -212,7 +209,7 @@ class DiagnosticProvider:
             if db is not None:
                 self.ingest_data(config, db)
 
-    def setup_environment(self, config: Config) -> None:
+    def setup_environment(self, config: Any) -> None:
         """
         Set up the execution environment (e.g., conda environment).
 
@@ -228,7 +225,7 @@ class DiagnosticProvider:
         """
         pass
 
-    def fetch_data(self, config: Config) -> None:
+    def fetch_data(self, config: Any) -> None:
         """
         Fetch all data required for offline execution.
 
@@ -252,7 +249,7 @@ class DiagnosticProvider:
         """
         pass
 
-    def ingest_data(self, config: Config, db: Any) -> None:
+    def ingest_data(self, config: Any, db: Any) -> None:
         """
         Ingest fetched data into the database.
 
@@ -281,7 +278,7 @@ class DiagnosticProvider:
         """
         pass
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """
         Validate that the provider is ready for offline execution.
 
@@ -426,17 +423,14 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         The version of the provider.
     slug
         A slugified version of the name.
-    repo
-        URL of the git repository to install a development version of the package from.
-    tag_or_commit
-        Tag or commit to install from the `repo` repository.
 
     Attributes
     ----------
     env_vars
         Environment variables to set when running commands in the conda environment.
-    url
-        URL to install a development version of the package from.
+    pip_packages
+        Pip packages to install (as URLs) with ``--no-deps``
+        after creating the conda environment.
 
     """
 
@@ -445,13 +439,11 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         name: str,
         version: str,
         slug: str | None = None,
-        repo: str | None = None,
-        tag_or_commit: str | None = None,
     ) -> None:
         super().__init__(name, version, slug)
         self._conda_exe: Path | None = None
         self._prefix: Path | None = None
-        self.url = f"git+{repo}@{tag_or_commit}" if repo and tag_or_commit else None
+        self.pip_packages: list[str] = []
         self.env_vars: dict[str, str] = os.environ.copy()
 
     @property
@@ -470,7 +462,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)
         self.prefix = config.paths.software / "conda"
@@ -551,8 +543,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """
         with self.get_environment_file() as file:
             suffix = hashlib.sha1(file.read_bytes(), usedforsecurity=False)
-            if self.url is not None:
-                suffix.update(bytes(self.url, encoding="utf-8"))
+            for pkg in self.pip_packages:
+                suffix.update(bytes(pkg, encoding="utf-8"))
         return self.prefix / f"{self.slug}-{suffix.hexdigest()}"
 
     def create_env(self) -> None:
@@ -578,8 +570,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.debug(f"Running {' '.join(cmd)}")
             subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
 
-            if self.url is not None:
-                logger.info(f"Installing development version of {self.slug} from {self.url}")
+            for pkg in self.pip_packages:
+                logger.info(f"Installing development version from {pkg}")
                 cmd = [
                     conda_exe,
                     "run",
@@ -588,7 +580,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     "pip",
                     "install",
                     "--no-deps",
-                    self.url,
+                    pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
                 subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
@@ -642,11 +634,11 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.error(e.stdout)
             raise e
 
-    def setup_environment(self, config: Config) -> None:
+    def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""
         self.create_env()
 
-    def validate_setup(self, config: Config) -> bool:
+    def validate_setup(self, config: Any) -> bool:
         """Validate conda environment exists."""
         env_exists = self.env_path.exists()
         if not env_exists:

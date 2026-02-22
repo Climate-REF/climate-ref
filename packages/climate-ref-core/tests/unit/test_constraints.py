@@ -7,6 +7,7 @@ import pytest
 from pandas.testing import assert_frame_equal
 
 from climate_ref_core.constraints import (
+    AddParentDataset,
     AddSupplementaryDataset,
     GroupConstraint,
     IgnoreFacets,
@@ -46,6 +47,23 @@ class TestRequireFacets:
         empty = data.loc[[]]
         expected_data = data if expected else empty
         assert_frame_equal(self.constraint.apply(data, empty), expected_data)
+
+    @pytest.mark.parametrize(
+        "data, expected",
+        [
+            (pd.DataFrame(columns=["variable_id", "path"]), False),
+            (pd.DataFrame({"variable_id": ["tas", "tos"], "path": ["tas.nc", "tos.nc"]}), True),
+        ],
+    )
+    def test_apply_any(self, data, expected):
+        constraint = RequireFacets(
+            dimension="variable_id",
+            required_facets=("tas", "pr"),
+            operator="any",
+        )
+        empty = data.loc[[]]
+        expected_data = data if expected else empty
+        assert_frame_equal(constraint.apply(data, empty), expected_data)
 
     def test_invalid_dimension(self):
         data = pd.DataFrame({"invalid": ["tas", "pr"], "path": ["tas.nc", "pr.nc"]})
@@ -244,7 +262,7 @@ class TestAddSupplementaryDataset:
                         "table_id": ["Amon", "fx", "fx"],
                         "experiment_id": ["historical"] * 3,
                         "member_id": ["r1i1p1f1"] * 3,
-                        "version": ["v20210316", "v202200101", "v20230101"],
+                        "version": ["v20210316", "v20220101", "v20230101"],
                     }
                 ),
                 [0, 2],
@@ -266,11 +284,201 @@ class TestAddSupplementaryDataset:
             ),
         ],
     )
-    def test_apply(self, data_catalog, expected_rows):
+    def test_add_cell_area(self, data_catalog, expected_rows):
         group = data_catalog[data_catalog["variable_id"] == "tas"]
         result = self.constraint.apply(group=group, data_catalog=data_catalog)
         expected = data_catalog.loc[expected_rows]
-        assert (result == expected).all().all()
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "data_catalog, group_index, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"] * 3,
+                        "source_id": ["A"] * 3,
+                        "grid_label": ["gn"] * 3,
+                        "table_id": ["Amon"] * 3,
+                        "experiment_id": ["historical", "ssp585", "ssp585"],
+                        "member_id": ["r1i1p1f1"] * 3,
+                        "version": ["v20210316"] * 3,
+                        "path": [
+                            "tas_historical_2000-2014.nc",
+                            "tas_ssp585_2014-2020.nc",
+                            "tas_ssp585_2020-2030.nc",
+                        ],
+                    },
+                    index=[0, 1, 1],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"] * 3,
+                        "source_id": ["A"] * 3,
+                        "grid_label": ["gn"] * 3,
+                        "table_id": ["Amon"] * 3,
+                        "experiment_id": ["historical", "ssp585", "ssp585"],
+                        "member_id": ["r1i1p1f1"] * 3,
+                        "version": ["v20210316"] * 3,
+                        "path": [
+                            "tas_historical_2000-2014.nc",
+                            "tas_ssp585_2014-2020.nc",
+                            "tas_ssp585_2020-2030.nc",
+                        ],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"] * 3,
+                        "source_id": ["A"] * 3,
+                        "grid_label": ["gn"] * 3,
+                        "table_id": ["Amon"] * 3,
+                        "experiment_id": ["historical", "historical", "ssp585"],
+                        "member_id": ["r1i1p1f1"] * 3,
+                        "version": ["v20210316"] * 3,
+                        "path": [
+                            "tas_historical_2000-2010.nc",
+                            "tas_historical_2010-2014.nc",
+                            "tas_ssp585_2014-2020.nc",
+                        ],
+                    },
+                    index=[0, 0, 1],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"] * 3,
+                        "source_id": ["A"] * 3,
+                        "grid_label": ["gn"] * 3,
+                        "table_id": ["Amon"] * 3,
+                        "experiment_id": ["historical", "historical", "ssp585"],
+                        "member_id": ["r1i1p1f1"] * 3,
+                        "version": ["v20210316"] * 3,
+                        "path": [
+                            "tas_historical_2000-2010.nc",
+                            "tas_historical_2010-2014.nc",
+                            "tas_ssp585_2014-2020.nc",
+                        ],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0, 1],
+                [0, 1, 2],
+            ),
+        ],
+    )
+    def test_with_indices(self, data_catalog, group_index, expected_rows):
+        """Test that duplicated and unique indices are handled correctly."""
+        constraint = AddSupplementaryDataset(
+            supplementary_facets={"experiment_id": "ssp585"},
+            matching_facets=("source_id", "member_id", "variable_id", "grid_label"),
+            optional_matching_facets=(),
+        )
+        group = data_catalog.loc[group_index]
+        result = constraint.apply(group=group, data_catalog=data_catalog)
+        expected = data_catalog.iloc[expected_rows]
+        assert_frame_equal(result, expected)
+
+    @pytest.mark.parametrize(
+        "data_catalog, group_index, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "variable_id": ["tas"] * 5,
+                        "source_id": ["A"] * 5,
+                        "experiment_id": ["historical"] + ["ssp585"] * 4,
+                        "member_id": ["r1i1p1f1", "r2i1p1f1", "r2i1p1f1", "r3i1p1f1", "r3i1p1f1"],
+                        "version": ["v20210316"] * 5,
+                        "path": [
+                            "tas_historical_ri1ip1f1_2000-2014.nc",
+                            "tas_ssp585_r2i1p1f1_2014-2020.nc",
+                            "tas_ssp585_r2i1p1f1_2020-2030.nc",
+                            "tas_ssp585_r3i1p1f1_2014-2020.nc",
+                            "tas_ssp585_r3i1p1f1_2020-2030.nc",
+                        ],
+                    },
+                    index=[0, 1, 2, 3, 4],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+        ],
+    )
+    def test_multiple_matches(self, data_catalog, group_index, expected_rows):
+        """Test that only one dataset is added when there are multiple equally good matches."""
+        constraint = AddSupplementaryDataset(
+            supplementary_facets={"experiment_id": "ssp585"},
+            matching_facets=(
+                "source_id",
+                "variable_id",
+            ),
+            optional_matching_facets=("member_id",),
+        )
+        group = data_catalog.loc[group_index]
+        result = constraint.apply(group=group, data_catalog=data_catalog)
+        expected = data_catalog.iloc[expected_rows]
+        assert_frame_equal(result, expected)
+
+    def test_duplicate_supplementary_index(self):
+        """Test that duplicate index labels on supplementary rows don't cause errors.
+
+        Reproduces a bug where the data catalog has multiple file entries for
+        the same supplementary dataset (e.g. areacella with two time-range rows),
+        resulting in duplicate index values. The ``|=`` operation in ``apply()``
+        would fail with ``ValueError: cannot reindex on an axis with duplicate labels``
+        when ``select`` (indexed over all supplementary candidates) and ``match``
+        (a subset) have mismatched label sets with duplicates.
+        """
+        data_catalog = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "areacella", "areacella", "areacella"],
+                "source_id": ["A"] * 5,
+                "grid_label": ["gn"] * 5,
+                "table_id": ["Amon", "Amon", "fx", "fx", "fx"],
+                "experiment_id": [
+                    "1pctCO2",
+                    "piControl",
+                    # The duplicate-index areacella rows match the first tas
+                    # dataset on experiment_id, making them the best match.
+                    # The third areacella matches the second tas dataset.
+                    "1pctCO2",
+                    "1pctCO2",
+                    "piControl",
+                ],
+                "member_id": ["r1i1p1f1"] * 5,
+                "version": ["v1"] * 5,
+            },
+            # Duplicate index 300 for the 1pctCO2 areacella rows, plus a
+            # distinct index 400 for the piControl areacella. The select
+            # Series gets index [300, 300, 400] while match for the first
+            # dataset has index [300, 300] — the label mismatch with
+            # duplicates triggers the reindex failure on |=.
+            index=[100, 200, 300, 300, 400],
+        )
+        group = data_catalog[data_catalog["variable_id"] == "tas"]
+        result = self.constraint.apply(group=group, data_catalog=data_catalog)
+
+        # Both tas rows plus all three areacella rows
+        expected = pd.concat(
+            [
+                data_catalog.iloc[[0, 1]],
+                data_catalog.iloc[[2, 3, 4]],
+            ]
+        )
+        assert_frame_equal(result, expected)
 
 
 class TestPartialDateTime:
@@ -747,6 +955,226 @@ class TestOverlappingTimerange:
         empty = data.loc[[]]
         expected_data = data if expected else empty
         assert_frame_equal(self.constraint.apply(data, empty), expected_data)
+
+
+class TestAddParent:
+    constraint = AddParentDataset.from_defaults(SourceDatasetType.CMIP6)
+
+    @pytest.mark.parametrize(
+        "data, group_rows, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p2f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20220101"],
+                    },
+                    index=[0, 1],
+                ),
+                [0],
+                [0, 1],
+            ),
+            # Test that the latest version of the parent is selected
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2", "1pctCO2"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl", "piControl"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p2f1", "r1i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20210101", "v20220101"],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0],
+                [0, 2],
+            ),
+            # Test that datasets with missing parent facets are excluded
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2", "esm-1pct-brch-1000PgC"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl", pd.NA],
+                        "parent_source_id": ["A", "A", pd.NA],
+                        "parent_variant_label": ["r1i1p1f1", "r1i1p1f1", pd.NA],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p2f1", "r1i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20220101", "v20210101"],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0, 2],
+                [0, 1],
+            ),
+            # Test that the dataset is removed from the group if no parent is found
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p2f1"],
+                        "version": ["v20210101"],
+                    },
+                    index=[0],
+                ),
+                [0],
+                [],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2", "esm-1pct-brch-1000PgC"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl", "1pctCO2"],
+                        "parent_source_id": ["A", "A", "B"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A", "A", "B"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p2f1", "r1i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20220101", "v20210202"],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0],
+                [0, 1],
+            ),
+        ],
+    )
+    def test_apply(self, data, group_rows, expected_rows):
+        group = data.loc[group_rows]
+        expected_data = data.loc[expected_rows]
+        assert_frame_equal(self.constraint.apply(group, data), expected_data)
+
+    @pytest.mark.parametrize(
+        "data_catalog, group_index, expected_rows",
+        [
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2", "1pctCO2"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl", "piControl"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p1f1"],
+                        "version": ["v20210101"],
+                        "path": [
+                            "tas_esm-1pct-brch-1000PgC_2000-2001.nc",
+                            "tas_1pctCO2_2000-2010.nc",
+                            "tas_1pctCO2_2010-2020.nc",
+                        ],
+                    },
+                    index=[0, 1, 1],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "1pctCO2", "1pctCO2"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "piControl", "piControl"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p1f1"],
+                        "version": ["v20210101"],
+                        "path": [
+                            "tas_esm-1pct-brch-1000PgC_2000-2001.nc",
+                            "tas_1pctCO2_2000-2010.nc",
+                            "tas_1pctCO2_2010-2020.nc",
+                        ],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "esm-1pct-brch-1000PgC", "1pctCO2"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "1pctCO2", "piControl"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p1f1"],
+                        "version": ["v20210101"],
+                        "path": [
+                            "tas_esm-1pct-brch-1000PgC_2000-2001.nc",
+                            "tas_esm-1pct-brch-1000PgC_2000-2001.nc",
+                            "tas_1pctCO2_2010-2020.nc",
+                        ],
+                    },
+                    index=[0, 0, 1],
+                ),
+                [0],
+                [0, 1, 2],
+            ),
+            (
+                pd.DataFrame(
+                    {
+                        "experiment_id": ["esm-1pct-brch-1000PgC", "esm-1pct-brch-1000PgC", "1pctCO2"],
+                        "grid_label": ["gn"],
+                        "parent_experiment_id": ["1pctCO2", "1pctCO2", "piControl"],
+                        "parent_source_id": ["A"],
+                        "parent_variant_label": ["r1i1p1f1"],
+                        "source_id": ["A"],
+                        "table_id": ["Amon"],
+                        "variable_id": ["tas"],
+                        "variant_label": ["r1i1p1f1"],
+                        "version": ["v20210101"],
+                        "path": [
+                            "tas_esm-1pct-brch-1000PgC_2000-2001.nc",
+                            "tas_esm-1pct-brch-1000PgC_2000-2001.nc",
+                            "tas_1pctCO2_2010-2020.nc",
+                        ],
+                    },
+                    index=[0, 1, 2],
+                ),
+                [0, 1],
+                [0, 1, 2],
+            ),
+        ],
+    )
+    def test_with_indices(self, data_catalog, group_index, expected_rows):
+        """Test that duplicated and unique indices are handled correctly."""
+        group = data_catalog.loc[group_index]
+        result = self.constraint.apply(group=group, data_catalog=data_catalog)
+        expected = data_catalog.iloc[expected_rows]
+        assert_frame_equal(result, expected)
 
 
 @pytest.fixture

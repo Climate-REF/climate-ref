@@ -19,4 +19,4 @@ build:
     - make fetch-test-data
     - uv run ref datasets ingest --source-type cmip6 $READTHEDOCS_REPOSITORY_PATH/tests/test-data/sample-data/CMIP6
     # Run a strict build
-    - unset NO_COLOR; FORCE_COLOR=1 uv run mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html
+    - NO_COLOR=1 uv run mkdocs build --strict --site-dir $READTHEDOCS_OUTPUT/html

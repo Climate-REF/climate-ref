@@ -490,10 +490,12 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
     CMECMetric.model_validate(metric_bundle)
 
-    # Check dimensions match diagnostic facets
-    bundle_dimensions = tuple(metric_bundle.DIMENSIONS.root["json_structure"])
-    assert diagnostic.facets == bundle_dimensions, (
-        f"Bundle dimensions {bundle_dimensions} don't match diagnostic facets {diagnostic.facets}"
+    # Check dimensions are a subset of diagnostic facets
+    # Different data requirements may have different group_by fields,
+    # so bundle dimensions vary per execution but must all be recognized facets
+    bundle_dimensions = set(metric_bundle.DIMENSIONS.root["json_structure"])
+    assert bundle_dimensions.issubset(set(diagnostic.facets)), (
+        f"Bundle dimensions {bundle_dimensions} are not a subset of diagnostic facets {diagnostic.facets}"
     )
 
     # Validate output bundle

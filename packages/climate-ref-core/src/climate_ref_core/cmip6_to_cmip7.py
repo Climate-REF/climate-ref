@@ -4,70 +4,86 @@ CMIP6 to CMIP7 format converter.
 This module provides utilities to convert CMIP6 xarray datasets to CMIP7 format,
 following the CMIP7 Global Attributes V1.0 specification (DOI: 10.5281/zenodo.17250297).
 
+Variable branding, realm, and out_name mappings are sourced from the CMIP7 Data Request
+(DReq v1.2.2.3) via a bundled JSON subset. Regenerate with::
 
-Key differences between CMIP6 and CMIP7
----------------------------------------
-- Variable naming: CMIP7 uses branded names like `tas_tavg-h2m-hxy-u` instead of `tas`
-- Branding suffix: `<temporal>-<vertical>-<horizontal>-<area>` labels (e.g., `tavg-h2m-hxy-u`)
-- Variant indices: Changed from integers to prefixed strings (1 -> "r1", "i1", "p1", "f1")
-- New mandatory attributes: license_id
-- table_id: Uses realm names instead of CMOR table names (atmos vs Amon)
-- Directory structure: MIP-DRS7 specification
-- Filename format: Includes branding suffix, region, and grid_label
-- Removed CMIP6 attributes: further_info_url, grid, member_id, sub_experiment, sub_experiment_id
+    python scripts/extract-data-request-mappings.py
 
-References
-----------
-- CMIP7 Global Attributes V1.0: https://doi.org/10.5281/zenodo.17250297
-- CMIP7 CVs: https://github.com/WCRP-CMIP/CMIP7_CVs
-- CMIP7 Guidance: https://wcrp-cmip.github.io/cmip7-guidance/
+The variable_id and table_id attributes are used to map the CMIP6 variable to its CMIP7 equivalent,
+and to determine the appropriate branding suffix and realm for the CMIP7 format.
+Grid information is not converted so the grid_labels may not be valid for CMIP7.
 """
 
 from __future__ import annotations
 
+import json
 import re
 import uuid
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
+from importlib import resources
 from typing import TYPE_CHECKING, Any
+
+import attrs
+import cftime  # type: ignore[import-untyped]
+import pandas as pd
 
 if TYPE_CHECKING:
     import xarray as xr
 
 
-# CMIP6 table_id to CMIP7 realm mapping
-TABLE_TO_REALM = {
-    "Amon": "atmos",
-    "Omon": "ocean",
-    "Lmon": "land",
-    "LImon": "landIce",
-    "SImon": "seaIce",
-    "AERmon": "aerosol",
-    "Oday": "ocean",
-    "day": "atmos",
-    "Aday": "atmos",
-    "Eday": "atmos",
-    "CFday": "atmos",
-    "3hr": "atmos",
-    "6hrLev": "atmos",
-    "6hrPlev": "atmos",
-    "6hrPlevPt": "atmos",
-    "fx": "atmos",  # Fixed fields default to atmos
-    "Ofx": "ocean",
-    "Efx": "atmos",
-    "Lfx": "land",
-}
+@attrs.frozen
+class DReqVariableMapping:
+    """
+    A single CMIP6-to-CMIP7 variable mapping from the Data Request.
 
-# CMIP6 frequency values (table_id prefix patterns)
-FREQUENCY_MAP = {
-    "mon": "mon",
-    "day": "day",
-    "3hr": "3hr",
-    "6hr": "6hr",
-    "1hr": "1hr",
-    "yr": "yr",
-    "fx": "fx",
-}
+    Each instance represents one row in the DReq Variables table,
+    capturing the CMIP6 compound name, its CMIP7 equivalent, and
+    the branding/realm metadata needed for format conversion.
+    """
+
+    table_id: str
+    variable_id: str
+    cmip6_compound_name: str
+    cmip7_compound_name: str
+    branded_variable: str
+    out_name: str
+    branding_suffix: str
+    temporal_label: str
+    vertical_label: str
+    horizontal_label: str
+    area_label: str
+    realm: str
+    region: str
+
+    def to_dict(self) -> dict[str, str]:
+        """Serialise to a plain dict (for JSON output)."""
+        return attrs.asdict(self)
+
+    @classmethod
+    def from_dict(cls, data: dict[str, Any]) -> DReqVariableMapping:
+        """Deserialise from a plain dict (e.g. loaded from JSON)."""
+        return cls(**{a.name: data[a.name] for a in attrs.fields(cls)})
+
+
+def _load_dreq_mappings() -> dict[str, DReqVariableMapping]:
+    """
+    Load CMIP6-to-CMIP7 variable mappings from bundled DReq JSON.
+
+    Returns
+    -------
+    dict
+        Mapping from CMIP6 compound name (e.g. ``"Amon.tas"``) to
+        :class:`DReqVariableMapping`.
+    """
+    data_files = resources.files("climate_ref_core") / "data" / "cmip6_cmip7_variable_map.json"
+    raw: dict[str, Any] = json.loads(data_files.read_text(encoding="utf-8"))
+    variables: dict[str, dict[str, Any]] = raw.get("variables", {})
+    return {key: DReqVariableMapping.from_dict(entry) for key, entry in variables.items()}
+
+
+_DREQ_VARIABLES: dict[str, DReqVariableMapping] = _load_dreq_mappings()
+
 
 # CMIP6-only attributes that should be removed when converting to CMIP7
 # These are not part of the CMIP7 Global Attributes specification (V1.0)
@@ -91,123 +107,102 @@ class BrandingSuffix:
     Example: tavg-h2m-hxy-u
     """
 
-    temporal_label: str = "tavg"  # tavg, tpt, tmax, tmin, tsum, tclm, ti
-    vertical_label: str = "u"  # h2m, h10m, u (unspecified), p19, etc.
+    temporal_label: str = "tavg"  # tavg, tpt, tmax, tmin, tsum, tclm, ti, tmaxavg, tminavg
+    vertical_label: str = "u"  # h2m, h10m, u (unspecified), p19, al, etc.
     horizontal_label: str = "hxy"  # hxy (gridded), hm (mean), hy (zonal), etc.
-    area_label: str = "u"  # u (unmasked), lnd, sea, si, etc.
+    area_label: str = "u"  # u (unmasked), lnd, sea, si, air, etc.
 
     def __str__(self) -> str:
         return f"{self.temporal_label}-{self.vertical_label}-{self.horizontal_label}-{self.area_label}"
 
 
-# Common variable to branding suffix mappings
-# These are based on typical CMIP6 variable definitions
-VARIABLE_BRANDING: dict[str, BrandingSuffix] = {
-    # Atmosphere 2D variables
-    "tas": BrandingSuffix("tavg", "h2m", "hxy", "u"),
-    "tasmax": BrandingSuffix("tmax", "h2m", "hxy", "u"),
-    "tasmin": BrandingSuffix("tmin", "h2m", "hxy", "u"),
-    "pr": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "psl": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "ps": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "uas": BrandingSuffix("tavg", "h10m", "hxy", "u"),
-    "vas": BrandingSuffix("tavg", "h10m", "hxy", "u"),
-    "sfcWind": BrandingSuffix("tavg", "h10m", "hxy", "u"),
-    "hurs": BrandingSuffix("tavg", "h2m", "hxy", "u"),
-    "huss": BrandingSuffix("tavg", "h2m", "hxy", "u"),
-    "clt": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rsds": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rsus": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rlds": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rlus": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rsdt": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rsut": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "rlut": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "evspsbl": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "tauu": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "tauv": BrandingSuffix("tavg", "u", "hxy", "u"),
-    # Ocean 2D variables
-    "tos": BrandingSuffix("tavg", "d0m", "hxy", "sea"),
-    "sos": BrandingSuffix("tavg", "d0m", "hxy", "sea"),
-    "zos": BrandingSuffix("tavg", "u", "hxy", "sea"),
-    "mlotst": BrandingSuffix("tavg", "u", "hxy", "sea"),
-    # Sea ice variables
-    "siconc": BrandingSuffix("tavg", "u", "hxy", "u"),
-    "sithick": BrandingSuffix("tavg", "u", "hxy", "si"),
-    "sisnthick": BrandingSuffix("tavg", "u", "hxy", "si"),
-    # Land variables
-    "mrso": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "mrsos": BrandingSuffix("tavg", "d10cm", "hxy", "lnd"),
-    "mrro": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "snw": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "lai": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "gpp": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "npp": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "nbp": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "cVeg": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "cSoil": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "treeFrac": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    "vegFrac": BrandingSuffix("tavg", "u", "hxy", "lnd"),
-    # Fixed fields
-    "areacella": BrandingSuffix("ti", "u", "hxy", "u"),
-    "areacello": BrandingSuffix("ti", "u", "hxy", "u"),
-    "sftlf": BrandingSuffix("ti", "u", "hxy", "u"),
-    "sftof": BrandingSuffix("ti", "u", "hxy", "u"),
-    "orog": BrandingSuffix("ti", "u", "hxy", "u"),
-}
+def get_dreq_entry(table_id: str, variable_id: str) -> DReqVariableMapping:
+    """
+    Look up a variable in the Data Request by compound name.
+
+    Parameters
+    ----------
+    table_id
+        CMIP6 table identifier (e.g., "Amon")
+    variable_id
+        CMIP6 variable ID (e.g., "tas")
+
+    Returns
+    -------
+    DReqVariableMapping
+        The DReq variable entry.
+
+    Raises
+    ------
+    KeyError
+        If the compound name is not found in the Data Request mappings.
+    """
+    compound = f"{table_id}.{variable_id}"
+    entry = _DREQ_VARIABLES.get(compound)
+    if entry is None:
+        raise KeyError(
+            f"Variable '{compound}' not found in Data Request mappings. "
+            f"Add it to INCLUDED_VARIABLES in scripts/extract-data-request-mappings.py and regenerate."
+        )
+    return entry
 
 
-def get_branding_suffix(variable_id: str, cell_methods: str | None = None) -> BrandingSuffix:
+def get_branding_suffix(table_id: str, variable_id: str) -> BrandingSuffix:
     """
     Determine the CMIP7 branding suffix for a variable.
 
     Parameters
     ----------
+    table_id
+        CMIP6 table ID (e.g., "Amon", "Omon")
     variable_id
-        The CMIP6 variable ID (e.g., "tas", "pr")
-    cell_methods
-        Optional cell_methods attribute to help determine temporal/spatial operations
+        CMIP6 variable ID (e.g., "tas", "pr")
 
     Returns
     -------
     BrandingSuffix
         The branding suffix components
+
+    Raises
+    ------
+    KeyError
+        If the variable is not found in the Data Request mappings.
     """
-    # Use predefined mapping if available
-    if variable_id in VARIABLE_BRANDING:
-        return VARIABLE_BRANDING[variable_id]
-
-    # Fallback: infer from variable name patterns
-    suffix = BrandingSuffix()
-
-    # Check for max/min in variable name
-    if variable_id.endswith("max") or (cell_methods and "maximum" in cell_methods):
-        suffix = BrandingSuffix(temporal_label="tmax")
-    elif variable_id.endswith("min") or (cell_methods and "minimum" in cell_methods):
-        suffix = BrandingSuffix(temporal_label="tmin")
-
-    return suffix
+    entry = get_dreq_entry(table_id, variable_id)
+    return BrandingSuffix(
+        temporal_label=entry.temporal_label,
+        vertical_label=entry.vertical_label,
+        horizontal_label=entry.horizontal_label,
+        area_label=entry.area_label,
+    )
 
 
-def get_cmip7_variable_name(variable_id: str, branding: BrandingSuffix | None = None) -> str:
+def get_cmip7_compound_name(table_id: str, variable_id: str) -> str:
     """
-    Convert a CMIP6 variable name to CMIP7 branded format.
+    Get the full CMIP7 compound name for a CMIP6 variable.
+
+    The CMIP7 compound name has the format:
+    ``<realm>.<variable_id>.<branding_suffix>.<frequency>.<region>``
 
     Parameters
     ----------
+    table_id
+        CMIP6 table identifier (e.g., "Amon")
     variable_id
-        The CMIP6 variable ID (e.g., "tas")
-    branding
-        Optional branding suffix; if None, determined automatically
+        CMIP6 variable ID (e.g., "tas")
 
     Returns
     -------
     str
-        The CMIP7 variable name (e.g., "tas_tavg-h2m-hxy-u")
+        The CMIP7 compound name.
+
+    Raises
+    ------
+    KeyError
+        If the variable is not found in the Data Request mappings.
     """
-    if branding is None:
-        branding = get_branding_suffix(variable_id)
-    return f"{variable_id}_{branding}"
+    entry = get_dreq_entry(table_id, variable_id)
+    return entry.cmip7_compound_name
 
 
 def get_frequency_from_table(table_id: str) -> str:  # noqa: PLR0911
@@ -243,21 +238,29 @@ def get_frequency_from_table(table_id: str) -> str:  # noqa: PLR0911
     return "mon"  # Default
 
 
-def get_realm_from_table(table_id: str) -> str:
+def get_realm(table_id: str, variable_id: str) -> str:
     """
-    Convert CMIP6 table_id to CMIP7 realm.
+    Get the CMIP7 realm for a CMIP6 variable.
 
     Parameters
     ----------
     table_id
         CMIP6 table identifier (e.g., "Amon", "Omon")
+    variable_id
+        CMIP6 variable ID (e.g., "tas", "tos")
 
     Returns
     -------
     str
-        CMIP7 realm (e.g., "atmos", "ocean")
+        CMIP7 realm (e.g., "atmos", "ocean", "land")
+
+    Raises
+    ------
+    KeyError
+        If the variable is not found in the Data Request mappings.
     """
-    return TABLE_TO_REALM.get(table_id, "atmos")
+    entry = get_dreq_entry(table_id, variable_id)
+    return entry.realm
 
 
 def convert_variant_index(value: int | str, prefix: str) -> str:
@@ -350,9 +353,9 @@ def convert_cmip6_to_cmip7_attrs(
     Parameters
     ----------
     cmip6_attrs
-        Dictionary of CMIP6 global attributes
+        Dictionary of CMIP6 global attributes. Must contain ``table_id``.
     variable_id
-        Variable ID for determining branding suffix
+        Variable ID for determining branding suffix. If not provided, read from attrs.
     branding
         Optional explicit branding suffix
 
@@ -368,9 +371,17 @@ def convert_cmip6_to_cmip7_attrs(
     if variable_id is None:
         variable_id = attrs.get("variable_id", "unknown")
 
-    # Get branding suffix
+    table_id: str = attrs["table_id"]
+
+    # Get branding suffix and out_name from DReq
+    dreq_entry = get_dreq_entry(table_id, variable_id)
     if branding is None:
-        branding = get_branding_suffix(variable_id, attrs.get("cell_methods"))
+        branding = BrandingSuffix(
+            temporal_label=dreq_entry.temporal_label,
+            vertical_label=dreq_entry.vertical_label,
+            horizontal_label=dreq_entry.horizontal_label,
+            area_label=dreq_entry.area_label,
+        )
 
     # Create CMIP7 metadata
     cmip7_meta = CMIP7Metadata.from_branding(branding)
@@ -380,7 +391,8 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["parent_mip_era"] = attrs.get("parent_mip_era", "CMIP6")
 
     # New/updated CMIP7 attributes
-    attrs["region"] = cmip7_meta.region
+    attrs["variable_id"] = dreq_entry.branded_variable.split("_")[0]
+    attrs["region"] = dreq_entry.region
     attrs["drs_specs"] = cmip7_meta.drs_specs
     attrs["data_specs_version"] = cmip7_meta.data_specs_version
     attrs["product"] = cmip7_meta.product
@@ -400,7 +412,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["branding_suffix"] = cmip7_meta.branding_suffix
 
     # Add branded_variable (required in CMIP7)
-    attrs["branded_variable"] = f"{variable_id}_{cmip7_meta.branding_suffix}"
+    attrs["branded_variable"] = f"{dreq_entry.out_name}_{cmip7_meta.branding_suffix}"
 
     # Convert variant indices from CMIP6 integer to CMIP7 string format
     if "realization_index" in attrs:
@@ -419,16 +431,12 @@ def convert_cmip6_to_cmip7_attrs(
     f = attrs.get("forcing_index", "f1")
     attrs["variant_label"] = f"{r}{i}{p}{f}"
 
-    # Convert table_id to realm-based and set realm attribute
-    if "table_id" in attrs:
-        old_table_id = attrs["table_id"]
-        realm = get_realm_from_table(old_table_id)
-        attrs["realm"] = realm
-        # Also update frequency if not present
-        if "frequency" not in attrs:
-            attrs["frequency"] = get_frequency_from_table(old_table_id)
-        # Store legacy CMIP6 compound name for reference (optional but recommended)
-        attrs["cmip6_compound_name"] = f"{old_table_id}.{variable_id}"
+    # Set realm and frequency from DReq
+    attrs["realm"] = get_realm(table_id, variable_id)
+    if "frequency" not in attrs:
+        attrs["frequency"] = get_frequency_from_table(table_id)
+    # Store legacy CMIP6 compound name for reference
+    attrs["cmip6_compound_name"] = f"{table_id}.{variable_id}"
 
     # Update Conventions (CF version only, per CMIP7 spec)
     attrs["Conventions"] = "CF-1.12"
@@ -447,8 +455,13 @@ def convert_cmip6_dataset(
     """
     Convert a CMIP6 xarray Dataset to CMIP7 format in-memory.
 
-    This function modifies the dataset attributes and optionally renames
-    variables to use CMIP7 branded names.
+    This uses the cmip6 compound name (table_id.variable_id) to look up the appropriate CMIP7 branding suffix
+    and realm from the Data Request mappings.
+    It then updates the global attributes according to the CMIP7 Global Attributes.
+
+    This doesn't modify the values or coordinates,
+    but it does add a "cmip6_compound_name" attribute for reference.
+    This may not be a fully valid CMIP7 dataset due to the grid names.
 
     Parameters
     ----------
@@ -468,15 +481,57 @@ def convert_cmip6_dataset(
     # Determine the primary variable (skip coordinates/bounds)
     data_vars = [str(v) for v in ds.data_vars if not str(v).endswith("_bnds") and v not in ds.coords]
 
-    # Convert global attributes
     variable_id = ds.attrs.get("variable_id")
     if variable_id is None and data_vars:
         variable_id = data_vars[0]
+    if variable_id is None:  # pragma: no cover
+        raise ValueError("Cannot determine variable_id for branding.")
 
-    branding = get_branding_suffix(variable_id) if variable_id else None
+    table_id = ds.attrs["table_id"]
+
+    # Use the CMIP7 variable name
+    dreq_entry = get_dreq_entry(table_id, variable_id)
+    ds = ds.rename({data_vars[0]: dreq_entry.out_name})
+
+    # Convert global attributes
+    branding = get_branding_suffix(table_id, variable_id)
     ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs, variable_id=variable_id, branding=branding)
 
     return ds
+
+
+def format_cmip7_time_range(ds: xr.Dataset, frequency: str) -> str | None:
+    """
+    Format a CMIP7 time range string from a dataset's time coordinate.
+
+    Per the MIP-DRS7 spec, monthly data uses ``YYYYMM-YYYYMM`` format.
+    Fixed-frequency (``"fx"``) data has no time range.
+
+    Parameters
+    ----------
+    ds
+        xarray Dataset with a ``"time"`` coordinate
+    frequency
+        Frequency string (e.g., ``"mon"``, ``"fx"``)
+
+    Returns
+    -------
+    str or None
+        Formatted time range string, or ``None`` for fixed-frequency data
+        or datasets without a time coordinate.
+    """
+    if frequency == "fx" or "time" not in ds or len(ds["time"]) == 0:
+        return None
+
+    start = ds["time"].values[0]
+    end = ds["time"].values[-1]
+
+    def _strftime(t: Any) -> str:
+        if isinstance(t, cftime.datetime):
+            return str(t.strftime("%Y%m"))
+        return str(pd.Timestamp(t).strftime("%Y%m"))
+
+    return f"{_strftime(start)}-{_strftime(end)}"
 
 
 def create_cmip7_filename(
@@ -488,6 +543,10 @@ def create_cmip7_filename(
 
     The CMIP7 filename follows the MIP-DRS7 specification (V1.0):
     <variable_id>_<branding_suffix>_<frequency>_<region>_<grid_label>_<source_id>_<experiment_id>_<variant_label>[_<timeRangeDD>].nc
+
+    Note that ``variable_id`` in CMIP7 may differ from CMIP6. For example,
+    the CMIP6 "tasmax" variable maps to "tas" in CMIP7 because the "max" part
+    is now captured in the branding suffix.
 
     Parameters
     ----------

@@ -21,6 +21,29 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.10.0 (2026-02-10)
+
+### Features
+
+- Added database support for CMIP7 datasets based on the CMIP7 Global Attributes v1.0 specification. ([#503](https://github.com/Climate-REF/climate-ref/pull/503))
+- Added CMIP7 data requirements support, enabling providers to fetch CMIP6 data from ESGF and translate it to CMIP7 format using the CMIP7 CV converter. ([#510](https://github.com/Climate-REF/climate-ref/pull/510))
+- Added diagnostic summary introspection and auto-generated documentation for all providers. The `ref providers show` command now defaults to detailed list format and supports `--columns` for filtering table output. ([#518](https://github.com/Climate-REF/climate-ref/pull/518))
+
+### Improvements
+
+- Separated model from observation runs for regional historical diagnostics. ([#460](https://github.com/Climate-REF/climate-ref/pull/460))
+- Made listing the changed files from a regression test faster. ([#514](https://github.com/Climate-REF/climate-ref/pull/514))
+- Prepared the monorepo for splitting diagnostic provider packages into independent repositories. Extracted shared test fixtures into a `climate-ref[test]` pytest plugin, decoupled `climate-ref-core` from application-level types, and added API surface documentation, versioning strategy, provider compatibility CI, and a copier template for bootstrapping new provider repositories. ([#520](https://github.com/Climate-REF/climate-ref/pull/520))
+
+### Bug Fixes
+
+- Fixed CMEC bundle dimension validation to use a subset check instead of exact equality, allowing diagnostics with multiple data requirements to have varying output dimensions. ([#523](https://github.com/Climate-REF/climate-ref/pull/523))
+
+### Trivial/Internal Changes
+
+- [#516](https://github.com/Climate-REF/climate-ref/pull/516)
+
+
 ## climate-ref 0.9.1 (2026-02-05)
 
 ### Features

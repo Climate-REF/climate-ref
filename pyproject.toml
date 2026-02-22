@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-root"
-version = "0.9.1"
+version = "0.10.0"
 description = "Climate Rapid Evaluation Framework (REF) root package"
 readme = "README.md"
 authors = [{ name = "Jared Lewis", email = "jared.lewis@climate-resource.com" }]
@@ -91,7 +91,7 @@ source = ["packages"]
 branch = true
 
 [tool.coverage.report]
-fail_under = 90
+fail_under = 70
 skip_empty = true
 show_missing = true
 # Regexes for lines to exclude from consideration in addition to the defaults
@@ -106,6 +106,8 @@ omit = [
     "*/migrations/*",
     # Skip the drivers as they can't be checked for coverage
     "*/drivers/*",
+    # Skip the pytest plugin (test infrastructure, not application code)
+    "*/conftest_plugin.py",
 ]
 
 [tool.mypy]

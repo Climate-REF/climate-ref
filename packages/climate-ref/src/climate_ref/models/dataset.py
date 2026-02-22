@@ -1,7 +1,8 @@
 import datetime
 from typing import Any, ClassVar
 
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ColumnElement, ForeignKey, func
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from climate_ref.models.base import Base
@@ -326,5 +327,18 @@ class CMIP7Dataset(Dataset):
     # Unique Identifier
     instance_id: Mapped[str] = mapped_column(index=True)
     """CMIP7 DRS format unique identifier"""
+
+    # TODO: Review whether branded_variable should use the file's branded_variable
+    # attribute (which uses out_name from the Data Request) instead of variable_id.
+    # Currently out_name == variable_id for all known CMIP7 variables except for tasmin/tasmax
+    @hybrid_property
+    def branded_variable(self) -> str:
+        """Return branded variable: ``{variable_id}_{branding_suffix}``."""
+        return f"{self.variable_id}_{self.branding_suffix}"
+
+    @branded_variable.inplace.expression
+    @classmethod
+    def _branded_variable_expression(cls) -> ColumnElement[str]:
+        return cls.variable_id + "_" + cls.branding_suffix
 
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP7}  # type: ignore

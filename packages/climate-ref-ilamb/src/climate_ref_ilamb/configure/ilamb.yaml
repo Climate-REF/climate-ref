@@ -57,3 +57,4 @@ burntFractionAll-GFED:
     burntArea: ilamb/burntFractionAll/GFED/burntArea.nc
   alternate_vars:
   - burntFractionAll
+  test_source_id: CESM2

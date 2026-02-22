@@ -2,7 +2,7 @@ import fnmatch
 from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import netCDF4
 import numpy as np
@@ -21,8 +21,22 @@ from climate_ref_core.diagnostics import (
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
-from climate_ref_esmvaltool.recipe import load_recipe, prepare_climate_data
+from climate_ref_esmvaltool.recipe import (
+    fix_annual_statistics_keep_year,
+    load_recipe,
+    prepare_climate_data,
+    rewrite_mip_for_cmip7,
+)
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
+
+
+def get_cmip_source_type(
+    input_files: dict[SourceDatasetType, pandas.DataFrame],
+) -> SourceDatasetType:
+    """Get the CMIP source type (CMIP6 or CMIP7) from input files."""
+    if SourceDatasetType.CMIP7 in input_files:
+        return SourceDatasetType.CMIP7
+    return SourceDatasetType.CMIP6
 
 
 def mask_fillvalues(array: np.ndarray) -> np.ma.MaskedArray:  # type: ignore[type-arg]
@@ -107,6 +121,8 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         }
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
+        rewrite_mip_for_cmip7(recipe)
+        fix_annual_statistics_keep_year(recipe)
         recipe_txt = yaml.safe_dump(recipe, sort_keys=False)
         logger.info(f"Using ESMValTool recipe:\n{recipe_txt}")
         recipe_path = definition.to_output_path("recipe.yml")
@@ -137,17 +153,52 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 climate_data_dir=climate_data,
             )
 
-        config = {
-            "drs": {
-                "CMIP6": "ESGF",
-                "obs4MIPs": "ESGF",
-            },
+        _local_source = "esmvalcore.io.local.LocalDataSource"
+        config: dict[str, Any] = {
             "output_dir": str(definition.to_output_path("executions")),
-            "rootpath": {
-                "CMIP6": str(climate_data),
-                "obs4MIPs": str(climate_data),
+            "search_data": "quick",
+            "projects": {
+                "CMIP6": {
+                    "data": {
+                        "local": {
+                            "type": _local_source,
+                            "rootpath": str(climate_data),
+                            "dirname_template": (
+                                "{project}/{activity}/{institute}/{dataset}"
+                                "/{exp}/{ensemble}/{mip}/{short_name}/{grid}/{version}"
+                            ),
+                            "filename_template": ("{short_name}_{mip}_{dataset}_{exp}_{ensemble}_{grid}*.nc"),
+                        },
+                    },
+                },
+                "CMIP7": {
+                    "data": {
+                        "local": {
+                            "type": _local_source,
+                            "rootpath": str(climate_data),
+                            "dirname_template": (
+                                "{project}/{activity}/{institute}/{dataset}"
+                                "/{exp}/{ensemble}/{region}/{frequency}/{short_name}"
+                                "/{branding_suffix}/{grid}/{version}"
+                            ),
+                            "filename_template": (
+                                "{short_name}_{branding_suffix}_{frequency}_{region}"
+                                "_{grid}_{dataset}_{exp}_{ensemble}*.nc"
+                            ),
+                        },
+                    },
+                },
+                "obs4MIPs": {
+                    "data": {
+                        "local": {
+                            "type": _local_source,
+                            "rootpath": str(climate_data),
+                            "dirname_template": "{project}/{dataset}/{version}",
+                            "filename_template": "{short_name}_*.nc",
+                        },
+                    },
+                },
             },
-            "search_esgf": "never",
         }
 
         # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
@@ -160,27 +211,49 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 "`ref datasets fetch-data --registry esmvaltool`."
             )
         else:
-            config["drs"].update(  # type: ignore[attr-defined]
-                {
-                    "OBS": "default",
-                    "OBS6": "default",
-                    "native6": "default",
-                }
-            )
-            config["rootpath"].update(  # type: ignore[attr-defined]
-                {
-                    "OBS": str(data_dir / "OBS"),
-                    "OBS6": str(data_dir / "OBS"),
-                    "native6": str(data_dir / "native6"),
-                }
-            )
-            config["rootpath"]["obs4MIPs"] = [  # type: ignore[index]
-                config["rootpath"]["obs4MIPs"],  # type: ignore[index]
-                str(data_dir),
-            ]
+            config["projects"]["OBS"] = {
+                "data": {
+                    "local": {
+                        "type": _local_source,
+                        "rootpath": str(data_dir / "OBS"),
+                        "dirname_template": "Tier{tier}/{dataset}",
+                        "filename_template": (
+                            "{project}_{dataset}_{type}_{version}_{mip}_{short_name}[_.]*nc"
+                        ),
+                    },
+                },
+            }
+            config["projects"]["OBS6"] = {
+                "data": {
+                    "local": {
+                        "type": _local_source,
+                        "rootpath": str(data_dir / "OBS"),
+                        "dirname_template": "Tier{tier}/{dataset}",
+                        "filename_template": (
+                            "{project}_{dataset}_{type}_{version}_{mip}_{short_name}[_.]*nc"
+                        ),
+                    },
+                },
+            }
+            config["projects"]["native6"] = {
+                "data": {
+                    "local": {
+                        "type": _local_source,
+                        "rootpath": str(data_dir / "native6"),
+                        "dirname_template": "Tier{tier}/{dataset}/{version}/{frequency}/{short_name}",
+                        "filename_template": "*.nc",
+                    },
+                },
+            }
+            config["projects"]["obs4MIPs"]["data"]["esmvaltool"] = {
+                "type": _local_source,
+                "rootpath": str(data_dir),
+                "dirname_template": "{project}/{dataset}/{version}",
+                "filename_template": "{short_name}_*.nc",
+            }
 
         config_dir = definition.to_output_path("config")
-        config_dir.mkdir()
+        config_dir.mkdir(exist_ok=True)
         config_txt = yaml.safe_dump(config)
         logger.info(f"Using ESMValTool configuration:\n{config_txt}")
         with (config_dir / "config.yml").open("w", encoding="utf-8") as file:
@@ -210,15 +283,16 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The resulting diagnostic.
         """
-        result_dir = next(definition.to_output_path("executions").glob("*"))
+        result_dir = max(definition.to_output_path("executions").glob("*"))
 
         metric_args = CMECMetric.create_template()
         output_args = CMECOutput.create_template()
 
         # Input selectors for the datasets used in the diagnostic.
-        # TODO: Better handling of multiple source types
         if SourceDatasetType.CMIP6 in definition.datasets:
             input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
+        elif SourceDatasetType.CMIP7 in definition.datasets:
+            input_selectors = definition.datasets[SourceDatasetType.CMIP7].selector_dict()
         elif SourceDatasetType.obs4MIPs in definition.datasets:
             input_selectors = definition.datasets[SourceDatasetType.obs4MIPs].selector_dict()
         else:
@@ -234,6 +308,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             for filename in metadata:
                 caption = metadata[filename].get("caption", "")
                 relative_path = definition.as_relative_path(filename)
+                for file_def in (*definition.diagnostic.files, *definition.diagnostic.series):
+                    if fnmatch.fnmatch(
+                        str(relative_path),
+                        f"executions/*/{file_def.file_pattern.format(**input_selectors)}",
+                    ):
+                        dimensions = file_def.dimensions
+                        break
+                else:
+                    dimensions = {}
                 if relative_path.suffix in plot_suffixes:
                     key = OutputCV.PLOTS.value
                 else:
@@ -242,10 +325,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     OutputCV.FILENAME.value: f"{relative_path}",
                     OutputCV.LONG_NAME.value: caption,
                     OutputCV.DESCRIPTION.value: "",
+                    OutputCV.DIMENSIONS.value: dimensions,
                 }
                 series.extend(
                     self._extract_series_from_file(
-                        definition, filename, relative_path, caption=caption, input_selectors=input_selectors
+                        definition,
+                        filename,
+                        relative_path,
+                        caption=caption,
+                        input_selectors=input_selectors,
                     )
                 )
 

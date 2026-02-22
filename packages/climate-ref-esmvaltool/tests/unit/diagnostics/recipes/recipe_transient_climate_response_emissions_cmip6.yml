@@ -37,12 +37,14 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
   global_cumulative_sum:
     custom_order: true
     area_statistics:
       operator: sum
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
     cumulative_sum:
       coord: time
       weights: true
@@ -63,7 +65,7 @@ diagnostics:
           exp: esm-1pctCO2
           grid: gn
           mip: Amon
-          timerange: 18500116T120000/19141216T120000
+          timerange: 1850/1914
       tas_esm-piControl:
         short_name: tas
         preprocessor: global_annual_mean_anomaly
@@ -76,7 +78,7 @@ diagnostics:
           exp: esm-piControl
           grid: gn
           mip: Amon
-          timerange: 18500116T120000/19141216T120000
+          timerange: 1850/1914
       fco2antt:
         preprocessor: global_cumulative_sum
         additional_datasets:
@@ -88,7 +90,7 @@ diagnostics:
           exp: esm-1pctCO2
           grid: gn
           mip: Amon
-          timerange: 18500116T120000/19141216T120000
+          timerange: 1850/1914
     scripts:
       calculate_tcre:
         script: climate_metrics/tcre.py

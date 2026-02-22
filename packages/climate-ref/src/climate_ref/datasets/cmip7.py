@@ -71,6 +71,8 @@ def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
                 "frequency": attrs.get("frequency", ""),
                 "region": attrs.get("region", "glb"),
                 "branding_suffix": attrs.get("branding_suffix", ""),
+                "branded_variable": attrs.get("branded_variable", ""),
+                "out_name": attrs.get("out_name", ""),
                 "version": attrs.get("version", ""),
                 # Additional mandatory attributes
                 "mip_era": attrs.get("mip_era", "CMIP7"),
@@ -242,5 +244,8 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         if missing_columns:
             for column in missing_columns:
                 datasets[column] = pd.NA
+
+        # Add branded_variable for the raw catalog (before DB ingestion)
+        datasets["branded_variable"] = datasets["variable_id"] + "_" + datasets["branding_suffix"]
 
         return datasets

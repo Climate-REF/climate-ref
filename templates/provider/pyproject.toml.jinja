@@ -1,0 +1,71 @@
+[project]
+name = "climate-ref-{{ provider_slug }}"
+version = "0.1.0"
+description = "{{ description }}"
+readme = "README.md"
+authors = [
+    { name = "{{ author_name }}", email = "{{ author_email }}" },
+]
+license = "{{ license }}"
+requires-python = ">=3.11"
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering",
+    "License :: OSI Approved :: Apache Software License",
+]
+dependencies = [
+    "climate-ref-core>={{ min_core_version }},<1.0.0",
+]
+
+[project.entry-points."climate-ref.providers"]
+{{ provider_slug }} = "{{ package_name }}:provider"
+
+[project.optional-dependencies]
+test = [
+    "climate-ref[test]",
+    "pytest>=9.0.0",
+    "pytest-mock>=3.12",
+]
+
+[dependency-groups]
+dev = [
+    "climate-ref-{{ provider_slug }}[test]",
+    "ruff>=0.14.0",
+    "mypy>=1.19.0",
+    "pre-commit>=3.3.1",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.ruff]
+src = ["src"]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E", "W", "F", "I", "D", "PL", "RUF", "UP", "S", "A"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "numpy"
+
+[tool.pytest.ini_options]
+addopts = ["--import-mode=importlib"]
+filterwarnings = [
+    "ignore:cannot collect test class 'TestCase':pytest.PytestCollectionWarning",
+    "ignore:cannot collect test class 'TestDataSpecification':pytest.PytestCollectionWarning",
+    "ignore:cannot collect test class 'TestCaseRunner':pytest.PytestCollectionWarning",
+    "ignore:cannot collect test class 'TestCaseNotFoundError':pytest.PytestCollectionWarning",
+    "ignore:cannot collect test class 'TestCasePaths':pytest.PytestCollectionWarning",
+]
+
+[tool.mypy]
+strict = true
+show_error_codes = true

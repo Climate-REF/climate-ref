@@ -60,60 +60,71 @@ ruff-fixes:  ## fix the code using ruff
 	uv run ruff check --fix
 	uv run ruff format
 
+# Coverage is collected with `coverage run` (rather than pytest-cov) so that
+# module-level code in entry-point plugins is tracked from process start.
+# Each target appends to .coverage; the `test` target runs a final report.
+
 .PHONY: test-ref
 test-ref:  ## run the tests
 	uv run --package climate-ref \
-		pytest packages/climate-ref \
-		-r a -v --doctest-modules --cov=packages/climate-ref/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref/src \
+		-m pytest packages/climate-ref \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-core
 test-core:  ## run the tests
 	uv run --package climate-ref-core \
-		pytest packages/climate-ref-core \
-		-r a -v --doctest-modules --cov=packages/climate-ref-core/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref-core/src \
+		-m pytest packages/climate-ref-core \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-celery
 test-celery:  ## run the tests
 	uv run --package climate-ref-celery \
-		pytest packages/climate-ref-celery \
-		-r a -v --doctest-modules --cov=packages/climate-ref-celery/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref-celery/src \
+		-m pytest packages/climate-ref-celery \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-example
 test-diagnostic-example:  ## run the tests
 	uv run --package climate-ref-example \
-		pytest packages/climate-ref-example \
-		-r a -v --doctest-modules --cov=packages/climate-ref-example/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref-example/src \
+		-m pytest packages/climate-ref-example \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-esmvaltool
 test-diagnostic-esmvaltool:  ## run the tests
 	uv run --package climate-ref-esmvaltool \
-		pytest packages/climate-ref-esmvaltool \
-		-r a -v --doctest-modules --cov=packages/climate-ref-esmvaltool/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref-esmvaltool/src \
+		-m pytest packages/climate-ref-esmvaltool \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-ilamb
 test-diagnostic-ilamb:  ## run the tests
 	uv run ref datasets fetch-data --registry ilamb-test
 	uv run --package climate-ref-ilamb \
-		pytest packages/climate-ref-ilamb \
-		-r a -v --doctest-modules --cov=packages/climate-ref-ilamb/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref-ilamb/src \
+		-m pytest packages/climate-ref-ilamb \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-pmp
 test-diagnostic-pmp:  ## run the tests
 	uv run --package climate-ref-pmp \
-		pytest packages/climate-ref-pmp \
-		-r a -v --doctest-modules --cov=packages/climate-ref-pmp/src --cov-report=term --cov-append
+		coverage run --append --source=packages/climate-ref-pmp/src \
+		-m pytest packages/climate-ref-pmp \
+		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-integration
 test-integration:  ## run the integration tests
 	uv run \
 		pytest tests \
-		-r a -v
+		-r a -v --durations=20
 
 .PHONY: test-integration-slow
 test-integration-slow:  ## run the integration tests, including the slow tests which may take a while
 	uv run \
 		pytest tests --slow \
-		-r a -v
+		-r a -v --durations=20
 
 .PHONY: test-diagnostics
 test-diagnostics: test-diagnostic-example test-diagnostic-esmvaltool test-diagnostic-ilamb test-diagnostic-pmp
@@ -123,6 +134,7 @@ test-executors: test-celery
 
 .PHONY: test
 test: clean test-core test-ref test-executors test-diagnostics test-integration ## run the tests
+	uv run coverage report
 
 .PHONY: test-quick
 test-quick: clean  ## run all the tests at once

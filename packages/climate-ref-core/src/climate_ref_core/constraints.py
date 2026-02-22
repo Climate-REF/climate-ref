@@ -92,7 +92,11 @@ def apply_constraint(
     """
     updated_group = constraint.apply(dataframe, data_catalog)
     if updated_group.empty:
-        logger.debug(f"Constraint {constraint} not satisfied for {dataframe}")
+        logger.debug(
+            "Constraint {} not satisfied for {} rows",
+            constraint,
+            len(dataframe),
+        )
         return None
 
     return updated_group
@@ -152,10 +156,22 @@ class RequireFacets:
         groups = [group] if not self.group_by else (g[1] for g in group.groupby(list(self.group_by)))
         for subgroup in groups:
             if not op(value in subgroup[self.dimension].values for value in self.required_facets):
-                logger.debug(
-                    f"Constraint {self} not satisfied because required facet values "
-                    f"not found for group {', '.join(subgroup['path'])}"
-                )
+                if self.operator == "all":
+                    missing_values = [
+                        f"'{value}'"
+                        for value in self.required_facets
+                        if value not in subgroup[self.dimension].values
+                    ]
+                    logger.debug(
+                        f"Constraint {self} not satisfied because required facet values "
+                        f"{', '.join(missing_values)} not found for group "
+                        f"{', '.join(sorted(subgroup['path']))}"
+                    )
+                else:
+                    logger.debug(
+                        f"Constraint {self} not satisfied because none of the required facet values "
+                        f"were found for group {', '.join(sorted(subgroup['path']))}"
+                    )
                 select.loc[subgroup.index] = False
         return group[select]
 
@@ -218,32 +234,42 @@ class AddSupplementaryDataset:
             values = tuple(group[facet].unique())
             supplementary_facets[facet] += values
 
-        supplementary_group = data_catalog
-        for facet, values in supplementary_facets.items():
-            mask = supplementary_group[facet].isin(values)
-            supplementary_group = supplementary_group[mask]
+        mask = data_catalog[list(supplementary_facets)].isin(supplementary_facets).all(axis="columns")
+        supplementary_group = data_catalog[mask]
         if not supplementary_group.empty:
+            # Save the original index and reset to a unique RangeIndex.
+            # The data catalog index can contain duplicate labels (e.g. multiple
+            # file entries for the same dataset) which causes pandas ``|=`` to
+            # fail with "cannot reindex on an axis with duplicate labels".
+            original_index = supplementary_group.index.copy()
+            supplementary_group = supplementary_group.reset_index(drop=True)
+
             matching_facets = list(self.matching_facets)
             facets = matching_facets + list(self.optional_matching_facets)
             datasets = group[facets].drop_duplicates()
-            indices = set()
+            select = pd.Series(False, index=supplementary_group.index)
             for i in range(len(datasets)):
                 dataset = datasets.iloc[i]
                 # Restrict the supplementary datasets to those that match the main dataset.
                 supplementaries = supplementary_group[
-                    (supplementary_group[matching_facets] == dataset[matching_facets]).all(1)
+                    (supplementary_group[matching_facets] == dataset[matching_facets]).all(axis="columns")
                 ]
                 if not supplementaries.empty:
                     # Select the best matching supplementary dataset based on the optional matching facets.
-                    scores = (supplementaries[facets] == dataset).sum(axis=1)
-                    matches = supplementaries[scores == scores.max()]
-                    if "version" in facets:
+                    scores = (supplementaries[facets] == dataset).sum(axis="columns")
+                    supplementaries = supplementaries[scores == scores.max()]
+                    if "version" in supplementaries.columns:
                         # Select the latest version if there are multiple matches
-                        matches = matches[matches["version"] == matches["version"].max()]
-                    # Select one match per dataset
-                    indices.add(matches.index[0])
+                        supplementaries = supplementaries[
+                            supplementaries["version"] == supplementaries["version"].max()
+                        ]
+                    # Select only the first group if there are still multiple matches
+                    first_supplementary_dataset = supplementaries[facets].drop_duplicates().iloc[0]
+                    select |= (supplementaries[facets] == first_supplementary_dataset).all(axis="columns")
 
-            supplementary_group = supplementary_group.loc[list(indices)].drop_duplicates()
+            supplementary_group = supplementary_group[select]
+            # Restore the original index so downstream concatenation is consistent
+            supplementary_group.index = original_index[list(select)]
 
         return pd.concat([group, supplementary_group])
 
@@ -521,15 +547,88 @@ class RequireOverlappingTimerange:
 
 
 @frozen
-class SelectParentExperiment:
+class AddParentDataset:
     """
-    Include a dataset's parent experiment in the selection
+    Include a dataset's parent in the selection.
+    """
+
+    parent_facet_map: dict[str, str]
+    """
+    Mapping from child to parent facets.
     """
 
     def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
         """
-        Include a dataset's parent experiment in the selection
+        Include a dataset's parent in the selection.
 
-        Not yet implemented
         """
-        raise NotImplementedError("This is not implemented yet")  # pragma: no cover
+        all_parent_facets = sorted({*self.parent_facet_map.keys(), *self.parent_facet_map.values()})
+
+        # Remove datasets that do not have all parent facets set.
+        valid_group = group[all_parent_facets].dropna(axis="index")
+
+        # Add the parent datasets from the data catalog.
+        select = pd.Series(False, index=data_catalog.index)
+        select.loc[valid_group.index] = True
+        for _, child_dataset in valid_group.groupby(all_parent_facets):
+            child_facets = {facet: child_dataset[facet].unique().tolist() for facet in all_parent_facets}
+            parent_facets = {
+                parent_facet: child_facets[child_facet]
+                for parent_facet, child_facet in self.parent_facet_map.items()
+            }
+            parent_dataset = data_catalog[
+                data_catalog[list(parent_facets)].isin(parent_facets).all(axis="columns")
+            ]
+            if parent_dataset.empty:
+                # Drop the child dataset if no parent dataset is found.
+                logger.debug(
+                    f"Constraint {self} not satisfied because no parent dataset found for "
+                    f"{', '.join(f'{k}={v}' for k, v in child_facets.items())}"
+                )
+                select.loc[child_dataset.index] = False
+            else:
+                # Add the latest version of the dataset to the selection.
+                parent_dataset = parent_dataset[parent_dataset["version"] == parent_dataset["version"].max()]
+                select.loc[parent_dataset.index] = True
+
+        return data_catalog[select]
+
+    @classmethod
+    def from_defaults(
+        cls,
+        source_type: SourceDatasetType,
+    ) -> Self:
+        """
+        Include a dataset's parent in the selection.
+
+        The constraint is created using the defaults for the source_type.
+
+        Parameters
+        ----------
+        source_type:
+            The source_type of the variable to add.
+
+        Returns
+        -------
+        :
+            A constraint to include a dataset's parent in the selection.
+
+        """
+        parent_facet_options = {
+            SourceDatasetType.CMIP6: {
+                "source_id": "parent_source_id",
+                "experiment_id": "parent_experiment_id",
+                "variant_label": "parent_variant_label",
+                "table_id": "table_id",
+                "variable_id": "variable_id",
+                "grid_label": "grid_label",
+            },
+            SourceDatasetType.CMIP7: {
+                "source_id": "parent_source_id",
+                "experiment_id": "parent_experiment_id",
+                "variant_label": "parent_variant_label",
+                "variable_id": "variable_id",
+                "grid_label": "grid_label",
+            },
+        }
+        return cls(parent_facet_map=parent_facet_options[source_type])

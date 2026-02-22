@@ -91,12 +91,11 @@ class TestCMIP6Adapter:
         assert new_instance_id in latest_instance_ids
 
     @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
-    def test_round_trip(self, cmip6_parser, config, sample_data_dir):
+    def test_round_trip(self, cmip6_parser, config, cmip6_local_catalogs):
         config.cmip6_parser = cmip6_parser
+        catalog = cmip6_local_catalogs[cmip6_parser]
 
         with Database.from_config(config, run_migrations=True) as database:
-            catalog = CMIP6DatasetAdapter(config=config).find_local_datasets(sample_data_dir / "CMIP6")
-
             # Indexes and ordering may be different
             adapter = CMIP6DatasetAdapter()
             with database.session.begin():
@@ -162,13 +161,10 @@ class TestCMIP6Adapter:
             assert result["experiment_id"].notna().all()
 
     @pytest.mark.parametrize("cmip6_parser", ["complete", "drs"])
-    def test_load_local_datasets(self, config, cmip6_parser, sample_data_dir, catalog_regression):
-        # Set the parser in the config
+    def test_load_local_datasets(self, config, cmip6_parser, catalog_regression, cmip6_local_catalogs):
         config.cmip6_parser = cmip6_parser
-
-        # Parse the local datasets
         adapter = CMIP6DatasetAdapter(config=config)
-        data_catalog = adapter.find_local_datasets(sample_data_dir / "CMIP6")
+        data_catalog = cmip6_local_catalogs[cmip6_parser]
 
         if cmip6_parser == "complete":
             assert data_catalog["finalised"].all()

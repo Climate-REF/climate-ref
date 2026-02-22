@@ -1,0 +1,416 @@
+cmip6_gn_r101i1p1f1_GISS-E2-1-G:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.1pctCO2.r101i1p1f1.Amon.tas.gn.v20190815
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.piControl.r101i1p1f1.Amon.tas.gn.v20190815
+cmip6_gn_r102i1p1f1_GISS-E2-1-G:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.1pctCO2.r102i1p1f1.Amon.tas.gn.v20190815
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.piControl.r102i1p1f1.Amon.tas.gn.v20190815
+cmip6_gn_r1i1p1f1_ACCESS-CM2:
+  cmip6:
+  - CMIP6.CMIP.CSIRO-ARCCSS.ACCESS-CM2.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191109
+  - CMIP6.CMIP.CSIRO-ARCCSS.ACCESS-CM2.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191109
+  - CMIP6.CMIP.CSIRO-ARCCSS.ACCESS-CM2.piControl.r1i1p1f1.Amon.tas.gn.v20191112
+  - CMIP6.DAMIP.CSIRO-ARCCSS.ACCESS-CM2.hist-GHG.r1i1p1f1.fx.areacella.gn.v20201120
+cmip6_gn_r1i1p1f1_ACCESS-ESM1-5:
+  cmip6:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316
+  - CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.fx.areacella.gn.v20200615
+cmip6_gn_r1i1p1f1_AWI-CM-1-1-MR:
+  cmip6:
+  - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191015
+  - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191015
+  - CMIP6.CMIP.AWI.AWI-CM-1-1-MR.piControl.r1i1p1f1.Amon.tas.gn.v20191015
+cmip6_gn_r1i1p1f1_AWI-ESM-1-1-LR:
+  cmip6:
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.1pctCO2.r1i1p1f1.Amon.tas.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.1pctCO2.r1i1p1f1.fx.areacella.gn.v20200212
+  - CMIP6.CMIP.AWI.AWI-ESM-1-1-LR.piControl.r1i1p1f1.Amon.tas.gn.v20200212
+cmip6_gn_r1i1p1f1_BCC-CSM2-MR:
+  cmip6:
+  - CMIP6.CMIP.BCC.BCC-CSM2-MR.1pctCO2.r1i1p1f1.Amon.tas.gn.v20181015
+  - CMIP6.CMIP.BCC.BCC-CSM2-MR.piControl.r1i1p1f1.Amon.tas.gn.v20181016
+cmip6_gn_r1i1p1f1_BCC-ESM1:
+  cmip6:
+  - CMIP6.CMIP.BCC.BCC-ESM1.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190613
+  - CMIP6.CMIP.BCC.BCC-ESM1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190613
+  - CMIP6.CMIP.BCC.BCC-ESM1.piControl.r1i1p1f1.Amon.tas.gn.v20181214
+cmip6_gn_r1i1p1f1_CAMS-CSM1-0:
+  cmip6:
+  - CMIP6.CMIP.CAMS.CAMS-CSM1-0.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190708
+  - CMIP6.CMIP.CAMS.CAMS-CSM1-0.piControl.r1i1p1f1.Amon.tas.gn.v20190729
+cmip6_gn_r1i1p1f1_CAS-ESM2-0:
+  cmip6:
+  - CMIP6.CMIP.CAS.CAS-ESM2-0.1pctCO2.r1i1p1f1.Amon.tas.gn.v20201226
+  - CMIP6.CMIP.CAS.CAS-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.v20201228
+cmip6_gn_r1i1p1f1_CESM2:
+  cmip6:
+  - CMIP6.C4MIP.NCAR.CESM2.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191119
+  - CMIP6.CMIP.NCAR.CESM2.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190425
+  - CMIP6.CMIP.NCAR.CESM2.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190425
+  - CMIP6.CMIP.NCAR.CESM2.piControl.r1i1p1f1.Amon.tas.gn.v20190320
+cmip6_gn_r1i1p1f1_CESM2-FV2:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-FV2.1pctCO2.r1i1p1f1.Amon.tas.gn.v20200310
+  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-FV2.piControl.r1i1p1f1.Amon.tas.gn.v20191120
+cmip6_gn_r1i1p1f1_CESM2-WACCM:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190425
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190425
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.piControl.r1i1p1f1.Amon.tas.gn.v20190320
+cmip6_gn_r1i1p1f1_CESM2-WACCM-FV2:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.1pctCO2.r1i1p1f1.Amon.tas.gn.v20200226
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.1pctCO2.r1i1p1f1.fx.areacella.gn.v20200226
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.piControl.r1i1p1f1.Amon.tas.gn.v20191120
+cmip6_gn_r1i1p1f1_CMCC-CM2-SR5:
+  cmip6:
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20200616
+  - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.piControl.r1i1p1f1.Amon.tas.gn.v20200616
+cmip6_gn_r1i1p1f1_CMCC-ESM2:
+  cmip6:
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.1pctCO2.r1i1p1f1.Amon.tas.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.1pctCO2.r1i1p1f1.fx.areacella.gn.v20210114
+  - CMIP6.CMIP.CMCC.CMCC-ESM2.piControl.r1i1p1f1.Amon.tas.gn.v20210304
+cmip6_gn_r1i1p1f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.Amon.tas.gn.v20190429
+cmip6_gn_r1i1p1f1_CanESM5-1:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5-1.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.piControl.r1i1p1f1.Amon.tas.gn.v20190429
+cmip6_gn_r1i1p1f1_FGOALS-g3:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-g3.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191215
+  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.fx.areacella.gn.v20210615
+  - CMIP6.CMIP.CAS.FGOALS-g3.piControl.r1i1p1f1.Amon.tas.gn.v20190818
+cmip6_gn_r1i1p1f1_FIO-ESM-2-0:
+  cmip6:
+  - CMIP6.CMIP.FIO-QLNM.FIO-ESM-2-0.1pctCO2.r1i1p1f1.Amon.tas.gn.v20200302
+  - CMIP6.CMIP.FIO-QLNM.FIO-ESM-2-0.piControl.r1i1p1f1.Amon.tas.gn.v20191010
+cmip6_gn_r1i1p1f1_GISS-E2-1-G:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.1pctCO2.r1i1p1f1.Amon.tas.gn.v20250110
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.piControl.r1i1p1f1.Amon.tas.gn.v20180824
+cmip6_gn_r1i1p1f1_GISS-E2-1-H:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-H.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190403
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-H.piControl.r1i1p1f1.Amon.tas.gn.v20190410
+cmip6_gn_r1i1p1f1_GISS-E2-2-G:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-2-G.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191120
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-2-G.piControl.r1i1p1f1.Amon.tas.gn.v20191120
+cmip6_gn_r1i1p1f1_GISS-E2-2-H:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-2-H.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191120
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-2-H.piControl.r1i1p1f1.Amon.tas.gn.v20191120
+cmip6_gn_r1i1p1f1_ICON-ESM-LR:
+  cmip6:
+  - CMIP6.CMIP.MPI-M.ICON-ESM-LR.1pctCO2.r1i1p1f1.Amon.tas.gn.v20210215
+  - CMIP6.CMIP.MPI-M.ICON-ESM-LR.1pctCO2.r1i1p1f1.fx.areacella.gn.v20220111
+  - CMIP6.CMIP.MPI-M.ICON-ESM-LR.piControl.r1i1p1f1.Amon.tas.gn.v20210215
+cmip6_gn_r1i1p1f1_IITM-ESM:
+  cmip6:
+  - CMIP6.CMIP.CCCR-IITM.IITM-ESM.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191204
+  - CMIP6.CMIP.CCCR-IITM.IITM-ESM.piControl.r1i1p1f1.Amon.tas.gn.v20191120
+cmip6_gn_r1i1p1f1_MCM-UA-1-0:
+  cmip6:
+  - CMIP6.CMIP.UA.MCM-UA-1-0.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190731
+  - CMIP6.CMIP.UA.MCM-UA-1-0.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190731
+  - CMIP6.CMIP.UA.MCM-UA-1-0.piControl.r1i1p1f1.Amon.tas.gn.v20190731
+cmip6_gn_r1i1p1f1_MIROC6:
+  cmip6:
+  - CMIP6.CMIP.MIROC.MIROC6.1pctCO2.r1i1p1f1.Amon.tas.gn.v20181212
+  - CMIP6.CMIP.MIROC.MIROC6.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190311
+  - CMIP6.CMIP.MIROC.MIROC6.piControl.r1i1p1f1.Amon.tas.gn.v20181212
+  - CMIP6.DAMIP.MIROC.MIROC6.hist-GHG.r1i1p1f1.fx.areacella.gn.v20190705
+cmip6_gn_r1i1p1f1_MPI-ESM-1-2-HAM:
+  cmip6:
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190628
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190628
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.piControl.r1i1p1f1.Amon.tas.gn.v20200120
+cmip6_gn_r1i1p1f1_MPI-ESM1-2-HR:
+  cmip6:
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-HR.piControl.r1i1p1f1.Amon.tas.gn.v20190710
+cmip6_gn_r1i1p1f1_MPI-ESM1-2-LR:
+  cmip6:
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190710
+  - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.piControl.r1i1p1f1.Amon.tas.gn.v20190710
+cmip6_gn_r1i1p1f1_MRI-ESM2-0:
+  cmip6:
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190308
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190603
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.v20190222
+cmip6_gn_r1i1p1f1_NESM3:
+  cmip6:
+  - CMIP6.CMIP.NUIST.NESM3.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190707
+cmip6_gn_r1i1p1f1_NorCPM1:
+  cmip6:
+  - CMIP6.CMIP.NCC.NorCPM1.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190914
+  - CMIP6.CMIP.NCC.NorCPM1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190914
+  - CMIP6.CMIP.NCC.NorCPM1.piControl.r1i1p1f1.Amon.tas.gn.v20190914
+cmip6_gn_r1i1p1f1_NorESM2-LM:
+  cmip6:
+  - CMIP6.C4MIP CDRMIP.NCC.NorESM2-LM.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191108
+  - CMIP6.CMIP.NCC.NorESM2-LM.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
+  - CMIP6.CMIP.NCC.NorESM2-LM.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190815
+  - CMIP6.CMIP.NCC.NorESM2-LM.piControl.r1i1p1f1.Amon.tas.gn.v20210118
+cmip6_gn_r1i1p1f1_NorESM2-MM:
+  cmip6:
+  - CMIP6.CMIP.NCC.NorESM2-MM.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191108
+  - CMIP6.CMIP.NCC.NorESM2-MM.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191108
+  - CMIP6.CMIP.NCC.NorESM2-MM.piControl.r1i1p1f1.Amon.tas.gn.v20191108
+cmip6_gn_r1i1p1f1_SAM0-UNICON:
+  cmip6:
+  - CMIP6.CMIP.SNU.SAM0-UNICON.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190323
+  - CMIP6.CMIP.SNU.SAM0-UNICON.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190323
+  - CMIP6.CMIP.SNU.SAM0-UNICON.piControl.r1i1p1f1.Amon.tas.gn.v20190910
+cmip6_gn_r1i1p1f1_TaiESM1:
+  cmip6:
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.1pctCO2.r1i1p1f1.Amon.tas.gn.v20200225
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20200311
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.fx.areacella.gn.v20200624
+  - CMIP6.CMIP.AS-RCEC.TaiESM1.piControl.r1i1p1f1.Amon.tas.gn.v20200211
+cmip6_gn_r1i1p1f2_MIROC-ES2L:
+  cmip6:
+  - CMIP6.CMIP.MIROC.MIROC-ES2L.1pctCO2.r1i1p1f2.Amon.tas.gn.v20190823
+  - CMIP6.CMIP.MIROC.MIROC-ES2L.1pctCO2.r1i1p1f2.fx.areacella.gn.v20190823
+  - CMIP6.CMIP.MIROC.MIROC-ES2L.piControl.r1i1p1f2.Amon.tas.gn.v20190823
+cmip6_gn_r1i1p1f2_UKESM1-0-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r1i1p1f2.Amon.tas.gn.v20190406
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.piControl.r1i1p1f2.Amon.tas.gn.v20200828
+cmip6_gn_r1i1p1f2_UKESM1-1-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-1-LL.1pctCO2.r1i1p1f2.Amon.tas.gn.v20220513
+  - CMIP6.CMIP.MOHC.UKESM1-1-LL.piControl.r1i1p1f2.Amon.tas.gn.v20220505
+cmip6_gn_r1i1p1f3_HadGEM3-GC31-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.1pctCO2.r1i1p1f3.Amon.tas.gn.v20190620
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Amon.tas.gn.v20211103
+cmip6_gn_r1i1p1f3_HadGEM3-GC31-MM:
+  cmip6:
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-MM.1pctCO2.r1i1p1f3.Amon.tas.gn.v20200115
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-MM.piControl.r1i1p1f1.Amon.tas.gn.v20190920
+cmip6_gn_r1i1p2f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p2f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p2f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p2f1.Amon.tas.gn.v20190429
+cmip6_gn_r1i1p2f1_CanESM5-1:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5-1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.1pctCO2.r1i1p2f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p2f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-1.piControl.r1i1p2f1.Amon.tas.gn.v20190429
+cmip6_gn_r1i1p2f1_CanESM5-CanOE:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5-CanOE.1pctCO2.r1i1p2f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-CanOE.1pctCO2.r1i1p2f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5-CanOE.piControl.r1i1p2f1.Amon.tas.gn.v20190429
+cmip6_gn_r1i1p3f1_GISS-E2-1-G:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.1pctCO2.r1i1p3f1.Amon.tas.gn.v20190702
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.piControl.r1i1p3f1.Amon.tas.gn.v20190710
+cmip6_gn_r1i1p3f1_GISS-E2-1-H:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-H.1pctCO2.r1i1p3f1.Amon.tas.gn.v20191010
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-H.piControl.r1i1p3f1.Amon.tas.gn.v20191010
+cmip6_gn_r1i1p5f1_GISS-E2-1-G:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.1pctCO2.r1i1p5f1.Amon.tas.gn.v20190905
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.piControl.r1i1p5f1.Amon.tas.gn.v20190710
+cmip6_gn_r1i2p1f1_MRI-ESM2-0:
+  cmip6:
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190603
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.1pctCO2.r1i2p1f1.Amon.tas.gn.v20191205
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i2p1f1.Amon.tas.gn.v20191205
+cmip6_gn_r1i2p2f1_CESM2-FV2:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-FV2.1pctCO2.r1i2p2f1.Amon.tas.gn.v20220915
+  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
+  - CMIP6.CMIP.NCAR.CESM2-FV2.piControl.r1i2p2f1.Amon.tas.gn.v20220915
+cmip6_gn_r2i1p1f1_CAMS-CSM1-0:
+  cmip6:
+  - CMIP6.CMIP.CAMS.CAMS-CSM1-0.1pctCO2.r2i1p1f1.Amon.tas.gn.v20190726
+  - CMIP6.CMIP.CAMS.CAMS-CSM1-0.piControl.r1i1p1f1.Amon.tas.gn.v20190729
+cmip6_gn_r2i1p1f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r2i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.Amon.tas.gn.v20190429
+cmip6_gn_r2i1p1f1_FGOALS-g3:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-g3.1pctCO2.r2i1p1f1.Amon.tas.gn.v20191222
+  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.fx.areacella.gn.v20210615
+  - CMIP6.CMIP.CAS.FGOALS-g3.piControl.r1i1p1f1.Amon.tas.gn.v20190818
+cmip6_gn_r2i1p1f1_FIO-ESM-2-0:
+  cmip6:
+  - CMIP6.CMIP.FIO-QLNM.FIO-ESM-2-0.1pctCO2.r2i1p1f1.Amon.tas.gn.v20200302
+  - CMIP6.CMIP.FIO-QLNM.FIO-ESM-2-0.piControl.r1i1p1f1.Amon.tas.gn.v20191010
+cmip6_gn_r2i1p1f2_UKESM1-0-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r2i1p1f2.Amon.tas.gn.v20190603
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.piControl.r1i1p1f2.Amon.tas.gn.v20200828
+cmip6_gn_r2i1p1f3_HadGEM3-GC31-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.1pctCO2.r2i1p1f3.Amon.tas.gn.v20190724
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Amon.tas.gn.v20211103
+cmip6_gn_r2i1p2f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r2i1p2f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p2f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p2f1.Amon.tas.gn.v20190429
+cmip6_gn_r3i1p1f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r3i1p1f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.Amon.tas.gn.v20190429
+cmip6_gn_r3i1p1f1_FGOALS-g3:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-g3.1pctCO2.r3i1p1f1.Amon.tas.gn.v20191222
+  - CMIP6.CMIP.CAS.FGOALS-g3.historical.r1i1p1f1.fx.areacella.gn.v20210615
+  - CMIP6.CMIP.CAS.FGOALS-g3.piControl.r1i1p1f1.Amon.tas.gn.v20190818
+cmip6_gn_r3i1p1f1_FIO-ESM-2-0:
+  cmip6:
+  - CMIP6.CMIP.FIO-QLNM.FIO-ESM-2-0.1pctCO2.r3i1p1f1.Amon.tas.gn.v20200302
+  - CMIP6.CMIP.FIO-QLNM.FIO-ESM-2-0.piControl.r1i1p1f1.Amon.tas.gn.v20191010
+cmip6_gn_r3i1p1f2_UKESM1-0-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r3i1p1f2.Amon.tas.gn.v20190604
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.piControl.r1i1p1f2.Amon.tas.gn.v20200828
+cmip6_gn_r3i1p1f3_HadGEM3-GC31-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.1pctCO2.r3i1p1f3.Amon.tas.gn.v20190821
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Amon.tas.gn.v20211103
+cmip6_gn_r3i1p2f1_CanESM5:
+  cmip6:
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r3i1p2f1.Amon.tas.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p2f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p2f1.Amon.tas.gn.v20190429
+cmip6_gn_r4i1p1f2_UKESM1-0-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r4i1p1f2.Amon.tas.gn.v20190604
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.piControl.r1i1p1f2.Amon.tas.gn.v20200828
+cmip6_gn_r4i1p1f3_HadGEM3-GC31-LL:
+  cmip6:
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.1pctCO2.r4i1p1f3.Amon.tas.gn.v20190821
+  - CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Amon.tas.gn.v20211103
+cmip6_gr1_r1i1p1f1_INM-CM4-8:
+  cmip6:
+  - CMIP6.CMIP.INM.INM-CM4-8.1pctCO2.r1i1p1f1.Amon.tas.gr1.v20190530
+  - CMIP6.CMIP.INM.INM-CM4-8.1pctCO2.r1i1p1f1.fx.areacella.gr1.v20190530
+  - CMIP6.CMIP.INM.INM-CM4-8.piControl.r1i1p1f1.Amon.tas.gr1.v20190605
+cmip6_gr1_r1i1p1f1_INM-CM5-0:
+  cmip6:
+  - CMIP6.CMIP.INM.INM-CM5-0.1pctCO2.r1i1p1f1.Amon.tas.gr1.v20200226
+  - CMIP6.CMIP.INM.INM-CM5-0.1pctCO2.r1i1p1f1.fx.areacella.gr1.v20190820
+  - CMIP6.CMIP.INM.INM-CM5-0.piControl.r1i1p1f1.Amon.tas.gr1.v20190619
+cmip6_gr1_r1i1p1f1_KIOST-ESM:
+  cmip6:
+  - CMIP6.CMIP.KIOST.KIOST-ESM.1pctCO2.r1i1p1f1.Amon.tas.gr1.v20210601
+  - CMIP6.CMIP.KIOST.KIOST-ESM.piControl.r1i1p1f1.Amon.tas.gr1.v20210329
+cmip6_gr_r1i1p1f1_E3SM-1-0:
+  cmip6:
+  - CMIP6.CMIP.E3SM-Project.E3SM-1-0.1pctCO2.r1i1p1f1.Amon.tas.gr.v20190718
+  - CMIP6.CMIP.E3SM-Project.E3SM-1-0.1pctCO2.r1i1p1f1.fx.areacella.gr.v20190919
+  - CMIP6.CMIP.E3SM-Project.E3SM-1-0.piControl.r1i1p1f1.Amon.tas.gr.v20190719
+  - CMIP6.DAMIP.E3SM-Project.E3SM-1-0.hist-GHG.r1i1p1f1.fx.areacella.gr.v20221014
+cmip6_gr_r1i1p1f1_E3SM-2-0:
+  cmip6:
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-0.1pctCO2.r1i1p1f1.Amon.tas.gr.v20220825
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-0.1pctCO2.r1i1p1f1.fx.areacella.gr.v20220913
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-0.piControl.r1i1p1f1.Amon.tas.gr.v20220913
+cmip6_gr_r1i1p1f1_E3SM-2-0-NARRM:
+  cmip6:
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-0-NARRM.1pctCO2.r1i1p1f1.Amon.tas.gr.v20230427
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-0-NARRM.1pctCO2.r1i1p1f1.fx.areacella.gr.v20231010
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-0-NARRM.piControl.r1i1p1f1.Amon.tas.gr.v20230505
+cmip6_gr_r1i1p1f1_E3SM-2-1:
+  cmip6:
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-1.1pctCO2.r1i1p1f1.Amon.tas.gr.v20240207
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-1.1pctCO2.r1i1p1f1.fx.areacella.gr.v20240625
+  - CMIP6.CMIP.E3SM-Project.E3SM-2-1.piControl.r1i1p1f1.Amon.tas.gr.v20240208
+cmip6_gr_r1i1p1f1_EC-Earth3-AerChem:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.1pctCO2.r1i1p1f1.Amon.tas.gr.v20200729
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.1pctCO2.r1i1p1f1.fx.areacella.gr.v20200729
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.piControl.r1i1p1f1.Amon.tas.gr.v20220621
+cmip6_gr_r1i1p1f1_EC-Earth3-CC:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.1pctCO2.r1i1p1f1.Amon.tas.gr.v20210525
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.1pctCO2.r1i1p1f1.fx.areacella.gr.v20210525
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.fx.areacella.gr.v20210616
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.piControl.r1i1p1f1.Amon.tas.gr.v20210330
+cmip6_gr_r1i1p1f1_EC-Earth3-Veg:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.1pctCO2.r1i1p1f1.Amon.tas.gr.v20200325
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.piControl.r1i1p1f1.Amon.tas.gr.v20210419
+cmip6_gr_r1i1p1f1_EC-Earth3-Veg-LR:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.1pctCO2.r1i1p1f1.Amon.tas.gr.v20220428
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.1pctCO2.r1i1p1f1.fx.areacella.gr.v20220428
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.piControl.r1i1p1f1.Amon.tas.gr.v20200213
+cmip6_gr_r1i1p1f1_FGOALS-f3-L:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.1pctCO2.r1i1p1f1.Amon.tas.gr.v20200620
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.piControl.r1i1p1f1.Amon.tas.gr.v20191029
+cmip6_gr_r1i1p1f1_IPSL-CM5A2-INCA:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.1pctCO2.r1i1p1f1.Amon.tas.gr.v20201218
+  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.1pctCO2.r1i1p1f1.fx.areacella.gr.v20201218
+  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.piControl.r1i1p1f1.Amon.tas.gr.v20210216
+cmip6_gr_r1i1p1f1_IPSL-CM6A-LR:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.1pctCO2.r1i1p1f1.Amon.tas.gr.v20180727
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.1pctCO2.r1i1p1f1.fx.areacella.gr.v20180727
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.fx.areacella.gr.v20180803
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.piControl.r1i1p1f1.Amon.tas.gr.v20200326
+cmip6_gr_r1i1p1f1_IPSL-CM6A-MR1:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-MR1.1pctCO2.r1i1p1f1.Amon.tas.gr.v20231229
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-MR1.1pctCO2.r1i1p1f1.fx.areacella.gr.v20231229
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-MR1.piControl.r1i1p1f1.Amon.tas.gr.v20231229
+cmip6_gr_r1i1p1f1_KACE-1-0-G:
+  cmip6:
+  - CMIP6.CMIP.NIMS-KMA.KACE-1-0-G.1pctCO2.r1i1p1f1.Amon.tas.gr.v20190916
+  - CMIP6.CMIP.NIMS-KMA.KACE-1-0-G.piControl.r1i1p1f1.Amon.tas.gr.v20191017
+cmip6_gr_r1i1p1f2_CNRM-CM6-1:
+  cmip6:
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.1pctCO2.r1i1p1f2.Amon.tas.gr.v20180626
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.1pctCO2.r1i1p1f2.fx.areacella.gr.v20180626
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.fx.areacella.gr.v20180917
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.piControl.r1i1p1f2.Amon.tas.gr.v20180814
+cmip6_gr_r1i1p1f2_CNRM-ESM2-1:
+  cmip6:
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.1pctCO2.r1i1p1f2.Amon.tas.gr.v20181018
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.1pctCO2.r1i1p1f2.fx.areacella.gr.v20181018
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.piControl.r1i1p1f2.Amon.tas.gr.v20181115
+cmip6_gr_r2i1p1f1_FGOALS-f3-L:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.1pctCO2.r2i1p1f1.Amon.tas.gr.v20200620
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.piControl.r1i1p1f1.Amon.tas.gr.v20191029
+cmip6_gr_r3i1p1f1_EC-Earth3:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3.1pctCO2.r3i1p1f1.Amon.tas.gr.v20210522
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3.historical.r1i1p1f1.fx.areacella.gr.v20210324
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3.piControl.r1i1p1f1.Amon.tas.gr.v20200312
+cmip6_gr_r3i1p1f1_FGOALS-f3-L:
+  cmip6:
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.1pctCO2.r3i1p1f1.Amon.tas.gr.v20200620
+  - CMIP6.CMIP.CAS.FGOALS-f3-L.piControl.r1i1p1f1.Amon.tas.gr.v20191029

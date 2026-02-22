@@ -24,8 +24,8 @@ authors:
 - family-names: "Xu"
   given-names: "Min"
   orcid: "https://orcid.org/0000-0003-3443-0300"
-version: 0.9.1
+version: 0.10.0
 doi: 10.5281/zenodo.15103441
-date-released: 2026-02-05
+date-released: 2026-02-10
 url: "https://github.com/Climate-REF/climate-ref"
 license: "Apache-2.0"

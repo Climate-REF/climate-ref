@@ -24,7 +24,7 @@ from climate_ref.solver import (
     solve_executions,
     solve_required_executions,
 )
-from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets, SelectParentExperiment
+from climate_ref_core.constraints import AddParentDataset, AddSupplementaryDataset, RequireFacets
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, FacetFilter
 from climate_ref_core.exceptions import InvalidDiagnosticException
@@ -246,35 +246,40 @@ class TestExtractCoveredDatasetsWithDataCatalog:
             DataRequirement(
                 source_type=SourceDatasetType.CMIP6,
                 filters=(FacetFilter(facets={"variable_id": ("tas", "pr")}),),
-                constraints=(SelectParentExperiment(),),
+                constraints=(AddParentDataset.from_defaults(SourceDatasetType.CMIP6),),
                 group_by=("variable_id", "experiment_id"),
             ),
             pd.DataFrame(
                 {
-                    "variable_id": ["tas", "tas"],
                     "experiment_id": ["ssp119", "historical"],
+                    "grid_label": ["gn", "gn"],
                     "parent_experiment_id": ["historical", "none"],
+                    "parent_source_id": ["A", "A"],
+                    "parent_variant_label": ["r1i1p1f1", "none"],
+                    "source_id": ["A", "A"],
+                    "table_id": ["Amon", "Amon"],
+                    "variable_id": ["tas", "tas"],
+                    "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+                    "version": ["v20210101", "v20220101"],
                 }
             ),
             {
                 (("variable_id", "tas"), ("experiment_id", "ssp119")): pd.DataFrame(
                     {
+                        "experiment_id": ["ssp119", "historical"],
+                        "grid_label": ["gn", "gn"],
+                        "parent_experiment_id": ["historical", "none"],
+                        "parent_source_id": ["A", "A"],
+                        "parent_variant_label": ["r1i1p1f1", "none"],
+                        "source_id": ["A", "A"],
+                        "table_id": ["Amon", "Amon"],
                         "variable_id": ["tas", "tas"],
-                        "experiment_id": ["historical", "ssp119"],
+                        "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20220101"],
                     },
-                    # The order of the rows is not guaranteed
-                    index=[1, 0],
-                ),
-                (("variable_id", "tas"), ("experiment_id", "historical")): pd.DataFrame(
-                    {
-                        "variable_id": ["tas", "tas"],
-                        "experiment_id": ["historical"],
-                    },
-                    # The order of the rows is not guaranteed
-                    index=[1, 0],
+                    index=[0, 1],
                 ),
             },
-            marks=[pytest.mark.xfail(reason="Parent experiment not implemented")],
             id="parent",
         ),
         pytest.param(
@@ -926,13 +931,15 @@ def test_solve_with_one_per_provider(
 def test_solve_with_one_per_diagnostic(
     db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor
 ):
-    # Create a mock solver that "solves" to create multiple executions with the same diagnostic
+    # Create a mock solver that "solves" to create multiple executions with the same diagnostic.
+    # The second execution has the same dataset hash as the first, so the in-progress guard
+    # in should_run will skip it (the first execution has successful=None).
     solver = mock.MagicMock(spec=ExecutionSolver)
     solver.solve.return_value = [mock_metric_execution, mock_metric_execution]
-    with caplog.at_level("INFO"):
+    with caplog.at_level("DEBUG"):
         solve_required_executions(db_seeded, solver=solver, one_per_diagnostic=True)
 
-    assert "Skipping execution due to one-of check" in caplog.text
+    assert "already has an in-progress execution" in caplog.text
 
     # Check that a result is created
     assert db_seeded.session.query(Execution).count() == 1

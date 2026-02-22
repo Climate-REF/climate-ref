@@ -21,6 +21,7 @@ preprocessors:
       operator: mean
     annual_statistics:
       operator: mean
+      keep_group_coordinates: true
   anomaly_base:
     area_statistics:
       operator: mean
@@ -43,7 +44,7 @@ diagnostics:
           exp: 1pctCO2
           grid: gn
           mip: Amon
-          timerange: 01580116T120000/01780116T120000
+          timerange: 0158/0177
       tas:
         preprocessor: spatial_mean
         additional_datasets:
@@ -55,7 +56,7 @@ diagnostics:
           exp: esm-1pct-brch-1000PgC
           grid: gn
           mip: Amon
-          timerange: 01680116T120000/02681216T120000
+          timerange: 0168/0267
     scripts:
       zec:
         script: climate_metrics/zec.py

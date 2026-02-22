@@ -14,6 +14,7 @@ from loguru import logger
 
 ignored_modules = [
     "climate_ref.executor.hpc",  # Optional dependencies not installed on Windows
+    "climate_ref.conftest_plugin",  # Requires pytest (optional via climate-ref[test])
 ]
 
 

@@ -136,7 +136,7 @@ def ingest(  # noqa
 
         # TODO: This assumes that all datasets are nc files.
         # This is true for CMIP6 and obs4MIPs but may not be true for other dataset types in the future.
-        if not list(_dir.rglob("*.nc")):
+        if not next(_dir.rglob("*.nc")):
             logger.error(f"No .nc files found in {_dir}")
             continue
 
@@ -144,7 +144,7 @@ def ingest(  # noqa
             data_catalog = adapter.find_local_datasets(_dir)
             data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
         except Exception as e:
-            logger.error(f"Error ingesting datasets from {_dir}: {e}")
+            logger.exception(f"Error ingesting datasets from {_dir}: {e}")
             continue
 
         if data_catalog.empty:

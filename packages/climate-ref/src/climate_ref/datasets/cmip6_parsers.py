@@ -10,8 +10,15 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-import xarray as xr
+import netCDF4
 from loguru import logger
+
+from climate_ref.datasets.netcdf_utils import (
+    read_global_attrs,
+    read_time_bounds,
+    read_variable_attrs,
+    read_vertical_levels,
+)
 
 
 def extract_attr_with_regex(
@@ -206,30 +213,19 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
     )
 
     try:
-        with xr.open_dataset(file, chunks={}, use_cftime=True) as ds:
-            info = {key: ds.attrs.get(key) for key in keys}
+        with netCDF4.Dataset(file, "r") as ds:
+            info = read_global_attrs(ds, keys)
             info["member_id"] = info["variant_label"]
 
             variable_id = info["variable_id"]
             if variable_id:  # pragma: no branch
-                attrs = ds[variable_id].attrs
-                for attr in ["standard_name", "long_name", "units"]:
-                    info[attr] = attrs.get(attr)
+                var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
+                info.update(var_attrs)
 
-            # Set the default of # of vertical levels to 1
-            vertical_levels = 1
+            vertical_levels = read_vertical_levels(ds)
+            start_time, end_time = read_time_bounds(ds)
+
             init_year = None
-            for dim_name in ("lev", "plev", "olevel", "height", "depth", "level", "altitude"):
-                if dim_name in ds.dims:
-                    vertical_levels = ds.sizes[dim_name]
-                    break
-
-            start_time, end_time = None, None
-            if "time" in ds:
-                time = ds["time"]
-                if len(time) > 0:
-                    start_time = str(time.values[0])
-                    end_time = str(time.values[-1])
             if info.get("sub_experiment_id"):  # pragma: no branch
                 init_year_str = extract_attr_with_regex(str(info["sub_experiment_id"]), r"\d{4}")
                 if init_year_str:  # pragma: no cover

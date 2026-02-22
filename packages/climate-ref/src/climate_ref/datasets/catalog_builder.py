@@ -13,6 +13,7 @@ from typing import Any
 
 import pandas as pd
 from loguru import logger
+from tqdm import tqdm
 
 from climate_ref.datasets.base import DatasetParsingFunction
 
@@ -96,24 +97,14 @@ def _parse_files(
     :
         List of parsed metadata dictionaries
     """
-    total = len(assets)
-
     if n_jobs == 1:
-        results: list[dict[str, Any]] = []
-        for i, asset in enumerate(assets, 1):
-            results.append(parsing_func(asset))
-            if i % 100 == 0 or i == total:
-                logger.info(f"Parsed {i}/{total} files")
-        return results
+        return [parsing_func(asset) for asset in tqdm(assets, desc="Parsing files", unit="file")]
 
     max_workers = None if n_jobs == -1 else n_jobs
-    results = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        for i, result in enumerate(executor.map(parsing_func, assets), 1):
-            results.append(result)
-            if i % 100 == 0 or i == total:
-                logger.info(f"Parsed {i}/{total} files")
-    return results
+        return list(
+            tqdm(executor.map(parsing_func, assets), total=len(assets), desc="Parsing files", unit="file")
+        )
 
 
 def build_catalog(

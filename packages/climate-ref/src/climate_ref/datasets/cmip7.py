@@ -7,16 +7,15 @@ Adapter for parsing and registering CMIP7 datasets based on CMIP7 Global Attribu
 from __future__ import annotations
 
 import traceback
-import warnings
 from pathlib import Path
 from typing import Any
 
 import pandas as pd
 import xarray as xr
-from ecgtools import Builder
 
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP7Dataset
 
@@ -201,18 +200,13 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
-        with warnings.catch_warnings():
-            # Ignore the DeprecationWarning from xarray
-            warnings.simplefilter("ignore", DeprecationWarning)
-
-            builder = Builder(
-                paths=[str(file_or_directory)],
-                depth=10,
-                include_patterns=["*.nc"],
-                joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-            ).build(parsing_func=parse_cmip7_file)
-
-        datasets: pd.DataFrame = builder.df
+        datasets = build_catalog(
+            paths=[str(file_or_directory)],
+            parsing_func=parse_cmip7_file,
+            include_patterns=["*.nc"],
+            depth=10,
+            n_jobs=self.n_jobs,
+        )
 
         # Convert the start_time and end_time columns to datetime objects
         if "start_time" in datasets.columns:

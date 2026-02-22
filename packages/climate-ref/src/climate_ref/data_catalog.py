@@ -1,9 +1,9 @@
 """
-DataCatalog wrapper for lazy loading and finalization of dataset catalogs.
+DataCatalog wrapper for lazy loading and finalisation of dataset catalogs.
 
 This module provides a wrapper around pandas DataFrames that supports:
 - Lazy loading of dataset catalogs from the database
-- Lazy finalization of unfinalised datasets at solve time
+- Lazy finalisation of unfinalised datasets at solve time
 """
 
 from __future__ import annotations
@@ -15,27 +15,52 @@ from loguru import logger
 from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
+from climate_ref_core.exceptions import RefException
 
 
 @define
 class DataCatalog:
     """
-    Wrapper around a dataset catalog DataFrame that supports lazy loading and lazy finalization.
+    Wrapper around a dataset catalog DataFrame that supports lazy loading and lazy finalisation.
 
     This replaces the raw pd.DataFrame in the solver's data_catalog dict,
     enabling two-phase ingestion where datasets are first bootstrapped from
-    DRS metadata and only finalized (full file I/O) when needed.
+    DRS metadata and only finalised when needed.
+
+    This lowers the amount of file I/O needed.
     """
 
-    database: Database
-    adapter: DatasetAdapter
+    database: Database | None
+    adapter: DatasetAdapter | None
     _df: pd.DataFrame | None = None
+
+    @staticmethod
+    def from_frame(df: pd.DataFrame) -> DataCatalog:
+        """
+        Create a DataCatalog from an existing DataFrame, bypassing lazy loading.
+
+        This is useful for testing or when the catalog is already loaded.
+
+        Parameters
+        ----------
+        df
+            The DataFrame to use as the catalog
+
+        Returns
+        -------
+        :
+            A DataCatalog instance with the given DataFrame as its catalog
+        """
+        return DataCatalog(database=None, adapter=None, df=df)
 
     def to_frame(self) -> pd.DataFrame:
         """
         Get the catalog as a DataFrame, lazily loading from DB on first access.
         """
         if self._df is None:
+            if self.adapter is None or self.database is None:
+                raise RefException("Cannot load catalog: adapter and database must be provided")
+
             self._df = self.adapter.load_catalog(self.database)
         return self._df
 
@@ -59,6 +84,9 @@ class DataCatalog:
         """
         if not isinstance(self.adapter, FinaliseableDatasetAdapterMixin):
             return subset
+
+        if self.database is None:  # type: ignore[unreachable]
+            raise RefException("Cannot finalise datasets: database must be provided")
 
         has_unfinalised = (
             "finalised" in subset.columns and (subset["finalised"] == False).any()  # noqa: E712

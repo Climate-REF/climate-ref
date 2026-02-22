@@ -12,7 +12,7 @@ class FinaliseableDatasetAdapterMixin:
     Mixin for dataset adapters that support two-phase ingestion.
 
     Phase 1 (bootstrap): Fast ingestion from directory/filename metadata only.
-    Phase 2 (finalization): Open files to extract full metadata for a subset.
+    Phase 2 (finalisation): Open files to extract full metadata for a subset.
     """
 
     def finalise_datasets(self, db: Database, datasets: pd.DataFrame) -> pd.DataFrame:

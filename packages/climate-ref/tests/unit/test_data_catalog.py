@@ -115,8 +115,15 @@ class TestDataCatalogFinalise:
         finalised_result["finalised"] = True
         mock_finaliseable_adapter.finalise_datasets.return_value = finalised_result
 
+        # After finalise_datasets writes to DB, subsequent load_catalog
+        # calls should return the updated state
+        mock_finaliseable_adapter.load_catalog.return_value = pd.DataFrame(
+            {"variable_id": ["tas", "pr"], "finalised": [True, True]}
+        )
+
         catalog.finalise(subset)
 
-        # The cached DataFrame should have been updated
+        # The cache was invalidated, so to_frame() reloads from DB
+        # which now reflects the finalised state
         updated_cache = catalog.to_frame()
         assert updated_cache["finalised"].all()

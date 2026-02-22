@@ -84,7 +84,7 @@ class TestMetricSolver:
 
 
 class TestExtractCoveredDatasetsWithDataCatalog:
-    """Test that extract_covered_datasets triggers finalization when given a DataCatalog."""
+    """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""
 
     def test_finalise_called_for_unfinalised_groups(self):
         """When a DataCatalog has unfinalised data, finalise() is called per group."""
@@ -110,12 +110,12 @@ class TestExtractCoveredDatasetsWithDataCatalog:
 
         mock_catalog.finalise.assert_called()
         assert len(result) == 1
-        # The finalized group should have finalised=True
+        # The finalised group should have finalised=True
         group_df = next(iter(result.values()))
         assert group_df["finalised"].all()
 
     def test_finalise_not_called_for_raw_dataframe(self):
-        """When a raw DataFrame is passed, no finalization is attempted."""
+        """When a raw DataFrame is passed, no finalisation is attempted."""
         catalog_df = pd.DataFrame(
             {
                 "variable_id": ["tas"],

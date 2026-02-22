@@ -121,7 +121,7 @@ def extract_covered_datasets(
     Determine the different diagnostic executions that should be performed with the current data catalog
     """
     # Resolve the DataCatalog to a DataFrame for filtering, but keep the
-    # original reference for finalization calls later.
+    # original reference for finalisation calls later.
     if isinstance(data_catalog, DataCatalog):
         data_catalog_source: DataCatalog | None = data_catalog
         catalog_df: pd.DataFrame = data_catalog.to_frame()
@@ -156,9 +156,9 @@ def extract_covered_datasets(
 
         # Finalise unfinalised datasets in this group before applying constraints.
         # This ensures that time-range constraints have access to full metadata.
-        finalized_group = data_catalog_source.finalise(group) if data_catalog_source is not None else group
+        finalised_group = data_catalog_source.finalise(group) if data_catalog_source is not None else group
 
-        constrained_group = _process_group_constraints(catalog_df, finalized_group, requirement)
+        constrained_group = _process_group_constraints(catalog_df, finalised_group, requirement)
 
         if constrained_group is not None:
             results[group_keys] = constrained_group

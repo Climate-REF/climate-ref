@@ -96,12 +96,24 @@ def _parse_files(
     :
         List of parsed metadata dictionaries
     """
+    total = len(assets)
+
     if n_jobs == 1:
-        return [parsing_func(asset) for asset in assets]
+        results: list[dict[str, Any]] = []
+        for i, asset in enumerate(assets, 1):
+            results.append(parsing_func(asset))
+            if i % 100 == 0 or i == total:
+                logger.info(f"Parsed {i}/{total} files")
+        return results
 
     max_workers = None if n_jobs == -1 else n_jobs
+    results = []
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
-        return list(executor.map(parsing_func, assets))
+        for i, result in enumerate(executor.map(parsing_func, assets), 1):
+            results.append(result)
+            if i % 100 == 0 or i == total:
+                logger.info(f"Parsed {i}/{total} files")
+    return results
 
 
 def build_catalog(
@@ -147,6 +159,8 @@ def build_catalog(
     if not assets:
         raise ValueError(f"No files matching {include_patterns} found in {paths}")
 
+    logger.info(f"Discovered {len(assets)} files matching {include_patterns} in {paths}")
+
     entries = _parse_files(assets, parsing_func, n_jobs=n_jobs)
     df = pd.DataFrame(entries)
 
@@ -161,5 +175,7 @@ def build_catalog(
             for _, row in invalid.iterrows():
                 logger.warning(f"Invalid asset: {row[INVALID_ASSET]}")
         df = df[df[INVALID_ASSET].isnull()].drop(columns=[INVALID_ASSET, TRACEBACK])
+
+    logger.info(f"Built catalog with {len(df)} valid entries ({len(assets) - len(df)} invalid)")
 
     return df

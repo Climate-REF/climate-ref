@@ -10,8 +10,15 @@ import traceback
 from pathlib import Path
 from typing import Any
 
-import xarray as xr
+import netCDF4
 from loguru import logger
+
+from climate_ref.datasets.netcdf_utils import (
+    read_global_attrs,
+    read_time_bounds,
+    read_variable_attrs,
+    read_vertical_levels,
+)
 
 # Mapping from CMIP6 table_id to frequency
 # This allows the DRS parser to infer frequency without opening netCDF files.
@@ -248,30 +255,19 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
     )
 
     try:
-        with xr.open_dataset(file, chunks={}, use_cftime=True) as ds:
-            info = {key: ds.attrs.get(key) for key in keys}
+        with netCDF4.Dataset(file, "r") as ds:
+            info = read_global_attrs(ds, keys)
             info["member_id"] = info["variant_label"]
 
             variable_id = info["variable_id"]
             if variable_id:  # pragma: no branch
-                attrs = ds[variable_id].attrs
-                for attr in ["standard_name", "long_name", "units"]:
-                    info[attr] = attrs.get(attr)
+                var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
+                info.update(var_attrs)
 
-            # Set the default of # of vertical levels to 1
-            vertical_levels = 1
+            vertical_levels = read_vertical_levels(ds)
+            start_time, end_time = read_time_bounds(ds)
+
             init_year = None
-            for dim_name in ("lev", "plev", "olevel", "height", "depth", "level", "altitude"):
-                if dim_name in ds.dims:
-                    vertical_levels = ds.sizes[dim_name]
-                    break
-
-            start_time, end_time = None, None
-            if "time" in ds:
-                time = ds["time"]
-                if len(time) > 0:
-                    start_time = str(time.values[0])
-                    end_time = str(time.values[-1])
             if info.get("sub_experiment_id"):  # pragma: no branch
                 init_year_str = extract_attr_with_regex(str(info["sub_experiment_id"]), r"\d{4}")
                 if init_year_str:  # pragma: no cover
@@ -337,11 +333,11 @@ def parse_cmip6_drs(file: str, **kwargs: Any) -> dict[str, Any]:
         info["start_time"] = start_time
         info["end_time"] = end_time
 
-    info["finalised"] = False
-
     # Infer frequency from table_id when available
     table_id = info.get("table_id")
     if table_id:
         info["frequency"] = TABLE_ID_TO_FREQUENCY.get(table_id)
+
+    info["finalised"] = False
 
     return info

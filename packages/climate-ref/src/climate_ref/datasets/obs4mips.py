@@ -4,17 +4,23 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+import netCDF4
 import pandas as pd
-import xarray as xr
 from loguru import logger
 
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.netcdf_utils import (
+    read_global_attrs,
+    read_time_bounds,
+    read_variable_attrs,
+    read_vertical_levels,
+)
 from climate_ref.datasets.utils import parse_datetime
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset
 
 
-def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:  # noqa: PLR0912
+def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
     """
     Parser for obs4mips
 
@@ -46,38 +52,27 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:  # noqa: PLR0912
     )
 
     try:
-        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-        with xr.open_dataset(file, chunks={}, decode_times=time_coder) as ds:
-            if ds.attrs.get("activity_id", "") != "obs4MIPs":
+        with netCDF4.Dataset(file, "r") as ds:
+            if getattr(ds, "activity_id", "") != "obs4MIPs":
                 traceback_message = f"{file} is not an obs4MIPs dataset"
                 raise TypeError(traceback_message)
 
-            has_none_value = any(ds.attrs.get(key) is None for key in keys)
-            if has_none_value:
-                missing_fields = [key for key in keys if ds.attrs.get(key) is None]
+            global_attrs = read_global_attrs(ds, keys)
+            missing_fields = [key for key in keys if global_attrs.get(key) is None]
+
+            if missing_fields:
                 traceback_message = str(missing_fields) + " are missing from the file metadata"
                 raise AttributeError(traceback_message)
-            info = {key: ds.attrs.get(key) for key in keys}
+            info = {**global_attrs}
 
-            variable_id = info["variable_id"]
+            variable_id = global_attrs["variable_id"]
 
             if variable_id:
-                attrs = ds[variable_id].attrs
-                for attr in ["long_name", "units"]:
-                    info[attr] = attrs.get(attr)
+                var_attrs = read_variable_attrs(ds, variable_id, ["long_name", "units"])
+                info.update(var_attrs)
 
-            # Set the default of # of vertical levels to 1
-            vertical_levels = 1
-            start_time, end_time = None, None
-            for dim_name in ("lev", "plev", "olevel", "height", "depth", "level", "altitude"):
-                if dim_name in ds.dims:
-                    vertical_levels = ds.sizes[dim_name]
-                    break
-            if "time" in ds:
-                time = ds["time"]
-                if len(time) > 0:
-                    start_time = str(time.values[0])
-                    end_time = str(time.values[-1])
+            vertical_levels = read_vertical_levels(ds)
+            start_time, end_time = read_time_bounds(ds)
 
             info["vertical_levels"] = vertical_levels
             info["start_time"] = start_time
@@ -91,7 +86,7 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:  # noqa: PLR0912
         # do not include "v" in the version directory name.
         # TODO: fix obs4REF paths
         info["version"] = Path(file).parent.name
-        if not info["version"].startswith("v"):  # type: ignore[union-attr]
+        if not info["version"].startswith("v"):
             info["version"] = "v{version}".format(**info)
         return info
 
@@ -190,12 +185,14 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             self.version_metadata,
         ]
         datasets["instance_id"] = datasets.apply(
-            lambda row: "obs4MIPs."
-            + ".".join(
-                [
-                    row[item].replace(" ", "") if item == "nominal_resolution" else row[item]
-                    for item in drs_items
-                ]
+            lambda row: (
+                "obs4MIPs."
+                + ".".join(
+                    [
+                        row[item].replace(" ", "") if item == "nominal_resolution" else row[item]
+                        for item in drs_items
+                    ]
+                )
             ),
             axis=1,
         )

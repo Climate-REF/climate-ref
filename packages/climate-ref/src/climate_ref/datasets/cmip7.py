@@ -10,12 +10,13 @@ import traceback
 from pathlib import Path
 from typing import Any
 
+import netCDF4
 import pandas as pd
-import xarray as xr
 
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.netcdf_utils import read_time_bounds, read_variable_attrs
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP7Dataset
 
@@ -35,67 +36,50 @@ def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
         Dictionary of metadata extracted from the file
     """
     try:
-        with xr.open_dataset(file, use_cftime=True) as ds:
-            attrs = ds.attrs
+        with netCDF4.Dataset(file, "r") as ds:
+            start_time, end_time = read_time_bounds(ds)
 
-            # Extract time bounds if available
-            start_time = None
-            end_time = None
-            if "time" in ds:
-                time = ds["time"]
-                if len(time) > 0:
-                    start_time = str(time.values[0])
-                    end_time = str(time.values[-1])
-
-            # Get variable metadata from the data variable
-            variable_id = attrs.get("variable_id", "")
-            standard_name = None
-            long_name = None
-            units = None
-            if variable_id and variable_id in ds:
-                var = ds[variable_id]
-                standard_name = var.attrs.get("standard_name")
-                long_name = var.attrs.get("long_name")
-                units = var.attrs.get("units")
+            variable_id = getattr(ds, "variable_id", "")
+            var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
 
             return {
                 # Core DRS attributes
-                "activity_id": attrs.get("activity_id", ""),
-                "institution_id": attrs.get("institution_id", ""),
-                "source_id": attrs.get("source_id", ""),
-                "experiment_id": attrs.get("experiment_id", ""),
-                "variant_label": attrs.get("variant_label", ""),
+                "activity_id": getattr(ds, "activity_id", ""),
+                "institution_id": getattr(ds, "institution_id", ""),
+                "source_id": getattr(ds, "source_id", ""),
+                "experiment_id": getattr(ds, "experiment_id", ""),
+                "variant_label": getattr(ds, "variant_label", ""),
                 "variable_id": variable_id,
-                "grid_label": attrs.get("grid_label", ""),
-                "frequency": attrs.get("frequency", ""),
-                "region": attrs.get("region", "glb"),
-                "branding_suffix": attrs.get("branding_suffix", ""),
-                "branded_variable": attrs.get("branded_variable", ""),
-                "out_name": attrs.get("out_name", ""),
-                "version": attrs.get("version", ""),
+                "grid_label": getattr(ds, "grid_label", ""),
+                "frequency": getattr(ds, "frequency", ""),
+                "region": getattr(ds, "region", "glb"),
+                "branding_suffix": getattr(ds, "branding_suffix", ""),
+                "branded_variable": getattr(ds, "branded_variable", ""),
+                "out_name": getattr(ds, "out_name", ""),
+                "version": getattr(ds, "version", ""),
                 # Additional mandatory attributes
-                "mip_era": attrs.get("mip_era", "CMIP7"),
-                "realm": attrs.get("realm"),
-                "nominal_resolution": attrs.get("nominal_resolution"),
+                "mip_era": getattr(ds, "mip_era", "CMIP7"),
+                "realm": getattr(ds, "realm", None),
+                "nominal_resolution": getattr(ds, "nominal_resolution", None),
                 # Parent info (nullable)
-                "branch_time_in_child": attrs.get("branch_time_in_child"),
-                "branch_time_in_parent": attrs.get("branch_time_in_parent"),
-                "parent_activity_id": attrs.get("parent_activity_id"),
-                "parent_experiment_id": attrs.get("parent_experiment_id"),
-                "parent_mip_era": attrs.get("parent_mip_era"),
-                "parent_source_id": attrs.get("parent_source_id"),
-                "parent_time_units": attrs.get("parent_time_units"),
-                "parent_variant_label": attrs.get("parent_variant_label"),
+                "branch_time_in_child": getattr(ds, "branch_time_in_child", None),
+                "branch_time_in_parent": getattr(ds, "branch_time_in_parent", None),
+                "parent_activity_id": getattr(ds, "parent_activity_id", None),
+                "parent_experiment_id": getattr(ds, "parent_experiment_id", None),
+                "parent_mip_era": getattr(ds, "parent_mip_era", None),
+                "parent_source_id": getattr(ds, "parent_source_id", None),
+                "parent_time_units": getattr(ds, "parent_time_units", None),
+                "parent_variant_label": getattr(ds, "parent_variant_label", None),
                 # Additional mandatory attributes
-                "license_id": attrs.get("license_id"),
+                "license_id": getattr(ds, "license_id", None),
                 # Conditionally required attributes
-                "external_variables": attrs.get("external_variables"),
+                "external_variables": getattr(ds, "external_variables", None),
                 # Variable metadata
-                "standard_name": standard_name,
-                "long_name": long_name,
-                "units": units,
+                "standard_name": var_attrs["standard_name"],
+                "long_name": var_attrs["long_name"],
+                "units": var_attrs["units"],
                 # File-level metadata
-                "tracking_id": attrs.get("tracking_id"),
+                "tracking_id": getattr(ds, "tracking_id", None),
                 # Time information
                 "start_time": start_time,
                 "end_time": end_time,

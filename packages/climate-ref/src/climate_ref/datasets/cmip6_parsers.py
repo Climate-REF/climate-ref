@@ -218,17 +218,18 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
 
             # Set the default of # of vertical levels to 1
             vertical_levels = 1
-            start_time, end_time = None, None
             init_year = None
-            try:
-                vertical_levels = ds[ds.cf["vertical"].name].size
-            except (KeyError, AttributeError, ValueError):
-                ...
+            for dim_name in ("lev", "plev", "olevel", "height", "depth", "level", "altitude"):
+                if dim_name in ds.dims:
+                    vertical_levels = ds.sizes[dim_name]
+                    break
 
-            try:
-                start_time, end_time = str(ds.cf["T"][0].data), str(ds.cf["T"][-1].data)
-            except (KeyError, AttributeError, ValueError):
-                ...
+            start_time, end_time = None, None
+            if "time" in ds:
+                time = ds["time"]
+                if len(time) > 0:
+                    start_time = str(time.values[0])
+                    end_time = str(time.values[-1])
             if info.get("sub_experiment_id"):  # pragma: no branch
                 init_year_str = extract_attr_with_regex(str(info["sub_experiment_id"]), r"\d{4}")
                 if init_year_str:  # pragma: no cover

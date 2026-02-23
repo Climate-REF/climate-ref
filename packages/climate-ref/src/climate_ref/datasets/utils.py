@@ -19,9 +19,13 @@ def parse_datetime(dt_str: pd.Series[str]) -> pd.Series[datetime | Any]:
     Pandas tries to coerce everything to their own datetime format, which is not what we want here.
     """
 
-    def _inner(date_string: str | None) -> datetime | None:
-        if not date_string or pd.isnull(date_string):
+    def _inner(date_string: str | datetime | None) -> datetime | None:
+        if date_string is None or (not isinstance(date_string, datetime) and pd.isnull(date_string)):
             return None
+
+        # Already parsed — return as-is
+        if isinstance(date_string, datetime):
+            return date_string
 
         # Try to parse the date string with and without milliseconds
         for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"):

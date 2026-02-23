@@ -1,7 +1,7 @@
 # Ingest Datasets
 
 Ingestion extracts metadata from your locally downloaded datasets and stores it in a local catalog for easy querying and filtering.
-This makes subsequent operations, such as running diagnostics, more efficient as the system can quickly access the necessary metadata without needing to reprocess the files.
+This makes subsequent operations, such as running diagnostics, more efficient as the system can quickly access the necessary metadata without needing to re-read the files.
 
 Before you begin, ensure you have:
 
@@ -27,7 +27,7 @@ ref datasets ingest --source-type cmip6 /path/to/cmip6/data
 ```
 
 [Globbed-style](https://en.wikipedia.org/wiki/Glob_(programming)) paths can be used to specify multiple directories or file patterns.
-For example, if you have CMIP6 data organized by the CMIP6 DRS,
+For example, if you have CMIP6 data organised by the CMIP6 DRS,
 you can use the following command to ingest all monthly and ancillary variables:
 
 ```bash

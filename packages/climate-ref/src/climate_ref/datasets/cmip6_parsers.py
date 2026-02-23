@@ -20,6 +20,48 @@ from climate_ref.datasets.netcdf_utils import (
     read_vertical_levels,
 )
 
+# Mapping from CMIP6 table_id to frequency
+# This allows the DRS parser to infer frequency without opening netCDF files.
+# See https://wcrp-cmip.github.io/WGCM_Infrastructure_Panel/CMIP6/
+# Future: replace with ESG Voc controlled vocabulary integration
+TABLE_ID_TO_FREQUENCY: dict[str, str] = {
+    "Amon": "mon",
+    "Omon": "mon",
+    "Lmon": "mon",
+    "LImon": "mon",
+    "SImon": "mon",
+    "AERmon": "mon",
+    "CFmon": "mon",
+    "Emon": "mon",
+    "Ofx": "fx",
+    "fx": "fx",
+    "day": "day",
+    "Eday": "day",
+    "CFday": "day",
+    "Oyr": "yr",
+    "Eyr": "yr",
+    "3hr": "3hr",
+    "E3hr": "3hr",
+    "CF3hr": "3hr",
+    "6hrLev": "6hr",
+    "6hrPlev": "6hr",
+    "6hrPlevPt": "6hr",
+    "1hr": "1hr",
+    "Oclim": "monC",
+    "Aclim": "monC",
+    "Efx": "fx",
+    "Lfx": "fx",
+    "SIfx": "fx",
+    "AERfx": "fx",
+    "EdayZ": "day",
+    "AmonZ": "mon",
+    "EmonZ": "mon",
+    "Oday": "day",
+    "OmonC": "monC",
+    "IyrAnt": "yr",
+    "IyrGre": "yr",
+}
+
 
 def extract_attr_with_regex(
     input_str: str,
@@ -136,10 +178,15 @@ def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
 
     The output from this is an estimated date range until the file is completely parsed.
 
+    Supports CMIP6 filename date formats:
+    - YYYYMM-YYYYMM (6 chars, monthly)
+    - YYYYMMDD-YYYYMMDD (8 chars, daily)
+    - YYYYMMDDhhmm-YYYYMMDDhhmm (12 chars, sub-daily)
+
     Parameters
     ----------
     date_range
-        Date range string in the format "YYYYMM-YYYYMM"
+        Date range string
 
     Returns
     -------
@@ -148,15 +195,28 @@ def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
     """
     try:
         start, end = date_range.split("-")
-        if len(start) != 6 or len(end) != 6:  # noqa: PLR2004
-            raise ValueError("Date range must be in the format 'YYYYMM-YYYYMM'")
+        if len(start) != len(end):
+            raise ValueError(f"Mismatched date component lengths: {len(start)} vs {len(end)}")
 
-        start = f"{start[:4]}-{start[4:6]}-01"
-        # Up to the 30th of the month, assuming a 30-day month
-        # These values will be corrected later when the file is parsed
-        end = f"{end[:4]}-{end[4:6]}-30"
+        if len(start) == 6:  # noqa: PLR2004
+            # YYYYMM — monthly resolution
+            # CMIP6 results typical report on the 16th of the month, but I'm not sure if that is guaranteed
+            start_date = f"{start[:4]}-{start[4:6]}-01"
+            # Up to the 30th of the month, assuming a 30-day month
+            # These values will be corrected later when the file is parsed
+            end_date = f"{end[:4]}-{end[4:6]}-30"
+        elif len(start) == 8:  # noqa: PLR2004
+            # YYYYMMDD — daily resolution
+            start_date = f"{start[:4]}-{start[4:6]}-{start[6:8]}"
+            end_date = f"{end[:4]}-{end[4:6]}-{end[6:8]}"
+        elif len(start) == 12:  # noqa: PLR2004
+            # YYYYMMDDhhmm — sub-daily resolution (time-of-day ignored for date estimate)
+            start_date = f"{start[:4]}-{start[4:6]}-{start[6:8]}"
+            end_date = f"{end[:4]}-{end[4:6]}-{end[6:8]}"
+        else:
+            raise ValueError(f"Unsupported date component length: {len(start)}")
 
-        return start, end
+        return start_date, end_date
     except ValueError:
         logger.error(f"Invalid date range format: {date_range}")
         return None, None
@@ -290,6 +350,11 @@ def parse_cmip6_drs(file: str, **kwargs: Any) -> dict[str, Any]:
         start_time, end_time = _parse_daterange(info["time_range"])
         info["start_time"] = start_time
         info["end_time"] = end_time
+
+    # Infer frequency from table_id when available
+    table_id = info.get("table_id")
+    if table_id:
+        info["frequency"] = TABLE_ID_TO_FREQUENCY.get(table_id)
 
     info["finalised"] = False
 

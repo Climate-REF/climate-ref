@@ -278,6 +278,48 @@ class SolveFilterOptions:
     """
     Check if the provider slug contains any of the provided values
     """
+    dataset: dict[str, list[str]] | None = None
+    """
+    Filter datasets by facet values before solving.
+
+    Keys are facet names (e.g. ``source_id``, ``variable_id``) and values are
+    lists of allowed values.  Different facets are ANDed together; multiple
+    values for the same facet are ORed.
+    """
+
+
+def apply_dataset_filters(
+    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+    dataset_filters: dict[str, list[str]],
+) -> dict[SourceDatasetType, pd.DataFrame]:
+    """
+    Filter data catalogs by facet values
+
+    Each facet filter is applied independently to each data catalog.
+    Different facets are ANDed together; multiple values for the same facet are ORed.
+    Facets that do not exist as columns in a given catalog are skipped for that catalog.
+
+    Parameters
+    ----------
+    data_catalog
+        Data catalogs keyed by source dataset type
+    dataset_filters
+        Mapping of facet names to lists of allowed values
+
+    Returns
+    -------
+    :
+        Filtered data catalogs
+    """
+    filtered = {}
+    for source_type, catalog in data_catalog.items():
+        mask = pd.Series(True, index=catalog.index)
+        for facet, values in dataset_filters.items():
+            if facet not in catalog.columns:
+                continue
+            mask &= catalog[facet].isin(values)
+        filtered[source_type] = catalog[mask]
+    return filtered
 
 
 def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -> bool:
@@ -364,6 +406,10 @@ class ExecutionSolver:
         DiagnosticExecution
             A class containing the information related to the execution of a diagnostic
         """
+        data_catalog = self.data_catalog
+        if filters and filters.dataset:
+            data_catalog = apply_dataset_filters(data_catalog, filters.dataset)
+
         for provider in self.provider_registry.providers:
             for diagnostic in provider.diagnostics():
                 # Filter the diagnostic based on the provided filters
@@ -371,7 +417,7 @@ class ExecutionSolver:
                     logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
                     continue
                 try:
-                    yield from solve_executions(self.data_catalog, diagnostic, provider)
+                    yield from solve_executions(data_catalog, diagnostic, provider)
                 except InvalidDiagnosticException as e:
                     # Skip diagnostics that don't have matching data
                     logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")

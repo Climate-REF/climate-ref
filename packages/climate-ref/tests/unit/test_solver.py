@@ -16,6 +16,7 @@ from climate_ref.solver import (
     DiagnosticExecution,
     ExecutionSolver,
     SolveFilterOptions,
+    apply_dataset_filters,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
@@ -1207,3 +1208,154 @@ def test_extract_covered_datasets_no_matching_filter():
     )
     result = extract_covered_datasets(data_catalog, requirement)
     assert result == {}
+
+
+class TestApplyDatasetFilters:
+    """Tests for the apply_dataset_filters function."""
+
+    def test_single_facet_single_value(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "tas"],
+                    "source_id": ["ACCESS-CM2", "ACCESS-CM2", "CESM2"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"source_id": ["ACCESS-CM2"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+        assert result[SourceDatasetType.CMIP6]["source_id"].unique().tolist() == ["ACCESS-CM2"]
+
+    def test_single_facet_multiple_values(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "hfls"],
+                    "source_id": ["A", "B", "C"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas", "pr"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+        assert sorted(result[SourceDatasetType.CMIP6]["variable_id"].tolist()) == ["pr", "tas"]
+
+    def test_multiple_facets_anded(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "tas", "pr"],
+                    "source_id": ["ACCESS-CM2", "CESM2", "ACCESS-CM2"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"], "source_id": ["ACCESS-CM2"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        row = result[SourceDatasetType.CMIP6].iloc[0]
+        assert row["variable_id"] == "tas"
+        assert row["source_id"] == "ACCESS-CM2"
+
+    def test_facet_not_in_catalog_skipped(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+        }
+        # experiment_id is not a column; should be skipped, leaving all rows
+        result = apply_dataset_filters(data_catalog, {"experiment_id": ["ssp126"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+
+    def test_filters_applied_per_source_type(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+            SourceDatasetType.obs4MIPs: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "hfls"],
+                    "source_id": ["ERA-5", "GPCP", "ERA-5"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        assert result[SourceDatasetType.CMIP6]["variable_id"].iloc[0] == "tas"
+        assert len(result[SourceDatasetType.obs4MIPs]) == 1
+        assert result[SourceDatasetType.obs4MIPs]["variable_id"].iloc[0] == "tas"
+
+    def test_no_matches_returns_empty(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["nonexistent"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 0
+
+    def test_empty_catalog_returns_empty(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(columns=["variable_id", "source_id"]),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 0
+
+
+def test_solver_solve_with_dataset_filters(aft_solver):
+    """Test that dataset filters reduce the executions produced by the solver."""
+    # Unfiltered baseline
+    all_executions = list(aft_solver.solve())
+    assert len(all_executions) > 0
+
+    # Filter to a single variable that exists in the test data
+    variable_id = aft_solver.data_catalog[SourceDatasetType.CMIP6]["variable_id"].iloc[0]
+    filtered = list(aft_solver.solve(filters=SolveFilterOptions(dataset={"variable_id": [variable_id]})))
+
+    # Filtered set should be smaller (or equal if all diagnostics only use that variable)
+    assert len(filtered) <= len(all_executions)
+    assert len(filtered) > 0
+
+    # All CMIP6 datasets in filtered executions should contain only the filtered variable
+    for execution in filtered:
+        if SourceDatasetType.CMIP6 in execution.datasets:
+            variables = execution.datasets[SourceDatasetType.CMIP6].datasets["variable_id"].unique()
+            assert variable_id in variables
+
+
+def test_solver_solve_with_dataset_filter_no_match(aft_solver):
+    """Test that a dataset filter matching nothing produces no executions."""
+    filtered = list(
+        aft_solver.solve(filters=SolveFilterOptions(dataset={"source_id": ["NONEXISTENT_MODEL"]}))
+    )
+    assert len(filtered) == 0
+
+
+def test_solver_solve_with_dataset_and_provider_filters(aft_solver):
+    """Test that dataset filters and provider filters compose correctly."""
+    # Filter to ilamb provider and a specific variable
+    variable_id = aft_solver.data_catalog[SourceDatasetType.CMIP6]["variable_id"].iloc[0]
+    filtered = list(
+        aft_solver.solve(
+            filters=SolveFilterOptions(
+                provider=["ilamb"],
+                dataset={"variable_id": [variable_id]},
+            )
+        )
+    )
+
+    for execution in filtered:
+        assert execution.provider.slug == "ilamb"

@@ -103,6 +103,10 @@ class DataCatalog:
         # reloads from DB with correct finalised metadata.
         # In-place cache updates are unreliable because _apply_fixes()
         # can change the DataFrame's index structure.
+        # Note: this invalidation does NOT affect the current iteration in
+        # extract_covered_datasets (which operates on a local catalog_df copy).
+        # It ensures the *next* DataRequirement processed against this
+        # DataCatalog gets fresh data from the DB.
         self._df = None
 
         return result

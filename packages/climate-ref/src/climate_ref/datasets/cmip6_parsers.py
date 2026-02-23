@@ -178,10 +178,15 @@ def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
 
     The output from this is an estimated date range until the file is completely parsed.
 
+    Supports CMIP6 filename date formats:
+    - YYYYMM-YYYYMM (6 chars, monthly)
+    - YYYYMMDD-YYYYMMDD (8 chars, daily)
+    - YYYYMMDDhhmm-YYYYMMDDhhmm (12 chars, sub-daily)
+
     Parameters
     ----------
     date_range
-        Date range string in the format "YYYYMM-YYYYMM"
+        Date range string
 
     Returns
     -------
@@ -190,15 +195,28 @@ def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
     """
     try:
         start, end = date_range.split("-")
-        if len(start) != 6 or len(end) != 6:  # noqa: PLR2004
-            raise ValueError("Date range must be in the format 'YYYYMM-YYYYMM'")
+        if len(start) != len(end):
+            raise ValueError(f"Mismatched date component lengths: {len(start)} vs {len(end)}")
 
-        start = f"{start[:4]}-{start[4:6]}-01"
-        # Up to the 30th of the month, assuming a 30-day month
-        # These values will be corrected later when the file is parsed
-        end = f"{end[:4]}-{end[4:6]}-30"
+        if len(start) == 6:  # noqa: PLR2004
+            # YYYYMM — monthly resolution
+            # CMIP6 results typical report on the 16th of the month, but I'm not sure if that is guaranteed
+            start_date = f"{start[:4]}-{start[4:6]}-01"
+            # Up to the 30th of the month, assuming a 30-day month
+            # These values will be corrected later when the file is parsed
+            end_date = f"{end[:4]}-{end[4:6]}-30"
+        elif len(start) == 8:  # noqa: PLR2004
+            # YYYYMMDD — daily resolution
+            start_date = f"{start[:4]}-{start[4:6]}-{start[6:8]}"
+            end_date = f"{end[:4]}-{end[4:6]}-{end[6:8]}"
+        elif len(start) == 12:  # noqa: PLR2004
+            # YYYYMMDDhhmm — sub-daily resolution (time-of-day ignored for date estimate)
+            start_date = f"{start[:4]}-{start[4:6]}-{start[6:8]}"
+            end_date = f"{end[:4]}-{end[4:6]}-{end[6:8]}"
+        else:
+            raise ValueError(f"Unsupported date component length: {len(start)}")
 
-        return start, end
+        return start_date, end_date
     except ValueError:
         logger.error(f"Invalid date range format: {date_range}")
         return None, None

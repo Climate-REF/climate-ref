@@ -225,8 +225,10 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
 
         if updated_indices:
             # Convert start_time/end_time strings from the complete parser to datetime objects
-            datasets["start_time"] = parse_datetime(datasets["start_time"])
-            datasets["end_time"] = parse_datetime(datasets["end_time"])
+            # Only convert the updated rows to avoid re-parsing already-converted datetimes
+            mask = datasets.index.isin(updated_indices)
+            datasets.loc[mask, "start_time"] = parse_datetime(datasets.loc[mask, "start_time"]).values
+            datasets.loc[mask, "end_time"] = parse_datetime(datasets.loc[mask, "end_time"]).values
 
             # Apply fixes (branch time cleaning, parent_variant_label, etc.)
             datasets = _apply_fixes(datasets)
@@ -289,3 +291,6 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
                             f.start_time, f.end_time = file_times[f.path]
             except Exception:
                 logger.exception(f"Error persisting finalised dataset {slug}")
+                # Mark the dataset as unfinalised in the DataFrame to stay
+                # consistent with the DB (where the update was not committed).
+                datasets.loc[datasets[self.slug_column] == slug, "finalised"] = False

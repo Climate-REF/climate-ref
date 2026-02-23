@@ -28,10 +28,6 @@ from climate_ref_core.providers import DiagnosticProvider
 
 ALL_PROVIDERS = [example_provider, pmp_provider, esmvaltool_provider, ilamb_provider]
 
-# Columns that require opening the netCDF file and are absent from DRS-only parsing.
-# These are NaN'd in the DRS simulation and restored by the mock finaliser.
-_CMIP6_FILE_OPEN_COLUMNS = CMIP6DatasetAdapter.columns_requiring_finalisation
-
 
 def _to_tuples(details: list[dict]) -> list[tuple[str, str, str]]:
     """Extract sorted (provider, diagnostic, dataset_key) tuples from execution details."""
@@ -83,7 +79,12 @@ class _DRSSimulatedAdapter(FinaliseableDatasetAdapterMixin):
     finalisation for a group.
     """
 
-    columns_requiring_finalisation = _CMIP6_FILE_OPEN_COLUMNS
+    columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+    """
+    Columns that require opening the netCDF file and are absent from DRS-only parsing.
+
+    These are NaN'd in the DRS simulation and restored by the mock finaliser.
+    """
 
     def __init__(self, df_full: pd.DataFrame, df_drs: pd.DataFrame):
         self._df_full = df_full
@@ -116,7 +117,7 @@ def _build_drs_catalogs(
     for source_type, df in esgf_data_catalog.items():
         df_drs = df.copy()
         df_drs["finalised"] = False
-        cols_to_nan = _CMIP6_FILE_OPEN_COLUMNS & set(df_drs.columns)
+        cols_to_nan = _DRSSimulatedAdapter.columns_requiring_finalisation & set(df_drs.columns)
         df_drs[list(cols_to_nan)] = pd.NA
 
         adapter = _DRSSimulatedAdapter(df_full=df, df_drs=df_drs)

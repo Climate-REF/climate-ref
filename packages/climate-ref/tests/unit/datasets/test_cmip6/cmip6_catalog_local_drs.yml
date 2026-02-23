@@ -524,7 +524,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gr
   instance_id: CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
@@ -561,7 +561,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gr
   instance_id: CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Amon.o3.gr.v20181206
@@ -1782,7 +1782,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.volcello.gn.v20191115
@@ -1930,7 +1930,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115
@@ -1967,7 +1967,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115

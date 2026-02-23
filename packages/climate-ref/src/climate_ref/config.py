@@ -31,6 +31,7 @@ from loguru import logger
 from tomlkit import TOMLDocument
 
 from climate_ref._config_helpers import (
+    _environ_post_init,
     _format_exception,
     _format_key_exception,
     _pop_empty,
@@ -387,6 +388,8 @@ class Config:
     Configuration that is used by the REF
     """
 
+    _prefix = env_prefix
+
     log_level: str = field(default="INFO")
     """
     Log level of messages that are displayed by the REF via the CLI
@@ -584,6 +587,10 @@ class Config:
         doc = TOMLDocument()
         doc.update(dump)
         return doc
+
+    def __attrs_post_init__(self) -> None:
+        # This is needed to apply the environment variable overrides on initialization
+        _environ_post_init(self)
 
 
 def _make_converter(omit_default: bool, forbid_extra_keys: bool) -> Converter:

@@ -311,14 +311,14 @@ class TestFinaliseEdgeCases:
             assert not result["finalised"].any()
 
     def test_skips_on_parse_exception(self, config):
-        """Rows that raise during parsing remain unfinalised."""
+        """Rows where the parser returns INVALID_ASSET remain unfinalised."""
         with Database.from_config(config, run_migrations=True) as database:
             adapter = CMIP6DatasetAdapter(config=config)
             df = self._make_unfinalised_df(["/fake/path.nc"])
 
             with patch(
                 "climate_ref.datasets.cmip6.parse_cmip6_complete",
-                side_effect=RuntimeError("file I/O error"),
+                return_value={"INVALID_ASSET": "/fake/path.nc", "TRACEBACK": "file I/O error"},
             ):
                 result = adapter.finalise_datasets(database, df)
             assert not result["finalised"].any()
@@ -376,9 +376,9 @@ class TestFinaliseEdgeCases:
                 "end_time": "2000-12-30",
             }
 
-            def side_effect(path):
+            def side_effect(path, **_):
                 if "bad" in path:
-                    raise RuntimeError("corrupt file")
+                    return {"INVALID_ASSET": path, "TRACEBACK": "corrupt file"}
                 return parsed_good
 
             with patch(

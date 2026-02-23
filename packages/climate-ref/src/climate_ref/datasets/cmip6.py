@@ -8,7 +8,7 @@ from loguru import logger
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
-from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.catalog_builder import build_catalog, parse_files
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
@@ -209,6 +209,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         """
         Finalise unfinalised CMIP6 datasets by opening files to extract full metadata.
 
+        Files are parsed in parallel using ``self.n_jobs`` threads (I/O-bound),
+        mirroring the parallelism used during ingest.
+
         Parameters
         ----------
         db
@@ -223,30 +226,27 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         """
         unfinalised = datasets[datasets["finalised"] == False]  # noqa: E712
 
+        # Collect (index, path) pairs for rows that have a valid path
+        valid = [(idx, str(row["path"])) for idx, row in unfinalised.iterrows() if not pd.isna(row["path"])]
+        if not valid:
+            return datasets
+
+        indices, paths = zip(*valid)
+
+        parsed_results = parse_files(list(paths), parse_cmip6_complete, n_jobs=self.n_jobs)
+
         updated_indices = []
-        for idx, row in unfinalised.iterrows():
-            path = row["path"]
-            if pd.isna(path):
-                logger.warning(f"No path for dataset at index {idx}, skipping")
+        for idx, path, parsed in zip(indices, paths, parsed_results):
+            if "INVALID_ASSET" in parsed:
+                logger.warning(f"Failed to finalise {path}: {parsed.get('TRACEBACK', '')}")
                 continue
 
-            try:
-                parsed = parse_cmip6_complete(str(path))
-                if "INVALID_ASSET" in parsed:
-                    logger.warning(f"Failed to finalise {path}: {parsed.get('TRACEBACK', '')}")
-                    continue
+            for key, value in parsed.items():
+                if key in datasets.columns and value is not None:
+                    datasets.at[idx, key] = value
 
-                # Update the row with the full metadata from the complete parser
-                for key, value in parsed.items():
-                    if key in datasets.columns and value is not None:
-                        datasets.at[idx, key] = value
-
-                datasets.at[idx, "finalised"] = True
-                updated_indices.append(idx)
-
-            except Exception:
-                logger.exception(f"Error finalising dataset at {path}")
-                continue
+            datasets.at[idx, "finalised"] = True
+            updated_indices.append(idx)
 
         if updated_indices:
             # Convert start_time/end_time strings from the complete parser to datetime objects

@@ -19,6 +19,7 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.solver import solve_executions
 from climate_ref_core.datasets import SourceDatasetType
@@ -29,31 +30,7 @@ ALL_PROVIDERS = [example_provider, pmp_provider, esmvaltool_provider, ilamb_prov
 
 # Columns that require opening the netCDF file and are absent from DRS-only parsing.
 # These are NaN'd in the DRS simulation and restored by the mock finaliser.
-# TODO: we should be able to determine this from the adapter
-_CMIP6_FILE_OPEN_COLUMNS = frozenset(
-    {
-        "branch_method",
-        "branch_time_in_child",
-        "branch_time_in_parent",
-        "experiment",
-        "grid",
-        "long_name",
-        "nominal_resolution",
-        "parent_activity_id",
-        "parent_experiment_id",
-        "parent_source_id",
-        "parent_time_units",
-        "parent_variant_label",
-        "product",
-        "realm",
-        "source_type",
-        "standard_name",
-        "sub_experiment",
-        "sub_experiment_id",
-        "units",
-        "vertical_levels",
-    }
-)
+_CMIP6_FILE_OPEN_COLUMNS = CMIP6DatasetAdapter.columns_requiring_finalisation
 
 
 def _to_tuples(details: list[dict]) -> list[tuple[str, str, str]]:
@@ -105,6 +82,8 @@ class _DRSSimulatedAdapter(FinaliseableDatasetAdapterMixin):
     ``CMIP6DatasetAdapter.finalise_datasets()`` does when the solver requests
     finalisation for a group.
     """
+
+    columns_requiring_finalisation = _CMIP6_FILE_OPEN_COLUMNS
 
     def __init__(self, df_full: pd.DataFrame, df_drs: pd.DataFrame):
         self._df_full = df_full

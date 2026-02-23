@@ -42,6 +42,19 @@ def mock_db():
     return mock.MagicMock()
 
 
+class TestColumnsRequiringFinalisation:
+    def test_returns_adapter_value(self, mock_db, mock_adapter):
+        mock_adapter.columns_requiring_finalisation = frozenset({"realm", "units"})
+        catalog = DataCatalog(database=mock_db, adapter=mock_adapter)
+
+        assert catalog.columns_requiring_finalisation == frozenset({"realm", "units"})
+
+    def test_returns_empty_frozenset_when_no_adapter(self):
+        catalog = DataCatalog.from_frame(pd.DataFrame({"variable_id": ["tas"]}))
+
+        assert catalog.columns_requiring_finalisation == frozenset()
+
+
 class TestDataCatalogToFrame:
     def test_lazy_loads_on_first_access(self, mock_db, mock_adapter):
         catalog = DataCatalog(database=mock_db, adapter=mock_adapter)

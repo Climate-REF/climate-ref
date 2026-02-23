@@ -10,6 +10,9 @@ from climate_ref_ilamb import provider as ilamb_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.config import ExecutorConfig
+from climate_ref.data_catalog import DataCatalog
+from climate_ref.database import Database
+from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
 from climate_ref.models import Execution
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
@@ -76,8 +79,61 @@ class TestMetricSolver:
         assert isinstance(solver, ExecutionSolver)
         assert isinstance(solver.provider_registry, ProviderRegistry)
         assert SourceDatasetType.CMIP6 in solver.data_catalog
-        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], pd.DataFrame)
-        assert len(solver.data_catalog[SourceDatasetType.CMIP6])
+        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
+        assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
+
+
+class TestExtractCoveredDatasetsWithDataCatalog:
+    """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""
+
+    def test_finalise_called_for_unfinalised_groups(self):
+        """When a DataCatalog has unfinalised data, finalise() is called per group."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+
+        mock_catalog.finalise.assert_called()
+        assert len(result) == 1
+        # The finalised group should have finalised=True
+        group_df = next(iter(result.values()))
+        assert group_df["finalised"].all()
+
+    def test_finalise_not_called_for_raw_dataframe(self):
+        """When a raw DataFrame is passed, no finalisation is attempted."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=None,
+        )
+
+        # Should work without error - no finalise call attempted on a raw DataFrame
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
 
 
 @pytest.mark.parametrize(
@@ -1159,3 +1215,55 @@ def test_extract_covered_datasets_no_matching_filter():
     )
     result = extract_covered_datasets(data_catalog, requirement)
     assert result == {}
+
+
+def _build_solver_for_parser(config, sample_data_dir, parser_type, tmp_path, providers):
+    """Helper: ingest sample data with the given parser and return a solver."""
+    config.cmip6_parser = parser_type
+
+    db_path = tmp_path / f"bench_{parser_type}.db"
+    db = Database(f"sqlite:///{db_path}")
+    db.migrate(config)
+
+    # Ingest CMIP6
+    adapter = CMIP6DatasetAdapter(config=config)
+    ingest_datasets(adapter, sample_data_dir / "CMIP6", db, skip_invalid=True)
+
+    # Ingest obs4MIPs + obs4REF
+    obs_adapter = Obs4MIPsDatasetAdapter()
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4MIPs", db, skip_invalid=True)
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4REF", db, skip_invalid=True)
+
+    # Register providers
+    with db.session.begin():
+        for p in providers:
+            _register_provider(db, p)
+
+    solver = ExecutionSolver.build_from_db(config, db)
+    solver.provider_registry = ProviderRegistry(providers=providers)
+    return solver, db
+
+
+def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_dir, prepare_db, tmp_path):
+    """DRS (lazy) and complete parsers must produce the same solver executions."""
+    providers = [pmp_provider, esmvaltool_provider, ilamb_provider]
+
+    solver_complete, db_complete = _build_solver_for_parser(
+        config, sample_data_dir, "complete", tmp_path, providers
+    )
+    solver_drs, db_drs = _build_solver_for_parser(config, sample_data_dir, "drs", tmp_path, providers)
+
+    try:
+        complete_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_complete.solve())
+        drs_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_drs.solve())
+
+        assert len(complete_executions) == len(drs_executions), (
+            f"Complete parser found {len(complete_executions)} executions "
+            f"but DRS parser found {len(drs_executions)}.\n"
+            f"Only in complete: {set(complete_executions) - set(drs_executions)}\n"
+            f"Only in DRS: {set(drs_executions) - set(complete_executions)}"
+        )
+        assert complete_executions == drs_executions
+    finally:
+        db_complete.close()
+        db_drs.close()

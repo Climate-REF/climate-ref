@@ -169,9 +169,7 @@ def ingest(  # noqa
                         logger.info(f"Would save dataset {instance_id} to the database")
         else:
             # Use shared ingestion logic with pre-validated catalog
-            stats = ingest_datasets(
-                adapter, None, config, db, data_catalog=data_catalog, skip_invalid=skip_invalid
-            )
+            stats = ingest_datasets(adapter, None, db, data_catalog=data_catalog, skip_invalid=skip_invalid)
             stats.log_summary()
 
     if solve:

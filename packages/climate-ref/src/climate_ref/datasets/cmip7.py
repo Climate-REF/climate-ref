@@ -86,6 +86,8 @@ def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
                 "time_range": f"{start_time}-{end_time}" if start_time and end_time else None,
                 # Path
                 "path": file,
+                # Finalisation status
+                "finalised": True,
             }
     except Exception:
         return {
@@ -121,7 +123,6 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "mip_era",
         "realm",
         "nominal_resolution",
-        # Additional mandatory attributes
         "license_id",
         # Conditionally required attributes
         "external_variables",
@@ -138,6 +139,8 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # Finalisation status
+        "finalised",
         # Unique identifier
         slug_column,
     )

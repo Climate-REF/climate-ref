@@ -33,10 +33,17 @@ We currently support:
 
 CMIP7-era files will be supported in the near future once we have some example CMORised output.
 
-The `ingest` phase iterates over the local datasets and extacts the metadata from the files.
-This metadata is then indexed in a database.
-Ingesting a large amount of datasets can take a long time,
-but it is only required to be done once.
+The `ingest` phase iterates over the local datasets and extracts metadata,
+which is then indexed in a database.
+
+For CMIP6 datasets, the default DRS parser extracts metadata from file paths and directory structure
+without opening each file, making ingestion very fast even for large archives.
+Full metadata (e.g. exact time ranges) is extracted lazily at solve time,
+only for datasets that match a diagnostic's requirements.
+This two-phase approach dramatically reduces ingestion time on HPC parallel file systems.
+
+The complete parser can be used instead by setting `cmip6_parser: "complete"` in the configuration,
+which opens every file during ingestion to extract all metadata upfront.
 
 The REF requires that input datasets are CMOR-compliant,
 but does not verify any of the attributes that may be in any CMIP controlled vocabularies.

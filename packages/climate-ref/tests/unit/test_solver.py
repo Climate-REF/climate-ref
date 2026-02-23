@@ -1493,7 +1493,7 @@ def test_solver_solve_with_dataset_filters(aft_solver):
     assert len(all_executions) > 0
 
     # Filter to a single variable that exists in the test data
-    variable_id = aft_solver.data_catalog[SourceDatasetType.CMIP6].to_frame()["variable_id"].iloc[0]
+    variable_id = "tas"
     filtered = list(aft_solver.solve(filters=SolveFilterOptions(dataset={"variable_id": [variable_id]})))
 
     # Filtered set should be smaller (or equal if all diagnostics only use that variable)

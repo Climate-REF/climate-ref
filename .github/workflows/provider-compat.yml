@@ -1,0 +1,61 @@
+# Provider Compatibility CI
+#
+# Tests that changes to climate-ref-core don't break existing provider packages.
+# Runs on pushes to main and PRs that modify core packages.
+#
+# This workflow installs each provider against:
+#   1. The current branch version of climate-ref-core
+#   2. (Future) The latest PyPI release of climate-ref-core
+#
+# Provider repos should copy this pattern into their own CI to test against
+# multiple climate-ref-core versions.
+
+name: Provider Compatibility
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "packages/climate-ref-core/**"
+      - "packages/climate-ref/**"
+      - ".github/workflows/provider-compat.yml"
+  pull_request:
+    paths:
+      - "packages/climate-ref-core/**"
+      - "packages/climate-ref/**"
+      - ".github/workflows/provider-compat.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  provider-compat:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider:
+          - climate-ref-example
+          - climate-ref-esmvaltool
+          - climate-ref-pmp
+          - climate-ref-ilamb
+        python-version: ["3.11", "3.12"]
+    name: ${{ matrix.provider }} (py${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v7
+
+      - name: Set up Python ${{ matrix.python-version }}
+        run: uv python install ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: uv sync --python ${{ matrix.python-version }} --dev --all-extras --locked
+
+      - name: Run provider tests
+        continue-on-error: true
+        run: |
+          uv run pytest packages/${{ matrix.provider }}/tests/ \
+            -x -q \
+            --ignore=packages/${{ matrix.provider }}/tests/integration

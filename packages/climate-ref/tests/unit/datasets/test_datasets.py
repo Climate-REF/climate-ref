@@ -5,8 +5,8 @@ import pytest
 
 from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
+from climate_ref.datasets import IngestionStats, get_dataset_adapter, ingest_datasets
 from climate_ref.datasets import base as base_module
-from climate_ref.datasets import get_dataset_adapter
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
@@ -97,6 +97,7 @@ def test_validate_data_catalog_metadata_variance(caplog):
     "source_type, expected_adapter",
     [
         (SourceDatasetType.CMIP6.value, "climate_ref.datasets.cmip6.CMIP6DatasetAdapter"),
+        (SourceDatasetType.CMIP7.value, "climate_ref.datasets.cmip7.CMIP7DatasetAdapter"),
         (SourceDatasetType.obs4MIPs.value, "climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter"),
     ],
 )
@@ -137,7 +138,8 @@ def test_db(monkeypatch):
     config = Config.default()
     db = Database("sqlite:///:memory:")
     db.migrate(config)
-    return adapter, config, db
+    yield adapter, db
+    db.close()
 
 
 def _mk_df(instance_id="CESM2.tas.gn", rows=None):
@@ -156,7 +158,7 @@ def _mk_df(instance_id="CESM2.tas.gn", rows=None):
 
 
 def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, db = test_db
 
     df = _mk_df(
         rows=[
@@ -174,7 +176,7 @@ def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
     )
 
     with db.session.begin():
-        result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+        result = adapter.register_dataset(db=db, data_catalog_dataset=df)
 
     assert result.dataset_state == ModelState.CREATED
     assert set(result.files_added) == {"f1.nc", "f2.nc"}
@@ -200,7 +202,7 @@ def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
 
 
 def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, db = test_db
 
     # First, create initial dataset with existing files
     initial_df = _mk_df(
@@ -219,7 +221,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
     )
 
     with db.session.begin():
-        adapter.register_dataset(config=config, db=db, data_catalog_dataset=initial_df)
+        adapter.register_dataset(db=db, data_catalog_dataset=initial_df)
 
     # Now update with modified data
     updated_df = _mk_df(
@@ -243,7 +245,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
     )
 
     with db.session.begin():
-        result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=updated_df)
+        result = adapter.register_dataset(db=db, data_catalog_dataset=updated_df)
 
     assert result.dataset_state == ModelState.UPDATED
     assert set(result.files_added) == {"f3.nc"}
@@ -264,7 +266,7 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
 
 
 def test_register_dataset_raises_on_removal(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, db = test_db
 
     # First, create initial dataset with files
     initial_df = _mk_df(
@@ -283,7 +285,7 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
     )
 
     with db.session.begin():
-        adapter.register_dataset(config=config, db=db, data_catalog_dataset=initial_df)
+        adapter.register_dataset(db=db, data_catalog_dataset=initial_df)
 
     # New catalog omits "remove.nc" -> triggers removal path
     updated_df = _mk_df(
@@ -298,11 +300,11 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
 
     with pytest.raises(NotImplementedError, match="Removing files is not yet supported"):
         with db.session.begin():
-            adapter.register_dataset(config=config, db=db, data_catalog_dataset=updated_df)
+            adapter.register_dataset(db=db, data_catalog_dataset=updated_df)
 
 
 def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
-    adapter, config, db = test_db
+    adapter, db = test_db
 
     df = pd.concat(
         [
@@ -332,12 +334,12 @@ def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
 
     with pytest.raises(RefException, match="Found multiple datasets in the same directory"):
         with db.session.begin():
-            adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+            adapter.register_dataset(db=db, data_catalog_dataset=df)
 
 
 def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     """Test that changes to dataset metadata are properly captured and result in UPDATED state"""
-    adapter, config, db = test_db
+    adapter, db = test_db
 
     # First, create initial dataset with original metadata
     df = _mk_df(
@@ -352,7 +354,7 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     )
 
     with db.session.begin():
-        initial_result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+        initial_result = adapter.register_dataset(db=db, data_catalog_dataset=df)
 
     assert initial_result.dataset_state == ModelState.CREATED
 
@@ -360,7 +362,7 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     df.loc[0, "grid_label"] = "gr2"
 
     with db.session.begin():
-        update_result = adapter.register_dataset(config=config, db=db, data_catalog_dataset=df)
+        update_result = adapter.register_dataset(db=db, data_catalog_dataset=df)
 
     # Should be UPDATED because dataset metadata changed
     assert update_result.dataset_state == ModelState.UPDATED
@@ -374,3 +376,232 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
     assert dataset is not None
     assert dataset.grid_label == "gr2"
+
+
+class TestIngestionStats:
+    """Tests for IngestionStats dataclass."""
+
+    def test_default_values(self):
+        stats = IngestionStats()
+        assert stats.datasets_created == 0
+        assert stats.datasets_updated == 0
+        assert stats.datasets_unchanged == 0
+        assert stats.files_added == 0
+        assert stats.files_updated == 0
+        assert stats.files_removed == 0
+        assert stats.files_unchanged == 0
+
+    def test_custom_values(self):
+        stats = IngestionStats(
+            datasets_created=1,
+            datasets_updated=2,
+            datasets_unchanged=3,
+            files_added=4,
+            files_updated=5,
+            files_removed=6,
+            files_unchanged=7,
+        )
+        assert stats.datasets_created == 1
+        assert stats.datasets_updated == 2
+        assert stats.datasets_unchanged == 3
+        assert stats.files_added == 4
+        assert stats.files_updated == 5
+        assert stats.files_removed == 6
+        assert stats.files_unchanged == 7
+
+    def test_log_summary(self, caplog):
+        stats = IngestionStats(
+            datasets_created=1,
+            datasets_updated=2,
+            datasets_unchanged=3,
+            files_added=4,
+            files_updated=5,
+            files_removed=6,
+            files_unchanged=7,
+        )
+        stats.log_summary()
+        assert "Datasets: 1/2/3 (created/updated/unchanged)" in caplog.text
+        assert "Files: 4/5/6/7 (created/updated/removed/unchanged)" in caplog.text
+
+    def test_log_summary_with_prefix(self, caplog):
+        stats = IngestionStats(datasets_created=1)
+        stats.log_summary("Test prefix:")
+        assert "Test prefix: Datasets:" in caplog.text
+
+
+class TestIngestDatasets:
+    """Tests for the ingest_datasets shared function."""
+
+    def test_ingest_datasets_directory_not_exists(self, test_db):
+        adapter, db = test_db
+        with pytest.raises(ValueError, match="does not exist"):
+            ingest_datasets(adapter, Path("/nonexistent/path"), db)
+
+    def test_ingest_datasets_no_nc_files(self, test_db, tmp_path):
+        adapter, db = test_db
+        empty_dir = tmp_path / "empty"
+        empty_dir.mkdir()
+        with pytest.raises(ValueError, match=r"No \.nc files found"):
+            ingest_datasets(adapter, empty_dir, db)
+
+    def test_ingest_datasets_requires_directory_or_catalog(self, test_db):
+        adapter, db = test_db
+        with pytest.raises(ValueError, match="Either directory or data_catalog must be provided"):
+            ingest_datasets(adapter, None, db)
+
+    def test_ingest_datasets_with_pre_validated_catalog(self, monkeypatch, test_db):
+        """Test that ingest_datasets works with a pre-validated data catalog."""
+        adapter, db = test_db
+
+        df = _mk_df(
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+                {
+                    "path": "f2.nc",
+                    "start_time": pd.Timestamp("2002-01-01"),
+                    "end_time": pd.Timestamp("2002-12-31"),
+                },
+            ]
+        )
+
+        # Call with pre-validated catalog (directory=None)
+        stats = ingest_datasets(adapter, None, db, data_catalog=df)
+
+        assert stats.datasets_created == 1
+        assert stats.datasets_updated == 0
+        assert stats.datasets_unchanged == 0
+        assert stats.files_added == 2
+        assert stats.files_updated == 0
+        assert stats.files_removed == 0
+        assert stats.files_unchanged == 0
+
+    def test_ingest_datasets_idempotent(self, monkeypatch, test_db):
+        """Test that calling ingest_datasets twice is idempotent."""
+        adapter, db = test_db
+
+        df = _mk_df(
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ]
+        )
+
+        # First call creates the dataset
+        stats1 = ingest_datasets(adapter, None, db, data_catalog=df)
+        assert stats1.datasets_created == 1
+        assert stats1.files_added == 1
+
+        # Second call should find it unchanged
+        stats2 = ingest_datasets(adapter, None, db, data_catalog=df)
+        assert stats2.datasets_created == 0
+        assert stats2.datasets_unchanged == 1
+        assert stats2.files_added == 0
+        assert stats2.files_unchanged == 1
+
+    def test_ingest_datasets_with_directory(self, monkeypatch, test_db, tmp_path):
+        """Test ingest_datasets with directory finds and validates datasets."""
+        adapter, db = test_db
+
+        # Create a directory with .nc files
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test1.nc").touch()
+        (data_dir / "test2.nc").touch()
+
+        # Create mock data catalog that find_local_datasets will return
+        mock_df = _mk_df(
+            rows=[
+                {
+                    "path": str(data_dir / "test1.nc"),
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+                {
+                    "path": str(data_dir / "test2.nc"),
+                    "start_time": pd.Timestamp("2002-01-01"),
+                    "end_time": pd.Timestamp("2002-12-31"),
+                },
+            ]
+        )
+
+        # Patch find_local_datasets to return our mock catalog
+        monkeypatch.setattr(adapter, "find_local_datasets", lambda d: mock_df)
+
+        stats = ingest_datasets(adapter, data_dir, db)
+
+        assert stats.datasets_created == 1
+        assert stats.files_added == 2
+
+    def test_ingest_datasets_empty_after_validation(self, monkeypatch, test_db, tmp_path):
+        """Test ingest_datasets raises ValueError when catalog is empty after validation."""
+        adapter, db = test_db
+
+        # Create a directory with .nc files
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        # Mock find_local_datasets to return a non-empty catalog
+        mock_df = _mk_df(
+            rows=[
+                {
+                    "path": str(data_dir / "test.nc"),
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ]
+        )
+        monkeypatch.setattr(adapter, "find_local_datasets", lambda d: mock_df)
+
+        # Mock validate_data_catalog to return empty DataFrame (all invalid)
+        monkeypatch.setattr(adapter, "validate_data_catalog", lambda df, **kwargs: pd.DataFrame())
+
+        with pytest.raises(ValueError, match="No valid datasets found"):
+            ingest_datasets(adapter, data_dir, db)
+
+    def test_ingest_datasets_updated_state(self, monkeypatch, test_db):
+        """Test that ingest_datasets correctly tracks updated datasets."""
+        adapter, db = test_db
+
+        # First create a dataset
+        df1 = _mk_df(
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ]
+        )
+        stats1 = ingest_datasets(adapter, None, db, data_catalog=df1)
+        assert stats1.datasets_created == 1
+
+        # Now update with additional file (triggers UPDATED state)
+        df2 = _mk_df(
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+                {
+                    "path": "f2.nc",
+                    "start_time": pd.Timestamp("2002-01-01"),
+                    "end_time": pd.Timestamp("2002-12-31"),
+                },
+            ]
+        )
+        stats2 = ingest_datasets(adapter, None, db, data_catalog=df2)
+
+        assert stats2.datasets_created == 0
+        assert stats2.datasets_updated == 1
+        assert stats2.datasets_unchanged == 0
+        assert stats2.files_added == 1
+        assert stats2.files_unchanged == 1

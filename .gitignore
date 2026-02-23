@@ -117,6 +117,7 @@ celerybeat.pid
 
 # Environments
 .env
+.envrc
 .venv
 env/
 venv/
@@ -150,7 +151,7 @@ dmypy.json
 
 # Generated output
 out
-.ref
+.ref*
 
 # Ignore copied LICENCE/NOTICE files
 packages/*/LICENCE
@@ -158,3 +159,15 @@ packages/*/NOTICE
 
 # Local directory for data
 /data
+
+# Generated SDK
+/climate_ref_client
+
+# User-specific catalog paths (test data)
+*.paths.yaml
+
+# Debug log files
+**/main_log_debug.txt
+
+# Helm dependencies
+helm/charts/*

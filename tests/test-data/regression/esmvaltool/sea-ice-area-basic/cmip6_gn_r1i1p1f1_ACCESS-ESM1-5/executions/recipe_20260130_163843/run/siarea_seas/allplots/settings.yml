@@ -1,0 +1,41 @@
+plot_folder: '{plot_dir}'
+group_variables_by: variable_group
+facet_used_for_labels: dataset
+plots:
+  annual_cycle:
+    caption: 20-year average seasonal cycle of the sea ice area in million km2 from
+      ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.
+    pyplot_kwargs:
+      title: Sea ice area (million km2)
+    plot_kwargs:
+      OSI-450-nh:
+        color: blue
+        label: OSISAF/CCI
+        linestyle: '-'
+        linewidth: 2
+        zorder: 3
+      OSI-450-sh:
+        color: blue
+        label: OSISAF/CCI
+        linestyle: '-'
+        linewidth: 2
+        zorder: 3
+      default:
+        color: red
+        label: '{dataset}'
+        linestyle: '-'
+        linewidth: 2
+        zorder: 4
+recipe: recipe.yml
+version: 2.13.0
+script: allplots
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_163843/run/siarea_seas/allplots
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_163843/work/siarea_seas/allplots
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+scheduler_address: tcp://127.0.0.1:40415
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_nh/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/metadata.yml

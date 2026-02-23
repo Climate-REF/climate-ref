@@ -829,3 +829,164 @@ class TestExecutionInspect:
 
     def test_flag_dirty_missing(self, db_seeded, invoke_cli):
         invoke_cli(["executions", "flag-dirty", "123"], expected_exit_code=1)
+
+
+class TestFailRunning:
+    @pytest.fixture
+    def db_with_running(self, db_seeded):
+        """Fixture with running executions (successful=None) across different providers."""
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            _register_provider(db_seeded, esmvaltool_provider)
+
+            diag_pmp = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            diag_esmvaltool = (
+                db_seeded.session.query(Diagnostic).filter_by(slug="enso-characteristics").first()
+            )
+
+            # Running execution for PMP diagnostic (created recently)
+            eg1 = ExecutionGroup(
+                key="running-pmp",
+                diagnostic_id=diag_pmp.id,
+                selectors={"cmip6": [["source_id", "GFDL-ESM4"]]},
+            )
+            db_seeded.session.add(eg1)
+
+            # Running execution for ESMValTool diagnostic (created long ago)
+            eg2 = ExecutionGroup(
+                key="running-esmvaltool",
+                diagnostic_id=diag_esmvaltool.id,
+                selectors={"cmip6": [["source_id", "ACCESS-ESM1-5"]]},
+            )
+            db_seeded.session.add(eg2)
+
+            # Successful execution (should not be touched)
+            eg3 = ExecutionGroup(
+                key="completed",
+                diagnostic_id=diag_pmp.id,
+                selectors={"cmip6": [["source_id", "CNRM-CM6-1"]]},
+            )
+            db_seeded.session.add(eg3)
+
+            db_seeded.session.flush()
+
+            # Recent running execution
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg1.id,
+                    successful=None,
+                    output_fragment="out-running-1",
+                    dataset_hash="hash-r1",
+                )
+            )
+
+            # Old running execution (48 hours ago)
+            old_time = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=48)
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg2.id,
+                    successful=None,
+                    output_fragment="out-running-2",
+                    dataset_hash="hash-r2",
+                    created_at=old_time,
+                )
+            )
+
+            # Completed execution (should not be affected)
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg3.id,
+                    successful=True,
+                    output_fragment="out-done",
+                    dataset_hash="hash-done",
+                )
+            )
+
+        db_seeded.session.commit()
+        return db_seeded
+
+    def test_fail_all_running(self, db_with_running, invoke_cli):
+        result = invoke_cli(["executions", "fail-running", "--force"])
+
+        assert result.exit_code == 0
+        assert "Successfully marked 2 execution(s) as failed" in result.stdout
+
+        # Verify both running executions are now failed
+        session = db_with_running.session
+        running = session.query(Execution).filter(Execution.successful.is_(None)).count()
+        assert running == 0
+
+        # Verify completed execution is untouched
+        completed = session.query(Execution).filter(Execution.successful.is_(True)).count()
+        assert completed == 1
+
+    def test_fail_running_marks_groups_dirty(self, db_with_running, invoke_cli):
+        result = invoke_cli(["executions", "fail-running", "--force"])
+
+        assert result.exit_code == 0
+
+        session = db_with_running.session
+        eg = session.query(ExecutionGroup).filter_by(key="running-pmp").first()
+        assert eg.dirty is True
+
+        eg2 = session.query(ExecutionGroup).filter_by(key="running-esmvaltool").first()
+        assert eg2.dirty is True
+
+    def test_fail_running_older_than(self, db_with_running, invoke_cli):
+        # Only fail executions older than 24 hours — should only catch the 48h-old one
+        result = invoke_cli(["executions", "fail-running", "--older-than", "24", "--force"])
+
+        assert result.exit_code == 0
+        assert "Successfully marked 1 execution(s) as failed" in result.stdout
+
+        session = db_with_running.session
+        # The recent one should still be running
+        running = session.query(Execution).filter(Execution.successful.is_(None)).count()
+        assert running == 1
+
+    def test_fail_running_older_than_none_match(self, db_with_running, invoke_cli):
+        # Use a very large threshold — nothing should match
+        result = invoke_cli(["executions", "fail-running", "--older-than", "9999", "--force"])
+
+        assert result.exit_code == 0
+        assert "No running executions found" in result.stdout
+
+    def test_fail_running_filter_by_provider(self, db_with_running, invoke_cli):
+        result = invoke_cli(["executions", "fail-running", "--provider", "pmp", "--force"])
+
+        assert result.exit_code == 0
+        assert "Successfully marked 1 execution(s) as failed" in result.stdout
+        assert "enso_tel" in result.stdout
+
+    def test_fail_running_filter_by_diagnostic(self, db_with_running, invoke_cli):
+        result = invoke_cli(["executions", "fail-running", "--diagnostic", "enso-characteristics", "--force"])
+
+        assert result.exit_code == 0
+        assert "Successfully marked 1 execution(s) as failed" in result.stdout
+        assert "enso-characteristics" in result.stdout
+
+    def test_fail_running_no_running_executions(self, db_with_groups, invoke_cli):
+        # db_with_groups has no running executions (all are True/False)
+        result = invoke_cli(["executions", "fail-running", "--force"])
+
+        assert result.exit_code == 0
+        assert "No running executions found" in result.stdout
+
+    def test_fail_running_cancelled(self, db_with_running, invoke_cli):
+        with patch("climate_ref.cli.executions.typer.confirm", return_value=False):
+            result = invoke_cli(["executions", "fail-running"])
+
+        assert result.exit_code == 0
+        assert "Cancelled." in result.stdout
+
+        # Verify nothing was changed
+        session = db_with_running.session
+        running = session.query(Execution).filter(Execution.successful.is_(None)).count()
+        assert running == 2
+
+    def test_fail_running_with_confirmation(self, db_with_running, invoke_cli):
+        with patch("climate_ref.cli.executions.typer.confirm", return_value=True):
+            result = invoke_cli(["executions", "fail-running"])
+
+        assert result.exit_code == 0
+        assert "Successfully marked 2 execution(s) as failed" in result.stdout

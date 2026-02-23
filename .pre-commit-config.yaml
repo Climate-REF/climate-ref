@@ -8,7 +8,7 @@ ci:
 # See https://pre-commit.com/#regular-expressions
 exclude: |
     (?x)^(
-        tests/test-data/regression/.*
+        .*/regression/.*
     )$
 
 # See https://pre-commit.com/hooks.html for more hooks
@@ -25,6 +25,7 @@ repos:
       - id: check-yaml
         args:
         - --unsafe
+        exclude: helm/templates
       - id: debug-statements
       - id: detect-private-key
       - id: end-of-file-fixer
@@ -40,13 +41,13 @@ repos:
         language: fail
         files: "\\.rej$"
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: 'v0.13.2'
+    rev: 'v0.14.10'
     hooks:
       - id: ruff-check
         args: [ --fix ]
       - id: ruff-format
   - repo: https://github.com/astral-sh/uv-pre-commit
-    rev: 0.8.6
+    rev: 0.9.22
     hooks:
       # Update the uv lockfile
       - id: uv-lock

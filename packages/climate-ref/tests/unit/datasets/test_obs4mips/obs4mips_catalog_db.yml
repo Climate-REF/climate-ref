@@ -110,6 +110,28 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
+  end_time: 2021-12-16 12:00:00
+  finalised: true
+  frequency: mon
+  grid: data gridded to 1x1 degree lat x lon
+  grid_label: gn
+  instance_id: obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+  institution_id: DLR-BIRA
+  long_name: Total Column Ozone
+  nominal_resolution: 1x1 degree
+  path: '{esgf_data_dir}/obs4MIPs/DLR-BIRA/C3S-GTO-ECV-9-0/toz/gn/v20231115/toz_C3S-GTO-ECV-9-0_gn_199601-202112.nc'
+  product: observations
+  realm: atmos
+  source_id: C3S-GTO-ECV-9-0
+  source_type: satellite_retrieval
+  source_version_number: '9.0'
+  start_time: 1996-01-16 12:00:00
+  units: m
+  variable_id: toz
+  variant_label: BE
+  version: v20231115
+  vertical_levels: 1
+- activity_id: obs4MIPs
   end_time: 2010-12-16 12:00:00
   finalised: true
   frequency: mon

@@ -1,5 +1,6 @@
 import importlib.resources
 import shutil
+from collections.abc import Generator
 from pathlib import Path
 from urllib import parse as urlparse
 
@@ -38,8 +39,10 @@ def _clone_db(target_db_url: str, template_db_path: Path) -> None:
 
 
 @pytest.fixture
-def db(config) -> Database:
-    return Database.from_config(config, run_migrations=True)
+def db(config) -> Generator[Database, None, None]:
+    database = Database.from_config(config, run_migrations=True)
+    yield database
+    database.close()
 
 
 @pytest.fixture(scope="session")
@@ -66,16 +69,18 @@ def db_seeded_template(tmp_path_session, cmip6_data_catalog, obs4mips_data_catal
     adapter = CMIP6DatasetAdapter()
     with database.session.begin():
         for instance_id, data_catalog_dataset in cmip6_data_catalog.groupby(adapter.slug_column):
-            adapter.register_dataset(config, database, data_catalog_dataset)
+            adapter.register_dataset(database, data_catalog_dataset)
 
     # Seed the obs4MIPs sample datasets
     adapter_obs = Obs4MIPsDatasetAdapter()
     with database.session.begin():
         for instance_id, data_catalog_dataset in obs4mips_data_catalog.groupby(adapter_obs.slug_column):
-            adapter_obs.register_dataset(config, database, data_catalog_dataset)
+            adapter_obs.register_dataset(database, data_catalog_dataset)
 
     with database.session.begin():
         _register_provider(database, example_provider)
+
+    database.close()
 
     return template_db_path
 
@@ -85,4 +90,6 @@ def db_seeded(db_seeded_template, config) -> Database:
     # Copy the template database to the location in the config
     _clone_db(config.db.database_url, db_seeded_template)
 
-    return Database.from_config(config, run_migrations=True)
+    database = Database.from_config(config, run_migrations=True)
+    yield database
+    database.close()

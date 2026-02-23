@@ -1,0 +1,21 @@
+{{- if .Values.flower.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "ref.fullname" . }}
+  labels:
+    app.kubernetes.io/component: flower
+    {{- include "ref.labels" . | nindent 4 }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: flower
+      {{- include "ref.labels" . | nindent 4 }}
+  endpoints:
+  - port: http
+    path: /metrics
+    interval: 30s
+  namespaceSelector:
+    matchNames:
+    - {{ .Release.Namespace }}
+{{- end }}

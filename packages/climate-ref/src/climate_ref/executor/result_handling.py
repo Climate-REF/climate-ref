@@ -206,14 +206,22 @@ def handle_execution_result(
         )
     except FileNotFoundError:
         logger.error(
-            f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}"
+            f"Could not find log file {EXECUTION_LOG_FILENAME} in scratch directory: {config.paths.scratch}. "
+            f"This is likely a system error (will be retried on next solve)."
         )
         execution.mark_failed()
+        # Missing log file suggests the process was killed before writing output,
+        # so leave dirty=True for retry
         return
 
     if not result.successful or result.metric_bundle_filename is None:
-        logger.error(f"{execution} failed")
         execution.mark_failed()
+        if result.retryable:
+            logger.error(f"{execution} failed due to a system error (will be retried on next solve)")
+            # Leave dirty=True so the execution is retried on next solve
+        else:
+            logger.error(f"{execution} failed due to a diagnostic error")
+            execution.execution_group.dirty = False
         return
 
     logger.info(f"{execution} successful")

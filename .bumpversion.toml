@@ -1,5 +1,5 @@
 [tool.bumpversion]
-current_version = "0.7.0"
+current_version = "0.10.0"
 parse = "(?P<major>\\d+)\\.(?P<minor>\\d+)\\.(?P<patch>\\d+)"
 serialize = ["{major}.{minor}.{patch}"]
 
@@ -43,3 +43,27 @@ filename = "CITATION.cff"
 search = "date-released: \\d{{4}}-\\d{{2}}-\\d{{2}}"
 replace = "date-released: {now:%Y-%m-%d}"
 regex = true
+
+# Helm chart version
+[[tool.bumpversion.files]]
+filename = "helm/Chart.yaml"
+search = "version: {current_version}"
+replace = "version: {new_version}"
+
+# Helm chart appVersion
+[[tool.bumpversion.files]]
+filename = "helm/Chart.yaml"
+search = "appVersion: \"{current_version}\""
+replace = "appVersion: \"{new_version}\""
+
+# Helm default image tag
+[[tool.bumpversion.files]]
+filename = "helm/values.yaml"
+search = "tag: v{current_version}"
+replace = "tag: v{new_version}"
+
+# Helm README defaults table
+[[tool.bumpversion.files]]
+filename = "helm/README.md"
+search = "| `defaults.image.tag`        | Worker image tag          | `v{current_version}`"
+replace = "| `defaults.image.tag`        | Worker image tag          | `v{new_version}`"

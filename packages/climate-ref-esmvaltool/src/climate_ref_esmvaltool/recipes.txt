@@ -7,10 +7,10 @@ recipe_tcre.yml                             48fc9e3baf541bbcef7491853ea3a7740537
 recipe_zec.yml                              b0af7f789b7610ab3f29a6617124aa40c40866ead958204fc199eaf82863de51
 ref/recipe_enso_basicclimatology.yml        9ea7deb7ee668e39ac44618b96496d898bd82285c22dcee4fce4695e0c9fa82b
 ref/recipe_enso_characteristics.yml         34c2518b138068ac96d212910b979d54a8fcedee2c0089b5acd56a42c41dc3e4
-ref/recipe_ref_annual_cycle_region.yml      64ebc687789dad6c45a2361b45218cb5a0ad0e38c516840c65fc7e8bf7b5ace7
+ref/recipe_ref_annual_cycle_region.yml      88e0c2f07a76c4de4276547badcc74091516e03840eddb1f0e62469c67a0a86d
 ref/recipe_ref_cre.yml                      4375f262479c3b3e1b348b71080a6d758e195bda76516a591182045a3a29aa32
 ref/recipe_ref_fire.yml                     2ad82effaca4e742d8abe6a0aa07bb46e1e92ef0d2d240760f7623b0ba045926
 ref/recipe_ref_sea_ice_area_basic.yml       7d01a8527880663ca28284772f83a8356d9972fb4f022a4000e50a56ce044b09
 ref/recipe_ref_scatterplot.yml              b99d1736e16256d161847b025811d7088ad9f892d4887fb009fa99c4079135a0
-ref/recipe_ref_timeseries_region.yml        86f36e442021caba201601d8cf4624f8ce6715ce421670a467c792db2910db22
+ref/recipe_ref_timeseries_region.yml        deee4403ea25867401e163f6c9d7fcc4fee09d3088009007fcad6a29d01247a8
 ref/recipe_ref_trend_regions.yml            18fe246a51474bd12172ab1ba141efac999a247de7774822f77ae6ef144645fe

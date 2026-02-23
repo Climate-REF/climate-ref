@@ -12,7 +12,15 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_pmp.pmp_driver import build_pmp_command, process_json_result
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
+from climate_ref_pmp.pmp_driver import build_pmp_command, get_model_source_type, process_json_result
+
+# CMIP7 branded variable names (from CMIP7 Data Request)
+_BRANDED_VARIABLE_NAMES: dict[str, str] = {
+    "ts": "ts_tavg-u-hxy-u",
+    "psl": "psl_tavg-u-hxy-u",
+}
 
 
 class ExtratropicalModesOfVariability(CommandLineDiagnostic):
@@ -24,6 +32,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
     facets = (
+        "mip_id",
         "source_id",
         "member_id",
         "experiment_id",
@@ -45,38 +54,160 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             obs_variable: str,
             model_variable: str,
             extra_experiments: str | tuple[str, ...] | list[str] = (),
-        ) -> tuple[DataRequirement, DataRequirement]:
-            filters = [
+        ) -> tuple[tuple[DataRequirement, DataRequirement], ...]:
+            cmip6_filters = [
                 FacetFilter(
                     facets={
                         "frequency": "mon",
-                        "experiment_id": ("historical", "hist-GHG", "piControl", *extra_experiments),
+                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
                         "variable_id": model_variable,
                     }
                 )
             ]
 
+            cmip7_filters = [
+                FacetFilter(
+                    facets={
+                        "branded_variable": (_BRANDED_VARIABLE_NAMES[model_variable],),
+                        "experiment_id": ("historical", "hist-GHG", *extra_experiments),
+                        "frequency": "mon",
+                        "realm": "atmos",
+                        "region": "glb",
+                    }
+                )
+            ]
+
+            obs_requirement = DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(FacetFilter(facets={"source_id": (obs_source,), "variable_id": (obs_variable,)}),),
+                group_by=("source_id", "variable_id"),
+            )
+            cmip6_requirement = DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=tuple(cmip6_filters),
+                group_by=("source_id", "experiment_id", "member_id", "grid_label"),
+            )
+            cmip7_requirement = DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=tuple(cmip7_filters),
+                group_by=("source_id", "experiment_id", "variant_label", "grid_label"),
+            )
+
             return (
-                DataRequirement(
-                    source_type=SourceDatasetType.obs4MIPs,
-                    filters=(
-                        FacetFilter(facets={"source_id": (obs_source,), "variable_id": (obs_variable,)}),
-                    ),
-                    group_by=("source_id", "variable_id"),
-                ),
-                DataRequirement(
-                    source_type=SourceDatasetType.CMIP6,
-                    filters=tuple(filters),
-                    group_by=("source_id", "experiment_id", "member_id", "grid_label"),
-                ),
+                (obs_requirement, cmip6_requirement),
+                (obs_requirement, cmip7_requirement),
             )
 
         if self.mode_id in self.ts_modes:
             self.parameter_file = "pmp_param_MoV-ts.py"
             self.data_requirements = _get_data_requirements("HadISST-1-1", "ts", "ts")
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="cmip6",
+                        description=f"Test {self.mode_id} with CMIP6 ts data and HadISST obs",
+                        requests=(
+                            RegistryRequest(
+                                slug=f"mov-{self.mode_id.lower()}-obs",
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
+                                facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
+                            ),
+                            CMIP6Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip6",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "ts",
+                                    "member_id": "r1i1p1f1",
+                                    "frequency": "mon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                    TestCase(
+                        name="cmip7",
+                        description=f"CMIP7 test case for {self.mode_id}",
+                        requests=(
+                            RegistryRequest(
+                                slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
+                                facets={"source_id": "HadISST-1-1", "variable_id": "ts"},
+                            ),
+                            CMIP7Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip7",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "ts",
+                                    "branded_variable": "ts_tavg-u-hxy-u",
+                                    "variant_label": "r1i1p1f1",
+                                    "frequency": "mon",
+                                    "region": "glb",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
         elif self.mode_id in self.psl_modes:
             self.parameter_file = "pmp_param_MoV-psl.py"
             self.data_requirements = _get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
+            self.test_data_spec = TestDataSpecification(
+                test_cases=(
+                    TestCase(
+                        name="cmip6",
+                        description=f"Test {self.mode_id} with CMIP6 psl data and 20CR obs",
+                        requests=(
+                            RegistryRequest(
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
+                                slug=f"mov-{self.mode_id.lower()}-obs",
+                                facets={"source_id": "20CR", "variable_id": "psl"},
+                            ),
+                            CMIP6Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip6",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "psl",
+                                    "member_id": "r1i1p1f1",
+                                    "frequency": "mon",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                    TestCase(
+                        name="cmip7",
+                        description=f"CMIP7 test case for {self.mode_id}",
+                        requests=(
+                            RegistryRequest(
+                                registry_name="obs4ref",
+                                source_type="obs4MIPs",
+                                slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
+                                facets={"source_id": "20CR", "variable_id": "psl"},
+                            ),
+                            CMIP7Request(
+                                slug=f"mov-{self.mode_id.lower()}-cmip7",
+                                facets={
+                                    "source_id": "ACCESS-ESM1-5",
+                                    "experiment_id": "historical",
+                                    "variable_id": "psl",
+                                    "branded_variable": "psl_tavg-u-hxy-u",
+                                    "variant_label": "r1i1p1f1",
+                                    "frequency": "mon",
+                                    "region": "glb",
+                                },
+                                time_span=("2000-01", "2014-12"),
+                            ),
+                        ),
+                    ),
+                ),
+            )
         else:
             raise ValueError(
                 f"Unknown mode_id '{self.mode_id}'. Must be one of {self.ts_modes + self.psl_modes}"
@@ -95,10 +226,12 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         -------
             Command arguments to execute in the PMP environment
         """
-        input_datasets = definition.datasets[SourceDatasetType.CMIP6]
+        model_source_type = get_model_source_type(definition)
+        input_datasets = definition.datasets[model_source_type]
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
-        member_id = input_datasets["member_id"].unique()[0]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
+        member_id = input_datasets[member_id_col].unique()[0]
 
         logger.debug(f"input_datasets: {input_datasets}")
         logger.debug(f"source_id: {source_id}")
@@ -134,6 +267,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             "variability_mode": self.mode_id,
             "modpath": modpath,
             "modpath_lf": "none",
+            "mip": model_source_type.value,
             "exp": experiment_id,
             "realization": member_id,
             "modnames": source_id,
@@ -174,7 +308,11 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         -------
             Result of the diagnostic execution
         """
-        results_files = list(definition.output_directory.glob("*_cmec.json"))
+        model_source_type = get_model_source_type(definition)
+        mip = model_source_type.value
+
+        # Use mip-scoped glob to avoid matching files from other MIP runs
+        results_files = list(definition.output_directory.glob(f"*_{mip}_*_cmec.json"))
         if len(results_files) != 1:  # pragma: no cover
             logger.warning(f"A single cmec output file not found: {results_files}")
             return ExecutionResult.build_from_failure(definition)
@@ -186,10 +324,9 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
         data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
 
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_files[0], png_files, data_files)
-
-        # Add additional metadata to the metrics
-        input_selectors = definition.datasets[SourceDatasetType.CMIP6].selector_dict()
-        reference_selectors = definition.datasets[SourceDatasetType.obs4MIPs].selector_dict()
+        input_datasets = definition.datasets[model_source_type]
+        reference_datasets = definition.datasets[SourceDatasetType.obs4MIPs]
+        member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
         cmec_metric_bundle = cmec_metric_bundle.remove_dimensions(
             [
                 "model",
@@ -198,10 +335,11 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
-                "source_id": input_selectors["source_id"],
-                "member_id": input_selectors["member_id"],
-                "experiment_id": input_selectors["experiment_id"],
-                "reference_source_id": reference_selectors["source_id"],
+                "mip_id": model_source_type.value,
+                "source_id": input_datasets["source_id"].unique()[0],
+                "member_id": input_datasets[member_id_col].unique()[0],
+                "experiment_id": input_datasets["experiment_id"].unique()[0],
+                "reference_source_id": reference_datasets["source_id"].unique()[0],
             }
         )
 

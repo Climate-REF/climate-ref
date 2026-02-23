@@ -16,19 +16,20 @@ import os
 import stat
 import subprocess
 from abc import abstractmethod
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from contextlib import AbstractContextManager
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import Any
 
 import requests
+import yaml
+from attrs import evolve
 from loguru import logger
 
+from climate_ref_core.constraints import IgnoreFacets
+from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
-
-if TYPE_CHECKING:
-    from climate_ref.config import Config
 
 
 def _slugify(value: str) -> str:
@@ -65,7 +66,7 @@ class DiagnosticProvider:
     def __repr__(self) -> str:
         return f"{self.__class__.__name__}(name={self.name!r}, version={self.version!r})"
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """
         Configure the provider.
 
@@ -74,6 +75,51 @@ class DiagnosticProvider:
         config :
             A configuration.
         """
+        logger.debug(
+            f"Configuring provider {self.slug} using ignore_datasets_file {config.ignore_datasets_file}"
+        )
+        # The format of the configuration file is:
+        # provider:
+        #   diagnostic:
+        #     source_type:
+        #       - facet: value
+        #       - other_facet: [other_value1, other_value2]
+        ignore_datasets_all = yaml.safe_load(config.ignore_datasets_file.read_text(encoding="utf-8")) or {}
+        ignore_datasets = ignore_datasets_all.get(self.slug, {})
+        if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:
+            logger.warning(
+                f"Unknown diagnostics found in {config.ignore_datasets_file} "
+                f"for provider {self.slug}: {', '.join(sorted(unknown_slugs))}"
+            )
+
+        known_source_types = {s.value for s in iter(SourceDatasetType)}
+        for diagnostic in self.diagnostics():
+            if diagnostic.slug in ignore_datasets:
+                if unknown_source_types := set(ignore_datasets[diagnostic.slug]) - known_source_types:
+                    logger.warning(
+                        f"Unknown source types found in {config.ignore_datasets_file} for "
+                        f"diagnostic '{diagnostic.slug}' by provider {self.slug}: "
+                        f"{', '.join(sorted(unknown_source_types))}"
+                    )
+                data_requirements = (
+                    r if isinstance(r, Sequence) else (r,) for r in diagnostic.data_requirements
+                )
+                diagnostic.data_requirements = tuple(
+                    tuple(
+                        evolve(
+                            data_requirement,
+                            constraints=tuple(
+                                IgnoreFacets(facets)
+                                for facets in ignore_datasets[diagnostic.slug].get(
+                                    data_requirement.source_type.value, []
+                                )
+                            )
+                            + data_requirement.constraints,
+                        )
+                        for data_requirement in requirement_collection
+                    )
+                    for requirement_collection in data_requirements
+                )
 
     def diagnostics(self) -> list[Diagnostic]:
         """
@@ -125,6 +171,142 @@ class DiagnosticProvider:
             The requested diagnostic.
         """
         return self._diagnostics[slug.lower()]
+
+    def setup(
+        self,
+        config: Any,
+        *,
+        db: Any = None,
+        skip_env: bool = False,
+        skip_data: bool = False,
+    ) -> None:
+        """
+        Perform all setup required before offline execution.
+
+        This calls setup_environment, fetch_data, and ingest_data in the correct order.
+        Override individual hooks for fine-grained control.
+
+        This method MUST be idempotent - safe to call multiple times.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        db
+            Optional database instance for data ingestion.
+
+            If None, ingestion is skipped. This allows providers to be set up without the full
+            climate-ref package (e.g., for environment setup or data fetching only).
+        skip_env
+            If True, skip environment setup (e.g., conda)
+        skip_data
+            If True, skip data fetching and ingestion
+        """
+        if not skip_env:
+            self.setup_environment(config)
+        if not skip_data:
+            self.fetch_data(config)
+            if db is not None:
+                self.ingest_data(config, db)
+
+    def setup_environment(self, config: Any) -> None:
+        """
+        Set up the execution environment (e.g., conda environment).
+
+        Default implementation does nothing. Override in subclasses
+        that require environment setup.
+
+        This method MUST be idempotent.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        """
+        pass
+
+    def fetch_data(self, config: Any) -> None:
+        """
+        Fetch all data required for offline execution.
+
+        This includes reference datasets, climatology files, map files,
+        recipes, or any other data the provider needs.
+
+        Default implementation does nothing. Override in subclasses
+        that require data fetching. Providers are responsible for
+        determining what data they need and how to fetch it.
+
+        Data should be downloaded to the pooch cache (via `fetch_all_files`
+        with `output_dir=None`). Diagnostics can then access data via
+        `registry.abspath`.
+
+        This method MUST be idempotent.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        """
+        pass
+
+    def ingest_data(self, config: Any, db: Any) -> None:
+        """
+        Ingest fetched data into the database.
+
+        This is called after fetch_data to register any provider-specific
+        datasets in the database. For example, PMP climatology data needs
+        to be ingested so it can be used by diagnostics.
+
+        Default implementation does nothing. Override in subclasses
+        that have data to ingest.
+
+        This method MUST be idempotent.
+
+        Note: This method is only called when a database instance is provided
+        to setup(). The database and ingestion utilities are part of the
+        climate-ref package, not climate-ref-core. Provider implementations
+        should handle ImportError gracefully if they need to import from
+        climate-ref, allowing the provider to work standalone without
+        the full climate-ref package installed.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+        db
+            The database instance (from climate-ref package)
+        """
+        pass
+
+    def validate_setup(self, config: Any) -> bool:
+        """
+        Validate that the provider is ready for offline execution.
+
+        Returns True if setup is complete and valid, False otherwise.
+        Default implementation returns True.
+
+        Parameters
+        ----------
+        config
+            The application configuration
+
+        Returns
+        -------
+        bool
+            True if setup is valid and complete
+        """
+        return True
+
+    def get_data_path(self) -> Path | None:
+        """
+        Get the path where this provider's data is cached.
+
+        Returns
+        -------
+        Path | None
+            The data cache path, or None if the provider doesn't use cached data.
+        """
+        return None
 
 
 def import_provider(fqn: str) -> DiagnosticProvider:
@@ -241,17 +423,14 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         The version of the provider.
     slug
         A slugified version of the name.
-    repo
-        URL of the git repository to install a development version of the package from.
-    tag_or_commit
-        Tag or commit to install from the `repo` repository.
 
     Attributes
     ----------
     env_vars
         Environment variables to set when running commands in the conda environment.
-    url
-        URL to install a development version of the package from.
+    pip_packages
+        Pip packages to install (as URLs) with ``--no-deps``
+        after creating the conda environment.
 
     """
 
@@ -260,14 +439,12 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         name: str,
         version: str,
         slug: str | None = None,
-        repo: str | None = None,
-        tag_or_commit: str | None = None,
     ) -> None:
         super().__init__(name, version, slug)
         self._conda_exe: Path | None = None
         self._prefix: Path | None = None
-        self.url = f"git+{repo}@{tag_or_commit}" if repo and tag_or_commit else None
-        self.env_vars: dict[str, str] = {}
+        self.pip_packages: list[str] = []
+        self.env_vars: dict[str, str] = os.environ.copy()
 
     @property
     def prefix(self) -> Path:
@@ -285,12 +462,30 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
-    def configure(self, config: Config) -> None:
+    def configure(self, config: Any) -> None:
         """Configure the provider."""
+        super().configure(config)
         self.prefix = config.paths.software / "conda"
+        self.env_vars.setdefault("HOME", str(self.prefix))
+
+    def _is_stale(self, path: Path) -> bool:
+        """Check if a file is older than `MICROMAMBA_MAX_AGE`.
+
+        Parameters
+        ----------
+        path
+            The path to the file to check.
+
+        Returns
+        -------
+            True if the file is older than `MICROMAMBA_MAX_AGE`, False otherwise.
+        """
+        creation_time = datetime.datetime.fromtimestamp(path.stat().st_ctime)
+        age = datetime.datetime.now() - creation_time
+        return age > MICROMAMBA_MAX_AGE
 
     def _install_conda(self, update: bool) -> Path:
-        """Install micromamba in a temporary location.
+        """Install micromamba in a specific location.
 
         Parameters
         ----------
@@ -304,20 +499,15 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """
         conda_exe = self.prefix / "micromamba"
 
-        if conda_exe.exists() and update:
-            # Only update if the executable is older than `MICROMAMBA_MAX_AGE`.
-            creation_time = datetime.datetime.fromtimestamp(conda_exe.stat().st_ctime)
-            age = datetime.datetime.now() - creation_time
-            if age < MICROMAMBA_MAX_AGE:
-                update = False
-
-        if not conda_exe.exists() or update:
+        if not conda_exe.exists() or update or self._is_stale(conda_exe):
             logger.info("Installing conda")
             self.prefix.mkdir(parents=True, exist_ok=True)
-            response = requests.get(_get_micromamba_url(), timeout=120)
+            response = requests.get(_get_micromamba_url(), timeout=120, stream=True)
             response.raise_for_status()
             with conda_exe.open(mode="wb") as file:
-                file.write(response.content)
+                for chunk in response.iter_content(chunk_size=8192):
+                    if chunk:  # Filter out keep-alive new chunks
+                        file.write(chunk)
             conda_exe.chmod(stat.S_IRWXU)
             logger.info("Successfully installed conda.")
 
@@ -353,8 +543,8 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """
         with self.get_environment_file() as file:
             suffix = hashlib.sha1(file.read_bytes(), usedforsecurity=False)
-            if self.url is not None:
-                suffix.update(bytes(self.url, encoding="utf-8"))
+            for pkg in self.pip_packages:
+                suffix.update(bytes(pkg, encoding="utf-8"))
         return self.prefix / f"{self.slug}-{suffix.hexdigest()}"
 
     def create_env(self) -> None:
@@ -378,10 +568,10 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 f"{self.env_path}",
             ]
             logger.debug(f"Running {' '.join(cmd)}")
-            subprocess.run(cmd, check=True)  # noqa: S603
+            subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
 
-            if self.url is not None:
-                logger.info(f"Installing development version of {self.slug} from {self.url}")
+            for pkg in self.pip_packages:
+                logger.info(f"Installing development version from {pkg}")
                 cmd = [
                     conda_exe,
                     "run",
@@ -390,10 +580,10 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     "pip",
                     "install",
                     "--no-deps",
-                    self.url,
+                    pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
-                subprocess.run(cmd, check=True)  # noqa: S603
+                subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
 
     def run(self, cmd: Iterable[str]) -> None:
         """
@@ -426,8 +616,6 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             *cmd,
         ]
         logger.info(f"Running '{' '.join(cmd)}'")
-        env_vars = os.environ.copy()
-        env_vars.update(self.env_vars)
         try:
             # This captures the log output until the execution is complete
             # We could poll using `subprocess.Popen` if we want something more responsive
@@ -437,7 +625,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=env_vars,
+                env=self.env_vars,
             )
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")
@@ -445,3 +633,20 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.error(f"Failed to run {cmd}")
             logger.error(e.stdout)
             raise e
+
+    def setup_environment(self, config: Any) -> None:
+        """Set up the conda environment."""
+        self.create_env()
+
+    def validate_setup(self, config: Any) -> bool:
+        """Validate conda environment exists."""
+        env_exists = self.env_path.exists()
+        if not env_exists:
+            logger.error(
+                f"Conda environment for {self.slug} is not available at {self.env_path}. "
+                f"Please run `ref providers setup --provider {self.slug}` to install it."
+            )
+
+        # TODO: Could add more validation here (e.g., check packages installed)
+
+        return env_exists

@@ -35,14 +35,14 @@
         "antarctic": {
           "annual_siconc_trend": -0.0002971439814176,
           "annual_tas_trend": 0.0325482853284367,
-          "direct_p_val": 1.6582163952524357e-07,
+          "direct_p_val": 1.6582163952524317e-07,
           "direct_r_val": -0.747116470283511,
           "direct_sensitivity_(notz-style)": -0.0093089389765667
         },
         "arctic": {
           "annual_siconc_trend": -0.0005345031872321,
           "annual_tas_trend": 0.0325482853284367,
-          "direct_p_val": 3.1662085847651657e-12,
+          "direct_p_val": 3.1662085847651617e-12,
           "direct_r_val": -0.8745553580707366,
           "direct_sensitivity_(notz-style)": -0.0154132028358053
         }
@@ -58,7 +58,7 @@
         "arctic": {
           "annual_siconc_trend": -0.0007012069342604,
           "annual_tas_trend": 0.0327313947248029,
-          "direct_p_val": 6.87979369930241e-09,
+          "direct_p_val": 6.8797936993024045e-09,
           "direct_r_val": -0.7952221159781833,
           "direct_sensitivity_(notz-style)": -0.0195835210216465
         }
@@ -67,14 +67,14 @@
         "antarctic": {
           "annual_siconc_trend": -0.0010106442791242,
           "annual_tas_trend": 0.038504358240076,
-          "direct_p_val": 8.345568766166358e-16,
+          "direct_p_val": 8.345568766166341e-16,
           "direct_r_val": -0.9245224453912408,
           "direct_sensitivity_(notz-style)": -0.0240291003592504
         },
         "arctic": {
           "annual_siconc_trend": -0.0007086997732451,
           "annual_tas_trend": 0.038504358240076,
-          "direct_p_val": 3.456803123954097e-17,
+          "direct_p_val": 3.456803123954115e-17,
           "direct_r_val": -0.9377936932511496,
           "direct_sensitivity_(notz-style)": -0.0182667687090698
         }

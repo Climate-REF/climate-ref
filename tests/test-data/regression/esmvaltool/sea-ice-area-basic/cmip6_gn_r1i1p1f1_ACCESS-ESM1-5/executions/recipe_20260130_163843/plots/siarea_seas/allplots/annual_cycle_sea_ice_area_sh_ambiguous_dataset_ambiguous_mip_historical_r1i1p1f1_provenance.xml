@@ -1,0 +1,652 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<prov:document xmlns:software="https://www.esmvaltool.org/software" xmlns:attribute="https://www.esmvaltool.org/attribute" xmlns:project="https://www.esmvaltool.org/project" xmlns:task="https://www.esmvaltool.org/task" xmlns:author="https://www.esmvaltool.org/author" xmlns:preprocessor="https://www.esmvaltool.org/preprocessor" xmlns:file="https://www.esmvaltool.org/file" xmlns:recipe="https://www.esmvaltool.org/recipe" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201301-201312.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:41:02</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200901-200912.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:39:37</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:activity prov:id="task:siarea_seas/sea_ice_area_sh"/>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/SImon/siconc/gn/v20200817/siconc_SImon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_197901-201412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2020-08-17T00:32:02Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:external_variables>areacello</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-08-17T00:32:02Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file). The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: siconc (['aice'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>seaIce</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>SImon</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:5bd755e94c2173cb3050a0f3480f60c4</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/931b0664-d90c-46d5-b9fb-f7f17b8cefd5</attribute:tracking_id>
+    <attribute:variable_id>siconc</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20200817</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200001-200012.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200501-200512.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199701-199712.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201001-201012.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200701-200712.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199901-199912.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:35:41</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_fx_areacello.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200001-200012.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:36:15</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201101-201112.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201401-201412.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200201-200212.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199601-199612.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199701-199712.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:34:59</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199901-199912.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200201-200212.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:36:57</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/allplots"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200901-200912.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200801-200812.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/SImon/siconc/gn/v20200817/siconc_SImon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_197901-201412.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:agent prov:id="author:Lauer, Axel">
+    <attribute:email>axel.lauer@dlr.de</attribute:email>
+    <attribute:institute>DLR, Germany</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0002-9270-1044</attribute:orcid>
+  </prov:agent>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png"/>
+    <prov:agent prov:ref="author:Schlund, Manuel"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200101-200112.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200601-200612.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200301-200312.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:37:24</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Ofx/areacello/gn/v20191115/areacello_Ofx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>21915.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.4.0</attribute:cmor_version>
+    <attribute:creation_date>2019-11-15T14:46:52Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>all-forcing simulation of the recent past</attribute:experiment>
+    <attribute:experiment_id>historical</attribute:experiment_id>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>fx</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.CSIRO.ACCESS-ESM1-5.historical.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>native atmosphere N96 grid (145x192 latxlon)</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2019-11-15T14:46:52Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Commonwealth Scientific and Industrial Research Organisation, Aspendale, Victoria 3195, Australia</attribute:institution>
+    <attribute:institution_id>CSIRO</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by CSIRO is licensed under a Creative Commons Attribution-ShareAlike 4.0 International License (https://creativecommons.org/licenses/).  Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment.  Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file).  The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:notes>Exp: ESM-historical; Local ID: HI-05; Variable: areacello (['area_t', 'ht'])</attribute:notes>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>ACCESS-ESM1-5</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 0101-1-1</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>ocean</attribute:realm>
+    <attribute:run_variant>forcing: GHG, Oz, SA, Sl, Vl, BC, OC, (GHG = CO2, N2O, CH4, CFC11, CFC12, CFC113, HCFC22, HFC125, HFC134a)</attribute:run_variant>
+    <attribute:source>ACCESS-ESM1.5 (2019): 
+aerosol: CLASSIC (v1.0)
+atmos: HadGAM2 (r1.1, N96; 192 x 145 longitude/latitude; 38 levels; top level 39255 m)
+atmosChem: none
+land: CABLE2.4
+landIce: none
+ocean: ACCESS-OM2 (MOM5, tripolar primarily 1deg; 360 x 300 longitude/latitude; 50 levels; top grid cell 0-10 m)
+ocnBgchem: WOMBAT (same grid as ocean)
+seaIce: CICE4.1 (same grid as ocean)</attribute:source>
+    <attribute:source_id>ACCESS-ESM1-5</attribute:source_id>
+    <attribute:source_type>AOGCM</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Ofx</attribute:table_id>
+    <attribute:table_info>Creation Date:(30 April 2019) MD5:e14f55f257cceafb2523e41244962371</attribute:table_info>
+    <attribute:title>ACCESS-ESM1-5 output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/fd041f03-fb0f-4c94-9e15-21733dceac88</attribute:tracking_id>
+    <attribute:variable_id>areacello</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+    <attribute:version>v20191115</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200801-200812.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:39:15</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:siarea_seas/allplots"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Lauer, Axel"/>
+  </prov:wasAttributedTo>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP6</attribute:alias>
+    <attribute:dataset>ACCESS-ESM1-5</attribute:dataset>
+    <attribute:diagnostic>siarea_seas</attribute:diagnostic>
+    <attribute:end_year>2014</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>CSIRO</attribute:institute>
+    <attribute:long_name>Sea-Ice Area Percentage (Ocean Grid)</attribute:long_name>
+    <attribute:mip>SImon</attribute:mip>
+    <attribute:modeling_realm>['seaIce']</attribute:modeling_realm>
+    <attribute:original_short_name>siconc</attribute:original_short_name>
+    <attribute:preprocessor>pp_sh</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:reference_dataset>OSI-450-sh</attribute:reference_dataset>
+    <attribute:short_name>siconc</attribute:short_name>
+    <attribute:standard_name>sea_ice_area_fraction</attribute:standard_name>
+    <attribute:start_year>1995</attribute:start_year>
+    <attribute:timerange>1995/2014</attribute:timerange>
+    <attribute:units>%</attribute:units>
+    <attribute:variable_group>sea_ice_area_sh</attribute:variable_group>
+    <attribute:version>v20200817</attribute:version>
+    <preprocessor:area_statistics>{'operator': 'sum'}</preprocessor:area_statistics>
+    <preprocessor:climate_statistics>{'period': 'month'}</preprocessor:climate_statistics>
+    <preprocessor:convert_units>{'units': '1e6 km2'}</preprocessor:convert_units>
+    <preprocessor:extract_region>{'start_longitude': 0, 'end_longitude': 360, 'start_latitude': -90, 'end_latitude': -30}</preprocessor:extract_region>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199601-199612.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:34:35</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201201-201212.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:agent prov:id="author:Schlund, Manuel">
+    <attribute:email>manuel.schlund@dlr.de</attribute:email>
+    <attribute:github>schlunma</attribute:github>
+    <attribute:institute>DLR, Germany</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0001-5251-0158</attribute:orcid>
+  </prov:agent>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199801-199812.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:35:20</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201401-201412.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:41:23</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199501-199512.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200401-200412.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201301-201312.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Ofx/areacello/gn/v20191115/areacello_Ofx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199501-199512.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:34:14</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:activity prov:id="task:siarea_seas/allplots"/>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201001-201012.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:39:59</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200501-200512.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:38:05</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200301-200312.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc">
+    <attribute:alias>OBS_OSI-450-sh</attribute:alias>
+    <attribute:dataset>OSI-450-sh</attribute:dataset>
+    <attribute:diagnostic>siarea_seas</attribute:diagnostic>
+    <attribute:end_year>2014</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>historical</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gr</attribute:grid>
+    <attribute:long_name>Sea Ice Area Fraction</attribute:long_name>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>['seaIce', 'ocean']</attribute:modeling_realm>
+    <attribute:original_short_name>sic</attribute:original_short_name>
+    <attribute:preprocessor>pp_sh</attribute:preprocessor>
+    <attribute:project>OBS</attribute:project>
+    <attribute:recipe_dataset_index>1</attribute:recipe_dataset_index>
+    <attribute:reference_dataset>OSI-450-sh</attribute:reference_dataset>
+    <attribute:short_name>siconc</attribute:short_name>
+    <attribute:standard_name>sea_ice_area_fraction</attribute:standard_name>
+    <attribute:start_year>1995</attribute:start_year>
+    <attribute:tier>2</attribute:tier>
+    <attribute:timerange>1995/2014</attribute:timerange>
+    <attribute:type>reanaly</attribute:type>
+    <attribute:units>%</attribute:units>
+    <attribute:variable_group>sea_ice_area_sh</attribute:variable_group>
+    <attribute:version>v3</attribute:version>
+    <preprocessor:area_statistics>{'operator': 'sum'}</preprocessor:area_statistics>
+    <preprocessor:climate_statistics>{'period': 'month'}</preprocessor:climate_statistics>
+    <preprocessor:convert_units>{'units': '1e6 km2'}</preprocessor:convert_units>
+    <preprocessor:extract_region>{'start_longitude': 0, 'end_longitude': 360, 'start_latitude': -90, 'end_latitude': -30}</preprocessor:extract_region>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'alias': 'siconc', 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201201-201212.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:40:41</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png">
+    <attribute:caption>20-year average seasonal cycle of the sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.</attribute:caption>
+    <attribute:facet_used_for_labels>dataset</attribute:facet_used_for_labels>
+    <attribute:group_variables_by>variable_group</attribute:group_variables_by>
+    <attribute:long_names>['Sea-Ice Area Percentage (Ocean Grid)', 'Sea Ice Area Fraction']</attribute:long_names>
+    <attribute:plot_folder>{plot_dir}</attribute:plot_folder>
+    <attribute:plot_types>('seasonal cycle',)</attribute:plot_types>
+    <attribute:plots>{'annual_cycle': {'caption': '20-year average seasonal cycle of the sea ice area in million km2 from ACCESS-ESM1-5.r1i1p1f1.gn compared with OSI-450.', 'pyplot_kwargs': {'title': 'Sea ice area (million km2)'}, 'plot_kwargs': {'OSI-450-nh': {'color': 'blue', 'label': 'OSISAF/CCI', 'linestyle': '-', 'linewidth': 2, 'zorder': 3}, 'OSI-450-sh': {'color': 'blue', 'label': 'OSISAF/CCI', 'linestyle': '-', 'linewidth': 2, 'zorder': 3}, 'default': {'color': 'red', 'label': '{dataset}', 'linestyle': '-', 'linewidth': 2, 'zorder': 4}}}}</attribute:plots>
+    <attribute:scheduler_address>tcp://127.0.0.1:40415</attribute:scheduler_address>
+    <attribute:script>allplots</attribute:script>
+    <attribute:script_file>monitor/multi_datasets.py</attribute:script_file>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200601-200612.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:38:28</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/OBS_OSI-450-sh_reanaly_v3_OImon_siconc_1995-2014.nc"/>
+    <prov:usedEntity prov:ref="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_199801-199812.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_201101-201112.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:40:20</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200701-200712.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:38:54</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163843/preproc/siarea_seas/sea_ice_area_sh/CMIP6_ACCESS-ESM1-5_SImon_historical_r1i1p1f1_siconc_gn_1995-2014.nc"/>
+    <prov:activity prov:ref="task:siarea_seas/allplots"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200401-200412.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:37:45</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_fx_areacello.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:27:43</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>fx</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:entity prov:id="file:/home/b/b381141/.cache/climate_ref/ESMValTool/OBS/Tier2/OSI-450-sh/OBS_OSI-450-sh_reanaly_v3_OImon_sic_200101-200112.nc">
+    <attribute:Conventions>CF-1.7</attribute:Conventions>
+    <attribute:history>Created on 2025-04-11 08:36:36</attribute:history>
+    <attribute:host>unknown host</attribute:host>
+    <attribute:mip>OImon</attribute:mip>
+    <attribute:modeling_realm>reanaly</attribute:modeling_realm>
+    <attribute:project_id>OBS</attribute:project_id>
+    <attribute:reference>doi:10.15770/EUM_SAF_OSI_0013</attribute:reference>
+    <attribute:source>http://osisaf.met.no/p/ice/</attribute:source>
+    <attribute:tier>2</attribute:tier>
+    <attribute:title>OSI-450-sh data reformatted for ESMValTool v2.13.0.dev22+g15d219c81.d20250409</attribute:title>
+    <attribute:user>bandela</attribute:user>
+    <attribute:version>v3</attribute:version>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:siarea_seas/sea_ice_area_sh"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:activity prov:id="software:esmvaltool==2.13.0"/>
+  <prov:entity prov:id="recipe:recipe.yml">
+    <attribute:description>Plots of the seasonal cycle and time series of NH and SH sea ice area.
+</attribute:description>
+    <attribute:references>[]</attribute:references>
+  </prov:entity>
+</prov:document>

@@ -1,9 +1,32 @@
 {
   "DIMENSIONS": {
-    "json_structure": []
+    "experiment_id": {
+      "ssp126": {}
+    },
+    "global warming level": {
+      "1.5": {},
+      "2.0": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "global warming level",
+      "metric"
+    ],
+    "metric": {
+      "exceedance_year": {}
+    }
   },
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": null,
-  "RESULTS": {}
+  "RESULTS": {
+    "ssp126": {
+      "1.5": {
+        "exceedance_year": 2031
+      },
+      "2.0": {
+        "exceedance_year": 2074
+      }
+    }
+  }
 }

@@ -1,0 +1,54 @@
+# Local testing values for climate-ref helm chart
+
+defaults:
+  image:
+    repository: ghcr.io/climate-ref/climate-ref
+    pullPolicy: IfNotPresent
+    tag: pr-492  # Using current PR tag
+
+  podSecurityContext:
+    runAsUser: 1000
+
+  # Set HOME to writable location to fix intake-esgf and ilamb3 config directory issues
+  env:
+    HOME: /tmp
+    CELERY_BROKER_URL: redis://climate-ref-test-dragonfly:6379
+    CELERY_RESULT_BACKEND: redis://climate-ref-test-dragonfly:6379
+
+  volumes:
+  - name: test-data
+    emptyDir: {}
+  - name: tmp
+    emptyDir: {}
+
+  volumeMounts:
+  - name: test-data
+    mountPath: /ref
+    readOnly: false
+  - name: tmp
+    mountPath: /tmp
+    readOnly: false
+
+flower:
+  # Fix runAsNonRoot issue with flower image
+  securityContext:
+    runAsNonRoot: false
+
+  env:
+    CELERY_BROKER_URL: redis://climate-ref-test-dragonfly:6379
+    CELERY_RESULT_BACKEND: redis://climate-ref-test-dragonfly:6379
+
+dragonfly:
+  storage:
+    enabled: false  # Use emptyDir for local testing
+  extraArgs:
+  - --proactor_threads=1
+  - --maxmemory=512mb
+
+# Enable all providers for testing
+providers:
+  orchestrator: {}
+  esmvaltool: {}
+  pmp: {}
+  ilamb: {}
+  example: {}

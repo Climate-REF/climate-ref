@@ -6,9 +6,11 @@ import importlib.metadata
 
 __version__ = importlib.metadata.version("climate-ref")
 
+# Version of sample data used for testing - defined here to avoid importing
+# the heavy climate_ref.testing module (which pulls in pandas, xarray, etc.)
+SAMPLE_DATA_VERSION = "v0.7.7"
 
-from climate_ref.testing import SAMPLE_DATA_VERSION
-from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager
+from climate_ref_core.dataset_registry import DATASET_URL, dataset_registry_manager  # noqa: E402
 
 # Register the obs4REF data registry
 dataset_registry_manager.register(

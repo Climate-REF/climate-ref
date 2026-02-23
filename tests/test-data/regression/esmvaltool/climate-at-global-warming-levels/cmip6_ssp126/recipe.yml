@@ -169,13 +169,13 @@ diagnostics:
 datasets:
 - project: CMIP6
   activity:
-  - CMIP
   - ScenarioMIP
+  - CMIP
   dataset: ACCESS-ESM1-5
   ensemble: r1i1p1f1
   institute: CSIRO
   exp:
-  - historical
   - ssp126
+  - historical
   grid: gn
   mip: Amon

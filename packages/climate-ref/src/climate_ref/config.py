@@ -14,11 +14,14 @@ which always take precedence over any other configuration values.
 # `esgpull` configuration management system with some of the extra complexity removed.
 # https://github.com/ESGF/esgf-download/blob/main/esgpull/config.py
 
+import datetime
 import importlib.resources
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
+import platformdirs
+import requests
 import tomlkit
 from attr import Factory
 from attrs import define, field
@@ -28,6 +31,7 @@ from loguru import logger
 from tomlkit import TOMLDocument
 
 from climate_ref._config_helpers import (
+    _environ_post_init,
     _format_exception,
     _format_key_exception,
     _pop_empty,
@@ -38,11 +42,11 @@ from climate_ref._config_helpers import (
 from climate_ref.constants import CONFIG_FILENAME
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import InvalidExecutorException
-from climate_ref_core.executor import Executor, import_executor_cls
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
+    from climate_ref_core.executor import Executor
 
 env_prefix = "REF"
 """
@@ -180,7 +184,7 @@ class ExecutorConfig:
     These options will be passed to the executor class when it is created.
     """
 
-    def build(self, config: "Config", database: "Database") -> Executor:
+    def build(self, config: "Config", database: "Database") -> "Executor":
         """
         Create an instance of the executor
 
@@ -189,6 +193,10 @@ class ExecutorConfig:
         :
             An executor that can be used to run diagnostics
         """
+        # Import lazily to avoid loading heavy dependencies (pandas, xarray)
+        # at module load time - these are only needed when actually running diagnostics
+        from climate_ref_core.executor import Executor, import_executor_cls  # noqa: PLC0415
+
         ExecutorCls = import_executor_cls(self.executor)
         kwargs = {
             "config": config,
@@ -298,7 +306,7 @@ class DbConfig:
 
 def default_providers() -> list[DiagnosticProviderConfig]:
     """
-    Default diagnostic provider
+    Return default diagnostic providers.
 
     Used if no diagnostic providers are specified in the configuration
 
@@ -306,7 +314,7 @@ def default_providers() -> list[DiagnosticProviderConfig]:
     -------
     :
         List of default diagnostic providers
-    """  # noqa: D401
+    """
     env_providers = env.list("REF_DIAGNOSTIC_PROVIDERS", default=None)
     if env_providers:
         return [DiagnosticProviderConfig(provider=provider) for provider in env_providers]
@@ -334,11 +342,53 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
     return _converter_defaults_relaxed.structure(doc, Config)
 
 
+DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
+DEFAULT_IGNORE_DATASETS_URL = (
+    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/default_ignore_datasets.yaml"
+)
+
+
+def _get_default_ignore_datasets_file() -> Path:
+    """
+    Get the path to the ignore datasets file
+    """
+    cache_dir = platformdirs.user_cache_path("climate_ref")
+    cache_dir.mkdir(parents=True, exist_ok=True)
+    ignore_datasets_file = cache_dir / "default_ignore_datasets.yaml"
+
+    download = True
+    if ignore_datasets_file.exists():
+        # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
+        modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
+        age = datetime.datetime.now() - modification_time
+        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+            download = False
+
+    if download:
+        logger.info(
+            f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
+            f"to {ignore_datasets_file}"
+        )
+        try:
+            response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
+            response.raise_for_status()
+        except requests.RequestException as exc:
+            logger.warning(f"Failed to download default ignore datasets file: {exc}")
+            ignore_datasets_file.touch(exist_ok=True)
+        else:
+            with ignore_datasets_file.open(mode="wb") as file:
+                file.write(response.content)
+
+    return ignore_datasets_file
+
+
 @define(auto_attribs=True)
 class Config:
     """
     Configuration that is used by the REF
     """
+
+    _prefix = env_prefix
 
     log_level: str = field(default="INFO")
     """
@@ -362,6 +412,26 @@ class Config:
 
     - `drs`: Use the DRS parser, which parses the dataset based on the DRS naming conventions.
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
+    """
+
+    ignore_datasets_file: Path = field(factory=_get_default_ignore_datasets_file)
+    """
+    Path to the file containing the ignore datasets
+
+    This file is a YAML file that contains a list of facets to ignore per diagnostic.
+
+    The format is:
+    ```yaml
+    provider:
+      diagnostic:
+        source_type:
+          - facet: value
+          - another_facet: [another_value1, another_value2]
+    ```
+
+    If this is not specified, a default ignore datasets file will be used.
+    The default file is downloaded from the Climate-REF GitHub repository
+    if it does not exist or is older than 6 hours.
     """
 
     paths: PathConfig = Factory(PathConfig)
@@ -517,6 +587,10 @@ class Config:
         doc = TOMLDocument()
         doc.update(dump)
         return doc
+
+    def __attrs_post_init__(self) -> None:
+        # This is needed to apply the environment variable overrides on initialization
+        _environ_post_init(self)
 
 
 def _make_converter(omit_default: bool, forbid_extra_keys: bool) -> Converter:

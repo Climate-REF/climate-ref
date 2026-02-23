@@ -1,30 +1,38 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20251001_073453/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162750/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20251001_073453/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162750/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20251001_073453/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc": {
-      "filename": "executions/recipe_20251001_073453/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc",
+    "executions/recipe_20260130_162750/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc": {
+      "filename": "executions/recipe_20260130_162750/work/timeseries/script1/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.nc",
       "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "annual mean",
+        "variable_id": "tas",
+        "region": "global"
+      }
     }
   },
   "plots": {
-    "executions/recipe_20251001_073453/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png": {
-      "filename": "executions/recipe_20251001_073453/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png",
+    "executions/recipe_20260130_162750/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png": {
+      "filename": "executions/recipe_20260130_162750/plots/timeseries/script1/png/CMIP6_ACCESS-ESM1-5_Amon_1pctCO2_r1i1p1f1_tas_gn_01010116T120000-02501216T120000.png",
       "long_name": "Annual global mean Near-Surface Air Temperature according to ACCESS-ESM1-5.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "annual mean",
+        "variable_id": "tas",
+        "region": "global"
+      }
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20251001_073453/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20251001_073453/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162750/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162750/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

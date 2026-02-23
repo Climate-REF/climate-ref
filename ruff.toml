@@ -42,6 +42,7 @@ ignore = [
 "docs/*" = [
     "D",
     "E402",  # Module level import not at top of file
+    "E501",  # Line too long
     "PLR2004",  # Magic value used in comparison.
 ]
 "*/migrations/versions/*" = [
@@ -49,6 +50,10 @@ ignore = [
 ]
 "stubs/*" = [
     "PLR0913",  # Too many arguments in function definition
+]
+# CLI modules use lazy imports to speed up startup time
+"*/cli/*.py" = [
+    "PLC0415",  # Import outside top-level (lazy imports for performance)
 ]
 
 [lint.isort]

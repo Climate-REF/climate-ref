@@ -1,0 +1,113 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe_20260205_082436/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe_20260205_082436/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe_20260205_082436/work/hus200_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260205_082436/work/hus200_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "hus200",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/work/pr_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260205_082436/work/pr_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/work/psl_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260205_082436/work/psl_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "psl",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/work/tas_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260205_082436/work/tas_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "tas",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/work/ua200_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe_20260205_082436/work/ua200_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "ua200",
+        "statistic": "trend"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe_20260205_082436/plots/hus200_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260205_082436/plots/hus200_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "hus200",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/plots/pr_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260205_082436/plots/pr_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/plots/psl_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260205_082436/plots/psl_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "psl",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/plots/tas_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260205_082436/plots/tas_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "tas",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe_20260205_082436/plots/ua200_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe_20260205_082436/plots/ua200_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "ua200",
+        "statistic": "trend"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe_20260205_082436/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260205_082436/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

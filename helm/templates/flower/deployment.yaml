@@ -1,0 +1,105 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "ref.fullname" . }}-flower
+  labels:
+    app.kubernetes.io/component: flower
+    {{- include "ref.labels" . | nindent 4 }}
+spec:
+  {{- if not .Values.flower.autoscaling.enabled }}
+  replicas: {{ .Values.flower.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      app.kubernetes.io/component: flower
+      {{- include "ref.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        checksum/config: {{ include (print $.Template.BasePath "/flower/secret.yaml") . | sha256sum }}
+        checksum/configmap: {{ include (print $.Template.BasePath "/flower/configmap.yaml") . | sha256sum }}
+      {{- with .Values.flower.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        app.kubernetes.io/component: flower
+        {{- include "ref.labels" . | nindent 8 }}
+        {{- with .Values.flower.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "ref.fullname" . }}-flower
+      {{- with .Values.flower.podSecurityContext }}
+      securityContext:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      initContainers:
+      - name: wait-for-dragonfly
+        image: busybox:1.37
+        command:
+        - sh
+        - -c
+        - |
+          echo "Waiting for Dragonfly at {{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port | default 6379 }}..."
+          until nc -z {{ include "dragonfly.fullname" .Subcharts.dragonfly }} {{ .Values.dragonfly.service.port | default 6379 }}; do
+            echo "Dragonfly not ready, retrying in 2s..."
+            sleep 2
+          done
+          echo "Dragonfly is ready"
+      containers:
+      - name: flower
+        {{- with .Values.flower.securityContext }}
+        securityContext:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        image: "{{ .Values.flower.image.repository }}:{{ .Values.flower.image.tag }}"
+        imagePullPolicy: {{ .Values.flower.image.pullPolicy }}
+        env:
+        - name: CELERY_CONFIG_MODULE
+          value: celeryconfig
+        - name: PYTHONPATH
+          value: /flower-config
+        envFrom:
+        - secretRef:
+            name: {{ include "ref.fullname" . }}-flower
+        ports:
+        - name: http
+          containerPort: {{ .Values.flower.service.port }}
+        readinessProbe:
+          httpGet:
+            path: /healthcheck
+            port: http
+        {{- with .Values.flower.resources }}
+        resources:
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+        volumeMounts:
+        - name: flower-config
+          mountPath: /flower-config
+          readOnly: true
+        {{- with .Values.flower.volumeMounts }}
+          {{- toYaml . | nindent 12 }}
+        {{- end }}
+      volumes:
+      - name: flower-config
+        configMap:
+          name: {{ include "ref.fullname" . }}-flower-config
+      {{- with .Values.flower.volumes }}
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.flower.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.flower.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.flower.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

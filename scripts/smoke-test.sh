@@ -85,7 +85,10 @@ fi
 
 
 # Run a simple solve
-if docker compose run --rm climate-ref -v solve --timeout 180 --one-per-provider; then
+if docker compose run --rm climate-ref -v solve --timeout 180 --one-per-provider \
+    --diagnostic global-mean-timeseries \
+    --diagnostic annual-cycle \
+    --diagnostic gpp-wecann; then
     echo -e "${GREEN} Solving completed before timeout${NC}"
 else
     echo -e "${RED} Solving failed${NC}"

@@ -1,0 +1,208 @@
+INFO    [2305059] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2305059] Package versions
+INFO    [2305059] ----------------
+INFO    [2305059] ESMValCore: 2.13.0
+INFO    [2305059] ESMValTool: 2.13.0
+INFO    [2305059] ----------------
+INFO    [2305059] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2305059] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_162509/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162509/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162509/run/cmor_log.txt
+INFO    [2305059] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:25:09 UTC
+INFO    [2305059] ----------------------------------------------------------------------
+INFO    [2305059] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2305059] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_162509/run
+INFO    [2305059] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162509/work
+INFO    [2305059] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc
+INFO    [2305059] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162509/plots
+INFO    [2305059] ----------------------------------------------------------------------
+INFO    [2305059] Running tasks using at most 10 processes
+INFO    [2305059] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2305059] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2305059] Creating tasks from recipe
+INFO    [2305059] Creating tasks for diagnostic plot_joint_clt_swcre_ref
+INFO    [2305059] Creating diagnostic task plot_joint_clt_swcre_ref/plot
+INFO    [2305059] Creating preprocessor task plot_joint_clt_swcre_ref/clt
+INFO    [2305059] Creating preprocessor 'common_grid_clt' task for variable 'clt'
+INFO    [2305059] Found input files for Dataset: clt, Amon, OBS, ESACCI-CLOUD, historical, AVHRR-AMPM-fv3.0
+INFO    [2305059] PreprocessingTask plot_joint_clt_swcre_ref/clt created.
+INFO    [2305059] Creating preprocessor task plot_joint_clt_swcre_ref/swcre
+INFO    [2305059] Creating preprocessor 'common_grid_swcre' task for variable 'swcre'
+INFO    [2305059] Found input files for Dataset: swcre, Amon, OBS, CERES-EBAF, historical, Ed4.2
+INFO    [2305059] PreprocessingTask plot_joint_clt_swcre_ref/swcre created.
+INFO    [2305059] Creating tasks for diagnostic plot_joint_clwvi_pr_ref
+INFO    [2305059] Creating diagnostic task plot_joint_clwvi_pr_ref/plot
+INFO    [2305059] Creating preprocessor task plot_joint_clwvi_pr_ref/clwvi
+INFO    [2305059] Creating preprocessor 'common_grid_clivi_clwvi' task for variable 'clwvi'
+INFO    [2305059] Found input files for Dataset: clwvi, Amon, OBS, ESACCI-CLOUD, historical, AVHRR-AMPM-fv3.0
+INFO    [2305059] PreprocessingTask plot_joint_clwvi_pr_ref/clwvi created.
+INFO    [2305059] Creating preprocessor task plot_joint_clwvi_pr_ref/pr
+INFO    [2305059] Creating preprocessor 'common_grid_pr' task for variable 'pr'
+INFO    [2305059] Found input files for Dataset: pr, Amon, obs4MIPs, GPCP-V2.3, historical, v20180519
+INFO    [2305059] PreprocessingTask plot_joint_clwvi_pr_ref/pr created.
+INFO    [2305059] Creating tasks for diagnostic plot_joint_clivi_lwcre_ref
+INFO    [2305059] Creating diagnostic task plot_joint_clivi_lwcre_ref/plot
+INFO    [2305059] Creating preprocessor task plot_joint_clivi_lwcre_ref/clivi
+INFO    [2305059] Creating preprocessor 'common_grid_clivi_clwvi' task for variable 'clivi'
+INFO    [2305059] Found input files for Dataset: clivi, Amon, OBS, ESACCI-CLOUD, historical, AVHRR-AMPM-fv3.0
+INFO    [2305059] PreprocessingTask plot_joint_clivi_lwcre_ref/clivi created.
+INFO    [2305059] Creating preprocessor task plot_joint_clivi_lwcre_ref/lwcre
+INFO    [2305059] Creating preprocessor 'common_grid_lwcre' task for variable 'lwcre'
+INFO    [2305059] Found input files for Dataset: lwcre, Amon, OBS, CERES-EBAF, historical, Ed4.2
+INFO    [2305059] PreprocessingTask plot_joint_clivi_lwcre_ref/lwcre created.
+INFO    [2305059] Creating tasks for diagnostic plot_joint_cli_ta_ref
+INFO    [2305059] Creating diagnostic task plot_joint_cli_ta_ref/plot
+INFO    [2305059] Creating preprocessor task plot_joint_cli_ta_ref/cli
+INFO    [2305059] Creating preprocessor 'common_grid_levels_cli' task for variable 'cli'
+INFO    [2305059] Found input files for Dataset: cli, Amon, OBS, CALIPSO-ICECLOUD, historical, 1-00
+INFO    [2305059] PreprocessingTask plot_joint_cli_ta_ref/cli created.
+INFO    [2305059] Creating preprocessor task plot_joint_cli_ta_ref/ta
+INFO    [2305059] Creating preprocessor 'common_grid_levels_ta' task for variable 'ta'
+INFO    [2305059] Found input files for Dataset: ta, Amon, obs4MIPs, ERA-5, historical, gn, v20250220
+INFO    [2305059] PreprocessingTask plot_joint_cli_ta_ref/ta created.
+INFO    [2305059] These tasks will be executed: plot_joint_clt_swcre_ref/plot, plot_joint_clwvi_pr_ref/pr, plot_joint_clivi_lwcre_ref/plot, plot_joint_cli_ta_ref/plot, plot_joint_clivi_lwcre_ref/clivi, plot_joint_clt_swcre_ref/swcre, plot_joint_cli_ta_ref/ta, plot_joint_clt_swcre_ref/clt, plot_joint_clwvi_pr_ref/clwvi, plot_joint_clivi_lwcre_ref/lwcre, plot_joint_clwvi_pr_ref/plot, plot_joint_cli_ta_ref/cli
+INFO    [2305059] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162509/run/recipe_filled.yml
+INFO    [2305059] Using Dask distributed scheduler (address: tcp://127.0.0.1:41875, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2305059] Running 12 tasks using 10 processes
+INFO    [2305139] Starting task plot_joint_clt_swcre_ref/swcre in process [2305139]
+INFO    [2305137] Starting task plot_joint_clt_swcre_ref/clt in process [2305137]
+INFO    [2305141] Starting task plot_joint_clwvi_pr_ref/clwvi in process [2305141]
+INFO    [2305145] Starting task plot_joint_clivi_lwcre_ref/clivi in process [2305145]
+INFO    [2305147] Starting task plot_joint_clivi_lwcre_ref/lwcre in process [2305147]
+INFO    [2305149] Starting task plot_joint_cli_ta_ref/cli in process [2305149]
+INFO    [2305151] Starting task plot_joint_cli_ta_ref/ta in process [2305151]
+INFO    [2305059] Progress: 8 tasks running, 4 tasks waiting for ancestors, 0/12 done
+INFO    [2305143] Starting task plot_joint_clwvi_pr_ref/pr in process [2305143]
+INFO    [2305147] Computing and saving data for preprocessing task plot_joint_clivi_lwcre_ref/lwcre
+INFO    [2305147] plot_joint_clivi_lwcre_ref/lwcre [########################################] | 100% Completed | 1.01 s
+INFO    [2305139] Computing and saving data for preprocessing task plot_joint_clt_swcre_ref/swcre
+INFO    [2305147] Successfully completed task plot_joint_clivi_lwcre_ref/lwcre (priority 8) in 0:00:01.398138
+INFO    [2305059] Progress: 7 tasks running, 4 tasks waiting for ancestors, 1/12 done
+INFO    [2305139] plot_joint_clt_swcre_ref/swcre [########################################] | 100% Completed | 1.03 s
+INFO    [2305151] Computing and saving data for preprocessing task plot_joint_cli_ta_ref/ta
+INFO    [2305139] Successfully completed task plot_joint_clt_swcre_ref/swcre (priority 2) in 0:00:02.436200
+INFO    [2305059] Progress: 6 tasks running, 4 tasks waiting for ancestors, 2/12 done
+INFO    [2305151] plot_joint_cli_ta_ref/ta      [########################################] | 100% Completed | 6.07 s
+INFO    [2305143] Computing and saving data for preprocessing task plot_joint_clwvi_pr_ref/pr
+INFO    [2305151] Successfully completed task plot_joint_cli_ta_ref/ta (priority 11) in 0:00:08.503202
+INFO    [2305059] Progress: 5 tasks running, 4 tasks waiting for ancestors, 3/12 done
+INFO    [2305143] plot_joint_clwvi_pr_ref/pr    [########################################] | 100% Completed | 2.06 s
+INFO    [2305149] Computing and saving data for preprocessing task plot_joint_cli_ta_ref/cli
+INFO    [2305143] Successfully completed task plot_joint_clwvi_pr_ref/pr (priority 5) in 0:00:10.342280
+INFO    [2305059] Progress: 4 tasks running, 4 tasks waiting for ancestors, 4/12 done
+INFO    [2305149] plot_joint_cli_ta_ref/cli     [########################################] | 100% Completed | 8.07 s
+INFO    [2305141] Computing and saving data for preprocessing task plot_joint_clwvi_pr_ref/clwvi
+INFO    [2305149] Successfully completed task plot_joint_cli_ta_ref/cli (priority 10) in 0:00:18.641122
+INFO    [2305059] Progress: 3 tasks running, 4 tasks waiting for ancestors, 5/12 done
+INFO    [2305153] Starting task plot_joint_cli_ta_ref/plot in process [2305153]
+INFO    [2305153] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_cli_ta_ref/plot/settings.yml']
+INFO    [2305153] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot
+INFO    [2305153] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_cli_ta_ref/plot
+INFO    [2305153] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_cli_ta_ref/plot/log.txt
+INFO    [2305153] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_cli_ta_ref/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_cli_ta_ref/plot/settings.yml
+INFO    [2305059] Progress: 4 tasks running, 3 tasks waiting for ancestors, 5/12 done
+INFO    [2305141] plot_joint_clwvi_pr_ref/clwvi [########################################] | 100% Completed | 4.06 s
+INFO    [2305137] Computing and saving data for preprocessing task plot_joint_clt_swcre_ref/clt
+INFO    [2305141] Successfully completed task plot_joint_clwvi_pr_ref/clwvi (priority 4) in 0:00:22.703566
+INFO    [2305059] Progress: 3 tasks running, 3 tasks waiting for ancestors, 6/12 done
+INFO    [2305155] Starting task plot_joint_clwvi_pr_ref/plot in process [2305155]
+INFO    [2305155] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clwvi_pr_ref/plot/settings.yml']
+INFO    [2305155] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot
+INFO    [2305155] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clwvi_pr_ref/plot
+INFO    [2305155] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clwvi_pr_ref/plot/log.txt
+INFO    [2305155] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clwvi_pr_ref/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clwvi_pr_ref/plot/settings.yml
+INFO    [2305059] Progress: 4 tasks running, 2 tasks waiting for ancestors, 6/12 done
+INFO    [2305137] plot_joint_clt_swcre_ref/clt  [########################################] | 100% Completed | 3.06 s
+INFO    [2305145] Computing and saving data for preprocessing task plot_joint_clivi_lwcre_ref/clivi
+INFO    [2305137] Successfully completed task plot_joint_clt_swcre_ref/clt (priority 1) in 0:00:25.764816
+INFO    [2305059] Progress: 3 tasks running, 2 tasks waiting for ancestors, 7/12 done
+INFO    [2305147] Starting task plot_joint_clt_swcre_ref/plot in process [2305147]
+INFO    [2305147] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clt_swcre_ref/plot/settings.yml']
+INFO    [2305147] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot
+INFO    [2305147] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot
+INFO    [2305147] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clt_swcre_ref/plot/log.txt
+INFO    [2305147] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clt_swcre_ref/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clt_swcre_ref/plot/settings.yml
+INFO    [2305059] Progress: 4 tasks running, 1 tasks waiting for ancestors, 7/12 done
+INFO    [2305153] Maximum memory used (estimate): 0.4 GB
+INFO    [2305153] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+WARNING [2305153] Error in the CMIP6 citation link: https://cera-www.dkrz.de/WDCC/ui/cerasearch/cerarest/exportcmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
+INFO    [2305153] Successfully completed task plot_joint_cli_ta_ref/plot (priority 9) in 0:00:10.831151
+INFO    [2305059] Progress: 3 tasks running, 1 tasks waiting for ancestors, 8/12 done
+INFO    [2305145] plot_joint_clivi_lwcre_ref/clivi [########################################] | 100% Completed | 4.06 s
+INFO    [2305145] Successfully completed task plot_joint_clivi_lwcre_ref/clivi (priority 7) in 0:00:29.826283
+INFO    [2305059] Progress: 2 tasks running, 1 tasks waiting for ancestors, 9/12 done
+INFO    [2305139] Starting task plot_joint_clivi_lwcre_ref/plot in process [2305139]
+INFO    [2305139] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py', '<OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clivi_lwcre_ref/plot/settings.yml']
+INFO    [2305139] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot
+INFO    [2305139] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clivi_lwcre_ref/plot
+INFO    [2305139] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clivi_lwcre_ref/plot/log.txt
+INFO    [2305139] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clivi_lwcre_ref/plot; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/seaborn_jointplot_histogram.py <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clivi_lwcre_ref/plot/settings.yml
+INFO    [2305059] Progress: 3 tasks running, 0 tasks waiting for ancestors, 9/12 done
+INFO    [2305155] Maximum memory used (estimate): 0.4 GB
+INFO    [2305155] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305155] Successfully completed task plot_joint_clwvi_pr_ref/plot (priority 3) in 0:00:07.540751
+INFO    [2305059] Progress: 2 tasks running, 0 tasks waiting for ancestors, 10/12 done
+INFO    [2305147] Maximum memory used (estimate): 0.4 GB
+INFO    [2305147] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305147] Successfully completed task plot_joint_clt_swcre_ref/plot (priority 0) in 0:00:06.425594
+INFO    [2305059] Progress: 1 tasks running, 0 tasks waiting for ancestors, 11/12 done
+INFO    [2305139] Maximum memory used (estimate): 0.4 GB
+INFO    [2305139] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305139] Successfully completed task plot_joint_clivi_lwcre_ref/plot (priority 6) in 0:00:06.342257
+INFO    [2305059] Progress: 0 tasks running, 0 tasks waiting for ancestors, 12/12 done
+INFO    [2305059] Successfully completed all tasks.
+INFO    [2305059] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162509/run/recipe_filled.yml
+INFO    [2305059] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162509/index.html
+INFO    [2305059] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_162509
+Then visit http://localhost:31415 in your browser
+INFO    [2305059] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2305059] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:25:50 UTC
+INFO    [2305059] Time for running the recipe was: 0:00:40.453739
+INFO    [2305059] Maximum memory used (estimate): 8.4 GB
+INFO    [2305059] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2305059] Removing `preproc` directory containing preprocessed data
+INFO    [2305059] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [2305059] Run was successful

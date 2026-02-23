@@ -10,19 +10,25 @@ from climate_ref_ilamb import provider as ilamb_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.config import ExecutorConfig
+from climate_ref.data_catalog import DataCatalog
+from climate_ref.database import Database
+from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
 from climate_ref.models import Execution
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
     DiagnosticExecution,
     ExecutionSolver,
     SolveFilterOptions,
+    apply_dataset_filters,
     extract_covered_datasets,
+    matches_filter,
     solve_executions,
     solve_required_executions,
 )
-from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets, SelectParentExperiment
+from climate_ref_core.constraints import AddParentDataset, AddSupplementaryDataset, RequireFacets
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, FacetFilter
+from climate_ref_core.exceptions import InvalidDiagnosticException
 
 
 @pytest.fixture
@@ -74,8 +80,176 @@ class TestMetricSolver:
         assert isinstance(solver, ExecutionSolver)
         assert isinstance(solver.provider_registry, ProviderRegistry)
         assert SourceDatasetType.CMIP6 in solver.data_catalog
-        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], pd.DataFrame)
-        assert len(solver.data_catalog[SourceDatasetType.CMIP6])
+        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
+        assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
+
+
+class TestExtractCoveredDatasetsWithDataCatalog:
+    """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""
+
+    def test_finalise_called_for_unfinalised_groups(self):
+        """When a DataCatalog has unfinalised data, finalise() is called per group."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+
+        mock_catalog.finalise.assert_called()
+        assert len(result) == 1
+        # The finalised group should have finalised=True
+        group_df = next(iter(result.values()))
+        assert group_df["finalised"].all()
+
+    def test_finalise_not_called_for_raw_dataframe(self):
+        """When a raw DataFrame is passed, no finalisation is attempted."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=None,
+        )
+
+        # Should work without error - no finalise call attempted on a raw DataFrame
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+    def test_validation_raises_for_filter_on_unfinalised_column(self):
+        """Filtering on a column that requires finalisation raises ValueError."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": [pd.NA],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        with pytest.raises(ValueError, match=r"filters on columns that require finalisation.*realm"):
+            extract_covered_datasets(mock_catalog, requirement)
+
+    def test_validation_raises_for_group_by_on_unfinalised_column(self):
+        """Grouping by a column that requires finalisation raises ValueError."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": [pd.NA],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("realm",),
+        )
+
+        with pytest.raises(ValueError, match=r"groups by columns that require finalisation.*realm"):
+            extract_covered_datasets(mock_catalog, requirement)
+
+    def test_validation_passes_for_drs_available_columns(self):
+        """Filtering on columns available from DRS parsing works fine."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+        assert len(result) == 1
+
+    def test_validation_skipped_for_raw_dataframe(self):
+        """No validation error when passing a raw DataFrame (no adapter info)."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": ["atmos"],
+                "source_id": ["MODEL-A"],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        # Raw DataFrame has no columns_requiring_finalisation, so no error
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+    def test_validation_skipped_for_empty_columns_requiring_finalisation(self):
+        """No validation error when adapter has empty columns_requiring_finalisation."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": ["atmos"],
+                "source_id": ["MODEL-A"],
+                "finalised": [True],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+        assert len(result) == 1
 
 
 @pytest.mark.parametrize(
@@ -188,35 +362,40 @@ class TestMetricSolver:
             DataRequirement(
                 source_type=SourceDatasetType.CMIP6,
                 filters=(FacetFilter(facets={"variable_id": ("tas", "pr")}),),
-                constraints=(SelectParentExperiment(),),
+                constraints=(AddParentDataset.from_defaults(SourceDatasetType.CMIP6),),
                 group_by=("variable_id", "experiment_id"),
             ),
             pd.DataFrame(
                 {
-                    "variable_id": ["tas", "tas"],
                     "experiment_id": ["ssp119", "historical"],
+                    "grid_label": ["gn", "gn"],
                     "parent_experiment_id": ["historical", "none"],
+                    "parent_source_id": ["A", "A"],
+                    "parent_variant_label": ["r1i1p1f1", "none"],
+                    "source_id": ["A", "A"],
+                    "table_id": ["Amon", "Amon"],
+                    "variable_id": ["tas", "tas"],
+                    "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+                    "version": ["v20210101", "v20220101"],
                 }
             ),
             {
                 (("variable_id", "tas"), ("experiment_id", "ssp119")): pd.DataFrame(
                     {
+                        "experiment_id": ["ssp119", "historical"],
+                        "grid_label": ["gn", "gn"],
+                        "parent_experiment_id": ["historical", "none"],
+                        "parent_source_id": ["A", "A"],
+                        "parent_variant_label": ["r1i1p1f1", "none"],
+                        "source_id": ["A", "A"],
+                        "table_id": ["Amon", "Amon"],
                         "variable_id": ["tas", "tas"],
-                        "experiment_id": ["historical", "ssp119"],
+                        "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+                        "version": ["v20210101", "v20220101"],
                     },
-                    # The order of the rows is not guaranteed
-                    index=[1, 0],
-                ),
-                (("variable_id", "tas"), ("experiment_id", "historical")): pd.DataFrame(
-                    {
-                        "variable_id": ["tas", "tas"],
-                        "experiment_id": ["historical"],
-                    },
-                    # The order of the rows is not guaranteed
-                    index=[1, 0],
+                    index=[0, 1],
                 ),
             },
-            marks=[pytest.mark.xfail(reason="Parent experiment not implemented")],
             id="parent",
         ),
         pytest.param(
@@ -551,6 +730,163 @@ def test_solve_metric_executions_multiple_sets(solver, mock_diagnostic, provider
     )
 
 
+def test_solve_metric_executions_or_logic_missing_source_type(mock_diagnostic, provider):
+    """Test OR logic when one requirement set has a missing source type."""
+    metric = mock_diagnostic
+    # First set requires CMIP7 (not available), second set requires CMIP6 (available)
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    # Only CMIP6 data available
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+
+    # Should fall back to CMIP6 requirement
+    assert len(executions) == 1
+    assert SourceDatasetType.CMIP6 in executions[0].datasets
+
+
+def test_solve_metric_executions_or_logic_first_matches(mock_diagnostic, provider):
+    """Test OR logic when first requirement set matches."""
+    metric = mock_diagnostic
+    # First set requires CMIP6 (available), second set also requires CMIP6
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "pr"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas", "pr"],
+                "experiment_id": ["historical", "historical"],
+                "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+
+    # Both requirement sets should produce executions
+    assert len(executions) == 2
+
+
+def test_solve_metric_executions_or_logic_no_matches(mock_diagnostic, provider):
+    """Test OR logic when no requirement sets match."""
+    metric = mock_diagnostic
+    # Both sets require source types that are not available
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "pr"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    # No matching data
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+
+    with pytest.raises(InvalidDiagnosticException, match="No data catalog matches"):
+        list(solve_executions(data_catalog, metric, provider))
+
+
+def test_solve_metric_executions_or_logic_with_cmip7_available(mock_diagnostic, provider):
+    """Test OR logic when CMIP7 data is available."""
+    metric = mock_diagnostic
+    # First set requires CMIP7 (available), second set requires CMIP6
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+
+    # Both CMIP6 and CMIP7 data available
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+        SourceDatasetType.CMIP7: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+
+    # Both sets should produce executions
+    assert len(executions) == 2
+    source_types = {next(iter(e.datasets.keys())) for e in executions}
+    assert SourceDatasetType.CMIP6 in source_types
+    assert SourceDatasetType.CMIP7 in source_types
+
+
 def _prep_data_catalog(data_catalog: dict[str, Any]) -> pd.DataFrame:
     data_catalog_df = pd.DataFrame(data_catalog)
     data_catalog_df["instance_id"] = data_catalog_df.apply(
@@ -711,13 +1047,15 @@ def test_solve_with_one_per_provider(
 def test_solve_with_one_per_diagnostic(
     db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor
 ):
-    # Create a mock solver that "solves" to create multiple executions with the same diagnostic
+    # Create a mock solver that "solves" to create multiple executions with the same diagnostic.
+    # The second execution has the same dataset hash as the first, so the in-progress guard
+    # in should_run will skip it (the first execution has successful=None).
     solver = mock.MagicMock(spec=ExecutionSolver)
     solver.solve.return_value = [mock_metric_execution, mock_metric_execution]
-    with caplog.at_level("INFO"):
+    with caplog.at_level("DEBUG"):
         solve_required_executions(db_seeded, solver=solver, one_per_diagnostic=True)
 
-    assert "Skipping execution due to one-of check" in caplog.text
+    assert "already has an in-progress execution" in caplog.text
 
     # Check that a result is created
     assert db_seeded.session.query(Execution).count() == 1
@@ -745,3 +1083,502 @@ def test_solve_with_one_per_diagnostic_different_diagnostics(
 
     # Check that multiple diagnostics are created
     assert db_seeded.session.query(Execution).count() == 2
+
+
+def test_solve_with_limit(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    # Create a mock solver that "solves" to create multiple executions
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, limit=1)
+
+    assert "Reached execution limit of 1" in caplog.text
+
+    # Only one execution should have been created
+    assert db_seeded.session.query(Execution).count() == 1
+    assert mock_executor.return_value.run.call_count == 1
+
+
+def test_solve_with_limit_dry_run(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, dry_run=True, limit=1)
+
+    assert "Reached execution limit of 1" in caplog.text
+    # Dry run should not create any DB records or run anything
+    assert db_seeded.session.query(Execution).count() == 0
+    assert mock_executor.return_value.run.call_count == 0
+
+
+def test_solve_with_limit_none_runs_all(db_seeded, mock_metric_execution, mock_diagnostic, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    solve_required_executions(db_seeded, solver=solver, limit=None)
+
+    # Both executions should run when limit is None
+    assert db_seeded.session.query(Execution).count() == 2
+    assert mock_executor.return_value.run.call_count == 2
+
+
+class TestMatchesFilter:
+    """Tests for the matches_filter function."""
+
+    def test_no_filters_returns_true(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, None) is True
+
+    def test_empty_filters_returns_true(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions()) is True
+
+    def test_empty_lists_returns_true(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=[], diagnostic=[])) is True
+
+    def test_matching_provider(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["mock_provider"])) is True
+
+    def test_non_matching_provider(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["nonexistent"])) is False
+
+    def test_matching_diagnostic(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(diagnostic=["mock"])) is True
+
+    def test_non_matching_diagnostic(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(diagnostic=["nonexistent"])) is False
+
+    def test_partial_match_provider(self, mock_diagnostic):
+        # "mock" is contained in "mock_provider"
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["mock"])) is True
+
+    def test_partial_match_diagnostic(self, mock_diagnostic):
+        # "ock" is contained in "mock"
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(diagnostic=["ock"])) is True
+
+    def test_case_insensitive_provider(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(provider=["MOCK_PROVIDER"])) is True
+
+    def test_case_insensitive_diagnostic(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(diagnostic=["MOCK"])) is True
+
+    def test_provider_and_diagnostic_both_match(self, mock_diagnostic):
+        assert (
+            matches_filter(
+                mock_diagnostic, SolveFilterOptions(provider=["mock_provider"], diagnostic=["mock"])
+            )
+            is True
+        )
+
+    def test_provider_matches_diagnostic_does_not(self, mock_diagnostic):
+        assert (
+            matches_filter(
+                mock_diagnostic, SolveFilterOptions(provider=["mock_provider"], diagnostic=["nonexistent"])
+            )
+            is False
+        )
+
+    def test_provider_does_not_match_diagnostic_matches(self, mock_diagnostic):
+        assert (
+            matches_filter(mock_diagnostic, SolveFilterOptions(provider=["nonexistent"], diagnostic=["mock"]))
+            is False
+        )
+
+
+def test_solve_metric_executions_empty_dataframe(mock_diagnostic, provider):
+    """Test solve_executions when data catalog has an empty DataFrame for the source type."""
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id",),
+        ),
+    )
+
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            columns=["variable_id", "experiment_id", "variant_label", "path"]
+        ),
+    }
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+    assert len(executions) == 0
+
+
+def test_solve_required_executions_no_execute(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """Test solve_required_executions with execute=False still creates DB records."""
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+
+    solve_required_executions(db_seeded, solver=solver, execute=False)
+
+    # DB record should be created
+    assert db_seeded.session.query(Execution).count() == 1
+    # But the executor's run method should NOT be called
+    assert mock_executor.return_value.run.call_count == 0
+
+
+def test_diagnostic_execution_slug(mock_diagnostic, provider):
+    """Test DiagnosticExecution.execution_slug method."""
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id",),
+        ),
+    )
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+    assert len(executions) == 1
+
+    slug = executions[0].execution_slug()
+    assert provider.slug in slug
+    assert mock_diagnostic.slug in slug
+    assert "cmip6" in slug
+
+
+def test_diagnostic_execution_build_definition(mock_diagnostic, provider, tmp_path):
+    """Test DiagnosticExecution.build_execution_definition method."""
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+                "instance_id": ["CMIP6.test.tas"],
+            }
+        ),
+    }
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id",),
+        ),
+    )
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+    assert len(executions) == 1
+
+    definition = executions[0].build_execution_definition(output_root=tmp_path)
+    assert definition.key == executions[0].dataset_key
+    assert provider.slug in str(definition.output_directory)
+    assert mock_diagnostic.slug in str(definition.output_directory)
+    # output_directory should be under the resolved tmp_path
+    assert str(tmp_path.resolve()) in str(definition.output_directory)
+
+
+def test_diagnostic_execution_selectors(mock_diagnostic, provider):
+    """Test DiagnosticExecution.selectors property."""
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id",),
+        ),
+    )
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+    assert len(executions) == 1
+
+    selectors = executions[0].selectors
+    assert isinstance(selectors, dict)
+    assert "cmip6" in selectors
+
+
+def test_diagnostic_execution_dataset_key_multiple_source_types(mock_diagnostic, provider):
+    """Test dataset_key with multiple source types produces a stable key."""
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id", "source_id"),
+        ),
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id", "experiment_id"),
+        ),
+    )
+
+    data_catalog = {
+        SourceDatasetType.obs4MIPs: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "source_id": ["ERA-5"],
+                "frequency": ["mon"],
+            }
+        ),
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+    assert len(executions) == 1
+
+    key = executions[0].dataset_key
+    # Key should contain both source types
+    assert "cmip6" in key
+    assert "obs4mips" in key
+    # Key should be joined by "__"
+    assert "__" in key
+
+
+def test_extract_covered_datasets_empty_catalog():
+    """Test extract_covered_datasets with empty data catalog."""
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(FacetFilter(facets={"variable_id": "tas"}),),
+        group_by=("variable_id",),
+    )
+    data_catalog = pd.DataFrame(columns=["variable_id", "experiment_id", "path"])
+    result = extract_covered_datasets(data_catalog, requirement)
+    assert result == {}
+
+
+def test_extract_covered_datasets_no_matching_filter():
+    """Test extract_covered_datasets when filter matches nothing."""
+    requirement = DataRequirement(
+        source_type=SourceDatasetType.CMIP6,
+        filters=(FacetFilter(facets={"variable_id": "nonexistent"}),),
+        group_by=("variable_id",),
+    )
+    data_catalog = pd.DataFrame(
+        {
+            "variable_id": ["tas", "pr"],
+            "experiment_id": ["ssp119", "ssp126"],
+            "path": ["tas.nc", "pr.nc"],
+        }
+    )
+    result = extract_covered_datasets(data_catalog, requirement)
+    assert result == {}
+
+
+class TestApplyDatasetFilters:
+    """Tests for the apply_dataset_filters function."""
+
+    def test_single_facet_single_value(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "tas"],
+                    "source_id": ["ACCESS-CM2", "ACCESS-CM2", "CESM2"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"source_id": ["ACCESS-CM2"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+        assert result[SourceDatasetType.CMIP6]["source_id"].unique().tolist() == ["ACCESS-CM2"]
+
+    def test_single_facet_multiple_values(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "hfls"],
+                    "source_id": ["A", "B", "C"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas", "pr"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+        assert sorted(result[SourceDatasetType.CMIP6]["variable_id"].tolist()) == ["pr", "tas"]
+
+    def test_multiple_facets_anded(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "tas", "pr"],
+                    "source_id": ["ACCESS-CM2", "CESM2", "ACCESS-CM2"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"], "source_id": ["ACCESS-CM2"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        row = result[SourceDatasetType.CMIP6].iloc[0]
+        assert row["variable_id"] == "tas"
+        assert row["source_id"] == "ACCESS-CM2"
+
+    def test_facet_not_in_catalog_skipped(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+        }
+        # experiment_id is not a column; should be skipped, leaving all rows
+        result = apply_dataset_filters(data_catalog, {"experiment_id": ["ssp126"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+
+    def test_filters_applied_per_source_type(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+            SourceDatasetType.obs4MIPs: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "hfls"],
+                    "source_id": ["ERA-5", "GPCP", "ERA-5"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        assert result[SourceDatasetType.CMIP6]["variable_id"].iloc[0] == "tas"
+        assert len(result[SourceDatasetType.obs4MIPs]) == 1
+        assert result[SourceDatasetType.obs4MIPs]["variable_id"].iloc[0] == "tas"
+
+    def test_no_matches_returns_empty(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["nonexistent"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 0
+
+    def test_empty_catalog_returns_empty(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(columns=["variable_id", "source_id"]),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 0
+
+
+def test_solver_solve_with_dataset_filters(aft_solver):
+    """Test that dataset filters reduce the executions produced by the solver."""
+    # Unfiltered baseline
+    all_executions = list(aft_solver.solve())
+    assert len(all_executions) > 0
+
+    # Filter to a single variable that exists in the test data
+    variable_id = "tas"
+    filtered = list(aft_solver.solve(filters=SolveFilterOptions(dataset={"variable_id": [variable_id]})))
+
+    # Filtered set should be smaller (or equal if all diagnostics only use that variable)
+    assert len(filtered) <= len(all_executions)
+    assert len(filtered) > 0
+
+    # All CMIP6 datasets in filtered executions should contain only the filtered variable
+    for execution in filtered:
+        if SourceDatasetType.CMIP6 in execution.datasets:
+            variables = execution.datasets[SourceDatasetType.CMIP6].datasets["variable_id"].unique()
+            assert variable_id in variables
+
+
+def test_solver_solve_with_dataset_filter_no_match(aft_solver):
+    """Test that a dataset filter matching nothing produces no executions."""
+    filtered = list(
+        aft_solver.solve(filters=SolveFilterOptions(dataset={"source_id": ["NONEXISTENT_MODEL"]}))
+    )
+    assert len(filtered) == 0
+
+
+def test_solver_solve_with_dataset_and_provider_filters(aft_solver):
+    """Test that dataset filters and provider filters compose correctly."""
+    # Filter to ilamb provider and a specific variable
+    variable_id = aft_solver.data_catalog[SourceDatasetType.CMIP6].to_frame()["variable_id"].iloc[0]
+    filtered = list(
+        aft_solver.solve(
+            filters=SolveFilterOptions(
+                provider=["ilamb"],
+                dataset={"variable_id": [variable_id]},
+            )
+        )
+    )
+
+    for execution in filtered:
+        assert execution.provider.slug == "ilamb"
+
+
+def _build_solver_for_parser(config, sample_data_dir, parser_type, tmp_path, providers):
+    """Helper: ingest sample data with the given parser and return a solver."""
+    config.cmip6_parser = parser_type
+
+    db_path = tmp_path / f"bench_{parser_type}.db"
+    db = Database(f"sqlite:///{db_path}")
+    db.migrate(config)
+
+    # Ingest CMIP6
+    adapter = CMIP6DatasetAdapter(config=config)
+    ingest_datasets(adapter, sample_data_dir / "CMIP6", db, skip_invalid=True)
+
+    # Ingest obs4MIPs + obs4REF
+    obs_adapter = Obs4MIPsDatasetAdapter()
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4MIPs", db, skip_invalid=True)
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4REF", db, skip_invalid=True)
+
+    # Register providers
+    with db.session.begin():
+        for p in providers:
+            _register_provider(db, p)
+
+    solver = ExecutionSolver.build_from_db(config, db)
+    solver.provider_registry = ProviderRegistry(providers=providers)
+    return solver, db
+
+
+def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_dir, prepare_db, tmp_path):
+    """DRS (lazy) and complete parsers must produce the same solver executions."""
+    providers = [pmp_provider, esmvaltool_provider, ilamb_provider]
+
+    solver_complete, db_complete = _build_solver_for_parser(
+        config, sample_data_dir, "complete", tmp_path, providers
+    )
+    solver_drs, db_drs = _build_solver_for_parser(config, sample_data_dir, "drs", tmp_path, providers)
+
+    try:
+        complete_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_complete.solve())
+        drs_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_drs.solve())
+
+        assert len(complete_executions) == len(drs_executions), (
+            f"Complete parser found {len(complete_executions)} executions "
+            f"but DRS parser found {len(drs_executions)}.\n"
+            f"Only in complete: {set(complete_executions) - set(drs_executions)}\n"
+            f"Only in DRS: {set(drs_executions) - set(complete_executions)}"
+        )
+        assert complete_executions == drs_executions
+    finally:
+        db_complete.close()
+        db_drs.close()

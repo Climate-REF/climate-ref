@@ -1,0 +1,15 @@
+{{- range $name, $size := .Values.createPVCs -}}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    {{- include "ref.labels" $ | nindent 4 }}
+  name: {{ include "ref.fullname" $ }}-{{ $name }}
+spec:
+  accessModes:
+  - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ $size }}
+---
+{{ end -}}

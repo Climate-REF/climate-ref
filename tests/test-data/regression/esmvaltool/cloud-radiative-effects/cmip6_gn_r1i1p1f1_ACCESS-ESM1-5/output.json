@@ -1,90 +1,126 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250922_114342/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162247/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250922_114342/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162247/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250922_114342/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_bottom.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_bottom.nc",
+    "executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_bottom.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_bottom.nc",
       "long_name": "Map plot of TOA Longwave Cloud Radiative Effect of dataset CMIP6.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "lwcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_left.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_left.nc",
+    "executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_left.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_left.nc",
       "long_name": "Map plot of TOA Longwave Cloud Radiative Effect of dataset CMIP6.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "lwcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_right.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_right.nc",
+    "executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_right.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_right.nc",
       "long_name": "Map plot of TOA Longwave Cloud Radiative Effect of dataset OBS.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "lwcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_bottom.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_bottom.nc",
+    "executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_bottom.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_bottom.nc",
       "long_name": "Map plot of TOA Shortwave Cloud Radiative Effect of dataset CMIP6.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "swcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_left.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_left.nc",
+    "executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_left.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_left.nc",
       "long_name": "Map plot of TOA Shortwave Cloud Radiative Effect of dataset CMIP6.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "swcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_right.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_right.nc",
+    "executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_right.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_right.nc",
       "long_name": "Map plot of TOA Shortwave Cloud Radiative Effect of dataset OBS.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "swcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.nc",
+    "executions/recipe_20260130_162247/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.nc",
       "long_name": "TOA Longwave Cloud Radiative Effect vs. latitude for various datasets.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "lwcre",
+        "statistic": "zonal mean"
+      }
     },
-    "executions/recipe_20250922_114342/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.nc": {
-      "filename": "executions/recipe_20250922_114342/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.nc",
+    "executions/recipe_20260130_162247/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.nc": {
+      "filename": "executions/recipe_20260130_162247/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.nc",
       "long_name": "TOA Shortwave Cloud Radiative Effect vs. latitude for various datasets.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "swcre",
+        "statistic": "zonal mean"
+      }
     }
   },
   "plots": {
-    "executions/recipe_20250922_114342/plots/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon.png": {
-      "filename": "executions/recipe_20250922_114342/plots/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon.png",
+    "executions/recipe_20260130_162247/plots/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon.png": {
+      "filename": "executions/recipe_20260130_162247/plots/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon.png",
       "long_name": "Map plot of TOA Longwave Cloud Radiative Effect of dataset CMIP6.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "lwcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/plots/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon.png": {
-      "filename": "executions/recipe_20250922_114342/plots/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon.png",
+    "executions/recipe_20260130_162247/plots/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon.png": {
+      "filename": "executions/recipe_20260130_162247/plots/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon.png",
       "long_name": "Map plot of TOA Shortwave Cloud Radiative Effect of dataset CMIP6.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "swcre",
+        "statistic": "climatology map"
+      }
     },
-    "executions/recipe_20250922_114342/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.png": {
-      "filename": "executions/recipe_20250922_114342/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.png",
+    "executions/recipe_20260130_162247/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.png": {
+      "filename": "executions/recipe_20260130_162247/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.png",
       "long_name": "TOA Longwave Cloud Radiative Effect vs. latitude for various datasets.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "lwcre",
+        "statistic": "zonal mean"
+      }
     },
-    "executions/recipe_20250922_114342/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.png": {
-      "filename": "executions/recipe_20250922_114342/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.png",
+    "executions/recipe_20260130_162247/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.png": {
+      "filename": "executions/recipe_20260130_162247/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.png",
       "long_name": "TOA Shortwave Cloud Radiative Effect vs. latitude for various datasets.",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "variable_id": "swcre",
+        "statistic": "zonal mean"
+      }
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250922_114342/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250922_114342/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162247/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162247/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

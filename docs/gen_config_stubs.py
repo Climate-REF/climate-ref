@@ -168,7 +168,7 @@ def write_field(fh, field_parent_names: list[str], field, description: str) -> N
 
     if field.metadata.get("env"):
         env_variable = f"{env_prefix}_{field.metadata.get('env')}"
-        fh.write(f"**Environment Variable**: {env_variable!r}\n\n")
+        fh.write(f"**Environment Variable**: `{env_variable}`\n\n")
 
 
 def write_config_page() -> None:

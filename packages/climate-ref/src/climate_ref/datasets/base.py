@@ -96,6 +96,15 @@ class DatasetAdapter(Protocol):
     """
     dataset_specific_metadata: tuple[str, ...]
     file_specific_metadata: tuple[str, ...] = ()
+    columns_requiring_finalisation: frozenset[str] = frozenset()
+    """
+    Columns that are not available until the dataset has been finalised.
+
+    For adapters that support two-phase parsing (e.g. DRS-only then complete),
+    these columns will contain ``pd.NA`` until finalisation opens the files.
+    Filtering or grouping on these columns before finalisation will silently
+    produce incorrect results.
+    """
 
     version_metadata: str = "version"
     """

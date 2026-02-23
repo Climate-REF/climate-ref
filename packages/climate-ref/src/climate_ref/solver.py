@@ -114,6 +114,49 @@ class DiagnosticExecution:
         )
 
 
+def _validate_requirement_columns(
+    requirement: DataRequirement, columns_requiring_finalisation: frozenset[str]
+) -> None:
+    """
+    Validate that a DataRequirement does not filter or group on unfinalised columns.
+
+    Parameters
+    ----------
+    requirement
+        The data requirement to validate
+    columns_requiring_finalisation
+        Set of column names that are unavailable before finalisation
+
+    Raises
+    ------
+    ValueError
+        If any filter facet key or group_by column requires finalisation
+    """
+    if not columns_requiring_finalisation:
+        return
+
+    # Check filter facet keys
+    if requirement.filters:
+        for facet_filter in requirement.filters:
+            conflicting = set(facet_filter.facets.keys()) & columns_requiring_finalisation
+            if conflicting:
+                raise ValueError(
+                    f"DataRequirement for {requirement.source_type.value} filters on columns "
+                    f"that require finalisation: {sorted(conflicting)}. "
+                    f"These columns are unavailable before datasets are finalised."
+                )
+
+    # Check group_by columns
+    if requirement.group_by:
+        conflicting = set(requirement.group_by) & columns_requiring_finalisation
+        if conflicting:
+            raise ValueError(
+                f"DataRequirement for {requirement.source_type.value} groups by columns "
+                f"that require finalisation: {sorted(conflicting)}. "
+                f"These columns are unavailable before datasets are finalised."
+            )
+
+
 def extract_covered_datasets(
     data_catalog: pd.DataFrame | DataCatalog, requirement: DataRequirement
 ) -> dict[Selector, pd.DataFrame]:
@@ -124,6 +167,7 @@ def extract_covered_datasets(
     # original reference for finalisation calls later.
     if isinstance(data_catalog, DataCatalog):
         data_catalog_source: DataCatalog | None = data_catalog
+        _validate_requirement_columns(requirement, data_catalog.columns_requiring_finalisation)
         catalog_df: pd.DataFrame = data_catalog.to_frame()
     else:
         data_catalog_source = None

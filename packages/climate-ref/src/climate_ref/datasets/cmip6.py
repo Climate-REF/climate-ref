@@ -46,6 +46,31 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
     dataset_cls = CMIP6Dataset
     slug_column = "instance_id"
 
+    columns_requiring_finalisation = frozenset(
+        {
+            "branch_method",
+            "branch_time_in_child",
+            "branch_time_in_parent",
+            "experiment",
+            "grid",
+            "long_name",
+            "nominal_resolution",
+            "parent_activity_id",
+            "parent_experiment_id",
+            "parent_source_id",
+            "parent_time_units",
+            "parent_variant_label",
+            "product",
+            "realm",
+            "source_type",
+            "standard_name",
+            "sub_experiment",
+            "sub_experiment_id",
+            "units",
+            "vertical_levels",
+        }
+    )
+
     dataset_specific_metadata = (
         "activity_id",
         "branch_method",

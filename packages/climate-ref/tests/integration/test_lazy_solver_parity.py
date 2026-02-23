@@ -19,6 +19,7 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.solver import solve_executions
 from climate_ref_core.datasets import SourceDatasetType
@@ -26,34 +27,6 @@ from climate_ref_core.exceptions import InvalidDiagnosticException
 from climate_ref_core.providers import DiagnosticProvider
 
 ALL_PROVIDERS = [example_provider, pmp_provider, esmvaltool_provider, ilamb_provider]
-
-# Columns that require opening the netCDF file and are absent from DRS-only parsing.
-# These are NaN'd in the DRS simulation and restored by the mock finaliser.
-# TODO: we should be able to determine this from the adapter
-_CMIP6_FILE_OPEN_COLUMNS = frozenset(
-    {
-        "branch_method",
-        "branch_time_in_child",
-        "branch_time_in_parent",
-        "experiment",
-        "grid",
-        "long_name",
-        "nominal_resolution",
-        "parent_activity_id",
-        "parent_experiment_id",
-        "parent_source_id",
-        "parent_time_units",
-        "parent_variant_label",
-        "product",
-        "realm",
-        "source_type",
-        "standard_name",
-        "sub_experiment",
-        "sub_experiment_id",
-        "units",
-        "vertical_levels",
-    }
-)
 
 
 def _to_tuples(details: list[dict]) -> list[tuple[str, str, str]]:
@@ -106,6 +79,13 @@ class _DRSSimulatedAdapter(FinaliseableDatasetAdapterMixin):
     finalisation for a group.
     """
 
+    columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+    """
+    Columns that require opening the netCDF file and are absent from DRS-only parsing.
+
+    These are NaN'd in the DRS simulation and restored by the mock finaliser.
+    """
+
     def __init__(self, df_full: pd.DataFrame, df_drs: pd.DataFrame):
         self._df_full = df_full
         self._df_drs = df_drs
@@ -137,7 +117,7 @@ def _build_drs_catalogs(
     for source_type, df in esgf_data_catalog.items():
         df_drs = df.copy()
         df_drs["finalised"] = False
-        cols_to_nan = _CMIP6_FILE_OPEN_COLUMNS & set(df_drs.columns)
+        cols_to_nan = _DRSSimulatedAdapter.columns_requiring_finalisation & set(df_drs.columns)
         df_drs[list(cols_to_nan)] = pd.NA
 
         adapter = _DRSSimulatedAdapter(df_full=df, df_drs=df_drs)

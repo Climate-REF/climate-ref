@@ -34,6 +34,18 @@ class DataCatalog:
     adapter: DatasetAdapter | None
     _df: pd.DataFrame | None = None
 
+    @property
+    def columns_requiring_finalisation(self) -> frozenset[str]:
+        """
+        Columns that require finalisation before they can be used for filtering or grouping.
+
+        Delegates to the adapter's ``columns_requiring_finalisation`` attribute.
+        Returns an empty frozenset when no adapter is set.
+        """
+        if self.adapter is None:
+            return frozenset()
+        return self.adapter.columns_requiring_finalisation
+
     @staticmethod
     def from_frame(df: pd.DataFrame) -> DataCatalog:
         """

@@ -98,6 +98,7 @@ class TestExtractCoveredDatasetsWithDataCatalog:
         )
         mock_catalog = mock.MagicMock(spec=DataCatalog)
         mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
         mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
 
         requirement = DataRequirement(
@@ -133,6 +134,120 @@ class TestExtractCoveredDatasetsWithDataCatalog:
 
         # Should work without error - no finalise call attempted on a raw DataFrame
         result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+    def test_validation_raises_for_filter_on_unfinalised_column(self):
+        """Filtering on a column that requires finalisation raises ValueError."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": [pd.NA],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        with pytest.raises(ValueError, match=r"filters on columns that require finalisation.*realm"):
+            extract_covered_datasets(mock_catalog, requirement)
+
+    def test_validation_raises_for_group_by_on_unfinalised_column(self):
+        """Grouping by a column that requires finalisation raises ValueError."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": [pd.NA],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("realm",),
+        )
+
+        with pytest.raises(ValueError, match=r"groups by columns that require finalisation.*realm"):
+            extract_covered_datasets(mock_catalog, requirement)
+
+    def test_validation_passes_for_drs_available_columns(self):
+        """Filtering on columns available from DRS parsing works fine."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+        assert len(result) == 1
+
+    def test_validation_skipped_for_raw_dataframe(self):
+        """No validation error when passing a raw DataFrame (no adapter info)."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": ["atmos"],
+                "source_id": ["MODEL-A"],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        # Raw DataFrame has no columns_requiring_finalisation, so no error
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+    def test_validation_skipped_for_empty_columns_requiring_finalisation(self):
+        """No validation error when adapter has empty columns_requiring_finalisation."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": ["atmos"],
+                "source_id": ["MODEL-A"],
+                "finalised": [True],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
         assert len(result) == 1
 
 

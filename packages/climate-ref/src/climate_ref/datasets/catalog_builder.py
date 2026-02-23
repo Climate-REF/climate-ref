@@ -71,7 +71,7 @@ def discover_files(
     return sorted(set(assets))
 
 
-def _parse_files(
+def parse_files(
     assets: list[str],
     parsing_func: DatasetParsingFunction,
     n_jobs: int = 1,
@@ -95,7 +95,7 @@ def _parse_files(
     Returns
     -------
     :
-        List of parsed metadata dictionaries
+        List of parsed metadata dictionaries, in the same order as ``assets``.
     """
     if n_jobs == 1:
         return [parsing_func(asset) for asset in tqdm(assets, desc="Parsing files", unit="file")]
@@ -152,7 +152,7 @@ def build_catalog(
 
     logger.info(f"Discovered {len(assets)} files matching {include_patterns} in {paths}")
 
-    entries = _parse_files(assets, parsing_func, n_jobs=n_jobs)
+    entries = parse_files(assets, parsing_func, n_jobs=n_jobs)
     df = pd.DataFrame(entries)
 
     # Remove invalid assets

@@ -191,6 +191,14 @@ class TestCaseRunner:
                 "No datasets provided. Run 'ref test-cases fetch' first to build the catalog."
             )
 
+        # Validate that all non-empty collections have the required 'path' column
+        for src_type, collection in self.datasets.items():
+            if len(collection.datasets) > 0 and "path" not in collection.datasets.columns:
+                raise DatasetResolutionError(
+                    f"Datasets for '{src_type}' are missing the required 'path' column. "
+                    f"Run 'ref test-cases fetch' to generate the paths file."
+                )
+
         # Determine output directory
         if output_dir is None:
             output_dir = (

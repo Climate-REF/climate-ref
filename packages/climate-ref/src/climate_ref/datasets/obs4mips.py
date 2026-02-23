@@ -190,12 +190,14 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             self.version_metadata,
         ]
         datasets["instance_id"] = datasets.apply(
-            lambda row: "obs4MIPs."
-            + ".".join(
-                [
-                    row[item].replace(" ", "") if item == "nominal_resolution" else row[item]
-                    for item in drs_items
-                ]
+            lambda row: (
+                "obs4MIPs."
+                + ".".join(
+                    [
+                        row[item].replace(" ", "") if item == "nominal_resolution" else row[item]
+                        for item in drs_items
+                    ]
+                )
             ),
             axis=1,
         )

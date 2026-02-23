@@ -17,6 +17,8 @@ from climate_ref.models.dataset import CMIP7Dataset
 from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_dataset,
     create_cmip7_filename,
+    create_cmip7_path,
+    format_cmip7_time_range,
 )
 from climate_ref_core.datasets import SourceDatasetType
 
@@ -258,7 +260,7 @@ class TestCMIP7ConvertedFile:
             pytest.skip("CMIP6 sample data not available")
 
         # Find the first .nc file
-        nc_files = list(cmip6_dir.rglob("*.nc"))
+        nc_files = list(cmip6_dir.rglob("**/tas_*.nc"))
         if not nc_files:
             pytest.skip("No CMIP6 netCDF files found in sample data")
 
@@ -268,14 +270,14 @@ class TestCMIP7ConvertedFile:
         with xr.open_dataset(cmip6_file, use_cftime=True) as ds:
             ds_cmip7 = convert_cmip6_dataset(ds)
 
-            # Add version attribute (required for CMIP7 DRS)
-            ds_cmip7.attrs["version"] = "v20250101"
+            # Create filename
+            time_range = format_cmip7_time_range(ds_cmip7, ds_cmip7.attrs["frequency"])
+            cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range=time_range)
 
-            # Create filename with time range (simplified - just use placeholder)
-            cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range="185001-185012")
+            cmip7_drs_path = create_cmip7_path(ds_cmip7.attrs)
 
             # Save to a simple output directory (not full DRS structure for easier testing)
-            output_dir = tmp_path / "CMIP7"
+            output_dir = tmp_path / cmip7_drs_path
             output_dir.mkdir(parents=True, exist_ok=True)
             output_file = output_dir / cmip7_filename
 

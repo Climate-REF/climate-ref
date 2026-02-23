@@ -115,14 +115,21 @@ class SlurmConfig(BaseModel):
         return v
 
 
-def with_memory_limit(limit_gb: float) -> Callable[[F], F]:
+def with_memory_limit(limit_gb: float | Callable[..., float | None]) -> Callable[[F], F]:
     """Set memory limit for a parsl worker"""
 
     def decorator(func: F) -> F:
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            bytes_limit = int(limit_gb * 1024 * 1024 * 1024)
-            soft, hard = bytes_limit, bytes_limit
-            resource.setrlimit(resource.RLIMIT_AS, (soft, hard))
+            try:
+                current_limit = limit_gb(*args, **kwargs) if callable(limit_gb) else limit_gb
+            except Exception:
+                current_limit = None
+
+            if current_limit is not None and current_limit > 0:
+                bytes_limit = int(current_limit * 1024 * 1024 * 1024)
+                _, hard0 = resource.getrlimit(resource.RLIMIT_AS)
+                soft = min(bytes_limit, hard0)
+                resource.setrlimit(resource.RLIMIT_AS, (soft, hard0))
             return func(*args, **kwargs)
 
         return cast(F, wrapper)
@@ -130,8 +137,19 @@ def with_memory_limit(limit_gb: float) -> Callable[[F], F]:
     return decorator
 
 
+def limit_from_env(*args: Any, **kwargs: Any) -> float | None:
+    """Get the memory limits from env variables"""
+    val = os.getenv("MEMORY_LIMIT_PARSL_JOB_GB")
+    if not val:
+        return None
+    try:
+        return float(val)
+    except ValueError:
+        return None
+
+
 @python_app
-@with_memory_limit(7.0)
+@with_memory_limit(limit_from_env)
 def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionResult:
     """Run the function on computer nodes"""
     # This is a catch-all for any exceptions that occur in the process and need to raise for

@@ -239,7 +239,8 @@ class TestReadTimeBounds:
 
     def test_matches_xarray_output(self, sample_nc_file):
         """Verify netCDF4+cftime produces the same time strings as xarray."""
-        with xr.open_dataset(sample_nc_file, use_cftime=True) as xr_ds:
+        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+        with xr.open_dataset(sample_nc_file, decode_times=time_coder) as xr_ds:
             xr_start = str(xr_ds["time"].values[0])
             xr_end = str(xr_ds["time"].values[-1])
 
@@ -259,7 +260,8 @@ class TestReadTimeBounds:
             time_var.calendar = "noleap"
             time_var[:] = [0.5, 365.5, 730.5]
 
-        with xr.open_dataset(filepath, use_cftime=True) as xr_ds:
+        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+        with xr.open_dataset(filepath, decode_times=time_coder) as xr_ds:
             xr_start = str(xr_ds["time"].values[0])
             xr_end = str(xr_ds["time"].values[-1])
 

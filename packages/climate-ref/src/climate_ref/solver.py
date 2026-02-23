@@ -378,7 +378,7 @@ class ExecutionSolver:
                     continue
 
 
-def solve_required_executions(  # noqa: PLR0912, PLR0913
+def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     db: Database,
     dry_run: bool = False,
     execute: bool = True,
@@ -388,6 +388,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
     one_per_provider: bool = False,
     one_per_diagnostic: bool = False,
     filters: SolveFilterOptions | None = None,
+    limit: int | None = None,
     rerun_failed: bool = False,
 ) -> None:
     """
@@ -412,6 +413,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
 
     diagnostic_count = {}
     provider_count = {}
+    total_count = 0
 
     for potential_execution in solver.solve(filters):
         # The diagnostic output is first written to the scratch directory
@@ -426,11 +428,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
             provider_count[potential_execution.provider.slug] = 0
         if potential_execution.diagnostic.full_slug() not in diagnostic_count:
             diagnostic_count[potential_execution.diagnostic.full_slug()] = 0
-
-        if dry_run:
-            provider_count[potential_execution.provider.slug] += 1
-            diagnostic_count[potential_execution.diagnostic.full_slug()] += 1
-            continue
 
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
@@ -477,6 +474,15 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
                     )
                     continue
 
+                if dry_run:
+                    provider_count[diagnostic.provider.slug] += 1
+                    diagnostic_count[diagnostic.full_slug()] += 1
+                    total_count += 1
+                    if limit is not None and total_count >= limit:
+                        logger.info(f"Reached execution limit of {limit}")
+                        break
+                    continue
+
                 logger.info(
                     f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
                 )
@@ -499,6 +505,10 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
 
                 provider_count[diagnostic.provider.slug] += 1
                 diagnostic_count[diagnostic.full_slug()] += 1
+                total_count += 1
+                if limit is not None and total_count >= limit:
+                    logger.info(f"Reached execution limit of {limit}")
+                    break
 
     logger.info("Solve complete")
     logger.info(f"Found {sum(diagnostic_count.values())} new executions")

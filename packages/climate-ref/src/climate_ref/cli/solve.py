@@ -48,6 +48,10 @@ def solve(  # noqa: PLR0913
             "Multiple values can be provided"
         ),
     ] = None,
+    limit: Annotated[
+        int | None,
+        typer.Option(help="Maximum number of executions to run. If not set, all executions are run."),
+    ] = None,
     rerun_failed: Annotated[
         bool,
         typer.Option(
@@ -85,5 +89,6 @@ def solve(  # noqa: PLR0913
         one_per_provider=one_per_provider,
         one_per_diagnostic=one_per_diagnostic,
         filters=filters,
+        limit=limit,
         rerun_failed=rerun_failed,
     )

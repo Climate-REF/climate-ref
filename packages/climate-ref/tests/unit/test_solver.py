@@ -913,6 +913,54 @@ def test_solve_with_one_per_diagnostic_different_diagnostics(
     assert db_seeded.session.query(Execution).count() == 2
 
 
+def test_solve_with_limit(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    # Create a mock solver that "solves" to create multiple executions
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, limit=1)
+
+    assert "Reached execution limit of 1" in caplog.text
+
+    # Only one execution should have been created
+    assert db_seeded.session.query(Execution).count() == 1
+    assert mock_executor.return_value.run.call_count == 1
+
+
+def test_solve_with_limit_dry_run(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, dry_run=True, limit=1)
+
+    assert "Reached execution limit of 1" in caplog.text
+    # Dry run should not create any DB records or run anything
+    assert db_seeded.session.query(Execution).count() == 0
+    assert mock_executor.return_value.run.call_count == 0
+
+
+def test_solve_with_limit_none_runs_all(db_seeded, mock_metric_execution, mock_diagnostic, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    solve_required_executions(db_seeded, solver=solver, limit=None)
+
+    # Both executions should run when limit is None
+    assert db_seeded.session.query(Execution).count() == 2
+    assert mock_executor.return_value.run.call_count == 2
+
+
 class TestMatchesFilter:
     """Tests for the matches_filter function."""
 

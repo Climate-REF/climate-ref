@@ -30,5 +30,5 @@ amoc-RAPID:
   transforms:
   - msftmz_to_rapid
   sources:
-    # obs4REF equiv does not work, changes `depth` to `olevel` and removed the depth bounds
+    # obs4REF equiv does not work
     amoc: ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc

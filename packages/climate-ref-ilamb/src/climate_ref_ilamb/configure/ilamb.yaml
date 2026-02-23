@@ -15,7 +15,8 @@ gpp-FLUXNET2015:
 
 mrro-LORA:
   sources:
-    mrro: obs4REF/ARCCSS/LORA-1-1/mon/mrro/gn/20250516/mrro_mon_LORA-1-1_REF_gn_198001-201212.nc
+    mrro:
+      source_id: LORA-1-1
   variable_cmap: Blues
 
 mrsos-WangMao:
@@ -34,16 +35,19 @@ cSoil-HWSD2:
     cSoil: ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc
   variable_cmap: viridis
 
-lai-AVH15C1:
+lai-NOAA-NCEI-LAI-AVHRR-5-0:
   sources:
-    lai: ilamb/lai/AVH15C1/lai.nc
+    lai:
+      source_id: NOAA-NCEI-LAI-AVHRR-5-0
   variable_cmap: Greens
 
 nbp-Hoffman:
   analyses:
   - nbp
   sources:
-    nbp: obs4REF/UCI-ORNL/Hoffman/yr/nbp/gm/20250516/nbp_yr_Hoffman_REF_gm_185007-201007.nc
+    nbp:
+      variable_id: nbp
+      source_id: Hoffman
   transforms:
   - integrate_space:
       varname: nbp

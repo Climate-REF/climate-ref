@@ -252,12 +252,10 @@ class ILAMBStandard(Diagnostic):
         self,
         registry_file: str,
         metric_name: str,
-        sources: dict[str, str],
+        sources: dict[str, str | dict[str, str]],
         **ilamb_kwargs: Any,
     ):
         # Setup the diagnostic
-        # if len(sources) != 1:
-        #    raise ValueError("Only single source ILAMB diagnostics have been implemented.")
         self.variable_id = ilamb_kwargs.get("analysis_variable", next(iter(sources.keys())))
         if "sources" not in ilamb_kwargs:  # pragma: no cover
             ilamb_kwargs["sources"] = sources
@@ -395,10 +393,37 @@ class ILAMBStandard(Diagnostic):
             group_by=("experiment_id", "source_id", "variant_label", "grid_label"),
         )
 
-        self.data_requirements = (
-            (cmip6_requirement,),
-            (cmip7_requirement,),
+        # obs4MIPs data requirement, normally ilamb3 expects the `sources` to
+        # resolve to keys in one of its data registries. If instead we find a
+        # dictionary, then assume that these keys are meant to be keywords in a
+        # REF data requirement.
+        filters: dict[str, list[str]] = {}
+        for _, source in sources.items():
+            if isinstance(source, dict):
+                for key, val in source.items():
+                    if key not in filters:
+                        filters[key] = []
+                    filters[key].append(val)
+        obs4mips_requirement = (
+            DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(FacetFilter(facets=filters),),
+                group_by=tuple(filters.keys()),
+            )
+            if filters
+            else None
         )
+
+        if obs4mips_requirement is None:
+            self.data_requirements = (
+                (cmip6_requirement,),
+                (cmip7_requirement,),
+            )
+        else:
+            self.data_requirements = (
+                (cmip6_requirement, obs4mips_requirement),
+                (cmip7_requirement, obs4mips_requirement),
+            )
 
         self.facets = (
             "experiment_id",
@@ -501,18 +526,32 @@ class ILAMBStandard(Diagnostic):
         Run the ILAMB standard analysis.
         """
         _set_ilamb3_options(self.registry, self.registry_file)
-        # ilamb3 just needs a dataframe where the index column is the dataset
-        # identifier found in our configure files. So we concat the obs4REF
-        # registries to the ilamb one so that any key may be used from either.
-        # Eventually this should be removed and we use ingested data as a
-        # DataRequirement but supporting both styles simultaneously is not
-        # trivial.
-        ref_datasets = pd.concat(
-            [
-                self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column),
-                registry_to_collection(dataset_registry_manager["obs4ref"]).datasets.set_index("key"),
-            ]
-        )
+        # Temporary hack of the ilamb3 inputs while we still need to refer to
+        # data not yet available in obs4{MIPs,REF}. This logic allows for
+        # DataRequirement filters to be added as a 'source' in the ilamb
+        # configure file. If a dictionary instead of a string was found, we
+        # populate an obs4MIPs requirement.
+        if SourceDatasetType.obs4MIPs in definition.datasets:
+            # ilamb3 will expect the reference dataset dataframe to have a `key`
+            # column that uniquely describes each dataset. Create one using the
+            # `instance_id` and an integer and then modify the ilamb3 configure
+            # so that it finds the proper data.
+            ref_datasets = definition.datasets[SourceDatasetType.obs4MIPs].datasets
+            ref_datasets = ref_datasets.reset_index()
+            ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
+            for instance_id, df in ref_datasets.groupby("instance_id"):
+                variable_id = df["variable_id"].unique()[0]
+                self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+        else:
+            # If the data is not ingested yet but in a registry, we concat the
+            # obs4REF registries to the ilamb one so that any key may be used
+            # from either. Eventually (?) this can be removed.
+            ref_datasets = pd.concat(
+                [
+                    self.ilamb_data.datasets.set_index(self.ilamb_data.slug_column),
+                    registry_to_collection(dataset_registry_manager["obs4ref"]).datasets.set_index("key"),
+                ]
+            )
         cmip_source = _get_cmip_source_type(definition.datasets)
         model_datasets = definition.datasets[cmip_source].datasets
 

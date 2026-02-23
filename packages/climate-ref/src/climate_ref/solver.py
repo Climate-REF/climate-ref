@@ -352,13 +352,17 @@ class SolveFilterOptions:
 def apply_dataset_filters(
     data_catalog: Mapping[SourceDatasetType, DataCatalog | pd.DataFrame],
     dataset_filters: dict[str, list[str]],
-) -> dict[SourceDatasetType, pd.DataFrame]:
+) -> dict[SourceDatasetType, DataCatalog | pd.DataFrame]:
     """
     Filter data catalogs by facet values
 
     Each facet filter is applied independently to each data catalog.
     Different facets are ANDed together; multiple values for the same facet are ORed.
     Facets that do not exist as columns in a given catalog are skipped for that catalog.
+
+    When a DataCatalog is provided, the returned value preserves the DataCatalog
+    wrapper (with adapter and database references) so that downstream finalisation
+    still works.
 
     Parameters
     ----------
@@ -372,15 +376,25 @@ def apply_dataset_filters(
     :
         Filtered data catalogs
     """
-    filtered = {}
+    filtered: dict[SourceDatasetType, DataCatalog | pd.DataFrame] = {}
     for source_type, catalog in data_catalog.items():
-        df = catalog.to_frame() if isinstance(catalog, DataCatalog) else catalog
-        mask = pd.Series(True, index=df.index)
-        for facet, values in dataset_filters.items():
-            if facet not in df.columns:
-                continue
-            mask &= df[facet].isin(values)
-        filtered[source_type] = df[mask]
+        if isinstance(catalog, DataCatalog):
+            df = catalog.to_frame()
+            mask = pd.Series(True, index=df.index)
+            for facet, values in dataset_filters.items():
+                if facet not in df.columns:
+                    continue
+                mask &= df[facet].isin(values)
+            filtered[source_type] = DataCatalog(
+                database=catalog.database, adapter=catalog.adapter, df=df[mask]
+            )
+        else:
+            mask = pd.Series(True, index=catalog.index)
+            for facet, values in dataset_filters.items():
+                if facet not in catalog.columns:
+                    continue
+                mask &= catalog[facet].isin(values)
+            filtered[source_type] = catalog[mask]
     return filtered
 
 

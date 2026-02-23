@@ -16,6 +16,7 @@ from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
 from climate_ref.models import Dataset
+from climate_ref.solver import apply_dataset_filters
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -70,14 +71,16 @@ def list_(  # noqa: PLR0913
             key, value = entry.split("=", 1)
             parsed_filters.setdefault(key, []).append(value)
 
-        for facet, values in parsed_filters.items():
+        for facet in parsed_filters:
             if facet not in data_catalog.columns:
                 logger.error(
                     f"Filter facet '{facet}' not found in data catalog. "
                     f"Choose from: {', '.join(sorted(data_catalog.columns))}"
                 )
                 raise typer.Exit(code=1)
-            data_catalog = data_catalog[data_catalog[facet].isin(values)]
+
+        filtered = apply_dataset_filters({source_type: data_catalog}, parsed_filters)
+        data_catalog = filtered[source_type]  # type: ignore[assignment]  # input is DataFrame
 
     if column:
         missing = set(column) - set(data_catalog.columns)

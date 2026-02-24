@@ -1,3 +1,4 @@
+from collections.abc import Sequence
 from pathlib import Path
 from typing import Any
 
@@ -397,7 +398,7 @@ class ILAMBStandard(Diagnostic):
         # resolve to keys in one of its data registries. If instead we find a
         # dictionary, then assume that these keys are meant to be keywords in a
         # REF data requirement.
-        filters: dict[str, list[str]] = {}
+        filters: dict[str, Any] = {}
         for _, source in sources.items():
             if isinstance(source, dict):
                 for key, val in source.items():
@@ -414,16 +415,18 @@ class ILAMBStandard(Diagnostic):
             else None
         )
 
+        data_requirements: Sequence[Sequence[DataRequirement]]
         if obs4mips_requirement is None:
-            self.data_requirements = (
+            data_requirements = (
                 (cmip6_requirement,),
                 (cmip7_requirement,),
             )
         else:
-            self.data_requirements = (
+            data_requirements = (
                 (cmip6_requirement, obs4mips_requirement),
                 (cmip7_requirement, obs4mips_requirement),
             )
+        self.data_requirements = data_requirements
 
         self.facets = (
             "experiment_id",

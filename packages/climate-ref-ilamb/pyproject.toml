@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
   "climate-ref-core",
-  "ilamb3>=2025.9.9",
+  "ilamb3>=2025.9.9,<2025.12",  # >=2025.12 removed integrate_space from nbp_analysis
   "scipy<1.16",        # https://github.com/statsmodels/statsmodels/issues/9584
   "xarray<2025.11",    # ilamb3 incompatibility with integrate_space units handling
   "matplotlib<3.11",    # ilamb3/plot.py:455: MatplotlibDeprecationWarning: Passing `apply_theta_transforms=True` (the default) is deprecated since Matplotlib 3.9. Support for this will be removed in Matplotlib in 3.11.

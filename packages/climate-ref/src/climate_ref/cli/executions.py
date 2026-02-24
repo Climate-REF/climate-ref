@@ -17,11 +17,14 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
+from sqlalchemy import or_
 
 from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
 from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
+from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
+from climate_ref.models.provider import Provider
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 app = typer.Typer(help=__doc__)
@@ -522,6 +525,107 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
     console.print(_datasets_panel(result))
     console.print(_results_directory_panel(result_directory))
     console.print(_log_panel(result_directory))
+
+
+@app.command()
+def fail_running(
+    ctx: typer.Context,
+    older_than: Annotated[
+        float | None,
+        typer.Option(
+            help="Only fail executions older than this many hours. "
+            "If not specified, all running executions are failed."
+        ),
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by diagnostic slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by provider slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    force: bool = typer.Option(False, help="Skip confirmation prompt"),
+) -> None:
+    """
+    Mark running executions as failed.
+
+    Running executions (those with no success/failure status) block their execution group
+    from being requeued. Use this command as an escape hatch to fail stuck executions
+    so they can be retried on the next solve.
+
+    An optional age threshold can be provided with --older-than to only fail executions
+    that have been running for longer than the specified number of hours.
+    """
+    import datetime
+
+    session = ctx.obj.database.session
+    console = ctx.obj.console
+
+    # Query for running executions (successful IS NULL)
+    query = session.query(Execution).filter(Execution.successful.is_(None))
+
+    # Apply age threshold
+    if older_than is not None:
+        cutoff = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=older_than)
+        query = query.filter(Execution.created_at < cutoff)
+
+    # Apply diagnostic/provider filters via execution group -> diagnostic join
+    if diagnostic or provider:
+        query = query.join(ExecutionGroup, Execution.execution_group_id == ExecutionGroup.id).join(
+            Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id
+        )
+
+    if diagnostic:
+        diagnostic_conditions = [
+            Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic
+        ]
+        query = query.filter(or_(*diagnostic_conditions))
+
+    if provider:
+        query = query.join(Provider, Diagnostic.provider_id == Provider.id)
+        provider_conditions = [Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider]
+        query = query.filter(or_(*provider_conditions))
+
+    running_executions = query.all()
+
+    if not running_executions:
+        console.print("No running executions found matching the specified criteria.")
+        return
+
+    console.print(f"Found {len(running_executions)} running execution(s) to mark as failed:")
+    for execution in running_executions:
+        eg = execution.execution_group
+        console.print(
+            f"  Execution {execution.id}: "
+            f"{eg.diagnostic.provider.slug}/{eg.diagnostic.slug} "
+            f"(group={eg.key}, created={execution.created_at})"
+        )
+
+    if not force:
+        if not typer.confirm("Do you want to mark these executions as failed?"):
+            console.print("Cancelled.")
+            return
+
+    with session.begin_nested() if session.in_transaction() else session.begin():
+        for execution in running_executions:
+            execution.mark_failed()
+            execution.execution_group.dirty = True
+            logger.info(
+                f"Marked execution {execution.id} as failed "
+                f"({execution.execution_group.diagnostic.slug}/{execution.execution_group.key})"
+            )
+
+    console.print(
+        f"[green]Successfully marked {len(running_executions)} execution(s) as failed "
+        f"and flagged their execution groups as dirty."
+    )
 
 
 @app.command()

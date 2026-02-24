@@ -186,6 +186,71 @@ Environment variables can be set via `defaults.env` or per-provider:
 | `REF_EXECUTOR`          | Executor class            | `climate_ref_celery.executor.CeleryExecutor` |
 | `HOME`                  | Home directory (writable) | `/tmp`                                       |
 
+### Celery Reliability Settings
+
+These settings control worker crash recovery and task time limits to ensure that the celery tasks
+are durable and do not result in hanging consumers.
+They have sensible defaults in `celeryconf/base.py` and can be overridden
+via environment variables globally (in `defaults.env`) or per-provider.
+
+If tasks are hanging or not resolving, then the celery configuration could be the issue.
+We need to be resiliant to workers failing.
+
+| Variable                            | Description                                      | Default             |
+| ----------------------------------- | ------------------------------------------------ | ------------------- |
+| `CELERY_TASK_TIME_LIMIT`            | Hard kill timeout in seconds                     | `21600` (6 hours)   |
+| `CELERY_TASK_SOFT_TIME_LIMIT`       | Soft timeout (raises exception for cleanup)      | `19800` (5.5 hours) |
+| `CELERY_TASK_MAX_RETRIES`           | Max retries before permanent failure             | `2`                 |
+| `CELERY_VISIBILITY_TIMEOUT`         | Redis redelivery timeout (must be >= time limit) | Matches time limit  |
+| `CELERY_WORKER_PREFETCH_MULTIPLIER` | Tasks prefetched per worker process              | `1`                 |
+| `CELERY_WORKER_CONCURRENCY`         | Worker processes per pod                         | CPU count           |
+| `CELERY_RESULT_EXPIRES`             | Result expiry in seconds                         | `172800` (48 hours) |
+| `CELERY_WORKER_MAX_TASKS_PER_CHILD` | Recycle worker after N tasks (memory leak guard) | None (no limit)     |
+| `CELERY_WORKER_MAX_MEMORY_PER_CHILD`| Max resident memory per worker in KB             | None (no limit)     |
+
+The following settings are always enabled in `base.py` and cannot be overridden via
+environment variables:
+
+| Setting                                              | Value  | Purpose                                                         |
+| ---------------------------------------------------- | ------ | --------------------------------------------------------------- |
+| `task_acks_late`                                     | `True` | ACK after execution so crashed tasks are redelivered            |
+| `task_reject_on_worker_lost`                         | `True` | SIGKILL causes redelivery instead of silent loss                |
+| `task_track_started`                                 | `True` | Distinguish "not started" from "worker died" in Flower          |
+| `worker_cancel_long_running_tasks_on_connection_loss`| `True` | Kill tasks on broker disconnect to prevent duplicate execution  |
+| `worker_send_task_events`                            | `True` | Emit task events for Flower monitoring                          |
+| `result_extended`                                    | `True` | Store extra metadata (task name, args, worker) with results     |
+| `result_backend_always_retry`                        | `True` | Retry result storage on transient Redis errors                  |
+
+#### Per-Provider Time Limits
+
+Providers have different runtime characteristics. Override time limits per-provider
+to avoid unnecessarily long visibility windows on fast providers:
+
+```yaml
+providers:
+  esmvaltool:
+    env:
+      # ESMValTool diagnostics can run for hours
+      CELERY_TASK_TIME_LIMIT: "21600"        # 6 hours
+      CELERY_TASK_SOFT_TIME_LIMIT: "19800"   # 5.5 hours
+      CELERY_VISIBILITY_TIMEOUT: "21600"
+  ilamb:
+    env:
+      # ILAMB diagnostics are typically fast
+      CELERY_TASK_TIME_LIMIT: "1800"         # 30 minutes
+      CELERY_TASK_SOFT_TIME_LIMIT: "1500"    # 25 minutes
+      CELERY_VISIBILITY_TIMEOUT: "1800"
+  pmp:
+    env:
+      CELERY_TASK_TIME_LIMIT: "7200"         # 2 hours
+      CELERY_TASK_SOFT_TIME_LIMIT: "6600"    # 1 hour 50 min
+      CELERY_VISIBILITY_TIMEOUT: "7200"
+```
+
+**Important:** `CELERY_VISIBILITY_TIMEOUT` must always be >= `CELERY_TASK_TIME_LIMIT`.
+If a task runs longer than the visibility timeout,
+Redis will redeliver it to another worker, causing duplicate execution. See the `celeryconf/base.py` docstring for details.
+
 ### Persistent Volume Claims
 
 Create PVCs using the `createPVCs` map:

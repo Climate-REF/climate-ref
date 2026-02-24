@@ -69,7 +69,7 @@ class CeleryExecutor(Executor):
             If provided, it will be updated with the executions of the execution.
             This may happen asynchronously, so the executions may not be immediately available.
         """
-        from climate_ref_celery.worker_tasks import handle_result  # noqa: PLC0415
+        from climate_ref_celery.worker_tasks import handle_failure, handle_result  # noqa: PLC0415
 
         diagnostic = definition.diagnostic
 
@@ -80,6 +80,7 @@ class CeleryExecutor(Executor):
             args=[definition, self.config.log_level],
             queue=diagnostic.provider.slug,
             link=handle_result.s(execution_id=execution.id).set(queue="celery") if execution else None,
+            link_error=handle_failure.s(execution_id=execution.id).set(queue="celery") if execution else None,
         )
         logger.debug(f"Celery task {async_result.id} submitted")
         self._results.append(async_result)

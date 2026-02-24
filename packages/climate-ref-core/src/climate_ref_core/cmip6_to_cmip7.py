@@ -25,7 +25,7 @@ from importlib import resources
 from typing import TYPE_CHECKING, Any
 
 import attrs
-import cftime  # type: ignore[import-untyped]
+import cftime
 import pandas as pd
 
 if TYPE_CHECKING:

@@ -6,7 +6,6 @@ from attrs import define
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
-from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.utils import validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
@@ -97,6 +96,15 @@ class DatasetAdapter(Protocol):
     """
     dataset_specific_metadata: tuple[str, ...]
     file_specific_metadata: tuple[str, ...] = ()
+    columns_requiring_finalisation: frozenset[str] = frozenset()
+    """
+    Columns that are not available until the dataset has been finalised.
+
+    For adapters that support two-phase parsing (e.g. DRS-only then complete),
+    these columns will contain ``pd.NA`` until finalisation opens the files.
+    Filtering or grouping on these columns before finalisation will silently
+    produce incorrect results.
+    """
 
     version_metadata: str = "version"
     """
@@ -191,15 +199,13 @@ class DatasetAdapter(Protocol):
         return data_catalog
 
     def register_dataset(  # noqa: PLR0915
-        self, config: Config, db: Database, data_catalog_dataset: pd.DataFrame
+        self, db: Database, data_catalog_dataset: pd.DataFrame
     ) -> DatasetRegistrationResult:
         """
         Register a dataset in the database using the data catalog
 
         Parameters
         ----------
-        config
-            Configuration object
         db
             Database instance
         data_catalog_dataset

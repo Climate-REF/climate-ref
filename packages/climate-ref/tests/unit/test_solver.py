@@ -10,12 +10,16 @@ from climate_ref_ilamb import provider as ilamb_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.config import ExecutorConfig
+from climate_ref.data_catalog import DataCatalog
+from climate_ref.database import Database
+from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
 from climate_ref.models import Execution
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
     DiagnosticExecution,
     ExecutionSolver,
     SolveFilterOptions,
+    apply_dataset_filters,
     extract_covered_datasets,
     matches_filter,
     solve_executions,
@@ -76,8 +80,176 @@ class TestMetricSolver:
         assert isinstance(solver, ExecutionSolver)
         assert isinstance(solver.provider_registry, ProviderRegistry)
         assert SourceDatasetType.CMIP6 in solver.data_catalog
-        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], pd.DataFrame)
-        assert len(solver.data_catalog[SourceDatasetType.CMIP6])
+        assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
+        assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
+
+
+class TestExtractCoveredDatasetsWithDataCatalog:
+    """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""
+
+    def test_finalise_called_for_unfinalised_groups(self):
+        """When a DataCatalog has unfinalised data, finalise() is called per group."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+
+        mock_catalog.finalise.assert_called()
+        assert len(result) == 1
+        # The finalised group should have finalised=True
+        group_df = next(iter(result.values()))
+        assert group_df["finalised"].all()
+
+    def test_finalise_not_called_for_raw_dataframe(self):
+        """When a raw DataFrame is passed, no finalisation is attempted."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=None,
+        )
+
+        # Should work without error - no finalise call attempted on a raw DataFrame
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+    def test_validation_raises_for_filter_on_unfinalised_column(self):
+        """Filtering on a column that requires finalisation raises ValueError."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": [pd.NA],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        with pytest.raises(ValueError, match=r"filters on columns that require finalisation.*realm"):
+            extract_covered_datasets(mock_catalog, requirement)
+
+    def test_validation_raises_for_group_by_on_unfinalised_column(self):
+        """Grouping by a column that requires finalisation raises ValueError."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": [pd.NA],
+                "source_id": ["MODEL-A"],
+                "finalised": [False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("realm",),
+        )
+
+        with pytest.raises(ValueError, match=r"groups by columns that require finalisation.*realm"):
+            extract_covered_datasets(mock_catalog, requirement)
+
+    def test_validation_passes_for_drs_available_columns(self):
+        """Filtering on columns available from DRS parsing works fine."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = CMIP6DatasetAdapter.columns_requiring_finalisation
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+        assert len(result) == 1
+
+    def test_validation_skipped_for_raw_dataframe(self):
+        """No validation error when passing a raw DataFrame (no adapter info)."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": ["atmos"],
+                "source_id": ["MODEL-A"],
+            }
+        )
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        # Raw DataFrame has no columns_requiring_finalisation, so no error
+        result = extract_covered_datasets(catalog_df, requirement)
+        assert len(result) == 1
+
+    def test_validation_skipped_for_empty_columns_requiring_finalisation(self):
+        """No validation error when adapter has empty columns_requiring_finalisation."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "realm": ["atmos"],
+                "source_id": ["MODEL-A"],
+                "finalised": [True],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"realm": "atmos"}),),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+        assert len(result) == 1
 
 
 @pytest.mark.parametrize(
@@ -875,13 +1047,15 @@ def test_solve_with_one_per_provider(
 def test_solve_with_one_per_diagnostic(
     db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor
 ):
-    # Create a mock solver that "solves" to create multiple executions with the same diagnostic
+    # Create a mock solver that "solves" to create multiple executions with the same diagnostic.
+    # The second execution has the same dataset hash as the first, so the in-progress guard
+    # in should_run will skip it (the first execution has successful=None).
     solver = mock.MagicMock(spec=ExecutionSolver)
     solver.solve.return_value = [mock_metric_execution, mock_metric_execution]
-    with caplog.at_level("INFO"):
+    with caplog.at_level("DEBUG"):
         solve_required_executions(db_seeded, solver=solver, one_per_diagnostic=True)
 
-    assert "Skipping execution due to one-of check" in caplog.text
+    assert "already has an in-progress execution" in caplog.text
 
     # Check that a result is created
     assert db_seeded.session.query(Execution).count() == 1
@@ -909,6 +1083,54 @@ def test_solve_with_one_per_diagnostic_different_diagnostics(
 
     # Check that multiple diagnostics are created
     assert db_seeded.session.query(Execution).count() == 2
+
+
+def test_solve_with_limit(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    # Create a mock solver that "solves" to create multiple executions
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, limit=1)
+
+    assert "Reached execution limit of 1" in caplog.text
+
+    # Only one execution should have been created
+    assert db_seeded.session.query(Execution).count() == 1
+    assert mock_executor.return_value.run.call_count == 1
+
+
+def test_solve_with_limit_dry_run(db_seeded, mock_metric_execution, mock_diagnostic, caplog, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    with caplog.at_level("INFO"):
+        solve_required_executions(db_seeded, solver=solver, dry_run=True, limit=1)
+
+    assert "Reached execution limit of 1" in caplog.text
+    # Dry run should not create any DB records or run anything
+    assert db_seeded.session.query(Execution).count() == 0
+    assert mock_executor.return_value.run.call_count == 0
+
+
+def test_solve_with_limit_none_runs_all(db_seeded, mock_metric_execution, mock_diagnostic, mock_executor):
+    mock_execution_2 = deepcopy(mock_metric_execution)
+    mock_execution_2.diagnostic = mock_diagnostic.provider.get("failed")
+
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution, mock_execution_2]
+
+    solve_required_executions(db_seeded, solver=solver, limit=None)
+
+    # Both executions should run when limit is None
+    assert db_seeded.session.query(Execution).count() == 2
+    assert mock_executor.return_value.run.call_count == 2
 
 
 class TestMatchesFilter:
@@ -1157,3 +1379,206 @@ def test_extract_covered_datasets_no_matching_filter():
     )
     result = extract_covered_datasets(data_catalog, requirement)
     assert result == {}
+
+
+class TestApplyDatasetFilters:
+    """Tests for the apply_dataset_filters function."""
+
+    def test_single_facet_single_value(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "tas"],
+                    "source_id": ["ACCESS-CM2", "ACCESS-CM2", "CESM2"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"source_id": ["ACCESS-CM2"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+        assert result[SourceDatasetType.CMIP6]["source_id"].unique().tolist() == ["ACCESS-CM2"]
+
+    def test_single_facet_multiple_values(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "hfls"],
+                    "source_id": ["A", "B", "C"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas", "pr"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+        assert sorted(result[SourceDatasetType.CMIP6]["variable_id"].tolist()) == ["pr", "tas"]
+
+    def test_multiple_facets_anded(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "tas", "pr"],
+                    "source_id": ["ACCESS-CM2", "CESM2", "ACCESS-CM2"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"], "source_id": ["ACCESS-CM2"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        row = result[SourceDatasetType.CMIP6].iloc[0]
+        assert row["variable_id"] == "tas"
+        assert row["source_id"] == "ACCESS-CM2"
+
+    def test_facet_not_in_catalog_skipped(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+        }
+        # experiment_id is not a column; should be skipped, leaving all rows
+        result = apply_dataset_filters(data_catalog, {"experiment_id": ["ssp126"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 2
+
+    def test_filters_applied_per_source_type(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+            SourceDatasetType.obs4MIPs: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr", "hfls"],
+                    "source_id": ["ERA-5", "GPCP", "ERA-5"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 1
+        assert result[SourceDatasetType.CMIP6]["variable_id"].iloc[0] == "tas"
+        assert len(result[SourceDatasetType.obs4MIPs]) == 1
+        assert result[SourceDatasetType.obs4MIPs]["variable_id"].iloc[0] == "tas"
+
+    def test_no_matches_returns_empty(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(
+                {
+                    "variable_id": ["tas", "pr"],
+                    "source_id": ["A", "B"],
+                }
+            ),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["nonexistent"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 0
+
+    def test_empty_catalog_returns_empty(self):
+        data_catalog = {
+            SourceDatasetType.CMIP6: pd.DataFrame(columns=["variable_id", "source_id"]),
+        }
+        result = apply_dataset_filters(data_catalog, {"variable_id": ["tas"]})
+
+        assert len(result[SourceDatasetType.CMIP6]) == 0
+
+
+def test_solver_solve_with_dataset_filters(aft_solver):
+    """Test that dataset filters reduce the executions produced by the solver."""
+    # Unfiltered baseline
+    all_executions = list(aft_solver.solve())
+    assert len(all_executions) > 0
+
+    # Filter to a single variable that exists in the test data
+    variable_id = "tas"
+    filtered = list(aft_solver.solve(filters=SolveFilterOptions(dataset={"variable_id": [variable_id]})))
+
+    # Filtered set should be smaller (or equal if all diagnostics only use that variable)
+    assert len(filtered) <= len(all_executions)
+    assert len(filtered) > 0
+
+    # All CMIP6 datasets in filtered executions should contain only the filtered variable
+    for execution in filtered:
+        if SourceDatasetType.CMIP6 in execution.datasets:
+            variables = execution.datasets[SourceDatasetType.CMIP6].datasets["variable_id"].unique()
+            assert variable_id in variables
+
+
+def test_solver_solve_with_dataset_filter_no_match(aft_solver):
+    """Test that a dataset filter matching nothing produces no executions."""
+    filtered = list(
+        aft_solver.solve(filters=SolveFilterOptions(dataset={"source_id": ["NONEXISTENT_MODEL"]}))
+    )
+    assert len(filtered) == 0
+
+
+def test_solver_solve_with_dataset_and_provider_filters(aft_solver):
+    """Test that dataset filters and provider filters compose correctly."""
+    # Filter to ilamb provider and a specific variable
+    variable_id = aft_solver.data_catalog[SourceDatasetType.CMIP6].to_frame()["variable_id"].iloc[0]
+    filtered = list(
+        aft_solver.solve(
+            filters=SolveFilterOptions(
+                provider=["ilamb"],
+                dataset={"variable_id": [variable_id]},
+            )
+        )
+    )
+
+    for execution in filtered:
+        assert execution.provider.slug == "ilamb"
+
+
+def _build_solver_for_parser(config, sample_data_dir, parser_type, tmp_path, providers):
+    """Helper: ingest sample data with the given parser and return a solver."""
+    config.cmip6_parser = parser_type
+
+    db_path = tmp_path / f"bench_{parser_type}.db"
+    db = Database(f"sqlite:///{db_path}")
+    db.migrate(config)
+
+    # Ingest CMIP6
+    adapter = CMIP6DatasetAdapter(config=config)
+    ingest_datasets(adapter, sample_data_dir / "CMIP6", db, skip_invalid=True)
+
+    # Ingest obs4MIPs + obs4REF
+    obs_adapter = Obs4MIPsDatasetAdapter()
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4MIPs", db, skip_invalid=True)
+    ingest_datasets(obs_adapter, sample_data_dir / "obs4REF", db, skip_invalid=True)
+
+    # Register providers
+    with db.session.begin():
+        for p in providers:
+            _register_provider(db, p)
+
+    solver = ExecutionSolver.build_from_db(config, db)
+    solver.provider_registry = ProviderRegistry(providers=providers)
+    return solver, db
+
+
+def test_drs_and_complete_parsers_produce_same_executions(config, sample_data_dir, prepare_db, tmp_path):
+    """DRS (lazy) and complete parsers must produce the same solver executions."""
+    providers = [pmp_provider, esmvaltool_provider, ilamb_provider]
+
+    solver_complete, db_complete = _build_solver_for_parser(
+        config, sample_data_dir, "complete", tmp_path, providers
+    )
+    solver_drs, db_drs = _build_solver_for_parser(config, sample_data_dir, "drs", tmp_path, providers)
+
+    try:
+        complete_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_complete.solve())
+        drs_executions = sorted((e.diagnostic.slug, e.dataset_key) for e in solver_drs.solve())
+
+        assert len(complete_executions) == len(drs_executions), (
+            f"Complete parser found {len(complete_executions)} executions "
+            f"but DRS parser found {len(drs_executions)}.\n"
+            f"Only in complete: {set(complete_executions) - set(drs_executions)}\n"
+            f"Only in DRS: {set(drs_executions) - set(complete_executions)}"
+        )
+        assert complete_executions == drs_executions
+    finally:
+        db_complete.close()
+        db_drs.close()

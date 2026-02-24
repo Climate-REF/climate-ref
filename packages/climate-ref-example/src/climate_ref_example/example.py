@@ -42,6 +42,11 @@ def calculate_annual_mean_timeseries(input_files: list[Path]) -> xr.Dataset:
 
     annual_mean = xr_ds.resample(time="YS").mean()
 
+    # Drop time_bnds before weighted mean to avoid dtype=object division error
+    # (resample+mean turns datetime bounds into object arrays)
+    if "time_bnds" in annual_mean:
+        annual_mean = annual_mean.drop_vars("time_bnds")
+
     return annual_mean.weighted(xr_ds.areacella.fillna(0)).mean(dim=["lat", "lon"], keep_attrs=True)
 
 

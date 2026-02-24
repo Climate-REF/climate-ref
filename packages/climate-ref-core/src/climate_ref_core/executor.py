@@ -13,6 +13,27 @@ from climate_ref_core.exceptions import DiagnosticError, InvalidExecutorExceptio
 from climate_ref_core.logging import redirect_logs
 
 
+def _is_system_error(exc: BaseException) -> bool:
+    """
+    Check if an exception represents a system-level failure.
+
+    System failures are retryable because running again with the same data
+    may succeed (e.g. more memory available, disk space freed).
+    Diagnostic logic errors are not retryable.
+
+    Parameters
+    ----------
+    exc
+        The exception to classify
+
+    Returns
+    -------
+    :
+        True if the exception is a system-level failure
+    """
+    return isinstance(exc, (MemoryError, OSError, SystemExit, KeyboardInterrupt))
+
+
 def execute_locally(
     definition: ExecutionDefinition,
     log_level: str,
@@ -45,8 +66,14 @@ def execute_locally(
             return definition.diagnostic.run(definition=definition)
     except Exception as e:
         # If the diagnostic fails, we want to log the error and return a failure result
-        logger.exception(f"Error running {definition.execution_slug()!r}")
-        result = ExecutionResult.build_from_failure(definition)
+        retryable = _is_system_error(e)
+        if retryable:
+            logger.error(
+                f"System error running {definition.execution_slug()!r} (will be retried on next solve): {e}"
+            )
+        else:
+            logger.exception(f"Diagnostic error running {definition.execution_slug()!r}")
+        result = ExecutionResult.build_from_failure(definition, retryable=retryable)
 
         if raise_error:
             raise DiagnosticError(str(e), result) from e

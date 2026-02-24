@@ -271,7 +271,15 @@ class AddSupplementaryDataset:
             # Restore the original index so downstream concatenation is consistent
             supplementary_group.index = original_index[list(select)]
 
-        return pd.concat([group, supplementary_group])
+        if supplementary_group.empty:
+            return group
+        # Drop all-NA columns before concat as the default behaviour will change in pandas 3
+        return pd.concat(
+            [
+                group.dropna(axis="columns", how="all"),
+                supplementary_group.dropna(axis="columns", how="all"),
+            ]
+        )
 
     @classmethod
     def from_defaults(

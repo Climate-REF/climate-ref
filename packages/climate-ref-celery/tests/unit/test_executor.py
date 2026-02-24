@@ -1,6 +1,6 @@
 import pytest
 from climate_ref_celery.executor import CeleryExecutor
-from climate_ref_celery.worker_tasks import handle_result
+from climate_ref_celery.worker_tasks import handle_failure, handle_result
 
 
 @pytest.mark.parametrize("include_execution_result", [True, False])
@@ -16,6 +16,7 @@ def test_run_metric(provider, config, mock_diagnostic, metric_definition, mocker
             "mock_provider.mock",
             args=[metric_definition, "INFO"],
             link=handle_result.s(execution_id=mock_execution_result.id).set(queue="celery"),
+            link_error=handle_failure.s(execution_id=mock_execution_result.id).set(queue="celery"),
             queue="mock_provider",
         )
     else:
@@ -25,6 +26,7 @@ def test_run_metric(provider, config, mock_diagnostic, metric_definition, mocker
             "mock_provider.mock",
             args=[metric_definition, "INFO"],
             link=None,
+            link_error=None,
             queue="mock_provider",
         )
 

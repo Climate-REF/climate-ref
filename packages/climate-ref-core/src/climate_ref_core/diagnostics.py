@@ -185,6 +185,18 @@ class ExecutionResult:
     Whether the diagnostic execution ran successfully.
     """
 
+    retryable: bool = False
+    """
+    Whether a failed execution should be retried.
+
+    System-level failures (OOM, disk full, process killed) are retryable
+    because running again with the same data may succeed.
+    Diagnostic logic errors are not retryable because the same inputs
+    will produce the same failure.
+
+    Only meaningful when ``successful`` is False.
+    """
+
     series_filename: pathlib.Path | None = None
     """
     A collection of series metric values that were extracted from the execution.
@@ -250,15 +262,27 @@ class ExecutionResult:
         )
 
     @staticmethod
-    def build_from_failure(definition: ExecutionDefinition) -> ExecutionResult:
+    def build_from_failure(definition: ExecutionDefinition, *, retryable: bool = False) -> ExecutionResult:
         """
         Build a failed diagnostic result.
 
-        This is a placeholder.
-        Additional log information should still be captured in the output bundle.
+        Parameters
+        ----------
+        definition
+            The execution definition.
+        retryable
+            Whether the failure is retryable.
+
+            System-level failures (OOM, disk full, process killed) are retryable
+            because running again may succeed.
+            Diagnostic logic errors are not retryable.
         """
         return ExecutionResult(
-            output_bundle_filename=None, metric_bundle_filename=None, successful=False, definition=definition
+            output_bundle_filename=None,
+            metric_bundle_filename=None,
+            successful=False,
+            retryable=retryable,
+            definition=definition,
         )
 
     def to_output_path(self, filename: str | pathlib.Path | None) -> pathlib.Path:

@@ -849,7 +849,6 @@ source = { editable = "packages/climate-ref-ilamb" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "ilamb3" },
-    { name = "matplotlib" },
     { name = "scipy" },
     { name = "xarray" },
 ]
@@ -863,7 +862,6 @@ dev = [
 requires-dist = [
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },
     { name = "ilamb3", specifier = ">=2025.9.9,<2025.12" },
-    { name = "matplotlib", specifier = "<3.11" },
     { name = "scipy", specifier = "<1.16" },
     { name = "xarray", specifier = "<2025.11" },
 ]

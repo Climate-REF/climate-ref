@@ -494,6 +494,7 @@ class ExecutionSolver:
                 if not matches_filter(diagnostic, filters):
                     logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
                     continue
+                logger.info(f"Solving {diagnostic.full_slug()}")
                 try:
                     yield from solve_executions(data_catalog, diagnostic, provider)
                 except InvalidDiagnosticException as e:

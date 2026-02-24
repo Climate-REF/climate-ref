@@ -148,6 +148,11 @@ def ingest_datasets(
             stats.files_removed += len(results.files_removed)
             stats.files_unchanged += len(results.files_unchanged)
 
+        # Release ORM objects from the session identity map after each commit.
+        # Without this, all Dataset and DatasetFile objects accumulate in memory
+        # across the entire ingestion loop.
+        db.session.expire_all()
+
     return stats
 
 

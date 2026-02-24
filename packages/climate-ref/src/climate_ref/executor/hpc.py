@@ -128,7 +128,7 @@ def with_memory_limit(limit_gb: float | Callable[..., float | None]) -> Callable
             if current_limit is not None and current_limit > 0:
                 bytes_limit = int(current_limit * 1024 * 1024 * 1024)
                 _, hard0 = resource.getrlimit(resource.RLIMIT_AS)
-                soft = min(bytes_limit, hard0)
+                soft = min(bytes_limit, hard0) if hard0 > 0 else bytes_limit
                 resource.setrlimit(resource.RLIMIT_AS, (soft, hard0))
             return func(*args, **kwargs)
 

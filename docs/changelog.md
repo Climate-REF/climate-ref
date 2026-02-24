@@ -21,6 +21,15 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.11.1 (2026-02-24)
+
+### Bug Fixes
+
+- Fixed DRS re-ingestion from crashing or regressing already-finalised datasets. Previously, re-ingesting the same directory with the DRS parser would either crash with a `TypeError` due to `pd.NA` comparisons, or overwrite finalised metadata with empty values. Finalised datasets are now skipped during DRS ingestion while still adding any new files.
+
+  Reduced memory usage during dataset ingestion by releasing ORM objects from the SQLAlchemy session after each dataset commit, preventing unbounded memory growth on large archives. ([#567](https://github.com/Climate-REF/climate-ref/pull/567))
+
+
 ## climate-ref 0.11.0 (2026-02-24)
 
 ### Breaking Changes

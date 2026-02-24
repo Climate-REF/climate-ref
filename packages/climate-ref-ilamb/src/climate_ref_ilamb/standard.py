@@ -398,7 +398,7 @@ class ILAMBStandard(Diagnostic):
         # resolve to keys in one of its data registries. If instead we find a
         # dictionary, then assume that these keys are meant to be keywords in a
         # REF data requirement.
-        filters: dict[str, Any] = {}
+        filters: dict[str, list[str]] = {}
         for _, source in sources.items():
             if isinstance(source, dict):
                 for key, val in source.items():

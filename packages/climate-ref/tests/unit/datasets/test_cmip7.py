@@ -267,7 +267,8 @@ class TestCMIP7ConvertedFile:
         cmip6_file = nc_files[0]
 
         # Open and convert to CMIP7
-        with xr.open_dataset(cmip6_file, use_cftime=True) as ds:
+        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+        with xr.open_dataset(cmip6_file, decode_times=time_coder) as ds:
             ds_cmip7 = convert_cmip6_dataset(ds)
 
             # Create filename

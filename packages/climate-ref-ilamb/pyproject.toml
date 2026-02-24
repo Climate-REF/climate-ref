@@ -24,7 +24,7 @@ classifiers = [
 ]
 dependencies = [
   "climate-ref-core",
-  "ilamb3>=2025.9.9",
+  "ilamb3>=2025.9.9,<2025.12",  # to be relaxed in #548
   "scipy<1.16",        # https://github.com/statsmodels/statsmodels/issues/9584
   "xarray<2025.11",    # ilamb3 incompatibility with integrate_space units handling
 ]

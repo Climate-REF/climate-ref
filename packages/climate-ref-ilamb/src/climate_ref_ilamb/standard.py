@@ -589,7 +589,8 @@ class ILAMBStandard(Diagnostic):
         # output files
         series = []
         for ncfile in definition.output_directory.glob("*.nc"):
-            ds = xr.open_dataset(ncfile, use_cftime=True)
+            time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+            ds = xr.open_dataset(ncfile, decode_times=time_coder)
             for name, da in ds.items():
                 # Only create series for 1d DataArray's with these dimensions
                 if not (da.ndim == 1 and set(da.dims).intersection(["time", "month"])):

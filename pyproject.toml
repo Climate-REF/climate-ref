@@ -145,7 +145,8 @@ addopts = [
     "--ignore=packages/climate-ref-pmp/src/climate_ref_pmp/drivers",
 ]
 filterwarnings = [
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+    # PytestAssertRewriteWarning: Module already imported so cannot be rewritten; celery.contrib.pytest
+    "ignore:Module already imported so cannot be rewritten:pytest.PytestAssertRewriteWarning",
     # TestCase, TestDataSpecification, TestCaseRunner, TestCaseNotFoundError, TestCasePaths are domain classes
     "ignore:cannot collect test class 'TestCase':pytest.PytestCollectionWarning",
     "ignore:cannot collect test class 'TestDataSpecification':pytest.PytestCollectionWarning",

@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 from urllib import parse as urlparse
 
 import alembic.command
+import pandas as pd
 import sqlalchemy
 from alembic.config import Config as AlembicConfig
 from alembic.runtime.migration import MigrationContext
@@ -136,6 +137,33 @@ def validate_database_url(database_url: str) -> str:
         raise ValueError(f"Unsupported database scheme: {split_url.scheme}")
 
     return database_url
+
+
+def _values_differ(current: Any, new: Any) -> bool:
+    """
+    Safely compare two values for inequality, handling ``pd.NA`` and ``np.nan``.
+
+    Direct ``!=`` comparison with ``pd.NA`` raises ``TypeError`` because
+    ``bool(pd.NA)`` is ambiguous.  This helper avoids that by checking
+    for NA on both sides first.
+    """
+    try:
+        current_is_na = pd.isna(current)
+        new_is_na = pd.isna(new)
+    except (TypeError, ValueError):
+        current_is_na = False
+        new_is_na = False
+
+    if current_is_na and new_is_na:
+        return False
+    if current_is_na or new_is_na:
+        return True
+
+    try:
+        return bool(current != new)
+    except (TypeError, ValueError):
+        # Fallback for types whose __ne__ returns an ambiguous result
+        return True
 
 
 class ModelState(enum.Enum):
@@ -313,7 +341,7 @@ class Database:
             # Update existing instance with defaults
             if defaults:
                 for key, value in defaults.items():
-                    if getattr(instance, key) != value:
+                    if _values_differ(getattr(instance, key), value):
                         logger.debug(f"Updating {model.__name__} {key} to {value}")
                         setattr(instance, key, value)
                         state = ModelState.UPDATED

@@ -12,6 +12,14 @@ from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
 
 
+def _is_na(value: Any) -> bool:
+    """Check if a value is NA/NaN/None, safely handling all types."""
+    try:
+        return bool(pd.isna(value))
+    except (TypeError, ValueError):
+        return False
+
+
 @define
 class DatasetRegistrationResult:
     """
@@ -198,7 +206,7 @@ class DatasetAdapter(Protocol):
 
         return data_catalog
 
-    def register_dataset(  # noqa: PLR0915
+    def register_dataset(  # noqa: PLR0912, PLR0915
         self, db: Database, data_catalog_dataset: pd.DataFrame
     ) -> DatasetRegistrationResult:
         """
@@ -224,10 +232,59 @@ class DatasetAdapter(Protocol):
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")
         slug = unique_slugs[0]
 
+        # Check if the incoming data is unfinalised (DRS parser) and the dataset
+        # already exists as finalised.  In that case, skip the entire update to
+        # avoid regressing metadata that was populated during finalisation.
+        incoming_finalised = data_catalog_dataset.get("finalised")
+        is_unfinalised_ingest = incoming_finalised is not None and not incoming_finalised.iloc[0]
+
+        if is_unfinalised_ingest:
+            existing = db.session.query(DatasetModel).filter_by(slug=slug).first()
+            if existing and existing.finalised:
+                logger.debug(f"Skipping already-finalised dataset: {slug}")
+                current_files = db.session.query(DatasetFile).filter_by(dataset_id=existing.id).all()
+                existing_paths = {f.path for f in current_files}
+
+                new_file_data = data_catalog_dataset.to_dict(orient="records")
+                new_paths = {str(validate_path(r["path"])) for r in new_file_data}
+                files_to_add = new_paths - existing_paths
+
+                if files_to_add:
+                    new_file_lookup = {}
+                    for r in new_file_data:
+                        p = str(validate_path(r["path"]))
+                        new_file_lookup[p] = {"start_time": r["start_time"], "end_time": r["end_time"]}
+
+                    for file_path in files_to_add:
+                        ft = new_file_lookup[file_path]
+                        db.session.add(
+                            DatasetFile(
+                                path=file_path,
+                                dataset_id=existing.id,
+                                start_time=ft["start_time"],
+                                end_time=ft["end_time"],
+                            )
+                        )
+
+                return DatasetRegistrationResult(
+                    dataset=existing,
+                    dataset_state=ModelState.UPDATED if files_to_add else None,
+                    files_added=list(files_to_add),
+                    files_updated=[],
+                    files_removed=[],
+                    files_unchanged=list(existing_paths & new_paths),
+                )
+
         # Upsert the dataset (create a new dataset or update the metadata)
         dataset_metadata = cast(
             dict[str, Any], data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
         )
+
+        # Strip NA/NaN values so we never overwrite existing metadata with empty values.
+        # This prevents DRS re-ingestion from regressing columns that were populated
+        # during finalisation.
+        dataset_metadata = {k: v for k, v in dataset_metadata.items() if not _is_na(v)}
+
         dataset, dataset_state = db.update_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
         if dataset_state == ModelState.CREATED:
             logger.info(f"Created new dataset: {dataset}")

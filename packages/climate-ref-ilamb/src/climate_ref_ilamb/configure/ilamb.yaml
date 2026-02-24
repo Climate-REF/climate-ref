@@ -16,6 +16,7 @@ gpp-FLUXNET2015:
 mrro-LORA:
   sources:
     mrro:
+      obs_source: obs4ref
       source_id: LORA-1-1
   variable_cmap: Blues
 
@@ -38,6 +39,7 @@ cSoil-HWSD2:
 lai-NOAA-NCEI-LAI-AVHRR-5-0:
   sources:
     lai:
+      obs_source: obs4mips
       source_id: NOAA-NCEI-LAI-AVHRR-5-0
   variable_cmap: Greens
 
@@ -46,6 +48,7 @@ nbp-Hoffman:
   - nbp
   sources:
     nbp:
+      obs_source: obs4ref
       variable_id: nbp
       source_id: Hoffman
   transforms:

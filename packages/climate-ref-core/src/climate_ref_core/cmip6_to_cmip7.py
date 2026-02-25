@@ -526,7 +526,7 @@ def convert_cmip6_dataset(
 
     # Use the CMIP7 variable name
     dreq_entry = get_dreq_entry(table_id, variable_id)
-    ds = ds.rename({data_vars[0]: dreq_entry.variable_id})
+    ds = ds.rename({variable_id: dreq_entry.variable_id})
 
     # Convert global attributes
     ds.attrs = convert_cmip6_to_cmip7_attrs(ds.attrs)

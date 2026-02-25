@@ -74,6 +74,7 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
 
     # Convert the file and derive the time range from the dataset
     logger.info(f"Converting to CMIP7: {cmip6_path.name}")
+
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
     with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
         frequency = str(cmip7_facets.get("frequency", "mon"))

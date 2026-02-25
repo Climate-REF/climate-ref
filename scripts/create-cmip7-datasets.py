@@ -56,8 +56,7 @@ def _convert_file(
         cmip7_dir.mkdir(parents=True, exist_ok=True)
 
         # Build CMIP7 filename with time range
-        frequency = ds_cmip7.attrs.get("frequency", "mon")
-        time_range = format_cmip7_time_range(ds_cmip7, frequency)
+        time_range = format_cmip7_time_range(ds_cmip7, ds_cmip7.attrs["frequency"])
         cmip7_filename = create_cmip7_filename(ds_cmip7.attrs, time_range=time_range)
         cmip7_path = cmip7_dir / cmip7_filename
 

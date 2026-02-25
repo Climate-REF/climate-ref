@@ -156,7 +156,11 @@ jobs:
         kubectl exec deployment/test-ref-orchestrator -- ref -v datasets ingest --source-type obs4mips /ref/sample-data/obs4REF
     - name: Simple Solve
       run: |
-        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 360 --one-per-provider
+        # Use a fixed set of fast diagnostics to keep CI times predictable
+        kubectl exec deployment/test-ref-orchestrator -- ref -v solve --timeout 720 --one-per-provider \
+          --diagnostic global-mean-timeseries \
+          --diagnostic annual-cycle \
+          --diagnostic gpp-wecann
     - name: Capture Worker Logs on Failure
       if: failure()
       run: |
@@ -175,5 +179,8 @@ jobs:
         echo "=== Orchestrator Worker Logs ==="
         kubectl logs -l app.kubernetes.io/component=orchestrator --tail=500 || true
         echo ""
+        echo "=== Flower Logs ==="
+        kubectl logs -l app.kubernetes.io/component=flower --tail=500 || true
+        echo ""
         echo "=== Dragonfly Logs ==="
-        kubectl logs -l app.kubernetes.io/name=dragonfly --tail=200 || true
+        kubectl logs -l app.kubernetes.io/name=dragonfly --tail=500 || true

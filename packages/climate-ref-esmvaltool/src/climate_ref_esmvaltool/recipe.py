@@ -5,7 +5,7 @@ from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
-import cftime  # type: ignore[import-untyped]
+import cftime
 import pandas as pd
 import pooch
 import xarray as xr

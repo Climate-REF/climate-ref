@@ -17,6 +17,7 @@ from typing import Any
 import pandas as pd
 from loguru import logger
 
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.solver import ExecutionSolver, SolveFilterOptions
@@ -149,7 +150,11 @@ def solve_to_results(
         ``dataset_key``, ``selectors``, ``datasets``
     """
     registry = ProviderRegistry(providers=providers)
-    solver = ExecutionSolver(provider_registry=registry, data_catalog=data_catalog)
+
+    _data_catalog = {
+        SourceDatasetType(source_type): DataCatalog.from_frame(df) for source_type, df in data_catalog.items()
+    }
+    solver = ExecutionSolver(provider_registry=registry, data_catalog=_data_catalog)
 
     results = []
     for execution in solver.solve(filters=filters):

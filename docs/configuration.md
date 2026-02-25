@@ -15,7 +15,7 @@ The REF will look for a configuration file in the following locations, taking th
 
 * `${REF_CONFIGURATION}/ref.toml`
 * `~/.config/climate_ref/ref.toml` (Linux)
-*  `$XDG_CONFIG_HOME/climate_ref/ref.toml` (Linux)
+* `$XDG_CONFIG_HOME/climate_ref/ref.toml` (Linux)
 * `~/Library/Application Support/climate_ref/ref.toml` (macOS)
 * `%USERPROFILE%\AppData\Local\climate_ref\ref.toml` (Windows)
 
@@ -77,6 +77,7 @@ This is used to cache the datasets so that they are not downloaded multiple time
 It is not recommended to ingest datasets from this directory (see `--output-dir` argument for `ref datasets fetch-data`).
 
 This defaults to the following locations:
+
 * `~/Library/Caches/climate_ref` (MacOS)
 * `~/.cache/climate_ref` or the value of the `$XDG_CACHE_HOME/climate_ref`
   environment variable, if defined. (Linux)
@@ -94,8 +95,6 @@ If this is set, then the sample data won't be updated.
 Path where the test output is stored.
 This is used to store the output of the tests that are run in the test suite for later inspection.
 
-
 ## Configuration Options
-
 
 <!-- This file is appended to by gen_config_stubs.py -->

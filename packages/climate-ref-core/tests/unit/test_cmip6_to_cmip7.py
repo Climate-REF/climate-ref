@@ -880,8 +880,9 @@ class TestCreateCmip7Path:
             "variable_id": "tas",
             "branding_suffix": "tavg-h2m-hxy-u",
             "grid_label": "g13s",
+            "version": "v20250622",
         }
-        path = create_cmip7_path(attrs, "v20250622")
+        path = create_cmip7_path(attrs)
 
         expected = "MIP-DRS7/CMIP7/CMIP/CCCma/CanESM6-MR/historical/r2i1p1f1/glb/mon/tas/tavg-h2m-hxy-u/g13s/v20250622"  # noqa: E501
         assert path == expected

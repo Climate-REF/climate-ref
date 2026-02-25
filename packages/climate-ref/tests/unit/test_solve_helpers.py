@@ -22,6 +22,20 @@ from climate_ref.solve_helpers import (
 from climate_ref_core.datasets import SourceDatasetType
 
 
+def _align_datetime_nulls(source: pd.DataFrame, target: pd.DataFrame) -> pd.DataFrame:
+    """Replace ``None`` with ``NaT`` in object columns that became datetime after parquet round-trip.
+
+    Parquet deserialises time columns as datetime64, converting ``None`` to
+    ``NaT``.  Without alignment, ``assert_frame_equal`` warns about mismatched
+    null-like values (``None`` vs ``NaT``), which becomes an error in pandas 3.
+    """
+    aligned = source.copy()
+    for col in aligned.columns:
+        if col in target.columns and target[col].dtype.kind == "M" and aligned[col].dtype == object:
+            aligned[col] = aligned[col].fillna(pd.NaT)
+    return aligned
+
+
 @pytest.fixture(scope="module")
 def cmip6_generated_catalog(sample_data_dir):
     """Module-cached CMIP6 catalog to avoid redundant find_local_datasets calls."""
@@ -72,8 +86,9 @@ class TestWriteAndLoadCatalog:
 
         assert out_path.exists()
         loaded = pd.read_parquet(out_path)
-        # Parquet may coerce time columns to datetime64, so skip dtype check
-        pd.testing.assert_frame_equal(cmip6_generated_catalog, loaded, check_dtype=False)
+        # Parquet coerces time columns (None -> NaT), so align dtypes before comparison
+        expected = _align_datetime_nulls(cmip6_generated_catalog, loaded)
+        pd.testing.assert_frame_equal(expected, loaded, check_dtype=False)
 
     def test_load_solve_catalog_missing_dir(self, tmp_path):
         result = load_solve_catalog(tmp_path / "nonexistent")
@@ -94,10 +109,10 @@ class TestWriteAndLoadCatalog:
         result = load_solve_catalog(catalog_dir)
         assert result is not None
         assert SourceDatasetType.CMIP6 in result
-        # Parquet may coerce time columns to datetime64, so skip dtype check
-        pd.testing.assert_frame_equal(
-            result[SourceDatasetType.CMIP6], cmip6_generated_catalog, check_dtype=False
-        )
+        # Parquet coerces time columns (None -> NaT), so align dtypes before comparison
+        loaded = result[SourceDatasetType.CMIP6]
+        expected = _align_datetime_nulls(cmip6_generated_catalog, loaded)
+        pd.testing.assert_frame_equal(loaded, expected, check_dtype=False)
 
 
 class TestSolveToResults:

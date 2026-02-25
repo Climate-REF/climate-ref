@@ -147,7 +147,7 @@ These defaults apply to all providers unless overridden per-provider.
 | --------------------------- | ------------------------- | --------------------------------- |
 | `defaults.replicaCount`     | Number of worker replicas | `1`                               |
 | `defaults.image.repository` | Worker image repository   | `ghcr.io/climate-ref/climate-ref` |
-| `defaults.image.tag`        | Worker image tag          | `v0.10.0`                          |
+| `defaults.image.tag`        | Worker image tag          | `v0.11.1`                          |
 | `defaults.image.pullPolicy` | Image pull policy         | `IfNotPresent`                    |
 | `defaults.resources`        | Resource requests/limits  | `{}`                              |
 | `defaults.nodeSelector`     | Node selector             | `{}`                              |

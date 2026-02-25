@@ -12,16 +12,6 @@ documentation:
   - kelley_douglas
   maintainer:
   - lenhardt_julien
-datasets:
-- project: CMIP6
-  activity: CMIP
-  dataset: ACCESS-ESM1-5
-  ensemble: r1i1p1f1
-  institute: CSIRO
-  exp: historical
-  grid: gn
-  start_year: 2013
-  end_year: 2014
 preprocessors:
   preproc:
     regrid:
@@ -44,24 +34,108 @@ diagnostics:
       pr:
         mip: Amon
         preprocessor: preproc
+        short_name: pr
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Amon
       tasmax:
         mip: Amon
         preprocessor: preproc
+        short_name: tasmax
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Amon
       treeFrac:
         mip: Lmon
         preprocessor: preproc_fraction
+        short_name: treeFrac
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Lmon
       vegFrac:
         mip: Emon
         preprocessor: preproc_fraction
+        short_name: vegFrac
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Emon
       cVeg:
         mip: Lmon
         preprocessor: preproc
+        short_name: cVeg
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Lmon
       tas:
         mip: Amon
         preprocessor: preproc
+        short_name: tas
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Amon
       hurs:
         mip: Amon
         preprocessor: preproc
+        short_name: hurs
+        start_year: 2013
+        end_year: 2014
+        additional_datasets:
+        - project: CMIP6
+          activity: CMIP
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          institute: CSIRO
+          exp: historical
+          grid: gn
+          mip: Amon
     scripts:
       fire_evaluation:
         script: fire/fire_diagnostic.py

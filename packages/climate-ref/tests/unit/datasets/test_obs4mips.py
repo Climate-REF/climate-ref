@@ -152,7 +152,6 @@ class Testobs4MIPsAdapter:
             assert str(excinfo.value) == "No obs4MIPs-compliant datasets found"
 
     def test_empty_directory_exception(self, test_empty_dir):
-        with pytest.raises(ValueError) as excinfo:
+        with pytest.raises(ValueError, match="No files matching"):
             adapter = Obs4MIPsDatasetAdapter()
             adapter.find_local_datasets(test_empty_dir)
-        assert str(excinfo.value) == "asset list provided is None. Please run `.get_assets()` first"

@@ -31,6 +31,45 @@ class TestDatasetsList:
     def test_list_column_invalid(self, db_seeded, invoke_cli):
         invoke_cli(["datasets", "list", "--column", "wrong"], expected_exit_code=1)
 
+    def test_list_dataset_filter(self, db_seeded, invoke_cli):
+        result = invoke_cli(
+            ["datasets", "list", "--dataset-filter", "variable_id=tas", "--column", "variable_id"]
+        )
+        # All rows should contain "tas", none should contain other variables
+        lines = result.stdout.strip().split("\n")
+        # Skip header and separator lines
+        data_lines = [line.strip() for line in lines[2:] if line.strip()]
+        assert all("tas" in line for line in data_lines)
+
+    def test_list_dataset_filter_multiple_values(self, db_seeded, invoke_cli):
+        result = invoke_cli(
+            [
+                "datasets",
+                "list",
+                "--dataset-filter",
+                "variable_id=tas",
+                "--dataset-filter",
+                "variable_id=pr",
+                "--column",
+                "variable_id",
+            ]
+        )
+        lines = result.stdout.strip().split("\n")
+        data_lines = [line.strip() for line in lines[2:] if line.strip()]
+        assert all("tas" in line or "pr" in line for line in data_lines)
+
+    def test_list_dataset_filter_invalid_format(self, db_seeded, invoke_cli):
+        invoke_cli(
+            ["datasets", "list", "--dataset-filter", "bad_filter"],
+            expected_exit_code=2,
+        )
+
+    def test_list_dataset_filter_invalid_facet(self, db_seeded, invoke_cli):
+        invoke_cli(
+            ["datasets", "list", "--dataset-filter", "nonexistent_facet=value"],
+            expected_exit_code=1,
+        )
+
 
 class TestDatasetsListColumns:
     def test_list_columns(self, db_seeded, invoke_cli):

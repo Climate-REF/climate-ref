@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-root"
-version = "0.10.0"
+version = "0.11.1"
 description = "Climate Rapid Evaluation Framework (REF) root package"
 readme = "README.md"
 authors = [{ name = "Jared Lewis", email = "jared.lewis@climate-resource.com" }]
@@ -145,9 +145,8 @@ addopts = [
     "--ignore=packages/climate-ref-pmp/src/climate_ref_pmp/drivers",
 ]
 filterwarnings = [
-    # Need to update ecgtools/intake_esm to remove this warning
-    'ignore:The `validate_arguments` method is deprecated:pydantic.warnings.PydanticDeprecatedSince20',
-    "ignore:pkg_resources is deprecated as an API:DeprecationWarning",
+    # PytestAssertRewriteWarning: Module already imported so cannot be rewritten; celery.contrib.pytest
+    "ignore:Module already imported so cannot be rewritten:pytest.PytestAssertRewriteWarning",
     # TestCase, TestDataSpecification, TestCaseRunner, TestCaseNotFoundError, TestCasePaths are domain classes
     "ignore:cannot collect test class 'TestCase':pytest.PytestCollectionWarning",
     "ignore:cannot collect test class 'TestDataSpecification':pytest.PytestCollectionWarning",

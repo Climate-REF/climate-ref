@@ -111,7 +111,7 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
         adapter = PMPClimatologyDatasetAdapter()
 
         try:
-            stats = ingest_datasets(adapter, climatology_path, config, db, skip_invalid=True)
+            stats = ingest_datasets(adapter, climatology_path, db, skip_invalid=True)
             stats.log_summary("PMP climatology ingestion complete:")
         except ValueError as e:
             logger.warning(f"No valid PMP climatology datasets found: {e}")

@@ -1,7 +1,7 @@
 # Ingest Datasets
 
 Ingestion extracts metadata from your locally downloaded datasets and stores it in a local catalog for easy querying and filtering.
-This makes subsequesnt operations, such as running diagnostics, more efficient as the system can quickly access the necessary metadata without needing to reprocess the files.
+This makes subsequent operations, such as running diagnostics, more efficient as the system can quickly access the necessary metadata without needing to re-read the files.
 
 Before you begin, ensure you have:
 
@@ -18,18 +18,7 @@ ref datasets ingest --source-type obs4mips $REF_CONFIGURATION/datasets/obs4ref
 
 Replace `$REF_CONFIGURATION/datasets/obs4ref` with the directory used when [fetched the obs4REF data](02-download-datasets.md#fetch-obs4ref-datasets).
 
-## 2. Ingest PMP Climatology data
-
-Use the `pmp-climatology` source type:
-
-```bash
-ref datasets ingest --source-type pmp-climatology $REF_CONFIGURATION/datasets/pmp-climatology
-```
-
-This registry contains pre-computed climatology fields used by the PMP diagnostics.
-Replace `$REF_CONFIGURATION/datasets/pmp-climatology` with the directory used when [fetched the pmp-climatology data](02-download-datasets.md#fetch-pmp-climatology-datasets)
-
-## 3. Ingest CMIP6 data
+## 2. Ingest CMIP6 data
 
 To ingest CMIP6 files, point the CLI at a directory of netCDF files and set `cmip6` as the source type:
 
@@ -37,9 +26,8 @@ To ingest CMIP6 files, point the CLI at a directory of netCDF files and set `cmi
 ref datasets ingest --source-type cmip6 /path/to/cmip6/data
 ```
 
-
 [Globbed-style](https://en.wikipedia.org/wiki/Glob_(programming)) paths can be used to specify multiple directories or file patterns.
-For example, if you have CMIP6 data organized by the CMIP6 DRS,
+For example, if you have CMIP6 data organised by the CMIP6 DRS,
 you can use the following command to ingest all monthly and ancillary variables:
 
 ```bash
@@ -69,7 +57,7 @@ python scripts/fetch-esgf.py
 
 ///
 
-## 4. Query your catalog
+## 3. Query your catalog
 
 After ingestion, list the datasets to verify:
 
@@ -82,7 +70,6 @@ You can also filter by column:
 ```bash
 ref datasets list --column instance_id --column variable_id
 ```
-
 
 ## Next steps
 

@@ -1,22 +1,53 @@
 """Entrypoint for the CLI"""
 
 import importlib
+import sys
 from enum import Enum
 from pathlib import Path
 from typing import Annotated
 
 import typer
-from attrs import define
+from attrs import define, field
 from loguru import logger
 from rich.console import Console
 
 from climate_ref import __version__
-from climate_ref.cli import config, datasets, executions, providers, solve
 from climate_ref.config import Config
 from climate_ref.constants import CONFIG_FILENAME
 from climate_ref.database import Database
 from climate_ref_core import __version__ as __core_version__
 from climate_ref_core.logging import initialise_logging
+
+# Registry of read-only command paths (group, command)
+# These commands skip database backup before migrations since they don't modify data
+_READ_ONLY_COMMANDS: set[tuple[str, str]] = {
+    ("config", "list"),
+    ("datasets", "list"),
+    ("datasets", "list-columns"),
+    ("executions", "list-groups"),
+    ("executions", "inspect"),
+    ("providers", "list"),
+    ("providers", "show"),
+    ("test-cases", "list"),
+}
+
+
+def _is_read_only_command() -> bool:
+    """
+    Check if the current command is a read-only command by inspecting sys.argv.
+
+    This checks against a registry of known read-only command paths since
+    the Typer callback runs before nested commands are resolved.
+    """
+    # Parse sys.argv to find the command path
+    # Skip options (--flag) and the program name
+    args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
+
+    if len(args) >= 2:  # noqa: PLR2004
+        # Check if (group, command) is in our read-only registry
+        return (args[0], args[1]) in _READ_ONLY_COMMANDS
+
+    return False
 
 
 class LogLevel(str, Enum):
@@ -33,12 +64,33 @@ class LogLevel(str, Enum):
 @define
 class CLIContext:
     """
-    Context object that can be passed to commands
+    Context object that can be passed to commands.
+
+    The database is created lazily on first access to avoid running
+    migrations and creating backups for commands that don't need the database.
     """
 
     config: Config
-    database: Database
     console: Console
+    skip_backup: bool = False
+    _database: Database | None = field(default=None, alias="_database")
+
+    @property
+    def database(self) -> Database:
+        """
+        Get the database instance, creating it lazily if needed.
+
+        The database is created on first access, which triggers migrations.
+        Backup creation is skipped for read-only commands to reduce overhead.
+        """
+        if self._database is None:
+            self._database = Database.from_config(self.config, skip_backup=self.skip_backup)
+        return self._database
+
+    def close(self) -> None:
+        """Close the database connection if it was opened."""
+        if self._database is not None:
+            self._database.close()
 
 
 def _version_callback(value: bool) -> None:
@@ -97,6 +149,16 @@ def build_app() -> typer.Typer:
     :
         The CLI app
     """
+    # Import here to avoid circular imports since submodules import read_only from this module
+    from climate_ref.cli import (
+        config,
+        datasets,
+        executions,
+        providers,
+        solve,
+        test_cases,
+    )
+
     app = typer.Typer(name="ref", no_args_is_help=True)
 
     app.command(name="solve")(solve.solve)
@@ -104,6 +166,7 @@ def build_app() -> typer.Typer:
     app.add_typer(datasets.app, name="datasets")
     app.add_typer(executions.app, name="executions")
     app.add_typer(providers.app, name="providers")
+    app.add_typer(test_cases.app, name="test-cases")
 
     try:
         celery_app = importlib.import_module("climate_ref_celery.cli").app
@@ -164,7 +227,15 @@ def main(  # noqa: PLR0913
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
 
-    ctx.obj = CLIContext(config=config, database=Database.from_config(config), console=_create_console())
+    # Create context with lazy database initialization
+    # The database is only created when first accessed
+    # Skip backup for read-only commands to reduce overhead
+    skip_backup = _is_read_only_command()
+    cli_context = CLIContext(config=config, console=_create_console(), skip_backup=skip_backup)
+    ctx.obj = cli_context
+
+    # Register cleanup to close database connection when CLI exits
+    ctx.call_on_close(cli_context.close)
 
 
 if __name__ == "__main__":

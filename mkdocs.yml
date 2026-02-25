@@ -9,6 +9,7 @@ repo_url: https://github.com/Climate-REF/climate-ref
 nav:
   - Rapid Evaluation Framework: index.md
   - Installation: installation.md
+  - In a Nutshell: nutshell.md
   - Getting Started:
       - Configure: getting-started/01-configure.md
       - Download Datasets: getting-started/02-download-datasets.md
@@ -16,6 +17,12 @@ nav:
       - Solve: getting-started/04-solve.md
       - Visualise: getting-started/05-visualise.md
   - Configuration: configuration.md
+  - Diagnostics:
+      - diagnostics/index.md
+      - Example: diagnostics/example.md
+      - ESMValTool: diagnostics/esmvaltool.md
+      - PMP: diagnostics/pmp.md
+      - ILAMB: diagnostics/ilamb.md
   - Roadmap: roadmap.md
   - How-to guides:
       - how-to-guides/index.md
@@ -26,13 +33,15 @@ nav:
       - how-to-guides/ingest-datasets.md
       - how-to-guides/running-diagnostics-locally.py
       - how-to-guides/adding_custom_diagnostics.md
+      - how-to-guides/testing-diagnostics.md
       - how-to-guides/docker_deployment.md
-  - Tutorials: tutorials.md
   - Further background:
       - Basic Concepts: background/basic-concepts.md
       - Architecture: background/architecture.md
       - Explanation: background/explanation.md
       - Datasets: background/datasets.md
+      - API Surface: api-surface.md
+      - Versioning and Compatibility: versioning-and-compatibility.md
   - CLI: cli.md
   - API: api/
   - Development: development.md
@@ -73,6 +82,7 @@ plugins:
       scripts:
         - docs/gen_doc_stubs.py
         - docs/gen_config_stubs.py
+        - docs/gen_diagnostic_stubs.py
   # Make the navigation easier to handle/auto-generate if we wish
   # https://oprypin.github.io/mkdocs-literate-nav/
   - literate-nav:

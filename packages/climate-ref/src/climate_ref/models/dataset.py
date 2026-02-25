@@ -1,11 +1,12 @@
 import datetime
 from typing import Any, ClassVar
 
-from sqlalchemy import ForeignKey, func
+from sqlalchemy import ColumnElement, ForeignKey, func
+from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from climate_ref.models.base import Base
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.source_types import SourceDatasetType
 
 
 class Dataset(Base):
@@ -93,6 +94,13 @@ class DatasetFile(Base):
     path: Mapped[str] = mapped_column()
     """
     Prefix that describes where the dataset is stored relative to the data directory
+    """
+
+    tracking_id: Mapped[str] = mapped_column(nullable=True)
+    """
+    Unique file identifier.
+
+    For CMIP7, this is the handle identifier (e.g., "hdl:21.14107/uuid").
     """
 
     dataset = relationship("Dataset", backref="files")
@@ -216,3 +224,121 @@ class PMPClimatologyDataset(Dataset):
     Unique identifier for the dataset.
     """
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.PMPClimatology}  # type: ignore
+
+
+class CMIP7Dataset(Dataset):
+    """
+    Represents a CMIP7 dataset
+
+    Based on CMIP7 Global Attributes v1.0 (DOI: 10.5281/zenodo.17250297).
+    Includes core DRS attributes, additional mandatory attributes, and parent info.
+    """
+
+    __tablename__ = "cmip7_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    # Core DRS Attributes (required for directory/filename/instance_id)
+    activity_id: Mapped[str] = mapped_column()
+    """CV - e.g., "CMIP", "ScenarioMIP" """
+
+    institution_id: Mapped[str] = mapped_column()
+    """CV - registered by modeling group"""
+
+    source_id: Mapped[str] = mapped_column(index=True)
+    """CV - model identifier"""
+
+    experiment_id: Mapped[str] = mapped_column(index=True)
+    """CV - experiment name"""
+
+    variant_label: Mapped[str] = mapped_column()
+    """Template - e.g., "r1i1p1f1" (CMIP7 uses prefixed strings)"""
+
+    variable_id: Mapped[str] = mapped_column()
+    """CV - variable root name"""
+
+    grid_label: Mapped[str] = mapped_column()
+    """CV - e.g., "gn", "gr" """
+
+    frequency: Mapped[str] = mapped_column()
+    """CV - e.g., "mon", "day" """
+
+    region: Mapped[str] = mapped_column()
+    """CV - e.g., "glb" (global)"""
+
+    branding_suffix: Mapped[str] = mapped_column()
+    """Template - e.g., "tavg-h2m-hxy-u" """
+
+    version: Mapped[str] = mapped_column()
+    """Template - e.g., "v20250622" """
+
+    # Additional Mandatory Attributes
+    mip_era: Mapped[str] = mapped_column()
+    """Always "CMIP7" """
+
+    realm: Mapped[str] = mapped_column(nullable=True)
+    """CV - e.g., "atmos", "ocean" (replaces table_id for filtering)"""
+
+    nominal_resolution: Mapped[str] = mapped_column(nullable=True)
+    """CV - e.g., "100 km" """
+
+    # Conditionally Required - Parent Info (nullable)
+    branch_time_in_child: Mapped[float] = mapped_column(nullable=True)
+    """Float - when parent exists"""
+
+    branch_time_in_parent: Mapped[float] = mapped_column(nullable=True)
+    """Float - when parent exists"""
+
+    parent_activity_id: Mapped[str] = mapped_column(nullable=True)
+    """String - parent activity identifier"""
+
+    parent_experiment_id: Mapped[str] = mapped_column(nullable=True)
+    """String - parent experiment identifier"""
+
+    parent_mip_era: Mapped[str] = mapped_column(nullable=True)
+    """String - "CMIP6" or "CMIP7" """
+
+    parent_source_id: Mapped[str] = mapped_column(nullable=True)
+    """String - parent model identifier"""
+
+    parent_time_units: Mapped[str] = mapped_column(nullable=True)
+    """String - time units used in parent"""
+
+    parent_variant_label: Mapped[str] = mapped_column(nullable=True)
+    """String - parent variant label"""
+
+    # Additional Mandatory Attributes
+    license_id: Mapped[str] = mapped_column(nullable=True)
+    """CV - e.g., "CC-BY-4.0", "CC0-1.0" """
+
+    # Conditionally Required Attributes
+    external_variables: Mapped[str] = mapped_column(nullable=True)
+    """Space-separated list of cell measure variable names (when cell_measures are specified)"""
+
+    # Variable Metadata (optional, useful for display)
+    standard_name: Mapped[str] = mapped_column(nullable=True)
+    """CF standard name"""
+
+    long_name: Mapped[str] = mapped_column(nullable=True)
+    """Human-readable description"""
+
+    units: Mapped[str] = mapped_column(nullable=True)
+    """Variable units"""
+
+    # Unique Identifier
+    instance_id: Mapped[str] = mapped_column(index=True)
+    """CMIP7 DRS format unique identifier"""
+
+    # TODO: Review whether branded_variable should use the file's branded_variable
+    # attribute (which uses out_name from the Data Request) instead of variable_id.
+    # Currently out_name == variable_id for all known CMIP7 variables except for tasmin/tasmax
+    @hybrid_property
+    def branded_variable(self) -> str:
+        """Return branded variable: ``{variable_id}_{branding_suffix}``."""
+        return f"{self.variable_id}_{self.branding_suffix}"
+
+    @branded_variable.inplace.expression
+    @classmethod
+    def _branded_variable_expression(cls) -> ColumnElement[str]:
+        return cls.variable_id + "_" + cls.branding_suffix
+
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP7}  # type: ignore

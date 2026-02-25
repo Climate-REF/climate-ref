@@ -1,0 +1,18 @@
+WARNING [2309056] There were warnings in variable rsdt:
+ rsdt: attribute positive not present
+loaded from file 
+WARNING [2309056] There were warnings in variable rsut:
+ rsut: attribute positive not present
+loaded from file 
+WARNING [2309056] There were warnings in variable rlut:
+ rlut: attribute positive not present
+loaded from file 
+WARNING [2309056] There were warnings in variable rsdt:
+ rsdt: attribute positive not present
+loaded from file 
+WARNING [2309056] There were warnings in variable rsut:
+ rsut: attribute positive not present
+loaded from file 
+WARNING [2309056] There were warnings in variable rlut:
+ rlut: attribute positive not present
+loaded from file 

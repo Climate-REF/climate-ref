@@ -67,3 +67,27 @@ class DiagnosticError(RefException):
     def __reduce__(self) -> tuple[type["DiagnosticError"], tuple[str, Any]]:
         # Return a tuple: (callable, args_tuple_for_reconstruction)
         return (self.__class__, (self.message, self.result))
+
+
+class TestCaseError(RefException):
+    """Raised when there is an error with a test case."""
+
+    pass
+
+
+class TestCaseNotFoundError(TestCaseError):
+    """Raised when a test case is not found."""
+
+    pass
+
+
+class NoTestDataSpecError(TestCaseError):
+    """Raised when a diagnostic has no test_data_spec."""
+
+    pass
+
+
+class DatasetResolutionError(TestCaseError):
+    """Raised when datasets cannot be resolved for a test case."""
+
+    pass

@@ -1,42 +1,50 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250917_082158/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162431/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250917_082158/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162431/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250917_082158/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_histogram.nc": {
-      "filename": "executions/recipe_20250917_082158/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_histogram.nc",
+    "executions/recipe_20260130_162431/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_histogram.nc": {
+      "filename": "executions/recipe_20260130_162431/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_histogram.nc",
       "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     },
-    "executions/recipe_20250917_082158/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082158/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc",
+    "executions/recipe_20260130_162431/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162431/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc",
       "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     },
-    "executions/recipe_20250917_082158/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_swcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082158/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_swcre_histogram.nc",
+    "executions/recipe_20260130_162431/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_swcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162431/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_swcre_histogram.nc",
       "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     }
   },
   "plots": {
-    "executions/recipe_20250917_082158/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
-      "filename": "executions/recipe_20250917_082158/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
+    "executions/recipe_20260130_162431/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
+      "filename": "executions/recipe_20260130_162431/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png",
       "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CESM2 r1i1p1f1 gn 1996/2014)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250917_082158/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250917_082158/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162431/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162431/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

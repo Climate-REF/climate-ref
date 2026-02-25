@@ -13,10 +13,12 @@ import importlib.resources
 import shutil
 from datetime import datetime
 from pathlib import Path
+from types import TracebackType
 from typing import TYPE_CHECKING, Any
 from urllib import parse as urlparse
 
 import alembic.command
+import pandas as pd
 import sqlalchemy
 from alembic.config import Config as AlembicConfig
 from alembic.runtime.migration import MigrationContext
@@ -137,6 +139,33 @@ def validate_database_url(database_url: str) -> str:
     return database_url
 
 
+def _values_differ(current: Any, new: Any) -> bool:
+    """
+    Safely compare two values for inequality, handling ``pd.NA`` and ``np.nan``.
+
+    Direct ``!=`` comparison with ``pd.NA`` raises ``TypeError`` because
+    ``bool(pd.NA)`` is ambiguous.  This helper avoids that by checking
+    for NA on both sides first.
+    """
+    try:
+        current_is_na = pd.isna(current)
+        new_is_na = pd.isna(new)
+    except (TypeError, ValueError):
+        current_is_na = False
+        new_is_na = False
+
+    if current_is_na and new_is_na:
+        return False
+    if current_is_na or new_is_na:
+        return True
+
+    try:
+        return bool(current != new)
+    except (TypeError, ValueError):
+        # Fallback for types whose __ne__ returns an ambiguous result
+        return True
+
+
 class ModelState(enum.Enum):
     """
     State of a model instance
@@ -161,6 +190,28 @@ class Database:
         # TODO: Set autobegin=False
         self.session = Session(self._engine)
 
+    def __enter__(self) -> "Database":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: type[BaseException] | None,
+        exc_value: BaseException | None,
+        traceback: TracebackType | None,
+    ) -> None:
+        self.close()
+
+    def close(self) -> None:
+        """
+        Close the database connection
+
+        This closes the session and disposes of the engine, releasing all connections.
+        """
+        try:
+            self.session.close()
+        finally:
+            self._engine.dispose()
+
     def alembic_config(self, config: "Config") -> AlembicConfig:
         """
         Get the Alembic configuration object for the database
@@ -182,7 +233,7 @@ class Database:
 
         return alembic_config
 
-    def migrate(self, config: "Config") -> None:
+    def migrate(self, config: "Config", skip_backup: bool = False) -> None:
         """
         Migrate the database to the latest revision
 
@@ -192,6 +243,9 @@ class Database:
             REF Configuration
 
             This is passed to alembic
+        skip_backup
+            If True, skip creating a backup before running migrations.
+            Useful for read-only commands that don't modify the database.
         """
         # Check if the database revision is one of the removed revisions
         # If it is, then we need to delete the database and start again
@@ -205,16 +259,16 @@ class Database:
                     "Please delete your database and start again."
                 )
 
-        # Create backup before running migrations
+        # Create backup before running migrations (unless skipped)
         split_url = urlparse.urlsplit(self.url)
-        if split_url.scheme == "sqlite" and split_url.path != ":memory:":
+        if not skip_backup and split_url.scheme == "sqlite" and split_url.path != ":memory:":
             db_path = Path(split_url.path[1:])
             _create_backup(db_path, config.db.max_backups)
 
         alembic.command.upgrade(self.alembic_config(config), "heads")
 
     @staticmethod
-    def from_config(config: "Config", run_migrations: bool = True) -> "Database":
+    def from_config(config: "Config", run_migrations: bool = True, skip_backup: bool = False) -> "Database":
         """
         Create a Database instance from a Config instance
 
@@ -225,6 +279,11 @@ class Database:
         ----------
         config
             The Config instance that includes information about where the database is located
+        run_migrations
+            If True, run any outstanding database migrations
+        skip_backup
+            If True, skip creating a backup before running migrations.
+            Useful for read-only commands that don't modify the database.
 
         Returns
         -------
@@ -241,7 +300,7 @@ class Database:
         if run_migrations:
             # Run any outstanding migrations
             # This also adds any diagnostic value columns to the DB if they don't exist
-            db.migrate(config)
+            db.migrate(config, skip_backup=skip_backup)
         # Register the CV dimensions with the MetricValue model
         # This will add new columns to the db if the CVs have changed
         MetricValue.register_cv_dimensions(cv)
@@ -282,7 +341,7 @@ class Database:
             # Update existing instance with defaults
             if defaults:
                 for key, value in defaults.items():
-                    if getattr(instance, key) != value:
+                    if _values_differ(getattr(instance, key), value):
                         logger.debug(f"Updating {model.__name__} {key} to {value}")
                         setattr(instance, key, value)
                         state = ModelState.UPDATED

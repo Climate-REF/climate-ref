@@ -1,0 +1,32 @@
+"""
+Tests for the {{ provider_name }} provider.
+"""
+
+from {{ package_name }} import provider
+
+
+def test_provider_name():
+    assert provider.name == "{{ provider_name }}"
+
+
+def test_provider_has_diagnostics():
+    assert len(provider) > 0
+
+
+def test_all_diagnostics_have_slugs():
+    for diagnostic in provider.diagnostics():
+        assert diagnostic.slug, f"Diagnostic {diagnostic.name} has no slug"
+
+
+def test_all_diagnostics_have_data_requirements():
+    for diagnostic in provider.diagnostics():
+        assert diagnostic.data_requirements, (
+            f"Diagnostic {diagnostic.slug} has no data_requirements"
+        )
+
+
+def test_all_diagnostics_have_facets():
+    for diagnostic in provider.diagnostics():
+        assert diagnostic.facets, (
+            f"Diagnostic {diagnostic.slug} has no facets"
+        )

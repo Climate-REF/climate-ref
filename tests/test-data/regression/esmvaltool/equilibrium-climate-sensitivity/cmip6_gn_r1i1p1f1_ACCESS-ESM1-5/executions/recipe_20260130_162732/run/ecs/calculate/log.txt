@@ -1,0 +1,132 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script calculate with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+calculate_mmm: false
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/rtnt/CMIP6_ACCESS-ESM1-5_Amon_abrupt-4xCO2_r1i1p1f1_rtnt_gn_01010116T120000-01251216T120000.nc
+  : activity: CMIP
+    alias: abrupt-4xCO2
+    dataset: ACCESS-ESM1-5
+    derive: true
+    diagnostic: ecs
+    end_year: 125
+    ensemble: r1i1p1f1
+    exp: abrupt-4xCO2
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/rtnt/CMIP6_ACCESS-ESM1-5_Amon_abrupt-4xCO2_r1i1p1f1_rtnt_gn_01010116T120000-01251216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: TOA Net downward Total Radiation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: spatial_mean
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: rtnt
+    standard_name: ''
+    start_year: 101
+    timerange: 01010116T120000/01251216T120000
+    units: W m-2
+    variable_group: rtnt
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/rtnt/CMIP6_ACCESS-ESM1-5_Amon_piControl_r1i1p1f1_rtnt_gn_01010116T120000-01251216T120000.nc
+  : activity: CMIP
+    alias: piControl
+    dataset: ACCESS-ESM1-5
+    derive: true
+    diagnostic: ecs
+    end_year: 125
+    ensemble: r1i1p1f1
+    exp: piControl
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/rtnt/CMIP6_ACCESS-ESM1-5_Amon_piControl_r1i1p1f1_rtnt_gn_01010116T120000-01251216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: TOA Net downward Total Radiation
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: spatial_mean
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: rtnt
+    standard_name: ''
+    start_year: 101
+    timerange: 01010116T120000/01251216T120000
+    units: W m-2
+    variable_group: rtnt
+    version: v20210316
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/tas/CMIP6_ACCESS-ESM1-5_Amon_abrupt-4xCO2_r1i1p1f1_tas_gn_01010116T120000-01251216T120000.nc
+  : activity: CMIP
+    alias: abrupt-4xCO2
+    dataset: ACCESS-ESM1-5
+    diagnostic: ecs
+    end_year: 125
+    ensemble: r1i1p1f1
+    exp: abrupt-4xCO2
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/tas/CMIP6_ACCESS-ESM1-5_Amon_abrupt-4xCO2_r1i1p1f1_tas_gn_01010116T120000-01251216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: spatial_mean
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 101
+    timerange: 01010116T120000/01251216T120000
+    units: K
+    variable_group: tas
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/tas/CMIP6_ACCESS-ESM1-5_Amon_piControl_r1i1p1f1_tas_gn_01010116T120000-01251216T120000.nc
+  : activity: CMIP
+    alias: piControl
+    dataset: ACCESS-ESM1-5
+    diagnostic: ecs
+    end_year: 125
+    ensemble: r1i1p1f1
+    exp: piControl
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/tas/CMIP6_ACCESS-ESM1-5_Amon_piControl_r1i1p1f1_tas_gn_01010116T120000-01251216T120000.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: Near-Surface Air Temperature
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: spatial_mean
+    project: CMIP6
+    recipe_dataset_index: 1
+    short_name: tas
+    standard_name: air_temperature
+    start_year: 101
+    timerange: 01010116T120000/01251216T120000
+    units: K
+    variable_group: tas
+    version: v20210316
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/tas/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162732/preproc/ecs/rtnt/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162732/plots/ecs/calculate
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162732/run/ecs/calculate
+scheduler_address: tcp://127.0.0.1:41731
+script: calculate
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162732/work/ecs/calculate
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162732/work/ecs/calculate
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162732/plots/ecs/calculate
+INFO:ecs.py:Calculating anomaly data
+INFO:ecs.py:Processing 'ACCESS-ESM1-5'
+INFO:ecs.py:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162732/plots/ecs/calculate/ACCESS-ESM1-5.png
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162732/work/ecs/calculate/ecs_regression_ACCESS-ESM1-5.nc
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162732/work/ecs/calculate/ecs.nc
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162732/work/ecs/calculate/lambda.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

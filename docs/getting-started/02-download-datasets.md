@@ -12,7 +12,6 @@ Note that not all of these datasets are required. The Climate-REF will determine
 
 The data used by the Climate-REF do not necessarily need to have been previously published to ESGF. As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process they can be evaluated via the REF.
 
-
 ## Reference dataset requirements
 
 Climate-REF uses public, open-license reference data.
@@ -22,7 +21,6 @@ During development, additional datasets have been identified for inclusion in ob
 This collection of datasets is referred to as `obs4REF` in the Climate-REF documentation.
 
 The required datasets are listed in the [obs4REF registry](https://github.com/Climate-REF/climate-ref/blob/main/packages/climate-ref/src/climate_ref/dataset_registry/obs4ref_reference.txt).
-
 
 /// admonition | Note
 
@@ -38,6 +36,7 @@ This can use up a large amount of disk space, so it is important to choose a loc
 ///
 
 [](){#fetch-obs4ref-datasets}
+
 ## 1. Fetching obs4REF datasets
 
 Use the [ref datasets fetch-data](../cli.md#fetch-data) command to retrieve each registry.
@@ -51,34 +50,10 @@ In the future, these datasets will be available on ESGF and can be fetched direc
 ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION/datasets/obs4ref
 ```
 
-[](){#fetch-pmp-climatology-datasets}
-## 2. PMP Climatology datasets
-
-PMP has generated a set of climatology datasets based on obs4MIPs data.
-These datasets are used for the PMP diagnostics and are not part of the obs4REF collection.
-These datasets will later be [ingested](../nutshell.md) into the REF and used in diagnostic data requirements.
-
-```bash
-ref datasets fetch-data --registry pmp-climatology --output-directory $REF_CONFIGURATION/datasets/pmp-climatology
-```
-
-## 3. Provider-specific datasets
-
-Some diagnostics require additional datasets that are not ingested into the REF and must be fetched separately.
-These datasets will eventually be integrated into the REF, but for now, they can be fetched using the following commands:
-
-
-```bash
-ref datasets fetch-data --registry ilamb
-ref datasets fetch-data --registry iomb
-ref datasets fetch-data --registry esmvaltool
-```
-
 ### Future work
 
 The Climate-REF team is working on providing a more integrated way to fetch and manage these datasets from the Next Generation ESGF infrastructure that in the process of being deployed.
 This should minimise the need to manually fetch datasets and ensure that all required datasets are available for diagnostics.
-
 
 ## Next steps
 

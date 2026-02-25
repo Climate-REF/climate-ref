@@ -87,8 +87,9 @@ def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionRe
         return execute_locally(definition=definition, log_level=log_level)
     except Exception:  # pragma: no cover
         # This isn't expected but if it happens we want to log the error before the process exits
+        # Mark as retryable since this is an infrastructure-level failure
         logger.exception("Error running diagnostic")
-        return ExecutionResult.build_from_failure(definition)
+        return ExecutionResult.build_from_failure(definition, retryable=True)
 
 
 class LocalExecutor:

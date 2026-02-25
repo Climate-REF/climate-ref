@@ -54,7 +54,7 @@ def get_write_file(package_full_name: str) -> Path:
     for sub_dir in package_full_name.split(".")[:-1]:
         write_dir = write_dir / sub_dir
 
-    write_file = write_dir / package_full_name.split(".")[-1] / "index.md"
+    write_file = write_dir / package_full_name.rsplit(".", maxsplit=1)[-1] / "index.md"
 
     return write_file
 
@@ -102,7 +102,7 @@ def write_module_page(
     else:
         sub_packages = None
 
-    package_name = package_full_name.split(".")[-1]
+    package_name = package_full_name.rsplit(".", maxsplit=1)[-1]
 
     write_file = get_write_file(package_full_name)
 

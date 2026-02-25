@@ -1,0 +1,1004 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<prov:document xmlns:author="https://www.esmvaltool.org/author" xmlns:file="https://www.esmvaltool.org/file" xmlns:attribute="https://www.esmvaltool.org/attribute" xmlns:software="https://www.esmvaltool.org/software" xmlns:project="https://www.esmvaltool.org/project" xmlns:task="https://www.esmvaltool.org/task" xmlns:preprocessor="https://www.esmvaltool.org/preprocessor" xmlns:recipe="https://www.esmvaltool.org/recipe" xmlns:prov="http://www.w3.org/ns/prov#" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_191001-191412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:47:49Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:47:49Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/676f6a58-fd39-4eb5-917b-52c7e21ce07e</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:activity prov:id="task:tcre/calculate_tcre"/>
+  <prov:agent prov:id="author:Schlund, Manuel">
+    <attribute:email>manuel.schlund@dlr.de</attribute:email>
+    <attribute:github>schlunma</attribute:github>
+    <attribute:institute>DLR, Germany</attribute:institute>
+    <attribute:orcid>https://orcid.org/0000-0001-5251-0158</attribute:orcid>
+  </prov:agent>
+  <prov:activity prov:id="task:tcre/fco2antt"/>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc">
+    <attribute:activity>C4MIP CDRMIP</attribute:activity>
+    <attribute:alias>C4MIP CDRMIP</attribute:alias>
+    <attribute:dataset>MPI-ESM1-2-LR</attribute:dataset>
+    <attribute:diagnostic>tcre</attribute:diagnostic>
+    <attribute:end_year>1914</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>esm-1pctCO2</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>MPI-M</attribute:institute>
+    <attribute:long_name>Carbon Mass Flux into Atmosphere Due to All Anthropogenic Emissions of CO2 [kgC m-2 s-1]</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>fco2antt</attribute:original_short_name>
+    <attribute:preprocessor>global_cumulative_sum</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>fco2antt</attribute:short_name>
+    <attribute:standard_name>tendency_of_atmosphere_mass_content_of_carbon_dioxide_expressed_as_carbon_due_to_anthropogenic_emission</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/19141216T120000</attribute:timerange>
+    <attribute:units>kg m-2 s-1</attribute:units>
+    <attribute:variable_group>fco2antt</attribute:variable_group>
+    <attribute:version>v20190815</attribute:version>
+    <preprocessor:annual_statistics>{'operator': 'mean'}</preprocessor:annual_statistics>
+    <preprocessor:area_statistics>{'operator': 'sum'}</preprocessor:area_statistics>
+    <preprocessor:convert_units>{'units': 'Pg'}</preprocessor:convert_units>
+    <preprocessor:cumulative_sum>{'coord': 'time', 'weights': True}</preprocessor:cumulative_sum>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:tcre/tas_esm-1pctCO2"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/fx/areacella/gn/v20190815/areacella_fx_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-1pctCO2"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_189001-190912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>146097.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-02-21T21:44:45Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>pre-industrial control simulation with CO2 concentration calculated</attribute:experiment>
+    <attribute:experiment_id>esm-piControl</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-piControl.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-02-21T21:44:45Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl-spinup</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/4b31321d-35a9-48c9-b79a-78ba9045f873</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:tcre/fco2antt"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:activity prov:id="task:tcre/tas_esm-piControl"/>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_189001-190912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:59:18Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:59:18Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/a101a31d-9596-4e1b-8e1b-9e72a140878e</attribute:tracking_id>
+    <attribute:variable_id>fco2antt</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_191001-191412.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-1pctCO2"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/work/tcre/calculate_tcre/tcre.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:activity prov:ref="task:tcre/calculate_tcre"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_189001-190912.nc"/>
+    <prov:activity prov:ref="task:tcre/fco2antt"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_191001-191512.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-piControl"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_185001-186912.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-piControl"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_187001-188912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:57:19Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:57:19Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/e9c7480b-aeba-4341-b9b8-4617bf7bfc35</attribute:tracking_id>
+    <attribute:variable_id>fco2antt</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_187001-188912.nc"/>
+    <prov:activity prov:ref="task:tcre/fco2antt"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="recipe:recipe.yml">
+    <attribute:description>Calculate Transient Climate Response to Cumulative CO2 Emissions (TCRE).
+</attribute:description>
+    <attribute:references>['sanderson24gmd']</attribute:references>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/fx/areacella/gn/v20190815/areacella_fx_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn.nc"/>
+    <prov:activity prov:ref="task:tcre/fco2antt"/>
+  </prov:wasDerivedFrom>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:tcre/calculate_tcre"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/work/tcre/calculate_tcre/tcre.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:activity prov:ref="task:tcre/calculate_tcre"/>
+  </prov:wasDerivedFrom>
+  <prov:activity prov:id="task:tcre/tas_esm-1pctCO2"/>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/work/tcre/calculate_tcre/tcre.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:activity prov:ref="task:tcre/calculate_tcre"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_189001-190912.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-piControl"/>
+  </prov:wasDerivedFrom>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_187001-188912.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-piControl"/>
+  </prov:wasDerivedFrom>
+  <prov:activity prov:id="software:esmvaltool==2.13.0"/>
+  <prov:wasStartedBy>
+    <prov:activity prov:ref="task:tcre/tas_esm-piControl"/>
+    <prov:trigger prov:ref="recipe:recipe.yml"/>
+    <prov:starter prov:ref="software:esmvaltool==2.13.0"/>
+  </prov:wasStartedBy>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/work/tcre/calculate_tcre/tcre.nc">
+    <attribute:calc_tcre_period>[45, 65]</attribute:calc_tcre_period>
+    <attribute:caption>Global annual mean near-surface air temperature anomaly ΔT vs.
+global annual cumulative CO2 emissions E of the emission-driven 1%
+CO2 increase per year experiment for model MPI-ESM1-2-LR (ensemble
+member r1i1p1f1). The transient climate response to cumulative CO2
+Emissions (TCRE) is defined as the 20-year average ΔT centered at
+the time where cumulative CO2 emissions E reach 1000 PgC.
+</attribute:caption>
+    <attribute:exp_target>esm-1pctCO2</attribute:exp_target>
+    <attribute:legend_kwargs>False</attribute:legend_kwargs>
+    <attribute:pyplot_kwargs>{'title': 'MPI-ESM1-2-LR (ensemble member r1i1p1f1)', 'xlabel': 'E [PgC]', 'ylabel': 'ΔT [K]'}</attribute:pyplot_kwargs>
+    <attribute:realms>('atmosphere',)</attribute:realms>
+    <attribute:references>['sanderson24gmd']</attribute:references>
+    <attribute:scheduler_address>tcp://127.0.0.1:33825</attribute:scheduler_address>
+    <attribute:script>calculate_tcre</attribute:script>
+    <attribute:script_file>climate_metrics/tcre.py</attribute:script_file>
+    <attribute:themes>('carbon cycle', 'biogeophysics')</attribute:themes>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_191001-191412.nc"/>
+    <prov:activity prov:ref="task:tcre/fco2antt"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_187001-188912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>146097.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-02-21T21:44:45Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>pre-industrial control simulation with CO2 concentration calculated</attribute:experiment>
+    <attribute:experiment_id>esm-piControl</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-piControl.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-02-21T21:44:45Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl-spinup</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/0f2265b4-0ff5-4cb8-97e3-23a4745e0889</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/fx/areacella/gn/v20190815/areacella_fx_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-piControl"/>
+  </prov:wasDerivedFrom>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/work/tcre/calculate_tcre/tcre.nc"/>
+    <prov:agent prov:ref="author:Schlund, Manuel"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/fco2antt/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_fco2antt_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_185001-186912.nc"/>
+    <prov:activity prov:ref="task:tcre/fco2antt"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc">
+    <attribute:activity>C4MIP CDRMIP</attribute:activity>
+    <attribute:alias>C4MIP CDRMIP</attribute:alias>
+    <attribute:dataset>MPI-ESM1-2-LR</attribute:dataset>
+    <attribute:diagnostic>tcre</attribute:diagnostic>
+    <attribute:end_year>1914</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>esm-1pctCO2</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>MPI-M</attribute:institute>
+    <attribute:long_name>Near-Surface Air Temperature</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>tas</attribute:original_short_name>
+    <attribute:preprocessor>global_annual_mean_anomaly</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>tas</attribute:short_name>
+    <attribute:standard_name>air_temperature</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/19141216T120000</attribute:timerange>
+    <attribute:units>K</attribute:units>
+    <attribute:variable_group>tas_esm-1pctCO2</attribute:variable_group>
+    <attribute:version>v20190815</attribute:version>
+    <preprocessor:annual_statistics>{'operator': 'mean'}</preprocessor:annual_statistics>
+    <preprocessor:area_statistics>{'operator': 'mean'}</preprocessor:area_statistics>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_187001-188912.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-1pctCO2"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_187001-188912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:57:19Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:57:19Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/a90871bf-38ab-4321-be3a-83a0757002cc</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc">
+    <attribute:activity>CMIP</attribute:activity>
+    <attribute:alias>CMIP</attribute:alias>
+    <attribute:dataset>MPI-ESM1-2-LR</attribute:dataset>
+    <attribute:diagnostic>tcre</attribute:diagnostic>
+    <attribute:end_year>1914</attribute:end_year>
+    <attribute:ensemble>r1i1p1f1</attribute:ensemble>
+    <attribute:exp>esm-piControl</attribute:exp>
+    <attribute:filename><OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc</attribute:filename>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:institute>MPI-M</attribute:institute>
+    <attribute:long_name>Near-Surface Air Temperature</attribute:long_name>
+    <attribute:mip>Amon</attribute:mip>
+    <attribute:modeling_realm>['atmos']</attribute:modeling_realm>
+    <attribute:original_short_name>tas</attribute:original_short_name>
+    <attribute:preprocessor>global_annual_mean_anomaly</attribute:preprocessor>
+    <attribute:project>CMIP6</attribute:project>
+    <attribute:recipe_dataset_index>0</attribute:recipe_dataset_index>
+    <attribute:short_name>tas</attribute:short_name>
+    <attribute:standard_name>air_temperature</attribute:standard_name>
+    <attribute:start_year>1850</attribute:start_year>
+    <attribute:timerange>18500116T120000/19141216T120000</attribute:timerange>
+    <attribute:units>K</attribute:units>
+    <attribute:variable_group>tas_esm-piControl</attribute:variable_group>
+    <attribute:version>v20190815</attribute:version>
+    <preprocessor:annual_statistics>{'operator': 'mean'}</preprocessor:annual_statistics>
+    <preprocessor:area_statistics>{'operator': 'mean'}</preprocessor:area_statistics>
+    <preprocessor:remove_supplementary_variables>{}</preprocessor:remove_supplementary_variables>
+    <preprocessor:save>{'compress': False, 'compute': False, 'filename': PosixPath('<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-piControl/CMIP6_MPI-ESM1-2-LR_Amon_esm-piControl_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc')}</preprocessor:save>
+  </prov:entity>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_185001-186912.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-1pctCO2"/>
+  </prov:wasDerivedFrom>
+  <prov:wasAttributedTo>
+    <prov:entity prov:ref="recipe:recipe.yml"/>
+    <prov:agent prov:ref="author:Schlund, Manuel"/>
+  </prov:wasAttributedTo>
+  <prov:wasDerivedFrom>
+    <prov:generatedEntity prov:ref="file:<OUTPUT_DIR>/executions/recipe_20260130_163954/preproc/tcre/tas_esm-1pctCO2/CMIP6_MPI-ESM1-2-LR_Amon_esm-1pctCO2_r1i1p1f1_tas_gn_18500116T120000-19141216T120000.nc"/>
+    <prov:usedEntity prov:ref="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_189001-190912.nc"/>
+    <prov:activity prov:ref="task:tcre/tas_esm-1pctCO2"/>
+  </prov:wasDerivedFrom>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_185001-186912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:49:42Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:49:42Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/b151d7d5-67d5-44d9-a93a-d31804cc98c5</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_189001-190912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:59:18Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:59:18Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/a3132fed-eef0-41eb-83e6-177da484582e</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_185001-186912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:49:42Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:49:42Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/04d2e5e4-e36d-4d02-b131-b493cf935552</attribute:tracking_id>
+    <attribute:variable_id>fco2antt</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_185001-186912.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>146097.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-02-21T21:00:23Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>pre-industrial control simulation with CO2 concentration calculated</attribute:experiment>
+    <attribute:experiment_id>esm-piControl</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-piControl.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-02-21T21:00:23Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl-spinup</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/ac61423e-de61-419f-9e95-6b5325cc1d2c</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/C4MIP CDRMIP/MPI-M/MPI-ESM1-2-LR/esm-1pctCO2/r1i1p1f1/Amon/fco2antt/gn/v20190815/fco2antt_Amon_MPI-ESM1-2-LR_esm-1pctCO2_r1i1p1f1_gn_191001-191412.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>C4MIP CDRMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>0.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-03-10T13:47:49Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>emissions driven 1% run</attribute:experiment>
+    <attribute:experiment_id>esm-1pctCO2</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-03-10T13:47:49Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/832aac4d-dc99-40f6-98b2-51164517c801</attribute:tracking_id>
+    <attribute:variable_id>fco2antt</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/fx/areacella/gn/v20190815/areacella_fx_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>146097.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-02-21T21:00:35Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>pre-industrial control simulation with CO2 concentration calculated</attribute:experiment>
+    <attribute:experiment_id>esm-piControl</attribute:experiment_id>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>fx</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-piControl.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-02-21T21:00:35Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl-spinup</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>fx</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/23dc5d84-fefa-49e7-96c5-7e5c8cbed56d</attribute:tracking_id>
+    <attribute:variable_id>areacella</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+  <prov:entity prov:id="file:<OUTPUT_DIR>/climate_data/CMIP6/CMIP/MPI-M/MPI-ESM1-2-LR/esm-piControl/r1i1p1f1/Amon/tas/gn/v20190815/tas_Amon_MPI-ESM1-2-LR_esm-piControl_r1i1p1f1_gn_191001-191512.nc">
+    <attribute:Conventions>CF-1.7 CMIP-6.2</attribute:Conventions>
+    <attribute:activity_id>CMIP</attribute:activity_id>
+    <attribute:branch_method>standard</attribute:branch_method>
+    <attribute:branch_time_in_child>0.0</attribute:branch_time_in_child>
+    <attribute:branch_time_in_parent>146097.0</attribute:branch_time_in_parent>
+    <attribute:cmor_version>3.5.0</attribute:cmor_version>
+    <attribute:contact>cmip6-mpi-esm@dkrz.de</attribute:contact>
+    <attribute:creation_date>2020-02-21T22:11:10Z</attribute:creation_date>
+    <attribute:data_specs_version>01.00.30</attribute:data_specs_version>
+    <attribute:experiment>pre-industrial control simulation with CO2 concentration calculated</attribute:experiment>
+    <attribute:experiment_id>esm-piControl</attribute:experiment_id>
+    <attribute:external_variables>areacella</attribute:external_variables>
+    <attribute:forcing_index>1</attribute:forcing_index>
+    <attribute:frequency>mon</attribute:frequency>
+    <attribute:further_info_url>https://furtherinfo.es-doc.org/CMIP6.MPI-M.MPI-ESM1-2-LR.esm-piControl.none.r1i1p1f1</attribute:further_info_url>
+    <attribute:grid>gn</attribute:grid>
+    <attribute:grid_label>gn</attribute:grid_label>
+    <attribute:history>2020-02-21T22:11:10Z ; CMOR rewrote data to be consistent with CMIP6, CF-1.7 CMIP-6.2 and CF standards.</attribute:history>
+    <attribute:initialization_index>1</attribute:initialization_index>
+    <attribute:institution>Max Planck Institute for Meteorology, Hamburg 20146, Germany</attribute:institution>
+    <attribute:institution_id>MPI-M</attribute:institution_id>
+    <attribute:license>CMIP6 model data produced by MPI-M is licensed under a Creative Commons Attribution ShareAlike 4.0 International License (https://creativecommons.org/licenses). Consult https://pcmdi.llnl.gov/CMIP6/TermsOfUse for terms of use governing CMIP6 output, including citation requirements and proper acknowledgment. Further information about this data, including some limitations, can be found via the further_info_url (recorded as a global attribute in this file) and. The data producers and data providers make no warranty, either express or implied, including, but not limited to, warranties of merchantability and fitness for a particular purpose. All liabilities arising from the supply of the information (including any liability arising in negligence) are excluded to the fullest extent permitted by law.</attribute:license>
+    <attribute:mip_era>CMIP6</attribute:mip_era>
+    <attribute:nominal_resolution>250 km</attribute:nominal_resolution>
+    <attribute:parent_activity_id>CMIP</attribute:parent_activity_id>
+    <attribute:parent_experiment_id>esm-piControl-spinup</attribute:parent_experiment_id>
+    <attribute:parent_mip_era>CMIP6</attribute:parent_mip_era>
+    <attribute:parent_source_id>MPI-ESM1-2-LR</attribute:parent_source_id>
+    <attribute:parent_time_units>days since 1850-1-1 00:00:00</attribute:parent_time_units>
+    <attribute:parent_variant_label>r1i1p1f1</attribute:parent_variant_label>
+    <attribute:physics_index>1</attribute:physics_index>
+    <attribute:product>model-output</attribute:product>
+    <attribute:project_id>CMIP6</attribute:project_id>
+    <attribute:realization_index>1</attribute:realization_index>
+    <attribute:realm>atmos</attribute:realm>
+    <attribute:references>MPI-ESM: Mauritsen, T. et al. (2019), Developments in the MPI‐M Earth System Model version 1.2 (MPI‐ESM1.2) and Its Response to Increasing CO2, J. Adv. Model. Earth Syst.,11, 998-1038, doi:10.1029/2018MS001400,
+Mueller, W.A. et al. (2018): A high‐resolution version of the Max Planck Institute Earth System Model MPI‐ESM1.2‐HR. J. Adv. Model. EarthSyst.,10,1383–1413, doi:10.1029/2017MS001217</attribute:references>
+    <attribute:source>MPI-ESM1.2-LR (2017): 
+aerosol: none, prescribed MACv2-SP
+atmos: ECHAM6.3 (spectral T63; 192 x 96 longitude/latitude; 47 levels; top level 0.01 hPa)
+atmosChem: none
+land: JSBACH3.20
+landIce: none/prescribed
+ocean: MPIOM1.63 (bipolar GR1.5, approximately 1.5deg; 256 x 220 longitude/latitude; 40 levels; top grid cell 0-12 m)
+ocnBgchem: HAMOCC6
+seaIce: unnamed (thermodynamic (Semtner zero-layer) dynamic (Hibler 79) sea ice model)</attribute:source>
+    <attribute:source_id>MPI-ESM1-2-LR</attribute:source_id>
+    <attribute:source_type>AOGCM BGC</attribute:source_type>
+    <attribute:sub_experiment>none</attribute:sub_experiment>
+    <attribute:sub_experiment_id>none</attribute:sub_experiment_id>
+    <attribute:table_id>Amon</attribute:table_id>
+    <attribute:table_info>Creation Date:(09 May 2019) MD5:dff4d5e7b285678699ef52ab1a3cca43</attribute:table_info>
+    <attribute:title>MPI-ESM1-2-LR output prepared for CMIP6</attribute:title>
+    <attribute:tracking_id>hdl:21.14100/b0e67a4d-64b3-482c-a164-ee72f8e53a82</attribute:tracking_id>
+    <attribute:variable_id>tas</attribute:variable_id>
+    <attribute:variant_label>r1i1p1f1</attribute:variant_label>
+  </prov:entity>
+</prov:document>

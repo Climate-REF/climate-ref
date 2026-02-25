@@ -1,0 +1,237 @@
+INFO    [2306451] 
+______________________________________________________________________
+          _____ ____  __  ____     __    _ _____           _
+         | ____/ ___||  \/  \ \   / /_ _| |_   _|__   ___ | |
+         |  _| \___ \| |\/| |\ \ / / _` | | | |/ _ \ / _ \| |
+         | |___ ___) | |  | | \ V / (_| | | | | (_) | (_) | |
+         |_____|____/|_|  |_|  \_/ \__,_|_| |_|\___/ \___/|_|
+______________________________________________________________________
+
+Earth System Model Evaluation Tool
+
+A community tool for the evaluation of Earth system models.
+
+https://esmvaltool.org
+
+The Earth System Model Evaluation Tool (ESMValTool) is a community
+diagnostics and performance metrics tool for the evaluation of Earth
+System Models (ESMs) that allows for routine comparison of single or
+multiple models, either against predecessor versions or against
+observations.
+
+Tutorial: https://tutorial.esmvaltool.org
+Documentation: https://docs.esmvaltool.org
+Contact: esmvaltool-dev@listserv.dfn.de
+
+If you find this software useful for your research, please cite it using
+https://doi.org/10.5281/zenodo.3387139 for ESMValCore or
+https://doi.org/10.5281/zenodo.3401363 for ESMValTool or
+any of the reference papers listed at https://esmvaltool.org/references/.
+
+Have fun!
+
+INFO    [2306451] Package versions
+INFO    [2306451] ----------------
+INFO    [2306451] ESMValCore: 2.13.0
+INFO    [2306451] ESMValTool: 2.13.0
+INFO    [2306451] ----------------
+INFO    [2306451] Reading configuration files from:
+/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvalcore/config/configurations/defaults (defaults)
+/home/b/b381141/.config/esmvaltool (default user configuration directory)
+<OUTPUT_DIR>/config (command line argument)
+INFO    [2306451] Writing program log files to:
+<OUTPUT_DIR>/executions/recipe_20260130_162632/run/main_log.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162632/run/main_log_debug.txt
+<OUTPUT_DIR>/executions/recipe_20260130_162632/run/cmor_log.txt
+INFO    [2306451] Starting the Earth System Model Evaluation Tool at time: 2026-01-30 16:26:33 UTC
+INFO    [2306451] ----------------------------------------------------------------------
+INFO    [2306451] RECIPE   = <OUTPUT_DIR>/recipe.yml
+INFO    [2306451] RUNDIR     = <OUTPUT_DIR>/executions/recipe_20260130_162632/run
+INFO    [2306451] WORKDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162632/work
+INFO    [2306451] PREPROCDIR = <OUTPUT_DIR>/executions/recipe_20260130_162632/preproc
+INFO    [2306451] PLOTDIR    = <OUTPUT_DIR>/executions/recipe_20260130_162632/plots
+INFO    [2306451] ----------------------------------------------------------------------
+INFO    [2306451] Running tasks using at most 10 processes
+INFO    [2306451] If your system hangs during execution, it may not have enough memory for keeping this number of tasks in memory.
+INFO    [2306451] If you experience memory problems, try reducing 'max_parallel_tasks' in your configuration.
+INFO    [2306451] For Dataset: tos, Omon, OBS6, TROPFLUX, v1, supplementaries: areacello, *, *: ignoring supplementary variable 'areacello', unable to expand wildcards 'mip', 'version'.
+INFO    [2306451] For Dataset: tos, Omon, OBS6, TROPFLUX, v1, supplementaries: areacello, *, *: ignoring supplementary variable 'areacello', unable to expand wildcards 'mip', 'version'.
+INFO    [2306451] For Dataset: tos, Omon, OBS6, TROPFLUX, v1, supplementaries: areacello, *, *: ignoring supplementary variable 'areacello', unable to expand wildcards 'mip', 'version'.
+INFO    [2306451] For Dataset: tos, Omon, OBS6, TROPFLUX, v1, supplementaries: areacello, *, *: ignoring supplementary variable 'areacello', unable to expand wildcards 'mip', 'version'.
+INFO    [2306451] Creating tasks from recipe
+INFO    [2306451] Creating tasks for diagnostic diagnostic_metrics
+INFO    [2306451] Creating diagnostic task diagnostic_metrics/plot_script
+INFO    [2306451] Creating preprocessor task diagnostic_metrics/tos_seas_asym
+INFO    [2306451] Creating preprocessor 'enso_seas_asym' task for variable 'tos_seas_asym'
+INFO    [2306451] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacello, Ofx
+WARNING [2306451] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'diagnostic_metrics',
+ 'variable_group': 'tos_seas_asym',
+ 'dataset': 'TROPFLUX',
+ 'project': 'OBS6',
+ 'mip': 'Omon',
+ 'short_name': 'tos',
+ 'alias': 'OBS6',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Surface Temperature',
+ 'modeling_realm': ['ocean'],
+ 'original_short_name': 'tos',
+ 'preprocessor': 'enso_seas_asym',
+ 'recipe_dataset_index': 1,
+ 'standard_name': 'sea_surface_temperature',
+ 'tier': 2,
+ 'type': 'reanaly',
+ 'units': 'degC',
+ 'version': 'v1'}
+session: 'recipe_20260130_162632'.
+INFO    [2306451] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2306451] PreprocessingTask diagnostic_metrics/tos_seas_asym created.
+INFO    [2306451] Creating preprocessor task diagnostic_metrics/tos_amp
+INFO    [2306451] Creating preprocessor 'enso_amplitude' task for variable 'tos_amp'
+INFO    [2306451] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacello, Ofx
+WARNING [2306451] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'diagnostic_metrics',
+ 'variable_group': 'tos_amp',
+ 'dataset': 'TROPFLUX',
+ 'project': 'OBS6',
+ 'mip': 'Omon',
+ 'short_name': 'tos',
+ 'alias': 'OBS6',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Surface Temperature',
+ 'modeling_realm': ['ocean'],
+ 'original_short_name': 'tos',
+ 'preprocessor': 'enso_amplitude',
+ 'recipe_dataset_index': 1,
+ 'standard_name': 'sea_surface_temperature',
+ 'tier': 2,
+ 'type': 'reanaly',
+ 'units': 'degC',
+ 'version': 'v1'}
+session: 'recipe_20260130_162632'.
+INFO    [2306451] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2306451] PreprocessingTask diagnostic_metrics/tos_amp created.
+INFO    [2306451] Creating preprocessor task diagnostic_metrics/tos_patdiv1
+INFO    [2306451] Creating preprocessor 'ssta_dec_area' task for variable 'tos_patdiv1'
+INFO    [2306451] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacello, Ofx
+WARNING [2306451] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'diagnostic_metrics',
+ 'variable_group': 'tos_patdiv1',
+ 'dataset': 'TROPFLUX',
+ 'project': 'OBS6',
+ 'mip': 'Omon',
+ 'short_name': 'tos',
+ 'alias': 'OBS6',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Surface Temperature',
+ 'modeling_realm': ['ocean'],
+ 'original_short_name': 'tos',
+ 'preprocessor': 'ssta_dec_area',
+ 'recipe_dataset_index': 1,
+ 'standard_name': 'sea_surface_temperature',
+ 'tier': 2,
+ 'type': 'reanaly',
+ 'units': 'degC',
+ 'version': 'v1'}
+session: 'recipe_20260130_162632'.
+INFO    [2306451] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2306451] PreprocessingTask diagnostic_metrics/tos_patdiv1 created.
+INFO    [2306451] Creating preprocessor task diagnostic_metrics/tos_lifdur1
+INFO    [2306451] Creating preprocessor 'ssta_ninoarea' task for variable 'tos_lifdur1'
+INFO    [2306451] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115, supplementaries: areacello, Ofx
+WARNING [2306451] Preprocessor function area_statistics works best when at least one supplementary variable of ['areacella', 'areacello'] is defined in the recipe for Dataset:
+{'diagnostic': 'diagnostic_metrics',
+ 'variable_group': 'tos_lifdur1',
+ 'dataset': 'TROPFLUX',
+ 'project': 'OBS6',
+ 'mip': 'Omon',
+ 'short_name': 'tos',
+ 'alias': 'OBS6',
+ 'frequency': 'mon',
+ 'long_name': 'Sea Surface Temperature',
+ 'modeling_realm': ['ocean'],
+ 'original_short_name': 'tos',
+ 'preprocessor': 'ssta_ninoarea',
+ 'recipe_dataset_index': 1,
+ 'standard_name': 'sea_surface_temperature',
+ 'tier': 2,
+ 'type': 'reanaly',
+ 'units': 'degC',
+ 'version': 'v1'}
+session: 'recipe_20260130_162632'.
+INFO    [2306451] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2306451] PreprocessingTask diagnostic_metrics/tos_lifdur1 created.
+INFO    [2306451] Creating preprocessor task diagnostic_metrics/tos_lifdurdiv2
+INFO    [2306451] Creating preprocessor 'ssta_meridional' task for variable 'tos_lifdurdiv2'
+INFO    [2306451] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2306451] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2306451] PreprocessingTask diagnostic_metrics/tos_lifdurdiv2 created.
+INFO    [2306451] Creating preprocessor task diagnostic_metrics/tos_pat2
+INFO    [2306451] Creating preprocessor 'ssta_pattern2' task for variable 'tos_pat2'
+INFO    [2306451] Found input files for Dataset: tos, Omon, CMIP6, ACCESS-ESM1-5, CMIP, historical, r1i1p1f1, gn, v20191115
+INFO    [2306451] Found input files for Dataset: tos, Omon, OBS6, TROPFLUX, v1
+INFO    [2306451] PreprocessingTask diagnostic_metrics/tos_pat2 created.
+INFO    [2306451] These tasks will be executed: diagnostic_metrics/tos_lifdurdiv2, diagnostic_metrics/tos_amp, diagnostic_metrics/tos_patdiv1, diagnostic_metrics/tos_lifdur1, diagnostic_metrics/tos_seas_asym, diagnostic_metrics/tos_pat2, diagnostic_metrics/plot_script
+INFO    [2306451] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162632/run/recipe_filled.yml
+INFO    [2306451] Using Dask distributed scheduler (address: tcp://127.0.0.1:44411, dashboard link: http://127.0.0.1:8787/status)
+INFO    [2306451] Running 7 tasks using 7 processes
+INFO    [2306529] Starting task diagnostic_metrics/tos_seas_asym in process [2306529]
+INFO    [2306531] Starting task diagnostic_metrics/tos_amp in process [2306531]
+INFO    [2306533] Starting task diagnostic_metrics/tos_patdiv1 in process [2306533]
+INFO    [2306537] Starting task diagnostic_metrics/tos_lifdurdiv2 in process [2306537]
+INFO    [2306539] Starting task diagnostic_metrics/tos_pat2 in process [2306539]
+INFO    [2306535] Starting task diagnostic_metrics/tos_lifdur1 in process [2306535]
+INFO    [2306451] Progress: 6 tasks running, 1 tasks waiting for ancestors, 0/7 done
+INFO    [2306529] Computing and saving data for preprocessing task diagnostic_metrics/tos_seas_asym
+INFO    [2306529] diagnostic_metrics/tos_seas_asym [########################################] | 100% Completed | 2.09 s
+INFO    [2306537] Computing and saving data for preprocessing task diagnostic_metrics/tos_lifdurdiv2
+INFO    [2306529] Successfully completed task diagnostic_metrics/tos_seas_asym (priority 1) in 0:00:03.404749
+INFO    [2306451] Progress: 5 tasks running, 1 tasks waiting for ancestors, 1/7 done
+INFO    [2306537] diagnostic_metrics/tos_lifdurdiv2 [########################################] | 100% Completed | 3.26 s
+INFO    [2306539] Computing and saving data for preprocessing task diagnostic_metrics/tos_pat2
+INFO    [2306537] Successfully completed task diagnostic_metrics/tos_lifdurdiv2 (priority 5) in 0:00:06.671063
+INFO    [2306451] Progress: 4 tasks running, 1 tasks waiting for ancestors, 2/7 done
+INFO    [2306539] diagnostic_metrics/tos_pat2   [########################################] | 100% Completed | 3.08 s
+INFO    [2306531] Computing and saving data for preprocessing task diagnostic_metrics/tos_amp
+INFO    [2306539] Successfully completed task diagnostic_metrics/tos_pat2 (priority 6) in 0:00:09.763016
+INFO    [2306451] Progress: 3 tasks running, 1 tasks waiting for ancestors, 3/7 done
+INFO    [2306531] diagnostic_metrics/tos_amp    [########################################] | 100% Completed | 3.10 s
+INFO    [2306535] Computing and saving data for preprocessing task diagnostic_metrics/tos_lifdur1
+INFO    [2306531] Successfully completed task diagnostic_metrics/tos_amp (priority 2) in 0:00:12.873702
+INFO    [2306451] Progress: 2 tasks running, 1 tasks waiting for ancestors, 4/7 done
+INFO    [2306535] diagnostic_metrics/tos_lifdur1 [########################################] | 100% Completed | 3.09 s
+INFO    [2306533] Computing and saving data for preprocessing task diagnostic_metrics/tos_patdiv1
+INFO    [2306535] Successfully completed task diagnostic_metrics/tos_lifdur1 (priority 4) in 0:00:15.954465
+INFO    [2306451] Progress: 1 tasks running, 1 tasks waiting for ancestors, 5/7 done
+INFO    [2306533] diagnostic_metrics/tos_patdiv1 [########################################] | 100% Completed | 3.09 s
+INFO    [2306533] Successfully completed task diagnostic_metrics/tos_patdiv1 (priority 3) in 0:00:19.064948
+INFO    [2306451] Progress: 0 tasks running, 1 tasks waiting for ancestors, 6/7 done
+INFO    [2306541] Starting task diagnostic_metrics/plot_script in process [2306541]
+INFO    [2306541] Running command ['/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python', '/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/enso_metrics/enso_diag1metrics.py', '<OUTPUT_DIR>/executions/recipe_20260130_162632/run/diagnostic_metrics/plot_script/settings.yml']
+INFO    [2306541] Writing output to <OUTPUT_DIR>/executions/recipe_20260130_162632/work/diagnostic_metrics/plot_script
+INFO    [2306541] Writing plots to <OUTPUT_DIR>/executions/recipe_20260130_162632/plots/diagnostic_metrics/plot_script
+INFO    [2306541] Writing log to <OUTPUT_DIR>/executions/recipe_20260130_162632/run/diagnostic_metrics/plot_script/log.txt
+INFO    [2306541] To re-run this diagnostic script, run:
+cd <OUTPUT_DIR>/executions/recipe_20260130_162632/run/diagnostic_metrics/plot_script; MPLBACKEND="Agg" /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/enso_metrics/enso_diag1metrics.py <OUTPUT_DIR>/executions/recipe_20260130_162632/run/diagnostic_metrics/plot_script/settings.yml
+INFO    [2306451] Progress: 1 tasks running, 0 tasks waiting for ancestors, 6/7 done
+INFO    [2306541] Maximum memory used (estimate): 0.4 GB
+INFO    [2306541] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2306541] Successfully completed task diagnostic_metrics/plot_script (priority 0) in 0:00:29.428203
+INFO    [2306451] Progress: 0 tasks running, 0 tasks waiting for ancestors, 7/7 done
+INFO    [2306451] Successfully completed all tasks.
+INFO    [2306451] Wrote recipe with version numbers and wildcards to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162632/run/recipe_filled.yml
+INFO    [2306451] Wrote recipe output to:
+file://<OUTPUT_DIR>/executions/recipe_20260130_162632/index.html
+INFO    [2306451] It looks like you are connected to a remote machine via SSH. To show the output html file, you can try the following command on your local machine:
+server=136.172.124.7 && port=31415 && ssh -t -L ${port}:localhost:${port} b381141@${server} /home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/bin/python -m http.server ${port} -d <OUTPUT_DIR>/executions/recipe_20260130_162632
+Then visit http://localhost:31415 in your browser
+INFO    [2306451] If the port 31415 is already in use, you can replace it with any other free one (e.g., 12789). If you are connected through a jump host, replace the server IP address 136.172.124.7 with your SSH server name
+INFO    [2306451] Ending the Earth System Model Evaluation Tool at time: 2026-01-30 16:27:26 UTC
+INFO    [2306451] Time for running the recipe was: 0:00:53.435852
+INFO    [2306451] Maximum memory used (estimate): 4.7 GB
+INFO    [2306451] Sampled every second. It may be inaccurate if short but high spikes in memory consumption occur.
+INFO    [2306451] Removing `preproc` directory containing preprocessed data
+INFO    [2306451] If this data is further needed, then set `remove_preproc_dir` to `false` in your configuration
+INFO    [2306451] Run was successful

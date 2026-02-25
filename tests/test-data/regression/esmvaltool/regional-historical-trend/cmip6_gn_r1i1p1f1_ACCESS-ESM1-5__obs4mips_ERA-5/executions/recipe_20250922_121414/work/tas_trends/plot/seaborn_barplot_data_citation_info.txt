@@ -1,6 +1,0 @@
-Follow the links below to find more information about CMIP6 data:
-- https://cera-www.dkrz.de/WDCC/ui/cerasearch/cmip6?input=CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical
-- https://cera-www.dkrz.de/WDCC/ui/cerasearch/cmip6?input=CMIP6.obs4MIPs.ECMWF.ERA-5.
-
-Additional data citation information was found, for which no entry is available in the bibtex file:
-- doi:https://doi.org/10.1029/2019JD032361

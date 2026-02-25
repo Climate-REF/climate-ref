@@ -47,6 +47,8 @@ def test_pdo_metric(data_catalog, config, mocker, pdo_example_dir, provider):
             definition.datasets["cmip6"].path.to_list()[0],
             "--modpath_lf",
             "none",
+            "--mip",
+            "cmip6",
             "--exp",
             "hist-GHG",
             "--realization",

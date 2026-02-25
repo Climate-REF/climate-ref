@@ -1,8 +1,0 @@
-WARNING [2080548] Long name changed from 'Sea-ice Area Percentage (Ocean Grid)' to 'Sea-Ice Area Percentage (Ocean Grid)'
-(for file <OUTPUT_DIR>/climate_data/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/SImon/siconc/gn/v20190429/siconc_SImon_CanESM5_historical_r1i1p1f1_gn_197901-201412.nc)
-WARNING [2080552] Long name changed from 'Sea-ice Area Percentage (Ocean Grid)' to 'Sea-Ice Area Percentage (Ocean Grid)'
-(for file <OUTPUT_DIR>/climate_data/CMIP6/CMIP/CCCma/CanESM5/historical/r1i1p1f1/SImon/siconc/gn/v20190429/siconc_SImon_CanESM5_historical_r1i1p1f1_gn_197901-201412.nc)
-WARNING [2080548] Long name changed from 'Sea-ice Area Percentage (Ocean Grid)' to 'Sea-Ice Area Percentage (Ocean Grid)'
-(for file <OUTPUT_DIR>/climate_data/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/historical/r1i1p1f3/SImon/siconc/gn/v20200330/siconc_SImon_HadGEM3-GC31-LL_historical_r1i1p1f3_gn_197901-201412.nc)
-WARNING [2080552] Long name changed from 'Sea-ice Area Percentage (Ocean Grid)' to 'Sea-Ice Area Percentage (Ocean Grid)'
-(for file <OUTPUT_DIR>/climate_data/CMIP6/CMIP/MOHC/HadGEM3-GC31-LL/historical/r1i1p1f3/SImon/siconc/gn/v20200330/siconc_SImon_HadGEM3-GC31-LL_historical_r1i1p1f3_gn_197901-201412.nc)

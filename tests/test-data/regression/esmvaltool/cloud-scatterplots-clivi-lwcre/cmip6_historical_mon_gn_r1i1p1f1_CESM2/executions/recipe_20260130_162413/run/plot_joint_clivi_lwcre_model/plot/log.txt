@@ -1,0 +1,94 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+bins: 20
+cbar: true
+cbar_kws:
+  extend: max
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc/plot_joint_clivi_lwcre_model/clivi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clivi_gn_1996-2014.nc
+  : activity: CMIP
+    alias: CESM2
+    dataset: CESM2
+    diagnostic: plot_joint_clivi_lwcre_model
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc/plot_joint_clivi_lwcre_model/clivi/CMIP6_CESM2_Amon_historical_r1i1p1f1_clivi_gn_1996-2014.nc
+    frequency: mon
+    grid: gn
+    institute: NCAR
+    long_name: Ice Water Path
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_clivi_clwvi
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: clivi
+    standard_name: atmosphere_mass_content_of_cloud_ice
+    start_year: 1996
+    timerange: 1996/2014
+    units: kg m-2
+    variable_group: clivi
+    version: v20190308
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc/plot_joint_clivi_lwcre_model/lwcre/CMIP6_CESM2_Amon_historical_r1i1p1f1_lwcre_gn_1996-2014.nc
+  : activity: CMIP
+    alias: CESM2
+    dataset: CESM2
+    derive: true
+    diagnostic: plot_joint_clivi_lwcre_model
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc/plot_joint_clivi_lwcre_model/lwcre/CMIP6_CESM2_Amon_historical_r1i1p1f1_lwcre_gn_1996-2014.nc
+    force_derivation: false
+    frequency: mon
+    grid: gn
+    institute: NCAR
+    long_name: TOA Longwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: common_grid_lwcre
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: lwcre
+    standard_name: ''
+    start_year: 1996
+    timerange: 1996/2014
+    units: W m-2
+    variable_group: lwcre
+    version: v20190308
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc/plot_joint_clivi_lwcre_model/clivi/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162413/preproc/plot_joint_clivi_lwcre_model/lwcre/metadata.yml
+joint_kws:
+  cmap: YlGnBu
+  vmax: 0.03
+log_level: info
+marginal_kws:
+  color: darkturquoise
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162413/plots/plot_joint_clivi_lwcre_model/plot
+plot_filename: jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162413/run/plot_joint_clivi_lwcre_model/plot
+scheduler_address: tcp://127.0.0.1:46667
+script: plot
+seaborn_settings:
+  rc:
+    axes.titlepad: 15.0
+  style: ticks
+suptitle: CMIP6 CESM2 r1i1p1f1 gn 1996/2014
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot
+x: clivi
+y: lwcre
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162413/plots/plot_joint_clivi_lwcre_model/plot
+INFO:esmvaltool.diag_scripts.shared._base:Plotting analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162413/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_lwcre_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_clivi_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:Saving analysis results to <OUTPUT_DIR>/executions/recipe_20260130_162413/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_lwcre_histogram.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

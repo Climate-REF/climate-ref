@@ -1,0 +1,219 @@
+INFO:esmvaltool.diag_scripts.shared._base:Starting diagnostic script plot with configuration:
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+input_data:
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_lwcre_gn_1996-2014.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    derive: true
+    diagnostic: plot_maps
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_lwcre_gn_1996-2014.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: TOA Longwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: full_climatology
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: lwcre
+    standard_name: ''
+    start_year: 1996
+    timerange: 1996/2014
+    units: W m-2
+    variable_group: lwcre
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_lwcre_2000-2023.nc
+  : alias: OBS
+    dataset: CERES-EBAF
+    derive: true
+    diagnostic: plot_maps
+    end_year: 2023
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_lwcre_2000-2023.nc
+    frequency: mon
+    long_name: TOA Longwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: full_climatology
+    project: OBS
+    recipe_dataset_index: 1
+    reference_for_monitor_diags: true
+    short_name: lwcre
+    standard_name: ''
+    start_year: 2000
+    tier: 2
+    timerange: 2000/2023
+    type: sat
+    units: W m-2
+    variable_group: lwcre
+    version: Ed4.2
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_swcre_gn_1996-2014.nc
+  : activity: CMIP
+    alias: CMIP6
+    dataset: ACCESS-ESM1-5
+    derive: true
+    diagnostic: plot_maps
+    end_year: 2014
+    ensemble: r1i1p1f1
+    exp: historical
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_swcre_gn_1996-2014.nc
+    frequency: mon
+    grid: gn
+    institute: CSIRO
+    long_name: TOA Shortwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: full_climatology
+    project: CMIP6
+    recipe_dataset_index: 0
+    short_name: swcre
+    standard_name: ''
+    start_year: 1996
+    timerange: 1996/2014
+    units: W m-2
+    variable_group: swcre
+    version: v20191115
+  ? <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_swcre_2000-2023.nc
+  : alias: OBS
+    dataset: CERES-EBAF
+    derive: true
+    diagnostic: plot_maps
+    end_year: 2023
+    filename: <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_swcre_2000-2023.nc
+    frequency: mon
+    long_name: TOA Shortwave Cloud Radiative Effect
+    mip: Amon
+    modeling_realm:
+    - atmos
+    preprocessor: full_climatology
+    project: OBS
+    recipe_dataset_index: 1
+    reference_for_monitor_diags: true
+    short_name: swcre
+    standard_name: ''
+    start_year: 2000
+    tier: 2
+    timerange: 2000/2023
+    type: sat
+    units: W m-2
+    variable_group: swcre
+    version: Ed4.2
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/metadata.yml
+log_level: info
+output_file_type: png
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162247/plots/plot_maps/plot
+plot_filename: '{plot_type}_{real_name}_{dataset}_{mip}'
+plot_folder: '{plot_dir}'
+plots:
+  map:
+    common_cbar: true
+    fontsize: 10
+    x_pos_stats_avg: -0.1
+recipe: recipe.yml
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162247/run/plot_maps/plot
+scheduler_address: tcp://127.0.0.1:43321
+script: plot
+version: 2.13.0
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot
+
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot
+INFO:esmvaltool.diag_scripts.shared._base:Creating <OUTPUT_DIR>/executions/recipe_20260130_162247/plots/plot_maps/plot
+INFO:multi_datasets:Using facet 'short_name' to group variables
+INFO:multi_datasets:Using facet 'dataset' to create labels
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_lwcre_gn_1996-2014.nc
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/lwcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_lwcre_2000-2023.nc
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/CMIP6_ACCESS-ESM1-5_Amon_historical_r1i1p1f1_swcre_gn_1996-2014.nc
+INFO:multi_datasets:Loading <OUTPUT_DIR>/executions/recipe_20260130_162247/preproc/plot_maps/swcre/OBS_CERES-EBAF_sat_Ed4.2_Amon_swcre_2000-2023.nc
+INFO:multi_datasets:Plotting map
+INFO:multi_datasets:Processing variable lwcre
+INFO:multi_datasets:Using reference dataset CERES-EBAF
+INFO:multi_datasets:Creating map plots using function 'contourf'
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:361: UserWarning: Rasterization of '<cartopy.mpl.gridliner.Gridliner object at 0x7fffac2eae40>' will be ignored
+  artist.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffac2e97f0>' will be ignored
+  collection.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffab880690>' will be ignored
+  collection.set_rasterized(True)
+
+INFO:multi_datasets:Creating map plots using function 'contourf'
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:361: UserWarning: Rasterization of '<cartopy.mpl.gridliner.Gridliner object at 0x7fffab881090>' will be ignored
+  artist.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffab882fd0>' will be ignored
+  collection.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffab882e90>' will be ignored
+  collection.set_rasterized(True)
+
+INFO:multi_datasets:Creating map plots using function 'contourf'
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:361: UserWarning: Rasterization of '<cartopy.mpl.gridliner.Gridliner object at 0x7fffab960e10>' will be ignored
+  artist.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffab960cd0>' will be ignored
+  collection.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffab960910>' will be ignored
+  collection.set_rasterized(True)
+
+INFO:multi_datasets:Area-weighted mean of lwcre for ACCESS-ESM1-5 = 25.599707W m-2
+INFO:multi_datasets:Area-weighted mean of lwcre for CERES-EBAF = 27.838533W m-2
+INFO:multi_datasets:Area-weighted bias of lwcre for ACCESS-ESM1-5 vs. CERES-EBAF = -2.238826W m-2
+INFO:multi_datasets:Area-weighted RMSE of lwcre for ACCESS-ESM1-5 vs. CERES-EBAF = 7.699716W m-2
+INFO:multi_datasets:Area-weighted R2 of lwcre for ACCESS-ESM1-5 vs. CERES-EBAF = 0.566473
+INFO:multi_datasets:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/plots/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon.png
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_left.nc
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_top_right.nc
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot/map_lwcre_ACCESS-ESM1-5_Amon_bottom.nc
+INFO:multi_datasets:Processing variable swcre
+INFO:multi_datasets:Using reference dataset CERES-EBAF
+INFO:multi_datasets:Creating map plots using function 'contourf'
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:361: UserWarning: Rasterization of '<cartopy.mpl.gridliner.Gridliner object at 0x7fffa9a86210>' will be ignored
+  artist.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffa9a85d10>' will be ignored
+  collection.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffa9a85e50>' will be ignored
+  collection.set_rasterized(True)
+
+INFO:multi_datasets:Creating map plots using function 'contourf'
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:361: UserWarning: Rasterization of '<cartopy.mpl.gridliner.Gridliner object at 0x7fffa9aa1810>' will be ignored
+  artist.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffa9aa1590>' will be ignored
+  collection.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffa9aa16d0>' will be ignored
+  collection.set_rasterized(True)
+
+INFO:multi_datasets:Creating map plots using function 'contourf'
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:361: UserWarning: Rasterization of '<cartopy.mpl.gridliner.Gridliner object at 0x7fffaa2bca50>' will be ignored
+  artist.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffaa2bc690>' will be ignored
+  collection.set_rasterized(True)
+
+WARNING:py.warnings:/home/b/b381141/climate_ref_software/conda/esmvaltool-814a955d9d6a2d3d464afb8051c2c08c777f1af7/lib/python3.13/site-packages/esmvaltool/diag_scripts/monitor/monitor_base.py:363: UserWarning: Rasterization of '<cartopy.mpl.contour.GeoContourSet object at 0x7fffaa2bc910>' will be ignored
+  collection.set_rasterized(True)
+
+INFO:multi_datasets:Area-weighted mean of swcre for ACCESS-ESM1-5 = -42.368249W m-2
+INFO:multi_datasets:Area-weighted mean of swcre for CERES-EBAF = -45.606376W m-2
+INFO:multi_datasets:Area-weighted bias of swcre for ACCESS-ESM1-5 vs. CERES-EBAF = 3.238127W m-2
+INFO:multi_datasets:Area-weighted RMSE of swcre for ACCESS-ESM1-5 vs. CERES-EBAF = 13.618326W m-2
+INFO:multi_datasets:Area-weighted R2 of swcre for ACCESS-ESM1-5 vs. CERES-EBAF = 0.440405
+INFO:multi_datasets:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/plots/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon.png
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_left.nc
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_top_right.nc
+INFO:esmvaltool.diag_scripts.shared.io:Wrote <OUTPUT_DIR>/executions/recipe_20260130_162247/work/plot_maps/plot/map_swcre_ACCESS-ESM1-5_Amon_bottom.nc
+INFO:esmvaltool.diag_scripts.shared._base:End of diagnostic script run.

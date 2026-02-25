@@ -1,0 +1,197 @@
+documentation:
+  description: ENSO CLIVAR metrics by Yann Planton - basic ENSO characteristics for
+    use in REF
+  title: Reproducing basic ENSO characteristics metrics
+  authors:
+  - chun_felicity
+  - beucher_romain
+  - sullivan_arnold
+  - planton_yann
+  maintainer:
+  - chun_felicity
+datasets:
+- project: CMIP6
+  activity: CMIP
+  dataset: ACCESS-ESM1-5
+  ensemble: r1i1p1f1
+  institute: CSIRO
+  exp: historical
+  grid: gn
+  mip: Omon
+  timerange: 18500116T120000/20141216T120000
+- dataset: TROPFLUX
+  version: v1
+  project: OBS6
+  type: reanaly
+  tier: 2
+  mip: Omon
+preprocessors:
+  ssta_enso:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 190.0
+      end_longitude: 240.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+  ssta_ninoarea:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 190.0
+      end_longitude: 240.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+    area_statistics:
+      operator: mean
+  ssta_dec_area:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 190.0
+      end_longitude: 240.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+    area_statistics:
+      operator: mean
+    extract_month:
+      month: 12
+  ssta_meridional:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+    meridional_statistics:
+      operator: mean
+  ssta_pattern2:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+    extract_month:
+      month: 12
+    meridional_statistics:
+      operator: mean
+  enso_amplitude:
+    custom_order: true
+    convert_units:
+      units: degC
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 190.0
+      end_longitude: 240.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    rolling_window_statistics:
+      coordinate: time
+      operator: mean
+      window_length: 5
+    anomalies:
+      period: monthly
+    area_statistics:
+      operator: mean
+    climate_statistics:
+      operator: std_dev
+      period: full
+  enso_seas_asym:
+    custom_order: true
+    extract_region:
+      start_longitude: 190.0
+      end_longitude: 240.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    convert_units:
+      units: degC
+    anomalies:
+      period: monthly
+    area_statistics:
+      operator: mean
+diagnostics:
+  diagnostic_metrics:
+    description: run preprocessors on variables for ENSO metrics
+    variables:
+      tos_seas_asym:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_seas_asym
+      tos_amp:
+        short_name: tos
+        mip: Omon
+        preprocessor: enso_amplitude
+      tos_patdiv1:
+        short_name: tos
+        mip: Omon
+        preprocessor: ssta_dec_area
+      tos_lifdur1:
+        short_name: tos
+        mip: Omon
+        preprocessor: ssta_ninoarea
+      tos_lifdurdiv2:
+        short_name: tos
+        mip: Omon
+        preprocessor: ssta_meridional
+      tos_pat2:
+        short_name: tos
+        mip: Omon
+        preprocessor: ssta_pattern2
+    scripts:
+      plot_script:
+        script: enso_metrics/enso_diag1metrics.py

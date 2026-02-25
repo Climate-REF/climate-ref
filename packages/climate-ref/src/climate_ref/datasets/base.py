@@ -6,11 +6,18 @@ from attrs import define
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
-from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.utils import validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
+
+
+def _is_na(value: Any) -> bool:
+    """Check if a value is NA/NaN/None, safely handling all types."""
+    try:
+        return bool(pd.isna(value))
+    except (TypeError, ValueError):
+        return False
 
 
 @define
@@ -97,6 +104,15 @@ class DatasetAdapter(Protocol):
     """
     dataset_specific_metadata: tuple[str, ...]
     file_specific_metadata: tuple[str, ...] = ()
+    columns_requiring_finalisation: frozenset[str] = frozenset()
+    """
+    Columns that are not available until the dataset has been finalised.
+
+    For adapters that support two-phase parsing (e.g. DRS-only then complete),
+    these columns will contain ``pd.NA`` until finalisation opens the files.
+    Filtering or grouping on these columns before finalisation will silently
+    produce incorrect results.
+    """
 
     version_metadata: str = "version"
     """
@@ -190,16 +206,14 @@ class DatasetAdapter(Protocol):
 
         return data_catalog
 
-    def register_dataset(  # noqa: PLR0915
-        self, config: Config, db: Database, data_catalog_dataset: pd.DataFrame
+    def register_dataset(  # noqa: PLR0912, PLR0915
+        self, db: Database, data_catalog_dataset: pd.DataFrame
     ) -> DatasetRegistrationResult:
         """
         Register a dataset in the database using the data catalog
 
         Parameters
         ----------
-        config
-            Configuration object
         db
             Database instance
         data_catalog_dataset
@@ -218,8 +232,59 @@ class DatasetAdapter(Protocol):
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")
         slug = unique_slugs[0]
 
+        # Check if the incoming data is unfinalised (DRS parser) and the dataset
+        # already exists as finalised.  In that case, skip the entire update to
+        # avoid regressing metadata that was populated during finalisation.
+        incoming_finalised = data_catalog_dataset.get("finalised")
+        is_unfinalised_ingest = incoming_finalised is not None and not incoming_finalised.iloc[0]
+
+        if is_unfinalised_ingest:
+            existing = db.session.query(DatasetModel).filter_by(slug=slug).first()
+            if existing and existing.finalised:
+                logger.debug(f"Skipping already-finalised dataset: {slug}")
+                current_files = db.session.query(DatasetFile).filter_by(dataset_id=existing.id).all()
+                existing_paths = {f.path for f in current_files}
+
+                new_file_data = data_catalog_dataset.to_dict(orient="records")
+                new_paths = {str(validate_path(r["path"])) for r in new_file_data}
+                files_to_add = new_paths - existing_paths
+
+                if files_to_add:
+                    new_file_lookup = {}
+                    for r in new_file_data:
+                        p = str(validate_path(r["path"]))
+                        new_file_lookup[p] = {"start_time": r["start_time"], "end_time": r["end_time"]}
+
+                    for file_path in files_to_add:
+                        ft = new_file_lookup[file_path]
+                        db.session.add(
+                            DatasetFile(
+                                path=file_path,
+                                dataset_id=existing.id,
+                                start_time=ft["start_time"],
+                                end_time=ft["end_time"],
+                            )
+                        )
+
+                return DatasetRegistrationResult(
+                    dataset=existing,
+                    dataset_state=ModelState.UPDATED if files_to_add else None,
+                    files_added=list(files_to_add),
+                    files_updated=[],
+                    files_removed=[],
+                    files_unchanged=list(existing_paths & new_paths),
+                )
+
         # Upsert the dataset (create a new dataset or update the metadata)
-        dataset_metadata = data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
+        dataset_metadata = cast(
+            dict[str, Any], data_catalog_dataset[list(self.dataset_specific_metadata)].iloc[0].to_dict()
+        )
+
+        # Strip NA/NaN values so we never overwrite existing metadata with empty values.
+        # This prevents DRS re-ingestion from regressing columns that were populated
+        # during finalisation.
+        dataset_metadata = {k: v for k, v in dataset_metadata.items() if not _is_na(v)}
+
         dataset, dataset_state = db.update_or_create(DatasetModel, defaults=dataset_metadata, slug=slug)
         if dataset_state == ModelState.CREATED:
             logger.info(f"Created new dataset: {dataset}")
@@ -381,23 +446,15 @@ class DatasetAdapter(Protocol):
             else:
                 catalog = self._get_datasets(db, limit)
 
-        def _get_latest_version(dataset_catalog: pd.DataFrame) -> pd.DataFrame:
-            """
-            Get the latest version of each dataset based on the version metadata.
-
-            This assumes that the version can be sorted lexicographically.
-            """
-            latest_version = dataset_catalog[self.version_metadata].max()
-
-            return cast(
-                pd.DataFrame, dataset_catalog[dataset_catalog[self.version_metadata] == latest_version]
-            )
-
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:
             return pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
 
-        # Group by the dataset ID and get the latest version for each dataset
-        return catalog.groupby(
-            list(self.dataset_id_metadata), group_keys=False, as_index=False, sort=False
-        ).apply(_get_latest_version)
+        # Get the latest version for each dataset group
+        # Uses transform to compute max version per group, then filters rows matching the max
+        # This assumes version can be sorted lexicographically
+        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
+            self.version_metadata
+        ].transform("max")
+
+        return catalog[catalog[self.version_metadata] == max_version_per_group]

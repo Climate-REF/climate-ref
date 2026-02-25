@@ -21,6 +21,188 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.11.1 (2026-02-24)
+
+### Bug Fixes
+
+- Fixed DRS re-ingestion from crashing or regressing already-finalised datasets. Previously, re-ingesting the same directory with the DRS parser would either crash with a `TypeError` due to `pd.NA` comparisons, or overwrite finalised metadata with empty values. Finalised datasets are now skipped during DRS ingestion while still adding any new files.
+
+  Reduced memory usage during dataset ingestion by releasing ORM objects from the SQLAlchemy session after each dataset commit, preventing unbounded memory growth on large archives. ([#567](https://github.com/Climate-REF/climate-ref/pull/567))
+
+
+## climate-ref 0.11.0 (2026-02-24)
+
+### Breaking Changes
+
+- Changed `get_branding_suffix`, `get_realm`, and `get_cmip7_compound_name` to require a `table_id` parameter in addition to `variable_id`, enabling Data Request compound name lookups. ([#530](https://github.com/Climate-REF/climate-ref/pull/530))
+- Failed diagnostic executions now clear the execution group's dirty flag,
+  preventing automatic retry on subsequent solves.
+
+  Previously, failed executions were retried indefinitely.
+  Use ``ref solve --rerun-failed`` or ``ref executions flag-dirty`` to explicitly retry failed diagnostics.
+  The solver also now skips duplicate submissions when an execution with the same dataset hash is already in progress. ([#552](https://github.com/Climate-REF/climate-ref/pull/552))
+
+### Features
+
+- Added a constraint to add the parent experiment. ([#214](https://github.com/Climate-REF/climate-ref/pull/214))
+- Added lazy dataset ingestion with two-phase finalisation. Datasets are now bootstrapped from directory structure metadata only (no file I/O), with full metadata extracted lazily at solve time after filtering narrows candidates. This dramatically reduces ingestion time for large CMIP6 archives on HPC parallel file systems. ([#515](https://github.com/Climate-REF/climate-ref/pull/515))
+- Added CMIP7 support to all ESMValTool diagnostics using OR-logic data requirements, enabling automatic evaluation of CMIP7 datasets alongside existing CMIP6 support. ([#519](https://github.com/Climate-REF/climate-ref/pull/519))
+- Added CMIP7 data requirements and test data specifications for all PMP diagnostics (annual cycle, ENSO, and variability modes). ([#526](https://github.com/Climate-REF/climate-ref/pull/526))
+- Added `esgf_data_catalog` test fixture and per-provider solver regression baselines using pre-generated parquet catalogs, enabling solver regression testing without requiring sample data downloads. ([#529](https://github.com/Climate-REF/climate-ref/pull/529))
+- Added structured CMIP6-to-CMIP7 variable mappings from the CMIP7 Data Request, with a typed `DReqVariableMapping` class for reliable branding suffix, realm, and output name lookups. ([#530](https://github.com/Climate-REF/climate-ref/pull/530))
+- TOML file for QAQC requirement from REF added. ([#532](https://github.com/Climate-REF/climate-ref/pull/532))
+- Added dimensions to files produced by ESMValTool diagnostics. ([#534](https://github.com/Climate-REF/climate-ref/pull/534))
+- Added CMIP7 data support to ILAMB diagnostics, enabling dual CMIP6/CMIP7 data requirements with branded variable name lookups and dynamic source type detection. ([#535](https://github.com/Climate-REF/climate-ref/pull/535))
+- Distinguished system errors (OOM, disk full, worker crash) from diagnostic logic errors when handling execution failures.
+  System errors leave the execution group dirty so they are automatically retried on the next solve,
+  while diagnostic errors clear the dirty flag to prevent retrying indefinitely with the same data.
+
+  The solver also now skips duplicate submissions when an execution is already in progress for the same dataset hash.
+
+  Added ``--rerun-failed`` and ``--no-wait`` flags to ``ref solve``, and a new ``ref executions fail-running`` command for marking stuck executions as failed. ([#552](https://github.com/Climate-REF/climate-ref/pull/552))
+- Added validation that prevents DataRequirements from filtering or grouping on columns that require dataset finalisation, raising a clear error instead of silently producing empty results. ([#561](https://github.com/Climate-REF/climate-ref/pull/561))
+- Added `--limit` flag to the `solve` command to cap the number of executions, and `--dataset-filter` option to both `solve` and `datasets list` commands to filter input datasets by facet values before solving. ([#562](https://github.com/Climate-REF/climate-ref/pull/562))
+
+### Improvements
+
+- Improved solver performance by caching slug column lookups and avoiding expensive DataFrame string representation in debug logging. ([#533](https://github.com/Climate-REF/climate-ref/pull/533))
+- Removed the `ecgtools` dependency and 16 transitive dependencies (intake, intake-esm, joblib, zarr, etc.) by replacing it with a focused internal catalog builder module. This also eliminates the pydantic v1 deprecation warning that ecgtools was causing. File parsing now shows a tqdm progress bar. ([#558](https://github.com/Climate-REF/climate-ref/pull/558))
+- Replaced xarray with netCDF4 for metadata-only reads during dataset ingestion, significantly reducing per-file parsing overhead. ([#559](https://github.com/Climate-REF/climate-ref/pull/559))
+- Parallelised the `finalise_datasets` operation for CMIP6 datasets, mirroring the threaded approach used during ingest.
+  The number of worker threads is controlled by the existing `n_jobs` parameter on `CMIP6DatasetAdapter`. ([#564](https://github.com/Climate-REF/climate-ref/pull/564))
+
+### Bug Fixes
+
+- Removed deprecated `mix_stderr` parameter from `CliRunner` in the test fixture, fixing compatibility with Click 8.3+. ([#528](https://github.com/Climate-REF/climate-ref/pull/528))
+- Fixed a `ValueError` in `AddSupplementaryDataset` when the data catalog contained duplicate index labels for supplementary datasets. ([#537](https://github.com/Climate-REF/climate-ref/pull/537))
+- Fixed confusion between variable_id and out_name in fake CMIP7 data. ([#539](https://github.com/Climate-REF/climate-ref/pull/539))
+- Improved the resiliance of the celery worker configuration to failures ([#550](https://github.com/Climate-REF/climate-ref/pull/550))
+- Mount a ``celeryconfig.py`` via ConfigMap for Flower so ``accept_content`` is read correctly by Celery's config loader. The ``CELERY_ACCEPT_CONTENT`` env var is not picked up by Flower/Kombu directly. The config is user-configurable via ``flower.celeryConfig`` in Helm values. ([#556](https://github.com/Climate-REF/climate-ref/pull/556))
+- Fixed `REF_CMIP6_PARSER` and `REF_LOG_FORMAT` environment variables not being applied because the `Config` class was missing the post-init hook for environment variable overrides. ([#561](https://github.com/Climate-REF/climate-ref/pull/561))
+- Resolved pandas FutureWarnings to support both pandas 2 and 3, including fixes for DataFrame concatenation with empty or all-NA entries and null-type mismatches in parquet round-trips. ([#565](https://github.com/Climate-REF/climate-ref/pull/565))
+
+### Trivial/Internal Changes
+
+- [#538](https://github.com/Climate-REF/climate-ref/pull/538), [#555](https://github.com/Climate-REF/climate-ref/pull/555)
+
+
+## climate-ref 0.10.0 (2026-02-10)
+
+### Features
+
+- Added database support for CMIP7 datasets based on the CMIP7 Global Attributes v1.0 specification. ([#503](https://github.com/Climate-REF/climate-ref/pull/503))
+- Added CMIP7 data requirements support, enabling providers to fetch CMIP6 data from ESGF and translate it to CMIP7 format using the CMIP7 CV converter. ([#510](https://github.com/Climate-REF/climate-ref/pull/510))
+- Added diagnostic summary introspection and auto-generated documentation for all providers. The `ref providers show` command now defaults to detailed list format and supports `--columns` for filtering table output. ([#518](https://github.com/Climate-REF/climate-ref/pull/518))
+
+### Improvements
+
+- Separated model from observation runs for regional historical diagnostics. ([#460](https://github.com/Climate-REF/climate-ref/pull/460))
+- Made listing the changed files from a regression test faster. ([#514](https://github.com/Climate-REF/climate-ref/pull/514))
+- Prepared the monorepo for splitting diagnostic provider packages into independent repositories. Extracted shared test fixtures into a `climate-ref[test]` pytest plugin, decoupled `climate-ref-core` from application-level types, and added API surface documentation, versioning strategy, provider compatibility CI, and a copier template for bootstrapping new provider repositories. ([#520](https://github.com/Climate-REF/climate-ref/pull/520))
+
+### Bug Fixes
+
+- Fixed CMEC bundle dimension validation to use a subset check instead of exact equality, allowing diagnostics with multiple data requirements to have varying output dimensions. ([#523](https://github.com/Climate-REF/climate-ref/pull/523))
+
+### Trivial/Internal Changes
+
+- [#516](https://github.com/Climate-REF/climate-ref/pull/516)
+
+
+## climate-ref 0.9.1 (2026-02-05)
+
+### Features
+
+- Added `ingest_data()` lifecycle hook to providers, enabling automatic dataset ingestion during `ref providers setup`. PMP climatology data is now ingested automatically, eliminating the need for a separate manual ingestion step. ([#508](https://github.com/Climate-REF/climate-ref/pull/508))
+
+### Improvements
+
+- Implemented coupled versioning for Helm chart: chart version, appVersion, and default image tag now stay in sync with the application version and are updated automatically by bump-my-version. ([#507](https://github.com/Climate-REF/climate-ref/pull/507))
+- Improved CLI performance by skipping database backup for read-only commands like `config list` and `datasets list`. ([#511](https://github.com/Climate-REF/climate-ref/pull/511))
+- Improved CLI startup time by deferring heavy imports until needed. ([#512](https://github.com/Climate-REF/climate-ref/pull/512))
+
+### Bug Fixes
+
+- Fixed Helm chart CI to use correct image tag override path (`defaults.image.tag` instead of invalid `climate-ref.image.tag`). ([#507](https://github.com/Climate-REF/climate-ref/pull/507))
+
+### Improved Documentation
+
+- Updated getting started documentation with clearer configuration and dataset download instructions. ([#508](https://github.com/Climate-REF/climate-ref/pull/508))
+
+
+## climate-ref 0.9.0 (2026-02-03)
+
+### Features
+
+- Added test data management infrastructure for diagnostic development:
+
+  - New `ref test-cases` CLI commands (`fetch`, `list`, `run`) for managing and running diagnostic test cases.
+  - ESGF data fetching utilities with support for CMIP6 and obs4MIPs datasets.
+  - `TestDataSpecification` and `TestCase` classes for defining reproducible test scenarios.
+
+  ([#475](https://github.com/Climate-REF/climate-ref/pull/475))
+- Add functionality to translate a CMIP6 dataset to the new CMIP7 conventions ([#484](https://github.com/Climate-REF/climate-ref/pull/484))
+- Added test automation infrastructure for diagnostic testing using test-cases ([#485](https://github.com/Climate-REF/climate-ref/pull/485))
+- Added CMIP6 to CMIP7 format conversion command-line script to translate CMIP6 datasets into CMIP7-compatible format. ([#489](https://github.com/Climate-REF/climate-ref/pull/489))
+- Added `RegistryRequest` class for fetching datasets from pooch registries (pmp-climatology, obs4ref) instead of ESGF. ([#490](https://github.com/Climate-REF/climate-ref/pull/490))
+- Added Helm chart for Kubernetes deployment with automated CI/CD pipeline for building and publishing the chart to GitHub Container Registry, including deployment templates for provider workloads (ESMValTool, PMP, ILAMB), Flower monitoring UI, Dragonfly Redis dependency, and comprehensive integration testing in minikube. ([#492](https://github.com/Climate-REF/climate-ref/pull/492))
+- Add CI workflow to verify solve works without network access (ci-offline-solve.yaml).
+  This test uses Docker with --network none to block all network access including
+  subprocesses. Runs every other day and can be triggered manually. ([#497](https://github.com/Climate-REF/climate-ref/pull/497))
+- Added provider lifecycle hooks for offline execution setup. Providers can now implement `setup_environment()`, `fetch_data()`, and `post_setup()` methods to prepare for execution on HPC compute nodes without internet access. A new `ref providers setup` CLI command runs all provider setup hooks, fetching required reference data to the local cache before offline solving. ([#498](https://github.com/Climate-REF/climate-ref/pull/498))
+
+### Improvements
+
+- Clean up the open database connections in the test suite ([#482](https://github.com/Climate-REF/climate-ref/pull/482))
+- Improved catalog handling with hash-based change detection and multi-file dataset support. Enhanced CLI `test-cases` commands with new flags: `--only-missing`, `--force`, `--dry-run`, `--if-changed`, and `--clean`. ([#490](https://github.com/Climate-REF/climate-ref/pull/490))
+- Updated ESMValTool to v2.13.0 ([#500](https://github.com/Climate-REF/climate-ref/pull/500))
+
+### Trivial/Internal Changes
+
+- [#480](https://github.com/Climate-REF/climate-ref/pull/480), [#506](https://github.com/Climate-REF/climate-ref/pull/506)
+
+
+## climate-ref 0.8.1 (2026-01-06)
+
+### Bug Fixes
+
+- Add a pin for fastprogress (dependency of intake-esm) to work around bug in newer versions ([#476](https://github.com/Climate-REF/climate-ref/pull/476))
+
+### Trivial/Internal Changes
+
+- [#477](https://github.com/Climate-REF/climate-ref/pull/477)
+
+
+## climate-ref 0.8.0 (2026-01-05)
+
+### Features
+
+- Enable spatial 3-d variables that has levels for PMP annual cycle. ([#411](https://github.com/Climate-REF/climate-ref/pull/411))
+- Added ignore datasets constraint and configuration file.
+
+  If no path is configured for the `ignore_datasets_file` in the configuration file,
+  the default ignore datasets file is downloaded from the Climate-REF GitHub repository
+  if it does not exist or is older than 6 hours. ([#447](https://github.com/Climate-REF/climate-ref/pull/447))
+
+### Improvements
+
+- Validated the slurm configurations of the HPCExecutor using pydantic ([#375](https://github.com/Climate-REF/climate-ref/pull/375))
+- Added reference values to ESMValTool series output. ([#452](https://github.com/Climate-REF/climate-ref/pull/452))
+
+### Bug Fixes
+
+- General fixes found when rerunning, including handling an edge case where no log output is written,
+  ignoring empty input directories and increased logging of the number of executions. ([#444](https://github.com/Climate-REF/climate-ref/pull/444))
+- Worked around [pydata/xarray#2742](https://github.com/pydata/xarray/issues/2742)
+  by always replacing the default fillvalue for the data type with NaN in arrays
+  read with Xarray. ([#454](https://github.com/Climate-REF/climate-ref/pull/454))
+- Excluded piControl from PMP annual cycle and variability metrics owing to non-overlapping periods with observations. ([#463](https://github.com/Climate-REF/climate-ref/pull/463))
+
+### Improved Documentation
+
+- Add a Jupyter notebook showing how to use the CMIP7 Assessment Fast Track website OpenAPI. ([#466](https://github.com/Climate-REF/climate-ref/pull/466))
+
+
 ## climate-ref 0.7.0 (2025-10-01)
 
 ### Breaking Changes

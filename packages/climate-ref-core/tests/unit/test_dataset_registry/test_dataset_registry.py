@@ -8,6 +8,7 @@ from climate_ref_core.dataset_registry import (
     _verify_hash_matches,
     dataset_registry_manager,
     fetch_all_files,
+    validate_registry_cache,
 )
 
 NUM_OBS4REF_FILES = 58
@@ -172,3 +173,104 @@ def test_fetch_all_files_no_output(mocker):
 
     fetch_all_files(registry, "obs4ref", None)
     assert registry.fetch.call_count == NUM_OBS4REF_FILES
+
+
+class TestValidateRegistryCache:
+    """Tests for validate_registry_cache function."""
+
+    def test_all_files_valid(self, mocker, tmp_path):
+        """Test validation passes when all files exist with correct checksums."""
+        mock_registry = mocker.Mock()
+        mock_registry.registry = {
+            "file1.txt": "sha256:abc123",
+            "file2.txt": "sha256:def456",
+        }
+        mock_registry.abspath = tmp_path
+
+        # Create cached files
+        (tmp_path / "file1.txt").write_text("content1")
+        (tmp_path / "file2.txt").write_text("content2")
+
+        # Mock successful hash verification
+        mocker.patch(
+            "climate_ref_core.dataset_registry._verify_hash_matches",
+            return_value=True,
+        )
+
+        errors = validate_registry_cache(mock_registry, "test-registry")
+        assert errors == []
+
+    def test_file_not_cached(self, mocker, tmp_path):
+        """Test validation fails when a file is not cached."""
+        mock_registry = mocker.Mock()
+        mock_registry.registry = {
+            "file1.txt": "sha256:abc123",
+            "missing.txt": "sha256:def456",
+        }
+        mock_registry.abspath = tmp_path
+
+        # Only create one file
+        (tmp_path / "file1.txt").write_text("content1")
+
+        mocker.patch(
+            "climate_ref_core.dataset_registry._verify_hash_matches",
+            return_value=True,
+        )
+
+        errors = validate_registry_cache(mock_registry, "test-registry")
+        assert len(errors) == 1
+        assert "File not cached: missing.txt" in errors[0]
+
+    def test_checksum_mismatch(self, mocker, tmp_path):
+        """Test validation fails when checksum doesn't match."""
+        mock_registry = mocker.Mock()
+        mock_registry.registry = {
+            "file1.txt": "sha256:abc123",
+        }
+        mock_registry.abspath = tmp_path
+
+        # Create cached file
+        (tmp_path / "file1.txt").write_text("corrupted content")
+
+        # Mock hash verification failure
+        mocker.patch(
+            "climate_ref_core.dataset_registry._verify_hash_matches",
+            side_effect=ValueError("Hash mismatch"),
+        )
+
+        errors = validate_registry_cache(mock_registry, "test-registry")
+        assert len(errors) == 1
+        assert "Hash mismatch" in errors[0]
+
+    def test_multiple_errors(self, mocker, tmp_path):
+        """Test validation collects multiple errors."""
+        mock_registry = mocker.Mock()
+        mock_registry.registry = {
+            "missing1.txt": "sha256:abc123",
+            "missing2.txt": "sha256:def456",
+            "corrupted.txt": "sha256:ghi789",
+        }
+        mock_registry.abspath = tmp_path
+
+        # Only create one file (which will have wrong checksum)
+        (tmp_path / "corrupted.txt").write_text("bad content")
+
+        mocker.patch(
+            "climate_ref_core.dataset_registry._verify_hash_matches",
+            side_effect=ValueError("Hash mismatch"),
+        )
+
+        errors = validate_registry_cache(mock_registry, "test-registry")
+        assert len(errors) == 3
+        assert any("missing1.txt" in e for e in errors)
+        assert any("missing2.txt" in e for e in errors)
+        assert any("Hash mismatch" in e for e in errors)
+
+    def test_empty_registry(self, mocker, tmp_path):
+        """Test validation passes for empty registry."""
+        mock_registry = mocker.Mock()
+        mock_registry.registry = {}
+        mock_registry.abspath = tmp_path
+
+        errors = validate_registry_cache(mock_registry, "test-registry")
+        assert errors == []

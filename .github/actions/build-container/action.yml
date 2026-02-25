@@ -31,8 +31,8 @@ runs:
         tags: ${{ steps.metadata.outputs.tags }}
         labels: ${{ steps.metadata.outputs.labels }}
     - name: Attest to REF image
-      uses: actions/attest-build-provenance@v2
       if: ${{ ! github.event.pull_request.head.repo.fork }}
+      uses: actions/attest-build-provenance@v2
       with:
         subject-name: ghcr.io/${{ github.repository_owner }}/${{ inputs.container-name }}
         subject-digest: ${{ steps.push.outputs.digest }}

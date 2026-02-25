@@ -24,6 +24,7 @@ class TestMetricExecution:
         execution_result = mocker.Mock(spec=Execution)
 
         execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = True
         execution.executions = [execution_result]
         execution.dirty = True
 
@@ -34,10 +35,71 @@ class TestMetricExecution:
         execution_result = mocker.Mock(spec=Execution)
 
         execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = True
         execution.executions = [execution_result]
         execution.dirty = False
 
         assert not ExecutionGroup.should_run(execution, "dataset_hash")
+
+    def test_shouldnt_run_already_in_progress(self, mocker):
+        """An in-progress execution with the same hash should not trigger a duplicate"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = None
+        execution.executions = [execution_result]
+        execution.dirty = True
+
+        assert not ExecutionGroup.should_run(execution, "dataset_hash")
+
+    def test_shouldnt_run_failed_not_dirty(self, mocker):
+        """A failed execution with dirty=False should not be retried by default"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = False
+        execution.executions = [execution_result]
+        execution.dirty = False
+
+        assert not ExecutionGroup.should_run(execution, "dataset_hash")
+
+    def test_should_run_failed_dirty(self, mocker):
+        """A failed execution with dirty=True should be retried (e.g. after flag-dirty or fail-running)"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = False
+        execution.executions = [execution_result]
+        execution.dirty = True
+
+        assert ExecutionGroup.should_run(execution, "dataset_hash")
+
+    def test_should_run_failed_different_hash(self, mocker):
+        """A failed execution with a different hash should trigger a new run"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "old_hash"
+        execution_result.successful = False
+        execution.executions = [execution_result]
+        execution.dirty = False
+
+        assert ExecutionGroup.should_run(execution, "new_hash")
+
+    def test_should_run_failed_rerun_flag(self, mocker):
+        """A failed execution should re-run when rerun_failed=True, even if not dirty"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = False
+        execution.executions = [execution_result]
+        execution.dirty = False
+
+        assert ExecutionGroup.should_run(execution, "dataset_hash", rerun_failed=True)
 
 
 class TestExecutionOutput:

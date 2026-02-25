@@ -57,7 +57,7 @@ def _verify_hash_matches(fname: str | pathlib.Path, known_hash: str) -> bool:
 
     algorithm = pooch.hashes.hash_algorithm(known_hash)
     new_hash = pooch.hashes.file_hash(str(fname), alg=algorithm)
-    matches = new_hash.lower() == known_hash.split(":")[-1].lower()
+    matches = new_hash.lower() == known_hash.rsplit(":", maxsplit=1)[-1].lower()
     if not matches:
         raise ValueError(
             f"{algorithm.upper()} hash of downloaded file ({fname!s}) does not match"
@@ -66,6 +66,49 @@ def _verify_hash_matches(fname: str | pathlib.Path, known_hash: str) -> bool:
             f"Delete the file and try again."
         )
     return matches
+
+
+def validate_registry_cache(
+    registry: pooch.Pooch,
+    name: str,
+) -> list[str]:
+    """
+    Validate that all files in a registry are cached and have correct checksums.
+
+    Parameters
+    ----------
+    registry
+        Pooch registry to validate.
+    name
+        Name of the registry (for error messages).
+
+    Returns
+    -------
+    list[str]
+        List of error messages for any validation failures.
+        Empty list if all files are valid.
+    """
+    errors: list[str] = []
+
+    for key in registry.registry.keys():
+        expected_hash = registry.registry[key]
+        if not isinstance(expected_hash, str) or not expected_hash:  # pragma: no cover
+            errors.append(f"{name}: No hash defined for {key}")
+            continue
+
+        # Check if file exists in cache
+        cached_path = registry.abspath / key  # type: ignore[attr-defined]
+        if not cached_path.exists():
+            errors.append(f"{name}: File not cached: {key}")
+            continue
+
+        # Verify checksum
+        try:
+            _verify_hash_matches(cached_path, expected_hash)
+        except ValueError as e:
+            errors.append(f"{name}: {e}")
+
+    return errors
 
 
 def fetch_all_files(

@@ -1,0 +1,183 @@
+documentation:
+  title: Diagnostic to calculate Global Warming Level exceedance years.
+  description: 'Recipe for calculating global warming level exceedances for individual
+    model
+
+    and ensemble members.
+
+    '
+  authors:
+  - swaminathan_ranjini
+  maintainer:
+  - swaminathan_ranjini
+  references:
+  - swaminathan22jclim
+preprocessors:
+  calculate_anomalies:
+    custom_order: true
+    area_statistics:
+      operator: mean
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+    anomalies:
+      period: full
+      reference:
+        start_year: 1850
+        start_month: 1
+        start_day: 1
+        end_year: 1900
+        end_month: 12
+        end_day: 31
+      standardize: false
+    extract_time:
+      start_year: 2000
+      start_month: 1
+      start_day: 1
+      end_year: 2100
+      end_month: 12
+      end_day: 31
+  multi_model_gwl_stats:
+    custom_order: true
+    extract_time:
+      start_year: 2000
+      start_month: 1
+      start_day: 1
+      end_year: 2100
+      end_month: 12
+      end_day: 31
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+GWL_PARAMS:
+  window_size: 21
+  gwls:
+  - 1.5
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+GWL:
+  window_size: 21
+  gwls:
+  - 1.5
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  script: gwls/calculate_gwl_exceedance_years.py
+PLOT_STATS:
+  window_size: 21
+  gwls:
+  - 1.5
+  - 2.0
+  - 3.0
+  - 4.0
+  - 5.0
+  script: gwls/plot_gwl_exceedance_mm_stats.py
+  pattern: GWL_exceedance_years.csv
+diagnostics:
+  calculate_gwl_exceedance_years:
+    description: Calculate Global Warming Level exceedance years from smoothed temperature
+      anomalies.
+    variables:
+      tas_anomaly:
+        short_name: tas
+        preprocessor: calculate_anomalies
+        timerange: 1850/2100
+    scripts:
+      gwl_exceedance_calculation:
+        window_size: 21
+        gwls:
+        - 1.5
+        - 2.0
+        - 3.0
+        - 4.0
+        - 5.0
+        script: gwls/calculate_gwl_exceedance_years.py
+  gwl_mean_plots_tas:
+    description: Plot multimodel mean and standard deviation for surface temperature
+      at specific Global Warming Levels.
+    variables:
+      tas:
+        short_name: tas
+        preprocessor: multi_model_gwl_stats
+        timerange: 2000/2100
+    scripts:
+      plot_gwl_stats:
+        window_size: 21
+        gwls:
+        - 1.5
+        - 2.0
+        - 3.0
+        - 4.0
+        - 5.0
+        script: gwls/plot_gwl_exceedance_mm_stats.py
+        pattern: GWL_exceedance_years.csv
+        ancestors:
+        - calculate_gwl_exceedance_years/gwl_exceedance_calculation
+        - gwl_mean_plots_tas/tas
+        quickplot:
+          plot_type: map
+          cmap_mean: RdBu_r
+          cmap_stdev: YlOrRd
+          title_var: Temperature
+          mean_level_params:
+          - -60.0
+          - 55.0
+          - 5.0
+          stdev_level_params:
+          - 0.0
+          - 11.0
+          - 1.0
+  gwl_mean_plots_pr:
+    description: Plot multimodel mean and standard deviation for precipitation at
+      specific Global Warming Levels.
+    variables:
+      pr:
+        short_name: pr
+        preprocessor: multi_model_gwl_stats
+        timerange: 2000/2100
+    scripts:
+      plot_gwl_stats:
+        window_size: 21
+        gwls:
+        - 1.5
+        - 2.0
+        - 3.0
+        - 4.0
+        - 5.0
+        script: gwls/plot_gwl_exceedance_mm_stats.py
+        pattern: GWL_exceedance_years.csv
+        ancestors:
+        - calculate_gwl_exceedance_years/gwl_exceedance_calculation
+        - gwl_mean_plots_pr/pr
+        quickplot:
+          plot_type: map
+          cmap_mean: YlGnBu
+          cmap_stdev: YlGnBu
+          title_var: Precipitation
+          mean_level_params:
+          - 0.0
+          - 18.0
+          - 2.0
+          stdev_level_params:
+          - 0.0
+          - 11.0
+          - 1.0
+datasets:
+- project: CMIP6
+  activity:
+  - ScenarioMIP
+  - CMIP
+  dataset: ACCESS-ESM1-5
+  ensemble: r1i1p1f1
+  institute: CSIRO
+  exp:
+  - ssp126
+  - historical
+  grid: gn
+  mip: Amon

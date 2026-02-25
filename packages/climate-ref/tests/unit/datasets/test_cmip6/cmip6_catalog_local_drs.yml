@@ -6,7 +6,7 @@
   experiment: .nan
   experiment_id: esm-1pct-brch-1000PgC
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206
@@ -43,7 +43,7 @@
   experiment: .nan
   experiment_id: esm-1pct-brch-1000PgC
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.fx.areacella.gn.v20191206
@@ -80,7 +80,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
@@ -117,7 +117,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
@@ -154,7 +154,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
@@ -191,7 +191,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.fco2antt.gn.v20190815
@@ -228,7 +228,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
@@ -265,7 +265,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
@@ -302,7 +302,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
@@ -339,7 +339,7 @@
   experiment: .nan
   experiment_id: esm-1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.C4MIP.MPI-M.MPI-ESM1-2-LR.esm-1pctCO2.r1i1p1f1.Amon.tas.gn.v20190815
@@ -376,7 +376,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tas.gn.v20190429
@@ -413,7 +413,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Ofx.areacello.gn.v20190429
@@ -450,7 +450,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.SImon.siconc.gn.v20190429
@@ -487,7 +487,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
@@ -520,11 +520,85 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: mon
+  grid: .nan
+  grid_label: gr
+  instance_id: CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
+  institution_id: CNRM-CERFACS
+  long_name: .nan
+  member_id: r1i1p1f2
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CNRM-CERFACS/CNRM-ESM2-1/historical/r1i1p1f2/AERmon/toz/gr/v20181206/toz_AERmon_CNRM-ESM2-1_historical_r1i1p1f2_gr_195001-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CNRM-ESM2-1
+  source_type: .nan
+  standard_name: .nan
+  start_time: 1950-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: AERmon
+  time_range: 195001-201412
+  units: .nan
+  variable_id: toz
+  variant_label: r1i1p1f2
+  version: v20181206
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: mon
+  grid: .nan
+  grid_label: gr
+  instance_id: CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Amon.o3.gr.v20181206
+  institution_id: CNRM-CERFACS
+  long_name: .nan
+  member_id: r1i1p1f2
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CNRM-CERFACS/CNRM-ESM2-1/historical/r1i1p1f2/Amon/o3/gr/v20181206/o3_Amon_CNRM-ESM2-1_historical_r1i1p1f2_gr_200501-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: CNRM-ESM2-1
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2005-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Amon
+  time_range: 200501-201412
+  units: .nan
+  variable_id: o3
+  variant_label: r1i1p1f2
+  version: v20181206
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
   end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: 1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20191115
@@ -561,7 +635,7 @@
   experiment: .nan
   experiment_id: 1pctCO2
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.1pctCO2.r1i1p1f1.fx.areacella.gn.v20191115
@@ -594,11 +668,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: abrupt-4xCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rlut.gn.v20191115
@@ -611,7 +685,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/rlut/gn/v20191115/rlut_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/rlut/gn/v20191115/rlut_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -621,7 +695,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -631,11 +705,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: abrupt-4xCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rsdt.gn.v20191115
@@ -648,7 +722,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/rsdt/gn/v20191115/rsdt_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/rsdt/gn/v20191115/rsdt_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -658,7 +732,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: rsdt
   variant_label: r1i1p1f1
@@ -668,11 +742,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: abrupt-4xCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20191115
@@ -685,7 +759,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/rsut/gn/v20191115/rsut_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/rsut/gn/v20191115/rsut_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -695,7 +769,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -705,11 +779,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: abrupt-4xCO2
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.Amon.tas.gn.v20191115
@@ -722,7 +796,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/tas/gn/v20191115/tas_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/abrupt-4xCO2/r1i1p1f1/Amon/tas/gn/v20191115/tas_Amon_ACCESS-ESM1-5_abrupt-4xCO2_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -732,7 +806,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: tas
   variant_label: r1i1p1f1
@@ -746,7 +820,7 @@
   experiment: .nan
   experiment_id: abrupt-4xCO2
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.abrupt-4xCO2.r1i1p1f1.fx.areacella.gn.v20191115
@@ -783,7 +857,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hurs.gn.v20191115
@@ -820,7 +894,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.hus.gn.v20191115
@@ -857,7 +931,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
@@ -894,7 +968,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.psl.gn.v20191115
@@ -931,7 +1005,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlut.gn.v20191115
@@ -968,7 +1042,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rlutcs.gn.v20191115
@@ -1005,7 +1079,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsdt.gn.v20191115
@@ -1042,7 +1116,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsut.gn.v20191115
@@ -1079,7 +1153,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.rsutcs.gn.v20191115
@@ -1116,7 +1190,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
@@ -1153,7 +1227,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tasmax.gn.v20191115
@@ -1190,7 +1264,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tauu.gn.v20191115
@@ -1227,7 +1301,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
@@ -1264,7 +1338,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ua.gn.v20191115
@@ -1301,7 +1375,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Emon.cSoil.gn.v20191115
@@ -1338,7 +1412,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Emon.vegFrac.gn.v20191115
@@ -1375,7 +1449,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.cVeg.gn.v20191115
@@ -1412,7 +1486,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.gpp.gn.v20191115
@@ -1449,7 +1523,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.lai.gn.v20191115
@@ -1486,7 +1560,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.mrro.gn.v20191115
@@ -1523,7 +1597,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.mrsos.gn.v20191115
@@ -1560,7 +1634,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.nbp.gn.v20191115
@@ -1597,7 +1671,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.treeFrac.gn.v20191115
@@ -1634,7 +1708,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.areacello.gn.v20191115
@@ -1671,7 +1745,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.sftof.gn.v20191115
@@ -1704,11 +1778,48 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
+  end_time: null
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: fx
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.volcello.gn.v20191115
+  institution_id: CSIRO
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Ofx/volcello/gn/v20191115/volcello_Ofx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc'
+  product: .nan
+  realm: .nan
+  source_id: ACCESS-ESM1-5
+  source_type: .nan
+  standard_name: .nan
+  start_time: null
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Ofx
+  time_range: .nan
+  units: .nan
+  variable_id: volcello
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
   end_time: 2009-12-30 00:00:00
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.msftmz.gn.v20191115
@@ -1745,7 +1856,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.msftmz.gn.v20191115
@@ -1782,7 +1893,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.sos.gn.v20191115
@@ -1815,11 +1926,85 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
+  end_time: 2009-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: mon
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115
+  institution_id: CSIRO
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Omon/thetao/gn/v20191115/thetao_Omon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-200912.nc'
+  product: .nan
+  realm: .nan
+  source_id: ACCESS-ESM1-5
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2005-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Omon
+  time_range: 200501-200912
+  units: .nan
+  variable_id: thetao
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
   end_time: 2014-12-30 00:00:00
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
+  grid: .nan
+  grid_label: gn
+  instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.thetao.gn.v20191115
+  institution_id: CSIRO
+  long_name: .nan
+  member_id: r1i1p1f1
+  nominal_resolution: .nan
+  parent_activity_id: .nan
+  parent_experiment_id: .nan
+  parent_source_id: .nan
+  parent_time_units: .nan
+  parent_variant_label: .nan
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Omon/thetao/gn/v20191115/thetao_Omon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201001-201412.nc'
+  product: .nan
+  realm: .nan
+  source_id: ACCESS-ESM1-5
+  source_type: .nan
+  standard_name: .nan
+  start_time: 2010-01-01 00:00:00
+  sub_experiment: .nan
+  sub_experiment_id: .nan
+  table_id: Omon
+  time_range: 201001-201412
+  units: .nan
+  variable_id: thetao
+  variant_label: r1i1p1f1
+  version: v20191115
+  vertical_levels: .nan
+- activity_id: CMIP
+  branch_method: .nan
+  branch_time_in_child: .nan
+  branch_time_in_parent: .nan
+  end_time: 2014-12-30 00:00:00
+  experiment: .nan
+  experiment_id: historical
+  finalised: false
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
@@ -1856,7 +2041,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.SImon.siconc.gn.v20200817
@@ -1893,7 +2078,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
@@ -1930,7 +2115,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
@@ -1967,7 +2152,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.psl.gn.v20191128
@@ -2004,7 +2189,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.Amon.ts.gn.v20191128
@@ -2041,7 +2226,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r2i1p1f1.fx.areacella.gn.v20191128
@@ -2074,11 +2259,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rlut.gn.v20210316
@@ -2091,7 +2276,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/rlut/gn/v20210316/rlut_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/rlut/gn/v20210316/rlut_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -2101,7 +2286,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: rlut
   variant_label: r1i1p1f1
@@ -2111,11 +2296,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsdt.gn.v20210316
@@ -2128,7 +2313,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/rsdt/gn/v20210316/rsdt_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/rsdt/gn/v20210316/rsdt_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -2138,7 +2323,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: rsdt
   variant_label: r1i1p1f1
@@ -2148,11 +2333,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0125-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.rsut.gn.v20210316
@@ -2165,7 +2350,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/rsut/gn/v20210316/rsut_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-012512.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/rsut/gn/v20210316/rsut_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -2175,7 +2360,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-012512
+  time_range: 010101-025012
   units: .nan
   variable_id: rsut
   variant_label: r1i1p1f1
@@ -2185,11 +2370,11 @@
   branch_method: .nan
   branch_time_in_child: .nan
   branch_time_in_parent: .nan
-  end_time: 0180-12-30 00:00:00
+  end_time: 0250-12-30 00:00:00
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.Amon.tas.gn.v20210316
@@ -2202,7 +2387,7 @@
   parent_source_id: .nan
   parent_time_units: .nan
   parent_variant_label: .nan
-  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/tas/gn/v20210316/tas_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-018012.nc'
+  path: '{esgf_data_dir}/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/piControl/r1i1p1f1/Amon/tas/gn/v20210316/tas_Amon_ACCESS-ESM1-5_piControl_r1i1p1f1_gn_010101-025012.nc'
   product: .nan
   realm: .nan
   source_id: ACCESS-ESM1-5
@@ -2212,7 +2397,7 @@
   sub_experiment: .nan
   sub_experiment_id: .nan
   table_id: Amon
-  time_range: 010101-018012
+  time_range: 010101-025012
   units: .nan
   variable_id: tas
   variant_label: r1i1p1f1
@@ -2226,7 +2411,7 @@
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.piControl.r1i1p1f1.fx.areacella.gn.v20210316
@@ -2263,7 +2448,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.Amon.tas.gn.v20190624
@@ -2300,7 +2485,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.historical.r1i1p1f3.SImon.siconc.gn.v20200330
@@ -2337,7 +2522,7 @@
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.Ofx.areacello.gn.v20190709
@@ -2374,7 +2559,7 @@
   experiment: .nan
   experiment_id: piControl
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MOHC.HadGEM3-GC31-LL.piControl.r1i1p1f1.fx.areacella.gn.v20190709
@@ -2411,7 +2596,7 @@
   experiment: .nan
   experiment_id: esm-piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
@@ -2448,7 +2633,7 @@
   experiment: .nan
   experiment_id: esm-piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
@@ -2485,7 +2670,7 @@
   experiment: .nan
   experiment_id: esm-piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
@@ -2522,7 +2707,7 @@
   experiment: .nan
   experiment_id: esm-piControl
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.Amon.tas.gn.v20190815
@@ -2559,7 +2744,7 @@
   experiment: .nan
   experiment_id: esm-piControl
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.esm-piControl.r1i1p1f1.fx.areacella.gn.v20190815
@@ -2596,7 +2781,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.cli.gn.v20190308
@@ -2633,7 +2818,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clivi.gn.v20190308
@@ -2670,7 +2855,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clt.gn.v20190308
@@ -2707,7 +2892,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.clwvi.gn.v20190308
@@ -2744,7 +2929,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20190401
@@ -2781,7 +2966,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rlut.gn.v20190308
@@ -2818,7 +3003,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rlutcs.gn.v20190308
@@ -2855,7 +3040,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsut.gn.v20190308
@@ -2892,7 +3077,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsutcs.gn.v20190308
@@ -2929,7 +3114,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.ta.gn.v20190308
@@ -2966,7 +3151,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: null
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonAnt.snc.gn.v20190308
@@ -3003,7 +3188,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: null
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.ImonGre.snc.gn.v20190308
@@ -3040,7 +3225,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.LImon.snc.gn.v20190308
@@ -3077,7 +3262,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190308
@@ -3114,7 +3299,7 @@
   experiment: .nan
   experiment_id: historical
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
@@ -3151,7 +3336,7 @@
   experiment: .nan
   experiment_id: hist-GHG
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.Amon.psl.gn.v20200615
@@ -3188,7 +3373,7 @@
   experiment: .nan
   experiment_id: hist-GHG
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.Amon.ts.gn.v20200615
@@ -3225,7 +3410,7 @@
   experiment: .nan
   experiment_id: hist-GHG
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r1i1p1f1.fx.areacella.gn.v20200615
@@ -3262,7 +3447,7 @@
   experiment: .nan
   experiment_id: hist-GHG
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.Amon.psl.gn.v20200615
@@ -3299,7 +3484,7 @@
   experiment: .nan
   experiment_id: hist-GHG
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.Amon.ts.gn.v20200615
@@ -3336,7 +3521,7 @@
   experiment: .nan
   experiment_id: hist-GHG
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.DAMIP.CSIRO.ACCESS-ESM1-5.hist-GHG.r2i1p1f1.fx.areacella.gn.v20200615
@@ -3373,7 +3558,7 @@
   experiment: .nan
   experiment_id: ssp126
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.pr.gn.v20210318
@@ -3410,7 +3595,7 @@
   experiment: .nan
   experiment_id: ssp126
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.rsdt.gn.v20210318
@@ -3447,7 +3632,7 @@
   experiment: .nan
   experiment_id: ssp126
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.rsut.gn.v20210318
@@ -3484,7 +3669,7 @@
   experiment: .nan
   experiment_id: ssp126
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Amon.tas.gn.v20210318
@@ -3521,7 +3706,7 @@
   experiment: .nan
   experiment_id: ssp126
   finalised: false
-  frequency: .nan
+  frequency: mon
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.Omon.tos.gn.v20210318
@@ -3558,7 +3743,7 @@
   experiment: .nan
   experiment_id: ssp126
   finalised: false
-  frequency: .nan
+  frequency: fx
   grid: .nan
   grid_label: gn
   instance_id: CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn.v20210318

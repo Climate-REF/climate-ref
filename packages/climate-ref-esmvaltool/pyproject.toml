@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-esmvaltool"
-version = "0.7.0"
+version = "0.11.1"
 description = "ESMValTool diagnostic provider for the Rapid Evaluation Framework"
 readme = "README.md"
 authors = [
@@ -23,6 +23,7 @@ classifiers = [
     "License :: OSI Approved :: Apache Software License",
 ]
 dependencies = [
+    "cftime>=1.6.4.post1",
     "climate-ref-core",
     "netcdf4>=1.7.2",
     "pooch >= 1.8",

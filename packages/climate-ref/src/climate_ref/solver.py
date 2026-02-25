@@ -7,18 +7,22 @@ This module provides a solver to determine which diagnostics need to be calculat
 import itertools
 import pathlib
 import typing
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 
 import pandas as pd
 from attrs import define, frozen
 from loguru import logger
 
 from climate_ref.config import Config
+from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
-from climate_ref.datasets import get_dataset_adapter
-from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
-from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
+from climate_ref.datasets import (
+    CMIP6DatasetAdapter,
+    CMIP7DatasetAdapter,
+    Obs4MIPsDatasetAdapter,
+    PMPClimatologyDatasetAdapter,
+    get_slug_column,
+)
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
@@ -110,17 +114,70 @@ class DiagnosticExecution:
         )
 
 
+def _validate_requirement_columns(
+    requirement: DataRequirement, columns_requiring_finalisation: frozenset[str]
+) -> None:
+    """
+    Validate that a DataRequirement does not filter or group on unfinalised columns.
+
+    Parameters
+    ----------
+    requirement
+        The data requirement to validate
+    columns_requiring_finalisation
+        Set of column names that are unavailable before finalisation
+
+    Raises
+    ------
+    ValueError
+        If any filter facet key or group_by column requires finalisation
+    """
+    if not columns_requiring_finalisation:
+        return
+
+    # Check filter facet keys
+    if requirement.filters:
+        for facet_filter in requirement.filters:
+            conflicting = set(facet_filter.facets.keys()) & columns_requiring_finalisation
+            if conflicting:
+                raise ValueError(
+                    f"DataRequirement for {requirement.source_type.value} filters on columns "
+                    f"that require finalisation: {sorted(conflicting)}. "
+                    f"These columns are unavailable before datasets are finalised."
+                )
+
+    # Check group_by columns
+    if requirement.group_by:
+        conflicting = set(requirement.group_by) & columns_requiring_finalisation
+        if conflicting:
+            raise ValueError(
+                f"DataRequirement for {requirement.source_type.value} groups by columns "
+                f"that require finalisation: {sorted(conflicting)}. "
+                f"These columns are unavailable before datasets are finalised."
+            )
+
+
 def extract_covered_datasets(
-    data_catalog: pd.DataFrame, requirement: DataRequirement
+    data_catalog: pd.DataFrame | DataCatalog, requirement: DataRequirement
 ) -> dict[Selector, pd.DataFrame]:
     """
     Determine the different diagnostic executions that should be performed with the current data catalog
     """
-    if len(data_catalog) == 0:
+    # Resolve the DataCatalog to a DataFrame for filtering, but keep the
+    # original reference for finalisation calls later.
+    if isinstance(data_catalog, DataCatalog):
+        data_catalog_source: DataCatalog | None = data_catalog
+        _validate_requirement_columns(requirement, data_catalog.columns_requiring_finalisation)
+        catalog_df: pd.DataFrame = data_catalog.to_frame()
+    else:
+        data_catalog_source = None
+        catalog_df = data_catalog
+
+    if len(catalog_df) == 0:
         logger.error(f"No datasets found in the data catalog: {requirement.source_type.value}")
         return {}
 
-    subset = requirement.apply_filters(data_catalog)
+    subset = requirement.apply_filters(catalog_df)
 
     if len(subset) == 0:
         logger.debug(f"No datasets found for requirement {requirement}")
@@ -130,7 +187,7 @@ def extract_covered_datasets(
         # Use a single group
         groups = [((), subset)]
     else:
-        groups = list(subset.groupby(list(requirement.group_by)))
+        groups = list(subset.groupby(list(requirement.group_by)))  # type: ignore[arg-type]
 
     results = {}
 
@@ -140,7 +197,12 @@ def extract_covered_datasets(
             group_keys: Selector = ()
         else:
             group_keys = tuple(zip(requirement.group_by, name))
-        constrained_group = _process_group_constraints(data_catalog, group, requirement)
+
+        # Finalise unfinalised datasets in this group before applying constraints.
+        # This ensures that time-range constraints have access to full metadata.
+        finalised_group = data_catalog_source.finalise(group) if data_catalog_source is not None else group
+
+        constrained_group = _process_group_constraints(catalog_df, finalised_group, requirement)
 
         if constrained_group is not None:
             results[group_keys] = constrained_group
@@ -161,7 +223,9 @@ def _process_group_constraints(
 
 
 def solve_executions(
-    data_catalog: dict[SourceDatasetType, pd.DataFrame], diagnostic: Diagnostic, provider: DiagnosticProvider
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
+    diagnostic: Diagnostic,
+    provider: DiagnosticProvider,
 ) -> typing.Generator["DiagnosticExecution", None, None]:
     """
     Calculate the diagnostic executions that need to be performed for a given diagnostic
@@ -195,19 +259,33 @@ def solve_executions(
             provider,
         )
     elif isinstance(first_item, Sequence):
-        # We have a sequence of collections of data requirements
+        # We have a sequence of collections of data requirements (OR logic)
+        # Try each requirement collection and yield from those that have matching data
+        any_matched = False
         for requirement_collection in diagnostic.data_requirements:
             if not isinstance(requirement_collection, Sequence):
                 raise TypeError(f"Expected a sequence of DataRequirement, got {type(requirement_collection)}")
-            yield from _solve_from_data_requirements(
-                data_catalog, diagnostic, requirement_collection, provider
+            # Buffer executions to check if any were actually produced
+            # _solve_from_data_requirements returns empty if source types are missing
+            executions = list(
+                _solve_from_data_requirements(data_catalog, diagnostic, requirement_collection, provider)
+            )
+            if executions:
+                any_matched = True
+                yield from executions
+        if not any_matched:
+            available = ", ".join(str(s) for s in data_catalog.keys())
+            raise InvalidDiagnosticException(
+                diagnostic,
+                f"No data catalog matches any of the diagnostic's data requirements. "
+                f"Available source types: {available}",
             )
     else:
         raise TypeError(f"Expected a DataRequirement, got {type(first_item)}")
 
 
 def _solve_from_data_requirements(
-    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+    data_catalog: Mapping[SourceDatasetType, pd.DataFrame | DataCatalog],
     diagnostic: Diagnostic,
     data_requirements: Sequence[DataRequirement],
     provider: DiagnosticProvider,
@@ -219,9 +297,11 @@ def _solve_from_data_requirements(
         if not isinstance(requirement, DataRequirement):
             raise TypeError(f"Expected a DataRequirement, got {type(requirement)}")
         if requirement.source_type not in data_catalog:
-            raise InvalidDiagnosticException(
-                diagnostic, f"No data catalog for source type {requirement.source_type}"
+            logger.debug(
+                f"No data catalog for source type {requirement.source_type} of "
+                f"{provider.slug} diagnostic {diagnostic.slug}"
             )
+            return
 
         dataset_groups[requirement.source_type] = extract_covered_datasets(
             data_catalog[requirement.source_type], requirement
@@ -236,7 +316,7 @@ def _solve_from_data_requirements(
                 {
                     source_type: DatasetCollection(
                         datasets=dataset_groups[source_type][selector],
-                        slug_column=get_dataset_adapter(source_type.value).slug_column,
+                        slug_column=get_slug_column(source_type),
                         selector=selector,
                     )
                     for source_type, selector in zip(dataset_groups.keys(), items)
@@ -259,6 +339,63 @@ class SolveFilterOptions:
     """
     Check if the provider slug contains any of the provided values
     """
+    dataset: dict[str, list[str]] | None = None
+    """
+    Filter datasets by facet values before solving.
+
+    Keys are facet names (e.g. ``source_id``, ``variable_id``) and values are
+    lists of allowed values.  Different facets are ANDed together; multiple
+    values for the same facet are ORed.
+    """
+
+
+def apply_dataset_filters(
+    data_catalog: Mapping[SourceDatasetType, DataCatalog | pd.DataFrame],
+    dataset_filters: dict[str, list[str]],
+) -> dict[SourceDatasetType, DataCatalog | pd.DataFrame]:
+    """
+    Filter data catalogs by facet values
+
+    Each facet filter is applied independently to each data catalog.
+    Different facets are ANDed together; multiple values for the same facet are ORed.
+    Facets that do not exist as columns in a given catalog are skipped for that catalog.
+
+    When a DataCatalog is provided, the returned value preserves the DataCatalog
+    wrapper (with adapter and database references) so that downstream finalisation
+    still works.
+
+    Parameters
+    ----------
+    data_catalog
+        Data catalogs keyed by source dataset type
+    dataset_filters
+        Mapping of facet names to lists of allowed values
+
+    Returns
+    -------
+    :
+        Filtered data catalogs
+    """
+    filtered: dict[SourceDatasetType, DataCatalog | pd.DataFrame] = {}
+    for source_type, catalog in data_catalog.items():
+        if isinstance(catalog, DataCatalog):
+            df = catalog.to_frame()
+            mask = pd.Series(True, index=df.index)
+            for facet, values in dataset_filters.items():
+                if facet not in df.columns:
+                    continue
+                mask &= df[facet].isin(values)
+            filtered[source_type] = DataCatalog(
+                database=catalog.database, adapter=catalog.adapter, df=df[mask]
+            )
+        else:
+            mask = pd.Series(True, index=catalog.index)
+            for facet, values in dataset_filters.items():
+                if facet not in catalog.columns:
+                    continue
+                mask &= catalog[facet].isin(values)
+            filtered[source_type] = catalog[mask]
+    return filtered
 
 
 def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -> bool:
@@ -303,7 +440,7 @@ class ExecutionSolver:
     """
 
     provider_registry: ProviderRegistry
-    data_catalog: dict[SourceDatasetType, pd.DataFrame]
+    data_catalog: dict[SourceDatasetType, DataCatalog]
 
     @staticmethod
     def build_from_db(config: Config, db: Database) -> "ExecutionSolver":
@@ -323,9 +460,12 @@ class ExecutionSolver:
         return ExecutionSolver(
             provider_registry=ProviderRegistry.build_from_config(config, db),
             data_catalog={
-                SourceDatasetType.CMIP6: CMIP6DatasetAdapter().load_catalog(db),
-                SourceDatasetType.obs4MIPs: Obs4MIPsDatasetAdapter().load_catalog(db),
-                SourceDatasetType.PMPClimatology: PMPClimatologyDatasetAdapter().load_catalog(db),
+                SourceDatasetType.CMIP6: DataCatalog(database=db, adapter=CMIP6DatasetAdapter(config=config)),
+                SourceDatasetType.CMIP7: DataCatalog(database=db, adapter=CMIP7DatasetAdapter()),
+                SourceDatasetType.obs4MIPs: DataCatalog(database=db, adapter=Obs4MIPsDatasetAdapter()),
+                SourceDatasetType.PMPClimatology: DataCatalog(
+                    database=db, adapter=PMPClimatologyDatasetAdapter()
+                ),
             },
         )
 
@@ -344,16 +484,26 @@ class ExecutionSolver:
         DiagnosticExecution
             A class containing the information related to the execution of a diagnostic
         """
+        data_catalog: Mapping[SourceDatasetType, DataCatalog | pd.DataFrame] = self.data_catalog
+        if filters and filters.dataset:
+            data_catalog = apply_dataset_filters(data_catalog, filters.dataset)
+
         for provider in self.provider_registry.providers:
             for diagnostic in provider.diagnostics():
                 # Filter the diagnostic based on the provided filters
                 if not matches_filter(diagnostic, filters):
                     logger.debug(f"Skipping {diagnostic.full_slug()} due to filter")
                     continue
-                yield from solve_executions(self.data_catalog, diagnostic, provider)
+                logger.info(f"Solving {diagnostic.full_slug()}")
+                try:
+                    yield from solve_executions(data_catalog, diagnostic, provider)
+                except InvalidDiagnosticException as e:
+                    # Skip diagnostics that don't have matching data
+                    logger.debug(f"Skipping {diagnostic.full_slug()}: {e}")
+                    continue
 
 
-def solve_required_executions(  # noqa: PLR0912, PLR0913
+def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     db: Database,
     dry_run: bool = False,
     execute: bool = True,
@@ -363,6 +513,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
     one_per_provider: bool = False,
     one_per_diagnostic: bool = False,
     filters: SolveFilterOptions | None = None,
+    limit: int | None = None,
+    rerun_failed: bool = False,
 ) -> None:
     """
     Solve for executions that require recalculation
@@ -386,6 +538,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
 
     diagnostic_count = {}
     provider_count = {}
+    total_count = 0
 
     for potential_execution in solver.solve(filters):
         # The diagnostic output is first written to the scratch directory
@@ -400,11 +553,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
             provider_count[potential_execution.provider.slug] = 0
         if potential_execution.diagnostic.full_slug() not in diagnostic_count:
             diagnostic_count[potential_execution.diagnostic.full_slug()] = 0
-
-        if dry_run:
-            provider_count[potential_execution.provider.slug] += 1
-            diagnostic_count[potential_execution.diagnostic.full_slug()] += 1
-            continue
 
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
@@ -444,11 +592,20 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
                 f"provider_count={provider_count}"
             )
 
-            if execution_group.should_run(definition.datasets.hash):
+            if execution_group.should_run(definition.datasets.hash, rerun_failed=rerun_failed):
                 if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
                     logger.info(
                         f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
                     )
+                    continue
+
+                if dry_run:
+                    provider_count[diagnostic.provider.slug] += 1
+                    diagnostic_count[diagnostic.full_slug()] += 1
+                    total_count += 1
+                    if limit is not None and total_count >= limit:
+                        logger.info(f"Reached execution limit of {limit}")
+                        break
                     continue
 
                 logger.info(
@@ -473,6 +630,10 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913
 
                 provider_count[diagnostic.provider.slug] += 1
                 diagnostic_count[diagnostic.full_slug()] += 1
+                total_count += 1
+                if limit is not None and total_count >= limit:
+                    logger.info(f"Reached execution limit of {limit}")
+                    break
 
     logger.info("Solve complete")
     logger.info(f"Found {sum(diagnostic_count.values())} new executions")

@@ -1,114 +1,146 @@
 {
-  "index": "<OUTPUT_DIR>/executions/recipe_20250917_082301/index.html",
+  "index": "<OUTPUT_DIR>/executions/recipe_20260130_162509/index.html",
   "provenance": {
     "environment": {},
     "modeldata": [],
     "obsdata": {},
-    "log": "<OUTPUT_DIR>/executions/recipe_20250917_082301/run/main_log_debug.txt"
+    "log": "<OUTPUT_DIR>/executions/recipe_20260130_162509/run/main_log_debug.txt"
   },
   "data": {
-    "executions/recipe_20250917_082301/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_histogram.nc",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CALIPSO-ICECLOUD / ERA-5 2007/2015)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_ta_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_ta_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_ta_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_cli_ta_histogram.nc",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CALIPSO-ICECLOUD / ERA-5 2007/2015)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_ta_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_ta_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_ta_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_cli_ta_ref/plot/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015_ta_histogram.nc",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CALIPSO-ICECLOUD / ERA-5 2007/2015)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_histogram.nc",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clivi vs lwcre"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_lwcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_lwcre_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_clivi_lwcre_histogram.nc",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clivi vs lwcre"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_lwcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_lwcre_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_lwcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clivi_lwcre_ref/plot/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF_lwcre_histogram.nc",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clivi vs lwcre"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_histogram.nc",
       "long_name": "Scatterplot of Total Cloud Fraction (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_swcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_swcre_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_swcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_clt_swcre_histogram.nc",
       "long_name": "Scatterplot of Total Cloud Fraction (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_swcre_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_swcre_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_swcre_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF_swcre_histogram.nc",
       "long_name": "Scatterplot of Total Cloud Fraction (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_histogram.nc",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (ESACCI-CLOUD / GPCP-SG)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clwvi vs pr"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_pr_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_pr_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_pr_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_clwvi_pr_histogram.nc",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (ESACCI-CLOUD / GPCP-SG)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clwvi vs pr"
+      }
     },
-    "executions/recipe_20250917_082301/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_pr_histogram.nc": {
-      "filename": "executions/recipe_20250917_082301/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_pr_histogram.nc",
+    "executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_pr_histogram.nc": {
+      "filename": "executions/recipe_20260130_162509/work/plot_joint_clwvi_pr_ref/plot/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG_pr_histogram.nc",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (ESACCI-CLOUD / GPCP-SG)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clwvi vs pr"
+      }
     }
   },
   "plots": {
-    "executions/recipe_20250917_082301/plots/plot_joint_cli_ta_ref/plot/png/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015.png": {
-      "filename": "executions/recipe_20250917_082301/plots/plot_joint_cli_ta_ref/plot/png/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015.png",
+    "executions/recipe_20260130_162509/plots/plot_joint_cli_ta_ref/plot/png/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015.png": {
+      "filename": "executions/recipe_20260130_162509/plots/plot_joint_cli_ta_ref/plot/png/jointplot_cli_ta_CALIPSO-ICECLOUD_-_ERA-5_2007-2015.png",
       "long_name": "Scatterplot of Mass Fraction of Cloud Ice (cli) vs Air Temperature (ta) (CALIPSO-ICECLOUD / ERA-5 2007/2015)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of cli vs ta"
+      }
     },
-    "executions/recipe_20250917_082301/plots/plot_joint_clivi_lwcre_ref/plot/png/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF.png": {
-      "filename": "executions/recipe_20250917_082301/plots/plot_joint_clivi_lwcre_ref/plot/png/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF.png",
+    "executions/recipe_20260130_162509/plots/plot_joint_clivi_lwcre_ref/plot/png/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF.png": {
+      "filename": "executions/recipe_20260130_162509/plots/plot_joint_clivi_lwcre_ref/plot/png/jointplot_clivi_lwcre_ESACCI-CLOUD_CERES-EBAF.png",
       "long_name": "Scatterplot of Ice Water Path (clivi) vs TOA Longwave Cloud Radiative Effect (lwcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clivi vs lwcre"
+      }
     },
-    "executions/recipe_20250917_082301/plots/plot_joint_clt_swcre_ref/plot/png/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF.png": {
-      "filename": "executions/recipe_20250917_082301/plots/plot_joint_clt_swcre_ref/plot/png/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF.png",
+    "executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot/png/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF.png": {
+      "filename": "executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot/png/jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF.png",
       "long_name": "Scatterplot of Total Cloud Fraction (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (ESACCI-CLOUD / CERES-EBAF)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
     },
-    "executions/recipe_20250917_082301/plots/plot_joint_clwvi_pr_ref/plot/png/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG.png": {
-      "filename": "executions/recipe_20250917_082301/plots/plot_joint_clwvi_pr_ref/plot/png/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG.png",
+    "executions/recipe_20260130_162509/plots/plot_joint_clwvi_pr_ref/plot/png/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG.png": {
+      "filename": "executions/recipe_20260130_162509/plots/plot_joint_clwvi_pr_ref/plot/png/jointplot_clwvi_pr_ESACCI-CLOUD_GPCP-SG.png",
       "long_name": "Scatterplot of Condensed Water Path (clwvi) vs Precipitation (pr) (ESACCI-CLOUD / GPCP-SG)",
       "description": "",
-      "dimensions": null
+      "dimensions": {
+        "statistic": "joint histogram of clwvi vs pr"
+      }
     }
   },
   "html": {
-    "<OUTPUT_DIR>/executions/recipe_20250917_082301/index.html": {
-      "filename": "<OUTPUT_DIR>/executions/recipe_20250917_082301/index.html",
+    "<OUTPUT_DIR>/executions/recipe_20260130_162509/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe_20260130_162509/index.html",
       "long_name": "Results page",
       "description": "Page showing the executions of the ESMValTool run.",
       "dimensions": null

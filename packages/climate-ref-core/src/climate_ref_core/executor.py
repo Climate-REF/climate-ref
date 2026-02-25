@@ -4,7 +4,7 @@ Executor interface for running diagnostics
 
 import importlib
 import shutil
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import Any, Protocol, runtime_checkable
 
 from loguru import logger
 
@@ -12,9 +12,26 @@ from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import DiagnosticError, InvalidExecutorException
 from climate_ref_core.logging import redirect_logs
 
-if TYPE_CHECKING:
-    # TODO: break this import cycle and move it into the execution definition
-    from climate_ref.models import Execution
+
+def _is_system_error(exc: BaseException) -> bool:
+    """
+    Check if an exception represents a system-level failure.
+
+    System failures are retryable because running again with the same data
+    may succeed (e.g. more memory available, disk space freed).
+    Diagnostic logic errors are not retryable.
+
+    Parameters
+    ----------
+    exc
+        The exception to classify
+
+    Returns
+    -------
+    :
+        True if the exception is a system-level failure
+    """
+    return isinstance(exc, (MemoryError, OSError, SystemExit, KeyboardInterrupt))
 
 
 def execute_locally(
@@ -49,8 +66,14 @@ def execute_locally(
             return definition.diagnostic.run(definition=definition)
     except Exception as e:
         # If the diagnostic fails, we want to log the error and return a failure result
-        logger.exception(f"Error running {definition.execution_slug()!r}")
-        result = ExecutionResult.build_from_failure(definition)
+        retryable = _is_system_error(e)
+        if retryable:
+            logger.error(
+                f"System error running {definition.execution_slug()!r} (will be retried on next solve): {e}"
+            )
+        else:
+            logger.exception(f"Diagnostic error running {definition.execution_slug()!r}")
+        result = ExecutionResult.build_from_failure(definition, retryable=retryable)
 
         if raise_error:
             raise DiagnosticError(str(e), result) from e
@@ -78,7 +101,7 @@ class Executor(Protocol):
     def run(
         self,
         definition: ExecutionDefinition,
-        execution: "Execution | None" = None,
+        execution: Any = None,
     ) -> None:
         """
         Execute a diagnostic with a given definition

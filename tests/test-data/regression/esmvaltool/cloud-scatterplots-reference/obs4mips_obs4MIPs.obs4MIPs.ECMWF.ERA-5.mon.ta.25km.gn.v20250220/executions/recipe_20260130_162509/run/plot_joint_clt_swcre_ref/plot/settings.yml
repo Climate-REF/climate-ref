@@ -1,0 +1,30 @@
+x: clt
+y: swcre
+bins: 20
+joint_kws:
+  vmax: 0.015
+  cmap: YlGnBu
+cbar: true
+cbar_kws:
+  extend: max
+marginal_kws:
+  color: darkturquoise
+seaborn_settings:
+  style: ticks
+  rc:
+    axes.titlepad: 15.0
+suptitle: ESACCI-CLOUD / CERES-EBAF
+plot_filename: jointplot_clt_swcre_ESACCI_CLOUD_CERES-EBAF
+recipe: recipe.yml
+version: 2.13.0
+script: plot
+run_dir: <OUTPUT_DIR>/executions/recipe_20260130_162509/run/plot_joint_clt_swcre_ref/plot
+plot_dir: <OUTPUT_DIR>/executions/recipe_20260130_162509/plots/plot_joint_clt_swcre_ref/plot
+work_dir: <OUTPUT_DIR>/executions/recipe_20260130_162509/work/plot_joint_clt_swcre_ref/plot
+output_file_type: png
+log_level: info
+auxiliary_data_dir: /home/b/b381141/auxiliary_data2
+scheduler_address: tcp://127.0.0.1:41875
+input_files:
+- <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/clt/metadata.yml
+- <OUTPUT_DIR>/executions/recipe_20260130_162509/preproc/plot_joint_clt_swcre_ref/swcre/metadata.yml

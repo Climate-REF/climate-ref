@@ -8,7 +8,6 @@ Climate-REF uses a [TOML](https://toml.io/en/) configuration file to specify dat
 
 Additional information about the configuration file can be found in the [Configuration documentation](../configuration.md).
 
-
 ## 1. Select a location for storing your configuration
 
 The most important part of the REF configuration is the location where the REF will store its data and results.
@@ -24,7 +23,6 @@ or exported directly in your terminal session (assuming a bash shell):
 ```bash
 export REF_CONFIGURATION="/path/to/your/ref/configuration"
 ```
-
 
 ## 2. Generate
 
@@ -96,7 +94,6 @@ provider = "climate_ref_pmp:provider"
 [diagnostic_providers.config]
 ```
 
-
 The particularly important sections to customize are:
 
 - **paths**: Set the paths for logs, scratch space, software, and results. These should point to directories where you have write access.
@@ -120,7 +117,6 @@ export REF_DATASET_CACHE_DIR="/path/to/your/dataset/cache"
 
 If environment variables are set, Climate-REF will use their values in preference to those found in the configuration file.
 
-
 ## 5. Validate your configuration
 
 To ensure your configuration is valid and correctly read by the REF, you can run the following command:
@@ -131,19 +127,35 @@ ref config list
 
 Your configuration should be displayed without errors and should include any changes you made in the `ref.toml` file.
 
+## 6. Set up diagnostic providers
 
-## 6. Create Provider-specific conda environments
-
-Some diagnostic providers require specific conda environments to be created before they can be used.
-This should happen before you run any diagnostics to avoid multiple installations of the same environment.
-By default, these conda environments will be installed in the `$REF_CONFIGURATION/software` directory,
-but the location can be changed in the configuration file using the [paths.software](../configuration.md#paths_software).
-
-You can create these environments using the following command:
+Diagnostic providers may need additional setup before they can be used,
+such as creating conda environments or downloading reference data.
+Run the following command to prepare all providers:
 
 ```bash
-ref providers create-env
+ref providers setup
 ```
+
+This creates any required conda environments (installed in `$REF_CONFIGURATION/software` by default,
+configurable via [paths.software](../configuration.md#paths_software)) and downloads reference data to the local cache.
+
+/// admonition | Conda Environments
+    type: note
+
+There may be some error messages related to linking when setting up the conda environments.
+This is expected and does not impact the REF's functionality.
+The ILAMB provider does not currently have a conda environment.
+
+///
+
+/// admonition | HPC users
+    type: tip
+
+If you're on an HPC system where compute nodes lack internet access,
+run this command on a login node before submitting jobs.
+
+///
 
 ## Next steps
 

@@ -6,96 +6,21 @@ Adapter for parsing and registering CMIP7 datasets based on CMIP7 Global Attribu
 
 from __future__ import annotations
 
-import traceback
 from pathlib import Path
-from typing import Any
 
-import netCDF4
 import pandas as pd
+from loguru import logger
 
 from climate_ref.config import Config
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import build_catalog
-from climate_ref.datasets.netcdf_utils import read_time_bounds, read_variable_attrs
+from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7_drs
+from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 from climate_ref.models.dataset import CMIP7Dataset
 
 
-def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
-    """
-    Parse metadata from a CMIP7 netCDF file.
-
-    Parameters
-    ----------
-    file
-        Path to the CMIP7 netCDF file
-
-    Returns
-    -------
-    :
-        Dictionary of metadata extracted from the file
-    """
-    try:
-        with netCDF4.Dataset(file, "r") as ds:
-            start_time, end_time = read_time_bounds(ds)
-
-            variable_id = getattr(ds, "variable_id", "")
-            var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
-
-            return {
-                # Core DRS attributes
-                "activity_id": getattr(ds, "activity_id", ""),
-                "institution_id": getattr(ds, "institution_id", ""),
-                "source_id": getattr(ds, "source_id", ""),
-                "experiment_id": getattr(ds, "experiment_id", ""),
-                "variant_label": getattr(ds, "variant_label", ""),
-                "variable_id": variable_id,
-                "grid_label": getattr(ds, "grid_label", ""),
-                "frequency": getattr(ds, "frequency", ""),
-                "region": getattr(ds, "region", "glb"),
-                "branding_suffix": getattr(ds, "branding_suffix", ""),
-                "branded_variable": getattr(ds, "branded_variable", ""),
-                "version": getattr(ds, "version", ""),
-                # Additional mandatory attributes
-                "mip_era": getattr(ds, "mip_era", "CMIP7"),
-                "realm": getattr(ds, "realm", None),
-                "nominal_resolution": getattr(ds, "nominal_resolution", None),
-                # Parent info (nullable)
-                "branch_time_in_child": getattr(ds, "branch_time_in_child", None),
-                "branch_time_in_parent": getattr(ds, "branch_time_in_parent", None),
-                "parent_activity_id": getattr(ds, "parent_activity_id", None),
-                "parent_experiment_id": getattr(ds, "parent_experiment_id", None),
-                "parent_mip_era": getattr(ds, "parent_mip_era", None),
-                "parent_source_id": getattr(ds, "parent_source_id", None),
-                "parent_time_units": getattr(ds, "parent_time_units", None),
-                "parent_variant_label": getattr(ds, "parent_variant_label", None),
-                # Additional mandatory attributes
-                "license_id": getattr(ds, "license_id", None),
-                # Conditionally required attributes
-                "external_variables": getattr(ds, "external_variables", None),
-                # Variable metadata
-                "standard_name": var_attrs["standard_name"],
-                "long_name": var_attrs["long_name"],
-                "units": var_attrs["units"],
-                # File-level metadata
-                "tracking_id": getattr(ds, "tracking_id", None),
-                # Time information
-                "start_time": start_time,
-                "end_time": end_time,
-                "time_range": f"{start_time}-{end_time}" if start_time and end_time else None,
-                # Path
-                "path": file,
-                # Finalisation status
-                "finalised": True,
-            }
-    except Exception:
-        return {
-            "INVALID_ASSET": file,
-            "TRACEBACK": traceback.format_exc(),
-        }
-
-
-class CMIP7DatasetAdapter(DatasetAdapter):
+class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
     """
     Adapter for CMIP7 datasets
 
@@ -104,6 +29,31 @@ class CMIP7DatasetAdapter(DatasetAdapter):
 
     dataset_cls = CMIP7Dataset
     slug_column = "instance_id"
+
+    columns_requiring_finalisation = frozenset(
+        {
+            # Optional information
+            "realm",
+            "nominal_resolution",
+            "license_id",
+            "external_variables",
+            # Parent info
+            "branch_time_in_child",
+            "branch_time_in_parent",
+            "parent_activity_id",
+            "parent_experiment_id",
+            "parent_mip_era",
+            "parent_source_id",
+            "parent_time_units",
+            "parent_variant_label",
+            # Variable metadata
+            "standard_name",
+            "long_name",
+            "units",
+            "time_units",
+            "calendar",
+        }
+    )
 
     dataset_specific_metadata = (
         # Core DRS attributes
@@ -138,6 +88,9 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # # Time encoding metadata
+        # "time_units",
+        # "calendar",
         # Finalisation status
         "finalised",
         # Unique identifier
@@ -169,6 +122,60 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         self.n_jobs = n_jobs
         self.config = config or Config.default()
 
+    def get_complete_parser(self) -> DatasetParsingFunction:
+        """
+        Return the complete parser that opens files to extract full CMIP7 metadata.
+
+        Returns
+        -------
+        :
+            Complete CMIP7 parsing function
+        """
+        return parse_cmip7_complete
+
+    def _post_finalise_fixes(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply CMIP7-specific fixes after finalisation.
+
+        Cleans branch time values that may be stored as strings with units suffixes.
+
+        Parameters
+        ----------
+        datasets
+            DataFrame with finalised metadata
+
+        Returns
+        -------
+        :
+            DataFrame with fixes applied
+        """
+        if "branch_time_in_child" in datasets.columns:
+            datasets["branch_time_in_child"] = clean_branch_time(datasets["branch_time_in_child"])
+        if "branch_time_in_parent" in datasets.columns:
+            datasets["branch_time_in_parent"] = clean_branch_time(datasets["branch_time_in_parent"])
+        return datasets
+
+    def get_parsing_function(self) -> DatasetParsingFunction:
+        """
+        Get the parsing function for CMIP7 datasets based on configuration
+
+        The parsing function used is determined by the `cmip7_parser` configuration value:
+        - "drs": Use the DRS parser (default)
+        - "complete": Use the complete parser that extracts all available metadata
+
+        Returns
+        -------
+        :
+            The appropriate parsing function based on configuration
+        """
+        parser_type = self.config.cmip7_parser
+        if parser_type == "complete":
+            logger.info("Using complete CMIP7 parser")
+            return parse_cmip7_complete
+        else:
+            logger.info(f"Using DRS CMIP7 parser (config value: {parser_type})")
+            return parse_cmip7_drs
+
     def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory.
@@ -186,9 +193,11 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
+        parsing_function = self.get_parsing_function()
+
         datasets = build_catalog(
             paths=[str(file_or_directory)],
-            parsing_func=parse_cmip7_file,
+            parsing_func=parsing_function,
             include_patterns=["*.nc"],
             depth=10,
             n_jobs=self.n_jobs,

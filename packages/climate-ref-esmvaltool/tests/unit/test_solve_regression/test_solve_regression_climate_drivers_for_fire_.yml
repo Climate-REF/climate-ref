@@ -91,9 +91,7 @@ cmip6_gr1_r1i1p1f1_GFDL-ESM4:
 cmip6_gr_r1i1p1f1_EC-Earth3-Veg:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.hurs.gr.v20211207
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20211207
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20211207
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tasmax.gr.v20211207
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Emon.vegFrac.gr.v20211207

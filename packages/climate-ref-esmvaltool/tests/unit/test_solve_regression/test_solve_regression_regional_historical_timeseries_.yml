@@ -431,11 +431,8 @@ cmip6_gn_r1i1p1f1_NESM3:
   - CMIP6.CMIP.NUIST.NESM3.historical.r1i1p1f1.Amon.tas.gn.v20190630
 cmip6_gn_r1i1p1f1_NorCPM1:
   cmip6:
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.pr.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.pr.gn.v20200724
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.psl.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.psl.gn.v20200724
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.tas.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.tas.gn.v20200724
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.fx.areacella.gn.v20200724
 cmip6_gn_r1i1p1f1_NorESM2-LM:
@@ -1156,9 +1153,7 @@ cmip6_gr1_r1i1p1f1_INM-CM5-0:
 cmip6_gr1_r1i1p1f1_KIOST-ESM:
   cmip6:
   - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.pr.gr1.v20210928
-  - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.psl.gr1.v20191106
   - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.psl.gr1.v20210601
-  - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.tas.gr1.v20191106
   - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.tas.gr1.v20210601
 cmip6_gr_r101i1p1f1_EC-Earth3:
   cmip6:
@@ -1596,11 +1591,8 @@ cmip6_gr_r1i1p1f1_EC-Earth3-CC:
 cmip6_gr_r1i1p1f1_EC-Earth3-Veg:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.pr.gr.v20211207
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.psl.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.psl.gr.v20211207
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20211207
 cmip6_gr_r1i1p1f1_EC-Earth3-Veg-LR:
   cmip6:

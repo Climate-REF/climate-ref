@@ -94,7 +94,6 @@ def make_data_requirement(
                 "branded_variable": (_BRANDED_VARIABLE_NAMES[variable_id],),
                 "experiment_id": ("amip", "historical", "hist-GHG"),
                 "frequency": "mon",
-                "realm": "atmos",
                 "region": "glb",
             }
         ),

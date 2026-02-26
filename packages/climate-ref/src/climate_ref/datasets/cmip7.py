@@ -55,7 +55,6 @@ def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
                 "region": getattr(ds, "region", "glb"),
                 "branding_suffix": getattr(ds, "branding_suffix", ""),
                 "branded_variable": getattr(ds, "branded_variable", ""),
-                "out_name": getattr(ds, "out_name", ""),
                 "version": getattr(ds, "version", ""),
                 # Additional mandatory attributes
                 "mip_era": getattr(ds, "mip_era", "CMIP7"),

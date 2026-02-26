@@ -1,7 +1,7 @@
 """
-Extract CMIP6-to-CMIP7 variable mappings from the CMIP7 Data Request (DReq).
+Extract CMIP6-to-CMIP7 variable mappings from a variable mapping file exported from the CMIP7 Data Request.
 
-Downloads the DReq release export JSON from GitHub and extracts a subset
+Downloads a JSON file from GitHub and extracts a subset
 containing only the variables used by Climate REF diagnostic providers.
 The output is written to the climate-ref-core package data directory.
 
@@ -9,12 +9,40 @@ Usage
 -----
     uv run python scripts/extract-data-request-mappings.py
 
-We are advised not to interact with the data request JSON directly,
-but in this case it's simpler to filter and extract directly without depending on the DReq software.
+The data request variable file contains entries like the following,
+keyed by CMIP6 compound name (e.g. "Amon.tas"):
+
+"Amon.tasmax": {
+    "frequency": "mon",
+    "modeling_realm": "atmos",
+    "standard_name": "air_temperature",
+    "units": "K",
+    "cell_methods": "area: mean time: maximum within days time: mean over days",
+    "cell_measures": "area: areacella",
+    "long_name": "Daily Maximum Near-Surface Air Temperature",
+    "comment": "monthly mean of the daily-maximum near-surface air temperature.",
+    "processing_note": "...",
+    "dimensions": "longitude latitude time4 height2m",
+    "out_name": "tas",
+    "type": "real",
+    "positive": "",
+    "spatial_shape": "XY-na",
+    "temporal_shape": "monthly-mean-daily-stat",
+    "cmip6_table": "Amon",
+    "physical_parameter_name": "tasmax",
+    "variableRootDD": "tas",
+    "branding_label": "tmaxavg-h2m-hxy-u",
+    "branded_variable_name": "tas_tmaxavg-h2m-hxy-u",
+    "region": "glb",
+    "cmip6_compound_name": "Amon.tasmax",
+    "cmip7_compound_name": "atmos.tas.tmaxavg-h2m-hxy-u.mon.glb",
+    "uid": "bab942a8-e5dd-11e5-8482-ac72891c3257"
+},
 
 References
 ----------
-- CMIP7 Data Request Content: https://github.com/CMIP-Data-Request/CMIP7_DReq_Content
+ - CMIP7 Data Request Software: https://github.com/CMIP-Data-Request/CMIP7_DReq_Software
+
 """
 
 from __future__ import annotations
@@ -31,7 +59,7 @@ from climate_ref_core.cmip6_to_cmip7 import DReqVariableMapping
 app = typer.Typer(help="Extract CMIP6-to-CMIP7 variable mappings from the CMIP7 Data Request.")
 
 DATA_REQUEST_VERSION = "v1.2.2.3"
-DATA_REQUEST_URL = f"https://github.com/CMIP-Data-Request/CMIP7_DReq_Content/raw/refs/tags/{DATA_REQUEST_VERSION}/airtable_export/dreq_release_export.json"
+DATA_REQUEST_URL = f"https://raw.githubusercontent.com/CMIP-Data-Request/CMIP7_DReq_Software/refs/heads/main/scripts/examples/variables_{DATA_REQUEST_VERSION}_cmip6names.json"
 
 DEFAULT_OUTPUT_PATH = (
     pathlib.Path(__file__).resolve().parent.parent
@@ -118,10 +146,7 @@ def download_dreq() -> dict:
     _download_timeout = 60
     with urllib.request.urlopen(DATA_REQUEST_URL, timeout=_download_timeout) as resp:  # noqa: S310
         data = json.loads(resp.read())
-    # The top-level key is the version string
-    version_key = next(iter(data.keys()))
-    typer.echo(f"Version: {typer.style(version_key, fg=typer.colors.CYAN, bold=True)}")
-    return data[version_key]
+    return data
 
 
 def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
@@ -131,30 +156,16 @@ def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
     Returns a dict keyed by CMIP6 compound name (e.g. ``"Amon.tas"``).
     Raises on duplicate compound names.
     """
-    variables = dreq["Variables"]["records"]
+    variables = dreq["Compound Name"]
 
     mappings: dict[str, DReqVariableMapping] = {}
 
     for _rec_id, rec in variables.items():
-        cmip6_cn = rec.get("CMIP6 Compound Name", "")
-        if not cmip6_cn or "." not in cmip6_cn:
-            continue
-
-        branded = rec.get("Branded Variable Name", "")
-        cmip7_cn = rec.get("CMIP7 Compound Name", "")
-        region = rec.get("Region", "glb")
-
-        # Parse branded variable name -> out_name + branding_suffix
-        parts = branded.split("_", 1)
-        out_name = parts[0] if parts else ""
-        branding_suffix = parts[1] if len(parts) > 1 else ""
+        cmip6_cn = rec["cmip6_compound_name"]
+        branded = rec["branded_variable_name"]
+        branding_suffix = rec["branding_label"]
 
         # Parse and validate branding suffix components (format: temporal-vertical-horizontal-area)
-        if not branding_suffix:
-            raise ValueError(
-                f"Missing branding suffix for record {_rec_id!r} "
-                f"(CMIP6 Compound Name: {cmip6_cn!r}, Branded Variable Name: {branded!r})"
-            )
         suffix_parts = branding_suffix.split("-")
         _expected_suffix_parts = 4
         if len(suffix_parts) != _expected_suffix_parts or any(not p for p in suffix_parts):
@@ -167,27 +178,22 @@ def extract_mappings(dreq: dict) -> dict[str, DReqVariableMapping]:
             )
         temporal_label, vertical_label, horizontal_label, area_label = suffix_parts
 
-        # Resolve realm from CMIP7 compound name (first component)
-        cmip7_parts = cmip7_cn.split(".")
-        realm = cmip7_parts[0] if cmip7_parts else ""
-
-        # Parse CMIP6 compound name
-        table_id, variable_id = cmip6_cn.split(".", 1)
+        table_id, _cmip6_variable_id = cmip6_cn.split(".", 1)
 
         entry = DReqVariableMapping(
             table_id=table_id,
-            variable_id=variable_id,
+            variable_id=rec["variableRootDD"],
             cmip6_compound_name=cmip6_cn,
-            cmip7_compound_name=cmip7_cn,
+            cmip7_compound_name=rec["cmip7_compound_name"],
             branded_variable=branded,
-            out_name=out_name,
             branding_suffix=branding_suffix,
             temporal_label=temporal_label,
             vertical_label=vertical_label,
             horizontal_label=horizontal_label,
             area_label=area_label,
-            realm=realm,
-            region=region,
+            realm=rec["modeling_realm"],
+            region=rec["region"],
+            frequency=rec["frequency"],
         )
 
         # Check if a duplicate has been seen
@@ -220,7 +226,7 @@ def print_summary(mappings: dict[str, DReqVariableMapping]) -> None:
         by_variable_id[v.variable_id].append(cn)
 
     all_overlaps = {vid: cns for vid, cns in by_variable_id.items() if len(cns) > 1}
-    detail_fields = ("out_name", "branding_suffix", "realm", "region")
+    detail_fields = ("variable_id", "branding_suffix", "realm", "region")
 
     # Only show overlaps where at least one field varies across tables
     varying_overlaps = {}

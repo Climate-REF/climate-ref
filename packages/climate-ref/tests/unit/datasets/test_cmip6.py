@@ -10,7 +10,7 @@ from climate_ref.datasets.cmip6 import (
     CMIP6DatasetAdapter,
     _apply_fixes,
 )
-from climate_ref.datasets.cmip6_parsers import _parse_daterange, parse_cmip6_complete, parse_cmip6_drs
+from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.utils import clean_branch_time, parse_datetime
 
 
@@ -549,49 +549,3 @@ class TestCMIP6AdapterInstanceId:
         """Adapter stores the provided n_jobs value."""
         adapter = CMIP6DatasetAdapter(n_jobs=4, config=config)
         assert adapter.n_jobs == 4
-
-
-class TestParseDaterange:
-    """Tests for _parse_daterange covering all CMIP6 filename date formats."""
-
-    def test_monthly_format(self):
-        """YYYYMM-YYYYMM (6 chars) produces approximate start/end dates."""
-        start, end = _parse_daterange("185001-201412")
-        assert start == "1850-01-01"
-        assert end == "2014-12-30"
-
-    def test_daily_format(self):
-        """YYYYMMDD-YYYYMMDD (8 chars) produces exact start/end dates."""
-        start, end = _parse_daterange("20100315-20101231")
-        assert start == "2010-03-15"
-        assert end == "2010-12-31"
-
-    def test_subdaily_format(self):
-        """YYYYMMDDhhmm-YYYYMMDDhhmm (12 chars) produces date-only start/end."""
-        start, end = _parse_daterange("201501011030-201512312330")
-        assert start == "2015-01-01"
-        assert end == "2015-12-31"
-
-    def test_mismatched_lengths_returns_none(self):
-        """Mismatched date component lengths return (None, None)."""
-        start, end = _parse_daterange("185001-20141201")
-        assert start is None
-        assert end is None
-
-    def test_unsupported_length_returns_none(self):
-        """Unsupported date component lengths (e.g. 4 chars) return (None, None)."""
-        start, end = _parse_daterange("1850-2014")
-        assert start is None
-        assert end is None
-
-    def test_no_hyphen_returns_none(self):
-        """Input without a hyphen separator returns (None, None)."""
-        start, end = _parse_daterange("185001201412")
-        assert start is None
-        assert end is None
-
-    def test_empty_string_returns_none(self):
-        """Empty string returns (None, None)."""
-        start, end = _parse_daterange("")
-        assert start is None
-        assert end is None

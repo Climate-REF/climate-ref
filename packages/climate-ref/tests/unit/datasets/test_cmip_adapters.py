@@ -1,90 +1,20 @@
-"""Shared finalisation tests parameterised over CMIP6 and CMIP7 adapter classes.
+"""Shared unit tests parameterised over CMIP6 and CMIP7 adapter classes.
 
-Tests the FinaliseableDatasetAdapterMixin behaviour that is identical
-regardless of which concrete adapter (CMIP6 / CMIP7) is used.
+Tests the FinaliseableDatasetAdapterMixin behaviour and common adapter
+patterns that are identical regardless of which concrete adapter
+(CMIP6 / CMIP7) is used.
 """
 
 from __future__ import annotations
 
-import dataclasses
-from typing import Any
 from unittest.mock import patch
 
 import pandas as pd
-import pytest
 
 from climate_ref.database import Database
-from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 
 
-@dataclasses.dataclass(frozen=True)
-class AdapterTestConfig:
-    """Adapter-specific values needed by the parameterised finalisation tests."""
-
-    adapter_cls: type
-    complete_parser_patch_path: str
-    default_instance_id: str
-    default_source_id: str
-    default_experiment_id: str
-    successful_parsed_result: dict[str, Any]
-    metadata_checks: dict[str, Any]
-
-
-ADAPTER_CONFIGS = {
-    "cmip6": AdapterTestConfig(
-        adapter_cls=CMIP6DatasetAdapter,
-        complete_parser_patch_path="climate_ref.datasets.cmip6.parse_cmip6_complete",
-        default_instance_id="CMIP6.test.inst.model.exp.r1i1p1f1.Amon.tas.gn.v1",
-        default_source_id="model",
-        default_experiment_id="exp",
-        successful_parsed_result={
-            "frequency": "mon",
-            "grid": "native atmosphere grid",
-            "realm": "atmos",
-            "branch_method": "standard",
-            "start_time": "2000-01-01",
-            "end_time": "2000-12-30",
-        },
-        metadata_checks={
-            "frequency": "mon",
-            "grid": "native atmosphere grid",
-            "realm": "atmos",
-            "branch_method": "standard",
-        },
-    ),
-    "cmip7": AdapterTestConfig(
-        adapter_cls=CMIP7DatasetAdapter,
-        complete_parser_patch_path="climate_ref.datasets.cmip7.parse_cmip7_complete",
-        default_instance_id="CMIP7.CMIP.NCAR.CESM3.hist.r1.glb.mon.tas.tavg-h2m-hxy-u.gn.v1",
-        default_source_id="CESM3",
-        default_experiment_id="hist",
-        successful_parsed_result={
-            "frequency": "mon",
-            "realm": "atmos",
-            "nominal_resolution": "100 km",
-            "standard_name": "air_temperature",
-            "long_name": "Near-Surface Air Temperature",
-            "units": "K",
-            "start_time": "2000-01-01",
-            "end_time": "2000-12-30",
-        },
-        metadata_checks={
-            "realm": "atmos",
-            "nominal_resolution": "100 km",
-            "standard_name": "air_temperature",
-        },
-    ),
-}
-
-
-@pytest.fixture(params=list(ADAPTER_CONFIGS.keys()))
-def adapter_config(request) -> AdapterTestConfig:
-    """Parameterised fixture providing adapter-specific test configuration."""
-    return ADAPTER_CONFIGS[request.param]
-
-
-def _make_unfinalised_df(cfg: AdapterTestConfig, paths: list) -> pd.DataFrame:
+def _make_unfinalised_df(cfg, paths: list) -> pd.DataFrame:
     """Build a minimal unfinalised DataFrame matching adapter column expectations."""
     adapter = cfg.adapter_cls()
     n = len(paths)
@@ -96,6 +26,55 @@ def _make_unfinalised_df(cfg: AdapterTestConfig, paths: list) -> pd.DataFrame:
     data["source_id"] = [cfg.default_source_id] * n
     data["experiment_id"] = [cfg.default_experiment_id] * n
     return pd.DataFrame(data)
+
+
+class TestAdapterBasics:
+    """Basic adapter behaviour, parameterised over adapter types."""
+
+    def test_catalog_empty(self, db, adapter_config):
+        """Empty database returns an empty catalog."""
+        adapter = adapter_config.adapter_cls()
+        df = adapter.load_catalog(db)
+        assert df.empty
+
+    def test_adapter_default_config(self, adapter_config):
+        """Adapter uses default config and n_jobs=1 when not specified."""
+        adapter = adapter_config.adapter_cls()
+        assert adapter.n_jobs == 1
+        assert adapter.config is not None
+
+    def test_adapter_custom_n_jobs(self, config, adapter_config):
+        """Adapter stores the provided n_jobs value."""
+        adapter = adapter_config.adapter_cls(n_jobs=4, config=config)
+        assert adapter.n_jobs == 4
+
+
+class TestParserDispatch:
+    """Parser dispatch tests, parameterised over adapter types."""
+
+    def test_returns_complete_parser(self, config, adapter_config):
+        """get_parsing_function() returns the complete parser."""
+        setattr(config, adapter_config.parser_config_attr, "complete")
+        adapter = adapter_config.adapter_cls(config=config)
+        assert adapter.get_parsing_function() is adapter_config.complete_parser
+
+    def test_returns_drs_parser(self, config, adapter_config):
+        """get_parsing_function() returns the DRS parser."""
+        setattr(config, adapter_config.parser_config_attr, "drs")
+        adapter = adapter_config.adapter_cls(config=config)
+        assert adapter.get_parsing_function() is adapter_config.drs_parser
+
+    def test_parse_exception_complete(self, adapter_config):
+        """Complete parser returns INVALID_ASSET for a missing file."""
+        result = adapter_config.complete_parser("missing_file")
+        assert result["INVALID_ASSET"] == "missing_file"
+        assert "TRACEBACK" in result
+
+    def test_parse_exception_drs(self, adapter_config):
+        """DRS parser returns INVALID_ASSET for a missing file."""
+        result = adapter_config.drs_parser("missing_file")
+        assert result["INVALID_ASSET"] == "missing_file"
+        assert "TRACEBACK" in result
 
 
 class TestFinalisationEdgeCases:

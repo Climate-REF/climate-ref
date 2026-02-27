@@ -8,6 +8,7 @@ import xarray as xr
 from climate_ref.datasets.netcdf_utils import (
     read_global_attrs,
     read_time_bounds,
+    read_time_metadata,
     read_variable_attrs,
     read_vertical_levels,
 )
@@ -270,3 +271,42 @@ class TestReadTimeBounds:
 
         assert nc_start == xr_start, f"Start mismatch: netCDF4={nc_start!r}, xarray={xr_start!r}"
         assert nc_end == xr_end, f"End mismatch: netCDF4={nc_end!r}, xarray={xr_end!r}"
+
+
+class TestReadTimeMetadata:
+    def test_reads_units_and_calendar(self, sample_nc_file):
+        with netCDF4.Dataset(sample_nc_file, "r") as ds:
+            units, calendar = read_time_metadata(ds)
+
+        assert units == "days since 1850-01-01"
+        assert calendar == "standard"
+
+    def test_no_time_variable_returns_none(self, no_time_nc_file):
+        with netCDF4.Dataset(no_time_nc_file, "r") as ds:
+            units, calendar = read_time_metadata(ds)
+
+        assert units is None
+        assert calendar is None
+
+    def test_no_calendar_attr_defaults_to_standard(self, no_time_units_nc_file):
+        """When time variable has no calendar attribute, defaults to 'standard'."""
+        with netCDF4.Dataset(no_time_units_nc_file, "r") as ds:
+            units, calendar = read_time_metadata(ds)
+
+        assert units is None
+        assert calendar == "standard"
+
+    def test_non_standard_calendar(self, tmp_path):
+        filepath = tmp_path / "noleap_meta.nc"
+        with netCDF4.Dataset(filepath, "w") as ds:
+            ds.createDimension("time", 2)
+            time_var = ds.createVariable("time", "f8", ("time",))
+            time_var.units = "days since 1950-01-01"
+            time_var.calendar = "365_day"
+            time_var[:] = [0.0, 365.0]
+
+        with netCDF4.Dataset(filepath, "r") as ds:
+            units, calendar = read_time_metadata(ds)
+
+        assert units == "days since 1950-01-01"
+        assert calendar == "365_day"

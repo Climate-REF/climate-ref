@@ -50,8 +50,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             "standard_name",
             "long_name",
             "units",
-            "time_units",
-            "calendar",
         }
     )
 
@@ -88,9 +86,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
-        # # Time encoding metadata
-        # "time_units",
-        # "calendar",
         # Finalisation status
         "finalised",
         # Unique identifier

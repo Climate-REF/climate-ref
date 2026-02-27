@@ -121,3 +121,26 @@ def read_time_bounds(ds: netCDF4.Dataset) -> tuple[str | None, str | None]:
 
     times = cftime.num2date([time_var[0], time_var[-1]], units, calendar)
     return str(times[0]), str(times[1])
+
+
+def read_time_metadata(ds: netCDF4.Dataset) -> tuple[str | None, str | None]:
+    """
+    Read time encoding metadata from a netCDF4 Dataset.
+
+    Parameters
+    ----------
+    ds
+        Open netCDF4 Dataset
+
+    Returns
+    -------
+    :
+        Tuple of (time_units, calendar). Returns (None, None) if no time variable.
+    """
+    if "time" not in ds.variables:
+        return None, None
+
+    time_var = ds.variables["time"]
+    units = getattr(time_var, "units", None)
+    calendar = getattr(time_var, "calendar", "standard")
+    return units, calendar

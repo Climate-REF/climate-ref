@@ -65,8 +65,6 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             "standard_name",
             "sub_experiment",
             "sub_experiment_id",
-            "time_units",
-            "calendar",
             "units",
             "vertical_levels",
         }
@@ -105,8 +103,6 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
-        "time_units",
-        "calendar",
         "finalised",
         slug_column,
     )

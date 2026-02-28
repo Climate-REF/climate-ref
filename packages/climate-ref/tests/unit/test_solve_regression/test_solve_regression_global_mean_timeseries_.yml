@@ -433,15 +433,9 @@ cmip6_abrupt-4xCO2_CESM2-FV2_rsut_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-FV2.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20200403
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
-cmip6_abrupt-4xCO2_CESM2-FV2_rsut_r1i2p2f1:
-  cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
 cmip6_abrupt-4xCO2_CESM2-FV2_tas_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-FV2.abrupt-4xCO2.r1i1p1f1.Amon.tas.gn.v20200403
-  - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
-cmip6_abrupt-4xCO2_CESM2-FV2_tas_r1i2p2f1:
-  cmip6:
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
 cmip6_abrupt-4xCO2_CESM2-WACCM-FV2_rsut_r1i1p1f1:
   cmip6:
@@ -1578,7 +1572,6 @@ cmip6_historical_EC-Earth3-Veg_rsut_r1i1p1f1:
 cmip6_historical_EC-Earth3-Veg_tas_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20200225
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Amon.tas.gr.v20211207
 cmip6_historical_EC-Earth3_rsut_r1i1p1f1:
   cmip6:
@@ -1731,7 +1724,6 @@ cmip6_historical_KIOST-ESM_rsut_r1i1p1f1:
   - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.rsut.gr1.v20210601
 cmip6_historical_KIOST-ESM_tas_r1i1p1f1:
   cmip6:
-  - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.tas.gr1.v20191106
   - CMIP6.CMIP.KIOST.KIOST-ESM.historical.r1i1p1f1.Amon.tas.gr1.v20210601
 cmip6_historical_MCM-UA-1-0_tas_r1i1p1f1:
   cmip6:
@@ -1807,7 +1799,6 @@ cmip6_historical_NorCPM1_rsut_r1i1p1f1:
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.fx.areacella.gn.v20200724
 cmip6_historical_NorCPM1_tas_r1i1p1f1:
   cmip6:
-  - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.tas.gn.v20190914
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Amon.tas.gn.v20200724
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.fx.areacella.gn.v20200724
 cmip6_historical_NorESM2-LM_rsut_r1i1p1f1:
@@ -2576,10 +2567,6 @@ cmip6_ssp126_EC-Earth3-Veg-LR_tas_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.1pctCO2.r1i1p1f1.fx.areacella.gr.v20220428
   - CMIP6.ScenarioMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.ssp126.r1i1p1f1.Amon.tas.gr.v20201201
-cmip6_ssp126_EC-Earth3-Veg_tas_r1i1p1f1:
-  cmip6:
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
-  - CMIP6.ScenarioMIP.EC-Earth-Consortium.EC-Earth3-Veg.ssp126.r1i1p1f1.Amon.tas.gr.v20200225
 cmip6_ssp126_EC-Earth3_tas_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3.historical.r1i1p1f1.fx.areacella.gr.v20210324
@@ -2621,7 +2608,6 @@ cmip6_ssp126_INM-CM5-0_tas_r1i1p1f1:
 cmip6_ssp126_IPSL-CM5A2-INCA_tas_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.1pctCO2.r1i1p1f1.fx.areacella.gr.v20201218
-  - CMIP6.ScenarioMIP.IPSL.IPSL-CM5A2-INCA.ssp126.r1i1p1f1.Amon.tas.gr.v20201218
   - CMIP6.ScenarioMIP.IPSL.IPSL-CM5A2-INCA.ssp126.r1i1p1f1.Amon.tas.gr.v20220105
 cmip6_ssp126_IPSL-CM6A-LR_tas_r1i1p1f1:
   cmip6:
@@ -2632,7 +2618,6 @@ cmip6_ssp126_KACE-1-0-G_tas_r1i1p1f1:
   - CMIP6.ScenarioMIP.NIMS-KMA.KACE-1-0-G.ssp126.r1i1p1f1.Amon.tas.gr.v20191007
 cmip6_ssp126_KIOST-ESM_tas_r1i1p1f1:
   cmip6:
-  - CMIP6.ScenarioMIP.KIOST.KIOST-ESM.ssp126.r1i1p1f1.Amon.tas.gr1.v20191106
   - CMIP6.ScenarioMIP.KIOST.KIOST-ESM.ssp126.r1i1p1f1.Amon.tas.gr1.v20210601
 cmip6_ssp126_MCM-UA-1-0_tas_r1i1p1f2:
   cmip6:
@@ -2799,7 +2784,6 @@ cmip6_ssp245_KACE-1-0-G_tas_r1i1p1f1:
   - CMIP6.ScenarioMIP.NIMS-KMA.KACE-1-0-G.ssp245.r1i1p1f1.Amon.tas.gr.v20191217
 cmip6_ssp245_KIOST-ESM_tas_r1i1p1f1:
   cmip6:
-  - CMIP6.ScenarioMIP.KIOST.KIOST-ESM.ssp245.r1i1p1f1.Amon.tas.gr1.v20191106
   - CMIP6.ScenarioMIP.KIOST.KIOST-ESM.ssp245.r1i1p1f1.Amon.tas.gr1.v20210601
 cmip6_ssp245_MCM-UA-1-0_tas_r1i1p1f2:
   cmip6:
@@ -3078,7 +3062,6 @@ cmip6_ssp585_EC-Earth3-Veg-LR_tas_r1i1p1f1:
 cmip6_ssp585_EC-Earth3-Veg_tas_r1i1p1f1:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
-  - CMIP6.ScenarioMIP.EC-Earth-Consortium.EC-Earth3-Veg.ssp585.r1i1p1f1.Amon.tas.gr.v20200225
   - CMIP6.ScenarioMIP.EC-Earth-Consortium.EC-Earth3-Veg.ssp585.r1i1p1f1.Amon.tas.gr.v20221112
 cmip6_ssp585_EC-Earth3_tas_r1i1p1f1:
   cmip6:
@@ -3127,7 +3110,6 @@ cmip6_ssp585_KACE-1-0-G_tas_r1i1p1f1:
   - CMIP6.ScenarioMIP.NIMS-KMA.KACE-1-0-G.ssp585.r1i1p1f1.Amon.tas.gr.v20190920
 cmip6_ssp585_KIOST-ESM_tas_r1i1p1f1:
   cmip6:
-  - CMIP6.ScenarioMIP.KIOST.KIOST-ESM.ssp585.r1i1p1f1.Amon.tas.gr1.v20191106
   - CMIP6.ScenarioMIP.KIOST.KIOST-ESM.ssp585.r1i1p1f1.Amon.tas.gr1.v20210601
 cmip6_ssp585_MCM-UA-1-0_tas_r1i1p1f2:
   cmip6:
@@ -3136,8 +3118,6 @@ cmip6_ssp585_MCM-UA-1-0_tas_r1i1p1f2:
 cmip6_ssp585_MIROC-ES2L_tas_r1i1p1f2:
   cmip6:
   - CMIP6.C4MIP CDRMIP.MIROC.MIROC-ES2L.esm-1pct-brch-1000PgC.r1i1p1f2.fx.areacella.gn.v20200622
-  - CMIP6.CMIP.MIROC.MIROC-ES2L.1pctCO2.r1i1p1f2.fx.areacella.gn.v20190823
-  - CMIP6.ScenarioMIP.MIROC.MIROC-ES2L.ssp585.r1i1p1f2.Amon.tas.gn.v20190823
   - CMIP6.ScenarioMIP.MIROC.MIROC-ES2L.ssp585.r1i1p1f2.Amon.tas.gn.v20220314
 cmip6_ssp585_MIROC6_tas_r1i1p1f1:
   cmip6:

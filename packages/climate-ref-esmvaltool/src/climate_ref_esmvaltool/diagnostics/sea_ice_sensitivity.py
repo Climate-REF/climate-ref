@@ -82,7 +82,6 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "seaIce",
                         },
                     ),
                     FacetFilter(
@@ -91,7 +90,6 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         },
                     ),
                 ),

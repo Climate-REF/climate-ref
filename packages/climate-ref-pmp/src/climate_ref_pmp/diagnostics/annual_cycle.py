@@ -94,7 +94,6 @@ def make_data_requirement(
                 "branded_variable": (_BRANDED_VARIABLE_NAMES[variable_id],),
                 "experiment_id": ("amip", "historical", "hist-GHG"),
                 "frequency": "mon",
-                "realm": "atmos",
                 "region": "glb",
             }
         ),
@@ -320,7 +319,7 @@ class AnnualCycle(CommandLineDiagnostic):
     test_data_spec = TestDataSpecification(
         test_cases=(
             TestCase(
-                name="cmip6",
+                name="cmip6-ts",
                 description="Test with CMIP6 ts data and ERA-5 climatology",
                 requests=(
                     RegistryRequest(
@@ -342,7 +341,30 @@ class AnnualCycle(CommandLineDiagnostic):
                 ),
             ),
             TestCase(
-                name="cmip7",
+                name="cmip6-pr",
+                description="Test with CMIP6 pr data and GPCP-Monthly-3-2 climatology. "
+                "Produces double ITCZ pattern in the diagnostics.",
+                requests=(
+                    RegistryRequest(
+                        slug="annual-cycle-gpcp-pr",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "pr", "source_id": "GPCP-Monthly-3-2"},
+                    ),
+                    CMIP6Request(
+                        slug="annual-cycle-cmip6-pr",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "pr",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7-ts",
                 description="CMIP7 test case with converted historical ts from ACCESS-ESM1-5",
                 requests=(
                     RegistryRequest(

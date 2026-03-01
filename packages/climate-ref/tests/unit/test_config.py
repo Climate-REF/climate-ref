@@ -159,6 +159,7 @@ filename = "sqlite://climate_ref.db"
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
+            "cmip7_parser": "complete",
             "diagnostic_providers": [
                 {"provider": "climate_ref_example:provider"},
             ],
@@ -170,6 +171,7 @@ filename = "sqlite://climate_ref.db"
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
+            "cmip7_parser": "complete",
             "diagnostic_providers": [
                 {
                     "provider": "climate_ref_example:provider",

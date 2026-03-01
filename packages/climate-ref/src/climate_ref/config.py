@@ -414,6 +414,16 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
+    cmip7_parser: Literal["drs", "complete"] = env_field("CMIP7_PARSER", default="complete")
+    """
+    Parser to use for CMIP7 datasets
+
+    This can be either `drs` or `complete`.
+
+    - `drs`: Use the DRS parser, which parses the dataset based on the DRS naming conventions.
+    - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
+    """
+
     ignore_datasets_file: Path = field(factory=_get_default_ignore_datasets_file)
     """
     Path to the file containing the ignore datasets

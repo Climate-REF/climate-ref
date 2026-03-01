@@ -37,6 +37,32 @@ def read_global_attrs(ds: netCDF4.Dataset, keys: list[str] | tuple[str, ...]) ->
     return {key: getattr(ds, key, None) for key in keys}
 
 
+def read_mandatory_attr(ds: netCDF4.Dataset, key: str) -> Any:
+    """
+    Read a mandatory global attribute from a netCDF4 Dataset, ensuring it is present and non-empty.
+
+    Parameters
+    ----------
+    ds
+        Open netCDF4 Dataset
+    key
+        Attribute name to read
+
+    Returns
+    -------
+    :
+        Value of the attribute
+
+    Raises
+    ------
+    ValueError
+        If the attribute is missing or empty
+    """
+    if not hasattr(ds, key) or getattr(ds, key) in (None, ""):
+        raise ValueError(f"Missing mandatory attribute: {key}")
+    return getattr(ds, key)
+
+
 def read_variable_attrs(
     ds: netCDF4.Dataset,
     variable_id: str,
@@ -121,3 +147,26 @@ def read_time_bounds(ds: netCDF4.Dataset) -> tuple[str | None, str | None]:
 
     times = cftime.num2date([time_var[0], time_var[-1]], units, calendar)
     return str(times[0]), str(times[1])
+
+
+def read_time_metadata(ds: netCDF4.Dataset) -> tuple[str | None, str | None]:
+    """
+    Read time encoding metadata from a netCDF4 Dataset.
+
+    Parameters
+    ----------
+    ds
+        Open netCDF4 Dataset
+
+    Returns
+    -------
+    :
+        Tuple of (time_units, calendar). Returns (None, None) if no time variable.
+    """
+    if "time" not in ds.variables:
+        return None, None
+
+    time_var = ds.variables["time"]
+    units = getattr(time_var, "units", None)
+    calendar = getattr(time_var, "calendar", "standard")
+    return units, calendar

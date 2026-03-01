@@ -78,7 +78,6 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         },
                     ),
                     FacetFilter(
@@ -87,7 +86,6 @@ class ENSOBasicClimatology(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "ocean",
                         },
                     ),
                 ),
@@ -336,7 +334,6 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "ocean",
                         },
                     ),
                 ),

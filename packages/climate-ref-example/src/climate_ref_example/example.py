@@ -152,8 +152,8 @@ class GlobalMeanTimeseries(Diagnostic):
                 filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
                 group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
                 constraints=(
-                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                     RequireContiguousTimerange(group_by=("instance_id",)),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
             ),
         ),
@@ -164,8 +164,8 @@ class GlobalMeanTimeseries(Diagnostic):
                 filters=(FacetFilter(facets={"variable_id": ("tas", "rsut")}),),
                 group_by=("source_id", "variable_id", "experiment_id", "variant_label"),
                 constraints=(
-                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                     RequireContiguousTimerange(group_by=("instance_id",)),
+                    AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
         ),

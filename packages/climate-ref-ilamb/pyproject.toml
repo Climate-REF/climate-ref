@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-ilamb"
-version = "0.10.0"
+version = "0.11.1"
 description = "ILAMB diagnostic provider for the Rapid Evaluation Framework"
 readme = "README.md"
 authors = [

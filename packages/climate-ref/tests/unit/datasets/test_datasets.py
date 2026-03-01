@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import numpy as np
 import pandas as pd
 import pytest
 
@@ -7,7 +8,7 @@ from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets import IngestionStats, get_dataset_adapter, ingest_datasets
 from climate_ref.datasets import base as base_module
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, _is_na
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref_core.datasets import SourceDatasetType
@@ -378,6 +379,97 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     assert dataset.grid_label == "gr2"
 
 
+class TestFilterLatestVersions:
+    """Tests for DatasetAdapter.filter_latest_versions."""
+
+    def test_keeps_latest_version_per_group(self):
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP"] * 4,
+                "institution_id": ["NCAR"] * 4,
+                "source_id": ["CESM2"] * 4,
+                "experiment_id": ["historical"] * 4,
+                "member_id": ["r1i1p1f1"] * 4,
+                "table_id": ["Amon"] * 4,
+                "variable_id": ["tas", "tas", "pr", "pr"],
+                "grid_label": ["gn"] * 4,
+                "version": ["v20200101", "v20210601", "v20200101", "v20210601"],
+                "instance_id": [
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v20200101",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v20210601",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20200101",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.pr.gn.v20210601",
+                ],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+
+        assert len(result) == 2
+        assert set(result["version"]) == {"v20210601"}
+        assert set(result["variable_id"]) == {"tas", "pr"}
+
+    def test_keeps_all_when_no_duplicates(self):
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP", "CMIP"],
+                "institution_id": ["NCAR", "NCAR"],
+                "source_id": ["CESM2", "CESM2"],
+                "experiment_id": ["historical", "historical"],
+                "member_id": ["r1i1p1f1", "r1i1p1f1"],
+                "table_id": ["Amon", "Amon"],
+                "variable_id": ["tas", "pr"],
+                "grid_label": ["gn", "gn"],
+                "version": ["v20210601", "v20210601"],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+        assert len(result) == 2
+
+    def test_handles_empty_catalog(self):
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame()
+
+        result = adapter.filter_latest_versions(catalog)
+        assert result.empty
+
+    def test_handles_multiple_files_per_dataset(self):
+        """Multiple files (rows) for the same dataset version should all be kept."""
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP"] * 4,
+                "institution_id": ["NCAR"] * 4,
+                "source_id": ["CESM2"] * 4,
+                "experiment_id": ["historical"] * 4,
+                "member_id": ["r1i1p1f1"] * 4,
+                "table_id": ["Amon"] * 4,
+                "variable_id": ["tas"] * 4,
+                "grid_label": ["gn"] * 4,
+                "version": ["v20200101", "v20200101", "v20210601", "v20210601"],
+                "path": ["old_1.nc", "old_2.nc", "new_1.nc", "new_2.nc"],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+
+        assert len(result) == 2
+        assert set(result["path"]) == {"new_1.nc", "new_2.nc"}
+        assert set(result["version"]) == {"v20210601"}
+
+    def test_no_dataset_id_metadata_returns_unfiltered(self):
+        """Adapters with empty dataset_id_metadata should return the catalog as-is."""
+        adapter = MockDatasetAdapter()
+        adapter.dataset_id_metadata = ()
+        catalog = pd.DataFrame({"version": ["v1", "v2"], "variable_id": ["tas", "tas"]})
+
+        result = adapter.filter_latest_versions(catalog)
+        assert len(result) == 2
+
+
 class TestIngestionStats:
     """Tests for IngestionStats dataclass."""
 
@@ -605,3 +697,286 @@ class TestIngestDatasets:
         assert stats2.datasets_unchanged == 0
         assert stats2.files_added == 1
         assert stats2.files_unchanged == 1
+
+
+def _mk_df_with_na(instance_id="CESM2.tas.gn", rows=None, finalised=False, na_columns=None):
+    """
+    Build a DataFrame that mimics DRS parser output with pd.NA for unfinalised columns.
+
+    Parameters
+    ----------
+    instance_id
+        Dataset slug
+    rows
+        List of dicts with file-level fields (path, start_time, end_time)
+    finalised
+        Value for the finalised column
+    na_columns
+        Columns to set to pd.NA (simulates DRS parser missing metadata).
+        If None, defaults to a representative set of finalisation-only columns.
+    """
+    rows = rows or []
+    if na_columns is None:
+        na_columns = ["realm", "grid", "units", "standard_name", "long_name"]
+
+    base = {
+        "instance_id": instance_id,
+        "source_id": "CESM2",
+        "variable_id": "tas",
+        "grid_label": "gn",
+        "finalised": finalised,
+    }
+    missing = set(CMIP6DatasetAdapter.dataset_specific_metadata) - set(base.keys())
+    for k in missing:
+        if k in na_columns:
+            base[k] = pd.NA
+        else:
+            base[k] = f"default_{k}"
+
+    return pd.DataFrame([{**base, **r} for r in rows])
+
+
+@pytest.fixture
+def test_db_with_finalised(monkeypatch):
+    """Like test_db but includes 'finalised' in the adapter metadata."""
+    monkeypatch.setattr(base_module, "validate_path", lambda p: p, raising=True)
+    adapter = CMIP6DatasetAdapter()
+    adapter.dataset_specific_metadata = (
+        "activity_id",
+        "experiment_id",
+        "institution_id",
+        "frequency",
+        "grid_label",
+        "source_id",
+        "table_id",
+        "variable_id",
+        "variant_label",
+        "member_id",
+        "version",
+        "instance_id",
+        "finalised",
+        "realm",
+        "grid",
+        "units",
+        "standard_name",
+        "long_name",
+    )
+    adapter.validate_data_catalog = lambda df, **kwargs: df
+
+    config = Config.default()
+    db = Database("sqlite:///:memory:")
+    db.migrate(config)
+    yield adapter, db
+    db.close()
+
+
+class TestReingestionWithNA:
+    """Tests for re-ingesting datasets when the catalog contains pd.NA values."""
+
+    def test_reingest_with_na_does_not_crash(self, test_db_with_finalised):
+        """Re-ingesting a dataset when defaults contain pd.NA must not raise TypeError."""
+        adapter, db = test_db_with_finalised
+
+        na_columns = ["realm", "grid", "units", "standard_name", "long_name"]
+        df = _mk_df_with_na(
+            na_columns=na_columns,
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+
+        # First ingest creates the dataset
+        with db.session.begin():
+            result1 = adapter.register_dataset(db, df)
+        assert result1.dataset_state == ModelState.CREATED
+
+        # Second ingest with same pd.NA values must not crash
+        with db.session.begin():
+            result2 = adapter.register_dataset(db, df)
+        # Dataset metadata has NA columns stripped so nothing changed
+        assert result2.files_unchanged == ["f1.nc"]
+
+    def test_reingest_na_does_not_overwrite_real_values(self, test_db_with_finalised):
+        """Re-ingesting with pd.NA must not overwrite previously-set real metadata."""
+        adapter, db = test_db_with_finalised
+
+        # First ingest with real metadata (simulates complete parser or finalisation)
+        df_complete = _mk_df_with_na(
+            na_columns=[],  # No NA columns - all populated
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+        df_complete.loc[:, "realm"] = "atmos"
+        df_complete.loc[:, "grid"] = "native"
+        df_complete.loc[:, "units"] = "K"
+
+        with db.session.begin():
+            adapter.register_dataset(db, df_complete)
+
+        # Re-ingest with DRS-style NA for those columns
+        df_drs = _mk_df_with_na(
+            na_columns=["realm", "grid", "units", "standard_name", "long_name"],
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+
+        with db.session.begin():
+            adapter.register_dataset(db, df_drs)
+
+        # Verify NA values did NOT overwrite the real metadata
+        dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
+        assert dataset.realm == "atmos", "NA should not overwrite real value"
+        assert dataset.grid == "native", "NA should not overwrite real value"
+        assert dataset.units == "K", "NA should not overwrite real value"
+
+    def test_reingest_preserves_finalised_true(self, test_db_with_finalised):
+        """DRS re-ingestion (finalised=False) must not downgrade an already-finalised dataset."""
+        adapter, db = test_db_with_finalised
+
+        # First ingest with finalised=True (simulates complete parser)
+        df_finalised = _mk_df_with_na(
+            finalised=True,
+            na_columns=[],
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+
+        with db.session.begin():
+            adapter.register_dataset(db, df_finalised)
+
+        # Re-ingest with DRS parser (finalised=False, NA metadata)
+        df_drs = _mk_df_with_na(
+            finalised=False,
+            na_columns=["realm", "grid", "units", "standard_name", "long_name"],
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+
+        with db.session.begin():
+            adapter.register_dataset(db, df_drs)
+
+        # Finalised must NOT be downgraded
+        dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
+        assert dataset.finalised is True, "DRS re-ingest must not downgrade finalised=True"
+
+    def test_first_drs_ingest_sets_finalised_false(self, test_db_with_finalised):
+        """First DRS ingest correctly sets finalised=False on a new dataset."""
+        adapter, db = test_db_with_finalised
+
+        df = _mk_df_with_na(
+            finalised=False,
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+
+        with db.session.begin():
+            result = adapter.register_dataset(db, df)
+        assert result.dataset_state == ModelState.CREATED
+
+        dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
+        assert dataset.finalised is False, "First DRS ingest should set finalised=False"
+
+    def test_reingest_adds_new_files_to_finalised_dataset(self, test_db_with_finalised):
+        """Re-ingesting a finalised dataset with new files adds them without regression."""
+        adapter, db = test_db_with_finalised
+
+        # First ingest as finalised with one file
+        df1 = _mk_df_with_na(
+            finalised=True,
+            na_columns=[],
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+            ],
+        )
+        df1.loc[:, "realm"] = "atmos"
+
+        with db.session.begin():
+            adapter.register_dataset(db, df1)
+
+        # Re-ingest with DRS (new file added, finalised=False, NA metadata)
+        df2 = _mk_df_with_na(
+            finalised=False,
+            na_columns=["realm", "grid", "units", "standard_name", "long_name"],
+            rows=[
+                {
+                    "path": "f1.nc",
+                    "start_time": pd.Timestamp("2001-01-01"),
+                    "end_time": pd.Timestamp("2001-12-31"),
+                },
+                {
+                    "path": "f2.nc",
+                    "start_time": pd.Timestamp("2002-01-01"),
+                    "end_time": pd.Timestamp("2002-12-31"),
+                },
+            ],
+        )
+
+        with db.session.begin():
+            result = adapter.register_dataset(db, df2)
+
+        # New file should be added
+        assert set(result.files_added) == {"f2.nc"}
+        assert result.files_unchanged == ["f1.nc"]
+
+        # Metadata should be preserved
+        dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
+        assert dataset.finalised is True
+        assert dataset.realm == "atmos"
+
+
+class TestIsNa:
+    """Tests for the _is_na helper."""
+
+    def test_pd_na(self):
+        assert _is_na(pd.NA) is True
+
+    def test_none(self):
+        assert _is_na(None) is True
+
+    def test_np_nan(self):
+        assert _is_na(np.nan) is True
+
+    def test_string(self):
+        assert _is_na("atmos") is False
+
+    def test_false(self):
+        assert _is_na(False) is False
+
+    def test_zero(self):
+        assert _is_na(0) is False
+
+    def test_empty_string(self):
+        assert _is_na("") is False

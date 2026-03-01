@@ -28,7 +28,6 @@ def get_cmip_data_requirements(
         "experiment_id": "historical",
         "frequency": "mon",
         "region": "glb",
-        "realm": "atmos",
     }
     if branded_variables is not None:
         cmip7_facets["branded_variable"] = branded_variables

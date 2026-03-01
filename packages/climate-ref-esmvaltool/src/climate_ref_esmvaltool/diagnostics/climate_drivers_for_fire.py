@@ -91,7 +91,6 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         }
                     ),
                     FacetFilter(
@@ -104,7 +103,6 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "land",
                         }
                     ),
                 ),

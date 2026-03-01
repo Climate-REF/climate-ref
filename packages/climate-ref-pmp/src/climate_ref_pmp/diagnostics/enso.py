@@ -201,7 +201,6 @@ class ENSO(CommandLineDiagnostic):
                     "branded_variable": tuple(_BRANDED_VARIABLE_NAMES[v] for v in self.model_variables),
                     "experiment_id": tuple(experiments),
                     "frequency": "mon",
-                    "realm": "atmos",
                     "region": "glb",
                 }
             )

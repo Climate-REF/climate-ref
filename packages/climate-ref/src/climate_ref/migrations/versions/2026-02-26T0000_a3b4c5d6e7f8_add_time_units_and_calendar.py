@@ -50,8 +50,8 @@ def upgrade() -> None:
 
     # Trigger re-finalisation of all datasets to populate the new columns
     # and re-serialise start_time/end_time as strings
-    op.execute("UPDATE dataset SET finalised=0 WHERE dataset_type='CMIP6'")
-    op.execute("UPDATE dataset SET finalised=0 WHERE dataset_type='CMIP7'")
+    op.execute("UPDATE dataset SET finalised=FALSE WHERE dataset_type='CMIP6'")
+    op.execute("UPDATE dataset SET finalised=FALSE WHERE dataset_type='CMIP7'")
 
     # ### end Alembic commands ###
 

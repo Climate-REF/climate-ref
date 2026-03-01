@@ -19,9 +19,8 @@ def provider_test_data_dir() -> Path:
     return Path(__file__).parent.parent / "test-data"
 
 
-xfail_diagnostics = [
-    "emp-gleamgpcp2.3",  # Missing sample data
-]
+xfail_diagnostics = []
+skipped_diagnostics = ["emp-gleamgpcp2.3"]
 
 
 diagnostics = [
@@ -30,6 +29,7 @@ diagnostics = [
         id=diagnostic.slug,
         marks=[
             *([pytest.mark.xfail(reason="Expected failure")] if diagnostic.slug in xfail_diagnostics else []),
+            *([pytest.mark.skip(reason="Problem test")] if diagnostic.slug in skipped_diagnostics else []),
         ],
     )
     for diagnostic in provider.diagnostics()

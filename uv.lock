@@ -861,7 +861,7 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },
-    { name = "ilamb3", specifier = ">=2025.9.9,<2025.12" },
+    { name = "ilamb3", specifier = ">=2026.2.19" },
     { name = "scipy", specifier = "<1.16" },
     { name = "xarray", specifier = "<2025.11" },
 ]
@@ -1718,7 +1718,7 @@ wheels = [
 
 [[package]]
 name = "ilamb3"
-version = "2025.9.9"
+version = "2026.2.19"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cartopy" },
@@ -1733,14 +1733,17 @@ dependencies = [
     { name = "pandas" },
     { name = "pint-xarray" },
     { name = "pooch" },
+    { name = "pyarrow" },
     { name = "pyyaml" },
     { name = "scipy" },
     { name = "statsmodels" },
+    { name = "tqdm" },
+    { name = "typer" },
     { name = "xarray" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/3a/92/4026b03878bc64cb46d4cf8f87fe66ab8472f7040a1c7b13f45c8c764a39/ilamb3-2025.9.9.tar.gz", hash = "sha256:fd0c3e55c322dbf0ad74ea82c26c10543e507cab64cd89c7a0b83aa894062987", size = 430926, upload-time = "2025-09-09T19:57:28.051Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/76/1b/1fbab0ecd53126c1771df7cef3574a52019eb8f24ea6e6e33033765259fb/ilamb3-2026.2.19.tar.gz", hash = "sha256:28c2aff287309c13932d300702819ddd799acb06ee3a989cc3f676ba6ad2f86b", size = 507980, upload-time = "2026-02-19T20:49:16.026Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a5/a4/b2e5838f73306f639ffe5c621f46f2ef1841206c5b9f88609875d5142446/ilamb3-2025.9.9-py3-none-any.whl", hash = "sha256:8b091f59798e663ea4055e606b66c938d850a26191b3425d6e30eb2f89857a0a", size = 98708, upload-time = "2025-09-09T19:57:27.04Z" },
+    { url = "https://files.pythonhosted.org/packages/30/c9/15c6ee07a2e272ec9ffc76f0f04d1d86c717615b39d864eebce9818c0efc/ilamb3-2026.2.19-py3-none-any.whl", hash = "sha256:dbfbef38c11b13d832670ea7723ed319a24df2e736ceae78d85c1f78dcdb0c1c", size = 125871, upload-time = "2026-02-19T20:49:18.041Z" },
 ]
 
 [[package]]

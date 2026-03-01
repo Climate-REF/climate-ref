@@ -230,6 +230,21 @@
    "region": "30S-90S",
    "frequency": "mon"
   },
+  "Amon.evspsbl": {
+   "table_id": "Amon",
+   "variable_id": "evspsbl",
+   "cmip6_compound_name": "Amon.evspsbl",
+   "cmip7_compound_name": "atmos.evspsbl.tavg-u-hxy-u.mon.glb",
+   "branded_variable": "evspsbl_tavg-u-hxy-u",
+   "branding_suffix": "tavg-u-hxy-u",
+   "temporal_label": "tavg",
+   "vertical_label": "u",
+   "horizontal_label": "hxy",
+   "area_label": "u",
+   "realm": "atmos land",
+   "region": "glb",
+   "frequency": "mon"
+  },
   "Amon.fco2antt": {
    "table_id": "Amon",
    "variable_id": "fco2antt",
@@ -1985,6 +2000,51 @@
    "region": "glb",
    "frequency": "fx"
   },
+  "Omon.evs": {
+   "table_id": "Omon",
+   "variable_id": "evspsbl",
+   "cmip6_compound_name": "Omon.evs",
+   "cmip7_compound_name": "ocean.evspsbl.tavg-u-hxy-ifs.mon.glb",
+   "branded_variable": "evspsbl_tavg-u-hxy-ifs",
+   "branding_suffix": "tavg-u-hxy-ifs",
+   "temporal_label": "tavg",
+   "vertical_label": "u",
+   "horizontal_label": "hxy",
+   "area_label": "ifs",
+   "realm": "ocean",
+   "region": "glb",
+   "frequency": "mon"
+  },
+  "Omon.msftmrho": {
+   "table_id": "Omon",
+   "variable_id": "msftm",
+   "cmip6_compound_name": "Omon.msftmrho",
+   "cmip7_compound_name": "ocean.msftm.tavg-rho-hyb-sea.mon.glb",
+   "branded_variable": "msftm_tavg-rho-hyb-sea",
+   "branding_suffix": "tavg-rho-hyb-sea",
+   "temporal_label": "tavg",
+   "vertical_label": "rho",
+   "horizontal_label": "hyb",
+   "area_label": "sea",
+   "realm": "ocean",
+   "region": "glb",
+   "frequency": "mon"
+  },
+  "Omon.msftmz": {
+   "table_id": "Omon",
+   "variable_id": "msftm",
+   "cmip6_compound_name": "Omon.msftmz",
+   "cmip7_compound_name": "ocean.msftm.tavg-ol-hyb-sea.mon.glb",
+   "branded_variable": "msftm_tavg-ol-hyb-sea",
+   "branding_suffix": "tavg-ol-hyb-sea",
+   "temporal_label": "tavg",
+   "vertical_label": "ol",
+   "horizontal_label": "hyb",
+   "area_label": "sea",
+   "realm": "ocean",
+   "region": "glb",
+   "frequency": "mon"
+  },
   "Omon.so": {
    "table_id": "Omon",
    "variable_id": "so",
@@ -2208,6 +2268,21 @@
    "area_label": "u",
    "realm": "seaIce",
    "region": "30S-90S",
+   "frequency": "mon"
+  },
+  "SImon.sidmassevapsubl": {
+   "table_id": "SImon",
+   "variable_id": "evspsbl",
+   "cmip6_compound_name": "SImon.sidmassevapsubl",
+   "cmip7_compound_name": "seaIce.evspsbl.tavg-u-hxy-si.mon.glb",
+   "branded_variable": "evspsbl_tavg-u-hxy-si",
+   "branding_suffix": "tavg-u-hxy-si",
+   "temporal_label": "tavg",
+   "vertical_label": "u",
+   "horizontal_label": "hxy",
+   "area_label": "si",
+   "realm": "seaIce",
+   "region": "glb",
    "frequency": "mon"
   },
   "SImon.sifllwdtop": {

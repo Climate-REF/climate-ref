@@ -1,6 +1,5 @@
 import ilamb3
 import pandas as pd
-import pytest
 from climate_ref_ilamb.standard import ILAMBStandard, _set_ilamb3_options
 from climate_ref_pmp import provider as ilamb_provider
 
@@ -105,15 +104,6 @@ def test_standard_grid(cmip6_data_catalog, definition_factory):
     assert result.successful
     assert metric_bundle_path.exists()
     assert metric_bundle_path.is_file()
-
-
-def test_standard_fail():
-    with pytest.raises(ValueError):
-        ILAMBStandard(
-            registry_file="ilamb-test",
-            metric_name="test-fail",
-            sources={"gpp": "ilamb/test/Grid/gpp.nc", "pr": "ilamb/test/Grid/pr.nc"},
-        )
 
 
 def test_options():

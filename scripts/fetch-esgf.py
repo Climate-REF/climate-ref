@@ -262,6 +262,7 @@ requests: list[Request] = [
                 "burntFractionAll",
                 "snc",
                 "nbp",
+                "et",
             ],
             experiment_id=["historical"],
         ),

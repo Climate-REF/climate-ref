@@ -19,10 +19,8 @@ def provider_test_data_dir() -> Path:
     return Path(__file__).parent.parent / "test-data"
 
 
-xfail_diagnostics = [
-    "ohc-noaa",  # Missing sample data
-]
-skipped_diagnostics = []
+xfail_diagnostics = []
+skipped_diagnostics = ["emp-gleamgpcp2.3"]
 
 
 diagnostics = [

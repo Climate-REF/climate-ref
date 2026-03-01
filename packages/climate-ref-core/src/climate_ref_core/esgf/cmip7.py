@@ -95,7 +95,14 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         try:
             logger.info(f"Writing translated CMIP7 file: {output_file}")
             suppress_bounds_coordinates(ds_cmip7)
-            ds_cmip7.to_netcdf(output_file)
+
+            # Apply lossy compression - these are converted files used for
+            # verification only, so precision loss is acceptable.
+            encoding = {
+                var: {"zlib": True, "complevel": 5, "least_significant_digit": 3}
+                for var in ds_cmip7.data_vars
+            }
+            ds_cmip7.to_netcdf(output_file, encoding=encoding)
         except PermissionError:
             # If we can't write but file exists (race condition or permission issue), use it
             if output_file.exists():
@@ -224,7 +231,7 @@ class CMIP7Request:
                 cmip7_row["branding_suffix"] = entry.branding_suffix
                 cmip7_row["branded_variable"] = entry.branded_variable
             except KeyError:
-                logger.debug(
+                logger.error(
                     f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"
                 )
 
@@ -273,7 +280,7 @@ class CMIP7Request:
                         cmip7_path = _convert_file_to_cmip7(cmip6_path, cmip7_row)
                         converted_files.append(str(cmip7_path))
                     except Exception as e:
-                        logger.warning(f"Failed to convert {cmip6_path.name}: {e}")
+                        logger.exception(f"Failed to convert {cmip6_path.name}: {e}")
                         continue
                 else:
                     logger.warning(f"CMIP6 file not found: {file_path}")

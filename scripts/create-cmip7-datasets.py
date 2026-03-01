@@ -71,7 +71,7 @@ def _convert_file(
         return cmip7_path
 
     except Exception as e:
-        logger.warning(f"Failed to convert {cmip6_path}: {e}")
+        logger.exception(f"Failed to convert {cmip6_path}: {e}")
         return None
     finally:
         ds.close()

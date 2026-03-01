@@ -95,7 +95,14 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         try:
             logger.info(f"Writing translated CMIP7 file: {output_file}")
             suppress_bounds_coordinates(ds_cmip7)
-            ds_cmip7.to_netcdf(output_file)
+
+            # Apply lossy compression - these are converted files used for
+            # verification only, so precision loss is acceptable.
+            encoding = {
+                var: {"zlib": True, "complevel": 5, "least_significant_digit": 3}
+                for var in ds_cmip7.data_vars
+            }
+            ds_cmip7.to_netcdf(output_file, encoding=encoding)
         except PermissionError:
             # If we can't write but file exists (race condition or permission issue), use it
             if output_file.exists():

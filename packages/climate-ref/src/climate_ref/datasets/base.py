@@ -302,15 +302,15 @@ class DatasetAdapter(Protocol):
         current_files = db.session.query(DatasetFile).filter_by(dataset_id=dataset.id).all()
         current_file_paths = {f.path: f for f in current_files}
 
+        # Columns to store per file (indexed by path)
+        file_meta_cols = [c for c in self.file_specific_metadata if c != "path"]
+
         # Get new file data from data catalog
         new_file_data = data_catalog_dataset.to_dict(orient="records")
         new_file_lookup = {}
         for dataset_file in new_file_data:
             file_path = str(validate_path(dataset_file["path"]))
-            new_file_lookup[file_path] = {
-                "start_time": dataset_file["start_time"],
-                "end_time": dataset_file["end_time"],
-            }
+            new_file_lookup[file_path] = {c: dataset_file.get(c) for c in file_meta_cols if c in dataset_file}
 
         new_file_paths = set(new_file_lookup.keys())
         existing_file_paths = set(current_file_paths.keys())
@@ -323,17 +323,22 @@ class DatasetAdapter(Protocol):
             logger.warning(f"Files to remove: {files_removed}")
             raise NotImplementedError("Removing files is not yet supported")
 
-        # Update existing files if start/end times have changed
+        # Update existing files if any file-specific metadata has changed
         for file_path, existing_file in current_file_paths.items():
             if file_path in new_file_lookup:
-                new_times = new_file_lookup[file_path]
-                if (
-                    existing_file.start_time != new_times["start_time"]
-                    or existing_file.end_time != new_times["end_time"]
-                ):
-                    logger.warning(f"Updating file times for {file_path}")
-                    existing_file.start_time = new_times["start_time"]
-                    existing_file.end_time = new_times["end_time"]
+                new_meta = new_file_lookup[file_path]
+                changed = any(
+                    not _is_na(new_meta.get(c))
+                    and hasattr(existing_file, c)
+                    and getattr(existing_file, c) != new_meta[c]
+                    for c in file_meta_cols
+                    if c in new_meta
+                )
+                if changed:
+                    logger.warning(f"Updating file metadata for {file_path}")
+                    for c in file_meta_cols:
+                        if c in new_meta and not _is_na(new_meta[c]) and hasattr(existing_file, c):
+                            setattr(existing_file, c, new_meta[c])
                     files_updated.append(file_path)
                 else:
                     files_unchanged.append(file_path)
@@ -344,13 +349,14 @@ class DatasetAdapter(Protocol):
             files_added = list(files_to_add)
             new_dataset_files = []
             for file_path in files_to_add:
-                file_times = new_file_lookup[file_path]
+                file_meta = new_file_lookup[file_path]
+                # Filter out NA values before passing to DatasetFile constructor
+                clean_meta = {c: v for c, v in file_meta.items() if not _is_na(v)}
                 new_dataset_files.append(
                     DatasetFile(
                         path=file_path,
                         dataset_id=dataset.id,
-                        start_time=file_times["start_time"],
-                        end_time=file_times["end_time"],
+                        **clean_meta,
                     )
                 )
             db.session.add_all(new_dataset_files)

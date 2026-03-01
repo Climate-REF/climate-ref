@@ -7,8 +7,9 @@ patterns that are identical regardless of which concrete adapter
 
 from __future__ import annotations
 
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
+import numpy as np
 import pandas as pd
 
 from climate_ref.database import Database
@@ -215,3 +216,47 @@ class TestPersistFinalisedMetadata:
 
             # Should not raise and should only attempt once for the slug
             adapter._persist_finalised_metadata(database, df, df.index)
+
+    def test_na_values_do_not_overwrite_db_records(self, config, adapter_config):
+        """pd.NA and np.nan values must not overwrite existing database fields.
+
+        The DRS DataFrame uses pd.NA for columns that haven't been finalised.
+        When _persist_finalised_metadata reads these cells, it must skip them
+        rather than writing NA sentinels into the database — matching the
+        filtering that register_dataset applies via _is_na.
+        """
+        adapter = adapter_config.adapter_cls(config=config)
+
+        # Create a mock dataset record with known values
+        mock_record = MagicMock()
+        mock_record.source_id = "original-source"
+        mock_record.experiment_id = "original-experiment"
+        mock_record.files = []
+
+        # Wire up a mock database whose query returns our mock record
+        mock_db = MagicMock()
+        mock_db.session.query.return_value.filter.return_value.one_or_none.return_value = mock_record
+
+        # Build a DataFrame with pd.NA and np.nan for columns we want to verify
+        data = {col: [pd.NA] for col in adapter.dataset_specific_metadata}
+        data.update({col: [pd.NA] for col in adapter.file_specific_metadata})
+        data["instance_id"] = [adapter_config.default_instance_id]
+        data["finalised"] = [True]
+        data["path"] = ["/fake/path.nc"]
+        # Mix pd.NA and np.nan to test both NA variants
+        data["source_id"] = [pd.NA]
+        data["experiment_id"] = [np.nan]
+        df = pd.DataFrame(data)
+
+        adapter._persist_finalised_metadata(mock_db, df, df.index)
+
+        # Verify the mock record was NOT updated with NA values:
+        # source_id and experiment_id should still be the originals
+        assert mock_record.source_id == "original-source", (
+            f"source_id overwritten by pd.NA: got {mock_record.source_id!r}"
+        )
+        assert mock_record.experiment_id == "original-experiment", (
+            f"experiment_id overwritten by np.nan: got {mock_record.experiment_id!r}"
+        )
+        # finalised should still have been set
+        assert mock_record.finalised is True

@@ -129,31 +129,34 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
     :
         Dictionary with extracted metadata
     """
+    # We don't extract all attributes (subvalues of the branding_suffix and variant_label components)
+    # These can be added later if needed or derived
     try:
         with netCDF4.Dataset(file, "r") as ds:
             start_time, end_time = read_time_bounds(ds)
 
-            variable_id = getattr(ds, "variable_id", "")
+            variable_id = ds["variable_id"]
             var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
 
             return {
                 # Core DRS attributes
-                "activity_id": getattr(ds, "activity_id", ""),
-                "institution_id": getattr(ds, "institution_id", ""),
-                "source_id": getattr(ds, "source_id", ""),
-                "experiment_id": getattr(ds, "experiment_id", ""),
-                "variant_label": getattr(ds, "variant_label", ""),
+                "activity_id": ds["activity_id"],
+                "institution_id": ds["institution_id"],
+                "source_id": ds["source_id"],
+                "experiment_id": ds["experiment_id"],
+                "variant_label": ds["variant_label"],
                 "variable_id": variable_id,
-                "grid_label": getattr(ds, "grid_label", ""),
-                "frequency": getattr(ds, "frequency", ""),
-                "region": getattr(ds, "region", "glb"),
-                "branding_suffix": getattr(ds, "branding_suffix", ""),
-                "branded_variable": getattr(ds, "branded_variable", ""),
-                "version": getattr(ds, "version", ""),
-                # Additional mandatory attributes
+                "grid_label": ds["grid_label"],
+                "frequency": ds["frequency"],
+                "region": ds["region"],
+                "branding_suffix": ds["branding_suffix"],
+                "branded_variable": ds["branded_variable"],
+                "version": extract_version_from_path(str(Path(file).parent)),
+                # Additional mandatory attributes (we don't yet enforce these)
                 "mip_era": getattr(ds, "mip_era", "CMIP7"),
                 "realm": getattr(ds, "realm", None),
                 "nominal_resolution": getattr(ds, "nominal_resolution", None),
+                "license_id": getattr(ds, "license_id", None),
                 # Parent info (nullable)
                 "branch_time_in_child": getattr(ds, "branch_time_in_child", None),
                 "branch_time_in_parent": getattr(ds, "branch_time_in_parent", None),
@@ -163,8 +166,6 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
                 "parent_source_id": getattr(ds, "parent_source_id", None),
                 "parent_time_units": getattr(ds, "parent_time_units", None),
                 "parent_variant_label": getattr(ds, "parent_variant_label", None),
-                # Additional mandatory attributes
-                "license_id": getattr(ds, "license_id", None),
                 # Conditionally required attributes
                 "external_variables": getattr(ds, "external_variables", None),
                 # Variable metadata

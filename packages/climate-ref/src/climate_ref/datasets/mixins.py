@@ -8,7 +8,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.database import Database
-from climate_ref.datasets.base import DatasetParsingFunction
+from climate_ref.datasets.base import DatasetParsingFunction, _is_na
 from climate_ref.datasets.catalog_builder import parse_files
 from climate_ref.datasets.utils import parse_datetime
 
@@ -135,6 +135,7 @@ class FinaliseableDatasetAdapterMixin:
         dataset_cls = self.dataset_cls  # type: ignore[attr-defined]
         slug_column = self.slug_column  # type: ignore[attr-defined]
         dataset_specific_metadata = self.dataset_specific_metadata  # type: ignore[attr-defined]
+        file_specific_metadata = self.file_specific_metadata  # type: ignore[attr-defined]
 
         finalised_mask = datasets["finalised"] == True  # noqa: E712
         originally_unfinalised = datasets.index.isin(unfinalised_index)
@@ -159,22 +160,32 @@ class FinaliseableDatasetAdapterMixin:
                         )
                         continue
 
-                    # Update dataset-level metadata from the first finalised row
+                    # Update dataset-level metadata from the first finalised row.
+                    # Use _is_na to skip None, pd.NA, and np.nan — matching
+                    # register_dataset's filtering — so we never overwrite
+                    # real values with NA sentinels.
                     for col in dataset_specific_metadata:
                         if col in datasets.columns:
                             val = row.get(col)
-                            if val is not None and hasattr(dataset_record, col):
+                            if not _is_na(val) and hasattr(dataset_record, col):
                                 setattr(dataset_record, col, val)
                     dataset_record.finalised = True
 
-                    # Update file start_time/end_time for files in this subset
+                    # Update file-level metadata for files in this subset.
+                    # Use file_specific_metadata (excluding "path") so adapters
+                    # like CMIP7 can persist tracking_id alongside start/end times.
+                    file_metadata_cols = [
+                        c for c in file_specific_metadata if c != "path" and c in datasets.columns
+                    ]
                     subset = datasets[datasets[slug_column] == slug]
-                    file_times = {
-                        str(r["path"]): (r["start_time"], r["end_time"]) for _, r in subset.iterrows()
+                    file_metadata_map = {
+                        str(r["path"]): {c: r.get(c) for c in file_metadata_cols}
+                        for _, r in subset.iterrows()
                     }
                     for f in dataset_record.files:
-                        if f.path in file_times:
-                            f.start_time, f.end_time = file_times[f.path]
+                        for col, val in file_metadata_map.get(f.path, {}).items():
+                            if not _is_na(val) and hasattr(f, col):
+                                setattr(f, col, val)
             except Exception:
                 logger.exception(f"Error persisting finalised dataset {slug}")
                 # Mark the dataset as unfinalised in the DataFrame to stay

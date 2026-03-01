@@ -391,7 +391,6 @@ def _build_test_data_spec(  # noqa: PLR0913
                             "source_id": test_source_id,
                             "variable_id": test_variable_ids,
                             "branded_variable": test_branded_names,
-                            "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],
                             "region": "glb",
                         },

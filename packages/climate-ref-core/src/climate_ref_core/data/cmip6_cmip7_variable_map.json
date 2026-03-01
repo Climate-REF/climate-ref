@@ -170,6 +170,21 @@
    "realm": "atmos",
    "region": "glb"
   },
+  "Amon.evspsbl": {
+   "table_id": "Amon",
+   "variable_id": "evspsbl",
+   "cmip6_compound_name": "Amon.evspsbl",
+   "cmip7_compound_name": "atmos.evspsbl.tavg-u-hxy-u.mon.glb",
+   "branded_variable": "evspsbl_tavg-u-hxy-u",
+   "out_name": "evspsbl",
+   "branding_suffix": "tavg-u-hxy-u",
+   "temporal_label": "tavg",
+   "vertical_label": "u",
+   "horizontal_label": "hxy",
+   "area_label": "u",
+   "realm": "atmos",
+   "region": "glb"
+  },
   "Amon.fco2antt": {
    "table_id": "Amon",
    "variable_id": "fco2antt",

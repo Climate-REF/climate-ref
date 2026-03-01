@@ -107,6 +107,7 @@ INCLUDED_VARIABLES = {
     "snc",
     "treeFrac",
     "vegFrac",
+    "evspsbl",
     # Geopotential
     "zg",
 }

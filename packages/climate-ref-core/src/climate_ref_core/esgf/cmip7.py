@@ -224,7 +224,7 @@ class CMIP7Request:
                 cmip7_row["branding_suffix"] = entry.branding_suffix
                 cmip7_row["branded_variable"] = entry.branded_variable
             except KeyError:
-                logger.debug(
+                logger.error(
                     f"No DReq entry for {table_id}.{variable_id}, region/branding_suffix will not be set"
                 )
 
@@ -273,7 +273,7 @@ class CMIP7Request:
                         cmip7_path = _convert_file_to_cmip7(cmip6_path, cmip7_row)
                         converted_files.append(str(cmip7_path))
                     except Exception as e:
-                        logger.warning(f"Failed to convert {cmip6_path.name}: {e}")
+                        logger.exception(f"Failed to convert {cmip6_path.name}: {e}")
                         continue
                 else:
                     logger.warning(f"CMIP6 file not found: {file_path}")

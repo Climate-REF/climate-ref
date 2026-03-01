@@ -120,7 +120,7 @@ INCLUDED_VARIABLES = {
     "sos",
     "thetao",
     "tos",
-    "msftmz",
+    "msftm",  # Not msftmz
     # Land / carbon
     "burntFractionAll",
     "cSoil",

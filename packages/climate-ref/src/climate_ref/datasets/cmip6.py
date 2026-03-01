@@ -10,7 +10,7 @@ from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
-from climate_ref.datasets.utils import clean_branch_time, parse_datetime
+from climate_ref.datasets.utils import clean_branch_time
 from climate_ref.models.dataset import CMIP6Dataset
 
 
@@ -65,6 +65,8 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             "standard_name",
             "sub_experiment",
             "sub_experiment_id",
+            "time_units",
+            "calendar",
             "units",
             "vertical_levels",
         }
@@ -103,6 +105,9 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # Time metadata
+        "time_units",
+        "calendar",
         "finalised",
         slug_column,
     )
@@ -203,11 +208,6 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         )
 
         datasets = datasets.drop(["init_year"], axis=1)
-
-        # Convert the start_time and end_time columns to datetime objects
-        # We don't know the calendar used in the dataset (#542)
-        datasets["start_time"] = parse_datetime(datasets["start_time"])
-        datasets["end_time"] = parse_datetime(datasets["end_time"])
 
         drs_items = [
             *self.dataset_id_metadata,

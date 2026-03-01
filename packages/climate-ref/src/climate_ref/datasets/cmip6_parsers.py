@@ -16,6 +16,7 @@ from loguru import logger
 from climate_ref.datasets.netcdf_utils import (
     read_global_attrs,
     read_time_bounds,
+    read_time_metadata,
     read_variable_attrs,
     read_vertical_levels,
 )
@@ -234,6 +235,7 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
 
             vertical_levels = read_vertical_levels(ds)
             start_time, end_time = read_time_bounds(ds)
+            time_units, calendar = read_time_metadata(ds)
 
             init_year = None
             if info.get("sub_experiment_id"):  # pragma: no branch
@@ -244,6 +246,8 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
             info["init_year"] = init_year
             info["start_time"] = start_time
             info["end_time"] = end_time
+            info["time_units"] = time_units
+            info["calendar"] = calendar
             if not (start_time and end_time):
                 info["time_range"] = None
             else:

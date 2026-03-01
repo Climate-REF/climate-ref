@@ -16,7 +16,7 @@ from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
-from climate_ref.datasets.utils import clean_branch_time, parse_datetime
+from climate_ref.datasets.utils import clean_branch_time
 from climate_ref.models.dataset import CMIP7Dataset
 
 
@@ -50,6 +50,9 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             "standard_name",
             "long_name",
             "units",
+            # Time metadata
+            "time_units",
+            "calendar",
         }
     )
 
@@ -86,6 +89,9 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # Time metadata
+        "time_units",
+        "calendar",
         # Finalisation status
         "finalised",
         # Unique identifier
@@ -197,12 +203,6 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             depth=10,
             n_jobs=self.n_jobs,
         )
-
-        # Convert the start_time and end_time columns to datetime objects
-        if "start_time" in datasets.columns:
-            datasets["start_time"] = parse_datetime(datasets["start_time"])
-        if "end_time" in datasets.columns:
-            datasets["end_time"] = parse_datetime(datasets["end_time"])
 
         # Clean branch times
         if "branch_time_in_child" in datasets.columns:

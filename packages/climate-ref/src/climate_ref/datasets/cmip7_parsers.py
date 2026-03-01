@@ -12,7 +12,7 @@ from typing import Any
 import netCDF4
 from loguru import logger
 
-from climate_ref.datasets.netcdf_utils import read_time_bounds, read_variable_attrs
+from climate_ref.datasets.netcdf_utils import read_mandatory_attr, read_time_bounds, read_variable_attrs
 from climate_ref.datasets.utils import extract_version_from_path, parse_drs_daterange
 
 
@@ -135,28 +135,28 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
         with netCDF4.Dataset(file, "r") as ds:
             start_time, end_time = read_time_bounds(ds)
 
-            variable_id = ds["variable_id"]
+            variable_id = read_mandatory_attr(ds, "variable_id")
             var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
 
             return {
                 # Core DRS attributes
-                "activity_id": ds["activity_id"],
-                "institution_id": ds["institution_id"],
-                "source_id": ds["source_id"],
-                "experiment_id": ds["experiment_id"],
-                "variant_label": ds["variant_label"],
+                "activity_id": read_mandatory_attr(ds, "activity_id"),
+                "institution_id": read_mandatory_attr(ds, "institution_id"),
+                "source_id": read_mandatory_attr(ds, "source_id"),
+                "experiment_id": read_mandatory_attr(ds, "experiment_id"),
+                "variant_label": read_mandatory_attr(ds, "variant_label"),
                 "variable_id": variable_id,
-                "grid_label": ds["grid_label"],
-                "frequency": ds["frequency"],
-                "region": ds["region"],
-                "branding_suffix": ds["branding_suffix"],
-                "branded_variable": ds["branded_variable"],
+                "grid_label": read_mandatory_attr(ds, "grid_label"),
+                "frequency": read_mandatory_attr(ds, "frequency"),
+                "region": read_mandatory_attr(ds, "region"),
+                "branding_suffix": read_mandatory_attr(ds, "branding_suffix"),
+                "branded_variable": read_mandatory_attr(ds, "branded_variable"),
                 "version": extract_version_from_path(str(Path(file).parent)),
-                # Additional mandatory attributes (we don't yet enforce these)
-                "mip_era": getattr(ds, "mip_era", "CMIP7"),
-                "realm": getattr(ds, "realm", None),
-                "nominal_resolution": getattr(ds, "nominal_resolution", None),
-                "license_id": getattr(ds, "license_id", None),
+                # Additional mandatory attributes
+                "mip_era": read_mandatory_attr(ds, "mip_era"),
+                "realm": read_mandatory_attr(ds, "realm"),
+                "nominal_resolution": read_mandatory_attr(ds, "nominal_resolution"),
+                "license_id": read_mandatory_attr(ds, "license_id"),
                 # Parent info (nullable)
                 "branch_time_in_child": getattr(ds, "branch_time_in_child", None),
                 "branch_time_in_parent": getattr(ds, "branch_time_in_parent", None),
@@ -173,7 +173,7 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
                 "long_name": var_attrs["long_name"],
                 "units": var_attrs["units"],
                 # File-level metadata
-                "tracking_id": getattr(ds, "tracking_id", None),
+                "tracking_id": read_mandatory_attr(ds, "tracking_id"),
                 # Time information
                 "start_time": start_time,
                 "end_time": end_time,

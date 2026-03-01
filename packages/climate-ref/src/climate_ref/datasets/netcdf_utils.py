@@ -37,6 +37,32 @@ def read_global_attrs(ds: netCDF4.Dataset, keys: list[str] | tuple[str, ...]) ->
     return {key: getattr(ds, key, None) for key in keys}
 
 
+def read_mandatory_attr(ds: netCDF4.Dataset, key: str) -> Any:
+    """
+    Read a mandatory global attribute from a netCDF4 Dataset, ensuring it is present and non-empty.
+
+    Parameters
+    ----------
+    ds
+        Open netCDF4 Dataset
+    key
+        Attribute name to read
+
+    Returns
+    -------
+    :
+        Value of the attribute
+
+    Raises
+    ------
+    ValueError
+        If the attribute is missing or empty
+    """
+    if not hasattr(ds, key) or getattr(ds, key) in (None, ""):
+        raise ValueError(f"Missing mandatory attribute: {key}")
+    return getattr(ds, key)
+
+
 def read_variable_attrs(
     ds: netCDF4.Dataset,
     variable_id: str,

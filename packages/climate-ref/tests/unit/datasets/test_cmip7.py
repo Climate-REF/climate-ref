@@ -2,6 +2,7 @@
 
 import pandas as pd
 
+from climate_ref.datasets.base import _is_na
 from climate_ref.datasets.cmip7 import (
     CMIP7DatasetAdapter,
 )
@@ -258,13 +259,13 @@ class TestCMIP7ConvertedFile:
         assert result["tracking_id"].startswith("hdl:21.14107/")
 
         # Verify DRS components are present
-        assert result["activity_id"] != ""
-        assert result["institution_id"] != ""
-        assert result["source_id"] != ""
-        assert result["experiment_id"] != ""
-        assert result["variable_id"] != ""
-        assert result["grid_label"] != ""
-        assert result["frequency"] != ""
+        assert not _is_na(result["activity_id"])
+        assert not _is_na(result["institution_id"])
+        assert not _is_na(result["source_id"])
+        assert not _is_na(result["experiment_id"])
+        assert not _is_na(result["variable_id"])
+        assert not _is_na(result["grid_label"])
+        assert not _is_na(result["frequency"])
 
     def test_branded_variable_derived(self, cmip7_converted_file, config):
         """Test that branded_variable is derived as variable_id + branding_suffix."""

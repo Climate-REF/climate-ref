@@ -7,6 +7,7 @@ import xarray as xr
 
 from climate_ref.datasets.netcdf_utils import (
     read_global_attrs,
+    read_mandatory_attr,
     read_time_bounds,
     read_time_metadata,
     read_variable_attrs,
@@ -131,6 +132,28 @@ class TestReadGlobalAttrs:
             result = read_global_attrs(ds, [])
 
         assert result == {}
+
+
+class TestReadMandatoryAttr:
+    def test_reads_existing_attr(self, sample_nc_file):
+        with netCDF4.Dataset(sample_nc_file, "r") as ds:
+            result = read_mandatory_attr(ds, "activity_id")
+
+        assert result == "CMIP"
+
+    def test_missing_attr_raises(self, sample_nc_file):
+        with netCDF4.Dataset(sample_nc_file, "r") as ds:
+            with pytest.raises(ValueError, match="Missing mandatory attribute: nonexistent_attr"):
+                read_mandatory_attr(ds, "nonexistent_attr")
+
+    def test_empty_attr_raises(self, tmp_path):
+        filepath = tmp_path / "empty_attr.nc"
+        with netCDF4.Dataset(filepath, "w") as ds:
+            ds.activity_id = ""
+
+        with netCDF4.Dataset(filepath, "r") as ds:
+            with pytest.raises(ValueError, match="Missing mandatory attribute: activity_id"):
+                read_mandatory_attr(ds, "activity_id")
 
 
 class TestReadVariableAttrs:

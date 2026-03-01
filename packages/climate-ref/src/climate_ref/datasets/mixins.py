@@ -10,7 +10,7 @@ from loguru import logger
 from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetParsingFunction, _is_na
 from climate_ref.datasets.catalog_builder import parse_files
-from climate_ref.datasets.utils import parse_datetime
+from climate_ref.datasets.utils import parse_cftime_dates
 
 
 class FinaliseableDatasetAdapterMixin:
@@ -100,11 +100,13 @@ class FinaliseableDatasetAdapterMixin:
             updated_indices.append(idx)
 
         if updated_indices:
-            # Convert start_time/end_time strings from the complete parser to datetime objects
-            # Only convert the updated rows to avoid re-parsing already-converted datetimes
+            # Convert start_time/end_time strings from the complete parser to cftime objects
             mask = datasets.index.isin(updated_indices)
-            datasets.loc[mask, "start_time"] = parse_datetime(datasets.loc[mask, "start_time"]).values
-            datasets.loc[mask, "end_time"] = parse_datetime(datasets.loc[mask, "end_time"]).values
+            cal = datasets.loc[mask, "calendar"] if "calendar" in datasets.columns else "standard"
+            datasets.loc[mask, "start_time"] = parse_cftime_dates(
+                datasets.loc[mask, "start_time"], cal
+            ).values
+            datasets.loc[mask, "end_time"] = parse_cftime_dates(datasets.loc[mask, "end_time"], cal).values
 
             # Apply adapter-specific fixes
             datasets = self._post_finalise_fixes(datasets)

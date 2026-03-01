@@ -19,6 +19,7 @@ from loguru import logger
 
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.datasets import get_dataset_adapter
+from climate_ref.datasets.utils import parse_cftime_dates
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.solver import ExecutionSolver, SolveFilterOptions
 from climate_ref_core.datasets import SourceDatasetType
@@ -79,6 +80,9 @@ def write_catalog_parquet(catalog: pd.DataFrame, output_path: Path) -> None:
     """
     Write a catalog DataFrame to parquet.
 
+    cftime.datetime objects in ``start_time``/``end_time`` are converted to
+    strings before writing because pyarrow cannot serialize them.
+
     Parameters
     ----------
     catalog
@@ -87,6 +91,15 @@ def write_catalog_parquet(catalog: pd.DataFrame, output_path: Path) -> None:
         Path for the output parquet file
     """
     output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Convert cftime objects to strings for parquet serialization
+    catalog = catalog.copy()
+    for col in ("start_time", "end_time"):
+        if col in catalog.columns:
+            catalog[col] = catalog[col].apply(
+                lambda x: str(x) if x is not None and not isinstance(x, str) else x
+            )
+
     catalog.to_parquet(output_path, index=False)
 
 
@@ -122,6 +135,13 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
         path = catalog_dir / filename
         if path.exists():
             catalog = pd.read_parquet(path)
+
+            # Convert start_time/end_time strings back to cftime objects
+            if "start_time" in catalog.columns:
+                cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
+                catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
+                catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
+
             # Apply the same version deduplication as DatasetAdapter.load_catalog()
             adapter = get_dataset_adapter(source_type.value)
             result[source_type] = adapter.filter_latest_versions(catalog)

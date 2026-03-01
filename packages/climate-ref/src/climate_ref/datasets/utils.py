@@ -5,42 +5,86 @@ Shared utility functions for dataset adapters
 from __future__ import annotations
 
 import re
-from datetime import datetime
 from pathlib import Path
-from typing import Any
 
+import cftime
 import pandas as pd
 from loguru import logger
 
 
-def parse_datetime(dt_str: pd.Series[str]) -> pd.Series[datetime | Any]:
+def parse_cftime_dates(
+    dt_str: pd.Series[str],
+    calendar: pd.Series[str] | str = "standard",
+) -> pd.Series:
     """
-    Parse datetime strings from dataset files.
+    Parse date strings to cftime.datetime objects.s
 
-    Pandas tries to coerce everything to their own datetime format, which is not what we want here.
+    Parameters
+    ----------
+    dt_str
+        Series of date strings in "YYYY-MM-DD" or "YYYY-MM-DD HH:MM:SS" format
+    calendar
+        Calendar name(s). Either a single string applied to all rows,
+        or a Series with per-row calendar values.
     """
+    # regex to parse a iso formatted date string with optional time component
+    _DATE_RE = re.compile(
+        r"^(\d{4})-(\d{2})-(\d{2})"
+        r"(?:\s+(\d{2}):(\d{2}):(\d{2})(?:\.(\d+))?)?"
+        r"$"
+    )
 
-    def _inner(date_string: str | datetime | None) -> datetime | None:
-        if date_string is None or (not isinstance(date_string, datetime) and pd.isnull(date_string)):
+    def _inner(date_value: object, cal_value: object) -> cftime.datetime | None:
+        # Resolve calendar, defaulting to "standard" for missing/NA values
+        cal = cal_value if isinstance(cal_value, str) and cal_value else "standard"
+
+        # Pass through cftime objects unchanged
+        if isinstance(date_value, cftime.datetime):
+            return date_value
+
+        # Handle None and pandas NA/NaN
+        if date_value is None:
+            return None
+        try:
+            if pd.isnull(date_value):  # type: ignore[call-overload]
+                return None
+        except (TypeError, ValueError):
+            pass
+
+        # Convert any date-like value (str, pd.Timestamp, datetime) to string for regex parsing
+        date_str = date_value if isinstance(date_value, str) else str(date_value)
+
+        # Parse using regex as strptime doesn't support all calendar types
+        m = _DATE_RE.match(date_str.strip())
+        if not m:
+            logger.error(f"Failed to parse date string: {date_str}")
             return None
 
-        # Already parsed — return as-is
-        if isinstance(date_string, datetime):
-            return date_string
+        year, month, day = int(m.group(1)), int(m.group(2)), int(m.group(3))
+        hour = int(m.group(4)) if m.group(4) else 0
+        minute = int(m.group(5)) if m.group(5) else 0
+        second = int(m.group(6)) if m.group(6) else 0
+        microsecond = 0
+        if m.group(7):
+            frac = m.group(7).ljust(6, "0")[:6]
+            microsecond = int(frac)
 
-        # Try to parse the date string with and without milliseconds
-        for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S", "%Y-%m-%d %H:%M:%S.%f"):
-            try:
-                return datetime.strptime(date_string, fmt)
-            except ValueError:
-                continue
+        try:
+            return cftime.datetime(  # type: ignore[call-arg]
+                year, month, day, hour, minute, second, microsecond, calendar=cal
+            )
+        except ValueError:
+            logger.error(f"Failed to create cftime date from: {date_str} (calendar={cal})")
+            return None
 
-        # If all parsing attempts fail, log an error and return None
-        logger.error(f"Failed to parse date string: {date_string}")
-        return None
+    # Determine per-row calendar values
+    if isinstance(calendar, str):
+        calendars = [calendar] * len(dt_str)
+    else:
+        calendars = list(calendar)
 
     return pd.Series(
-        [_inner(dt) for dt in dt_str],
+        [_inner(dt, cal) for dt, cal in zip(dt_str, calendars)],
         index=dt_str.index,
         dtype="object",
     )

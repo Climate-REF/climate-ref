@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 
+import cftime
 import pandas as pd
 import pytest
 from climate_ref_example import provider as example_provider
@@ -22,16 +23,26 @@ from climate_ref.solve_helpers import (
 from climate_ref_core.datasets import SourceDatasetType
 
 
-def _align_datetime_nulls(source: pd.DataFrame, target: pd.DataFrame) -> pd.DataFrame:
-    """Replace ``None`` with ``NaT`` in object columns that became datetime after parquet round-trip.
+def _align_for_parquet_roundtrip(source: pd.DataFrame, target: pd.DataFrame) -> pd.DataFrame:
+    """Align a source DataFrame for comparison after a parquet round-trip.
 
-    Parquet deserialises time columns as datetime64, converting ``None`` to
-    ``NaT``.  Without alignment, ``assert_frame_equal`` warns about mismatched
-    null-like values (``None`` vs ``NaT``), which becomes an error in pandas 3.
+    Handles two conversions that happen during parquet serialization:
+    - cftime.datetime objects are converted to strings by ``write_catalog_parquet``
+    - ``None`` in datetime columns may become ``NaT`` after deserialization
     """
+
     aligned = source.copy()
     for col in aligned.columns:
-        if col in target.columns and target[col].dtype.kind == "M" and aligned[col].dtype == object:
+        if col not in target.columns:
+            continue
+        # cftime objects -> strings (only when target has strings, not cftime)
+        if aligned[col].dtype == object and target[col].dtype == object:
+            has_source_cftime = aligned[col].apply(lambda x: isinstance(x, cftime.datetime)).any()
+            has_target_strings = target[col].dropna().apply(lambda x: isinstance(x, str)).any()
+            if has_source_cftime and has_target_strings:
+                aligned[col] = aligned[col].apply(lambda x: str(x) if isinstance(x, cftime.datetime) else x)
+        # None -> NaT alignment for datetime columns
+        if target[col].dtype.kind == "M" and aligned[col].dtype == object:
             aligned[col] = aligned[col].fillna(pd.NaT)
     return aligned
 
@@ -87,7 +98,7 @@ class TestWriteAndLoadCatalog:
         assert out_path.exists()
         loaded = pd.read_parquet(out_path)
         # Parquet coerces time columns (None -> NaT), so align dtypes before comparison
-        expected = _align_datetime_nulls(cmip6_generated_catalog, loaded)
+        expected = _align_for_parquet_roundtrip(cmip6_generated_catalog, loaded)
         pd.testing.assert_frame_equal(expected, loaded, check_dtype=False)
 
     def test_load_solve_catalog_missing_dir(self, tmp_path):
@@ -111,7 +122,7 @@ class TestWriteAndLoadCatalog:
         assert SourceDatasetType.CMIP6 in result
         # Parquet coerces time columns (None -> NaT), so align dtypes before comparison
         loaded = result[SourceDatasetType.CMIP6]
-        expected = _align_datetime_nulls(cmip6_generated_catalog, loaded)
+        expected = _align_for_parquet_roundtrip(cmip6_generated_catalog, loaded)
         pd.testing.assert_frame_equal(loaded, expected, check_dtype=False)
 
 

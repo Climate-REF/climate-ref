@@ -16,6 +16,7 @@ import pandas as pd
 import pytest
 
 from climate_ref.database import Database
+from climate_ref.datasets.utils import sort_data_catalog
 
 
 class TestLocalDatasets:
@@ -140,18 +141,15 @@ class TestRoundTripAndFinalisation:
                 for instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
                     adapter.register_dataset(database, data_catalog_dataset)
 
-            local_data_catalog = (
+            local_data_catalog = sort_data_catalog(
                 catalog.drop(columns=adapter_config.non_roundtrip_columns, errors="ignore")
-                .sort_values(["instance_id", "start_time"])
-                .reset_index(drop=True)
-            )
+            ).reset_index(drop=True)
 
-            db_data_catalog = (
-                adapter.load_catalog(database)
-                .drop(columns=adapter_config.non_roundtrip_columns, errors="ignore")
-                .sort_values(["instance_id", "start_time"])
-                .reset_index(drop=True)
-            )
+            db_data_catalog = sort_data_catalog(
+                adapter.load_catalog(database).drop(
+                    columns=adapter_config.non_roundtrip_columns, errors="ignore"
+                )
+            ).reset_index(drop=True)
 
             # Normalize null values for consistent comparison
             with pd.option_context("future.no_silent_downcasting", True):

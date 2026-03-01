@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Any
 from urllib import parse as urlparse
 
+import cftime
 import pandas as pd
 import pytest
 import xarray as xr
@@ -33,13 +34,21 @@ from climate_ref_core.pycmec.controlled_vocabulary import CV
 # Ignore the alembic folder
 collect_ignore = ["src/climate_ref/migrations"]
 
-# Add a representer for pandas Timestamps/NaT in the regression tests
-RegressionYamlDumper.add_representer(
-    pd.Timestamp, lambda dumper, data: SafeRepresenter.represent_datetime(dumper, data.to_pydatetime())
-)
+# Add a representer for pandas NaT in the regression tests
 RegressionYamlDumper.add_representer(
     type(pd.NaT), lambda dumper, data: SafeRepresenter.represent_none(dumper, data)
 )
+
+# cftime.datetime objects are not standard YAML types; represent them as strings
+# Register the base cftime.datetime class (used by the cftime.datetime() constructor)
+RegressionYamlDumper.add_representer(
+    cftime.datetime, lambda dumper, data: SafeRepresenter.represent_str(dumper, str(data))
+)
+# Register concrete subclasses (DatetimeGregorian, DatetimeNoLeap, etc.)
+for _cftime_cls in cftime._cftime.DATE_TYPES.values():
+    RegressionYamlDumper.add_representer(
+        _cftime_cls, lambda dumper, data: SafeRepresenter.represent_str(dumper, str(data))
+    )
 
 
 def _clone_db(target_db_url: str, template_db_path: Path) -> None:
@@ -192,6 +201,8 @@ ADAPTER_CONFIGS = {
             "branch_method": "standard",
             "start_time": "2000-01-01",
             "end_time": "2000-12-30",
+            "time_units": "days since 1850-01-01",
+            "calendar": "standard",
         },
         metadata_checks={
             "frequency": "mon",
@@ -228,6 +239,8 @@ ADAPTER_CONFIGS = {
             "units": "K",
             "start_time": "2000-01-01",
             "end_time": "2000-12-30",
+            "time_units": "days since 1850-01-01",
+            "calendar": "standard",
         },
         metadata_checks={
             "realm": "atmos",

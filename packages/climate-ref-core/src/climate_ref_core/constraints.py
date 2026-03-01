@@ -3,10 +3,8 @@ Dataset selection constraints
 """
 
 import sys
-import warnings
 from collections import defaultdict
 from collections.abc import Mapping
-from datetime import datetime
 from functools import total_ordering
 from typing import Literal, Protocol, runtime_checkable
 
@@ -372,29 +370,29 @@ class PartialDateTime:  # noqa: PLW1641
         return f"{self.__class__.__name__}({', '.join(f'{a}={v}' for a, v in self._attrs.items())})"
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, datetime):
-            msg = (
-                f"Can only compare PartialDateTime with `datetime.datetime` "
-                f"objects, got object {other} of type {type(other)}"
-            )
-            raise TypeError(msg)
-
+        # Use duck typing to support both datetime.datetime and cftime.datetime
         for attr, value in self._attrs.items():
-            other_value = getattr(other, attr)
+            other_value = getattr(other, attr, None)
+            if other_value is None:
+                msg = (
+                    f"Cannot compare PartialDateTime: object {other} of type "
+                    f"{type(other)} has no attribute '{attr}'"
+                )
+                raise TypeError(msg)
             if value != other_value:
                 return False
         return True
 
     def __lt__(self, other: object) -> bool:
-        if not isinstance(other, datetime):
-            msg = (
-                f"Can only compare PartialDateTime with `datetime.datetime` "
-                f"objects, got object {other} of type {type(other)}"
-            )
-            raise TypeError(msg)
-
+        # Use duck typing to support both datetime.datetime and cftime.datetime
         for attr, value in self._attrs.items():
-            other_value = getattr(other, attr)
+            other_value = getattr(other, attr, None)
+            if other_value is None:
+                msg = (
+                    f"Cannot compare PartialDateTime: object {other} of type "
+                    f"{type(other)} has no attribute '{attr}'"
+                )
+                raise TypeError(msg)
             if value != other_value:
                 return value < other_value  # type: ignore[no-any-return]
         return False
@@ -486,28 +484,20 @@ class RequireContiguousTimerange:
         select = pd.Series(True, index=group.index)
 
         for _, subgroup in group.dropna(subset=["start_time", "end_time"]).groupby(list(self.group_by)):
+            if "calendar" in subgroup.columns and subgroup["calendar"].nunique() > 1:
+                logger.debug(
+                    f"Constraint {self} not satisfied because subgroup contains multiple calendars: "
+                    f"{', '.join(subgroup['path'])}"
+                )
+                select.loc[subgroup.index] = False
+                continue
             if len(subgroup) < 2:  # noqa: PLR2004
                 continue
+
             sorted_group = subgroup.sort_values("start_time", kind="stable")
             start_series = sorted_group["start_time"]
             end_series = sorted_group["end_time"]
-            # Sometimes the elements of start_series.values are of type datetime64[ns]
-            # and sometimes its elements are of type datetime.datetime.
-            # Convert both arrays to datetime.datetime objects to make sure they
-            # can be subtracted.
-            with warnings.catch_warnings():
-                # We have already mitigated the future change in behaviour of DatetimeProperties.to_pydatetime
-                warnings.simplefilter("ignore", FutureWarning)
-
-                if hasattr(start_series, "dt"):
-                    start_array = np.array(start_series.dt.to_pydatetime())
-                else:
-                    start_array = start_series.values  # type: ignore[assignment]
-                if hasattr(end_series, "dt"):
-                    end_array = np.array(end_series.dt.to_pydatetime())
-                else:
-                    end_array = end_series.values  # type: ignore[assignment]
-            diff = start_array[1:] - end_array[:-1]
+            diff = start_series.values[1:] - end_series.values[:-1]  # type: ignore[operator]
             gap_indices = diff > max_timedelta
             if gap_indices.any():
                 paths = sorted_group["path"]
@@ -544,7 +534,11 @@ class RequireOverlappingTimerange:
 
         starts = group_with_time.groupby(list(self.group_by))["start_time"].min()
         ends = group_with_time.groupby(list(self.group_by))["end_time"].max()
-        result = starts.max() < ends.min()
+        try:
+            result = starts.max() < ends.min()
+        except TypeError:
+            # Cross-calendar cftime comparison: fall back to string representation
+            result = starts.apply(str).max() < ends.apply(str).min()
         if not result:
             logger.debug(
                 f"Constraint {self} not satisfied because no overlapping timerange "

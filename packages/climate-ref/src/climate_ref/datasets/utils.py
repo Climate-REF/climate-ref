@@ -12,12 +12,38 @@ import pandas as pd
 from loguru import logger
 
 
+def sort_data_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
+    """
+    Sort a dataset catalog DataFrame by instance_id and start_time (with NA values last).
+
+    This provides a stable ordering for testing and debugging.
+
+    Parameters
+    ----------
+    catalog
+        Dataset catalog DataFrame with at least "instance_id" and "start_time" columns
+
+    Returns
+    -------
+    :
+        Sorted DataFrame
+    """
+
+    def _sort_key(col: pd.Series) -> pd.Series:
+        return col.apply(str) if col.name == "start_time" else col
+
+    return catalog.sort_values(
+        ["instance_id", "start_time"],
+        key=_sort_key,
+    ).reset_index(drop=True)
+
+
 def parse_cftime_dates(
     dt_str: pd.Series[str],
     calendar: pd.Series[str] | str = "standard",
 ) -> pd.Series:
     """
-    Parse date strings to cftime.datetime objects.s
+    Parse date strings to cftime.datetime objects
 
     Parameters
     ----------

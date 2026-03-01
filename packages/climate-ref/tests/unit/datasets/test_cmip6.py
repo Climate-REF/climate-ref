@@ -3,6 +3,7 @@ import pandas as pd
 import pytest
 
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter, _apply_fixes
+from climate_ref.datasets.utils import sort_data_catalog
 
 
 class TestCMIP6Adapter:
@@ -16,9 +17,9 @@ class TestCMIP6Adapter:
         for k in adapter.dataset_specific_metadata + adapter.file_specific_metadata:
             assert k in df.columns
 
-        # The order of the rows may be flakey due to sqlite ordering and the created time resolution
         catalog_regression(
-            df.sort_values(["instance_id", "start_time"]), basename=f"cmip6_catalog_db_{cmip6_parser}"
+            sort_data_catalog(df),
+            basename=f"cmip6_catalog_db_{cmip6_parser}",
         )
 
     def test_load_catalog_multiple_versions(self, config, db_seeded, catalog_regression, sample_data_dir):
@@ -33,10 +34,9 @@ class TestCMIP6Adapter:
         with db_seeded.session.begin():
             adapter.register_dataset(db_seeded, target_metadata)
 
-        # An older version should not be in the catalog
         pd.testing.assert_frame_equal(
-            data_catalog.sort_values(["instance_id", "start_time"]),
-            adapter.load_catalog(db_seeded).sort_values(["instance_id", "start_time"]),
+            sort_data_catalog(data_catalog),
+            sort_data_catalog(adapter.load_catalog(db_seeded)),
         )
 
         # Make a new version

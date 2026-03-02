@@ -386,6 +386,20 @@ def catalog_changed_since_regression(paths: TestCasePaths) -> bool:
     return stored_hash != current_hash
 
 
+def _sanitize_for_yaml(value: Any) -> Any:
+    """Convert non-YAML-safe values to plain Python types."""
+    if value is None:
+        return None
+    if isinstance(value, (str, int, bool)):
+        return value
+    if isinstance(value, float):
+        return None if pd.isna(value) else value
+    # Convert datetime-like objects (cftime, datetime, pd.Timestamp) to strings
+    if hasattr(value, "strftime"):
+        return str(value)
+    return value
+
+
 def save_datasets_to_yaml(
     datasets: ExecutionDatasetCollection,
     path: Path,
@@ -448,8 +462,9 @@ def save_datasets_to_yaml(
                 record["filename"] = filename
                 # Use composite key to support multiple files per instance_id
                 paths_map[f"{instance_id}::{filename}"] = file_path
-                # Sort fields within each record alphabetically
-                sorted_record = dict(sorted(record.items()))
+                # Sanitize and sort fields within each record alphabetically
+                sanitized_record = {k: _sanitize_for_yaml(v) for k, v in record.items()}
+                sorted_record = dict(sorted(sanitized_record.items()))
                 filtered_records.append(sorted_record)
 
         # Sort records by instance_id, then by filename for stability

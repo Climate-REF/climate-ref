@@ -8,7 +8,6 @@ from typing import TYPE_CHECKING, Any
 import cftime
 import pandas as pd
 import pooch
-import xarray as xr
 import yaml
 
 from climate_ref_esmvaltool.types import Recipe
@@ -259,28 +258,23 @@ def get_child_and_parent_dataset(
     # Compute the start time of the child and parent datasets using the
     # branch_time_in_parent and branch_time_in_child attributes to compute the offset.
     # This ensures that the datasets are aligned correctly in time.
-    parent_path = parent_df.path.min()
-    child_path = child_df.path.min()
-    time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    with (
-        xr.open_dataset(parent_path, decode_times=time_coder) as parent_ds,
-        xr.open_dataset(child_path, decode_times=time_coder) as child_ds,
-    ):
-        branch_time_in_parent = cftime.num2date(
-            child_ds.attrs["branch_time_in_parent"],
-            units=parent_ds.time.encoding["units"],
-            calendar=parent_ds.time.encoding.get("calendar", "standard"),
-        )
-        branch_time_in_child = cftime.num2date(
-            child_ds.attrs["branch_time_in_child"],
-            units=child_ds.time.encoding["units"],
-            calendar=child_ds.time.encoding.get("calendar", "standard"),
-        )
-        child_start = child_ds.time.values[0]
-        parent_start = branch_time_in_parent - branch_time_in_child + child_start
+    parent_attrs = parent_df.iloc[0]
+    child_attrs = child_df.iloc[0]
+    branch_time_in_parent = cftime.num2date(
+        child_attrs["branch_time_in_parent"],
+        units=parent_attrs["time_units"],
+        calendar=parent_attrs["calendar"],
+    )
+    branch_time_in_child = cftime.num2date(
+        child_attrs["branch_time_in_child"],
+        units=child_attrs["time_units"],
+        calendar=child_attrs["calendar"],
+    )
+    child_start = child_attrs["start_time"]
+    parent_start = child_start + (branch_time_in_parent - branch_time_in_child)
 
     # Create the datasets for use in the recipe.
-    var_name = child_df.variable_id.iloc[0]
+    var_name = child_attrs["variable_id"]
     child_dataset = dataframe_to_recipe(child_df)[var_name]["additional_datasets"][0]
     # The end year of the timerange is inclusive, so subtract 1.
     child_end_year = child_start.year + child_duration_in_years - 1

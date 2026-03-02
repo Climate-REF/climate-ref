@@ -181,3 +181,15 @@ datasets:
   - historical
   grid: gn
   mip: Amon
+- project: CMIP6
+  activity:
+  - ScenarioMIP
+  - CMIP
+  dataset: MPI-ESM1-2-LR
+  ensemble: r1i1p1f1
+  institute: MPI-M
+  exp:
+  - ssp126
+  - historical
+  grid: gn
+  mip: Amon

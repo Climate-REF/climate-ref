@@ -122,9 +122,9 @@ diagnostics:
     additional_datasets:
     - project: CMIP6
       activity: CMIP
-      dataset: CESM2
+      dataset: ACCESS-ESM1-5
       ensemble: r1i1p1f1
-      institute: NCAR
+      institute: CSIRO
       exp: historical
       grid: gn
       mip: Amon
@@ -147,5 +147,5 @@ diagnostics:
           style: ticks
           rc:
             axes.titlepad: 15.0
-        suptitle: CMIP6 CESM2 r1i1p1f1 gn 1996/2014
-        plot_filename: jointplot_clivi_lwcre_CMIP6_CESM2_r1i1p1f1_gn_1996-2014
+        suptitle: CMIP6 ACCESS-ESM1-5 r1i1p1f1 gn 1996/2014
+        plot_filename: jointplot_clivi_lwcre_CMIP6_ACCESS-ESM1-5_r1i1p1f1_gn_1996-2014

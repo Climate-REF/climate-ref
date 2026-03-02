@@ -1,6 +1,6 @@
-import cftime
 from pathlib import Path
 
+import cftime
 import pandas as pd
 import pytest
 from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset, prepare_climate_data

@@ -7,17 +7,9 @@ from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import parse_cftime_dates, validate_path
+from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
-
-
-def _is_na(value: Any) -> bool:
-    """Check if a value is NA/NaN/None, safely handling all types."""
-    try:
-        return bool(pd.isna(value))
-    except (TypeError, ValueError):
-        return False
 
 
 @define

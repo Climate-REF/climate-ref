@@ -8,9 +8,9 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.database import Database
-from climate_ref.datasets.base import DatasetParsingFunction, _is_na
+from climate_ref.datasets.base import DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import parse_files
-from climate_ref.datasets.utils import parse_cftime_dates
+from climate_ref.datasets.utils import _is_na, parse_cftime_dates
 
 
 class FinaliseableDatasetAdapterMixin:

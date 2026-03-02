@@ -6,10 +6,22 @@ from __future__ import annotations
 
 import re
 from pathlib import Path
+from typing import Any
 
 import cftime
 import pandas as pd
 from loguru import logger
+
+
+def _is_na(value: Any) -> bool:
+    """Check if a value is NA/NaN/None, safely handling all types."""
+    if value is None:
+        return True
+
+    try:
+        return bool(pd.isna(value))
+    except (TypeError, ValueError):
+        return False
 
 
 def sort_data_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
@@ -68,14 +80,8 @@ def parse_cftime_dates(
         if isinstance(date_value, cftime.datetime):
             return date_value
 
-        # Handle None and pandas NA/NaN
-        if date_value is None:
+        if _is_na(date_value):
             return None
-        try:
-            if pd.isnull(date_value):  # type: ignore[call-overload]
-                return None
-        except (TypeError, ValueError):
-            pass
 
         # Convert any date-like value (str, pd.Timestamp, datetime) to string for regex parsing
         date_str = date_value if isinstance(date_value, str) else str(date_value)

@@ -494,22 +494,11 @@ class RequireContiguousTimerange:
             if len(subgroup) < 2:  # noqa: PLR2004
                 continue
 
-            try:
-                sorted_group = subgroup.sort_values("start_time", kind="stable")
-                start_series = sorted_group["start_time"]
-                end_series = sorted_group["end_time"]
-                diff = start_series.values[1:] - end_series.values[:-1]  # type: ignore[operator]
-            except TypeError:
-                # Mixed-calendar cftime objects (e.g., "standard" vs "proleptic_gregorian"
-                # during partial finalization). Fall back to string-based comparison since
-                # these calendars produce equivalent dates for modern date ranges.
-                def _sort_key(col: pd.Series) -> pd.Series:
-                    return col.apply(str) if col.name == "start_time" else col
+            sorted_group = subgroup.sort_values("start_time", kind="stable")
+            start_series = sorted_group["start_time"]
+            end_series = sorted_group["end_time"]
+            diff = start_series.values[1:] - end_series.values[:-1]  # type: ignore[operator]
 
-                sorted_group = subgroup.sort_values("start_time", kind="stable", key=_sort_key)
-                starts = pd.to_datetime(sorted_group["start_time"].apply(str))
-                ends = pd.to_datetime(sorted_group["end_time"].apply(str))
-                diff = starts.values[1:] - ends.values[:-1]  # type: ignore[operator]
             gap_indices = diff > max_timedelta
             if gap_indices.any():
                 paths = sorted_group["path"]

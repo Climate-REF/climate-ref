@@ -63,6 +63,11 @@ from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
 
+_MAX_SOURCE_IDS = 5
+"""
+Maximum number of unique source_ids to keep per catalog DataFrame in the trimmed ESGF catalog fixture.
+"""
+
 
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
@@ -163,6 +168,29 @@ def esgf_data_catalog(
             "Run scripts/generate_esgf_catalog.py to generate it."
         )
     return esgf_solve_catalog
+
+
+@pytest.fixture(scope="session")
+def esgf_data_catalog_trimmed(
+    esgf_solve_catalog: dict[SourceDatasetType, pd.DataFrame], test_data_dir: Path
+) -> dict[SourceDatasetType, pd.DataFrame]:
+    """
+    Trimmed ESGF catalog for integration tests.
+
+    Keeps only the first ``_MAX_SOURCE_IDS`` unique source_ids per catalog
+    DataFrame, reducing row count by ~95% while preserving representative
+    coverage of experiments, variables, and members needed to produce
+    executions for each provider.
+    """
+    result = {}
+    for source_type, df in esgf_solve_catalog.items():
+        if source_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
+            source_ids = sorted(df["source_id"].unique())[:_MAX_SOURCE_IDS]
+            result[source_type] = df[df["source_id"].isin(source_ids)]
+        else:
+            result[source_type] = df
+
+    return result
 
 
 @pytest.fixture

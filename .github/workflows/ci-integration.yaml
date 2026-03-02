@@ -1,3 +1,5 @@
+name: CI Integration Tests
+
 # These tests run on self-hosted runners with access to a shared cache of datasets and software.
 # This allows us to run the full suite of tests,
 # including slow integration tests that require large datasets and/or long runtimes.

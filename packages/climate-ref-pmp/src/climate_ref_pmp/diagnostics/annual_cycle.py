@@ -1,5 +1,6 @@
 import datetime
 import json
+import os
 from pathlib import Path
 from typing import Any
 
@@ -393,6 +394,7 @@ class AnnualCycle(CommandLineDiagnostic):
     def __init__(self) -> None:
         self.parameter_file_1 = "pmp_param_annualcycle_1-clims.py"
         self.parameter_file_2 = "pmp_param_annualcycle_2-metrics.py"
+        self.parameter_file_3 = "pmp_param_monsoon.py"
 
     def build_cmds(self, definition: ExecutionDefinition) -> list[list[str]]:  # noqa: PLR0915
         """
@@ -520,6 +522,28 @@ class AnnualCycle(CommandLineDiagnostic):
                 **params,
             )
         )
+
+        # --------------------------------------------------
+        # PART 3: Monsoon
+        # --------------------------------------------------
+        if variable_id in ["pr"]:
+            params = {
+                "reference_dataset_path": reference_dataset_path,
+                "test_data_path": os.path.join(
+                    output_directory_path,
+                    f"{variable_id}_{data_name}_clims.198101-200512.AC.v{date_stamp}.nc",
+                ),
+                "modnames": [source_id],
+                "result_dir": output_directory_path,
+            }
+
+            cmds.append(
+                build_pmp_command(
+                    driver_file="monsoon_wang_driver.py",
+                    parameter_file=self.parameter_file_3,
+                    **params,
+                )
+            )
 
         logger.debug("build_cmd end")
         logger.debug(f"cmds: {cmds}")

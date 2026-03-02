@@ -7,6 +7,7 @@ import pandas as pd
 import pytest
 
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, parse_obs4mips
+from climate_ref.datasets.utils import sort_data_catalog
 from climate_ref.testing import TEST_DATA_DIR
 
 
@@ -109,8 +110,7 @@ class Testobs4MIPsAdapter:
         for k in adapter.dataset_specific_metadata + adapter.file_specific_metadata:
             assert k in df.columns
 
-        # The order of the rows may be flakey due to sqlite ordering and the created time resolution
-        catalog_regression(df.sort_values(["instance_id", "start_time"]), basename="obs4mips_catalog_db")
+        catalog_regression(sort_data_catalog(df), basename="obs4mips_catalog_db")
 
     @pytest.mark.xfail(reason="The database seems to store only the latest version of a dataset.")
     def test_round_trip(self, db_seeded, obs4mips_data_catalog, sample_data_dir):
@@ -124,9 +124,6 @@ class Testobs4MIPsAdapter:
 
         db_data_catalog = adapter.load_catalog(db_seeded).sort_values(["instance_id"]).reset_index(drop=True)
 
-        # TODO: start_time has a different dtype from the database due to pandas dt coercion
-        db_data_catalog["start_time"] = db_data_catalog["start_time"].astype(object)
-        db_data_catalog["end_time"] = db_data_catalog["end_time"].astype(object)
         pd.testing.assert_frame_equal(local_data_catalog, db_data_catalog, check_like=True)
 
     def test_load_local_datasets(self, sample_data_dir, catalog_regression):
@@ -139,7 +136,8 @@ class Testobs4MIPsAdapter:
         )
 
         catalog_regression(
-            data_catalog.sort_values(["instance_id", "start_time"]), basename="obs4mips_catalog_local"
+            sort_data_catalog(data_catalog),
+            basename="obs4mips_catalog_local",
         )
 
     def test_load_local_CMIP6_datasets(self, sample_data_dir):

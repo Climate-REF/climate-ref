@@ -7,17 +7,9 @@ from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import validate_path
+from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
-
-
-def _is_na(value: Any) -> bool:
-    """Check if a value is NA/NaN/None, safely handling all types."""
-    try:
-        return bool(pd.isna(value))
-    except (TypeError, ValueError):
-        return False
 
 
 @define
@@ -484,5 +476,11 @@ class DatasetAdapter(Protocol):
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:
             return pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
+
+        # Convert start_time/end_time strings from DB to cftime objects
+        if "start_time" in catalog.columns:
+            cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
+            catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
+            catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
 
         return self.filter_latest_versions(catalog)

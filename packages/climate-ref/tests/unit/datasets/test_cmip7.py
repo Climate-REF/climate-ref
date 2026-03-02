@@ -135,6 +135,8 @@ class TestCMIP7Adapter:
             "parent_variant_label",
             "license_id",
             "external_variables",
+            "time_units",
+            "calendar",
         }
         assert adapter.columns_requiring_finalisation == requires_finalisation
 

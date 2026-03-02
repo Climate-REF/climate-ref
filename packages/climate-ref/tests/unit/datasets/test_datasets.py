@@ -32,8 +32,8 @@ class MockDatasetAdapter(DatasetAdapter):
             "source_id": ["CESM2", "CESM2"],  # Model name
             "grid_label": ["gn", "gn"],  # Native grid
             "dataset_slug": ["tas_CESM2_gn", "tas_CESM2_gn"],  # Dataset identifier
-            "start_time": [pd.Timestamp("2001-01-01"), pd.Timestamp("2002-01-01")],
-            "end_time": [pd.Timestamp("2001-12-31"), pd.Timestamp("2002-12-31")],
+            "start_time": ["2001-01-01", "2002-01-01"],
+            "end_time": ["2001-12-31", "2002-12-31"],
             "time_range": ["2001-01-01/2001-12-31", "2002-01-01/2002-12-31"],
             "path": [f"{file_or_directory.name}_2001.nc", f"{file_or_directory.name}_2002.nc"],
         }
@@ -165,13 +165,13 @@ def test_register_dataset_creates_and_adds_files(monkeypatch, test_db):
         rows=[
             {
                 "path": "f1.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
             {
                 "path": "f2.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
         ]
     )
@@ -210,13 +210,13 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
         rows=[
             {
                 "path": "f1.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
             {
                 "path": "f2.nc",
-                "start_time": pd.Timestamp("2000-01-01"),
-                "end_time": pd.Timestamp("2000-12-31"),
+                "start_time": "2000-01-01",
+                "end_time": "2000-12-31",
             },
         ]
     )
@@ -229,18 +229,18 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
         rows=[
             {
                 "path": "f1.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },  # unchanged
             {
                 "path": "f2.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },  # updated
             {
                 "path": "f3.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },  # added
         ]
     )
@@ -262,8 +262,8 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
 
     # Check that f2.nc was actually updated
     f2_file = next(f for f in files if f.path == "f2.nc")
-    assert f2_file.start_time == pd.Timestamp("2001-01-01")
-    assert f2_file.end_time == pd.Timestamp("2001-12-31")
+    assert f2_file.start_time == "2001-01-01"
+    assert f2_file.end_time == "2001-12-31"
 
 
 def test_register_dataset_raises_on_removal(monkeypatch, test_db):
@@ -274,13 +274,13 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
         rows=[
             {
                 "path": "keep.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
             {
                 "path": "remove.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
         ]
     )
@@ -293,8 +293,8 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
         rows=[
             {
                 "path": "keep.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
         ]
     )
@@ -314,8 +314,8 @@ def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
                 rows=[
                     {
                         "path": "a.nc",
-                        "start_time": pd.Timestamp("2001-01-01"),
-                        "end_time": pd.Timestamp("2001-12-31"),
+                        "start_time": "2001-01-01",
+                        "end_time": "2001-12-31",
                     }
                 ],
             ),
@@ -324,8 +324,8 @@ def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
                 rows=[
                     {
                         "path": "b.nc",
-                        "start_time": pd.Timestamp("2001-01-01"),
-                        "end_time": pd.Timestamp("2001-12-31"),
+                        "start_time": "2001-01-01",
+                        "end_time": "2001-12-31",
                     }
                 ],
             ),
@@ -348,8 +348,8 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
         rows=[
             {
                 "path": "tas_file.nc",
-                "start_time": pd.Timestamp("2001-01-01"),
-                "end_time": pd.Timestamp("2001-12-31"),
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
             },
         ],
     )
@@ -549,13 +549,13 @@ class TestIngestDatasets:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
                 {
                     "path": "f2.nc",
-                    "start_time": pd.Timestamp("2002-01-01"),
-                    "end_time": pd.Timestamp("2002-12-31"),
+                    "start_time": "2002-01-01",
+                    "end_time": "2002-12-31",
                 },
             ]
         )
@@ -579,8 +579,8 @@ class TestIngestDatasets:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ]
         )
@@ -612,13 +612,13 @@ class TestIngestDatasets:
             rows=[
                 {
                     "path": str(data_dir / "test1.nc"),
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
                 {
                     "path": str(data_dir / "test2.nc"),
-                    "start_time": pd.Timestamp("2002-01-01"),
-                    "end_time": pd.Timestamp("2002-12-31"),
+                    "start_time": "2002-01-01",
+                    "end_time": "2002-12-31",
                 },
             ]
         )
@@ -645,8 +645,8 @@ class TestIngestDatasets:
             rows=[
                 {
                     "path": str(data_dir / "test.nc"),
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ]
         )
@@ -667,8 +667,8 @@ class TestIngestDatasets:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ]
         )
@@ -680,13 +680,13 @@ class TestIngestDatasets:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
                 {
                     "path": "f2.nc",
-                    "start_time": pd.Timestamp("2002-01-01"),
-                    "end_time": pd.Timestamp("2002-12-31"),
+                    "start_time": "2002-01-01",
+                    "end_time": "2002-12-31",
                 },
             ]
         )
@@ -783,8 +783,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -810,8 +810,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -828,8 +828,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -854,8 +854,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -870,8 +870,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -892,8 +892,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -916,8 +916,8 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
             ],
         )
@@ -933,13 +933,13 @@ class TestReingestionWithNA:
             rows=[
                 {
                     "path": "f1.nc",
-                    "start_time": pd.Timestamp("2001-01-01"),
-                    "end_time": pd.Timestamp("2001-12-31"),
+                    "start_time": "2001-01-01",
+                    "end_time": "2001-12-31",
                 },
                 {
                     "path": "f2.nc",
-                    "start_time": pd.Timestamp("2002-01-01"),
-                    "end_time": pd.Timestamp("2002-12-31"),
+                    "start_time": "2002-01-01",
+                    "end_time": "2002-12-31",
                 },
             ],
         )

@@ -1,5 +1,5 @@
 - activity_id: obs4MIPs
-  end_time: 2012-12-15 00:00:00
+  end_time: '2012-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 0.5x0.5 degree
@@ -14,7 +14,7 @@
   source_id: LORA-1-1
   source_type: gridded_insitu
   source_version_number: '1.1'
-  start_time: 1980-01-15 00:00:00
+  start_time: '1980-01-15 00:00:00'
   time_range: 1980-01-15 00:00:00-2012-12-15 00:00:00
   units: kg m-2 s-1
   variable_id: mrro
@@ -22,7 +22,7 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-12-16 12:00:00
+  end_time: '2019-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -37,7 +37,7 @@
   source_id: AVISO-1-0
   source_type: satellite_retrieval
   source_version_number: '1.0'
-  start_time: 1993-01-16 12:00:00
+  start_time: '1993-01-16 12:00:00'
   time_range: 1993-01-16 12:00:00-2019-12-16 12:00:00
   units: m
   variable_id: zos
@@ -45,7 +45,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree
@@ -61,7 +61,7 @@
   source_id: WECANN-1-0
   source_type: satellite_retrieval
   source_version_number: '1'
-  start_time: 2007-01-15 00:00:00
+  start_time: '2007-01-15 00:00:00'
   time_range: 2007-01-15 00:00:00-2015-12-15 00:00:00
   units: kg m-2 s-1
   variable_id: gpp
@@ -69,7 +69,7 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree
@@ -84,7 +84,7 @@
   source_id: WECANN-1-0
   source_type: satellite_retrieval
   source_version_number: '1'
-  start_time: 2007-01-15 00:00:00
+  start_time: '2007-01-15 00:00:00'
   time_range: 2007-01-15 00:00:00-2015-12-15 00:00:00
   units: W m-2
   variable_id: hfls
@@ -92,7 +92,7 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree
@@ -107,7 +107,7 @@
   source_id: WECANN-1-0
   source_type: satellite_retrieval
   source_version_number: '1'
-  start_time: 2007-01-15 00:00:00
+  start_time: '2007-01-15 00:00:00'
   time_range: 2007-01-15 00:00:00-2015-12-15 00:00:00
   units: W m-2
   variable_id: hfss
@@ -115,7 +115,7 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -130,7 +130,7 @@
   source_id: ERA-20C
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1900-01-16 12:00:00
+  start_time: '1900-01-16 12:00:00'
   time_range: 1900-01-16 12:00:00-2010-12-16 12:00:00
   units: Pa
   variable_id: psl
@@ -138,7 +138,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -153,7 +153,7 @@
   source_id: ERA-20C
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1900-01-16 12:00:00
+  start_time: '1900-01-16 12:00:00'
   time_range: 1900-01-16 12:00:00-2010-12-16 12:00:00
   units: K
   variable_id: ts
@@ -161,7 +161,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -176,7 +176,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: W m-2
   variable_id: hfls
@@ -184,7 +184,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -199,7 +199,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: W m-2
   variable_id: hfss
@@ -207,7 +207,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -222,7 +222,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   time_range: 1989-01-16 12:00:00-2010-01-16 12:00:00
   units: '%'
   variable_id: hur
@@ -230,7 +230,7 @@
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -245,7 +245,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   time_range: 1989-01-16 12:00:00-2010-01-16 12:00:00
   units: '1'
   variable_id: hus
@@ -253,7 +253,7 @@
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -268,7 +268,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
@@ -276,7 +276,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -291,7 +291,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: Pa
   variable_id: psl
@@ -299,7 +299,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -314,7 +314,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: W m-2
   variable_id: rlds
@@ -322,7 +322,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -337,7 +337,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: W m-2
   variable_id: rlus
@@ -345,7 +345,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -360,7 +360,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: W m-2
   variable_id: rsds
@@ -368,7 +368,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -383,7 +383,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: W m-2
   variable_id: rsus
@@ -391,7 +391,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -406,7 +406,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: m s-1
   variable_id: sfcWind
@@ -414,7 +414,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -429,7 +429,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   time_range: 1989-01-16 12:00:00-2010-01-16 12:00:00
   units: K
   variable_id: ta
@@ -437,7 +437,7 @@
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -452,7 +452,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: Pa
   variable_id: tauu
@@ -460,7 +460,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -475,7 +475,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: Pa
   variable_id: tauv
@@ -483,7 +483,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -498,7 +498,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: K
   variable_id: ts
@@ -506,7 +506,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -521,7 +521,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   time_range: 1989-01-16 12:00:00-2010-01-16 12:00:00
   units: m s-1
   variable_id: ua
@@ -529,7 +529,7 @@
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -544,7 +544,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: m s-1
   variable_id: uas
@@ -552,7 +552,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -567,7 +567,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   time_range: 1989-01-16 12:00:00-2010-01-16 12:00:00
   units: m s-1
   variable_id: va
@@ -575,7 +575,7 @@
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -590,7 +590,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-03-16 12:00:00
   units: m s-1
   variable_id: vas
@@ -598,7 +598,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -613,7 +613,7 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   time_range: 1989-01-16 12:00:00-2010-01-16 12:00:00
   units: m
   variable_id: zg
@@ -621,7 +621,7 @@
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -636,7 +636,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: W m-2
   variable_id: hfls
@@ -644,7 +644,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -659,7 +659,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
   units: W m-2
   variable_id: hfls
@@ -667,7 +667,7 @@
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -682,7 +682,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: W m-2
   variable_id: hfns
@@ -690,7 +690,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -705,7 +705,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: W m-2
   variable_id: hfss
@@ -713,7 +713,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -728,7 +728,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
   units: W m-2
   variable_id: hfss
@@ -736,7 +736,7 @@
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -751,7 +751,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: K
   variable_id: tas
@@ -759,7 +759,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -774,7 +774,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
   units: K
   variable_id: tas
@@ -782,7 +782,7 @@
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -797,7 +797,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: Pa
   variable_id: tauu
@@ -805,7 +805,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -820,7 +820,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
   units: Pa
   variable_id: tauu
@@ -828,7 +828,7 @@
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -843,7 +843,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: Pa
   variable_id: tauv
@@ -851,7 +851,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -866,7 +866,7 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
   units: K
   variable_id: ts
@@ -874,7 +874,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-07-16 12:00:00
+  end_time: '2019-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -889,7 +889,7 @@
   source_id: HadISST-1-1
   source_type: satellite_blended
   source_version_number: 1-1
-  start_time: 1870-01-16 11:59:59.464417
+  start_time: '1870-01-16 11:59:59.464417'
   time_range: 1870-01-16 11:59:59.464417-2019-07-16 12:00:00
   units: K
   variable_id: ts
@@ -897,7 +897,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2025-01-16 12:00:00
+  end_time: '2025-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -912,7 +912,7 @@
   source_id: HadISST-1-1
   source_type: satellite_blended
   source_version_number: 1-1
-  start_time: 1870-01-16 12:00:00
+  start_time: '1870-01-16 12:00:00'
   time_range: 1870-01-16 12:00:00-2025-01-16 12:00:00
   units: K
   variable_id: ts
@@ -920,7 +920,7 @@
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-03-16 12:00:00
+  end_time: '2023-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.5x0.5 degree latitude x longitude
@@ -935,7 +935,7 @@
   source_id: GPCP-Monthly-3-2
   source_type: satellite_blended
   source_version_number: '3.2'
-  start_time: 1983-01-16 12:00:00
+  start_time: '1983-01-16 12:00:00'
   time_range: 1983-01-16 12:00:00-2023-03-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
@@ -943,7 +943,7 @@
   version: v20231205
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-12-16 12:00:00
+  end_time: '2017-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
@@ -958,7 +958,7 @@
   source_id: TRMM-3B43v-7
   source_type: satellite_blended
   source_version_number: 3B43v.7
-  start_time: 1998-01-16 12:00:00
+  start_time: '1998-01-16 12:00:00'
   time_range: 1998-01-16 12:00:00-2017-12-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
@@ -966,7 +966,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -981,7 +981,7 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
   units: W m-2
   variable_id: rlds
@@ -989,7 +989,7 @@
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -1004,7 +1004,7 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
   units: W m-2
   variable_id: rlus
@@ -1012,7 +1012,7 @@
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -1027,7 +1027,7 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
   units: W m-2
   variable_id: rsds
@@ -1035,7 +1035,7 @@
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -1050,7 +1050,7 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
   units: W m-2
   variable_id: rsus
@@ -1058,7 +1058,7 @@
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
@@ -1073,7 +1073,7 @@
   source_id: 20CR
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1871-01-16 12:00:00
+  start_time: '1871-01-16 12:00:00'
   time_range: 1871-01-16 12:00:00-2012-12-16 12:00:00
   units: Pa
   variable_id: psl
@@ -1081,7 +1081,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
@@ -1096,7 +1096,7 @@
   source_id: 20CR
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1871-01-16 12:00:00
+  start_time: '1871-01-16 12:00:00'
   time_range: 1871-01-16 12:00:00-2012-12-16 12:00:00
   units: K
   variable_id: ts
@@ -1104,7 +1104,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-01-16 12:00:00
+  end_time: '2019-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
@@ -1119,7 +1119,7 @@
   source_id: CMAP-V1902
   source_type: satellite_blended
   source_version_number: V1902
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-01-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
@@ -1127,7 +1127,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-07-16 12:00:00
+  end_time: '2019-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 2.5x2.5 degree latitude x longitude
@@ -1142,7 +1142,7 @@
   source_id: GPCP-2-3
   source_type: satellite_blended
   source_version_number: '2.3'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   time_range: 1979-01-16 12:00:00-2019-07-16 12:00:00
   units: kg m-2 s-1
   variable_id: pr
@@ -1150,7 +1150,7 @@
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -1166,7 +1166,7 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   time_range: 2015-01-15 00:00:00-2015-12-15 00:00:00
   units: micromoles_per_kilogram
   variable_id: no3
@@ -1174,7 +1174,7 @@
   version: v20250516
   vertical_levels: 43
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -1190,7 +1190,7 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   time_range: 2015-01-15 00:00:00-2015-12-15 00:00:00
   units: micromoles_per_kilogram
   variable_id: o2
@@ -1198,7 +1198,7 @@
   version: v20250516
   vertical_levels: 57
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -1214,7 +1214,7 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   time_range: 2015-01-15 00:00:00-2015-12-15 00:00:00
   units: micromoles_per_kilogram
   variable_id: po4
@@ -1222,7 +1222,7 @@
   version: v20250516
   vertical_levels: 43
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -1238,7 +1238,7 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   time_range: 2015-01-15 00:00:00-2015-12-15 00:00:00
   units: '1'
   variable_id: so
@@ -1246,7 +1246,7 @@
   version: v20250516
   vertical_levels: 57
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -1261,7 +1261,7 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   time_range: 2015-01-15 00:00:00-2015-12-15 00:00:00
   units: degC
   variable_id: thetao
@@ -1269,7 +1269,7 @@
   version: v20250516
   vertical_levels: 57
 - activity_id: obs4MIPs
-  end_time: 2023-02-15 00:00:00
+  end_time: '2023-02-15 00:00:00'
   finalised: true
   frequency: mon
   grid: N/A
@@ -1284,7 +1284,7 @@
   source_id: RAPID
   source_type: insitu
   source_version_number: '2023.1'
-  start_time: 2004-04-15 00:00:00
+  start_time: '2004-04-15 00:00:00'
   time_range: 2004-04-15 00:00:00-2023-02-15 00:00:00
   units: Sv
   variable_id: msftmz
@@ -1292,7 +1292,7 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-07-02 12:00:00
+  end_time: '2010-07-02 12:00:00'
   finalised: true
   frequency: yr
   grid: global mean data
@@ -1307,7 +1307,7 @@
   source_id: Hoffman
   source_type: stastical-estimate
   source_version_number: '1'
-  start_time: 1850-07-02 12:00:00
+  start_time: '1850-07-02 12:00:00'
   time_range: 1850-07-02 12:00:00-2010-07-02 12:00:00
   units: Pg yr-1
   variable_id: fgco2
@@ -1315,7 +1315,7 @@
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-07-02 12:00:00
+  end_time: '2010-07-02 12:00:00'
   finalised: true
   frequency: yr
   grid: global mean data
@@ -1330,7 +1330,7 @@
   source_id: Hoffman
   source_type: stastical-estimate
   source_version_number: '1'
-  start_time: 1850-07-02 12:00:00
+  start_time: '1850-07-02 12:00:00'
   time_range: 1850-07-02 12:00:00-2010-07-02 12:00:00
   units: Pg yr-1
   variable_id: nbp

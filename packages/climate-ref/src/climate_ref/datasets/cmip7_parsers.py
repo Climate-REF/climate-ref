@@ -12,7 +12,12 @@ from typing import Any
 import netCDF4
 from loguru import logger
 
-from climate_ref.datasets.netcdf_utils import read_mandatory_attr, read_time_bounds, read_variable_attrs
+from climate_ref.datasets.netcdf_utils import (
+    read_mandatory_attr,
+    read_time_bounds,
+    read_time_metadata,
+    read_variable_attrs,
+)
 from climate_ref.datasets.utils import extract_version_from_path, parse_drs_daterange
 
 
@@ -134,6 +139,7 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
     try:
         with netCDF4.Dataset(file, "r") as ds:
             start_time, end_time = read_time_bounds(ds)
+            time_units, calendar = read_time_metadata(ds)
 
             variable_id = read_mandatory_attr(ds, "variable_id")
             var_attrs = read_variable_attrs(ds, variable_id, ["standard_name", "long_name", "units"])
@@ -178,6 +184,8 @@ def parse_cmip7_complete(file: str, **kwargs: Any) -> dict[str, Any]:
                 "start_time": start_time,
                 "end_time": end_time,
                 "time_range": f"{start_time}-{end_time}" if start_time and end_time else None,
+                "time_units": time_units,
+                "calendar": calendar,
                 # Path
                 "path": file,
                 # Finalisation status

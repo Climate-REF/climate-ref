@@ -2,6 +2,7 @@ import operator
 from collections.abc import Callable
 from datetime import datetime
 
+import cftime
 import pandas as pd
 import pytest
 from pandas.testing import assert_frame_equal
@@ -524,6 +525,26 @@ class TestPartialDateTime:
         with pytest.raises(TypeError):
             assert op(PartialDateTime(year=2000), object())
 
+    def test_eq_cftime(self) -> None:
+        """PartialDateTime compares correctly with cftime.datetime objects."""
+        cftime = pytest.importorskip("cftime")
+        dt = cftime.datetime(2000, 6, 15, calendar="360_day")
+        assert PartialDateTime(year=2000, month=6) == dt
+        assert not (PartialDateTime(year=2001) == dt)
+
+    def test_lt_cftime(self) -> None:
+        """PartialDateTime less-than works with cftime.datetime objects."""
+        cftime = pytest.importorskip("cftime")
+        dt = cftime.datetime(2001, 3, 1, calendar="noleap")
+        assert PartialDateTime(year=2000) < dt
+        assert not (PartialDateTime(year=2002) < dt)
+
+    def test_gt_cftime(self) -> None:
+        """PartialDateTime greater-than works with cftime.datetime objects."""
+        cftime = pytest.importorskip("cftime")
+        dt = cftime.datetime(2000, 1, 1, calendar="standard")
+        assert PartialDateTime(year=2000, month=2) > dt
+
 
 class TestRequireTimerange:
     @pytest.mark.parametrize(
@@ -752,6 +773,50 @@ class TestRequireTimerange:
         constraint = RequireTimerange(group_by=["variable_id"], start=start, end=end)
         assert_frame_equal(constraint.apply(data, data), expected_data)
 
+    def test_cftime_within_required_range(self) -> None:
+        """RequireTimerange works with cftime dates and PartialDateTime bounds."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 16, 12, calendar="360_day"),
+                    cftime.datetime(2001, 1, 16, 12, calendar="360_day"),
+                ],
+                "end_time": [
+                    cftime.datetime(2000, 12, 16, 12, calendar="360_day"),
+                    cftime.datetime(2001, 12, 16, 12, calendar="360_day"),
+                ],
+                "calendar": ["360_day", "360_day"],
+                "path": ["tas_2000.nc", "tas_2001.nc"],
+            }
+        )
+        constraint = RequireTimerange(
+            group_by=["variable_id"],
+            start=PartialDateTime(year=2000, month=1),
+            end=PartialDateTime(year=2001, month=12),
+        )
+        result = constraint.apply(data, data)
+        assert_frame_equal(result, data)
+
+    def test_cftime_outside_required_range(self) -> None:
+        """RequireTimerange rejects cftime dates outside the required range."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "start_time": [cftime.datetime(2002, 1, 1, calendar="noleap")],
+                "end_time": [cftime.datetime(2002, 12, 31, calendar="noleap")],
+                "calendar": ["noleap"],
+                "path": ["tas_2002.nc"],
+            }
+        )
+        constraint = RequireTimerange(
+            group_by=["variable_id"],
+            start=PartialDateTime(year=2000, month=1),
+            end=None,
+        )
+        result = constraint.apply(data, data)
+        assert result.empty
+
 
 class TestContiguousTimerange:
     constraint = RequireContiguousTimerange(group_by=["variable_id"])
@@ -865,6 +930,109 @@ class TestContiguousTimerange:
         expected_data = data.loc[expected_rows]
         assert_frame_equal(self.constraint.apply(data, data.loc[[]]), expected_data)
 
+    def test_cftime_same_calendar_contiguous(self) -> None:
+        """Contiguous cftime dates with the same calendar are accepted."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "calendar": ["360_day", "360_day"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="360_day"),
+                    cftime.datetime(2001, 1, 1, calendar="360_day"),
+                ],
+                "end_time": [
+                    cftime.datetime(2000, 12, 30, calendar="360_day"),
+                    cftime.datetime(2001, 12, 30, calendar="360_day"),
+                ],
+                "path": ["tas_2000.nc", "tas_2001.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert_frame_equal(result, data)
+
+    def test_cftime_same_calendar_with_gap(self) -> None:
+        """Non-contiguous cftime dates with the same calendar are rejected."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "calendar": ["noleap", "noleap"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="noleap"),
+                    cftime.datetime(2003, 1, 1, calendar="noleap"),
+                ],
+                "end_time": [
+                    cftime.datetime(2000, 12, 31, calendar="noleap"),
+                    cftime.datetime(2003, 12, 31, calendar="noleap"),
+                ],
+                "path": ["tas_2000.nc", "tas_2003.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert result.empty
+
+    def test_cftime_mixed_calendars_same_subgroup_rejected(self) -> None:
+        """Mixed calendars within a single subgroup are rejected."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "calendar": ["360_day", "noleap"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="360_day"),
+                    cftime.datetime(2001, 1, 1, calendar="noleap"),
+                ],
+                "end_time": [
+                    cftime.datetime(2000, 12, 30, calendar="360_day"),
+                    cftime.datetime(2001, 12, 31, calendar="noleap"),
+                ],
+                "path": ["tas_360.nc", "tas_noleap.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert result.empty
+
+    def test_cftime_different_calendars_different_subgroups(self) -> None:
+        """Different calendars in separate subgroups are checked independently."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "pr", "pr"],
+                "calendar": ["360_day", "360_day", "noleap", "noleap"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="360_day"),
+                    cftime.datetime(2001, 1, 1, calendar="360_day"),
+                    cftime.datetime(2000, 1, 1, calendar="noleap"),
+                    cftime.datetime(2001, 1, 1, calendar="noleap"),
+                ],
+                "end_time": [
+                    cftime.datetime(2000, 12, 30, calendar="360_day"),
+                    cftime.datetime(2001, 12, 30, calendar="360_day"),
+                    cftime.datetime(2000, 12, 31, calendar="noleap"),
+                    cftime.datetime(2001, 12, 31, calendar="noleap"),
+                ],
+                "path": ["tas_2000.nc", "tas_2001.nc", "pr_2000.nc", "pr_2001.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert_frame_equal(result, data)
+
+    def test_cftime_no_calendar_column_falls_back(self) -> None:
+        """Without a calendar column, cftime dates from the same calendar still work."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 16, 12, calendar="standard"),
+                    cftime.datetime(2001, 1, 16, 12, calendar="standard"),
+                ],
+                "end_time": [
+                    cftime.datetime(2000, 12, 16, 12, calendar="standard"),
+                    cftime.datetime(2001, 12, 16, 12, calendar="standard"),
+                ],
+                "path": ["tas_2000.nc", "tas_2001.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert_frame_equal(result, data)
+
 
 class TestOverlappingTimerange:
     constraint = RequireOverlappingTimerange(group_by=["variable_id"])
@@ -955,6 +1123,63 @@ class TestOverlappingTimerange:
         empty = data.loc[[]]
         expected_data = data if expected else empty
         assert_frame_equal(self.constraint.apply(data, empty), expected_data)
+
+    def test_cftime_same_calendar_overlapping(self) -> None:
+        """Overlapping cftime dates with the same calendar are accepted."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "pr"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="360_day"),
+                    cftime.datetime(2000, 6, 1, calendar="360_day"),
+                ],
+                "end_time": [
+                    cftime.datetime(2001, 12, 30, calendar="360_day"),
+                    cftime.datetime(2002, 12, 30, calendar="360_day"),
+                ],
+                "path": ["tas_2000-2001.nc", "pr_2000-2002.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert_frame_equal(result, data)
+
+    def test_cftime_same_calendar_no_overlap(self) -> None:
+        """Non-overlapping cftime dates with the same calendar are rejected."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "pr"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="noleap"),
+                    cftime.datetime(2003, 1, 1, calendar="noleap"),
+                ],
+                "end_time": [
+                    cftime.datetime(2001, 12, 31, calendar="noleap"),
+                    cftime.datetime(2004, 12, 31, calendar="noleap"),
+                ],
+                "path": ["tas_2000-2001.nc", "pr_2003-2004.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert result.empty
+
+    def test_cftime_different_calendars_across_groups_overlapping(self) -> None:
+        """Different calendars across variable groups with overlapping ranges are accepted."""
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "pr"],
+                "start_time": [
+                    cftime.datetime(2000, 1, 1, calendar="360_day"),
+                    cftime.datetime(2000, 1, 1, calendar="noleap"),
+                ],
+                "end_time": [
+                    cftime.datetime(2002, 12, 30, calendar="360_day"),
+                    cftime.datetime(2002, 12, 31, calendar="noleap"),
+                ],
+                "path": ["tas_2000-2002.nc", "pr_2000-2002.nc"],
+            }
+        )
+        result = self.constraint.apply(data, data.loc[[]])
+        assert_frame_equal(result, data)
 
 
 class TestAddParent:

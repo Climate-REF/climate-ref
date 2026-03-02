@@ -5,6 +5,7 @@ import warnings
 import pytest
 
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
+from climate_ref.datasets.utils import sort_data_catalog
 
 
 @pytest.fixture
@@ -24,7 +25,7 @@ class TestPMPClimatologyAdapter:
     def test_load_local_datasets(self, sample_data_dir, catalog_regression):
         adapter = PMPClimatologyDatasetAdapter()
         # TODO: ingest pmp data instead of obs4REF
-        data_catalog = adapter.find_local_datasets(str(sample_data_dir / "obs4REF"))
+        data_catalog = adapter.find_local_datasets(sample_data_dir / "obs4REF")
 
         # TODO: add time_range to the db?
         assert sorted(data_catalog.columns.tolist()) == sorted(
@@ -32,7 +33,8 @@ class TestPMPClimatologyAdapter:
         )
 
         catalog_regression(
-            data_catalog.sort_values(["instance_id", "start_time"]), basename="pmp_catalog_local"
+            sort_data_catalog(data_catalog),
+            basename="pmp_catalog_local",
         )
 
     def test_load_local_CMIP6_datasets(self, sample_data_dir):
@@ -40,7 +42,7 @@ class TestPMPClimatologyAdapter:
             warnings.simplefilter("ignore")
             with pytest.raises(ValueError) as excinfo:
                 adapter = PMPClimatologyDatasetAdapter()
-                adapter.find_local_datasets(str(sample_data_dir) + "/CMIP6")
+                adapter.find_local_datasets(sample_data_dir / "CMIP6")
             assert str(excinfo.value) == "No obs4MIPs-compliant datasets found"
 
     def test_empty_directory_exception(self, test_empty_dir):

@@ -71,7 +71,7 @@ class Obs4MIPsRequest(IntakeESGFMixin):
             Optional time range filter (start, end) in YYYY-MM format
         """
         self.slug = slug
-        self.facets = facets
+        self.facets = {"project": "obs4MIPs", **facets}
         self.remove_ensembles = remove_ensembles
         self.time_span = time_span
 

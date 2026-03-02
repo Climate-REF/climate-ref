@@ -12,9 +12,7 @@ from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-
-# from climate_ref_core.metric_values.typing import SeriesDefinition
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
@@ -77,7 +75,7 @@ toz_data_requirement = (
                     },
                 ),
             ),
-            group_by=("source_id", "variable_label", "grid_label"),
+            group_by=("source_id", "variant_label", "grid_label"),
             constraints=(
                 RequireTimerange(
                     group_by=("instance_id",),
@@ -111,9 +109,9 @@ toz_test_spec = TestDataSpecification(
                 CMIP6Request(
                     slug="cmip6",
                     facets={
-                        "experiment_id": ["historical"],
-                        "frequency": ["toz"],
-                        "source_id": "CanESM5",
+                        "experiment_id": "historical",
+                        "frequency": "mon",
+                        "source_id": "GFDL-ESM4",
                         "variable_id": "toz",
                     },
                     remove_ensembles=True,
@@ -135,7 +133,7 @@ toz_test_spec = TestDataSpecification(
                     slug="cmip7",
                     facets={
                         "experiment_id": ["historical"],
-                        "source_id": "CanESM5",
+                        "source_id": "GFDL-ESM4",
                         "variable_id": "toz",
                         "branded_variable": [
                             "toz_tavg-u-hxy-u",
@@ -178,7 +176,7 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["toz"]["additional_datasets"][0]
         # set time range of model (CMIP6) dataset (should match observational period)
         dataset["timerange"] = "1996/2014"
@@ -207,7 +205,7 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["toz"]["additional_datasets"][0]
         # set model (CMIP6) time range to 1950...2014
         dataset["timerange"] = "1950/2014"
@@ -239,7 +237,7 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         # measurements north of 80N in March. Specifying 85N as northern boundary
         # in the orignal 'recipe_ref_ozone.yml' is a bug!
         recipe["preprocessors"]["create_time_series_NH"]["extract_region"]["end_latitude"] = 80
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["toz"]["additional_datasets"][0]
         # set model (CMIP6) time range to 1950...2014
         dataset["timerange"] = "1950/2014"
@@ -286,6 +284,49 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
         # TODO: Use ESACCI-OZONE (SAGE-OMPS, variable o3) from obs4MIPs once available.
     )
     facets = ()
+    test_data_spec = TestDataSpecification(
+        test_cases=(
+            TestCase(
+                name="cmip6",
+                description="Test with CMIP6 data.",
+                requests=(
+                    CMIP6Request(
+                        slug="cmip6",
+                        facets={
+                            "experiment_id": "historical",
+                            "frequency": "mon",
+                            "source_id": "GFDL-ESM4",
+                            "variable_id": "o3",
+                        },
+                        remove_ensembles=True,
+                        time_span=("1996", "2015"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "GFDL-ESM4",
+                            "variable_id": "o3",
+                            "branded_variable": [
+                                "o3_tavg-al-hxy-u",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
+                        time_span=("1980", "2009"),
+                    ),
+                ),
+            ),
+        ),
+    )
 
     @staticmethod
     def update_recipe(
@@ -293,7 +334,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["o3"]["additional_datasets"][0]
         # set model (CMIP6) time range to 2005...2014
         dataset["timerange"] = "2005/2014"
@@ -326,7 +367,7 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        recipe_variables = dataframe_to_recipe(input_files[SourceDatasetType.CMIP6])
+        recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["toz"]["additional_datasets"][0]
         # set model (CMIP6) time range to 2005...2014
         dataset["timerange"] = "2005/2014"

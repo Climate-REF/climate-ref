@@ -31,14 +31,6 @@ defaults:
 datasets:
 - project: CMIP6
   activity: CMIP
-  dataset: CanESM5
-  ensemble: r1i1p1f1
-  institute: CCCma
-  exp: historical
-  grid: gn
-  timerange: 1979/2014
-- project: CMIP6
-  activity: CMIP
   dataset: ACCESS-ESM1-5
   ensemble: r1i1p1f1
   institute: CSIRO
@@ -47,9 +39,17 @@ datasets:
   timerange: 1979/2014
 - project: CMIP6
   activity: CMIP
-  dataset: HadGEM3-GC31-LL
-  ensemble: r1i1p1f3
-  institute: MOHC
+  dataset: MPI-ESM1-2-LR
+  ensemble: r1i1p1f1
+  institute: MPI-M
+  exp: historical
+  grid: gn
+  timerange: 1979/2014
+- project: CMIP6
+  activity: CMIP
+  dataset: CESM2
+  ensemble: r1i1p1f1
+  institute: NCAR
   exp: historical
   grid: gn
   timerange: 1979/2014

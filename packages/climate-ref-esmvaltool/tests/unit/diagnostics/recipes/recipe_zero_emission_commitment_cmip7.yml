@@ -1,0 +1,69 @@
+documentation:
+  title: 'Zero Emission Commitment (ZEC)
+
+    '
+  description: 'Calculate Zero Emission Commitment (ZEC) temperature.
+
+    '
+  authors:
+  - gier_bettina
+  maintainer:
+  - gier_bettina
+  references:
+  - macdougall20
+  domains:
+  - global
+  realms:
+  - atmos
+preprocessors:
+  spatial_mean:
+    area_statistics:
+      operator: mean
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+  anomaly_base:
+    area_statistics:
+      operator: mean
+    climate_statistics:
+      operator: mean
+      period: full
+diagnostics:
+  zec:
+    description: Calculate ZEC for all available models.
+    variables:
+      tas_base:
+        short_name: tas
+        preprocessor: anomaly_base
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: 1pctCO2
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 0158/0177
+      tas:
+        preprocessor: spatial_mean
+        additional_datasets:
+        - project: CMIP7
+          activity: C4MIP CDRMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: esm-1pct-brch-1000PgC
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 0168/0267
+    scripts:
+      zec:
+        script: climate_metrics/zec.py
+        zec_year: 50

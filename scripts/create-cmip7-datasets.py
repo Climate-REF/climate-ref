@@ -16,6 +16,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     create_cmip7_filename,
     create_cmip7_path,
     format_cmip7_time_range,
+    suppress_bounds_coordinates,
 )
 
 app = typer.Typer()
@@ -61,6 +62,7 @@ def _convert_file(
 
         # Only write if file doesn't already exist
         if not cmip7_path.exists():
+            suppress_bounds_coordinates(ds_cmip7)
             ds_cmip7.to_netcdf(cmip7_path)
             logger.debug(f"Wrote CMIP7 file: {cmip7_path}")
         else:
@@ -69,7 +71,7 @@ def _convert_file(
         return cmip7_path
 
     except Exception as e:
-        logger.warning(f"Failed to convert {cmip6_path}: {e}")
+        logger.exception(f"Failed to convert {cmip6_path}: {e}")
         return None
     finally:
         ds.close()

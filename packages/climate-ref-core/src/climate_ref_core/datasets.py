@@ -3,7 +3,7 @@ Dataset management and filtering
 """
 
 import hashlib
-from collections.abc import Collection, Iterable, Iterator
+from collections.abc import Collection, Iterable, Iterator, Mapping
 from typing import Any
 
 import pandas as pd
@@ -15,7 +15,7 @@ from climate_ref_core.source_types import Selector, SourceDatasetType
 __all__ = ["Selector", "SourceDatasetType"]
 
 
-def _clean_facets(raw_values: dict[str, str | Collection[str]]) -> dict[str, tuple[str, ...]]:
+def _clean_facets(raw_values: Mapping[str, str | Collection[str]]) -> dict[str, tuple[str, ...]]:
     """
     Clean the value of a facet filter to a tuple of strings
     """

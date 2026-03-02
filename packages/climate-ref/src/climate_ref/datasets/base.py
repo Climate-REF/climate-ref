@@ -7,17 +7,9 @@ from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import validate_path
+from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
-
-
-def _is_na(value: Any) -> bool:
-    """Check if a value is NA/NaN/None, safely handling all types."""
-    try:
-        return bool(pd.isna(value))
-    except (TypeError, ValueError):
-        return False
 
 
 @define
@@ -302,15 +294,15 @@ class DatasetAdapter(Protocol):
         current_files = db.session.query(DatasetFile).filter_by(dataset_id=dataset.id).all()
         current_file_paths = {f.path: f for f in current_files}
 
+        # Columns to store per file (indexed by path)
+        file_meta_cols = [c for c in self.file_specific_metadata if c != "path"]
+
         # Get new file data from data catalog
         new_file_data = data_catalog_dataset.to_dict(orient="records")
         new_file_lookup = {}
         for dataset_file in new_file_data:
             file_path = str(validate_path(dataset_file["path"]))
-            new_file_lookup[file_path] = {
-                "start_time": dataset_file["start_time"],
-                "end_time": dataset_file["end_time"],
-            }
+            new_file_lookup[file_path] = {c: dataset_file.get(c) for c in file_meta_cols if c in dataset_file}
 
         new_file_paths = set(new_file_lookup.keys())
         existing_file_paths = set(current_file_paths.keys())
@@ -323,17 +315,22 @@ class DatasetAdapter(Protocol):
             logger.warning(f"Files to remove: {files_removed}")
             raise NotImplementedError("Removing files is not yet supported")
 
-        # Update existing files if start/end times have changed
+        # Update existing files if any file-specific metadata has changed
         for file_path, existing_file in current_file_paths.items():
             if file_path in new_file_lookup:
-                new_times = new_file_lookup[file_path]
-                if (
-                    existing_file.start_time != new_times["start_time"]
-                    or existing_file.end_time != new_times["end_time"]
-                ):
-                    logger.warning(f"Updating file times for {file_path}")
-                    existing_file.start_time = new_times["start_time"]
-                    existing_file.end_time = new_times["end_time"]
+                new_meta = new_file_lookup[file_path]
+                changed = any(
+                    not _is_na(new_meta.get(c))
+                    and hasattr(existing_file, c)
+                    and getattr(existing_file, c) != new_meta[c]
+                    for c in file_meta_cols
+                    if c in new_meta
+                )
+                if changed:
+                    logger.warning(f"Updating file metadata for {file_path}")
+                    for c in file_meta_cols:
+                        if c in new_meta and not _is_na(new_meta[c]) and hasattr(existing_file, c):
+                            setattr(existing_file, c, new_meta[c])
                     files_updated.append(file_path)
                 else:
                     files_unchanged.append(file_path)
@@ -344,13 +341,14 @@ class DatasetAdapter(Protocol):
             files_added = list(files_to_add)
             new_dataset_files = []
             for file_path in files_to_add:
-                file_times = new_file_lookup[file_path]
+                file_meta = new_file_lookup[file_path]
+                # Filter out NA values before passing to DatasetFile constructor
+                clean_meta = {c: v for c, v in file_meta.items() if not _is_na(v)}
                 new_dataset_files.append(
                     DatasetFile(
                         path=file_path,
                         dataset_id=dataset.id,
-                        start_time=file_times["start_time"],
-                        end_time=file_times["end_time"],
+                        **clean_meta,
                     )
                 )
             db.session.add_all(new_dataset_files)
@@ -381,6 +379,35 @@ class DatasetAdapter(Protocol):
         )
 
         return result
+
+    def filter_latest_versions(self, catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Filter a data catalog to only include the latest version of each dataset
+
+        Groups by ``dataset_id_metadata`` and keeps only the rows where the version
+        matches the maximum version within each group (lexicographic comparison).
+
+        Parameters
+        ----------
+        catalog
+            Data catalog to filter
+
+        Returns
+        -------
+        :
+            Filtered data catalog with only the latest version of each dataset
+        """
+        if catalog.empty or not self.dataset_id_metadata:
+            return catalog
+
+        # Get the latest version for each dataset group
+        # Uses transform to compute max version per group, then filters rows matching the max
+        # This assumes version can be sorted lexicographically
+        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
+            self.version_metadata
+        ].transform("max")
+
+        return catalog[catalog[self.version_metadata] == max_version_per_group]
 
     def _get_dataset_files(self, db: Database, limit: int | None = None) -> pd.DataFrame:
         dataset_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
@@ -450,11 +477,10 @@ class DatasetAdapter(Protocol):
         if catalog.empty:
             return pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
 
-        # Get the latest version for each dataset group
-        # Uses transform to compute max version per group, then filters rows matching the max
-        # This assumes version can be sorted lexicographically
-        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
-            self.version_metadata
-        ].transform("max")
+        # Convert start_time/end_time strings from DB to cftime objects
+        if "start_time" in catalog.columns:
+            cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
+            catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
+            catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
 
-        return catalog[catalog[self.version_metadata] == max_version_per_group]
+        return self.filter_latest_versions(catalog)

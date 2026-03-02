@@ -16,9 +16,11 @@ from loguru import logger
 from climate_ref.datasets.netcdf_utils import (
     read_global_attrs,
     read_time_bounds,
+    read_time_metadata,
     read_variable_attrs,
     read_vertical_levels,
 )
+from climate_ref.datasets.utils import extract_version_from_path, parse_drs_daterange
 
 # Mapping from CMIP6 table_id to frequency
 # This allows the DRS parser to infer frequency without opening netCDF files.
@@ -154,8 +156,7 @@ def parse_cmip6_using_directories(file: str) -> dict[str, Any]:
         fileparts["activity_id"] = part_1[-2]
         fileparts["institution_id"] = part_1[-1]
 
-        version_regex = r"v\d{4}\d{2}\d{2}|v\d{1}"
-        version = extract_attr_with_regex(parent, regex=version_regex) or "v0"
+        version = extract_version_from_path(parent)
         fileparts["version"] = version
         fileparts["path"] = file
 
@@ -170,56 +171,6 @@ def parse_cmip6_using_directories(file: str) -> dict[str, Any]:
         return {"INVALID_ASSET": file, "TRACEBACK": traceback.format_exc()}
 
     return fileparts
-
-
-def _parse_daterange(date_range: str) -> tuple[str | None, str | None]:
-    """
-    Parse a date range string into start and end dates
-
-    The output from this is an estimated date range until the file is completely parsed.
-
-    Supports CMIP6 filename date formats:
-    - YYYYMM-YYYYMM (6 chars, monthly)
-    - YYYYMMDD-YYYYMMDD (8 chars, daily)
-    - YYYYMMDDhhmm-YYYYMMDDhhmm (12 chars, sub-daily)
-
-    Parameters
-    ----------
-    date_range
-        Date range string
-
-    Returns
-    -------
-    :
-        Tuple containing start and end dates as strings in the format "YYYY-MM-DD"
-    """
-    try:
-        start, end = date_range.split("-")
-        if len(start) != len(end):
-            raise ValueError(f"Mismatched date component lengths: {len(start)} vs {len(end)}")
-
-        if len(start) == 6:  # noqa: PLR2004
-            # YYYYMM — monthly resolution
-            # CMIP6 results typical report on the 16th of the month, but I'm not sure if that is guaranteed
-            start_date = f"{start[:4]}-{start[4:6]}-01"
-            # Up to the 30th of the month, assuming a 30-day month
-            # These values will be corrected later when the file is parsed
-            end_date = f"{end[:4]}-{end[4:6]}-30"
-        elif len(start) == 8:  # noqa: PLR2004
-            # YYYYMMDD — daily resolution
-            start_date = f"{start[:4]}-{start[4:6]}-{start[6:8]}"
-            end_date = f"{end[:4]}-{end[4:6]}-{end[6:8]}"
-        elif len(start) == 12:  # noqa: PLR2004
-            # YYYYMMDDhhmm — sub-daily resolution (time-of-day ignored for date estimate)
-            start_date = f"{start[:4]}-{start[4:6]}-{start[6:8]}"
-            end_date = f"{end[:4]}-{end[4:6]}-{end[6:8]}"
-        else:
-            raise ValueError(f"Unsupported date component length: {len(start)}")
-
-        return start_date, end_date
-    except ValueError:
-        logger.error(f"Invalid date range format: {date_range}")
-        return None, None
 
 
 def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
@@ -284,6 +235,7 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
 
             vertical_levels = read_vertical_levels(ds)
             start_time, end_time = read_time_bounds(ds)
+            time_units, calendar = read_time_metadata(ds)
 
             init_year = None
             if info.get("sub_experiment_id"):  # pragma: no branch
@@ -294,12 +246,14 @@ def parse_cmip6_complete(file: str, **kwargs: Any) -> dict[str, Any]:
             info["init_year"] = init_year
             info["start_time"] = start_time
             info["end_time"] = end_time
+            info["time_units"] = time_units
+            info["calendar"] = calendar
             if not (start_time and end_time):
                 info["time_range"] = None
             else:
                 info["time_range"] = f"{start_time}-{end_time}"
         info["path"] = str(file)
-        info["version"] = extract_attr_with_regex(str(file), regex=r"v\d{4}\d{2}\d{2}|v\d{1}") or "v0"
+        info["version"] = extract_version_from_path(str(Path(file).parent))
 
         # Mark the dataset as finalised
         # This is used to indicate that the dataset has been fully parsed and is ready for use
@@ -347,7 +301,7 @@ def parse_cmip6_drs(file: str, **kwargs: Any) -> dict[str, Any]:
 
     if info.get("time_range"):
         # Parse the time range if it exists
-        start_time, end_time = _parse_daterange(info["time_range"])
+        start_time, end_time = parse_drs_daterange(info["time_range"])
         info["start_time"] = start_time
         info["end_time"] = end_time
 

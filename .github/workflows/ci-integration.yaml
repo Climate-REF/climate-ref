@@ -8,7 +8,7 @@
 # REF_SOFTWARE_ROOT: /data/cache/software
 #
 # The ~/.esgf directory is also configured to point to a shared cache location downloaded ESGF datasets.
-
+name: CI Integration Tests
 on:
   # Allow manual triggering of this workflow
   workflow_dispatch:
@@ -43,6 +43,7 @@ jobs:
           uv sync
           uv run ref datasets fetch-sample-data
           uv run ref datasets fetch-data --registry ilamb-test
+          uv run ref datasets fetch-data --registry obs4ref
           uv run ref providers setup
 
   tests-slow:

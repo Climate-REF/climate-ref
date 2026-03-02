@@ -70,7 +70,6 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                             "experiment_id": experiments,
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         },
                     ),
                 ),

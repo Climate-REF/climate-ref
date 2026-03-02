@@ -16,7 +16,7 @@ from climate_ref.datasets.netcdf_utils import (
     read_variable_attrs,
     read_vertical_levels,
 )
-from climate_ref.datasets.utils import parse_datetime
+from climate_ref.datasets.utils import parse_cftime_dates
 from climate_ref.models.dataset import Dataset, Obs4MIPsDataset
 
 
@@ -175,10 +175,9 @@ class Obs4MIPsDatasetAdapter(DatasetAdapter):
             logger.error("No datasets found")
             raise ValueError("No obs4MIPs-compliant datasets found")
 
-        # Convert the start_time and end_time columns to datetime objects
-        # We don't know the calendar used in the dataset
-        datasets["start_time"] = parse_datetime(datasets["start_time"])
-        datasets["end_time"] = parse_datetime(datasets["end_time"])
+        # Convert the start_time and end_time columns to cftime objects
+        datasets["start_time"] = parse_cftime_dates(datasets["start_time"])
+        datasets["end_time"] = parse_cftime_dates(datasets["end_time"])
 
         drs_items = [
             *self.dataset_id_metadata,

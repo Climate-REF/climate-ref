@@ -244,6 +244,15 @@ requests: list[Request] = [
             experiment_id=["historical"],
         ),
     ),
+    # ESMValTool Ozone
+    CMIP6Request(
+        id="esmvaltool-ozone",
+        facets=dict(
+            variable_id=["toz"],
+            experiment_id=["historical"],
+            table_id="AERmon",
+        ),
+    ),
     # ILAMB data
     CMIP6Request(
         id="ilamb-data",
@@ -262,6 +271,7 @@ requests: list[Request] = [
                 "burntFractionAll",
                 "snc",
                 "nbp",
+                "et",
             ],
             experiment_id=["historical"],
         ),

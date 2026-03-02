@@ -34,6 +34,53 @@ you can use the following command to ingest all monthly and ancillary variables:
 ref datasets ingest --source-type cmip6 /path/to/cmip6/data/CMIP6/*/*/*/*/*/*mon /path/to/cmip6/data/CMIP6/*/*/*/*/*/*fx --n-jobs 64
 ```
 
+### Using the DRS parser for large collections
+
+By default, Climate-REF opens every netCDF file during ingestion to extract additional metadata such as branch times
+This works well for small collections, but can be very slow for large archives on parallel file systems (such as Lustre)
+due to the large amount of small random IOPs.
+
+The **DRS parser** is an alternative that extracts metadata entirely from file paths and directory names,
+following the CMIP6/CMIP7 Data Reference Syntax (DRS).
+Because it never opens the files, ingestion is dramatically faster.
+This functionality is currently opt-in, but will become the new default in future releases.
+
+To enable the DRS parser, add the following to your `ref.toml` configuration file:
+
+```toml
+cmip6_parser = "drs"
+```
+
+Or set the environment variable:
+
+```bash
+export REF_CMIP6_PARSER=drs
+```
+
+With the DRS parser enabled, you can ingest a large archive quickly:
+
+```bash
+ref datasets ingest --source-type cmip6 /path/to/cmip6/data --n-jobs 64
+```
+
+/// admonition | How does this work?
+    type: info
+
+When using the DRS parser, datasets are initially stored with only the metadata
+available from the file path (variable, experiment, source, member, grid, table, and version).
+Some metadata fields such as exact time ranges, variable units, and parent experiment details
+are left unpopulated.
+
+These missing fields are filled in automatically when you run `ref solve`.
+At solve time, only the files that actually match a diagnostic's data requirements are opened,
+meaning the full archive is never read in its entirety.
+This two-phase approach (fast ingest, lazy finalisation) keeps ingestion fast
+while still providing complete metadata where it is needed.
+
+For more details, see the [datasets background documentation](../background/datasets.md).
+
+///
+
 /// admonition | Tip
 
 As part of the Climate-REF test suite,

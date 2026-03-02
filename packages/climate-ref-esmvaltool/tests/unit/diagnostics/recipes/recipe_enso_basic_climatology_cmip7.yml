@@ -1,0 +1,324 @@
+documentation:
+  description: ENSO CLIVAR metrics by Yann Planton, background climatology for REF
+  title: Reproducing ENSO CLIVAR metrics - background climatology
+  authors:
+  - chun_felicity
+  - beucher_romain
+  - planton_yann
+  maintainer:
+  - chun_felicity
+preprocessors:
+  base_bias:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 210.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+  ITCZ_bias:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 210.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+    convert_units:
+      units: mm/day
+    zonal_statistics:
+      operator: mean
+  eq_bias:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+    meridional_statistics:
+      operator: mean
+  base_cycle:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 210.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+  ITCZ_sea_cycle:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 210.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+    convert_units:
+      units: mm/day
+  eq_sea_cycle:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -5.0
+      end_latitude: 5.0
+  map_bias_level2:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: full
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+  map_sea_cyclel2:
+    custom_order: true
+    climate_statistics:
+      operator: mean
+      period: monthly
+    regrid:
+      target_grid: 1x1
+      scheme: linear
+    extract_region:
+      start_longitude: 150.0
+      end_longitude: 270.0
+      start_latitude: -15.0
+      end_latitude: 15.0
+diagnostics:
+  diagnostic_metrics:
+    description: run preprocessors on variables for background climatology metrics
+    variables:
+      pr_double:
+        short_name: pr
+        preprocessor: ITCZ_bias
+        mip: atmos
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          tier: 1
+          start_year: 1979
+          end_year: 2017
+          mip: Amon
+        - &id001
+          project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 18500116T120000/20141216T120000
+      eq_pr_bias:
+        short_name: pr
+        preprocessor: eq_bias
+        mip: atmos
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          tier: 1
+          start_year: 1979
+          end_year: 2017
+          mip: Amon
+        - *id001
+      eq_sst_bias:
+        short_name: tos
+        preprocessor: eq_bias
+        mip: ocean
+        additional_datasets:
+        - dataset: TROPFLUX
+          version: v1
+          project: OBS6
+          type: reanaly
+          tier: 2
+          start_year: 1979
+          end_year: 2018
+          mip: Omon
+        - &id002
+          project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-sea
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: ocean
+          region: glb
+          timerange: 18500116T120000/20141216T120000
+      eq_tauu_bias:
+        short_name: tauu
+        preprocessor: eq_bias
+        mip: atmos
+        additional_datasets:
+        - dataset: TROPFLUX
+          version: v1
+          project: OBS6
+          type: reanaly
+          tier: 2
+          mip: Amon
+          start_year: 1979
+          end_year: 2018
+        - &id003
+          project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 18500116T120000/20141216T120000
+      pr_double_seacycle:
+        short_name: pr
+        preprocessor: ITCZ_sea_cycle
+        mip: atmos
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          tier: 1
+          start_year: 1979
+          end_year: 2017
+          mip: Amon
+        - *id001
+      eq_pr_seacycle:
+        short_name: pr
+        preprocessor: eq_sea_cycle
+        mip: atmos
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          tier: 1
+          start_year: 1979
+          end_year: 2017
+          mip: Amon
+        - *id001
+      eq_sst_seacycle:
+        short_name: tos
+        preprocessor: eq_sea_cycle
+        mip: ocean
+        additional_datasets:
+        - dataset: TROPFLUX
+          version: v1
+          project: OBS6
+          type: reanaly
+          tier: 2
+          mip: Omon
+        - *id002
+      eq_tauu_seacycle:
+        short_name: tauu
+        preprocessor: eq_sea_cycle
+        mip: atmos
+        additional_datasets:
+        - dataset: TROPFLUX
+          version: v1
+          project: OBS6
+          type: reanaly
+          tier: 2
+          mip: Amon
+          start_year: 1979
+          end_year: 2018
+        - *id003
+    scripts:
+      plot_script:
+        script: enso_metrics/climatology_diagnostic1.py
+  diagnostic_level2:
+    description: run preprocessors on variables for background climatology diagnostic
+      level 2
+    variables:
+      pr_bias:
+        short_name: pr
+        preprocessor: map_bias_level2
+        mip: atmos
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          tier: 1
+          start_year: 1979
+          end_year: 2017
+          mip: Amon
+        - *id001
+      pr_seacycle:
+        short_name: pr
+        preprocessor: map_sea_cyclel2
+        mip: atmos
+        additional_datasets:
+        - dataset: GPCP-V2.3
+          project: obs4MIPs
+          tier: 1
+          start_year: 1979
+          end_year: 2017
+          mip: Amon
+        - *id001
+      sst_bias:
+        short_name: tos
+        preprocessor: map_bias_level2
+        mip: ocean
+        additional_datasets:
+        - dataset: TROPFLUX
+          version: v1
+          project: OBS6
+          type: reanaly
+          tier: 2
+          mip: Omon
+        - *id002
+      tauu_bias:
+        short_name: tauu
+        preprocessor: map_bias_level2
+        mip: atmos
+        additional_datasets:
+        - dataset: TROPFLUX
+          version: v1
+          project: OBS6
+          type: reanaly
+          tier: 2
+          mip: Amon
+          start_year: 1979
+          end_year: 2018
+        - *id003
+    scripts:
+      plot_script:
+        script: enso_metrics/climatology_diagnosticlevel2.py

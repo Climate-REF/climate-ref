@@ -3,7 +3,7 @@ from typing import Any, ClassVar
 
 from sqlalchemy import ColumnElement, ForeignKey, func
 from sqlalchemy.ext.hybrid import hybrid_property
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from climate_ref.models.base import Base
 from climate_ref_core.source_types import SourceDatasetType
@@ -81,20 +81,29 @@ class DatasetFile(Base):
     Foreign key to the dataset table
     """
 
-    start_time: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    start_time: Mapped[str] = mapped_column(nullable=True)
     """
-    Start time of a given file
+    Start time of a given file (ISO string, supports cftime calendars)
     """
 
-    end_time: Mapped[datetime.datetime] = mapped_column(nullable=True)
+    end_time: Mapped[str] = mapped_column(nullable=True)
     """
-    Start time of a given file
+    End time of a given file (ISO string, supports cftime calendars)
     """
 
     path: Mapped[str] = mapped_column()
     """
     Prefix that describes where the dataset is stored relative to the data directory
     """
+
+    @validates("start_time", "end_time")
+    def _coerce_time_to_str(self, _key: str, value: object) -> str | None:
+        """Cast cftime/datetime objects to ISO strings for DB storage."""
+        if value is None:
+            return None
+        if isinstance(value, str):
+            return value
+        return str(value)
 
     tracking_id: Mapped[str] = mapped_column(nullable=True)
     """
@@ -152,6 +161,12 @@ class CMIP6Dataset(Dataset):
     """
     Unique identifier for the dataset (including the version).
     """
+
+    time_units: Mapped[str] = mapped_column(nullable=True)
+    """Time encoding units (e.g. 'days since 1850-01-01')"""
+
+    calendar: Mapped[str] = mapped_column(nullable=True)
+    """CF calendar type (e.g. 'standard', '360_day', 'noleap')"""
 
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore
 
@@ -328,9 +343,12 @@ class CMIP7Dataset(Dataset):
     instance_id: Mapped[str] = mapped_column(index=True)
     """CMIP7 DRS format unique identifier"""
 
-    # TODO: Review whether branded_variable should use the file's branded_variable
-    # attribute (which uses out_name from the Data Request) instead of variable_id.
-    # Currently out_name == variable_id for all known CMIP7 variables except for tasmin/tasmax
+    time_units: Mapped[str] = mapped_column(nullable=True)
+    """Time encoding units (e.g. 'days since 1850-01-01')"""
+
+    calendar: Mapped[str] = mapped_column(nullable=True)
+    """CF calendar type (e.g. 'standard', '360_day', 'noleap')"""
+
     @hybrid_property
     def branded_variable(self) -> str:
         """Return branded variable: ``{variable_id}_{branding_suffix}``."""

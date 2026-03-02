@@ -497,8 +497,15 @@ class RequireContiguousTimerange:
             sorted_group = subgroup.sort_values("start_time", kind="stable")
             start_series = sorted_group["start_time"]
             end_series = sorted_group["end_time"]
-            diff = start_series.values[1:] - end_series.values[:-1]  # type: ignore[operator]
-
+            try:
+                diff = start_series.values[1:] - end_series.values[:-1]  # type: ignore[operator]
+            except TypeError:
+                # Cross-calendar cftime comparison: fall back to string representation
+                # This can happen with historical vs scenario datasets that use different calendars
+                diff = pd.to_timedelta(
+                    pd.to_datetime(start_series.astype(str)).values[1:]  # type: ignore
+                    - pd.to_datetime(end_series.astype(str)).values[:-1]
+                )
             gap_indices = diff > max_timedelta
             if gap_indices.any():
                 paths = sorted_group["path"]

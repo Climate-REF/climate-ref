@@ -1,29 +1,33 @@
 import pandas
 
 from climate_ref_core.constraints import (
+    AddSupplementaryDataset,
     PartialDateTime,
     RequireContiguousTimerange,
     RequireTimerange,
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.esgf.cmip6 import CMIP6Request
+from climate_ref_core.esgf.cmip7 import CMIP7Request
+from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
+from climate_ref_core.testing import TestCase, TestDataSpecification
 
 # from climate_ref_core.metric_values.typing import SeriesDefinition
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
+ozone_obs_filter = FacetFilter(
+    facets={
+        "variable_id": "toz",
+        "source_id": "C3S-GTO-ECV-9-0",
+        "frequency": "mon",
+    },
+)
 
-class O3LatTimeMapplot(ESMValToolDiagnostic):
-    """
-    Calculate the ozone diagnostics - zonal mean total column ozone vs. time.
-    """
-
-    name = "Ozone Diagnostics"
-    slug = "ozone-lat-time"
-    base_recipe = "ref/recipe_ref_ozone.yml"
-
-    data_requirements = (
+toz_data_requirement = (
+    (
         DataRequirement(
             source_type=SourceDatasetType.CMIP6,
             filters=(
@@ -43,19 +47,12 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
                     end=PartialDateTime(2014, 12),
                 ),
                 RequireContiguousTimerange(group_by=("instance_id",)),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
             ),
         ),
         DataRequirement(
             source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "source_id": "C3S-GTO-ECV-9-0",
-                        "frequency": "mon",
-                    },
-                ),
-            ),
+            filters=(ozone_obs_filter,),
             group_by=("source_id",),
             constraints=(
                 RequireTimerange(
@@ -65,8 +62,115 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
                 ),
             ),
         ),
-    )
+    ),
+    (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP7,
+            filters=(
+                FacetFilter(
+                    facets={
+                        "variable_id": "toz",
+                        "experiment_id": "historical",
+                        "branded_variable": "toz_tavg-u-hxy-u",
+                        "frequency": "mon",
+                        "region": "glb",
+                    },
+                ),
+            ),
+            group_by=("source_id", "variable_label", "grid_label"),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1996, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
+                RequireContiguousTimerange(group_by=("instance_id",)),
+                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+            ),
+        ),
+        DataRequirement(
+            source_type=SourceDatasetType.obs4MIPs,
+            filters=(ozone_obs_filter,),
+            group_by=("source_id",),
+            constraints=(
+                RequireTimerange(
+                    group_by=("instance_id",),
+                    start=PartialDateTime(1996, 1),
+                    end=PartialDateTime(2014, 12),
+                ),
+            ),
+        ),
+    ),
+)
+toz_test_spec = TestDataSpecification(
+    test_cases=(
+        TestCase(
+            name="cmip6",
+            description="Test with CMIP6 data.",
+            requests=(
+                CMIP6Request(
+                    slug="cmip6",
+                    facets={
+                        "experiment_id": ["historical"],
+                        "frequency": ["toz"],
+                        "source_id": "CanESM5",
+                        "variable_id": "toz",
+                    },
+                    remove_ensembles=True,
+                    time_span=("1996", "2015"),
+                ),
+                Obs4MIPsRequest(
+                    slug="obs4mips",
+                    facets=ozone_obs_filter.facets,
+                    remove_ensembles=False,
+                    time_span=("1980", "2009"),
+                ),
+            ),
+        ),
+        TestCase(
+            name="cmip7",
+            description="Test with CMIP7 data.",
+            requests=(
+                CMIP7Request(
+                    slug="cmip7",
+                    facets={
+                        "experiment_id": ["historical"],
+                        "source_id": "CanESM5",
+                        "variable_id": "toz",
+                        "branded_variable": [
+                            "toz_tavg-u-hxy-u",
+                        ],
+                        "variant_label": "r1i1p1f1",
+                        "frequency": ["fx", "mon"],
+                        "region": "glb",
+                    },
+                    remove_ensembles=True,
+                    time_span=("1980", "2009"),
+                ),
+                Obs4MIPsRequest(
+                    slug="obs4mips",
+                    facets=ozone_obs_filter.facets,
+                    remove_ensembles=False,
+                    time_span=("1980", "2009"),
+                ),
+            ),
+        ),
+    ),
+)
+
+
+class O3LatTimeMapplot(ESMValToolDiagnostic):
+    """
+    Calculate the ozone diagnostics - zonal mean total column ozone vs. time.
+    """
+
+    name = "Ozone Diagnostics"
+    slug = "ozone-lat-time"
+    base_recipe = "ref/recipe_ref_ozone.yml"
+
+    data_requirements = toz_data_requirement
     facets = ()
+    test_data_spec = toz_test_spec
 
     @staticmethod
     def update_recipe(
@@ -93,50 +197,9 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
     slug = "ozone-sh-oct"
     base_recipe = "ref/recipe_ref_ozone.yml"
 
-    data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "experiment_id": "historical",
-                        "table_id": "AERmon",
-                    },
-                ),
-            ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1950, 1),
-                    end=PartialDateTime(2014, 12),
-                ),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-            ),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "source_id": "C3S-GTO-ECV-9-0",
-                        "frequency": "mon",
-                    },
-                ),
-            ),
-            group_by=("source_id",),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1996, 1),
-                    end=PartialDateTime(2021, 12),
-                ),
-            ),
-        ),
-    )
+    data_requirements = toz_data_requirement
     facets = ()
+    test_data_spec = toz_test_spec
 
     @staticmethod
     def update_recipe(
@@ -162,50 +225,9 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     slug = "ozone-nh-mar"
     base_recipe = "ref/recipe_ref_ozone.yml"
 
-    data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "experiment_id": "historical",
-                        "table_id": "AERmon",
-                    },
-                ),
-            ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1950, 1),
-                    end=PartialDateTime(2014, 12),
-                ),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-            ),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "source_id": "C3S-GTO-ECV-9-0",
-                        "frequency": "mon",
-                    },
-                ),
-            ),
-            group_by=("source_id",),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(1996, 1),
-                    end=PartialDateTime(2021, 12),
-                ),
-            ),
-        ),
-    )
+    data_requirements = toz_data_requirement
     facets = ()
+    test_data_spec = toz_test_spec
 
     @staticmethod
     def update_recipe(
@@ -294,50 +316,9 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
     slug = "ozone-annual-cycle"
     base_recipe = "ref/recipe_ref_ozone.yml"
 
-    data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "experiment_id": "historical",
-                        "table_id": "AERmon",
-                    },
-                ),
-            ),
-            group_by=("source_id", "member_id", "grid_label"),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(2005, 1),
-                    end=PartialDateTime(2014, 12),
-                ),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-            ),
-        ),
-        DataRequirement(
-            source_type=SourceDatasetType.obs4MIPs,
-            filters=(
-                FacetFilter(
-                    facets={
-                        "variable_id": "toz",
-                        "source_id": "C3S-GTO-ECV-9-0",
-                        "frequency": "mon",
-                    },
-                ),
-            ),
-            group_by=("source_id",),
-            constraints=(
-                RequireTimerange(
-                    group_by=("instance_id",),
-                    start=PartialDateTime(2005, 1),
-                    end=PartialDateTime(2014, 12),
-                ),
-            ),
-        ),
-    )
+    data_requirements = toz_data_requirement
     facets = ()
+    test_data_spec = toz_test_spec
 
     @staticmethod
     def update_recipe(

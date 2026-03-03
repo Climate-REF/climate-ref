@@ -21,6 +21,34 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.12.0 (2026-03-03)
+
+### Features
+
+- Added ESMValTool ozone diagnostics. ([#473](https://github.com/Climate-REF/climate-ref/pull/473))
+- Metric for diagnostics of double ITCZ was added: Spatial corrleation of simulated DJF precipitation climatology against reference dataset over the area of 20S to 0 latitude and 100 to 210 longitude. ([#557](https://github.com/Climate-REF/climate-ref/pull/557))
+- Added lazy loading and finalisation support for CMIP7 datasets via DRS and complete parsers, matching the existing CMIP6 pattern.
+
+  This removes the realm filter for CMIP7 executions as it cannot be parsed from the DRS.
+  We strongly recommend the use of branded variables when filtering CMIP7 datasets to properly constrain the expected variables. ([#571](https://github.com/Climate-REF/climate-ref/pull/571))
+- Update `ilamb3`, remove the `ohc-noaa` diagnostic and add the `evspsbl-pr` diagnostic. ([#573](https://github.com/Climate-REF/climate-ref/pull/573))
+- Added `time_units` and `calendar` metadata to CMIP6 and CMIP7 datasets, enabling proper handling of non-standard CF calendars such as `360_day` and `noleap`. Time values are now stored as `cftime.datetime` objects instead of `datetime.datetime`. ([#574](https://github.com/Climate-REF/climate-ref/pull/574))
+- Added CMIP7 data catalog and ESMValTool recipe variants for CMIP7 diagnostics. ([#577](https://github.com/Climate-REF/climate-ref/pull/577))
+
+### Improvements
+
+- Implemented a memory constraint using the environment variable `MEMORY_LIMIT_PARSL_JOB_GB` to set the memory limit (units: GB) for a PARSL worker. ([#464](https://github.com/Climate-REF/climate-ref/pull/464))
+- Extracted shared finalisation logic into `FinaliseableDatasetAdapterMixin`, reducing code duplication between CMIP6 and CMIP7 adapters. ([#571](https://github.com/Climate-REF/climate-ref/pull/571))
+- Use the metadata from the data catalog instead of reading netCDF files when determining ESMValTool branch times ([#577](https://github.com/Climate-REF/climate-ref/pull/577))
+
+### Bug Fixes
+
+- Fixed fire diagnostic CMIP7 data selection and recipe writing. ([#540](https://github.com/Climate-REF/climate-ref/pull/540))
+- Migrated to use a different post-processed JSON file for mapping CMIP6 compound names to CMIP7.
+  This fixes some errors when dealing with tasmax/tasmin and the removes the out_name attribute which was correctly included in [#530](https://github.com/Climate-REF/climate-ref/pull/530). ([#547](https://github.com/Climate-REF/climate-ref/pull/547))
+- Apply same version filtering logic to the regression tests as loading the data catalog ([#570](https://github.com/Climate-REF/climate-ref/pull/570))
+
+
 ## climate-ref 0.11.1 (2026-02-24)
 
 ### Bug Fixes

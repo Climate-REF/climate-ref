@@ -107,7 +107,7 @@ jobs:
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload scratch artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-output-providers
@@ -190,7 +190,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
       - name: Set up Docker Compose
-        uses: docker/setup-compose-action@v1
+        uses: docker/setup-compose-action@v2
       - uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}

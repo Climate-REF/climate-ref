@@ -73,7 +73,7 @@ jobs:
           uv run pytest packages tests --slow --no-docker -m "not test_cases" -r a -v
       # Upload the scratch and executions directories as artifacts
       - name: Upload scratch artifacts
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: integration-output-${{ matrix.python-version }}
@@ -101,7 +101,7 @@ jobs:
           uv run ref test-cases fetch || echo "Some fetches failed"
           uv run pytest packages -m test_cases --slow -v -r a
       - name: Upload test case outputs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: always()
         with:
           name: test-case-outputs

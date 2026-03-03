@@ -5,6 +5,21 @@
   "description": "CMIP6-to-CMIP7 variable mappings extracted from the CMIP7 Data Request. Filtered to mon/fx tables and variables used by REF providers. Keyed by CMIP6 compound name (table_id.variable_id). Regenerate with: uv run python scripts/extract-data-request-mappings.py "
  },
  "variables": {
+  "AERmon.toz": {
+   "table_id": "AERmon",
+   "variable_id": "toz",
+   "cmip6_compound_name": "AERmon.toz",
+   "cmip7_compound_name": "aerosol.toz.tavg-u-hxy-u.mon.glb",
+   "branded_variable": "toz_tavg-u-hxy-u",
+   "branding_suffix": "tavg-u-hxy-u",
+   "temporal_label": "tavg",
+   "vertical_label": "u",
+   "horizontal_label": "hxy",
+   "area_label": "u",
+   "realm": "aerosol",
+   "region": "glb",
+   "frequency": "mon"
+  },
   "AERmon.ua": {
    "table_id": "AERmon",
    "variable_id": "ua",

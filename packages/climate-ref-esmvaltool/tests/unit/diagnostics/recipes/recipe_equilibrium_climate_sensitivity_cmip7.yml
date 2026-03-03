@@ -1,0 +1,84 @@
+documentation:
+  title: 'Equilibrium Climate Sensitivity (ECS)
+
+    '
+  description: 'Calculate Equilibrium Climate Sensitivity (ECS) using linear regression
+    following Gregory et al. (2004).
+
+    '
+  authors:
+  - schlund_manuel
+  maintainer:
+  - schlund_manuel
+  references:
+  - gregory04grl
+  projects:
+  - crescendo
+preprocessors:
+  spatial_mean:
+    area_statistics:
+      operator: mean
+diagnostics:
+  ecs:
+    description: Calculate ECS.
+    variables:
+      tas:
+        preprocessor: spatial_mean
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: abrupt-4xCO2
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 01010116T120000/02501216T120000
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-h2m-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: piControl
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 01010116T120000/02501216T120000
+      rtnt:
+        preprocessor: spatial_mean
+        derive: true
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: abrupt-4xCO2
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 01010116T120000/02501216T120000
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: ACCESS-ESM1-5
+          ensemble: r1i1p1f1
+          exp: piControl
+          frequency: mon
+          grid: gn
+          institute: CSIRO
+          mip: atmos
+          region: glb
+          timerange: 01010116T120000/02501216T120000
+    scripts:
+      calculate:
+        script: climate_metrics/ecs.py
+        calculate_mmm: false
+datasets: []

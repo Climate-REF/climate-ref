@@ -91,6 +91,8 @@ INCLUDED_VARIABLES = {
     "tasmax",
     "tasmin",
     "ts",
+    # Ozone
+    "toz",
     # Atmosphere: winds
     "tauu",
     "ua",

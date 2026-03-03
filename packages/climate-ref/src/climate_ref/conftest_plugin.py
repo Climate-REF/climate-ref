@@ -165,6 +165,27 @@ def esgf_data_catalog(
     return esgf_solve_catalog
 
 
+@pytest.fixture(scope="session")
+def esgf_data_catalog_trimmed(
+    esgf_solve_catalog: dict[SourceDatasetType, pd.DataFrame], test_data_dir: Path
+) -> dict[SourceDatasetType, pd.DataFrame]:
+    """
+    Trimmed ESGF catalog for integration tests.
+
+    Uses a fixed set of CMIP6 source_ids to keep the catalog small and tests fast,
+    while still covering multiple models.
+    """
+    result = {}
+    for source_type, df in esgf_solve_catalog.items():
+        if source_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
+            source_ids = ["ACCESS-ESM1-5", "CESM2", "MPI-ESM1-2-LR"]
+            result[source_type] = df[df["source_id"].isin(source_ids)]
+        else:
+            result[source_type] = df
+
+    return result
+
+
 @pytest.fixture
 def run_test_case(config: Config) -> object:
     """

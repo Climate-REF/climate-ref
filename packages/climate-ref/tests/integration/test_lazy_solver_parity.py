@@ -127,15 +127,15 @@ def _build_drs_catalogs(
 
 
 @pytest.fixture(scope="session")
-def complete_executions(esgf_data_catalog):
+def complete_executions(esgf_data_catalog_trimmed):
     """Baseline: solve with plain DataFrames (fully finalised data)."""
-    return _collect_execution_details(esgf_data_catalog, ALL_PROVIDERS)
+    return _collect_execution_details(esgf_data_catalog_trimmed, ALL_PROVIDERS)
 
 
 @pytest.fixture(scope="session")
-def lazy_executions(esgf_data_catalog):
+def lazy_executions(esgf_data_catalog_trimmed):
     """Solve with DRS-simulated catalogs (file-open columns NaN'd, restored on finalise)."""
-    return _collect_execution_details(_build_drs_catalogs(esgf_data_catalog), ALL_PROVIDERS)
+    return _collect_execution_details(_build_drs_catalogs(esgf_data_catalog_trimmed), ALL_PROVIDERS)
 
 
 class TestDRSSimulatedParity:

@@ -16,6 +16,7 @@ from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
 from climate_ref.models import Dataset
+from climate_ref.solver import apply_dataset_filters
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -23,7 +24,7 @@ app = typer.Typer(help=__doc__)
 
 
 @app.command(name="list")
-def list_(
+def list_(  # noqa: PLR0913
     ctx: typer.Context,
     source_type: Annotated[
         SourceDatasetType, typer.Option(help="Type of source dataset")
@@ -36,6 +37,16 @@ def list_(
             "Limit the number of datasets (or files when using --include-files) to display to this number."
         ),
     ),
+    dataset_filter: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter datasets by facet values using key=value syntax. "
+            "For example, --dataset-filter source_id=ACCESS-CM2 --dataset-filter variable_id=tas. "
+            "Multiple values for the same facet are ORed (include any match), "
+            "different facets are ANDed (must match all). "
+            "Multiple values can be provided"
+        ),
+    ] = None,
 ) -> None:
     """
     List the datasets that have been ingested
@@ -48,6 +59,28 @@ def list_(
 
     adapter = get_dataset_adapter(source_type.value)
     data_catalog = adapter.load_catalog(database, include_files=include_files, limit=limit)
+
+    if dataset_filter:
+        parsed_filters: dict[str, list[str]] = {}
+        for entry in dataset_filter:
+            if "=" not in entry:
+                raise typer.BadParameter(
+                    f"Invalid dataset filter {entry!r}. Expected key=value format.",
+                    param_hint="--dataset-filter",
+                )
+            key, value = entry.split("=", 1)
+            parsed_filters.setdefault(key, []).append(value)
+
+        for facet in parsed_filters:
+            if facet not in data_catalog.columns:
+                logger.error(
+                    f"Filter facet '{facet}' not found in data catalog. "
+                    f"Choose from: {', '.join(sorted(data_catalog.columns))}"
+                )
+                raise typer.Exit(code=1)
+
+        filtered = apply_dataset_filters({source_type: data_catalog}, parsed_filters)
+        data_catalog = filtered[source_type]  # type: ignore[assignment]  # input is DataFrame
 
     if column:
         missing = set(column) - set(data_catalog.columns)
@@ -136,7 +169,7 @@ def ingest(  # noqa
 
         # TODO: This assumes that all datasets are nc files.
         # This is true for CMIP6 and obs4MIPs but may not be true for other dataset types in the future.
-        if not list(_dir.rglob("*.nc")):
+        if not next(_dir.rglob("*.nc")):
             logger.error(f"No .nc files found in {_dir}")
             continue
 
@@ -144,7 +177,7 @@ def ingest(  # noqa
             data_catalog = adapter.find_local_datasets(_dir)
             data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
         except Exception as e:
-            logger.error(f"Error ingesting datasets from {_dir}: {e}")
+            logger.exception(f"Error ingesting datasets from {_dir}: {e}")
             continue
 
         if data_catalog.empty:
@@ -169,9 +202,7 @@ def ingest(  # noqa
                         logger.info(f"Would save dataset {instance_id} to the database")
         else:
             # Use shared ingestion logic with pre-validated catalog
-            stats = ingest_datasets(
-                adapter, None, config, db, data_catalog=data_catalog, skip_invalid=skip_invalid
-            )
+            stats = ingest_datasets(adapter, None, db, data_catalog=data_catalog, skip_invalid=skip_invalid)
             stats.log_summary()
 
     if solve:

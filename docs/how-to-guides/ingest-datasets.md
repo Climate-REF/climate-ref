@@ -19,9 +19,15 @@ When processing diagnostics, the REF needs to know the location of the datasets 
 Ingestion is the process of extracting metadata from datasets and storing it in a local database.
 This makes it easier to query and filter datasets for further processing.
 
-The REF extracts metadata for each dataset (and file if a dataset contains multiple files).
 The collection of metadata, also known as a data catalog, is stored in a local SQLite database.
 This database is used to query and filter datasets for further processing.
+
+For CMIP6 datasets, the default DRS parser extracts metadata from file paths and directory names
+without opening each file. This makes ingestion very fast, even for archives with tens of thousands of files.
+Any remaining metadata (such as exact time ranges) is extracted automatically at solve time
+for datasets that match a diagnostic's data requirements.
+If you need all metadata upfront, you can set `cmip6_parser: "complete"` in your configuration file,
+though this will be significantly slower for large archives.
 
 ## Ingesting Datasets
 
@@ -29,8 +35,8 @@ To ingest datasets, use the `ref datasets ingest` command.
 This command takes a path to a directory containing datasets as an argument
 and the type of the dataset being ingested (only cmip6 is currently supported).
 
-This will walk through the provided directory looking for `*.nc` files to ingest.
-Each file will be loaded and its metadata extracted.
+This will walk through the provided directory looking for datasets to ingest.
+Metadata will be extracted from each dataset and stored in the database.
 
 ```
 >>> ref --log-level INFO datasets ingest --source-type cmip6 /path/to/cmip6

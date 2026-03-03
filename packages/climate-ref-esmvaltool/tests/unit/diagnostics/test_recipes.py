@@ -11,24 +11,43 @@ from pytest_regressions.file_regression import FileRegressionFixture
 from climate_ref.solver import solve_executions
 from climate_ref_core.datasets import SourceDatasetType
 
+SKIP = {
+    "ozone-zonal",
+}
 
-@pytest.mark.parametrize(
-    "diagnostic", [pytest.param(diagnostic, id=diagnostic.slug) for diagnostic in provider.diagnostics()]
-)
+diagnostics = [
+    pytest.param(
+        diagnostic,
+        id=diagnostic.slug,
+        marks=pytest.mark.skipif(
+            diagnostic.slug in SKIP,
+            reason="Missing datasets",
+        ),
+    )
+    for diagnostic in provider.diagnostics()
+]
+
+
+@pytest.mark.parametrize("diagnostic", diagnostics)
 def test_write_recipe(
     tmp_path: Path,
     file_regression: FileRegressionFixture,
-    data_catalog: dict[SourceDatasetType, pd.DataFrame],
+    esgf_data_catalog_trimmed: dict[SourceDatasetType, pd.DataFrame],
     diagnostic: ESMValToolDiagnostic,
 ) -> None:
     """Test that the recipes are updated correctly."""
+
+    # Select the first ensemble member as it has the most data
+    cmip6_catalog = esgf_data_catalog_trimmed[SourceDatasetType.CMIP6]
+    cmip6_catalog = cmip6_catalog[cmip6_catalog["variant_label"] == "r1i1p1f1"]
+    esgf_data_catalog_trimmed[SourceDatasetType.CMIP6] = cmip6_catalog
 
     def get_source_types(execution):
         return tuple(sorted(k.value for k in execution.datasets.keys()))
 
     seen = set()
     for execution in solve_executions(
-        data_catalog=data_catalog,
+        data_catalog=esgf_data_catalog_trimmed,
         diagnostic=diagnostic,
         provider=diagnostic.provider,
     ):

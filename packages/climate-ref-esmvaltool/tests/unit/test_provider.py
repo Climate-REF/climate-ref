@@ -17,6 +17,7 @@ def test_provider():
         "cloud_scatterplots.py": 5,
         "enso.py": 2,
         "regional_historical_changes.py": 3,
+        "ozone.py": 5,
     }
     n_diagnostics = sum(diagnostics_per_module.get(f.name, 1) for f in diagnostic_modules)
     assert len(provider) == n_diagnostics

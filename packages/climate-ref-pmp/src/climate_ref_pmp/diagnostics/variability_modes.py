@@ -71,7 +71,6 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                         "branded_variable": (_BRANDED_VARIABLE_NAMES[model_variable],),
                         "experiment_id": ("historical", "hist-GHG", *extra_experiments),
                         "frequency": "mon",
-                        "realm": "atmos",
                         "region": "glb",
                     }
                 )

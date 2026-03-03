@@ -1,16 +1,16 @@
 from __future__ import annotations
 
-import warnings
 from pathlib import Path
 
 import pandas as pd
-from ecgtools import Builder
 from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
+from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
-from climate_ref.datasets.utils import clean_branch_time, parse_datetime
+from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
+from climate_ref.datasets.utils import clean_branch_time, parse_cftime_dates
 from climate_ref.models.dataset import CMIP6Dataset
 
 
@@ -37,13 +37,40 @@ def _apply_fixes(data_catalog: pd.DataFrame) -> pd.DataFrame:
     return data_catalog
 
 
-class CMIP6DatasetAdapter(DatasetAdapter):
+class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
     """
     Adapter for CMIP6 datasets
     """
 
     dataset_cls = CMIP6Dataset
     slug_column = "instance_id"
+
+    columns_requiring_finalisation = frozenset(
+        {
+            "branch_method",
+            "branch_time_in_child",
+            "branch_time_in_parent",
+            "experiment",
+            "grid",
+            "long_name",
+            "nominal_resolution",
+            "parent_activity_id",
+            "parent_experiment_id",
+            "parent_source_id",
+            "parent_time_units",
+            "parent_variant_label",
+            "product",
+            "realm",
+            "source_type",
+            "standard_name",
+            "sub_experiment",
+            "sub_experiment_id",
+            "time_units",
+            "calendar",
+            "units",
+            "vertical_levels",
+        }
+    )
 
     dataset_specific_metadata = (
         "activity_id",
@@ -78,6 +105,9 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # Time metadata
+        "time_units",
+        "calendar",
         "finalised",
         slug_column,
     )
@@ -101,6 +131,33 @@ class CMIP6DatasetAdapter(DatasetAdapter):
     def __init__(self, n_jobs: int = 1, config: Config | None = None):
         self.n_jobs = n_jobs
         self.config = config or Config.default()
+
+    def get_complete_parser(self) -> DatasetParsingFunction:
+        """
+        Return the complete parser that opens files to extract full CMIP6 metadata.
+
+        Returns
+        -------
+        :
+            Complete CMIP6 parsing function
+        """
+        return parse_cmip6_complete
+
+    def _post_finalise_fixes(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply CMIP6-specific fixes after finalisation.
+
+        Parameters
+        ----------
+        datasets
+            DataFrame with finalised metadata
+
+        Returns
+        -------
+        :
+            DataFrame with fixes applied
+        """
+        return _apply_fixes(datasets)
 
     def get_parsing_function(self) -> DatasetParsingFunction:
         """
@@ -142,23 +199,22 @@ class CMIP6DatasetAdapter(DatasetAdapter):
         """
         parsing_function = self.get_parsing_function()
 
-        with warnings.catch_warnings():
-            # Ignore the DeprecationWarning from xarray
-            warnings.simplefilter("ignore", DeprecationWarning)
+        datasets = build_catalog(
+            paths=[str(file_or_directory)],
+            parsing_func=parsing_function,
+            include_patterns=["*.nc"],
+            depth=10,
+            n_jobs=self.n_jobs,
+        )
 
-            builder = Builder(
-                paths=[str(file_or_directory)],
-                depth=10,
-                include_patterns=["*.nc"],
-                joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-            ).build(parsing_func=parsing_function)
+        datasets = datasets.drop(["init_year"], axis=1)
 
-        datasets: pd.DataFrame = builder.df.drop(["init_year"], axis=1)
-
-        # Convert the start_time and end_time columns to datetime objects
-        # We don't know the calendar used in the dataset (TODO: Check what ecgtools does)
-        datasets["start_time"] = parse_datetime(datasets["start_time"])
-        datasets["end_time"] = parse_datetime(datasets["end_time"])
+        # Convert the start_time and end_time columns to cftime objects
+        cal = datasets["calendar"] if "calendar" in datasets.columns else "standard"
+        if "start_time" in datasets.columns:
+            datasets["start_time"] = parse_cftime_dates(datasets["start_time"], cal)
+        if "end_time" in datasets.columns:
+            datasets["end_time"] = parse_cftime_dates(datasets["end_time"], cal)
 
         drs_items = [
             *self.dataset_id_metadata,

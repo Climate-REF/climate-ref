@@ -5,7 +5,7 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.17.1
+#       jupytext_version: 1.19.1
 #   kernelspec:
 #     display_name: Python 3 (ipykernel)
 #     language: python
@@ -19,7 +19,8 @@
 #
 # This notebook provides some examples querying and filtering datasets, which is useful
 # to understand how to configure dataset selection when integrating a diagnostic into the
-# REF.
+# REF. The examples below use CMIP6 datasets, but the same patterns apply to
+# other source types such as CMIP7.
 
 # %% tags=["remove_input"]
 import pandas as pd
@@ -60,7 +61,7 @@ adapter
 #
 # Each row represents an individual NetCDF file,
 # with the rows containing the metadata associated with that file.
-# There are ~36 different **facets** of metadata for a CMIP6 data file.
+# Each file has many metadata **facets** (see `adapter.dataset_specific_metadata` for the full list).
 # Each of these facets can be used to refine the datasets that are needed for a given diagnostic execution.
 
 # %%
@@ -145,7 +146,7 @@ display_groups(groups)
 # ### Group by
 # The `group_by` field can be used to split the filtered data into multiple groups,
 # each of which has a unique set of values in the specified facets.
-# This executions in multiple groups of datasets, each of which would correspond to a diagnostic execution.
+# This results in multiple groups of datasets, each of which would correspond to a diagnostic execution.
 
 # %%
 data_requirement = DataRequirement(

@@ -2,10 +2,12 @@ registry: ilamb
 
 gpp-WECANN:
   sources:
-    # TODO: Update to use the obs4REF equiv
+      # TODO: Update to use the obs4REF equiv
     gpp: ilamb/gpp/WECANN/gpp.nc
+    # gpp: obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/20250516/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
   relationships:
     pr: ilamb/pr/GPCPv2.3/pr.nc
+    # pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
     tas: ilamb/tas/CRU4.02/tas.nc
   variable_cmap: Greens
 
@@ -16,8 +18,11 @@ gpp-FLUXNET2015:
 
 mrro-LORA:
   sources:
-    # TODO: Update to use the obs4REF equiv
+     # TODO: Update to use the obs4REF equiv
     mrro: ilamb/mrro/LORA/LORA.nc
+    # mrro:
+    #   obs_source: obs4ref
+    #   source_id: LORA-1-1
   variable_cmap: Blues
 
 mrsos-WangMao:
@@ -37,8 +42,12 @@ cSoil-HWSD2:
   variable_cmap: viridis
 
 lai-AVH15C1:
+  # TODO: Update to use the obs4REF equiv
   sources:
     lai: ilamb/lai/AVH15C1/lai.nc
+    # lai:
+    #   obs_source: obs4mips
+    #   source_id: NOAA-NCEI-LAI-AVHRR-5-0
   variable_cmap: Greens
 
 nbp-Hoffman:
@@ -47,6 +56,13 @@ nbp-Hoffman:
   sources:
     # TODO: Update to use the obs4REF equiv
     nbp: ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
+    # nbp:
+    #   obs_source: obs4ref
+    #   variable_id: nbp
+    #   source_id: Hoffman
+  transforms:
+  - integrate_space:
+      varname: nbp
 
 snc-ESACCI:
   sources:
@@ -58,3 +74,17 @@ burntFractionAll-GFED:
   alternate_vars:
   - burntFractionAll
   test_source_id: CESM2
+
+emp-GLEAMGPCP2.3:
+  analysis_variable: emp
+  sources:
+    et: ilamb/evspsbl/GLEAMv3.3a/et.nc
+    pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
+  transforms:
+  - select_time:
+      vmin: 2000-01
+      vmax: 2015-01
+  - expression:
+      expr: emp = et - pr
+  alternate_vars:
+  - evspsbl

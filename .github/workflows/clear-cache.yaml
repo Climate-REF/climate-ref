@@ -1,0 +1,50 @@
+name: Clear Runner Cache
+
+on:
+  workflow_dispatch:
+    inputs:
+      cache:
+        description: "Which cache to clear"
+        required: true
+        type: choice
+        options:
+          - software
+          - datasets
+          - all
+
+permissions:
+  contents: read
+
+jobs:
+  clear-cache:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: "arc-climate-ref"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Clear software cache
+        if: inputs.cache == 'software' || inputs.cache == 'all'
+        run: |
+          echo "Clearing software cache at /data/cache/software"
+          ls -la /data/cache/software/ || true
+          rm -rf /data/cache/software/*
+          echo "Software cache cleared"
+
+      - name: Clear dataset cache
+        if: inputs.cache == 'datasets' || inputs.cache == 'all'
+        run: |
+          echo "Clearing dataset cache at /data/cache/datasets"
+          ls -la /data/cache/datasets/ || true
+          rm -rf /data/cache/datasets/*
+          echo "Dataset cache cleared"
+
+      - name: Verify
+        run: |
+          echo "=== Software cache ==="
+          du -sh /data/cache/software/ 2>/dev/null || echo "Empty or does not exist"
+          ls /data/cache/software/ 2>/dev/null || true
+          echo ""
+          echo "=== Dataset cache ==="
+          du -sh /data/cache/datasets/ 2>/dev/null || echo "Empty or does not exist"
+          ls /data/cache/datasets/ 2>/dev/null || true

@@ -6,6 +6,7 @@ from __future__ import annotations
 
 import json
 
+import cftime
 import pandas as pd
 import pytest
 from climate_ref_example import provider as example_provider
@@ -20,6 +21,30 @@ from climate_ref.solve_helpers import (
     write_catalog_parquet,
 )
 from climate_ref_core.datasets import SourceDatasetType
+
+
+def _align_for_parquet_roundtrip(source: pd.DataFrame, target: pd.DataFrame) -> pd.DataFrame:
+    """Align a source DataFrame for comparison after a parquet round-trip.
+
+    Handles two conversions that happen during parquet serialization:
+    - cftime.datetime objects are converted to strings by ``write_catalog_parquet``
+    - ``None`` in datetime columns may become ``NaT`` after deserialization
+    """
+
+    aligned = source.copy()
+    for col in aligned.columns:
+        if col not in target.columns:
+            continue
+        # cftime objects -> strings (only when target has strings, not cftime)
+        if aligned[col].dtype == object and target[col].dtype == object:
+            has_source_cftime = aligned[col].apply(lambda x: isinstance(x, cftime.datetime)).any()
+            has_target_strings = target[col].dropna().apply(lambda x: isinstance(x, str)).any()
+            if has_source_cftime and has_target_strings:
+                aligned[col] = aligned[col].apply(lambda x: str(x) if isinstance(x, cftime.datetime) else x)
+        # None -> NaT alignment for datetime columns
+        if target[col].dtype.kind == "M" and aligned[col].dtype == object:
+            aligned[col] = aligned[col].fillna(pd.NaT)
+    return aligned
 
 
 @pytest.fixture(scope="module")
@@ -72,8 +97,9 @@ class TestWriteAndLoadCatalog:
 
         assert out_path.exists()
         loaded = pd.read_parquet(out_path)
-        # Parquet may coerce time columns to datetime64, so skip dtype check
-        pd.testing.assert_frame_equal(cmip6_generated_catalog, loaded, check_dtype=False)
+        # Parquet coerces time columns (None -> NaT), so align dtypes before comparison
+        expected = _align_for_parquet_roundtrip(cmip6_generated_catalog, loaded)
+        pd.testing.assert_frame_equal(expected, loaded, check_dtype=False)
 
     def test_load_solve_catalog_missing_dir(self, tmp_path):
         result = load_solve_catalog(tmp_path / "nonexistent")
@@ -94,10 +120,10 @@ class TestWriteAndLoadCatalog:
         result = load_solve_catalog(catalog_dir)
         assert result is not None
         assert SourceDatasetType.CMIP6 in result
-        # Parquet may coerce time columns to datetime64, so skip dtype check
-        pd.testing.assert_frame_equal(
-            result[SourceDatasetType.CMIP6], cmip6_generated_catalog, check_dtype=False
-        )
+        # Parquet coerces time columns (None -> NaT), so align dtypes before comparison
+        loaded = result[SourceDatasetType.CMIP6]
+        expected = _align_for_parquet_roundtrip(cmip6_generated_catalog, loaded)
+        pd.testing.assert_frame_equal(loaded, expected, check_dtype=False)
 
 
 class TestSolveToResults:

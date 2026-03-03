@@ -2,11 +2,13 @@ import re
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import numpy as np
+import pandas as pd
 import pytest
 import sqlalchemy
 from sqlalchemy import inspect
 
-from climate_ref.database import Database, _create_backup, validate_database_url
+from climate_ref.database import Database, _create_backup, _values_differ, validate_database_url
 from climate_ref.models import MetricValue
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
 from climate_ref_core.datasets import SourceDatasetType
@@ -304,3 +306,57 @@ def test_from_config_creates_backup_by_default(tmp_path, config, mocker):
 
     # Backup should have been called
     mock_backup.assert_called_once()
+
+
+class TestValuesDiffer:
+    """Tests for _values_differ helper that handles pd.NA safely."""
+
+    def test_equal_strings(self):
+        assert not _values_differ("atmos", "atmos")
+
+    def test_different_strings(self):
+        assert _values_differ("atmos", "ocean")
+
+    def test_equal_numbers(self):
+        assert not _values_differ(42, 42)
+
+    def test_different_numbers(self):
+        assert _values_differ(42, 99)
+
+    def test_both_none(self):
+        assert not _values_differ(None, None)
+
+    def test_both_pd_na(self):
+        assert not _values_differ(pd.NA, pd.NA)
+
+    def test_both_np_nan(self):
+        assert not _values_differ(np.nan, np.nan)
+
+    def test_none_vs_pd_na(self):
+        """Both are NA-like, so they should be treated as equal."""
+        assert not _values_differ(None, pd.NA)
+        assert not _values_differ(pd.NA, None)
+
+    def test_none_vs_np_nan(self):
+        assert not _values_differ(None, np.nan)
+        assert not _values_differ(np.nan, None)
+
+    def test_string_vs_pd_na(self):
+        """Real value vs pd.NA should be detected as different without crashing."""
+        assert _values_differ("atmos", pd.NA)
+        assert _values_differ(pd.NA, "atmos")
+
+    def test_string_vs_none(self):
+        assert _values_differ("atmos", None)
+        assert _values_differ(None, "atmos")
+
+    def test_bool_values(self):
+        assert not _values_differ(True, True)
+        assert not _values_differ(False, False)
+        assert _values_differ(True, False)
+
+    def test_bool_vs_pd_na(self):
+        """Bool vs pd.NA should not raise TypeError."""
+        assert _values_differ(True, pd.NA)
+        assert _values_differ(False, pd.NA)
+        assert _values_differ(pd.NA, True)

@@ -1,5 +1,5 @@
 - activity_id: obs4MIPs
-  end_time: 2012-12-15 00:00:00
+  end_time: '2012-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 0.5x0.5 degree
@@ -14,14 +14,14 @@
   source_id: LORA-1-1
   source_type: gridded_insitu
   source_version_number: '1.1'
-  start_time: 1980-01-15 00:00:00
+  start_time: '1980-01-15 00:00:00'
   units: kg m-2 s-1
   variable_id: mrro
   variant_label: REF
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-12-16 12:00:00
+  end_time: '2019-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -36,14 +36,14 @@
   source_id: AVISO-1-0
   source_type: satellite_retrieval
   source_version_number: '1.0'
-  start_time: 1993-01-16 12:00:00
+  start_time: '1993-01-16 12:00:00'
   units: m
   variable_id: zos
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree
@@ -59,14 +59,14 @@
   source_id: WECANN-1-0
   source_type: satellite_retrieval
   source_version_number: '1'
-  start_time: 2007-01-15 00:00:00
+  start_time: '2007-01-15 00:00:00'
   units: kg m-2 s-1
   variable_id: gpp
   variant_label: REF
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree
@@ -81,14 +81,14 @@
   source_id: WECANN-1-0
   source_type: satellite_retrieval
   source_version_number: '1'
-  start_time: 2007-01-15 00:00:00
+  start_time: '2007-01-15 00:00:00'
   units: W m-2
   variable_id: hfls
   variant_label: REF
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree
@@ -103,14 +103,14 @@
   source_id: WECANN-1-0
   source_type: satellite_retrieval
   source_version_number: '1'
-  start_time: 2007-01-15 00:00:00
+  start_time: '2007-01-15 00:00:00'
   units: W m-2
   variable_id: hfss
   variant_label: REF
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2021-12-16 12:00:00
+  end_time: '2021-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: data gridded to 1x1 degree lat x lon
@@ -125,14 +125,14 @@
   source_id: C3S-GTO-ECV-9-0
   source_type: satellite_retrieval
   source_version_number: '9.0'
-  start_time: 1996-01-16 12:00:00
+  start_time: '1996-01-16 12:00:00'
   units: m
   variable_id: toz
   variant_label: BE
   version: v20231115
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -147,14 +147,14 @@
   source_id: ERA-20C
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1900-01-16 12:00:00
+  start_time: '1900-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -169,14 +169,14 @@
   source_id: ERA-20C
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1900-01-16 12:00:00
+  start_time: '1900-01-16 12:00:00'
   units: K
   variable_id: ts
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1980-12-16 12:00:00
+  end_time: '1980-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -191,14 +191,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1980-01-16 12:00:00
+  start_time: '1980-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1981-12-16 12:00:00
+  end_time: '1981-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -213,14 +213,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1981-01-16 12:00:00
+  start_time: '1981-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1982-12-16 12:00:00
+  end_time: '1982-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -235,14 +235,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1982-01-16 12:00:00
+  start_time: '1982-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1983-12-16 12:00:00
+  end_time: '1983-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -257,14 +257,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1983-01-16 12:00:00
+  start_time: '1983-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1984-12-16 12:00:00
+  end_time: '1984-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -279,14 +279,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1984-01-16 12:00:00
+  start_time: '1984-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1985-12-16 12:00:00
+  end_time: '1985-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -301,14 +301,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1985-01-16 12:00:00
+  start_time: '1985-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1986-12-16 12:00:00
+  end_time: '1986-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -323,14 +323,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1986-01-16 12:00:00
+  start_time: '1986-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1987-12-16 12:00:00
+  end_time: '1987-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -345,14 +345,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1987-01-16 12:00:00
+  start_time: '1987-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1988-12-16 12:00:00
+  end_time: '1988-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -367,14 +367,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1988-01-16 12:00:00
+  start_time: '1988-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1989-12-16 12:00:00
+  end_time: '1989-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -389,14 +389,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1990-12-16 12:00:00
+  end_time: '1990-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -411,14 +411,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1990-01-16 12:00:00
+  start_time: '1990-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1991-12-16 12:00:00
+  end_time: '1991-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -433,14 +433,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1991-01-16 12:00:00
+  start_time: '1991-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1992-12-16 12:00:00
+  end_time: '1992-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -455,14 +455,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1992-01-16 12:00:00
+  start_time: '1992-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1993-12-16 12:00:00
+  end_time: '1993-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -477,14 +477,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1993-01-16 12:00:00
+  start_time: '1993-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1994-12-16 12:00:00
+  end_time: '1994-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -499,14 +499,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1994-01-16 12:00:00
+  start_time: '1994-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1995-12-16 12:00:00
+  end_time: '1995-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -521,14 +521,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1995-01-16 12:00:00
+  start_time: '1995-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1996-12-16 12:00:00
+  end_time: '1996-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -543,14 +543,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1996-01-16 12:00:00
+  start_time: '1996-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1997-12-16 12:00:00
+  end_time: '1997-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -565,14 +565,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1997-01-16 12:00:00
+  start_time: '1997-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1998-12-16 12:00:00
+  end_time: '1998-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -587,14 +587,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1998-01-16 12:00:00
+  start_time: '1998-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1999-12-16 12:00:00
+  end_time: '1999-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -609,14 +609,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1999-01-16 12:00:00
+  start_time: '1999-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2000-12-16 12:00:00
+  end_time: '2000-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -631,14 +631,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2000-01-16 12:00:00
+  start_time: '2000-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2001-12-16 12:00:00
+  end_time: '2001-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -653,14 +653,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2001-01-16 12:00:00
+  start_time: '2001-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2002-12-16 12:00:00
+  end_time: '2002-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -675,14 +675,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2002-01-16 12:00:00
+  start_time: '2002-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2003-12-16 12:00:00
+  end_time: '2003-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -697,14 +697,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2003-01-16 12:00:00
+  start_time: '2003-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2004-12-16 12:00:00
+  end_time: '2004-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -719,14 +719,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2004-01-16 12:00:00
+  start_time: '2004-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2005-12-16 12:00:00
+  end_time: '2005-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -741,14 +741,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2005-01-16 12:00:00
+  start_time: '2005-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2006-12-16 12:00:00
+  end_time: '2006-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -763,14 +763,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2006-01-16 12:00:00
+  start_time: '2006-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2007-12-16 12:00:00
+  end_time: '2007-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -785,14 +785,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2007-01-16 12:00:00
+  start_time: '2007-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2008-12-16 12:00:00
+  end_time: '2008-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -807,14 +807,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2008-01-16 12:00:00
+  start_time: '2008-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2009-12-16 12:00:00
+  end_time: '2009-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -829,14 +829,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2009-01-16 12:00:00
+  start_time: '2009-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -851,14 +851,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2010-01-16 12:00:00
+  start_time: '2010-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2011-12-16 12:00:00
+  end_time: '2011-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -873,14 +873,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2011-01-16 12:00:00
+  start_time: '2011-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -895,14 +895,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2012-01-16 12:00:00
+  start_time: '2012-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2013-12-16 12:00:00
+  end_time: '2013-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -917,14 +917,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2013-01-16 12:00:00
+  start_time: '2013-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2014-12-16 12:00:00
+  end_time: '2014-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -939,14 +939,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2014-01-16 12:00:00
+  start_time: '2014-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2007-12-16 12:00:00
+  end_time: '2007-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -961,14 +961,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2007-01-16 12:00:00
+  start_time: '2007-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2008-12-16 12:00:00
+  end_time: '2008-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -983,14 +983,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2008-01-16 12:00:00
+  start_time: '2008-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2009-12-16 12:00:00
+  end_time: '2009-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1005,14 +1005,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2009-01-16 12:00:00
+  start_time: '2009-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1027,14 +1027,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2010-01-16 12:00:00
+  start_time: '2010-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2011-12-16 12:00:00
+  end_time: '2011-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1049,14 +1049,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2011-01-16 12:00:00
+  start_time: '2011-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1071,14 +1071,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2012-01-16 12:00:00
+  start_time: '2012-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2013-12-16 12:00:00
+  end_time: '2013-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1093,14 +1093,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2013-01-16 12:00:00
+  start_time: '2013-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2014-12-16 12:00:00
+  end_time: '2014-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1115,14 +1115,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2014-01-16 12:00:00
+  start_time: '2014-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2015-12-16 12:00:00
+  end_time: '2015-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1137,14 +1137,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2015-01-16 12:00:00
+  start_time: '2015-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1980-12-16 12:00:00
+  end_time: '1980-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1159,14 +1159,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1980-01-16 12:00:00
+  start_time: '1980-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1981-12-16 12:00:00
+  end_time: '1981-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1181,14 +1181,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1981-01-16 12:00:00
+  start_time: '1981-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1982-12-16 12:00:00
+  end_time: '1982-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1203,14 +1203,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1982-01-16 12:00:00
+  start_time: '1982-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1983-12-16 12:00:00
+  end_time: '1983-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1225,14 +1225,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1983-01-16 12:00:00
+  start_time: '1983-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1984-12-16 12:00:00
+  end_time: '1984-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1247,14 +1247,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1984-01-16 12:00:00
+  start_time: '1984-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1985-12-16 12:00:00
+  end_time: '1985-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1269,14 +1269,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1985-01-16 12:00:00
+  start_time: '1985-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1986-12-16 12:00:00
+  end_time: '1986-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1291,14 +1291,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1986-01-16 12:00:00
+  start_time: '1986-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1987-12-16 12:00:00
+  end_time: '1987-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1313,14 +1313,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1987-01-16 12:00:00
+  start_time: '1987-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1988-12-16 12:00:00
+  end_time: '1988-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1335,14 +1335,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1988-01-16 12:00:00
+  start_time: '1988-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1989-12-16 12:00:00
+  end_time: '1989-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1357,14 +1357,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1990-12-16 12:00:00
+  end_time: '1990-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1379,14 +1379,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1990-01-16 12:00:00
+  start_time: '1990-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1991-12-16 12:00:00
+  end_time: '1991-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1401,14 +1401,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1991-01-16 12:00:00
+  start_time: '1991-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1992-12-16 12:00:00
+  end_time: '1992-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1423,14 +1423,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1992-01-16 12:00:00
+  start_time: '1992-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1993-12-16 12:00:00
+  end_time: '1993-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1445,14 +1445,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1993-01-16 12:00:00
+  start_time: '1993-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1994-12-16 12:00:00
+  end_time: '1994-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1467,14 +1467,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1994-01-16 12:00:00
+  start_time: '1994-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1995-12-16 12:00:00
+  end_time: '1995-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1489,14 +1489,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1995-01-16 12:00:00
+  start_time: '1995-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1996-12-16 12:00:00
+  end_time: '1996-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1511,14 +1511,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1996-01-16 12:00:00
+  start_time: '1996-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1997-12-16 12:00:00
+  end_time: '1997-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1533,14 +1533,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1997-01-16 12:00:00
+  start_time: '1997-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1998-12-16 12:00:00
+  end_time: '1998-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1555,14 +1555,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1998-01-16 12:00:00
+  start_time: '1998-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1999-12-16 12:00:00
+  end_time: '1999-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1577,14 +1577,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1999-01-16 12:00:00
+  start_time: '1999-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2000-12-16 12:00:00
+  end_time: '2000-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1599,14 +1599,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2000-01-16 12:00:00
+  start_time: '2000-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2001-12-16 12:00:00
+  end_time: '2001-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1621,14 +1621,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2001-01-16 12:00:00
+  start_time: '2001-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2002-12-16 12:00:00
+  end_time: '2002-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1643,14 +1643,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2002-01-16 12:00:00
+  start_time: '2002-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2003-12-16 12:00:00
+  end_time: '2003-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1665,14 +1665,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2003-01-16 12:00:00
+  start_time: '2003-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2004-12-16 12:00:00
+  end_time: '2004-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1687,14 +1687,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2004-01-16 12:00:00
+  start_time: '2004-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2005-12-16 12:00:00
+  end_time: '2005-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1709,14 +1709,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2005-01-16 12:00:00
+  start_time: '2005-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2006-12-16 12:00:00
+  end_time: '2006-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1731,14 +1731,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2006-01-16 12:00:00
+  start_time: '2006-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2007-12-16 12:00:00
+  end_time: '2007-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1753,14 +1753,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2007-01-16 12:00:00
+  start_time: '2007-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2008-12-16 12:00:00
+  end_time: '2008-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1775,14 +1775,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2008-01-16 12:00:00
+  start_time: '2008-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2009-12-16 12:00:00
+  end_time: '2009-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1797,14 +1797,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2009-01-16 12:00:00
+  start_time: '2009-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1819,14 +1819,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2010-01-16 12:00:00
+  start_time: '2010-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2011-12-16 12:00:00
+  end_time: '2011-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1841,14 +1841,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2011-01-16 12:00:00
+  start_time: '2011-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1863,14 +1863,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2012-01-16 12:00:00
+  start_time: '2012-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2013-12-16 12:00:00
+  end_time: '2013-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1885,14 +1885,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2013-01-16 12:00:00
+  start_time: '2013-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2014-12-16 12:00:00
+  end_time: '2014-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1907,14 +1907,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2014-01-16 12:00:00
+  start_time: '2014-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 1980-12-16 12:00:00
+  end_time: '1980-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1929,14 +1929,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1980-01-16 12:00:00
+  start_time: '1980-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1981-12-16 12:00:00
+  end_time: '1981-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1951,14 +1951,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1981-01-16 12:00:00
+  start_time: '1981-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1982-12-16 12:00:00
+  end_time: '1982-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1973,14 +1973,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1982-01-16 12:00:00
+  start_time: '1982-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1983-12-16 12:00:00
+  end_time: '1983-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -1995,14 +1995,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1983-01-16 12:00:00
+  start_time: '1983-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1984-12-16 12:00:00
+  end_time: '1984-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2017,14 +2017,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1984-01-16 12:00:00
+  start_time: '1984-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1985-12-16 12:00:00
+  end_time: '1985-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2039,14 +2039,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1985-01-16 12:00:00
+  start_time: '1985-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1986-12-16 12:00:00
+  end_time: '1986-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2061,14 +2061,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1986-01-16 12:00:00
+  start_time: '1986-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1987-12-16 12:00:00
+  end_time: '1987-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2083,14 +2083,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1987-01-16 12:00:00
+  start_time: '1987-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1988-12-16 12:00:00
+  end_time: '1988-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2105,14 +2105,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1988-01-16 12:00:00
+  start_time: '1988-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1989-12-16 12:00:00
+  end_time: '1989-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2127,14 +2127,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1990-12-16 12:00:00
+  end_time: '1990-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2149,14 +2149,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1990-01-16 12:00:00
+  start_time: '1990-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1991-12-16 12:00:00
+  end_time: '1991-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2171,14 +2171,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1991-01-16 12:00:00
+  start_time: '1991-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1992-12-16 12:00:00
+  end_time: '1992-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2193,14 +2193,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1992-01-16 12:00:00
+  start_time: '1992-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1993-12-16 12:00:00
+  end_time: '1993-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2215,14 +2215,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1993-01-16 12:00:00
+  start_time: '1993-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1994-12-16 12:00:00
+  end_time: '1994-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2237,14 +2237,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1994-01-16 12:00:00
+  start_time: '1994-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1995-12-16 12:00:00
+  end_time: '1995-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2259,14 +2259,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1995-01-16 12:00:00
+  start_time: '1995-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1996-12-16 12:00:00
+  end_time: '1996-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2281,14 +2281,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1996-01-16 12:00:00
+  start_time: '1996-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1997-12-16 12:00:00
+  end_time: '1997-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2303,14 +2303,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1997-01-16 12:00:00
+  start_time: '1997-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1998-12-16 12:00:00
+  end_time: '1998-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2325,14 +2325,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1998-01-16 12:00:00
+  start_time: '1998-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 1999-12-16 12:00:00
+  end_time: '1999-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2347,14 +2347,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 1999-01-16 12:00:00
+  start_time: '1999-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2000-12-16 12:00:00
+  end_time: '2000-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2369,14 +2369,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2000-01-16 12:00:00
+  start_time: '2000-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2001-12-16 12:00:00
+  end_time: '2001-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2391,14 +2391,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2001-01-16 12:00:00
+  start_time: '2001-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2002-12-16 12:00:00
+  end_time: '2002-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2413,14 +2413,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2002-01-16 12:00:00
+  start_time: '2002-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2003-12-16 12:00:00
+  end_time: '2003-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2435,14 +2435,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2003-01-16 12:00:00
+  start_time: '2003-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2004-12-16 12:00:00
+  end_time: '2004-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2457,14 +2457,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2004-01-16 12:00:00
+  start_time: '2004-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2005-12-16 12:00:00
+  end_time: '2005-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2479,14 +2479,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2005-01-16 12:00:00
+  start_time: '2005-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2006-12-16 12:00:00
+  end_time: '2006-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2501,14 +2501,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2006-01-16 12:00:00
+  start_time: '2006-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2007-12-16 12:00:00
+  end_time: '2007-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2523,14 +2523,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2007-01-16 12:00:00
+  start_time: '2007-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2008-12-16 12:00:00
+  end_time: '2008-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2545,14 +2545,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2008-01-16 12:00:00
+  start_time: '2008-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2009-12-16 12:00:00
+  end_time: '2009-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2567,14 +2567,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2009-01-16 12:00:00
+  start_time: '2009-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2010-12-16 12:00:00
+  end_time: '2010-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2589,14 +2589,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2010-01-16 12:00:00
+  start_time: '2010-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2011-12-16 12:00:00
+  end_time: '2011-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2611,14 +2611,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2011-01-16 12:00:00
+  start_time: '2011-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2633,14 +2633,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2012-01-16 12:00:00
+  start_time: '2012-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2013-12-16 12:00:00
+  end_time: '2013-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2655,14 +2655,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2013-01-16 12:00:00
+  start_time: '2013-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2014-12-16 12:00:00
+  end_time: '2014-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x 0.25 degree latitude x longitude
@@ -2677,14 +2677,14 @@
   source_id: ERA-5
   source_type: reanalysis
   source_version_number: '1.0'
-  start_time: 2014-01-16 12:00:00
+  start_time: '2014-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20250220
   vertical_levels: 37
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2699,14 +2699,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: hfls
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2721,14 +2721,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: hfss
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2743,14 +2743,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: '%'
   variable_id: hur
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2765,14 +2765,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: '1'
   variable_id: hus
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2787,14 +2787,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: kg m-2 s-1
   variable_id: pr
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2809,14 +2809,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2831,14 +2831,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: rlds
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2853,14 +2853,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: rlus
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2875,14 +2875,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: rsds
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2897,14 +2897,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: rsus
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2919,14 +2919,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: m s-1
   variable_id: sfcWind
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2941,14 +2941,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: K
   variable_id: ta
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2963,14 +2963,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: Pa
   variable_id: tauu
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -2985,14 +2985,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: Pa
   variable_id: tauv
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -3007,14 +3007,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: K
   variable_id: ts
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -3029,14 +3029,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: m s-1
   variable_id: ua
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -3051,14 +3051,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: m s-1
   variable_id: uas
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -3073,14 +3073,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: m s-1
   variable_id: va
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2019-03-16 12:00:00
+  end_time: '2019-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -3095,14 +3095,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: m s-1
   variable_id: vas
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-01-16 12:00:00
+  end_time: '2010-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.5x1.5 degree latitude x longitude
@@ -3117,14 +3117,14 @@
   source_id: ERA-INT
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1989-01-16 12:00:00
+  start_time: '1989-01-16 12:00:00'
   units: m
   variable_id: zg
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 19
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3139,14 +3139,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: hfls
   variant_label: PCMDI
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -3161,14 +3161,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   units: W m-2
   variable_id: hfns
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3183,14 +3183,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: W m-2
   variable_id: hfss
   variant_label: PCMDI
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3205,14 +3205,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: K
   variable_id: tas
   variant_label: PCMDI
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-16 12:00:00
+  end_time: '2017-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3227,14 +3227,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: Pa
   variable_id: tauu
   variant_label: PCMDI
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -3249,14 +3249,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   units: Pa
   variable_id: tauv
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-07-15 12:00:00
+  end_time: '2017-07-15 12:00:00'
   finalised: true
   frequency: mon
   grid: 1.0x1.0 degree latitude x longitude
@@ -3271,14 +3271,14 @@
   source_id: TropFlux-1-0
   source_type: satellite_blended
   source_version_number: '1.0'
-  start_time: 1979-01-15 00:00:00
+  start_time: '1979-01-15 00:00:00'
   units: K
   variable_id: ts
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2025-01-16 12:00:00
+  end_time: '2025-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3293,14 +3293,14 @@
   source_id: HadISST-1-1
   source_type: satellite_blended
   source_version_number: 1-1
-  start_time: 1870-01-16 12:00:00
+  start_time: '1870-01-16 12:00:00'
   units: K
   variable_id: ts
   variant_label: PCMDI
   version: v20250415
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-03-16 12:00:00
+  end_time: '2023-03-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.5x0.5 degree latitude x longitude
@@ -3315,14 +3315,14 @@
   source_id: GPCP-Monthly-3-2
   source_type: satellite_blended
   source_version_number: '3.2'
-  start_time: 1983-01-16 12:00:00
+  start_time: '1983-01-16 12:00:00'
   units: kg m-2 s-1
   variable_id: pr
   variant_label: RSS
   version: v20231205
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2017-12-16 12:00:00
+  end_time: '2017-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
@@ -3337,14 +3337,14 @@
   source_id: TRMM-3B43v-7
   source_type: satellite_blended
   source_version_number: 3B43v.7
-  start_time: 1998-01-16 12:00:00
+  start_time: '1998-01-16 12:00:00'
   units: kg m-2 s-1
   variable_id: pr
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3359,14 +3359,14 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   units: W m-2
   variable_id: rlds
   variant_label: RSS
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3381,14 +3381,14 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   units: W m-2
   variable_id: rlus
   variant_label: RSS
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3403,14 +3403,14 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   units: W m-2
   variable_id: rsds
   variant_label: RSS
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2023-09-16 00:00:00
+  end_time: '2023-09-16 00:00:00'
   finalised: true
   frequency: mon
   grid: 1x1 degree latitude x longitude
@@ -3425,14 +3425,14 @@
   source_id: CERES-EBAF-4-2
   source_type: satellite_blended
   source_version_number: '4.2'
-  start_time: 2000-03-16 12:00:00
+  start_time: '2000-03-16 12:00:00'
   units: W m-2
   variable_id: rsus
   variant_label: RSS
   version: v20230209
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
@@ -3447,14 +3447,14 @@
   source_id: 20CR
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1871-01-16 12:00:00
+  start_time: '1871-01-16 12:00:00'
   units: Pa
   variable_id: psl
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2012-12-16 12:00:00
+  end_time: '2012-12-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 2.0x2.0 degree latitude x longitude
@@ -3469,14 +3469,14 @@
   source_id: 20CR
   source_type: reanalysis
   source_version_number: N/A
-  start_time: 1871-01-16 12:00:00
+  start_time: '1871-01-16 12:00:00'
   units: K
   variable_id: ts
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-01-16 12:00:00
+  end_time: '2019-01-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 0.25x0.25 degree latitude x longitude
@@ -3491,14 +3491,14 @@
   source_id: CMAP-V1902
   source_type: satellite_blended
   source_version_number: V1902
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: kg m-2 s-1
   variable_id: pr
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2019-07-16 12:00:00
+  end_time: '2019-07-16 12:00:00'
   finalised: true
   frequency: mon
   grid: 2.5x2.5 degree latitude x longitude
@@ -3513,14 +3513,14 @@
   source_id: GPCP-2-3
   source_type: satellite_blended
   source_version_number: '2.3'
-  start_time: 1979-01-16 12:00:00
+  start_time: '1979-01-16 12:00:00'
   units: kg m-2 s-1
   variable_id: pr
   variant_label: PCMDI
   version: v20210727
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -3536,14 +3536,14 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   units: micromoles_per_kilogram
   variable_id: no3
   variant_label: REF
   version: v20250516
   vertical_levels: 43
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -3559,14 +3559,14 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   units: micromoles_per_kilogram
   variable_id: o2
   variant_label: REF
   version: v20250516
   vertical_levels: 57
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -3582,14 +3582,14 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   units: micromoles_per_kilogram
   variable_id: po4
   variant_label: REF
   version: v20250516
   vertical_levels: 43
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -3605,14 +3605,14 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   units: '1'
   variable_id: so
   variant_label: REF
   version: v20250516
   vertical_levels: 57
 - activity_id: obs4MIPs
-  end_time: 2015-12-15 00:00:00
+  end_time: '2015-12-15 00:00:00'
   finalised: true
   frequency: mon
   grid: 100 km
@@ -3627,14 +3627,14 @@
   source_id: WOA2023
   source_type: gridded_insitu
   source_version_number: '2023'
-  start_time: 2015-01-15 00:00:00
+  start_time: '2015-01-15 00:00:00'
   units: degC
   variable_id: thetao
   variant_label: REF
   version: v20250516
   vertical_levels: 57
 - activity_id: obs4MIPs
-  end_time: 2023-02-15 00:00:00
+  end_time: '2023-02-15 00:00:00'
   finalised: true
   frequency: mon
   grid: N/A
@@ -3649,14 +3649,14 @@
   source_id: RAPID
   source_type: insitu
   source_version_number: '2023.1'
-  start_time: 2004-04-15 00:00:00
+  start_time: '2004-04-15 00:00:00'
   units: Sv
   variable_id: msftmz
   variant_label: REF
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-07-02 12:00:00
+  end_time: '2010-07-02 12:00:00'
   finalised: true
   frequency: yr
   grid: global mean data
@@ -3671,14 +3671,14 @@
   source_id: Hoffman
   source_type: stastical-estimate
   source_version_number: '1'
-  start_time: 1850-07-02 12:00:00
+  start_time: '1850-07-02 12:00:00'
   units: Pg yr-1
   variable_id: fgco2
   variant_label: REF
   version: v20250516
   vertical_levels: 1
 - activity_id: obs4MIPs
-  end_time: 2010-07-02 12:00:00
+  end_time: '2010-07-02 12:00:00'
   finalised: true
   frequency: yr
   grid: global mean data
@@ -3693,7 +3693,7 @@
   source_id: Hoffman
   source_type: stastical-estimate
   source_version_number: '1'
-  start_time: 1850-07-02 12:00:00
+  start_time: '1850-07-02 12:00:00'
   units: Pg yr-1
   variable_id: nbp
   variant_label: REF

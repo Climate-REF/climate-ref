@@ -159,6 +159,7 @@ filename = "sqlite://climate_ref.db"
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
+            "cmip7_parser": "complete",
             "diagnostic_providers": [
                 {"provider": "climate_ref_example:provider"},
             ],
@@ -170,6 +171,7 @@ filename = "sqlite://climate_ref.db"
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
+            "cmip7_parser": "complete",
             "diagnostic_providers": [
                 {
                     "provider": "climate_ref_example:provider",
@@ -197,6 +199,7 @@ filename = "sqlite://climate_ref.db"
         monkeypatch.setenv("REF_SCRATCH_ROOT", "/my/test/scratch")
         monkeypatch.setenv("REF_LOG_ROOT", "/my/test/logs")
         monkeypatch.setenv("REF_RESULTS_ROOT", "/my/test/executions")
+        monkeypatch.setenv("REF_CMIP6_PARSER", "drs")
 
         config_new = config.refresh()
 
@@ -205,6 +208,7 @@ filename = "sqlite://climate_ref.db"
         assert config_new.paths.scratch == Path("/my/test/scratch")
         assert config_new.paths.log == Path("/my/test/logs")
         assert config_new.paths.results == Path("/my/test/executions")
+        assert config_new.cmip6_parser == "drs"
 
     def test_custom_env_variable(self, monkeypatch, tmp_path, config):
         monkeypatch.setenv("ABC", "/my")

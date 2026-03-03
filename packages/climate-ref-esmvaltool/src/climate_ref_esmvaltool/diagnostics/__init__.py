@@ -13,6 +13,13 @@ from climate_ref_esmvaltool.diagnostics.cloud_scatterplots import (
 from climate_ref_esmvaltool.diagnostics.ecs import EquilibriumClimateSensitivity
 from climate_ref_esmvaltool.diagnostics.enso import ENSOBasicClimatology, ENSOCharacteristics
 from climate_ref_esmvaltool.diagnostics.example import GlobalMeanTimeseries
+from climate_ref_esmvaltool.diagnostics.ozone import (
+    O3LatMonthMapplot,
+    O3LatTimeMapplot,
+    O3PolarCapTimeseriesNH,
+    O3PolarCapTimeseriesSH,
+    O3ZonalMeanProfiles,
+)
 from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
     RegionalHistoricalAnnualCycle,
     RegionalHistoricalTimeSeries,
@@ -37,6 +44,11 @@ __all__ = [
     "ENSOCharacteristics",
     "EquilibriumClimateSensitivity",
     "GlobalMeanTimeseries",
+    "O3LatMonthMapplot",
+    "O3LatTimeMapplot",
+    "O3PolarCapTimeseriesNH",
+    "O3PolarCapTimeseriesSH",
+    "O3ZonalMeanProfiles",
     "RegionalHistoricalAnnualCycle",
     "RegionalHistoricalTimeSeries",
     "RegionalHistoricalTrend",

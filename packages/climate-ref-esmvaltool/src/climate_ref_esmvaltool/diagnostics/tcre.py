@@ -87,7 +87,6 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                             "experiment_id": "esm-1pctCO2",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         },
                     ),
                     FacetFilter(
@@ -96,7 +95,6 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                             "experiment_id": "esm-piControl",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         },
                     ),
                 ),

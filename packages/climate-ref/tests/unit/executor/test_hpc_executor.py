@@ -1,4 +1,6 @@
+import os
 import re
+import resource
 from unittest.mock import MagicMock, patch
 
 import parsl
@@ -6,7 +8,13 @@ import pytest
 from parsl.dataflow import futures
 from pydantic import ValidationError
 
-from climate_ref.executor.hpc import HPCExecutor, SlurmConfig, execute_locally
+from climate_ref.executor.hpc import (
+    HPCExecutor,
+    SlurmConfig,
+    execute_locally,
+    limit_from_env,
+    with_memory_limit,
+)
 from climate_ref.executor.local import ExecutionFuture
 from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.exceptions import DiagnosticError
@@ -173,3 +181,37 @@ class TestHPCExecutor:
         [slurm_cfg_dict.pop(m) for m in missing_config]
         with pytest.raises(ValidationError):
             SlurmConfig.model_validate(slurm_cfg_dict)
+
+    def test_memeory_limit_fixed(self):
+        """Test with a fixed numeric memory limit"""
+
+        @with_memory_limit(2.0)
+        def test_func():
+            # Check if memory limit was set
+            soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+            expected_bytes = int(2.0 * 1024 * 1024 * 1024)
+            assert soft == expected_bytes
+            assert hard >= expected_bytes
+
+    def test_memory_limit_func(self):
+        # Save original state
+        os.environ.pop("MEMORY_LIMIT_PARSL_JOB_GB", None)
+        orig_soft, orig_hard = resource.getrlimit(resource.RLIMIT_AS)
+
+        @with_memory_limit(limit_from_env)
+        def unset_func():
+            soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+            assert soft == orig_soft
+            assert hard == orig_hard
+
+        unset_func()
+        os.environ["MEMORY_LIMIT_PARSL_JOB_GB"] = "7"
+
+        @with_memory_limit(limit_from_env)
+        def set_func():
+            soft, hard = resource.getrlimit(resource.RLIMIT_AS)
+            expected_bytes = 7 * 1024 * 1024 * 1024
+            assert soft == expected_bytes
+            assert hard == -1 or hard >= expected_bytes
+
+        set_func()

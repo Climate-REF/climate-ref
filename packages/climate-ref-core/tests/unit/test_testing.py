@@ -479,6 +479,7 @@ cmip6:
   datasets:
     - instance_id: CMIP6.test
       variable_id: tas
+      path: /path/to/file.nc
 """
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)

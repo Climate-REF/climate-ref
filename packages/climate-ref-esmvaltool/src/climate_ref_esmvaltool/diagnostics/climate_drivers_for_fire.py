@@ -91,7 +91,6 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "atmos",
                         }
                     ),
                     FacetFilter(
@@ -99,20 +98,11 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                             "branded_variable": (
                                 "cVeg_tavg-u-hxy-lnd",
                                 "treeFrac_tavg-u-hxy-u",
+                                "vegFrac_tavg-u-hxy-u",
                             ),
                             "experiment_id": "historical",
                             "frequency": "mon",
                             "region": "glb",
-                            "realm": "land",
-                        }
-                    ),
-                    FacetFilter(
-                        {
-                            "branded_variable": "vegFrac_tavg-u-hxy-u",
-                            "experiment_id": "historical",
-                            "frequency": "mon",
-                            "region": "glb",
-                            "realm": "land",
                         }
                     ),
                 ),
@@ -125,16 +115,16 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     ),
                     AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
                     RequireFacets(
-                        "variable_id",
+                        "branded_variable",
                         (
-                            "cVeg",
-                            "hurs",
-                            "pr",
-                            "tas",
-                            "tasmax",
-                            "sftlf",
-                            "treeFrac",
-                            "vegFrac",
+                            "cVeg_tavg-u-hxy-lnd",
+                            "hurs_tavg-h2m-hxy-u",
+                            "pr_tavg-u-hxy-u",
+                            "sftlf_ti-u-hxy-u",
+                            "tas_tavg-h2m-hxy-u",
+                            "tas_tmaxavg-h2m-hxy-u",
+                            "treeFrac_tavg-u-hxy-u",
+                            "vegFrac_tavg-u-hxy-u",
                         ),
                     ),
                 ),
@@ -234,27 +224,27 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
         """Update the recipe."""
         cmip_source = get_cmip_source_type(input_files)
         recipe_variables = dataframe_to_recipe(input_files[cmip_source])
+        recipe.pop("datasets")
+        for diagnostic in recipe["diagnostics"].values():
+            for variable_group, variable in diagnostic.get("variables", {}).items():
+                cmip6_short_name = variable.get("short_name", variable_group)
+                if cmip_source == SourceDatasetType.CMIP7 and cmip6_short_name == "tasmax":
+                    short_name = "tas"
+                else:
+                    short_name = cmip6_short_name
+                variable["short_name"] = short_name
+                variable["start_year"] = 2013
+                variable["end_year"] = 2014
+                datasets = recipe_variables[short_name]["additional_datasets"]
+                for dataset in datasets:
+                    dataset.pop("timerange", None)
+                if cmip_source == SourceDatasetType.CMIP7 and short_name == "tas":
+                    # Separate the two "tas" datasets into "tas" and "tasmax".
+                    if cmip6_short_name == "tasmax":
+                        datasets = [d for d in datasets if d["branding_suffix"] == "tmaxavg-h2m-hxy-u"]
+                    else:
+                        datasets = [d for d in datasets if d["branding_suffix"] == "tavg-h2m-hxy-u"]
 
-        if cmip_source == SourceDatasetType.CMIP7:
-            # CMIP7: use per-variable additional_datasets to preserve correct branding_suffix
-            recipe["datasets"] = []
-            for diagnostic in recipe["diagnostics"].values():
-                for var_name, variable in diagnostic.get("variables", {}).items():
-                    short_name = variable.get("short_name", var_name)
-                    if short_name in recipe_variables:
-                        datasets = recipe_variables[short_name]["additional_datasets"]
-                        for ds in datasets:
-                            ds.pop("mip", None)
-                            ds.pop("timerange", None)
-                            ds["start_year"] = 2013
-                            ds["end_year"] = 2014
-                        variable["additional_datasets"] = datasets
-        else:
-            dataset = recipe_variables["cVeg"]["additional_datasets"][0]
-            dataset.pop("mip")
-            dataset.pop("timerange")
-            dataset["start_year"] = 2013
-            dataset["end_year"] = 2014
-            recipe["datasets"] = [dataset]
+                variable["additional_datasets"] = datasets
 
         recipe["diagnostics"]["fire_evaluation"]["scripts"]["fire_evaluation"]["remove_confire_files"] = True

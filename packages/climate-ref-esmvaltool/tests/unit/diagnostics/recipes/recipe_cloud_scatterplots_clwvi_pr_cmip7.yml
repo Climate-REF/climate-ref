@@ -1,0 +1,165 @@
+documentation:
+  title: Model evaluation with focus on clouds.
+  description: 'Plot 2D histograms using the Seaborn diagnostic in ESMValTool.
+
+    '
+  authors:
+  - bock_lisa
+  - lauer_axel
+  - andela_bouwe
+  maintainer:
+  - bock_lisa
+timerange_for_data:
+  timerange: 1996/2014
+regridding:
+  regrid:
+    target_grid: 1x1
+    scheme:
+      reference: esmf_regrid.schemes:ESMFAreaWeighted
+levels_for_3d_vars:
+  extract_levels:
+    levels:
+      cmor_table: CMIP6
+      coordinate: plev27
+    coordinate: air_pressure
+    scheme: linear
+preprocessors:
+  common_grid_clt:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 1.0
+      maximum: 100.0
+  common_grid_clivi_clwvi:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 0.01
+      maximum: 0.2
+  common_grid_lwcre:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 1.0
+      maximum: 100.0
+  common_grid_swcre:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: -200.0
+      maximum: -1.0
+  common_grid_pr:
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    convert_units:
+      units: mm day-1
+    mask_outside_range:
+      minimum: 0.1
+      maximum: 4
+  common_grid_levels_ta:
+    extract_levels:
+      levels:
+        cmor_table: CMIP6
+        coordinate: plev27
+      coordinate: air_pressure
+      scheme: linear
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    mask_outside_range:
+      minimum: 200
+      maximum: 280
+  common_grid_levels_cli:
+    extract_levels:
+      levels:
+        cmor_table: CMIP6
+        coordinate: plev27
+      coordinate: air_pressure
+      scheme: linear
+    regrid:
+      target_grid: 1x1
+      scheme:
+        reference: esmf_regrid.schemes:ESMFAreaWeighted
+    custom_order: true
+    convert_units:
+      units: g kg-1
+    mask_outside_range:
+      minimum: 0.0001
+      maximum: 0.005
+diagnostics:
+  plot_joint_clwvi_pr_model:
+    description: Scatterplot clwvi vs pr.
+    variables:
+      clwvi:
+        timerange: 1996/2014
+        mip: atmos
+        exp: historical
+        preprocessor: common_grid_clivi_clwvi
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: CESM2
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: NCAR
+          mip: atmos
+          region: glb
+          timerange: 1996/2014
+      pr:
+        timerange: 1996/2014
+        mip: atmos
+        exp: historical
+        preprocessor: common_grid_pr
+        additional_datasets:
+        - project: CMIP7
+          activity: CMIP
+          branding_suffix: tavg-u-hxy-u
+          dataset: CESM2
+          ensemble: r1i1p1f1
+          exp: historical
+          frequency: mon
+          grid: gn
+          institute: NCAR
+          mip: atmos
+          region: glb
+          timerange: 1996/2014
+    scripts:
+      plot:
+        script: seaborn_jointplot_histogram.py
+        x: clwvi
+        y: pr
+        bins: 20
+        joint_kws:
+          vmax: 0.03
+          cmap: YlGnBu
+        cbar: true
+        cbar_kws:
+          extend: max
+        marginal_kws:
+          color: darkturquoise
+        seaborn_settings:
+          style: ticks
+          rc:
+            axes.titlepad: 15.0
+        suptitle: CMIP7 CESM2 r1i1p1f1 gn 1996/2014
+        plot_filename: jointplot_clwvi_pr_CMIP7_CESM2_r1i1p1f1_gn_1996-2014

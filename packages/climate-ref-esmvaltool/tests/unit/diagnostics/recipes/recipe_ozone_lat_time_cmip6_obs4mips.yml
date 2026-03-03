@@ -1,0 +1,139 @@
+documentation:
+  title: Model evaluation with focus on total column and stratospheric ozone.
+  description: 'Plot climatologies, zonal means, and selected monthly means for total
+    column ozone and stratospheric ozone for the REF.
+
+    '
+  authors:
+  - schlund_manuel
+  - hassler_birgit
+  maintainer:
+  - hassler_birgit
+preprocessors:
+  create_time_series_SH:
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+    area_statistics:
+      operator: mean
+    extract_region:
+      start_latitude: -85
+      end_latitude: -60
+      start_longitude: 0
+      end_longitude: 360
+    extract_month:
+      month: 10
+    convert_units:
+      units: DU
+  create_time_series_NH:
+    annual_statistics:
+      operator: mean
+      keep_group_coordinates: true
+    area_statistics:
+      operator: mean
+    extract_region:
+      start_latitude: 60
+      end_latitude: 85
+      start_longitude: 0
+      end_longitude: 360
+    extract_month:
+      month: 3
+    convert_units:
+      units: DU
+  create_lat_time_map:
+    regrid:
+      scheme: linear
+      target_grid: 5x5
+    regrid_time:
+      calendar: standard
+    zonal_statistics:
+      operator: mean
+    convert_units:
+      units: DU
+  create_lat_month_map:
+    regrid:
+      scheme: linear
+      target_grid: 5x5
+    climate_statistics:
+      operator: mean
+      period: month
+    zonal_statistics:
+      operator: mean
+    convert_units:
+      units: DU
+  create_zonal_mean_profile:
+    zonal_statistics:
+      operator: mean
+    regrid:
+      scheme: linear
+      target_grid: 5x5
+    extract_levels:
+      levels:
+      - 15000
+      - 10000
+      - 7000
+      - 5000
+      - 3000
+      - 2000
+      - 1000
+      - 500
+      - 100
+      scheme: linear_extrapolate
+      coordinate: air_pressure
+    climate_statistics:
+      operator: mean
+      period: full
+    convert_units:
+      units: ppm
+datasets:
+- project: CMIP6
+  activity: CMIP
+  dataset: GFDL-ESM4
+  ensemble: r1i1p1f1
+  institute: NOAA-GFDL
+  exp: historical
+  grid: gr1
+  mip: AERmon
+  timerange: 1996/2014
+timerange_for_toz_monthly_data:
+  timerange: 1950/2014
+timerange_for_toz_zonal_mean:
+  timerange: 1997/2014
+timerange_for_ozone_profile:
+  timerange: 1990/2000
+diagnostics:
+  lat_time_mapplot:
+    variables:
+      toz:
+        timerange: 1996/2014
+        mip: AERmon
+        exp: historical
+        preprocessor: create_lat_time_map
+        additional_datasets:
+        - project: obs4MIPs
+          dataset: C3S-GTO-ECV-9-0
+          tier: 1
+          alias: GTO-ECV
+          frequency: mon
+          reference_for_monitor_diags: true
+    scripts:
+      plot:
+        script: monitor/multi_datasets.py
+        facet_used_for_labels: alias
+        plot_folder: '{plot_dir}'
+        plot_filename: '{plot_type}_{real_name}_LatTime_Map'
+        matplotlib_rc_params:
+          xtick.labelsize: 6
+          ytick.labelsize: 8
+          axes.labelsize: 8
+          axes.titlesize: 8
+        savefig_kwargs:
+          dpi: 150
+          bbox_inches: tight
+          orientation: landscape
+        plots:
+          hovmoeller_time_vs_lat_or_lon:
+            common_cbar: true
+            show_x_minor_ticks: false
+            time_format: '%Y'
+            time_on: x-axis

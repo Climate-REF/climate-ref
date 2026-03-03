@@ -6,112 +6,21 @@ Adapter for parsing and registering CMIP7 datasets based on CMIP7 Global Attribu
 
 from __future__ import annotations
 
-import traceback
-import warnings
 from pathlib import Path
-from typing import Any
 
 import pandas as pd
-import xarray as xr
-from ecgtools import Builder
+from loguru import logger
 
 from climate_ref.config import Config
-from climate_ref.datasets.base import DatasetAdapter
-from climate_ref.datasets.utils import clean_branch_time, parse_datetime
+from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
+from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7_drs
+from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
+from climate_ref.datasets.utils import clean_branch_time, parse_cftime_dates
 from climate_ref.models.dataset import CMIP7Dataset
 
 
-def parse_cmip7_file(file: str, **kwargs: Any) -> dict[str, Any]:
-    """
-    Parse metadata from a CMIP7 netCDF file.
-
-    Parameters
-    ----------
-    file
-        Path to the CMIP7 netCDF file
-
-    Returns
-    -------
-    :
-        Dictionary of metadata extracted from the file
-    """
-    try:
-        with xr.open_dataset(file, use_cftime=True) as ds:
-            attrs = ds.attrs
-
-            # Extract time bounds if available
-            start_time = None
-            end_time = None
-            if "time" in ds:
-                time = ds["time"]
-                if len(time) > 0:
-                    start_time = str(time.values[0])
-                    end_time = str(time.values[-1])
-
-            # Get variable metadata from the data variable
-            variable_id = attrs.get("variable_id", "")
-            standard_name = None
-            long_name = None
-            units = None
-            if variable_id and variable_id in ds:
-                var = ds[variable_id]
-                standard_name = var.attrs.get("standard_name")
-                long_name = var.attrs.get("long_name")
-                units = var.attrs.get("units")
-
-            return {
-                # Core DRS attributes
-                "activity_id": attrs.get("activity_id", ""),
-                "institution_id": attrs.get("institution_id", ""),
-                "source_id": attrs.get("source_id", ""),
-                "experiment_id": attrs.get("experiment_id", ""),
-                "variant_label": attrs.get("variant_label", ""),
-                "variable_id": variable_id,
-                "grid_label": attrs.get("grid_label", ""),
-                "frequency": attrs.get("frequency", ""),
-                "region": attrs.get("region", "glb"),
-                "branding_suffix": attrs.get("branding_suffix", ""),
-                "branded_variable": attrs.get("branded_variable", ""),
-                "out_name": attrs.get("out_name", ""),
-                "version": attrs.get("version", ""),
-                # Additional mandatory attributes
-                "mip_era": attrs.get("mip_era", "CMIP7"),
-                "realm": attrs.get("realm"),
-                "nominal_resolution": attrs.get("nominal_resolution"),
-                # Parent info (nullable)
-                "branch_time_in_child": attrs.get("branch_time_in_child"),
-                "branch_time_in_parent": attrs.get("branch_time_in_parent"),
-                "parent_activity_id": attrs.get("parent_activity_id"),
-                "parent_experiment_id": attrs.get("parent_experiment_id"),
-                "parent_mip_era": attrs.get("parent_mip_era"),
-                "parent_source_id": attrs.get("parent_source_id"),
-                "parent_time_units": attrs.get("parent_time_units"),
-                "parent_variant_label": attrs.get("parent_variant_label"),
-                # Additional mandatory attributes
-                "license_id": attrs.get("license_id"),
-                # Conditionally required attributes
-                "external_variables": attrs.get("external_variables"),
-                # Variable metadata
-                "standard_name": standard_name,
-                "long_name": long_name,
-                "units": units,
-                # File-level metadata
-                "tracking_id": attrs.get("tracking_id"),
-                # Time information
-                "start_time": start_time,
-                "end_time": end_time,
-                "time_range": f"{start_time}-{end_time}" if start_time and end_time else None,
-                # Path
-                "path": file,
-            }
-    except Exception:
-        return {
-            "INVALID_ASSET": file,
-            "TRACEBACK": traceback.format_exc(),
-        }
-
-
-class CMIP7DatasetAdapter(DatasetAdapter):
+class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
     """
     Adapter for CMIP7 datasets
 
@@ -120,6 +29,32 @@ class CMIP7DatasetAdapter(DatasetAdapter):
 
     dataset_cls = CMIP7Dataset
     slug_column = "instance_id"
+
+    columns_requiring_finalisation = frozenset(
+        {
+            # Optional information
+            "realm",
+            "nominal_resolution",
+            "license_id",
+            "external_variables",
+            # Parent info
+            "branch_time_in_child",
+            "branch_time_in_parent",
+            "parent_activity_id",
+            "parent_experiment_id",
+            "parent_mip_era",
+            "parent_source_id",
+            "parent_time_units",
+            "parent_variant_label",
+            # Variable metadata
+            "standard_name",
+            "long_name",
+            "units",
+            # Time metadata
+            "time_units",
+            "calendar",
+        }
+    )
 
     dataset_specific_metadata = (
         # Core DRS attributes
@@ -138,7 +73,6 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "mip_era",
         "realm",
         "nominal_resolution",
-        # Additional mandatory attributes
         "license_id",
         # Conditionally required attributes
         "external_variables",
@@ -155,6 +89,11 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         "standard_name",
         "long_name",
         "units",
+        # Time metadata
+        "time_units",
+        "calendar",
+        # Finalisation status
+        "finalised",
         # Unique identifier
         slug_column,
     )
@@ -184,6 +123,60 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         self.n_jobs = n_jobs
         self.config = config or Config.default()
 
+    def get_complete_parser(self) -> DatasetParsingFunction:
+        """
+        Return the complete parser that opens files to extract full CMIP7 metadata.
+
+        Returns
+        -------
+        :
+            Complete CMIP7 parsing function
+        """
+        return parse_cmip7_complete
+
+    def _post_finalise_fixes(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply CMIP7-specific fixes after finalisation.
+
+        Cleans branch time values that may be stored as strings with units suffixes.
+
+        Parameters
+        ----------
+        datasets
+            DataFrame with finalised metadata
+
+        Returns
+        -------
+        :
+            DataFrame with fixes applied
+        """
+        if "branch_time_in_child" in datasets.columns:
+            datasets["branch_time_in_child"] = clean_branch_time(datasets["branch_time_in_child"])
+        if "branch_time_in_parent" in datasets.columns:
+            datasets["branch_time_in_parent"] = clean_branch_time(datasets["branch_time_in_parent"])
+        return datasets
+
+    def get_parsing_function(self) -> DatasetParsingFunction:
+        """
+        Get the parsing function for CMIP7 datasets based on configuration
+
+        The parsing function used is determined by the `cmip7_parser` configuration value:
+        - "drs": Use the DRS parser (default)
+        - "complete": Use the complete parser that extracts all available metadata
+
+        Returns
+        -------
+        :
+            The appropriate parsing function based on configuration
+        """
+        parser_type = self.config.cmip7_parser
+        if parser_type == "complete":
+            logger.info("Using complete CMIP7 parser")
+            return parse_cmip7_complete
+        else:
+            logger.info(f"Using DRS CMIP7 parser (config value: {parser_type})")
+            return parse_cmip7_drs
+
     def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory.
@@ -201,24 +194,22 @@ class CMIP7DatasetAdapter(DatasetAdapter):
         :
             Data catalog containing the metadata for the dataset
         """
-        with warnings.catch_warnings():
-            # Ignore the DeprecationWarning from xarray
-            warnings.simplefilter("ignore", DeprecationWarning)
+        parsing_function = self.get_parsing_function()
 
-            builder = Builder(
-                paths=[str(file_or_directory)],
-                depth=10,
-                include_patterns=["*.nc"],
-                joblib_parallel_kwargs={"n_jobs": self.n_jobs},
-            ).build(parsing_func=parse_cmip7_file)
+        datasets = build_catalog(
+            paths=[str(file_or_directory)],
+            parsing_func=parsing_function,
+            include_patterns=["*.nc"],
+            depth=10,
+            n_jobs=self.n_jobs,
+        )
 
-        datasets: pd.DataFrame = builder.df
-
-        # Convert the start_time and end_time columns to datetime objects
+        # Convert the start_time and end_time columns to cftime objects
+        cal = datasets["calendar"] if "calendar" in datasets.columns else "standard"
         if "start_time" in datasets.columns:
-            datasets["start_time"] = parse_datetime(datasets["start_time"])
+            datasets["start_time"] = parse_cftime_dates(datasets["start_time"], cal)
         if "end_time" in datasets.columns:
-            datasets["end_time"] = parse_datetime(datasets["end_time"])
+            datasets["end_time"] = parse_cftime_dates(datasets["end_time"], cal)
 
         # Clean branch times
         if "branch_time_in_child" in datasets.columns:

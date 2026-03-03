@@ -202,7 +202,9 @@ def extract_covered_datasets(
         # This ensures that time-range constraints have access to full metadata.
         finalised_group = data_catalog_source.finalise(group) if data_catalog_source is not None else group
 
-        constrained_group = _process_group_constraints(catalog_df, finalised_group, requirement)
+        constrained_group = _process_group_constraints(
+            catalog_df, finalised_group, requirement, data_catalog_source
+        )
 
         if constrained_group is not None:
             results[group_keys] = constrained_group
@@ -211,12 +213,22 @@ def extract_covered_datasets(
 
 
 def _process_group_constraints(
-    data_catalog: pd.DataFrame, group: pd.DataFrame, requirement: DataRequirement
+    data_catalog: pd.DataFrame,
+    group: pd.DataFrame,
+    requirement: DataRequirement,
+    data_catalog_source: DataCatalog | None = None,
 ) -> pd.DataFrame | None:
     for constraint in requirement.constraints or []:
         constrained_group = apply_constraint(group, constraint, data_catalog)
         if constrained_group is None:
             return None
+
+        # Re-finalise after constraints that add rows from the unfinalised
+        # catalog (e.g. AddParentDataset, AddSupplementaryDataset).  Without
+        # this, columns like ``calendar`` remain NaN and downstream
+        # constraints such as RequireContiguousTimerange silently skip checks.
+        if data_catalog_source is not None:
+            constrained_group = data_catalog_source.finalise(constrained_group)
 
         group = constrained_group
     return group

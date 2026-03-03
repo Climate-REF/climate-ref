@@ -22,6 +22,12 @@ def provider_test_data_dir() -> Path:
 SKIP = {
     "regional-historical-annual-cycle",
     "regional-historical-timeseries",
+    # No data in sample data catalog
+    "ozone-annual-cycle",
+    "ozone-lat-time",
+    "ozone-nh-mar",
+    "ozone-sh-oct",
+    "ozone-zonal",
 }
 
 diagnostics = [

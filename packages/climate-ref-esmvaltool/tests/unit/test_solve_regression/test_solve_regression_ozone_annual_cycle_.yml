@@ -1,0 +1,152 @@
+cmip6_gn_r1i1p1f1_EC-Earth3-AerChem__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.AERmon.toz.gn.v20200624
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p1f1_MPI-ESM-1-2-HAM__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.AERmon.toz.gn.v20190627
+  - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.fx.areacella.gn.v20190627
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p1f1_MRI-ESM2-0__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.AERmon.toz.gn.v20200207
+  - CMIP6.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.fx.areacella.gn.v20190603
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p1f2_UKESM1-0-LL__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.AERmon.toz.gn.v20190406
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p1f2_UKESM1-1-LL__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.AERmon.toz.gn.v20220512
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p3f1_GISS-E2-1-G__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.historical.r1i1p3f1.AERmon.toz.gn.v20220525
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p3f1_GISS-E2-1-H__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-H.historical.r1i1p3f1.AERmon.toz.gn.v20220525
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p3f1_GISS-E2-2-G__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-2-G.historical.r1i1p3f1.AERmon.toz.gn.v20211020
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gn_r1i1p4f2_MIROC-ES2H__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.MIROC.MIROC-ES2H.historical.r1i1p4f2.AERmon.toz.gn.v20220322
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gr1_r1i1p1f1_GFDL-ESM4__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.AERmon.toz.gr1.v20190726
+  - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.fx.areacella.gr1.v20190726
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gr_r1i1p1f1_IPSL-CM5A2-INCA__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.AERmon.toz.gr.v20200729
+  - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.fx.areacella.gr.v20200729
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gr_r1i1p1f1_IPSL-CM6A-LR-INCA__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR-INCA.historical.r1i1p1f1.AERmon.toz.gr.v20210216
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gr_r1i1p1f2_CNRM-CM6-1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.AERmon.toz.gr.v20180917
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.fx.areacella.gr.v20180917
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip6_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip6:
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.fx.areacella.gr.v20250328
+  - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.AERmon.toz.gr.v20181206
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_EC-Earth3-AerChem_r1i1p1f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-AerChem.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gn.v20200624
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_GISS-E2-1-G_r1i1p3f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.NASA-GISS.GISS-E2-1-G.historical.r1i1p3f1.glb.mon.toz.tavg-u-hxy-u.gn.v20220525
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_GISS-E2-1-H_r1i1p3f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.NASA-GISS.GISS-E2-1-H.historical.r1i1p3f1.glb.mon.toz.tavg-u-hxy-u.gn.v20220525
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_GISS-E2-2-G_r1i1p3f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.NASA-GISS.GISS-E2-2-G.historical.r1i1p3f1.glb.mon.toz.tavg-u-hxy-u.gn.v20211020
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_MIROC-ES2H_r1i1p4f2__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.MIROC.MIROC-ES2H.historical.r1i1p4f2.glb.mon.toz.tavg-u-hxy-u.gn.v20220322
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_MPI-ESM-1-2-HAM_r1i1p1f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190627
+  - CMIP7.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gn.v20190627
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_MRI-ESM2-0_r1i1p1f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190603
+  - CMIP7.CMIP.MRI.MRI-ESM2-0.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gn.v20200207
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_UKESM1-0-LL_r1i1p1f2__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.glb.mon.toz.tavg-u-hxy-u.gn.v20190406
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gn_UKESM1-1-LL_r1i1p1f2__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.glb.mon.toz.tavg-u-hxy-u.gn.v20220512
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gr1_GFDL-ESM4_r1i1p1f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr1.v20190726
+  - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gr1.v20190726
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gr_CNRM-CM6-1_r1i1p1f2__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.glb.fx.areacella.ti-u-hxy-u.gr.v20180917
+  - CMIP7.CMIP.CNRM-CERFACS.CNRM-CM6-1.historical.r1i1p1f2.glb.mon.toz.tavg-u-hxy-u.gr.v20180917
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gr_CNRM-ESM2-1_r1i1p1f2__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.glb.fx.areacella.ti-u-hxy-u.gr.v20250328
+  - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.toz.tavg-u-hxy-u.gr.v20181206
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gr_IPSL-CM5A2-INCA_r1i1p1f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20200729
+  - CMIP7.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gr.v20200729
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+cmip7_gr_IPSL-CM6A-LR-INCA_r1i1p1f1__obs4mips_C3S-GTO-ECV-9-0:
+  cmip7:
+  - CMIP7.CMIP.IPSL.IPSL-CM6A-LR-INCA.historical.r1i1p1f1.glb.mon.toz.tavg-u-hxy-u.gr.v20210216
+  obs4mips:
+  - obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115

@@ -178,7 +178,7 @@ def esgf_data_catalog_trimmed(
     result = {}
     for source_type, df in esgf_solve_catalog.items():
         if source_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
-            source_ids = ["ACCESS-ESM1-5", "CESM2", "MPI-ESM1-2-LR"]
+            source_ids = ["ACCESS-ESM1-5", "CESM2", "MPI-ESM1-2-LR", "GFDL-ESM4"]
             result[source_type] = df[df["source_id"].isin(source_ids)]
         else:
             result[source_type] = df

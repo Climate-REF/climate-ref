@@ -15,7 +15,11 @@ class TestObs4MIPsRequest:
             facets={"source_id": "GPCP-SG", "variable_id": "pr"},
         )
         assert request.slug == "test-obs"
-        assert request.facets == {"source_id": "GPCP-SG", "variable_id": "pr"}
+        assert request.facets == {
+            "project": "obs4MIPs",
+            "source_id": "GPCP-SG",
+            "variable_id": "pr",
+        }
         assert request.remove_ensembles is False
         assert request.time_span is None
         assert request.source_type == "obs4MIPs"

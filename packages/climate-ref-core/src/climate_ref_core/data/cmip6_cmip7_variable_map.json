@@ -5,6 +5,36 @@
   "description": "CMIP6-to-CMIP7 variable mappings extracted from the CMIP7 Data Request. Filtered to mon/fx tables and variables used by REF providers. Keyed by CMIP6 compound name (table_id.variable_id). Regenerate with: uv run python scripts/extract-data-request-mappings.py "
  },
  "variables": {
+  "AERmon.o3": {
+   "table_id": "AERmon",
+   "variable_id": "o3",
+   "cmip6_compound_name": "AERmon.o3",
+   "cmip7_compound_name": "atmosChem.o3.tavg-al-hxy-u.mon.glb",
+   "branded_variable": "o3_tavg-al-hxy-u",
+   "branding_suffix": "tavg-al-hxy-u",
+   "temporal_label": "tavg",
+   "vertical_label": "al",
+   "horizontal_label": "hxy",
+   "area_label": "u",
+   "realm": "atmosChem",
+   "region": "glb",
+   "frequency": "mon"
+  },
+  "AERmon.o3inst": {
+   "table_id": "AERmon",
+   "variable_id": "o3",
+   "cmip6_compound_name": "AERmon.o3inst",
+   "cmip7_compound_name": "atmosChem.o3.tpt-al-hxy-u.mon.glb",
+   "branded_variable": "o3_tpt-al-hxy-u",
+   "branding_suffix": "tpt-al-hxy-u",
+   "temporal_label": "tpt",
+   "vertical_label": "al",
+   "horizontal_label": "hxy",
+   "area_label": "u",
+   "realm": "atmosChem aerosol",
+   "region": "glb",
+   "frequency": "mon"
+  },
   "AERmon.toz": {
    "table_id": "AERmon",
    "variable_id": "toz",
@@ -62,6 +92,21 @@
    "horizontal_label": "hxy",
    "area_label": "u",
    "realm": "atmos",
+   "region": "glb",
+   "frequency": "mon"
+  },
+  "AERmonZ.o3": {
+   "table_id": "AERmonZ",
+   "variable_id": "o3",
+   "cmip6_compound_name": "AERmonZ.o3",
+   "cmip7_compound_name": "atmosChem.o3.tavg-p39-hy-air.mon.glb",
+   "branded_variable": "o3_tavg-p39-hy-air",
+   "branding_suffix": "tavg-p39-hy-air",
+   "temporal_label": "tavg",
+   "vertical_label": "p39",
+   "horizontal_label": "hy",
+   "area_label": "air",
+   "realm": "atmosChem",
    "region": "glb",
    "frequency": "mon"
   },
@@ -393,6 +438,36 @@
    "area_label": "u",
    "realm": "atmos",
    "region": "30S-90S",
+   "frequency": "mon"
+  },
+  "Amon.o3": {
+   "table_id": "Amon",
+   "variable_id": "o3",
+   "cmip6_compound_name": "Amon.o3",
+   "cmip7_compound_name": "atmosChem.o3.tavg-p19-hxy-air.mon.glb",
+   "branded_variable": "o3_tavg-p19-hxy-air",
+   "branding_suffix": "tavg-p19-hxy-air",
+   "temporal_label": "tavg",
+   "vertical_label": "p19",
+   "horizontal_label": "hxy",
+   "area_label": "air",
+   "realm": "atmosChem",
+   "region": "glb",
+   "frequency": "mon"
+  },
+  "Amon.o3Clim": {
+   "table_id": "Amon",
+   "variable_id": "o3",
+   "cmip6_compound_name": "Amon.o3Clim",
+   "cmip7_compound_name": "atmosChem.o3.tclm-p19-hxy-air.mon.glb",
+   "branded_variable": "o3_tclm-p19-hxy-air",
+   "branding_suffix": "tclm-p19-hxy-air",
+   "temporal_label": "tclm",
+   "vertical_label": "p19",
+   "horizontal_label": "hxy",
+   "area_label": "air",
+   "realm": "atmosChem",
+   "region": "glb",
    "frequency": "mon"
   },
   "Amon.pr": {

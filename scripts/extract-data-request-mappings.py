@@ -93,6 +93,7 @@ INCLUDED_VARIABLES = {
     "ts",
     # Ozone
     "toz",
+    "o3",
     # Atmosphere: winds
     "tauu",
     "ua",

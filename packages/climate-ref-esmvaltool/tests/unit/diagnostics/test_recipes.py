@@ -11,10 +11,24 @@ from pytest_regressions.file_regression import FileRegressionFixture
 from climate_ref.solver import solve_executions
 from climate_ref_core.datasets import SourceDatasetType
 
+SKIP = {
+    "ozone-zonal",
+}
 
-@pytest.mark.parametrize(
-    "diagnostic", [pytest.param(diagnostic, id=diagnostic.slug) for diagnostic in provider.diagnostics()]
-)
+diagnostics = [
+    pytest.param(
+        diagnostic,
+        id=diagnostic.slug,
+        marks=pytest.mark.skipif(
+            diagnostic.slug in SKIP,
+            reason="Missing datasets",
+        ),
+    )
+    for diagnostic in provider.diagnostics()
+]
+
+
+@pytest.mark.parametrize("diagnostic", diagnostics)
 def test_write_recipe(
     tmp_path: Path,
     file_regression: FileRegressionFixture,

@@ -248,9 +248,16 @@ requests: list[Request] = [
     CMIP6Request(
         id="esmvaltool-ozone",
         facets=dict(
-            variable_id=["toz"],
+            variable_id=["toz", "o3"],
             experiment_id=["historical"],
             table_id="AERmon",
+        ),
+    ),
+    Obs4MIPsRequest(
+        id="esmvaltool-ozone-obs4mips",
+        facets=dict(
+            source_id="C3S-GTO-ECV-9-0",
+            variable_id="toz",
         ),
     ),
     # ILAMB data

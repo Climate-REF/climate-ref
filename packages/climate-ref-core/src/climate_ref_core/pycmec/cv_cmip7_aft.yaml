@@ -1,4 +1,9 @@
 dimensions:
+- name: mip_id
+  long_name: MIP ID
+  description: "MIP ID (e.g., CMIP6)"
+  allow_extra_values: true
+  required: false
 - name: source_id
   long_name: Source ID
   description: "Source ID (e.g., GFDL-CM4)"

@@ -21,6 +21,11 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.12.2 (2026-03-06)
+
+No significant changes.
+
+
 ## climate-ref 0.12.1 (2026-03-06)
 
 ### Bug Fixes

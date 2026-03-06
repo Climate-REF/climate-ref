@@ -29,7 +29,11 @@ from loguru import logger
 from climate_ref_core.constraints import IgnoreFacets
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
-from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
+from climate_ref_core.exceptions import (
+    CondaCommandError,
+    InvalidDiagnosticException,
+    InvalidProviderException,
+)
 
 
 def _slugify(value: str) -> str:
@@ -630,9 +634,12 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")
         except subprocess.CalledProcessError as e:
+            # These are logged to the execution log
             logger.error(f"Failed to run {cmd}")
-            logger.error(e.stdout)
-            raise e
+            logger.error(f"stdout: {e.stdout}")
+            logger.error(f"stderr: {e.stderr}")
+            # This will be shown in the solve log
+            raise CondaCommandError(f"Failed to run {cmd}", stdout=e.stdout, stderr=e.stderr) from e
 
     def setup_environment(self, config: Any) -> None:
         """Set up the conda environment."""

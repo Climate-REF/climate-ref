@@ -88,7 +88,7 @@ def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionRe
     except Exception:  # pragma: no cover
         # This isn't expected but if it happens we want to log the error before the process exits
         # Mark as retryable since this is an infrastructure-level failure
-        logger.exception("Error running diagnostic")
+        logger.exception(f"Error running execution {definition.execution_slug()}")
         return ExecutionResult.build_from_failure(definition, retryable=True)
 
 

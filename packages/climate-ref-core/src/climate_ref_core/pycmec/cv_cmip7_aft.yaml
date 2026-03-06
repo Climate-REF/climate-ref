@@ -1,4 +1,9 @@
 dimensions:
+- name: mip_id
+  long_name: MIP ID
+  description: "MIP ID (e.g., CMIP6)"
+  allow_extra_values: true
+  required: false
 - name: source_id
   long_name: Source ID
   description: "Source ID (e.g., GFDL-CM4)"
@@ -37,6 +42,16 @@ dimensions:
 - name: variant_label
   long_name: Variant Label
   description: "Ensemble member (construct from realization, initialization, physics, and forcing indices)"
+  allow_extra_values: true
+  required: false
+- name: table_id
+  long_name: Table ID
+  description: "Table ID for the dataset"
+  allow_extra_values: true
+  required: false
+- name: global_warming_level
+  long_name: Global Warming Level
+  description: "Global warming level (e.g., 1.5C, 2C, etc.)"
   allow_extra_values: true
   required: false
 - name: metric
@@ -122,6 +137,9 @@ dimensions:
     - name: eof1
       long_name: EOF1
       description: "The leading EOF of the reference dataset"
+    - name: eof2
+      long_name: EOF2
+      description: "The second EOF of the reference dataset"
 - name: statistic
   long_name: Statistic
   description: ""

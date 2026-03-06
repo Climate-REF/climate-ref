@@ -9,7 +9,7 @@ from typing import Any, Protocol, runtime_checkable
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
-from climate_ref_core.exceptions import DiagnosticError, InvalidExecutorException
+from climate_ref_core.exceptions import CondaCommandError, DiagnosticError, InvalidExecutorException
 from climate_ref_core.logging import redirect_logs
 
 
@@ -64,6 +64,12 @@ def execute_locally(
 
         with redirect_logs(definition, log_level):
             return definition.diagnostic.run(definition=definition)
+
+    except CondaCommandError as e:
+        # We don't need to see the stacktrace for this error
+        # This exception string includes the stdout and stderr from the conda command
+        logger.error(f"Conda command failed for {definition.execution_slug()}: {e}")
+        return ExecutionResult.build_from_failure(definition, retryable=False)
     except Exception as e:
         # If the diagnostic fails, we want to log the error and return a failure result
         retryable = _is_system_error(e)

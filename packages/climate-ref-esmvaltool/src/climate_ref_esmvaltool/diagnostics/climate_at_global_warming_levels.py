@@ -134,7 +134,7 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
             ),
         ),
     )
-    facets = ("experiment_id", "global warming level", "metric")
+    facets = ("experiment_id", "global_warming_level", "metric")
 
     files = tuple(
         FileDefinition(
@@ -269,10 +269,10 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
         """Format the result."""
         metric_args[MetricCV.DIMENSIONS.value] = {
             "json_structure": [
-                "global warming level",
+                "global_warming_level",
                 "metric",
             ],
-            "global warming level": {},
+            "global_warming_level": {},
             "metric": {"exceedance_year": {}},
         }
 
@@ -285,8 +285,8 @@ class ClimateAtGlobalWarmingLevels(ESMValToolDiagnostic):
         )
         for row in df.itertuples(index=False):
             gwl = str(row.GWL)
-            if gwl not in metric_args[MetricCV.DIMENSIONS.value]["global warming level"]:
-                metric_args[MetricCV.DIMENSIONS.value]["global warming level"][gwl] = {}
+            if gwl not in metric_args[MetricCV.DIMENSIONS.value]["global_warming_level"]:
+                metric_args[MetricCV.DIMENSIONS.value]["global_warming_level"][gwl] = {}
             metric_args[MetricCV.RESULTS.value][gwl] = {
                 "exceedance_year": int(str(row.Exceedance_Year)),
             }

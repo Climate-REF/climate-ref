@@ -55,6 +55,18 @@ class ExecutionError(RefException):
         super().__init__(message)
 
 
+class CondaCommandError(ExecutionError):
+    """Exception raised when a conda command fails"""
+
+    def __init__(self, message: str, stdout: str = "", stderr: str = "") -> None:
+        self.short_message = message
+        self.stdout = stdout
+        self.stderr = stderr
+        complete_msg = f"{message}\nstdout: {stdout}\nstderr: {stderr}"
+
+        super().__init__(complete_msg)
+
+
 class DiagnosticError(RefException):
     """Error from diagnostic computing"""
 

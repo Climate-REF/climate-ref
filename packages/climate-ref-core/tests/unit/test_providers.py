@@ -13,7 +13,11 @@ from requests import Response
 import climate_ref_core.providers
 from climate_ref_core.constraints import IgnoreFacets
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
-from climate_ref_core.exceptions import InvalidDiagnosticException, InvalidProviderException
+from climate_ref_core.exceptions import (
+    CondaCommandError,
+    InvalidDiagnosticException,
+    InvalidProviderException,
+)
 from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider, import_provider
 
 
@@ -512,8 +516,9 @@ class TestCondaDiagnosticProvider:
             side_effect=error,
         )
 
-        with pytest.raises(subprocess.CalledProcessError):
+        with pytest.raises(CondaCommandError) as exc_info:
             provider.run(["mock-command"])
+        assert "error output" in exc_info.value.stdout
 
 
 class TestLifecycleHooks:

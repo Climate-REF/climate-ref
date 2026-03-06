@@ -39,6 +39,16 @@ dimensions:
   description: "Ensemble member (construct from realization, initialization, physics, and forcing indices)"
   allow_extra_values: true
   required: false
+- name: table_id
+  long_name: Table ID
+  description: "Table ID for the dataset"
+  allow_extra_values: true
+  required: false
+- name: global_warming_level
+  long_name: Global Warming Level
+  description: "Global warming level (e.g., 1.5C, 2C, etc.)"
+  allow_extra_values: true
+  required: false
 - name: metric
   long_name: Metric
   description: ""

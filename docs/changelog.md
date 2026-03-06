@@ -21,6 +21,22 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.12.2 (2026-03-06)
+
+No significant changes.
+
+
+## climate-ref 0.12.1 (2026-03-06)
+
+### Bug Fixes
+
+- Improved conda error logging by capturing stderr in solve logs and avoiding unnecessary stacktraces. ([#580](https://github.com/Climate-REF/climate-ref/pull/580))
+
+### Trivial/Internal Changes
+
+- [#580](https://github.com/Climate-REF/climate-ref/pull/580)
+
+
 ## climate-ref 0.12.0 (2026-03-03)
 
 ### Features

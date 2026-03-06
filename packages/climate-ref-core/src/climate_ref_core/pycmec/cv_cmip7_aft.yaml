@@ -1,4 +1,9 @@
 dimensions:
+- name: mip_id
+  long_name: MIP ID
+  description: "MIP ID (e.g., CMIP6)"
+  allow_extra_values: true
+  required: false
 - name: source_id
   long_name: Source ID
   description: "Source ID (e.g., GFDL-CM4)"
@@ -132,6 +137,9 @@ dimensions:
     - name: eof1
       long_name: EOF1
       description: "The leading EOF of the reference dataset"
+    - name: eof2
+      long_name: EOF2
+      description: "The second EOF of the reference dataset"
 - name: statistic
   long_name: Statistic
   description: ""

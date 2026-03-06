@@ -139,6 +139,21 @@ def validate_database_url(database_url: str) -> str:
     return database_url
 
 
+def _to_python_native(value: Any) -> Any:
+    """
+    Convert numpy/pandas scalar types to Python natives for reliable comparison.
+
+    Without this, comparisons like ``numpy.int64(5) != 5`` may produce
+    numpy booleans that behave unexpectedly, and type mismatches between
+    DB values (Python natives) and DataFrame values (numpy scalars)
+    can cause spurious "updated" detections.
+    """
+    # numpy scalars expose .item() to convert to Python native
+    if hasattr(value, "item"):
+        return value.item()
+    return value
+
+
 def _values_differ(current: Any, new: Any) -> bool:
     """
     Safely compare two values for inequality, handling ``pd.NA`` and ``np.nan``.
@@ -146,7 +161,13 @@ def _values_differ(current: Any, new: Any) -> bool:
     Direct ``!=`` comparison with ``pd.NA`` raises ``TypeError`` because
     ``bool(pd.NA)`` is ambiguous.  This helper avoids that by checking
     for NA on both sides first.
+
+    Values are normalised to Python native types before comparison
+    to avoid spurious mismatches between numpy scalars and Python builtins.
     """
+    current = _to_python_native(current)
+    new = _to_python_native(new)
+
     try:
         current_is_na = pd.isna(current)
         new_is_na = pd.isna(new)
@@ -341,8 +362,9 @@ class Database:
             # Update existing instance with defaults
             if defaults:
                 for key, value in defaults.items():
-                    if _values_differ(getattr(instance, key), value):
-                        logger.debug(f"Updating {model.__name__} {key} to {value}")
+                    current = getattr(instance, key)
+                    if _values_differ(current, value):
+                        logger.debug(f"Updating {model.__name__} {key}: {current!r} -> {value!r}")
                         setattr(instance, key, value)
                         state = ModelState.UPDATED
             return instance, state

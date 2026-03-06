@@ -10,7 +10,7 @@ from attrs import define
 from loguru import logger
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.base import DatasetAdapter
+from climate_ref.datasets.base import DatasetAdapter, DatasetRegistrationResult
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
@@ -71,6 +71,25 @@ class IngestionStats:
         )
 
 
+def _accumulate_stats(stats: IngestionStats, results: "DatasetRegistrationResult") -> None:
+    """Accumulate registration results into ingestion stats."""
+    if results.dataset_state == ModelState.CREATED:
+        stats.datasets_created += 1
+    elif results.dataset_state == ModelState.UPDATED:
+        stats.datasets_updated += 1
+    else:
+        stats.datasets_unchanged += 1
+    stats.files_added += len(results.files_added)
+    stats.files_updated += len(results.files_updated)
+    stats.files_removed += len(results.files_removed)
+    stats.files_unchanged += len(results.files_unchanged)
+
+
+#: Number of datasets to commit in a single transaction.
+#: Batching reduces SQLite fsync overhead from N commits to N/BATCH_SIZE commits.
+INGEST_BATCH_SIZE = 50
+
+
 def ingest_datasets(
     adapter: DatasetAdapter,
     directory: Path | None,
@@ -84,6 +103,10 @@ def ingest_datasets(
 
     This is the common ingestion logic shared between the CLI ingest command
     and provider setup.
+
+    Datasets are committed in batches to reduce database overhead.
+    Each batch is a single transaction; if a dataset within a batch fails,
+    the entire batch is rolled back.
 
     Parameters
     ----------
@@ -132,23 +155,17 @@ def ingest_datasets(
 
     stats = IngestionStats()
 
-    for instance_id, data_catalog_dataset in data_catalog.groupby(adapter.slug_column):
-        logger.debug(f"Processing dataset {instance_id}")
+    groups = list(data_catalog.groupby(adapter.slug_column))
+
+    for batch_start in range(0, len(groups), INGEST_BATCH_SIZE):
+        batch = groups[batch_start : batch_start + INGEST_BATCH_SIZE]
         with db.session.begin():
-            results = adapter.register_dataset(db, data_catalog_dataset)
+            for instance_id, data_catalog_dataset in batch:
+                logger.debug(f"Processing dataset {instance_id}")
+                results = adapter.register_dataset(db, data_catalog_dataset)
+                _accumulate_stats(stats, results)
 
-            if results.dataset_state == ModelState.CREATED:
-                stats.datasets_created += 1
-            elif results.dataset_state == ModelState.UPDATED:
-                stats.datasets_updated += 1
-            else:
-                stats.datasets_unchanged += 1
-            stats.files_added += len(results.files_added)
-            stats.files_updated += len(results.files_updated)
-            stats.files_removed += len(results.files_removed)
-            stats.files_unchanged += len(results.files_unchanged)
-
-        # Release ORM objects from the session identity map after each commit.
+        # Release ORM objects from the session identity map after each batch commit.
         # Without this, all Dataset and DatasetFile objects accumulate in memory
         # across the entire ingestion loop.
         db.session.expire_all()

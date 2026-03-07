@@ -705,6 +705,54 @@ class TestDeleteGroups:
         assert output_dir.exists()
 
 
+class TestExecutionStats:
+    def test_stats_no_data(self, db_seeded, invoke_cli):
+        result = invoke_cli(["executions", "stats"])
+        assert "No execution groups found." in result.stdout
+
+    def test_stats_basic(self, db_with_groups, invoke_cli):
+        result = invoke_cli(["executions", "stats"])
+        # db_with_groups has both pmp and esmvaltool providers
+        assert "pmp" in result.stdout
+        assert "esmvaltool" in result.stdout
+
+    def test_stats_shows_status_columns(self, db_with_groups, invoke_cli):
+        result = invoke_cli(["executions", "stats"])
+        assert "diagnostic" in result.stdout
+        assert "running" in result.stdout
+        assert "failed" in result.stdout
+        assert "successful" in result.stdout
+        assert "not_started" in result.stdout
+        assert "dirty" in result.stdout
+        assert "total" in result.stdout
+
+    def test_stats_includes_diagnostic_and_totals(self, db_with_groups, invoke_cli):
+        """Verify that the output includes per-diagnostic rows and provider totals.
+
+        The fixture creates diagnostics across pmp and esmvaltool providers.
+        Each provider should have a (total) row.
+        """
+        result = invoke_cli(["executions", "stats"])
+        assert "(total)" in result.stdout
+        # Individual diagnostics should appear
+        assert "enso_tel" in result.stdout
+        assert "enso-characteristics" in result.stdout
+
+    def test_stats_filter_by_provider(self, db_with_groups, invoke_cli):
+        result = invoke_cli(["executions", "stats", "--provider", "pmp"])
+        assert "pmp" in result.stdout
+        assert "esmvaltool" not in result.stdout
+
+    def test_stats_filter_by_diagnostic(self, db_with_groups, invoke_cli):
+        result = invoke_cli(["executions", "stats", "--diagnostic", "enso"])
+        # Only diagnostics matching "enso" should appear
+        assert result.exit_code == 0
+
+    def test_stats_filter_no_results(self, db_with_groups, invoke_cli):
+        result = invoke_cli(["executions", "stats", "--provider", "nonexistent"])
+        assert "No execution groups found." in result.stdout
+
+
 class TestExecutionInspect:
     def test_inspect(self, sample_data_dir, db_seeded, invoke_cli, file_regression, config):
         # Ensure the executions path is consistent

@@ -51,7 +51,7 @@ class CMIP6Request:
             if max_members > 0 and cmip6_data.df is not None:
                 df = cmip6_data.df
                 mask = df.groupby("source_id")["member_id"].transform(
-                    lambda s: s.isin(s.unique()[:max_members])
+                    lambda s: s.isin(sorted(s.unique())[:max_members])
                 )
                 cmip6_data.df = df[mask]
             return cmip6_data.to_path_dict()

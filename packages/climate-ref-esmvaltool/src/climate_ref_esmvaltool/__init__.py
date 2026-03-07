@@ -19,12 +19,16 @@ from climate_ref_core.dataset_registry import (
 )
 from climate_ref_core.providers import CondaDiagnosticProvider
 from climate_ref_esmvaltool._version import __version__
-from climate_ref_esmvaltool.recipe import _ESMVALCORE_URL, _ESMVALTOOL_URL
+from climate_ref_esmvaltool.diagnostics.base import _DATASETS_REGISTRY_NAME
+from climate_ref_esmvaltool.recipe import (
+    _ESMVALCORE_URL,
+    _ESMVALTOOL_URL,
+    _RECIPES_REGISTRY_NAME,
+    _RECIPES_URL,
+)
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
-
-_REGISTRY_NAME = "esmvaltool"
 
 
 class ESMValToolProvider(CondaDiagnosticProvider):
@@ -32,8 +36,9 @@ class ESMValToolProvider(CondaDiagnosticProvider):
 
     def fetch_data(self, config: Config) -> None:
         """Fetch ESMValTool reference data."""
-        registry = dataset_registry_manager[_REGISTRY_NAME]
-        fetch_all_files(registry, _REGISTRY_NAME, output_dir=None)
+        for registry_name in [_DATASETS_REGISTRY_NAME, _RECIPES_REGISTRY_NAME]:
+            registry = dataset_registry_manager[registry_name]
+            fetch_all_files(registry, registry_name, output_dir=None)
 
     def validate_setup(self, config: Config) -> bool:
         """Validate conda environment and data checksums."""
@@ -42,8 +47,9 @@ class ESMValToolProvider(CondaDiagnosticProvider):
             return False
 
         # Then check data checksums
-        registry = dataset_registry_manager[_REGISTRY_NAME]
-        errors = validate_registry_cache(registry, _REGISTRY_NAME)
+        errors = []
+        for registry_name in [_DATASETS_REGISTRY_NAME, _RECIPES_REGISTRY_NAME]:
+            errors.extend(validate_registry_cache(dataset_registry_manager[registry_name], registry_name))
         if errors:
             for error in errors:
                 logger.error(f"{self.slug} validation failed: {error}")
@@ -73,8 +79,17 @@ for _diagnostic_cls_name in climate_ref_esmvaltool.diagnostics.__all__:
 
 # Register OBS, OBS6, and raw data
 dataset_registry_manager.register(
-    "esmvaltool",
+    name=_DATASETS_REGISTRY_NAME,
     base_url=DATASET_URL,
     package="climate_ref_esmvaltool.dataset_registry",
     resource="data.txt",
+    cache_name=f"climate_ref_esmvaltool/{_DATASETS_REGISTRY_NAME}",
+)
+# Register the ESMValTool recipes.
+dataset_registry_manager.register(
+    name=_RECIPES_REGISTRY_NAME,
+    base_url=_RECIPES_URL,
+    package="climate_ref_esmvaltool",
+    resource="recipes.txt",
+    cache_name=f"climate_ref_esmvaltool/{_RECIPES_REGISTRY_NAME}",
 )

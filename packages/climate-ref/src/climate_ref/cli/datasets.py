@@ -16,7 +16,6 @@ from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
 from climate_ref.models import Dataset
-from climate_ref.solver import apply_dataset_filters
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -57,11 +56,9 @@ def list_(  # noqa: PLR0913
 
     database = ctx.obj.database
 
-    adapter = get_dataset_adapter(source_type.value)
-    data_catalog = adapter.load_catalog(database, include_files=include_files, limit=limit)
-
+    parsed_filters: dict[str, list[str]] | None = None
     if dataset_filter:
-        parsed_filters: dict[str, list[str]] = {}
+        parsed_filters = {}
         for entry in dataset_filter:
             if "=" not in entry:
                 raise typer.BadParameter(
@@ -71,16 +68,21 @@ def list_(  # noqa: PLR0913
             key, value = entry.split("=", 1)
             parsed_filters.setdefault(key, []).append(value)
 
+    adapter = get_dataset_adapter(source_type.value)
+
+    if parsed_filters:
+        valid_facets = set(adapter.dataset_specific_metadata)
         for facet in parsed_filters:
-            if facet not in data_catalog.columns:
+            if facet not in valid_facets:
                 logger.error(
-                    f"Filter facet '{facet}' not found in data catalog. "
-                    f"Choose from: {', '.join(sorted(data_catalog.columns))}"
+                    f"Filter facet '{facet}' not found in dataset metadata. "
+                    f"Choose from: {', '.join(sorted(valid_facets))}"
                 )
                 raise typer.Exit(code=1)
 
-        filtered = apply_dataset_filters({source_type: data_catalog}, parsed_filters)
-        data_catalog = filtered[source_type]  # type: ignore[assignment]  # input is DataFrame
+    data_catalog = adapter.load_catalog(
+        database, include_files=include_files, limit=limit, filters=parsed_filters
+    )
 
     if column:
         missing = set(column) - set(data_catalog.columns)

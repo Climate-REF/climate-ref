@@ -85,8 +85,8 @@ def _accumulate_stats(stats: IngestionStats, results: "DatasetRegistrationResult
     stats.files_unchanged += len(results.files_unchanged)
 
 
-#: Number of datasets to commit in a single transaction.
-#: Batching reduces SQLite fsync overhead from N commits to N/BATCH_SIZE commits.
+# Number of datasets to commit in a single transaction.
+# Batching reduces SQLite fsync overhead from N commits to N/BATCH_SIZE commits.
 INGEST_BATCH_SIZE = 50
 
 

@@ -6,10 +6,24 @@ from attrs import define
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
-from climate_ref.database import Database, ModelState
+from climate_ref.database import Database, ModelState, _values_differ
 from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
+
+
+def _file_meta_differs(db_value: Any, new_value: Any) -> bool:
+    """
+    Compare a DB-stored file metadata value against an incoming value.
+
+    DatasetFile stores start_time/end_time as strings (via _coerce_time_to_str),
+    but incoming values from the parser may be cftime.datetime objects.
+    Coerce non-string values to strings before comparison to avoid
+    type-mismatch false positives.
+    """
+    if not isinstance(new_value, str) and new_value is not None:
+        new_value = str(new_value)
+    return _values_differ(db_value, new_value)
 
 
 @define
@@ -322,7 +336,7 @@ class DatasetAdapter(Protocol):
                 changed = any(
                     not _is_na(new_meta.get(c))
                     and hasattr(existing_file, c)
-                    and getattr(existing_file, c) != new_meta[c]
+                    and _file_meta_differs(getattr(existing_file, c), new_meta[c])
                     for c in file_meta_cols
                     if c in new_meta
                 )

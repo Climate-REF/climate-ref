@@ -3,7 +3,7 @@ from pathlib import Path
 import cftime
 import pandas as pd
 import pytest
-from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset, prepare_climate_data
+from climate_ref_esmvaltool.recipe import as_facets, get_child_and_parent_dataset, prepare_climate_data
 
 
 def test_get_child_and_parent_dataset():
@@ -74,6 +74,108 @@ def test_get_child_and_parent_dataset():
         "mip": "Amon",
         "timerange": "5201/5340",
     }
+
+
+def test_as_facets_uses_activity_from_instance_id():
+    """activity_id can be space-separated (e.g. 'C4MIP CDRMIP').
+
+    as_facets must derive activity from instance_id (which uses the primary
+    activity only) so the facet matches the directory structure created by
+    prepare_climate_data.
+    """
+    group = pd.DataFrame(
+        {
+            "instance_id": [
+                "CMIP6.C4MIP.CSIRO.ACCESS-ESM1-5.esm-1pct-brch-1000PgC.r1i1p1f1.Amon.tas.gn.v20191206",
+            ],
+            "activity_id": ["C4MIP CDRMIP"],
+            "source_id": ["ACCESS-ESM1-5"],
+            "member_id": ["r1i1p1f1"],
+            "institution_id": ["CSIRO"],
+            "experiment_id": ["esm-1pct-brch-1000PgC"],
+            "grid_label": ["gn"],
+            "table_id": ["Amon"],
+            "variable_id": ["tas"],
+            "variant_label": ["r1i1p1f1"],
+            "start_time": [pd.Timestamp("1850-01-16")],
+            "end_time": [pd.Timestamp("1989-12-16")],
+        }
+    )
+
+    facets = as_facets(group)
+
+    # Must use "C4MIP" (from instance_id), NOT "C4MIP CDRMIP" (from activity_id)
+    assert facets["activity"] == "C4MIP"
+    assert facets["project"] == "CMIP6"
+    assert facets["dataset"] == "ACCESS-ESM1-5"
+
+
+def test_get_child_and_parent_dataset_multi_file_start_time():
+    """child_start must be the earliest start_time across all file entries.
+
+    When a dataset is split across multiple files (time slabs), iloc[0] may
+    not be the row with the earliest start_time, leading to wrong timeranges.
+    """
+    df = pd.DataFrame(
+        {
+            "instance_id": [
+                # Child: 4 time slabs, intentionally out of order
+                "CMIP6.C4MIP.MOHC.UKESM1-0-LL.esm-1pct-brch-1000PgC.r2i1p1f2.Amon.tas.gn.v20200210",
+                "CMIP6.C4MIP.MOHC.UKESM1-0-LL.esm-1pct-brch-1000PgC.r2i1p1f2.Amon.tas.gn.v20200210",
+                "CMIP6.C4MIP.MOHC.UKESM1-0-LL.esm-1pct-brch-1000PgC.r2i1p1f2.Amon.tas.gn.v20200210",
+                "CMIP6.C4MIP.MOHC.UKESM1-0-LL.esm-1pct-brch-1000PgC.r2i1p1f2.Amon.tas.gn.v20200210",
+                # Parent: 2 time slabs
+                "CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r2i1p1f2.Amon.tas.gn.v20200210",
+                "CMIP6.CMIP.MOHC.UKESM1-0-LL.1pctCO2.r2i1p1f2.Amon.tas.gn.v20200210",
+            ],
+            "activity_id": ["C4MIP CDRMIP"] * 4 + ["CMIP"] * 2,
+            "branch_time_in_child": [23760.0] * 4 + [0.0] * 2,
+            "branch_time_in_parent": [23760.0] * 4 + [97200.0] * 2,
+            "experiment_id": ["esm-1pct-brch-1000PgC"] * 4 + ["1pctCO2"] * 2,
+            "grid_label": ["gn"] * 6,
+            "institution_id": ["MOHC"] * 6,
+            "source_id": ["UKESM1-0-LL"] * 6,
+            "table_id": ["Amon"] * 6,
+            "variable_id": ["tas"] * 6,
+            "variant_label": ["r2i1p1f2"] * 6,
+            "member_id": ["r2i1p1f2"] * 6,
+            "start_time": [
+                # Child time slabs out of order - first row is latest slab
+                cftime.datetime(2150, 1, 1, calendar="360_day"),
+                cftime.datetime(1950, 1, 1, calendar="360_day"),
+                cftime.datetime(1916, 1, 1, calendar="360_day"),
+                cftime.datetime(2050, 1, 16, calendar="360_day"),
+                # Parent
+                cftime.datetime(1850, 1, 1, calendar="360_day"),
+                cftime.datetime(1950, 1, 16, calendar="360_day"),
+            ],
+            "end_time": [
+                cftime.datetime(2181, 12, 30, calendar="360_day"),
+                cftime.datetime(2049, 12, 30, calendar="360_day"),
+                cftime.datetime(1949, 12, 30, calendar="360_day"),
+                cftime.datetime(2149, 12, 16, calendar="360_day"),
+                cftime.datetime(1949, 12, 30, calendar="360_day"),
+                cftime.datetime(1999, 12, 16, calendar="360_day"),
+            ],
+            "time_units": ["days since 1850-01-01"] * 6,
+            "calendar": ["360_day"] * 6,
+            "path": [f"file{i}.nc" for i in range(6)],
+            "version": ["v20200210"] * 6,
+        }
+    )
+
+    child, parent = get_child_and_parent_dataset(
+        df,
+        parent_experiment="1pctCO2",
+        child_duration_in_years=100,
+        parent_offset_in_years=-10,
+        parent_duration_in_years=20,
+    )
+
+    # child_start should be 1916 (earliest), not 2150 (iloc[0])
+    assert child["timerange"] == "1916/2015"
+    # parent timerange should be based on 1916, not 2150
+    assert parent["timerange"] == "1906/1925"
 
 
 @pytest.mark.parametrize(

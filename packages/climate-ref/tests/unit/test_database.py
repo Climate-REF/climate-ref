@@ -8,7 +8,13 @@ import pytest
 import sqlalchemy
 from sqlalchemy import inspect
 
-from climate_ref.database import Database, _create_backup, _values_differ, validate_database_url
+from climate_ref.database import (
+    Database,
+    _create_backup,
+    _to_python_native,
+    _values_differ,
+    validate_database_url,
+)
 from climate_ref.models import MetricValue
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
 from climate_ref_core.datasets import SourceDatasetType
@@ -360,3 +366,54 @@ class TestValuesDiffer:
         assert _values_differ(True, pd.NA)
         assert _values_differ(False, pd.NA)
         assert _values_differ(pd.NA, True)
+
+    def test_numpy_int64_equal_to_python_int(self):
+        """numpy.int64 from a DataFrame vs Python int from the DB must not flag as changed."""
+        assert not _values_differ(np.int64(5), 5)
+        assert not _values_differ(5, np.int64(5))
+
+    def test_numpy_float64_equal_to_python_float(self):
+        assert not _values_differ(np.float64(1.5), 1.5)
+        assert not _values_differ(1.5, np.float64(1.5))
+
+    def test_numpy_int64_different_from_python_int(self):
+        assert _values_differ(np.int64(5), 6)
+        assert _values_differ(6, np.int64(5))
+
+    def test_numpy_bool_equal(self):
+        assert not _values_differ(np.bool_(True), True)
+        assert not _values_differ(np.bool_(False), False)
+
+
+class TestToPythonNative:
+    """Tests for _to_python_native which normalises numpy scalars to Python builtins."""
+
+    def test_numpy_int64_converts_to_python_int(self):
+        result = _to_python_native(np.int64(42))
+        assert result == 42
+        assert type(result) is int
+
+    def test_numpy_float64_converts_to_python_float(self):
+        result = _to_python_native(np.float64(3.14))
+        assert abs(result - 3.14) < 1e-9
+        assert type(result) is float
+
+    def test_numpy_bool_converts_to_python_bool(self):
+        result = _to_python_native(np.bool_(True))
+        assert result is True
+        assert type(result) is bool
+
+    def test_python_str_passthrough(self):
+        assert _to_python_native("atmos") == "atmos"
+
+    def test_python_int_passthrough(self):
+        value = 7
+        assert _to_python_native(value) is value
+
+    def test_none_passthrough(self):
+        assert _to_python_native(None) is None
+
+    def test_pd_na_passthrough(self):
+        """pd.NA has no .item() so must be returned unchanged."""
+        result = _to_python_native(pd.NA)
+        assert pd.isna(result)

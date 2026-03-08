@@ -28,3 +28,35 @@ esmvaltool:
           table_id: SImon
           variable_id: siconc
           version: v20201225
+        - experiment_id: historical
+          source_id: BCC-ESM1
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: CMCC-CM2-HR4
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: CMCC-CM2-SR5
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: CMCC-ESM2
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: ICON-ESM-LR
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: NorESM2-LM
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: NorESM2-MM
+          table_id: SImon
+          variable_id: siconc
+        - experiment_id: historical
+          source_id: SAM0-UNICON
+          table_id: SImon
+          variable_id: siconc

@@ -127,11 +127,20 @@ def as_facets(
 
     """
     facets = {}
-    project = group.iloc[0].instance_id.split(".", 2)[0]
+    instance_parts = group.iloc[0].instance_id.split(".")
+    project = instance_parts[0]
     facets["project"] = project
     for esmvaltool_name, ref_name in FACETS[project].items():
-        values = group[ref_name].unique().tolist()
-        facets[esmvaltool_name] = values if len(values) > 1 else values[0]
+        if esmvaltool_name == "activity":
+            # Derive activity from instance_id to match the directory structure
+            # created by prepare_climate_data(). The activity_id column can
+            # contain space-separated values (e.g. "C4MIP CDRMIP") but the
+            # instance_id always uses only the primary activity.
+            activities = group["instance_id"].apply(lambda x: x.split(".")[1]).unique().tolist()
+            facets[esmvaltool_name] = activities if len(activities) > 1 else activities[0]
+        else:
+            values = group[ref_name].unique().tolist()
+            facets[esmvaltool_name] = values if len(values) > 1 else values[0]
     timerange = as_timerange(group)
     if timerange is not None:
         facets["timerange"] = timerange
@@ -270,7 +279,7 @@ def get_child_and_parent_dataset(
         units=child_attrs["time_units"],
         calendar=child_attrs["calendar"],
     )
-    child_start = child_attrs["start_time"]
+    child_start = child_df["start_time"].dropna().min()
     parent_start = child_start + (branch_time_in_parent - branch_time_in_child)
 
     # Create the datasets for use in the recipe.

@@ -29,6 +29,7 @@ nav:
       - how-to-guides/using-pre-computed-results.py
       - how-to-guides/executors.md
       - how-to-guides/hpc_executor.md
+      - how-to-guides/control-memory-use.md
       - how-to-guides/dataset-selection.py
       - how-to-guides/ingest-datasets.md
       - how-to-guides/running-diagnostics-locally.py

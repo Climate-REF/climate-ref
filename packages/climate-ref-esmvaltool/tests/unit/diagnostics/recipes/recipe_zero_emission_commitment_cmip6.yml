@@ -61,3 +61,8 @@ diagnostics:
       zec:
         script: climate_metrics/zec.py
         zec_year: 50
+        experiments:
+          reference:
+          - 1pctCO2
+          simulation:
+          - esm-1pct-brch-1000PgC

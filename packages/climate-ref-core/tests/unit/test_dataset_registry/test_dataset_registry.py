@@ -85,7 +85,7 @@ class TestDatasetRegistry:
         assert retrieved_registry == mock_pooch_instance
 
     @pytest.mark.parametrize(
-        "cache_name, expected", [(None, "climate_ref"), ("custom_cache", "custom_cache")]
+        "cache_name, expected", [(None, "test_registry"), ("custom_cache", "custom_cache")]
     )
     def test_with_cache_name(self, mocker, fake_registry_file, cache_name, expected):
         registry = DatasetRegistryManager()
@@ -93,13 +93,45 @@ class TestDatasetRegistry:
         base_url = "http://example.com"
 
         mock_pooch = mocker.patch("climate_ref_core.dataset_registry.pooch")
+        mock_pooch.os_cache.return_value = Path("/path/to/climate_ref")
         package, resource = self.setup_registry_file(fake_registry_file)
 
         registry.register(name, base_url, package, resource, cache_name=cache_name)
 
-        mock_pooch.os_cache.assert_called_with(expected)
+        mock_pooch.os_cache.assert_called_with("climate_ref")
         assert name in registry._registries
-        mock_pooch.create.assert_called_once()
+        expected_kwargs = {
+            "base_url": "http://example.com",
+            "path": Path("/path/to/climate_ref", expected),
+            "retry_if_failed": 10,
+            "version": None,
+        }
+        mock_pooch.create.assert_called_once_with(**expected_kwargs)
+
+    @pytest.mark.parametrize("env", [None, "", "/some/other/path"])
+    def test_with_environment_variable(self, monkeypatch, mocker, fake_registry_file, env):
+        if env is not None:
+            monkeypatch.setenv("REF_DATASET_CACHE_DIR", env)
+        expected_path = Path(env) / "test_registry" if env else Path("/path/to/climate_ref") / "test_registry"
+
+        registry = DatasetRegistryManager()
+        name = "test_registry"
+        base_url = "http://example.com"
+
+        mock_pooch = mocker.patch("climate_ref_core.dataset_registry.pooch")
+        mock_pooch.os_cache.return_value = Path("/path/to/climate_ref")
+        package, resource = self.setup_registry_file(fake_registry_file)
+
+        registry.register(name, base_url, package, resource)
+
+        assert name in registry._registries
+        expected_kwargs = {
+            "path": expected_path,
+            "base_url": "http://example.com",
+            "retry_if_failed": 10,
+            "version": None,
+        }
+        mock_pooch.create.assert_called_once_with(**expected_kwargs)
 
 
 @pytest.mark.parametrize("symlink", [True, False])

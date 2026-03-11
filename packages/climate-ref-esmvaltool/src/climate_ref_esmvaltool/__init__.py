@@ -83,7 +83,7 @@ dataset_registry_manager.register(
     base_url=DATASET_URL,
     package="climate_ref_esmvaltool.dataset_registry",
     resource="data.txt",
-    cache_name=f"climate_ref_esmvaltool/{_DATASETS_REGISTRY_NAME}",
+    cache_name=_DATASETS_REGISTRY_NAME.replace("-", "/"),
 )
 # Register the ESMValTool recipes.
 dataset_registry_manager.register(
@@ -91,5 +91,5 @@ dataset_registry_manager.register(
     base_url=_RECIPES_URL,
     package="climate_ref_esmvaltool",
     resource="recipes.txt",
-    cache_name=f"climate_ref_esmvaltool/{_RECIPES_REGISTRY_NAME}",
+    cache_name=_RECIPES_REGISTRY_NAME.replace("-", "/"),
 )

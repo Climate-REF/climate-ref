@@ -1,0 +1,19 @@
+# ==============================================================================
+# == Data Reference Syntax checks
+# ==============================================================================
+
+[drs.filename]
+# Check FILE001
+severity = "H"
+
+[drs.directory]
+# Check PATH003
+severity = "H"
+
+[drs.attributes_vs_directory]
+# Checks PATH001
+severity = "H"
+
+[drs.filename_vs_directory]
+# Check PATH002 
+severity = "H"

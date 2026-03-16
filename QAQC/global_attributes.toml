@@ -327,19 +327,19 @@ cv_source_collection = "vertical_label"
 # ==============================================================================
 
 [global.consistency.filename_vs_attributes]
-# Check ATTR005 
+# Check ATTR005
 severity = "H"
 
 [global.consistency.experiment_properties]
-# Check ATTR007 
+# Check ATTR007
 severity = "H"
 
 [global.consistency.institution_properties]
-# Check ATTR009 
+# Check ATTR009
 severity = "H"
 
 [global.consistency.source_properties]
-# Check ATTR010 
+# Check ATTR010
 severity = "H"
 
 [global.consistency.variant_properties]

@@ -15,5 +15,5 @@ severity = "H"
 severity = "H"
 
 [drs.filename_vs_directory]
-# Check PATH002 
+# Check PATH002
 severity = "H"

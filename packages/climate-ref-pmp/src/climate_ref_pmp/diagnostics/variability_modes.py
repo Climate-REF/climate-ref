@@ -250,8 +250,6 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         if isinstance(model_files, list):
             modpath = get_wildcard_pattern(model_files)
-            print(f"pmp-mov-model_files: {model_files}")
-            print(f"pmp-mov-modpath: {modpath}")
             logger.debug(f"model_files: {model_files}")
             logger.debug(f"modpath: {modpath}")
         else:

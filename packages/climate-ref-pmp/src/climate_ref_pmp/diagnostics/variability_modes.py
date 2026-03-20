@@ -116,7 +116,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP6Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip6",
                                 facets={
-                                    "source_id": "AWI-ESM-1-1-LR",
+                                    "source_id": "ACCESS-ESM1-5",
                                     "experiment_id": "historical",
                                     "variable_id": "ts",
                                     "member_id": "r1i1p1f1",
@@ -139,7 +139,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
-                                    "source_id": "AWI-ESM-1-1-LR",
+                                    "source_id": "ACCESS-ESM1-5",
                                     "experiment_id": "historical",
                                     "variable_id": "ts",
                                     "branded_variable": "ts_tavg-u-hxy-u",
@@ -171,7 +171,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP6Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip6",
                                 facets={
-                                    "source_id": "AWI-ESM-1-1-LR",
+                                    "source_id": "ACCESS-ESM1-5",
                                     "experiment_id": "historical",
                                     "variable_id": "psl",
                                     "member_id": "r1i1p1f1",
@@ -194,7 +194,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
-                                    "source_id": "AWI-ESM-1-1-LR",
+                                    "source_id": "ACCESS-ESM1-5",
                                     "experiment_id": "historical",
                                     "variable_id": "psl",
                                     "branded_variable": "psl_tavg-u-hxy-u",

@@ -1,5 +1,6 @@
 import json
 from collections.abc import Iterable
+from os.path import commonprefix
 from pathlib import Path
 from typing import Any, Union
 
@@ -115,7 +116,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP6Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip6",
                                 facets={
-                                    "source_id": "ACCESS-ESM1-5",
+                                    "source_id": "AWI-ESM-1-1-LR",
                                     "experiment_id": "historical",
                                     "variable_id": "ts",
                                     "member_id": "r1i1p1f1",
@@ -138,7 +139,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
-                                    "source_id": "ACCESS-ESM1-5",
+                                    "source_id": "AWI-ESM-1-1-LR",
                                     "experiment_id": "historical",
                                     "variable_id": "ts",
                                     "branded_variable": "ts_tavg-u-hxy-u",
@@ -170,7 +171,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP6Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip6",
                                 facets={
-                                    "source_id": "ACCESS-ESM1-5",
+                                    "source_id": "AWI-ESM-1-1-LR",
                                     "experiment_id": "historical",
                                     "variable_id": "psl",
                                     "member_id": "r1i1p1f1",
@@ -193,7 +194,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                             CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",
                                 facets={
-                                    "source_id": "ACCESS-ESM1-5",
+                                    "source_id": "AWI-ESM-1-1-LR",
                                     "experiment_id": "historical",
                                     "variable_id": "psl",
                                     "branded_variable": "psl_tavg-u-hxy-u",
@@ -247,12 +248,12 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         model_files = input_datasets.path.to_list()
 
-        if len(model_files) != 1:
-            # Have some logic to replace the dates in the filename with a wildcard
-            raise NotImplementedError("Only one model file is supported at this time.")
-
         if isinstance(model_files, list):
-            modpath = " ".join([str(p) for p in model_files])
+            modpath = get_wildcard_pattern(model_files)
+            print(f"pmp-mov-model_files: {model_files}")
+            print(f"pmp-mov-modpath: {modpath}")
+            logger.debug(f"model_files: {model_files}")
+            logger.debug(f"modpath: {modpath}")
         else:
             modpath = model_files
 
@@ -405,3 +406,63 @@ def remove_null_values(data: Union[dict[Any, Any], list[Any], Any]) -> Union[dic
     if isinstance(data, list):
         return [remove_null_values(item) for item in data if item is not None]
     return data
+
+
+def get_wildcard_pattern(paths: Union[list[str], str]) -> str:
+    """
+    Extract a common pattern from a list of strings using a wildcard.
+
+    Parameters
+    ----------
+    paths : list of str
+        A list of file paths or strings from which to extract a common pattern.
+
+    Returns
+    -------
+    str
+        A string representing the common prefix and suffix joined by an
+        asterisk (*). If the list is empty, returns an empty string.
+        If all strings are identical, returns the string itself.
+
+    Notes
+    -----
+    The function identifies the longest common prefix and the longest common
+    suffix across all elements. It prevents character overlap to ensure
+    the resulting wildcard string is logically sound.
+
+    Examples
+    --------
+    >>> get_wildcard_pattern(["/tmp/file_1.txt", "/tmp/file_2.txt"])
+    '/tmp/file_*.txt'
+    >>> get_wildcard_pattern(["data.csv", "data.csv"])
+    'data.csv'
+    """
+    if not paths:
+        return ""
+
+    if not isinstance(paths, list):
+        return paths
+
+    # Early exit if all elements are identical
+    if len(set(paths)) == 1:
+        return paths[0]
+
+    if len(paths) == 1:
+        return paths[0]
+
+    # 1. Use os.path.commonprefix for the start
+    prefix = commonprefix(paths)
+
+    # 2. Find the longest common suffix by reversing strings
+    reversed_paths = [p[::-1] for p in paths]
+    rev_suffix = commonprefix(reversed_paths)
+    suffix = rev_suffix[::-1]
+
+    # 3. Handle cases where prefix and suffix might "clash"
+    shortest_len = len(min(paths, key=len))
+    if len(prefix) + len(suffix) >= shortest_len:
+        # If they meet or overlap, returning just prefix + '*'
+        # prevents 'data.csv*data.csv' logic errors.
+        return f"{prefix}*"
+
+    return f"{prefix}*{suffix}"

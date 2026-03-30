@@ -32,16 +32,19 @@ from the examples given in that link.
 - Fixed zero-emission-commitment diagnostic failures caused by space-separated `activity_id` values creating path mismatches, incorrect parent timerange computation when datasets are split across multiple files, and models with `esm-1pctCO2` as parent experiment being incorrectly scheduled (see #586). ([#585](https://github.com/Climate-REF/climate-ref/pull/585))
 - Fixed experiment selection for computing ZEC. ([#589](https://github.com/Climate-REF/climate-ref/pull/589))
 - Solve regression tests now use the local `default_ignore_datasets.yaml` instead of downloading from the `main` branch on GitHub, ensuring tests reflect the current ignore list. ([#606](https://github.com/Climate-REF/climate-ref/pull/606))
+- Use flexible time stamp for PMP annual cycle. ([#465](https://github.com/Climate-REF/climate-ref/pull/465))
+
+### Improvements
+
+- Enable multiple-file-input for PMP's variability modes diagnostics. ([#583](https://github.com/Climate-REF/climate-ref/pull/583))
 
 ### Improved Documentation
 
 - Added a how-to guide on controlling memory use and parallism during diagnostic execution. ([#591](https://github.com/Climate-REF/climate-ref/pull/591))
 
-
 ## climate-ref 0.12.2 (2026-03-06)
 
 No significant changes.
-
 
 ## climate-ref 0.12.1 (2026-03-06)
 
@@ -52,7 +55,6 @@ No significant changes.
 ### Trivial/Internal Changes
 
 - [#580](https://github.com/Climate-REF/climate-ref/pull/580)
-
 
 ## climate-ref 0.12.0 (2026-03-03)
 
@@ -81,7 +83,6 @@ No significant changes.
   This fixes some errors when dealing with tasmax/tasmin and the removes the out_name attribute which was correctly included in [#530](https://github.com/Climate-REF/climate-ref/pull/530). ([#547](https://github.com/Climate-REF/climate-ref/pull/547))
 - Apply same version filtering logic to the regression tests as loading the data catalog ([#570](https://github.com/Climate-REF/climate-ref/pull/570))
 
-
 ## climate-ref 0.11.1 (2026-02-24)
 
 ### Bug Fixes
@@ -89,7 +90,6 @@ No significant changes.
 - Fixed DRS re-ingestion from crashing or regressing already-finalised datasets. Previously, re-ingesting the same directory with the DRS parser would either crash with a `TypeError` due to `pd.NA` comparisons, or overwrite finalised metadata with empty values. Finalised datasets are now skipped during DRS ingestion while still adding any new files.
 
   Reduced memory usage during dataset ingestion by releasing ORM objects from the SQLAlchemy session after each dataset commit, preventing unbounded memory growth on large archives. ([#567](https://github.com/Climate-REF/climate-ref/pull/567))
-
 
 ## climate-ref 0.11.0 (2026-02-24)
 
@@ -146,7 +146,6 @@ No significant changes.
 
 - [#538](https://github.com/Climate-REF/climate-ref/pull/538), [#555](https://github.com/Climate-REF/climate-ref/pull/555)
 
-
 ## climate-ref 0.10.0 (2026-02-10)
 
 ### Features
@@ -169,7 +168,6 @@ No significant changes.
 
 - [#516](https://github.com/Climate-REF/climate-ref/pull/516)
 
-
 ## climate-ref 0.9.1 (2026-02-05)
 
 ### Features
@@ -189,7 +187,6 @@ No significant changes.
 ### Improved Documentation
 
 - Updated getting started documentation with clearer configuration and dataset download instructions. ([#508](https://github.com/Climate-REF/climate-ref/pull/508))
-
 
 ## climate-ref 0.9.0 (2026-02-03)
 
@@ -222,7 +219,6 @@ No significant changes.
 
 - [#480](https://github.com/Climate-REF/climate-ref/pull/480), [#506](https://github.com/Climate-REF/climate-ref/pull/506)
 
-
 ## climate-ref 0.8.1 (2026-01-06)
 
 ### Bug Fixes
@@ -232,7 +228,6 @@ No significant changes.
 ### Trivial/Internal Changes
 
 - [#477](https://github.com/Climate-REF/climate-ref/pull/477)
-
 
 ## climate-ref 0.8.0 (2026-01-05)
 
@@ -262,7 +257,6 @@ No significant changes.
 ### Improved Documentation
 
 - Add a Jupyter notebook showing how to use the CMIP7 Assessment Fast Track website OpenAPI. ([#466](https://github.com/Climate-REF/climate-ref/pull/466))
-
 
 ## climate-ref 0.7.0 (2025-10-01)
 
@@ -324,7 +318,6 @@ No significant changes.
 
 - [#440](https://github.com/Climate-REF/climate-ref/pull/440)
 
-
 ## climate-ref 0.6.6 (2025-09-10)
 
 ### Features
@@ -356,7 +349,6 @@ No significant changes.
   This bug was introduced in [#378](https://github.com/Climate-REF/climate-ref/pull/378)
   and included in the v0.6.5 release. ([#384](https://github.com/Climate-REF/climate-ref/pull/384))
 
-
 ## climate-ref 0.6.5 (2025-08-25)
 
 ### Features
@@ -375,7 +367,6 @@ No significant changes.
 
 - Address documentation review from the Model Benchmarking Task Team ([#371](https://github.com/Climate-REF/climate-ref/pull/371))
 
-
 ## climate-ref 0.6.4 (2025-08-04)
 
 ### Deprecations
@@ -393,14 +384,12 @@ No significant changes.
 - Add additional dimensions to the example metric for testing purposes. ([#372](https://github.com/Climate-REF/climate-ref/pull/372))
 - Added a basic script to the CMIP6 data targetted by the current set of diagnostics for the Assessment Fast Track. ([#373](https://github.com/Climate-REF/climate-ref/pull/373))
 
-
 ## climate-ref 0.6.3 (2025-07-17)
 
 ### Improvements
 
 - Use a new URL for serving the reference data.
   This should now support older versions of TLS which may help some users. ([#364](https://github.com/Climate-REF/climate-ref/pull/364))
-
 
 ## climate-ref 0.6.2 (2025-07-09)
 
@@ -416,7 +405,6 @@ No significant changes.
 ### Improved Documentation
 
 - Add documentation for the CLI tool ([#343](https://github.com/Climate-REF/climate-ref/pull/343))
-
 
 ## climate-ref 0.6.1 (2025-05-28)
 
@@ -434,7 +422,6 @@ No significant changes.
 ### Improved Documentation
 
 - Add Getting Started section for ingesting and solving ([#342](https://github.com/Climate-REF/climate-ref/pull/342))
-
 
 ## climate-ref 0.6.0 (2025-05-27)
 
@@ -475,7 +462,6 @@ No significant changes.
 
 - Depth selects properly in mrsos, added regression data ([#331](https://github.com/Climate-REF/climate-ref/pull/331))
 
-
 ## climate-ref 0.5.5 (2025-05-21)
 
 ### Improvements
@@ -490,13 +476,11 @@ No significant changes.
 
 - Updated documentation to include more information about concepts within the REF. ([#312](https://github.com/Climate-REF/climate-ref/pull/312))
 
-
 ## climate-ref 0.5.4 (2025-05-19)
 
 ### Bug Fixes
 
 - Add additional dependencies to the `climate-ref-core` so that it is self-contained ([#307](https://github.com/Climate-REF/climate-ref/pull/307))
-
 
 ## climate-ref 0.5.3 (2025-05-19)
 
@@ -520,7 +504,6 @@ No significant changes.
 
 - Added page describing the required reference datasets ([#298](https://github.com/Climate-REF/climate-ref/pull/298))
 
-
 ## climate-ref 0.5.2 (2025-05-15)
 
 ### Bug Fixes
@@ -530,7 +513,6 @@ No significant changes.
 ### Improved Documentation
 
 - Added documentation for configuration options ([#296](https://github.com/Climate-REF/climate-ref/pull/296))
-
 
 ## climate-ref 0.5.1 (2025-05-14)
 
@@ -579,7 +561,6 @@ No significant changes.
 - Requery an Execution from the database when handling the result from the LocalExecutor.
   This ensures that the execution isn't stale and that the result is still valid. ([#293](https://github.com/Climate-REF/climate-ref/pull/293))
 
-
 ## climate-ref 0.5.0 (2025-05-03)
 
 ### Breaking Changes
@@ -608,7 +589,6 @@ No significant changes.
   This removes any previous database migrations and replaces them with a new clean migration.
   If you have an existing database, you will need to delete it and re-create it. ([#271](https://github.com/Climate-REF/climate-ref/pull/271))
 
-
 ## cmip_ref 0.4.1 (2025-05-02)
 
 ### Breaking Changes
@@ -632,7 +612,6 @@ No significant changes.
 ### Improved Documentation
 
 - Add deprecation notices to PyPi package README's ([#269](https://github.com/Climate-REF/climate-ref/pull/269))
-
 
 ## cmip_ref 0.4.0 (2025-04-29)
 
@@ -702,13 +681,11 @@ No significant changes.
 
 - [#220](https://github.com/Climate-REF/climate-ref/pull/220)
 
-
 ## cmip_ref 0.3.1 (2025-03-28)
 
 ### Trivial/Internal Changes
 
 - [#218](https://github.com/Climate-REF/climate-ref/pull/218)
-
 
 ## cmip_ref 0.3.0 (2025-03-28)
 
@@ -756,6 +733,7 @@ No significant changes.
   MAMBA_PLATFORM=osx-64 uv run ref providers create-env --provider pmp
   ``` ([#127](https://github.com/Climate-REF/climate-ref/pull/127))
 - Fixed issue with `mypy` not being run across the celery package ([#128](https://github.com/Climate-REF/climate-ref/pull/128))
+
 - Added the `fetch-ref-data` make command to download reference data while it's not in obs4mips, yet. ([#155](https://github.com/Climate-REF/climate-ref/pull/155))
 - Improvements:
   - Drop the metric plugin version number in the environment name because the environment may not change between releases
@@ -796,7 +774,6 @@ No significant changes.
 ### Trivial/Internal Changes
 
 - [#161](https://github.com/Climate-REF/climate-ref/pull/161), [#182](https://github.com/Climate-REF/climate-ref/pull/182), [#184](https://github.com/Climate-REF/climate-ref/pull/184), [#207](https://github.com/Climate-REF/climate-ref/pull/207)
-
 
 ## cmip_ref 0.2.0 (2025-03-01)
 
@@ -867,7 +844,6 @@ No significant changes.
 
 - [#97](https://github.com/Climate-REF/climate-ref/pull/97), [#102](https://github.com/Climate-REF/climate-ref/pull/102), [#116](https://github.com/Climate-REF/climate-ref/pull/116), [#118](https://github.com/Climate-REF/climate-ref/pull/118)
 
-
 ## cmip_ref 0.1.6 (2025-02-03)
 
 ### Features
@@ -896,13 +872,11 @@ No significant changes.
 
 - [#68](https://github.com/Climate-REF/climate-ref/pull/68)
 
-
 ## cmip_ref 0.1.5 (2025-01-13)
 
 ### Trivial/Internal Changes
 
 - [#56](https://github.com/Climate-REF/climate-ref/pull/56)
-
 
 ## cmip_ref 0.1.4 (2025-01-13)
 
@@ -937,9 +911,9 @@ No significant changes.
 
   This provides the ability to:
 
-  * filter a data catalog
-  * group datasets together to be used in a metric calculation
-  * declare constraints on the data that is required for a metric calculation
+  - filter a data catalog
+  - group datasets together to be used in a metric calculation
+  - declare constraints on the data that is required for a metric calculation
 
   ([#15](https://github.com/Climate-REF/climate-ref/pull/15))
 - Add a placeholder iterative metric solving scheme ([#16](https://github.com/Climate-REF/climate-ref/pull/16))
@@ -979,7 +953,7 @@ No significant changes.
 
 ### Improved Documentation
 
-- Deployed documentation to https://climate-ref.readthedocs.io/en/latest/ ([#16](https://github.com/Climate-REF/climate-ref/pull/16))
+- Deployed documentation to <https://climate-ref.readthedocs.io/en/latest/> ([#16](https://github.com/Climate-REF/climate-ref/pull/16))
 - General documentation cleanup.
 
   Added notebook describing the process of executing a notebook locally ([#19](https://github.com/Climate-REF/climate-ref/pull/19))

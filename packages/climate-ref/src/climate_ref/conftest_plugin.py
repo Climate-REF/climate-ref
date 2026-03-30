@@ -249,6 +249,17 @@ def data_catalog(
     }
 
 
+@pytest.fixture(scope="session")
+def solve_config() -> Config:
+    """Session-scoped Config that uses the local default_ignore_datasets.yaml"""
+    cfg = Config.default()
+    local_ignore_file = Path(__file__).parents[4] / "default_ignore_datasets.yaml"
+    if not local_ignore_file.is_file():
+        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
+    cfg.ignore_datasets_file = local_ignore_file
+    return cfg
+
+
 @pytest.fixture
 def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.FixtureRequest) -> Config:
     """Per-test Config with isolated directories."""

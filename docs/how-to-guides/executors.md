@@ -60,3 +60,10 @@ executor = "climate_ref.executor.SynchronousExecutor"
 - **CeleryExecutor** suits distributed deployments in containerized or cloud setups.
 
 Once configured, run `ref solve` as usual and the REF will use your chosen executor to schedule and execute diagnostics.
+
+/// note | Configuring Dask
+It is recommended to configure Dask for the system running your executors, to
+avoid excessive memory use or context switching. Go to
+[How to control memory use and parallism guide](control-memory-use.md) for
+detailed instructions.
+///

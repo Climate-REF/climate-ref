@@ -21,6 +21,23 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.12.3 (2026-03-30)
+
+### Features
+
+- Added `ref datasets stats` and `ref executions stats` CLI commands for viewing summary statistics without listing individual records. ([#584](https://github.com/Climate-REF/climate-ref/pull/584))
+
+### Bug Fixes
+
+- Fixed zero-emission-commitment diagnostic failures caused by space-separated `activity_id` values creating path mismatches, incorrect parent timerange computation when datasets are split across multiple files, and models with `esm-1pctCO2` as parent experiment being incorrectly scheduled (see #586). ([#585](https://github.com/Climate-REF/climate-ref/pull/585))
+- Fixed experiment selection for computing ZEC. ([#589](https://github.com/Climate-REF/climate-ref/pull/589))
+- Solve regression tests now use the local `default_ignore_datasets.yaml` instead of downloading from the `main` branch on GitHub, ensuring tests reflect the current ignore list. ([#606](https://github.com/Climate-REF/climate-ref/pull/606))
+
+### Improved Documentation
+
+- Added a how-to guide on controlling memory use and parallism during diagnostic execution. ([#591](https://github.com/Climate-REF/climate-ref/pull/591))
+
+
 ## climate-ref 0.12.2 (2026-03-06)
 
 No significant changes.

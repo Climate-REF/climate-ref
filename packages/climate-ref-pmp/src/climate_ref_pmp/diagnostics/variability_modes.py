@@ -451,6 +451,12 @@ def get_wildcard_pattern(paths: Union[list[str], str]) -> str:
     # 1. Use os.path.commonprefix for the start
     prefix = commonprefix(paths)
 
+    if not prefix:
+        raise ValueError(
+            f"No common prefix found for paths: {paths}. "
+            "A wildcard pattern without a prefix would match too broadly."
+        )
+
     # 2. Find the longest common suffix by reversing strings
     reversed_paths = [p[::-1] for p in paths]
     rev_suffix = commonprefix(reversed_paths)
@@ -459,8 +465,6 @@ def get_wildcard_pattern(paths: Union[list[str], str]) -> str:
     # 3. Handle cases where prefix and suffix might "clash"
     shortest_len = len(min(paths, key=len))
     if len(prefix) + len(suffix) >= shortest_len:
-        # If they meet or overlap, returning just prefix + '*'
-        # prevents 'data.csv*data.csv' logic errors.
-        return f"{prefix}*"
+        suffix = ""
 
     return f"{prefix}*{suffix}"

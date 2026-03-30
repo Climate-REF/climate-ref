@@ -7,7 +7,6 @@ from climate_ref_core.constraints import (
     AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
-    RequireFacets,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -34,11 +33,6 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
     slug = "zero-emission-commitment"
     base_recipe = "recipe_zec.yml"
 
-    experiments = (
-        "1pctCO2",
-        "esm-1pct-brch-1000PgC",
-    )
-
     data_requirements = (
         (
             DataRequirement(
@@ -55,10 +49,6 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 group_by=("source_id", "member_id", "grid_label"),
                 constraints=(
                     AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
-                    # The ZEC diagnostic requires the parent experiment to be
-                    # "1pctCO2". Some models have "esm-1pctCO2" as parent
-                    # which is not accepted by the ESMValTool ZEC script.
-                    RequireFacets("experiment_id", ("1pctCO2",)),
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),
@@ -71,7 +61,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tas_tavg-h2m-hxy-u",
-                            "experiment_id": experiments,
+                            "experiment_id": "esm-flat10-zec",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -79,8 +69,8 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 ),
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP7),
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireFacets("experiment_id", experiments),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
@@ -113,7 +103,7 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
     test_data_spec = TestDataSpecification(
         test_cases=(
             TestCase(
-                name="cmip6",
+                name="cmip6-1pctCO2-parent",
                 description="Test with CMIP6 data.",
                 requests=(
                     CMIP6Request(
@@ -129,13 +119,29 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 ),
             ),
             TestCase(
+                name="cmip6-esm-1pctCO2-parent",
+                description="Test with CMIP6 data.",
+                requests=(
+                    CMIP6Request(
+                        slug="cmip6",
+                        facets={
+                            "experiment_id": ["esm-1pctCO2", "esm-1pct-brch-1000PgC"],
+                            "source_id": "MIROC-ES2L",
+                            "variable_id": ["areacella", "tas"],
+                            "frequency": ["fx", "mon"],
+                        },
+                        remove_ensembles=True,
+                    ),
+                ),
+            ),
+            TestCase(
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
                     CMIP7Request(
                         slug="cmip7",
                         facets={
-                            "experiment_id": ["1pctCO2", "esm-1pct-brch-1000PgC"],
+                            "experiment_id": ["esm-flat10", "esm-flat10-zec"],
                             "source_id": "ACCESS-ESM1-5",
                             "variable_id": ["areacella", "tas"],
                             "branded_variable": [
@@ -160,13 +166,17 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Prepare updated datasets section in recipe. It contains two
-        # datasets, one for the "esm-1pct-brch-1000PgC" and one for the "1pctCO2"
-        # experiment.
+        # datasets, one for the child and one for the parent experiment.
         cmip_source = get_cmip_source_type(input_files)
         df = input_files[cmip_source]
+        child_experiment = {
+            SourceDatasetType.CMIP6: "esm-1pct-brch-1000PgC",
+            SourceDatasetType.CMIP7: "esm-flat10-zec",
+        }[cmip_source]
+        parent_experiment = next(exp for exp in df.experiment_id.unique() if exp != child_experiment)
         child_dataset, parent_dataset = get_child_and_parent_dataset(
             df[df.variable_id == "tas"],
-            parent_experiment="1pctCO2",
+            parent_experiment=parent_experiment,
             child_duration_in_years=100,
             parent_offset_in_years=-10,
             parent_duration_in_years=20,
@@ -182,10 +192,13 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
             "preprocessor": "spatial_mean",
             "additional_datasets": [child_dataset],
         }
+        recipe["diagnostics"]["zec"]["scripts"]["zec"]["experiments"] = {
+            "reference": [parent_dataset["exp"]],
+            "simulation": [child_dataset["exp"]],
+        }
 
-    @classmethod
+    @staticmethod
     def format_result(
-        cls,
         result_dir: Path,
         execution_dataset: ExecutionDatasetCollection,
         metric_args: MetricBundleArgs,

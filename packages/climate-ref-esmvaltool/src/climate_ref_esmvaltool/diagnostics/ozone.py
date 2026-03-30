@@ -11,6 +11,7 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 from climate_ref_core.esgf.cmip7 import CMIP7Request
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
@@ -169,6 +170,12 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
     data_requirements = toz_data_requirement
     facets = ()
     test_data_spec = toz_test_spec
+    files = (
+        FileDefinition(
+            file_pattern="plots/lat_time_mapplot/plot/*.png",
+            dimensions={"variable_id": "toz", "statistic": "zonal mean vs time"},
+        ),
+    )
 
     @staticmethod
     def update_recipe(
@@ -198,6 +205,23 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
     data_requirements = toz_data_requirement
     facets = ()
     test_data_spec = toz_test_spec
+    files = (
+        FileDefinition(
+            file_pattern="plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png",
+            dimensions={"variable_id": "toz", "statistic": "Southern Hemisphere October polar mean"},
+        ),
+    )
+    # dim0=0 is the model, dim0=1 contains the observational reference data.
+    series = (
+        SeriesDefinition(
+            file_pattern="work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc",
+            sel={"dim0": 0},
+            dimensions={"variable_id": "toz", "statistic": "Southern Hemisphere October polar mean"},
+            values_name="toz",
+            index_name="time",
+            attributes=[],
+        ),
+    )
 
     @staticmethod
     def update_recipe(
@@ -226,6 +250,23 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
     data_requirements = toz_data_requirement
     facets = ()
     test_data_spec = toz_test_spec
+    files = (
+        FileDefinition(
+            file_pattern="plots/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.png",
+            dimensions={"variable_id": "toz", "statistic": "Northern Hemisphere March polar mean"},
+        ),
+    )
+    # dim0=0 is the model, dim0=1 contains the observational reference data.
+    series = (
+        SeriesDefinition(
+            file_pattern="work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc",
+            sel={"dim0": 0},
+            dimensions={"variable_id": "toz", "statistic": "Northern Hemisphere March polar mean"},
+            values_name="toz",
+            index_name="time",
+            attributes=[],
+        ),
+    )
 
     @staticmethod
     def update_recipe(
@@ -360,6 +401,12 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
     data_requirements = toz_data_requirement
     facets = ()
     test_data_spec = toz_test_spec
+    files = (
+        FileDefinition(
+            file_pattern="plots/lat_month_mapplot/plot/*.png",
+            dimensions={"variable_id": "toz", "statistic": "zonal mean annual cycle"},
+        ),
+    )
 
     @staticmethod
     def update_recipe(

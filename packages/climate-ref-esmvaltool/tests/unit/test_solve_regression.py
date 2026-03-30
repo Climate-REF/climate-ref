@@ -9,13 +9,12 @@ from __future__ import annotations
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 
-from climate_ref.config import Config
 from climate_ref.solve_helpers import solve_results_for_regression, solve_to_results
 
 
 @pytest.fixture(scope="module")
-def esmvaltool_results(esgf_data_catalog):
-    esmvaltool_provider.configure(Config.default())
+def esmvaltool_results(esgf_data_catalog, solve_config):
+    esmvaltool_provider.configure(solve_config)
     return solve_to_results(esgf_data_catalog, providers=[esmvaltool_provider])
 
 

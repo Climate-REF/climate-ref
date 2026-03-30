@@ -15,6 +15,7 @@ import typer
 from loguru import logger
 
 from climate_ref.cli._utils import pretty_print_df
+from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models import Dataset
 from climate_ref.solver import apply_dataset_filters
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
@@ -53,8 +54,6 @@ def list_(  # noqa: PLR0913
 
     The data catalog is sorted by the date that the dataset was ingested (first = newest).
     """
-    from climate_ref.datasets import get_dataset_adapter
-
     database = ctx.obj.database
 
     adapter = get_dataset_adapter(source_type.value)
@@ -114,8 +113,6 @@ def list_columns(
     If a configuration directory is provided,
     the configuration will attempt to load from the specified directory.
     """
-    from climate_ref.datasets import get_dataset_adapter
-
     database = ctx.obj.database
 
     adapter = get_dataset_adapter(source_type.value)
@@ -145,7 +142,7 @@ def ingest(  # noqa
 
     A table of the datasets will be printed to the console at the end of the operation.
     """
-    from climate_ref.datasets import get_dataset_adapter, ingest_datasets
+    from climate_ref.datasets import ingest_datasets
 
     config = ctx.obj.config
     db = ctx.obj.database
@@ -213,6 +210,92 @@ def ingest(  # noqa
             db=db,
             dry_run=dry_run,
         )
+
+
+_ALLOWED_GROUP_BY = ("source_id", "variable_id")
+
+
+@app.command()
+def stats(
+    ctx: typer.Context,
+    source_type: Annotated[SourceDatasetType | None, typer.Option(help="Filter by dataset type")] = None,
+    group_by: Annotated[
+        str | None,
+        typer.Option(
+            help=f"Group results by a dataset facet. Allowed values: {', '.join(_ALLOWED_GROUP_BY)}. "
+            "Requires --source-type to be specified."
+        ),
+    ] = None,
+) -> None:
+    """
+    Show summary statistics for datasets.
+
+    Displays counts of datasets grouped by dataset type, with finalisation status breakdown
+    and file counts. Optionally expand by a facet using --group-by (e.g., --group-by source_id).
+    """
+    import pandas as pd
+    from sqlalchemy import case, func
+
+    from climate_ref.models.dataset import DatasetFile
+
+    session = ctx.obj.database.session
+    console = ctx.obj.console
+
+    if group_by and source_type is None:
+        logger.error("--group-by requires --source-type to be specified.")
+        raise typer.Exit(code=1)
+
+    if group_by is not None and group_by not in _ALLOWED_GROUP_BY:
+        logger.error(f"Invalid --group-by value '{group_by}'. Allowed values: {', '.join(_ALLOWED_GROUP_BY)}")
+        raise typer.Exit(code=1)
+
+    # When source_type is given, query from the subclass to access its columns
+    base: type[Dataset] = Dataset
+    group_col = None
+    if source_type is not None:
+        base = get_dataset_adapter(source_type.value).dataset_cls
+        if group_by is not None:
+            group_col = getattr(base, group_by)
+
+    group_columns = [base.dataset_type]
+    if group_col is not None:
+        group_columns.append(group_col)
+
+    query = (
+        session.query(
+            base.dataset_type.label("dataset_type"),
+            *([group_col.label(group_by)] if group_col is not None else []),
+            func.count(func.distinct(base.id)).label("datasets"),
+            func.count(DatasetFile.id).label("files"),
+            func.count(func.distinct(case((base.finalised.is_(True), base.id)))).label("finalised"),
+            func.count(func.distinct(case((base.finalised.is_(False), base.id)))).label("unfinalised"),
+        )
+        .outerjoin(DatasetFile, base.id == DatasetFile.dataset_id)
+        .group_by(*group_columns)
+    )
+
+    if source_type is not None:
+        query = query.filter(base.dataset_type == source_type)
+
+    results = query.all()
+
+    if not results:
+        console.print("No datasets found.")
+        return
+
+    rows: list[dict[str, object]] = []
+    for row in results:
+        entry: dict[str, object] = {"dataset_type": row.dataset_type.value}
+        if group_by is not None and group_col is not None:
+            entry[group_by] = getattr(row, group_by)
+        entry["datasets"] = row.datasets
+        entry["files"] = row.files
+        entry["finalised"] = row.finalised
+        entry["unfinalised"] = row.unfinalised
+        rows.append(entry)
+
+    results_df = pd.DataFrame(rows)
+    pretty_print_df(results_df, console=console)
 
 
 @app.command(name="fetch-sample-data")

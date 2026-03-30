@@ -87,6 +87,7 @@ instance/
 
 # Sphinx documentation
 docs/_build/
+docs/how-to-guides/climate_ref_client/
 
 # PyBuilder
 target/

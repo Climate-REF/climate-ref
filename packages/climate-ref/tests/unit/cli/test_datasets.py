@@ -71,6 +71,52 @@ class TestDatasetsList:
         )
 
 
+class TestDatasetsStats:
+    def test_stats_basic(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "stats"])
+        # db_seeded has CMIP6 datasets
+        assert "cmip6" in result.stdout
+        assert "dataset_type" in result.stdout
+        assert "datasets" in result.stdout
+        assert "files" in result.stdout
+        assert "finalised" in result.stdout
+        assert "unfinalised" in result.stdout
+
+    def test_stats_no_data(self, db, invoke_cli):
+        result = invoke_cli(["datasets", "stats"])
+        assert "No datasets found." in result.stdout
+
+    def test_stats_filter_by_source_type(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "stats", "--source-type", "cmip6"])
+        assert "cmip6" in result.stdout
+
+    def test_stats_filter_no_results(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "stats", "--source-type", "pmp-climatology"])
+        assert "No datasets found." in result.stdout
+
+    def test_stats_group_by(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "stats", "--source-type", "cmip6", "--group-by", "source_id"])
+        assert "source_id" in result.stdout
+        # db_seeded has ACCESS-ESM1-5 datasets
+        assert "ACCESS-ESM1-5" in result.stdout
+
+    def test_stats_group_by_variable_id(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "stats", "--source-type", "cmip6", "--group-by", "variable_id"])
+        assert "variable_id" in result.stdout
+
+    def test_stats_group_by_requires_source_type(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "stats", "--group-by", "source_id"], expected_exit_code=1)
+        assert "--group-by requires --source-type" in result.stderr
+
+    def test_stats_group_by_invalid_column(self, db_seeded, invoke_cli):
+        result = invoke_cli(
+            ["datasets", "stats", "--source-type", "cmip6", "--group-by", "experiment_id"],
+            expected_exit_code=1,
+        )
+        assert "Invalid --group-by value" in result.stderr
+        assert "source_id, variable_id" in result.stderr
+
+
 class TestDatasetsListColumns:
     def test_list_columns(self, db_seeded, invoke_cli):
         result = invoke_cli(["datasets", "list-columns"])

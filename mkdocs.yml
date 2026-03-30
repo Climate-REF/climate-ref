@@ -23,12 +23,12 @@ nav:
       - ESMValTool: diagnostics/esmvaltool.md
       - PMP: diagnostics/pmp.md
       - ILAMB: diagnostics/ilamb.md
-  - Roadmap: roadmap.md
   - How-to guides:
       - how-to-guides/index.md
       - how-to-guides/using-pre-computed-results.py
       - how-to-guides/executors.md
       - how-to-guides/hpc_executor.md
+      - how-to-guides/control-memory-use.md
       - how-to-guides/dataset-selection.py
       - how-to-guides/ingest-datasets.md
       - how-to-guides/running-diagnostics-locally.py
@@ -42,6 +42,7 @@ nav:
       - Datasets: background/datasets.md
       - API Surface: api-surface.md
       - Versioning and Compatibility: versioning-and-compatibility.md
+      - Quality Assurance: background/quality-assurance.md
   - CLI: cli.md
   - API: api/
   - Development: development.md

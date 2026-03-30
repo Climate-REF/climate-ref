@@ -17,7 +17,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
-from sqlalchemy import or_
+from sqlalchemy import case, func, or_
 
 from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
 from climate_ref.config import Config
@@ -626,6 +626,119 @@ def fail_running(
         f"[green]Successfully marked {len(running_executions)} execution(s) as failed "
         f"and flagged their execution groups as dirty."
     )
+
+
+@app.command()
+def stats(
+    ctx: typer.Context,
+    diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by diagnostic slug (substring match, case-insensitive)."
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by provider slug (substring match, case-insensitive)."
+            "Multiple values can be provided."
+        ),
+    ] = None,
+) -> None:
+    """
+    Show summary statistics for execution groups.
+
+    Displays counts of executions grouped by provider, broken down by status
+    (running, failed, successful, not started, dirty).
+    """
+    import pandas as pd
+
+    session = ctx.obj.database.session
+    console = ctx.obj.console
+
+    # Subquery to get the latest execution per execution group
+    latest_exec_subquery = (
+        session.query(
+            Execution.execution_group_id,
+            func.max(Execution.created_at).label("latest_created_at"),
+        )
+        .group_by(Execution.execution_group_id)
+        .subquery()
+    )
+
+    # Build query: join ExecutionGroup -> Diagnostic -> Provider, and optionally latest Execution
+    query = (
+        session.query(
+            Provider.slug.label("provider"),
+            Diagnostic.slug.label("diagnostic"),
+            func.count().label("total"),
+            func.sum(
+                case(
+                    (Execution.successful.is_(None) & Execution.id.isnot(None), 1),
+                    else_=0,
+                )
+            ).label("running"),
+            func.sum(case((Execution.successful.is_(False), 1), else_=0)).label("failed"),
+            func.sum(case((Execution.successful.is_(True), 1), else_=0)).label("successful"),
+            func.sum(case((Execution.id.is_(None), 1), else_=0)).label("not_started"),
+            func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
+        )
+        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+        .join(Provider, Diagnostic.provider_id == Provider.id)
+        .outerjoin(latest_exec_subquery, ExecutionGroup.id == latest_exec_subquery.c.execution_group_id)
+        .outerjoin(
+            Execution,
+            (Execution.execution_group_id == ExecutionGroup.id)
+            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
+        )
+        .group_by(Provider.slug, Diagnostic.slug)
+        .order_by(Provider.slug, Diagnostic.slug)
+    )
+
+    # Apply diagnostic filter
+    if diagnostic:
+        diagnostic_conditions = [
+            Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic
+        ]
+        query = query.filter(or_(*diagnostic_conditions))
+
+    # Apply provider filter
+    if provider:
+        provider_conditions = [Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider]
+        query = query.filter(or_(*provider_conditions))
+
+    results = query.all()
+
+    if not results:
+        console.print("No execution groups found.")
+        return
+
+    rows = [
+        {
+            "provider": row.provider,
+            "diagnostic": row.diagnostic,
+            "running": row.running,
+            "failed": row.failed,
+            "successful": row.successful,
+            "not_started": row.not_started,
+            "dirty": row.dirty,
+            "total": row.total,
+        }
+        for row in results
+    ]
+
+    results_df = pd.DataFrame(rows)
+
+    # Add provider totals
+    status_cols = ["running", "failed", "successful", "not_started", "dirty", "total"]
+    totals = results_df.groupby("provider")[status_cols].sum().reset_index()
+    totals["diagnostic"] = "(total)"
+
+    results_df = pd.concat([results_df, totals], ignore_index=True)
+    results_df = results_df.sort_values(["provider", "diagnostic"]).reset_index(drop=True)
+
+    pretty_print_df(results_df, console=console)
 
 
 @app.command()

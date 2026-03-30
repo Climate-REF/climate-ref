@@ -55,6 +55,10 @@ class ZeroEmissionCommitment(ESMValToolDiagnostic):
                 group_by=("source_id", "member_id", "grid_label"),
                 constraints=(
                     AddParentDataset.from_defaults(SourceDatasetType.CMIP6),
+                    # The ZEC diagnostic requires the parent experiment to be
+                    # "1pctCO2". Some models have "esm-1pctCO2" as parent
+                    # which is not accepted by the ESMValTool ZEC script.
+                    RequireFacets("experiment_id", ("1pctCO2",)),
                     RequireContiguousTimerange(group_by=("instance_id",)),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                 ),

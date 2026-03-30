@@ -2,6 +2,7 @@ import shutil
 
 import pytest
 from climate_ref_pmp.diagnostics import ExtratropicalModesOfVariability
+from climate_ref_pmp.diagnostics.variability_modes import get_wildcard_pattern
 from climate_ref_pmp.pmp_driver import _get_resource
 
 from climate_ref.solver import solve_executions
@@ -107,3 +108,69 @@ def test_mode_id_invalid():
     with pytest.raises(ValueError) as excinfo:
         ExtratropicalModesOfVariability("INVALID")
     assert "Unknown mode_id 'INVALID'" in str(excinfo.value)
+
+
+class TestGetWildcardPattern:
+    """Tests for the get_wildcard_pattern utility function."""
+
+    @pytest.mark.parametrize(
+        ("paths", "expected"),
+        [
+            ([], ""),
+            (["/test/file_1.txt"], "/test/file_1.txt"),
+            (["/test/data.csv", "/test/data.csv", "/test/data.csv"], "/test/data.csv"),
+            (["data.csv", "data.csv"], "data.csv"),
+            (["/test/file_1.txt", "/test/file_2.txt"], "/test/file_*.txt"),
+            (["/test/file_1.txt", "/test/file_2.txt", "/test/file_3.txt"], "/test/file_*.txt"),
+            (["abc", "axc"], "a*c"),
+            (
+                [
+                    "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200412.nc",
+                    "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-200912.nc",
+                    "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201001-201412.nc",
+                ],
+                "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_20*12.nc",
+            ),
+        ],
+    )
+    def test_exact_output(self, paths, expected):
+        assert get_wildcard_pattern(paths) == expected
+
+    def test_single_string_not_list_returns_unchanged(self):
+        assert get_wildcard_pattern("/test/file_1.txt") == "/test/file_1.txt"
+
+    @pytest.mark.parametrize(
+        ("paths", "starts_with", "ends_with"),
+        [
+            (["/a/short.nc", "/a/much_longer_name.nc"], "/a/", ".nc"),
+            (["/data/output_a.nc", "/data/output_b.csv"], "/data/output_", None),
+            (["xy", "xz"], "x", None),
+            (
+                [
+                    "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200001-200412.nc",
+                    "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_200501-200912.nc",
+                    "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_201001-201412.nc",
+                ],
+                "/data/cmip6/ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_",
+                ".nc",
+            ),
+        ],
+    )
+    def test_pattern_shape(self, paths, starts_with, ends_with):
+        result = get_wildcard_pattern(paths)
+        assert "*" in result
+        if starts_with is not None:
+            assert result.startswith(starts_with)
+        if ends_with is not None:
+            assert result.endswith(ends_with)
+
+    @pytest.mark.parametrize(
+        "paths",
+        [
+            ["abc", "xyz"],
+            ["alpha_result.json", "beta_result.json"],
+        ],
+    )
+    def test_raises_when_no_common_prefix(self, paths):
+        with pytest.raises(ValueError, match="No common prefix found"):
+            get_wildcard_pattern(paths)

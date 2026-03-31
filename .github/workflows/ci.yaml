@@ -55,7 +55,7 @@ jobs:
           uv run coverage report
           uv run coverage xml
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           flags: core
         env:
@@ -101,7 +101,7 @@ jobs:
           uv run coverage report
           uv run coverage xml
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           flags: providers
         env:
@@ -188,7 +188,7 @@ jobs:
       - name: Check out repository
         uses: actions/checkout@v6
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@v4
       - name: Set up Docker Compose
         uses: docker/setup-compose-action@v2
       - uses: ./.github/actions/setup

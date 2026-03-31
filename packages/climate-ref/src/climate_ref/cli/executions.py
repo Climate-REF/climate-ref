@@ -817,7 +817,6 @@ def reingest(  # noqa: PLR0913
     db = ctx.obj.database
     console = ctx.obj.console
 
-    # Require at least one filter to prevent accidental full reingest
     if not any([group_ids, provider, diagnostic]):
         logger.error(
             "At least one filter is required (group IDs, --provider, or --diagnostic). "
@@ -825,10 +824,8 @@ def reingest(  # noqa: PLR0913
         )
         raise typer.Exit(code=1)
 
-    # Build provider registry
     provider_registry = ProviderRegistry.build_from_config(config, db)
 
-    # Query eligible executions
     results = get_executions_for_reingest(
         db,
         execution_group_ids=group_ids,
@@ -841,7 +838,6 @@ def reingest(  # noqa: PLR0913
         console.print("No executions found matching the specified criteria.")
         return
 
-    # Build preview table
     preview_df = pd.DataFrame(
         [
             {
@@ -861,7 +857,6 @@ def reingest(  # noqa: PLR0913
         pretty_print_df(preview_df, console=console)
         return
 
-    # Show preview and confirm
     console.print(f"Will reingest {len(results)} execution(s) in [bold]{mode.value}[/] mode:")
     pretty_print_df(preview_df, console=console)
 
@@ -870,7 +865,8 @@ def reingest(  # noqa: PLR0913
             console.print("Reingest cancelled.")
             return
 
-    # Process each execution
+    # Process each execution in a separate session
+    # This rolls back any failures
     success_count = 0
     skip_count = 0
     for eg, ex in results:

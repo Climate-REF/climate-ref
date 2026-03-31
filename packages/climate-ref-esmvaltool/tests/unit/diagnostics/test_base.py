@@ -7,6 +7,7 @@ import pytest
 import xarray as xr
 import yaml
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
+from climate_ref_esmvaltool.diagnostics.regional_historical_changes import _region_to_filename
 from climate_ref_esmvaltool.types import Recipe
 
 from climate_ref_core.datasets import SourceDatasetType
@@ -147,6 +148,67 @@ def test_series_extraction(tmp_path, metric_definition, mock_diagnostic, mocker)
     assert s.attributes["long_name"] == "Test Data"
     assert s.attributes["units"] == "K"
     assert s.attributes["caption"] == "Test caption."
+
+
+def test_series_extraction_byte_string_index(tmp_path, metric_definition, mock_diagnostic, mocker):
+    """Test that byte string coordinates in NetCDF files are decoded to regular strings."""
+    metric_definition.diagnostic.series = [
+        SeriesDefinition(
+            file_pattern="work/trends/script1/file0.nc",
+            attributes=[],
+            dimensions={"variable_id": "tas", "statistic": "trend"},
+            sel={},
+            values_name="tas",
+            index_name="shape_id",
+        )
+    ]
+
+    results_dir = metric_definition.to_output_path("executions") / "recipe_test"
+    nc_path = results_dir / "work" / "trends" / "script1" / "file0.nc"
+    nc_path.parent.mkdir(parents=True, exist_ok=True)
+
+    # Create a NetCDF file with byte string coordinates (as ESMValTool produces)
+    shape_ids = np.array([b"ARP", b"CAF", b"MED"], dtype="|S3")
+    data = np.array([0.05, 0.03, 0.07], dtype=np.float32)
+    ds = xr.Dataset(
+        {"tas": ("dim0", data)},
+        coords={"shape_id": ("dim0", shape_ids)},
+    )
+    ds["tas"].attrs["long_name"] = "tas"
+    ds["tas"].attrs["units"] = "K yr-1"
+    ds["shape_id"].attrs["long_name"] = "shape_id"
+    ds.to_netcdf(nc_path)
+
+    metadata_file = results_dir / "run" / "trends" / "script1" / "diagnostic_provenance.yml"
+    metadata_file.parent.mkdir(parents=True, exist_ok=True)
+    metadata = {str(nc_path): {"caption": "Trend barplot."}}
+    with metadata_file.open("w", encoding="utf-8") as file:
+        yaml.dump(metadata, file)
+
+    result = mock_diagnostic.build_execution_result(definition=metric_definition)
+
+    loaded_series = SeriesMetricValueType.load_from_json(result.to_output_path(result.series_filename))
+    assert loaded_series, "Series should not be empty"
+    s = loaded_series[0]
+    assert s.index == ["ARP", "CAF", "MED"], "Byte strings should be decoded to regular strings"
+    assert s.index_name == "shape_id"
+    assert s.dimensions == {"variable_id": "tas", "statistic": "trend"}
+    assert len(s.values) == 3
+
+
+@pytest.mark.parametrize(
+    "region,expected",
+    [
+        ("Arabian-Peninsula", "Arabian-Peninsula"),
+        ("C.Australia", "C-Australia"),
+        ("Greenland/Iceland", "Greenland-Iceland"),
+        ("West&Central-Europe", "West-Central-Europe"),
+        ("N.E.North-America", "N-E-North-America"),
+    ],
+)
+def test_region_to_filename(region, expected):
+    """Test that region names are correctly converted to filename format."""
+    assert _region_to_filename(region) == expected
 
 
 def test_series_validation_failure(tmp_path, metric_definition, mock_diagnostic, mocker):

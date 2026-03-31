@@ -230,85 +230,6 @@ def _handle_reingest_outputs(
         )
 
 
-def _process_reingest_series(
-    database: "Database",
-    result: ExecutionResult,
-    execution: Execution,
-    cv: CV,
-) -> None:
-    """
-    Process series values for reingest.
-
-    Like ``_process_execution_series`` but skips the file copy since the series
-    file is already in the results directory. Unlike the normal ingestion path,
-    errors are raised rather than swallowed so that the caller can roll back.
-    """
-    assert result.series_filename, "Series filename must be set in the result"
-
-    # Load the series values directly from the results directory
-    series_values_path = result.to_output_path(result.series_filename)
-    series_values = TSeries.load_from_json(series_values_path)
-
-    try:
-        cv.validate_metrics(series_values)
-    except (ResultValidationError, AssertionError):
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-
-    series_values_content = [
-        {
-            "execution_id": execution.id,
-            "values": series_result.values,
-            "attributes": series_result.attributes,
-            "index": series_result.index,
-            "index_name": series_result.index_name,
-            **series_result.dimensions,
-        }
-        for series_result in series_values
-    ]
-    logger.debug(f"Ingesting {len(series_values)} series values for execution {execution.id}")
-    if series_values:
-        database.session.execute(
-            insert(SeriesMetricValue),
-            series_values_content,
-        )
-
-
-def _process_reingest_scalar(
-    database: "Database",
-    result: ExecutionResult,
-    execution: Execution,
-    cv: CV,
-) -> None:
-    """
-    Process scalar values for reingest.
-
-    Like ``_process_execution_scalar`` but raises on insertion errors
-    so the caller can roll back.
-    """
-    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-
-    try:
-        cv.validate_metrics(cmec_metric_bundle)
-    except (ResultValidationError, AssertionError):
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-
-    scalar_values = [
-        {
-            "execution_id": execution.id,
-            "value": metric_result.value,
-            "attributes": metric_result.attributes,
-            **metric_result.dimensions,
-        }
-        for metric_result in cmec_metric_bundle.iter_results()
-    ]
-    logger.debug(f"Ingesting {len(scalar_values)} scalar values for execution {execution.id}")
-    if scalar_values:
-        database.session.execute(
-            insert(ScalarMetricValue),
-            scalar_values,
-        )
-
-
 def _get_existing_metric_dimensions(
     database: "Database", execution: Execution
 ) -> set[tuple[tuple[str, str], ...]]:
@@ -325,60 +246,19 @@ def _get_existing_metric_dimensions(
     return sigs
 
 
-def _process_reingest_scalar_additive(
+def _process_reingest_series(
     database: "Database",
     result: ExecutionResult,
     execution: Execution,
     cv: CV,
+    *,
+    existing: set[tuple[tuple[str, str], ...]] | None = None,
 ) -> None:
     """
-    Process scalar values for additive reingest.
+    Process series values for reingest.
 
-    Only inserts values whose dimension signatures are not already present
-    for this execution.
-    """
-    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-
-    try:
-        cv.validate_metrics(cmec_metric_bundle)
-    except (ResultValidationError, AssertionError):
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-
-    existing = _get_existing_metric_dimensions(database, execution)
-
-    new_values = []
-    for metric_result in cmec_metric_bundle.iter_results():
-        dims = tuple(sorted(metric_result.dimensions.items()))
-        if dims not in existing:
-            new_values.append(
-                {
-                    "execution_id": execution.id,
-                    "value": metric_result.value,
-                    "attributes": metric_result.attributes,
-                    **metric_result.dimensions,
-                }
-            )
-
-    logger.debug(
-        f"Additive: {len(new_values)} new scalar values "
-        f"(skipped {len(list(cmec_metric_bundle.iter_results())) - len(new_values)} existing) "
-        f"for execution {execution.id}"
-    )
-    if new_values:
-        database.session.execute(insert(ScalarMetricValue), new_values)
-
-
-def _process_reingest_series_additive(
-    database: "Database",
-    result: ExecutionResult,
-    execution: Execution,
-    cv: CV,
-) -> None:
-    """
-    Process series values for additive reingest.
-
-    Only inserts series whose dimension signatures are not already present
-    for this execution.
+    When ``existing`` is provided, only inserts series whose dimension
+    signatures are not already present (additive mode).
     """
     assert result.series_filename, "Series filename must be set in the result"
 
@@ -390,30 +270,85 @@ def _process_reingest_series_additive(
     except (ResultValidationError, AssertionError):
         logger.exception("Diagnostic values do not conform with the controlled vocabulary")
 
-    existing = _get_existing_metric_dimensions(database, execution)
-
     new_values = []
     for series_result in series_values:
-        dims = tuple(sorted(series_result.dimensions.items()))
-        if dims not in existing:
-            new_values.append(
-                {
-                    "execution_id": execution.id,
-                    "values": series_result.values,
-                    "attributes": series_result.attributes,
-                    "index": series_result.index,
-                    "index_name": series_result.index_name,
-                    **series_result.dimensions,
-                }
-            )
+        if existing is not None:
+            dims = tuple(sorted(series_result.dimensions.items()))
+            if dims in existing:
+                continue
+        new_values.append(
+            {
+                "execution_id": execution.id,
+                "values": series_result.values,
+                "attributes": series_result.attributes,
+                "index": series_result.index,
+                "index_name": series_result.index_name,
+                **series_result.dimensions,
+            }
+        )
 
-    logger.debug(
-        f"Additive: {len(new_values)} new series values "
-        f"(skipped {len(series_values) - len(new_values)} existing) "
-        f"for execution {execution.id}"
-    )
+    skipped = len(series_values) - len(new_values)
+    if existing is not None:
+        logger.debug(
+            f"Additive: {len(new_values)} new series values "
+            f"(skipped {skipped} existing) for execution {execution.id}"
+        )
+    else:
+        logger.debug(f"Ingesting {len(new_values)} series values for execution {execution.id}")
+
     if new_values:
         database.session.execute(insert(SeriesMetricValue), new_values)
+
+
+def _process_reingest_scalar(
+    database: "Database",
+    result: ExecutionResult,
+    execution: Execution,
+    cv: CV,
+    *,
+    existing: set[tuple[tuple[str, str], ...]] | None = None,
+) -> None:
+    """
+    Process scalar values for reingest.
+
+    When ``existing`` is provided, only inserts values whose dimension
+    signatures are not already present (additive mode).
+    """
+    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
+
+    try:
+        cv.validate_metrics(cmec_metric_bundle)
+    except (ResultValidationError, AssertionError):
+        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
+
+    new_values = []
+    total_count = 0
+    for metric_result in cmec_metric_bundle.iter_results():
+        total_count += 1
+        if existing is not None:
+            dims = tuple(sorted(metric_result.dimensions.items()))
+            if dims in existing:
+                continue
+        new_values.append(
+            {
+                "execution_id": execution.id,
+                "value": metric_result.value,
+                "attributes": metric_result.attributes,
+                **metric_result.dimensions,
+            }
+        )
+
+    skipped = total_count - len(new_values)
+    if existing is not None:
+        logger.debug(
+            f"Additive: {len(new_values)} new scalar values "
+            f"(skipped {skipped} existing) for execution {execution.id}"
+        )
+    else:
+        logger.debug(f"Ingesting {len(new_values)} scalar values for execution {execution.id}")
+
+    if new_values:
+        database.session.execute(insert(ScalarMetricValue), new_values)
 
 
 def _copy_results_to_scratch(
@@ -516,16 +451,14 @@ def _ingest_metrics(
     additive: bool,
 ) -> None:
     """Ingest scalar and series metric values, using additive dedup when requested."""
-    if result.series_filename:
-        if additive:
-            _process_reingest_series_additive(database=database, result=result, execution=execution, cv=cv)
-        else:
-            _process_reingest_series(database=database, result=result, execution=execution, cv=cv)
+    existing = _get_existing_metric_dimensions(database, execution) if additive else None
 
-    if additive:
-        _process_reingest_scalar_additive(database=database, result=result, execution=execution, cv=cv)
-    else:
-        _process_reingest_scalar(database=database, result=result, execution=execution, cv=cv)
+    if result.series_filename:
+        _process_reingest_series(
+            database=database, result=result, execution=execution, cv=cv, existing=existing
+        )
+
+    _process_reingest_scalar(database=database, result=result, execution=execution, cv=cv, existing=existing)
 
 
 def _copy_scratch_to_results(
@@ -601,53 +534,52 @@ def reingest_execution(
     # If anything fails, the original files remain untouched.
     scratch_dir = _copy_results_to_scratch(config, execution.output_fragment)
 
-    # Reconstruct the definition pointing at the scratch copy
-    definition = reconstruct_execution_definition(config, execution, diagnostic)
-
-    # Re-run build_execution_result on the scratch copy
     try:
-        result = diagnostic.build_execution_result(definition)
-    except Exception:
-        logger.exception(
-            f"build_execution_result failed for execution {execution.id} "
-            f"({provider_slug}/{diagnostic_slug}). Skipping."
+        definition = reconstruct_execution_definition(config, execution, diagnostic)
+
+        try:
+            result = diagnostic.build_execution_result(definition)
+        except Exception:
+            logger.exception(
+                f"build_execution_result failed for execution {execution.id} "
+                f"({provider_slug}/{diagnostic_slug}). Skipping."
+            )
+            return False
+
+        if not result.successful or result.metric_bundle_filename is None:
+            logger.warning(
+                f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
+            )
+            return False
+
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        try:
+            target_execution = _apply_reingest_mode(
+                config=config,
+                database=database,
+                execution=execution,
+                result=result,
+                mode=mode,
+                cv=cv,
+            )
+        except Exception:
+            logger.exception(
+                f"Ingestion failed for execution {execution.id} "
+                f"({provider_slug}/{diagnostic_slug}). Rolling back changes."
+            )
+            return False
+
+        _copy_scratch_to_results(config, scratch_dir, target_execution, mode, results_dir)
+
+        logger.info(
+            f"Successfully reingested execution {execution.id} "
+            f"({provider_slug}/{diagnostic_slug}) in {mode.value} mode"
         )
-        return False
-
-    if not result.successful or result.metric_bundle_filename is None:
-        logger.warning(
-            f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
-        )
-        return False
-
-    cv = CV.load_from_file(config.paths.dimensions_cv)
-
-    # All mode-specific mutations happen inside a single savepoint so that
-    # any failure rolls back everything, preserving the original DB state.
-    try:
-        target_execution = _apply_reingest_mode(
-            config=config,
-            database=database,
-            execution=execution,
-            result=result,
-            mode=mode,
-            cv=cv,
-        )
-    except Exception:
-        logger.exception(
-            f"Ingestion failed for execution {execution.id} "
-            f"({provider_slug}/{diagnostic_slug}). Rolling back changes."
-        )
-        return False
-
-    # DB transaction succeeded -- copy files from scratch to the results tree.
-    _copy_scratch_to_results(config, scratch_dir, target_execution, mode, results_dir)
-
-    logger.info(
-        f"Successfully reingested execution {execution.id} "
-        f"({provider_slug}/{diagnostic_slug}) in {mode.value} mode"
-    )
-    return True
+        return True
+    finally:
+        if scratch_dir.exists():
+            shutil.rmtree(scratch_dir)
 
 
 def get_executions_for_reingest(

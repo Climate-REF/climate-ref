@@ -875,10 +875,6 @@ def reingest(  # noqa: PLR0913
     skip_count = 0
     for eg, ex in results:
         with db.session.begin():
-            # Safety net: reingest_execution does not modify dirty, but we
-            # save/restore as a guard against future regressions.
-            dirty_before = eg.dirty
-
             ok = reingest_execution(
                 config=config,
                 database=db,
@@ -886,9 +882,6 @@ def reingest(  # noqa: PLR0913
                 provider_registry=provider_registry,
                 mode=mode,
             )
-
-            # Restore dirty flag (reingest must not modify it)
-            eg.dirty = dirty_before
 
             if ok:
                 success_count += 1

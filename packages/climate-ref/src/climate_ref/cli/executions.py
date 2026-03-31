@@ -21,6 +21,7 @@ from sqlalchemy import case, func, or_
 
 from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
 from climate_ref.config import Config
+from climate_ref.executor.reingest import ReingestMode
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
@@ -739,6 +740,162 @@ def stats(
     results_df = results_df.sort_values(["provider", "diagnostic"]).reset_index(drop=True)
 
     pretty_print_df(results_df, console=console)
+
+
+@app.command()
+def reingest(  # noqa: PLR0913
+    ctx: typer.Context,
+    group_ids: Annotated[
+        list[int] | None,
+        typer.Argument(help="Execution group IDs to reingest. If omitted, uses filters."),
+    ] = None,
+    mode: Annotated[
+        ReingestMode,
+        typer.Option(
+            help="Reingest mode: 'additive' (keep existing, add new), "
+            "'replace' (delete existing, re-ingest), "
+            "'versioned' (create new execution record)."
+        ),
+    ] = ReingestMode.additive,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by provider slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by diagnostic slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    include_failed: Annotated[
+        bool,
+        typer.Option(
+            "--include-failed",
+            help="Also attempt reingest on failed executions.",
+        ),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Show what would be reingested without making changes.",
+        ),
+    ] = False,
+    force: bool = typer.Option(False, help="Skip confirmation prompt"),
+) -> None:
+    """
+    Reingest existing executions without re-running diagnostics.
+
+    Re-runs build_execution_result() on existing output files and re-ingests
+    the results into the database. Useful when new series definitions or
+    metadata extraction logic has been added.
+
+    Three modes are available:
+
+    - additive: Keep existing metric values, add any new ones. Outputs are replaced.
+
+    - replace: Delete all existing metric values and outputs, then re-ingest from scratch.
+
+    - versioned: Create a new Execution record under the same ExecutionGroup,
+      leaving the original execution untouched.
+
+    The dirty flag is never modified by this command.
+    """
+    import pandas as pd
+
+    from climate_ref.executor.reingest import (
+        get_executions_for_reingest,
+        reingest_execution,
+    )
+    from climate_ref.provider_registry import ProviderRegistry
+
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console = ctx.obj.console
+
+    # Require at least one filter to prevent accidental full reingest
+    if not any([group_ids, provider, diagnostic]):
+        logger.error(
+            "At least one filter is required (group IDs, --provider, or --diagnostic). "
+            "This prevents accidental reingest of all executions."
+        )
+        raise typer.Exit(code=1)
+
+    # Build provider registry
+    provider_registry = ProviderRegistry.build_from_config(config, db)
+
+    # Query eligible executions
+    results = get_executions_for_reingest(
+        db,
+        execution_group_ids=group_ids,
+        provider_filters=provider,
+        diagnostic_filters=diagnostic,
+        include_failed=include_failed,
+    )
+
+    if not results:
+        console.print("No executions found matching the specified criteria.")
+        return
+
+    # Build preview table
+    preview_df = pd.DataFrame(
+        [
+            {
+                "group_id": eg.id,
+                "execution_id": ex.id,
+                "provider": eg.diagnostic.provider.slug,
+                "diagnostic": eg.diagnostic.slug,
+                "key": eg.key,
+                "successful": ex.successful,
+            }
+            for eg, ex in results
+        ]
+    )
+
+    if dry_run:
+        console.print(f"[bold]Dry run:[/] would reingest {len(results)} execution(s) in {mode.value} mode:")
+        pretty_print_df(preview_df, console=console)
+        return
+
+    # Show preview and confirm
+    console.print(f"Will reingest {len(results)} execution(s) in [bold]{mode.value}[/] mode:")
+    pretty_print_df(preview_df, console=console)
+
+    if not force:
+        if not typer.confirm("\nProceed with reingest?"):
+            console.print("Reingest cancelled.")
+            return
+
+    # Process each execution
+    success_count = 0
+    skip_count = 0
+    for eg, ex in results:
+        with db.session.begin():
+            # Safety net: reingest_execution does not modify dirty, but we
+            # save/restore as a guard against future regressions.
+            dirty_before = eg.dirty
+
+            ok = reingest_execution(
+                config=config,
+                database=db,
+                execution=ex,
+                provider_registry=provider_registry,
+                mode=mode,
+            )
+
+            # Restore dirty flag (reingest must not modify it)
+            eg.dirty = dirty_before
+
+            if ok:
+                success_count += 1
+            else:
+                skip_count += 1
+
+    console.print(f"\n[green]Reingest complete:[/] {success_count} succeeded, {skip_count} skipped.")
 
 
 @app.command()

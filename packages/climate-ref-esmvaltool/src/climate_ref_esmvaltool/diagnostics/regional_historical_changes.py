@@ -21,6 +21,28 @@ from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillva
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
+ANNUAL_CYCLE_DIAGNOSTICS = (
+    ("hus", "specific_humidity_annual_cycle"),
+    ("pr", "precipitation_annual_cycle"),
+    ("psl", "sea_level_pressure_annual_cycle"),
+    ("tas", "near-surface_air_temperature_annual_cycle"),
+    ("ua", "eastward_wind_annual_cycle"),
+)
+
+TIMESERIES_DIAGNOSTICS = (
+    ("hus", "specific_humidity"),
+    ("pr", "precipitation"),
+    ("psl", "sea_level_pressure"),
+    ("tas", "near-surface_air_temperature"),
+    ("ua", "eastward_wind"),
+)
+
+
+def _region_to_filename(region: str) -> str:
+    """Convert a region name to the format used in ESMValTool output filenames."""
+    return region.replace(".", "-").replace("/", "-").replace("&", "-")
+
+
 REGIONS = (
     "Arabian-Peninsula",
     "Arabian-Sea",
@@ -259,32 +281,30 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     facets = ()
     files = tuple(
         FileDefinition(
-            file_pattern=f"plots/anncyc-{region}/allplots/*_{var_name}_*.png",
+            file_pattern=f"plots/{diag_name}/figures/annual_cycle_*_{_region_to_filename(region)}.png",
             dimensions={
                 "region": region,
                 "variable_id": var_name,
                 "statistic": "mean",
             },
         )
-        for var_name in variables
+        for var_name, diag_name in ANNUAL_CYCLE_DIAGNOSTICS
         for region in REGIONS
     )
     series = tuple(
         SeriesDefinition(
-            file_pattern=f"anncyc-{region}/allplots/*_{var_name}_*.nc",
+            file_pattern=f"work/{diag_name}/figures/annual_cycle_*_{_region_to_filename(region)}.nc",
             sel={"dim0": 0},  # Select the model and not the observation.
-            dimensions=(
-                {
-                    "region": region,
-                    "variable_id": var_name,
-                    "statistic": "mean",
-                }
-            ),
+            dimensions={
+                "region": region,
+                "variable_id": var_name,
+                "statistic": "mean",
+            },
             values_name=var_name,
             index_name="month_number",
             attributes=[],
         )
-        for var_name in variables
+        for var_name, diag_name in ANNUAL_CYCLE_DIAGNOSTICS
         for region in REGIONS
     )
 
@@ -531,35 +551,61 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
 
     files = tuple(
         FileDefinition(
-            file_pattern=f"plots/{diagnostic}-{region}/allplots/*_{var_name}_*.png",
+            file_pattern=(f"plots/{diag_name}/figures/timeseries_*_{_region_to_filename(region)}.png"),
             dimensions={
                 "region": region,
                 "variable_id": var_name,
-                "statistic": ("mean" if diagnostic == "timeseries_abs" else "mean anomaly"),
+                "statistic": "mean",
             },
         )
-        for var_name in variables
+        for var_name, diag_name in TIMESERIES_DIAGNOSTICS
         for region in REGIONS
-        for diagnostic in ["timeseries_abs", "timeseries"]
+    ) + tuple(
+        FileDefinition(
+            file_pattern=(
+                f"plots/{diag_name}_anomalies/figures/timeseries_*_{_region_to_filename(region)}.png"
+            ),
+            dimensions={
+                "region": region,
+                "variable_id": var_name,
+                "statistic": "mean anomaly",
+            },
+        )
+        for var_name, diag_name in TIMESERIES_DIAGNOSTICS
+        for region in REGIONS
     )
     series = tuple(
         SeriesDefinition(
-            file_pattern=f"{diagnostic}-{region}/allplots/*_{var_name}_*.nc",
+            file_pattern=(f"work/{diag_name}/figures/timeseries_*_{_region_to_filename(region)}.nc"),
             sel={"dim0": 0},
-            dimensions=(
-                {
-                    "region": region,
-                    "variable_id": var_name,
-                    "statistic": ("mean" if diagnostic == "timeseries_abs" else "mean anomaly"),
-                }
-            ),
+            dimensions={
+                "region": region,
+                "variable_id": var_name,
+                "statistic": "mean",
+            },
             values_name=var_name,
             index_name="time",
             attributes=[],
         )
-        for var_name in variables
+        for var_name, diag_name in TIMESERIES_DIAGNOSTICS
         for region in REGIONS
-        for diagnostic in ["timeseries_abs", "timeseries"]
+    ) + tuple(
+        SeriesDefinition(
+            file_pattern=(
+                f"work/{diag_name}_anomalies/figures/timeseries_*_{_region_to_filename(region)}.nc"
+            ),
+            sel={"dim0": 0},
+            dimensions={
+                "region": region,
+                "variable_id": var_name,
+                "statistic": "mean anomaly",
+            },
+            values_name=var_name,
+            index_name="time",
+            attributes=[],
+        )
+        for var_name, diag_name in TIMESERIES_DIAGNOSTICS
+        for region in REGIONS
     )
 
 

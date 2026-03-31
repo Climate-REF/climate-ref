@@ -411,6 +411,9 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                 if hasattr(index[0], "isoformat"):
                     # Convert time objects to strings.
                     index = [v.isoformat() for v in index]
+                elif isinstance(index[0], bytes):
+                    # Convert byte strings from NetCDF to regular strings.
+                    index = [v.decode().strip() for v in index]
 
                 series.append(
                     SeriesMetricValue(

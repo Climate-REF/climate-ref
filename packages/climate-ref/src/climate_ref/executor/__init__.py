@@ -18,15 +18,12 @@ except InvalidExecutorException as exc:
     HPCExecutor = exc  # type: ignore
 
 from .local import LocalExecutor
-from .reingest import ReingestMode, reingest_execution
 from .result_handling import handle_execution_result
 from .synchronous import SynchronousExecutor
 
 __all__ = [
     "HPCExecutor",
     "LocalExecutor",
-    "ReingestMode",
     "SynchronousExecutor",
     "handle_execution_result",
-    "reingest_execution",
 ]

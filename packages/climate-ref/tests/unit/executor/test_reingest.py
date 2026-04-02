@@ -89,25 +89,32 @@ def mock_provider_registry(provider):
     return ProviderRegistry(providers=[provider])
 
 
+SAMPLE_SERIES = [
+    TSeries(
+        dimensions={"source_id": "test-model"},
+        values=[1.0, 2.0, 3.0],
+        index=[0, 1, 2],
+        index_name="time",
+        attributes={"units": "K"},
+    )
+]
+
+
+def _create_results_dir(config, execution):
+    """Create and return the results directory for an execution."""
+    results_dir = config.paths.results / execution.output_fragment
+    results_dir.mkdir(parents=True, exist_ok=True)
+    return results_dir
+
+
 @pytest.fixture
 def output_dir_with_results(config, reingest_execution_obj):
     """Create a results directory with empty CMEC template files."""
-    results_dir = config.paths.results / reingest_execution_obj.output_fragment
-    results_dir.mkdir(parents=True, exist_ok=True)
+    results_dir = _create_results_dir(config, reingest_execution_obj)
 
     CMECMetric(**CMECMetric.create_template()).dump_to_json(results_dir / "diagnostic.json")
     CMECOutput(**CMECOutput.create_template()).dump_to_json(results_dir / "output.json")
-
-    series_data = [
-        TSeries(
-            dimensions={"source_id": "test-model"},
-            values=[1.0, 2.0, 3.0],
-            index=[0, 1, 2],
-            index_name="time",
-            attributes={"units": "K"},
-        )
-    ]
-    TSeries.dump_to_json(results_dir / "series.json", series_data)
+    TSeries.dump_to_json(results_dir / "series.json", SAMPLE_SERIES)
 
     return results_dir
 
@@ -115,10 +122,8 @@ def output_dir_with_results(config, reingest_execution_obj):
 @pytest.fixture
 def output_dir_with_data(config, reingest_execution_obj):
     """Create a results directory with CMEC files containing actual metric/output data."""
-    results_dir = config.paths.results / reingest_execution_obj.output_fragment
-    results_dir.mkdir(parents=True, exist_ok=True)
+    results_dir = _create_results_dir(config, reingest_execution_obj)
 
-    # 2-level nesting required by MetricResults schema
     (results_dir / "diagnostic.json").write_text(
         json.dumps(
             {
@@ -147,20 +152,43 @@ def output_dir_with_data(config, reingest_execution_obj):
         )
     )
 
-    TSeries.dump_to_json(
-        results_dir / "series.json",
-        [
-            TSeries(
-                dimensions={"source_id": "test-model"},
-                values=[1.0, 2.0, 3.0],
-                index=[0, 1, 2],
-                index_name="time",
-                attributes={"units": "K"},
-            )
-        ],
-    )
+    TSeries.dump_to_json(results_dir / "series.json", SAMPLE_SERIES)
 
     return results_dir
+
+
+@pytest.fixture
+def mock_result_factory(mocker):
+    """Factory to create mock ExecutionResult objects with sensible defaults.
+
+    Accepts an output_dir and optional overrides for output_bundle_filename
+    and series_filename.
+    """
+
+    def _create(
+        output_dir,
+        *,
+        output_bundle_filename=pathlib.Path("output.json"),
+        series_filename=pathlib.Path("series.json"),
+    ):
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
+        mock_result.output_bundle_filename = output_bundle_filename
+        mock_result.series_filename = series_filename
+        mock_result.retryable = False
+        mock_result.to_output_path = lambda f: output_dir / f if f else output_dir
+        mock_result.as_relative_path = pathlib.Path
+        return mock_result
+
+    return _create
+
+
+def _patch_build_result(mocker, registry, mock_result):
+    """Patch build_execution_result on the mock diagnostic to return mock_result."""
+    diagnostic = registry.get_metric("mock_provider", "mock")
+    mocker.patch.object(diagnostic, "build_execution_result", return_value=mock_result)
+    return diagnostic
 
 
 class TestReingestMode:
@@ -214,7 +242,6 @@ class TestDeleteExecutionResults:
         """Deleting results should remove all metric values and outputs."""
         execution = reingest_execution_obj
 
-        # Add some metric values and outputs
         reingest_db.session.add(
             ScalarMetricValue(
                 execution_id=execution.id,
@@ -276,12 +303,12 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Replace mode should delete existing values and re-ingest."""
         execution = reingest_execution_obj
 
-        # Pre-populate some metric values
         reingest_db.session.add(
             ScalarMetricValue(
                 execution_id=execution.id,
@@ -294,17 +321,8 @@ class TestReingestExecution:
         old_count = reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
         assert old_count == 1
 
-        # Mock build_execution_result to return a controlled result
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = pathlib.Path("output.json")
-        mock_result.series_filename = pathlib.Path("series.json")
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(output_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         ok = reingest_execution(
             config=config,
@@ -316,7 +334,6 @@ class TestReingestExecution:
         reingest_db.session.commit()
 
         assert ok is True
-        # Old value (99.0) should be gone
         old_vals = (
             reingest_db.session.query(ScalarMetricValue)
             .filter_by(execution_id=execution.id)
@@ -333,22 +350,15 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Versioned mode should create a new Execution record."""
         original_id = reingest_execution_obj.id
         original_count = reingest_db.session.query(Execution).count()
 
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = pathlib.Path("output.json")
-        mock_result.series_filename = pathlib.Path("series.json")
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(output_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         ok = reingest_execution(
             config=config,
@@ -401,6 +411,7 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """The dirty flag should remain unchanged after reingest.
@@ -413,16 +424,10 @@ class TestReingestExecution:
         eg.dirty = True
         reingest_db.session.commit()
 
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = None
-        mock_result.series_filename = None
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(
+            output_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         reingest_execution(
             config=config,
@@ -444,12 +449,12 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Additive mode should keep pre-existing metric values untouched."""
         execution = reingest_execution_obj
 
-        # Pre-populate with a value that has a unique dimension signature
         reingest_db.session.add(
             ScalarMetricValue(
                 execution_id=execution.id,
@@ -460,16 +465,10 @@ class TestReingestExecution:
         )
         reingest_db.session.commit()
 
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = None
-        mock_result.series_filename = None
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(
+            output_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         reingest_execution(
             config=config,
@@ -497,21 +496,14 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Running additive reingest twice should not create duplicate rows."""
         execution = reingest_execution_obj
 
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = pathlib.Path("output.json")
-        mock_result.series_filename = pathlib.Path("series.json")
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(output_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # First reingest
         reingest_execution(
@@ -562,12 +554,12 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """If ingestion fails in replace mode, original data should be preserved."""
         execution = reingest_execution_obj
 
-        # Pre-populate with known values
         reingest_db.session.add(
             ScalarMetricValue(
                 execution_id=execution.id,
@@ -582,17 +574,10 @@ class TestReingestExecution:
         )
         assert original_count == 1
 
-        # Mock build_execution_result to return a result that will fail during scalar ingestion
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = None
-        mock_result.series_filename = None
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(
+            output_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # Make the scalar ingestion fail by corrupting the metric bundle
         (output_dir_with_results / "diagnostic.json").write_text("not valid json")
@@ -624,19 +609,12 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Running versioned reingest twice should create distinct output fragments."""
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = pathlib.Path("output.json")
-        mock_result.series_filename = pathlib.Path("series.json")
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(output_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # First versioned reingest
         ok1 = reingest_execution(
@@ -676,6 +654,7 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Reingest should mark a previously-failed execution as successful."""
@@ -683,16 +662,10 @@ class TestReingestExecution:
         reingest_db.session.commit()
         assert reingest_execution_obj.successful is False
 
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = None
-        mock_result.series_filename = None
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(
+            output_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         ok = reingest_execution(
             config=config,
@@ -714,19 +687,14 @@ class TestReingestExecution:
         reingest_execution_obj,
         mock_provider_registry,
         output_dir_with_results,
+        mock_result_factory,
         mocker,
     ):
         """Scratch directory should be removed after successful reingest."""
-        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.output_bundle_filename = None
-        mock_result.series_filename = None
-        mock_result.retryable = False
-        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
-        mock_result.as_relative_path = pathlib.Path
-        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+        mock_result = mock_result_factory(
+            output_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         scratch_dir = config.paths.scratch / reingest_execution_obj.output_fragment
 
@@ -829,14 +797,10 @@ class TestHandleReingestOutputBundle:
 class TestIngestMetrics:
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_ingest_scalar_values(
-        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mocker
+        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
     ):
         """Should ingest scalar metric values from a real CMEC bundle."""
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.series_filename = pathlib.Path("series.json")
-        mock_result.to_output_path = lambda f: output_dir_with_data / f
-
+        mock_result = mock_result_factory(output_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
@@ -852,14 +816,10 @@ class TestIngestMetrics:
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_ingest_additive_skips_existing(
-        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mocker
+        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
     ):
         """Additive mode should skip values with existing dimension signatures."""
-        mock_result = mocker.Mock(spec=ExecutionResult)
-        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
-        mock_result.series_filename = pathlib.Path("series.json")
-        mock_result.to_output_path = lambda f: output_dir_with_data / f
-
+        mock_result = mock_result_factory(output_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         # First ingest
@@ -920,12 +880,16 @@ class TestReconstructWithDatasets:
 
 
 class TestGetExecutionsForReingest:
-    def test_filters_by_success(self, db_seeded):
-        """By default should only return successful executions."""
+    @pytest.fixture(autouse=True)
+    def _register_providers(self, db_seeded):
+        """Register providers once for all tests in this class."""
         with db_seeded.session.begin():
             _register_provider(db_seeded, pmp_provider)
             _register_provider(db_seeded, esmvaltool_provider)
 
+    def test_filters_by_success(self, db_seeded):
+        """By default should only return successful executions."""
+        with db_seeded.session.begin():
             diag = db_seeded.session.query(DiagnosticModel).first()
             eg = ExecutionGroup(key="test-filter", diagnostic_id=diag.id, selectors={})
             db_seeded.session.add(eg)
@@ -947,9 +911,6 @@ class TestGetExecutionsForReingest:
     def test_include_failed(self, db_seeded):
         """With include_failed=True, should also return failed executions."""
         with db_seeded.session.begin():
-            _register_provider(db_seeded, pmp_provider)
-            _register_provider(db_seeded, esmvaltool_provider)
-
             diag = db_seeded.session.query(DiagnosticModel).first()
             eg = ExecutionGroup(key="test-failed", diagnostic_id=diag.id, selectors={})
             db_seeded.session.add(eg)
@@ -970,8 +931,6 @@ class TestGetExecutionsForReingest:
     def test_filters_by_group_ids(self, db_seeded):
         """Should only return executions for specified group IDs."""
         with db_seeded.session.begin():
-            _register_provider(db_seeded, pmp_provider)
-
             diag = db_seeded.session.query(DiagnosticModel).first()
             eg1 = ExecutionGroup(key="group-a", diagnostic_id=diag.id, selectors={})
             eg2 = ExecutionGroup(key="group-b", diagnostic_id=diag.id, selectors={})

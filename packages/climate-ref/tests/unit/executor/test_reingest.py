@@ -1,5 +1,6 @@
 """Tests for the reingest module."""
 
+import json
 import pathlib
 
 import pytest
@@ -8,8 +9,12 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.executor.reingest import (
     ReingestMode,
+    _copy_results_to_scratch,
     _delete_execution_results,
     _extract_dataset_attributes,
+    _get_existing_metric_dimensions,
+    _handle_reingest_output_bundle,
+    _ingest_metrics,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
@@ -22,12 +27,15 @@ from climate_ref.models.execution import (
     ExecutionGroup,
     ExecutionOutput,
     ResultOutputType,
+    execution_datasets,
 )
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
+from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
+from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -83,15 +91,12 @@ def mock_provider_registry(provider):
 
 @pytest.fixture
 def output_dir_with_results(config, reingest_execution_obj):
-    """Create a results directory with CMEC output files."""
+    """Create a results directory with empty CMEC template files."""
     results_dir = config.paths.results / reingest_execution_obj.output_fragment
     results_dir.mkdir(parents=True, exist_ok=True)
 
-    cmec_metric = CMECMetric(**CMECMetric.create_template())
-    cmec_metric.dump_to_json(results_dir / "diagnostic.json")
-
-    cmec_output = CMECOutput(**CMECOutput.create_template())
-    cmec_output.dump_to_json(results_dir / "output.json")
+    CMECMetric(**CMECMetric.create_template()).dump_to_json(results_dir / "diagnostic.json")
+    CMECOutput(**CMECOutput.create_template()).dump_to_json(results_dir / "output.json")
 
     series_data = [
         TSeries(
@@ -103,6 +108,57 @@ def output_dir_with_results(config, reingest_execution_obj):
         )
     ]
     TSeries.dump_to_json(results_dir / "series.json", series_data)
+
+    return results_dir
+
+
+@pytest.fixture
+def output_dir_with_data(config, reingest_execution_obj):
+    """Create a results directory with CMEC files containing actual metric/output data."""
+    results_dir = config.paths.results / reingest_execution_obj.output_fragment
+    results_dir.mkdir(parents=True, exist_ok=True)
+
+    # 2-level nesting required by MetricResults schema
+    (results_dir / "diagnostic.json").write_text(
+        json.dumps(
+            {
+                "DIMENSIONS": {
+                    "json_structure": ["source_id", "metric"],
+                    "source_id": {"test-model": {}},
+                    "metric": {"rmse": {}},
+                },
+                "RESULTS": {"test-model": {"rmse": 42.0}},
+            }
+        )
+    )
+
+    (results_dir / "plot.png").write_bytes(b"fake png")
+    (results_dir / "output.json").write_text(
+        json.dumps(
+            {
+                "index": "index.html",
+                "provenance": {"environment": {}, "modeldata": [], "obsdata": {}, "log": "cmec_output.log"},
+                "data": {},
+                "plots": {"test_plot": {"filename": "plot.png", "long_name": "Test Plot", "description": ""}},
+                "html": {},
+                "metrics": None,
+                "diagnostics": {},
+            }
+        )
+    )
+
+    TSeries.dump_to_json(
+        results_dir / "series.json",
+        [
+            TSeries(
+                dimensions={"source_id": "test-model"},
+                values=[1.0, 2.0, 3.0],
+                index=[0, 1, 2],
+                index_name="time",
+                attributes={"units": "K"},
+            )
+        ],
+    )
 
     return results_dir
 
@@ -713,6 +769,154 @@ class TestReingestExecution:
 
         assert result is False
         assert not scratch_dir.exists(), f"Scratch directory was not cleaned up on failure: {scratch_dir}"
+
+
+class TestCopyResultsToScratch:
+    def test_path_traversal_raises(self, config):
+        """Should reject output fragments that escape the base directory."""
+        with pytest.raises(ValueError, match="Unsafe source path"):
+            _copy_results_to_scratch(config, "/etc/passwd")
+
+    def test_copies_directory(self, config, reingest_execution_obj, output_dir_with_results):
+        """Should copy the results directory to scratch."""
+        scratch = _copy_results_to_scratch(config, reingest_execution_obj.output_fragment)
+        assert scratch.exists()
+        assert (scratch / "diagnostic.json").exists()
+        assert (scratch / "output.json").exists()
+
+
+class TestGetExistingMetricDimensions:
+    def test_returns_empty_for_no_values(self, reingest_db, reingest_execution_obj):
+        """Should return empty set when no metric values exist."""
+        result = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
+        assert result == set()
+
+    def test_returns_dimension_signatures(self, reingest_db, reingest_execution_obj):
+        """Should return sorted dimension tuples for existing metric values."""
+        reingest_db.session.add(
+            ScalarMetricValue(
+                execution_id=reingest_execution_obj.id,
+                value=1.0,
+                attributes={},
+                source_id="model-a",
+            )
+        )
+        reingest_db.session.commit()
+
+        result = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
+        assert len(result) == 1
+        sig = next(iter(result))
+        # Should contain source_id dimension
+        assert any(k == "source_id" and v == "model-a" for k, v in sig)
+
+
+class TestHandleReingestOutputBundle:
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_registers_outputs_in_db(self, config, reingest_db, reingest_execution_obj, output_dir_with_data):
+        """Should register output entries from the bundle into the database."""
+        bundle_path = output_dir_with_data / "output.json"
+
+        _handle_reingest_output_bundle(config, reingest_db, reingest_execution_obj, bundle_path)
+        reingest_db.session.commit()
+
+        outputs = (
+            reingest_db.session.query(ExecutionOutput).filter_by(execution_id=reingest_execution_obj.id).all()
+        )
+        assert len(outputs) >= 1
+        assert any(o.short_name == "test_plot" for o in outputs)
+
+
+class TestIngestMetrics:
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_scalar_values(
+        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mocker
+    ):
+        """Should ingest scalar metric values from a real CMEC bundle."""
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
+        mock_result.series_filename = pathlib.Path("series.json")
+        mock_result.to_output_path = lambda f: output_dir_with_data / f
+
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        reingest_db.session.commit()
+
+        scalars = (
+            reingest_db.session.query(ScalarMetricValue)
+            .filter_by(execution_id=reingest_execution_obj.id)
+            .all()
+        )
+        assert len(scalars) >= 1
+        assert scalars[0].value == 42.0
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_additive_skips_existing(
+        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mocker
+    ):
+        """Additive mode should skip values with existing dimension signatures."""
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
+        mock_result.series_filename = pathlib.Path("series.json")
+        mock_result.to_output_path = lambda f: output_dir_with_data / f
+
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        # First ingest
+        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        reingest_db.session.commit()
+        count_first = (
+            reingest_db.session.query(MetricValue).filter_by(execution_id=reingest_execution_obj.id).count()
+        )
+
+        # Second ingest in additive mode should not duplicate
+        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=True)
+        reingest_db.session.commit()
+        count_second = (
+            reingest_db.session.query(MetricValue).filter_by(execution_id=reingest_execution_obj.id).count()
+        )
+
+        assert count_first == count_second
+
+
+class TestReconstructWithDatasets:
+    def test_reconstruct_with_linked_datasets(self, config, db_seeded, provider):
+        """reconstruct_execution_definition should build dataset collections from linked datasets."""
+        with db_seeded.session.begin():
+            diag = db_seeded.session.query(DiagnosticModel).first()
+            eg = ExecutionGroup(
+                key="recon-test",
+                diagnostic_id=diag.id,
+                selectors={"cmip6": [["source_id", "ACCESS-ESM1-5"]]},
+            )
+            db_seeded.session.add(eg)
+            db_seeded.session.flush()
+
+            ex = Execution(
+                execution_group_id=eg.id,
+                successful=True,
+                output_fragment="test/recon/abc",
+                dataset_hash="h1",
+            )
+            db_seeded.session.add(ex)
+            db_seeded.session.flush()
+
+            # Link a dataset to the execution
+            dataset = db_seeded.session.query(CMIP6Dataset).first()
+            if dataset:
+                db_seeded.session.execute(
+                    execution_datasets.insert().values(
+                        execution_id=ex.id,
+                        dataset_id=dataset.id,
+                    )
+                )
+
+        diagnostic = provider.get("mock")
+        definition = reconstruct_execution_definition(config, ex, diagnostic)
+
+        assert definition.key == "recon-test"
+        if dataset:
+            assert SourceDatasetType.CMIP6 in definition.datasets
 
 
 class TestGetExecutionsForReingest:

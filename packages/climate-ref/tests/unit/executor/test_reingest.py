@@ -21,6 +21,7 @@ from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
     ExecutionOutput,
+    ResultOutputType,
 )
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.models.provider import Provider as ProviderModel
@@ -168,7 +169,7 @@ class TestDeleteExecutionResults:
         reingest_db.session.add(
             ExecutionOutput(
                 execution_id=execution.id,
-                output_type="plot",
+                output_type=ResultOutputType.Plot,
                 filename="test.png",
                 short_name="test",
             )
@@ -558,6 +559,160 @@ class TestReingestExecution:
         assert preserved_count == original_count, (
             f"Replace mode lost data on failure: {original_count} -> {preserved_count}"
         )
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_versioned_reingest_twice_creates_unique_fragments(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        output_dir_with_results,
+        mocker,
+    ):
+        """Running versioned reingest twice should create distinct output fragments."""
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
+        mock_result.output_bundle_filename = pathlib.Path("output.json")
+        mock_result.series_filename = pathlib.Path("series.json")
+        mock_result.retryable = False
+        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
+        mock_result.as_relative_path = pathlib.Path
+        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+
+        # First versioned reingest
+        ok1 = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.versioned,
+        )
+        reingest_db.session.commit()
+        assert ok1 is True
+
+        # Second versioned reingest
+        reingest_db.session.refresh(reingest_execution_obj)
+        ok2 = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.versioned,
+        )
+        reingest_db.session.commit()
+        assert ok2 is True
+
+        # Should have 3 executions total: original + 2 versioned
+        all_executions = reingest_db.session.query(Execution).all()
+        assert len(all_executions) == 3
+
+        fragments = [e.output_fragment for e in all_executions]
+        assert len(set(fragments)) == 3, f"Expected unique fragments, got: {fragments}"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_marks_failed_execution_as_successful(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        output_dir_with_results,
+        mocker,
+    ):
+        """Reingest should mark a previously-failed execution as successful."""
+        reingest_execution_obj.successful = False
+        reingest_db.session.commit()
+        assert reingest_execution_obj.successful is False
+
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
+        mock_result.output_bundle_filename = None
+        mock_result.series_filename = None
+        mock_result.retryable = False
+        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
+        mock_result.as_relative_path = pathlib.Path
+        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.replace,
+        )
+        reingest_db.session.commit()
+
+        assert ok is True
+        reingest_db.session.refresh(reingest_execution_obj)
+        assert reingest_execution_obj.successful is True
+
+    def test_scratch_directory_cleaned_up_on_success(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        output_dir_with_results,
+        mocker,
+    ):
+        """Scratch directory should be removed after successful reingest."""
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = pathlib.Path("diagnostic.json")
+        mock_result.output_bundle_filename = None
+        mock_result.series_filename = None
+        mock_result.retryable = False
+        mock_result.to_output_path = lambda f: output_dir_with_results / f if f else output_dir_with_results
+        mock_result.as_relative_path = pathlib.Path
+        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+
+        scratch_dir = config.paths.scratch / reingest_execution_obj.output_fragment
+
+        reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.additive,
+        )
+
+        assert not scratch_dir.exists(), f"Scratch directory was not cleaned up: {scratch_dir}"
+
+    def test_scratch_directory_cleaned_up_on_failure(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        output_dir_with_results,
+        mocker,
+    ):
+        """Scratch directory should be removed even when reingest fails."""
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        mocker.patch.object(
+            mock_diagnostic,
+            "build_execution_result",
+            side_effect=RuntimeError("Extraction failed"),
+        )
+
+        scratch_dir = config.paths.scratch / reingest_execution_obj.output_fragment
+
+        result = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.replace,
+        )
+
+        assert result is False
+        assert not scratch_dir.exists(), f"Scratch directory was not cleaned up on failure: {scratch_dir}"
 
 
 class TestGetExecutionsForReingest:

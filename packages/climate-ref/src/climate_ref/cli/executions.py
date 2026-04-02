@@ -865,8 +865,7 @@ def reingest(  # noqa: PLR0913
             console.print("Reingest cancelled.")
             return
 
-    # Process each execution in a separate session
-    # This rolls back any failures
+    # Process each execution in a separate transaction
     success_count = 0
     skip_count = 0
     for eg, ex in results:

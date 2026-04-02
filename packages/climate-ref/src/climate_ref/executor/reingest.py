@@ -214,9 +214,16 @@ def _handle_reingest_outputs(
     """Register outputs in the DB without copying files (they are already in place)."""
     outputs = outputs or {}
     results_base = config.paths.results / execution.output_fragment
+    scratch_base = config.paths.scratch / execution.output_fragment
 
     for key, output_info in outputs.items():
-        filename = ensure_relative_path(output_info.filename, results_base)
+        # Output bundles produced during re-extraction may contain absolute
+        # paths under the scratch directory. Fall back to scratch_base when
+        # the filename is not relative to results_base.
+        try:
+            filename = ensure_relative_path(output_info.filename, results_base)
+        except ValueError:
+            filename = ensure_relative_path(output_info.filename, scratch_base)
         database.session.add(
             ExecutionOutput.build(
                 execution_id=execution.id,
@@ -365,9 +372,19 @@ def _copy_results_to_scratch(
     the results tree unchanged until we decide to commit.
 
     Returns the scratch output directory.
+
+    Note: the scratch path is deterministic (scratch/output_fragment), so
+    concurrent reingest of the same execution is not supported.  The CLI
+    is single-threaded, so this is not a practical concern.
     """
     src = config.paths.results / output_fragment
     dst = config.paths.scratch / output_fragment
+
+    if not src.is_relative_to(config.paths.results):
+        raise ValueError(f"Unsafe source path: {src} is not under {config.paths.results}")
+    if not dst.is_relative_to(config.paths.scratch):
+        raise ValueError(f"Unsafe destination path: {dst} is not under {config.paths.scratch}")
+
     if dst.exists():
         shutil.rmtree(dst)
     shutil.copytree(src, dst)
@@ -403,10 +420,16 @@ def _apply_reingest_mode(  # noqa: PLR0913
                 f"{execution.output_fragment}-reingest-{execution.id}".encode()
             ).hexdigest()[:12]
 
+            base_fragment = f"{execution.output_fragment}_v{version_hash}"
+            existing_count = sum(
+                1 for e in execution_group.executions if e.output_fragment.startswith(base_fragment)
+            )
+            version_suffix = f"_n{existing_count + 1}" if existing_count > 0 else ""
+
             target_execution = Execution(
                 execution_group=execution_group,
                 dataset_hash=execution.dataset_hash,
-                output_fragment=f"{execution.output_fragment}_v{version_hash}",
+                output_fragment=f"{base_fragment}{version_suffix}",
             )
             database.session.add(target_execution)
             database.session.flush()
@@ -422,10 +445,9 @@ def _apply_reingest_mode(  # noqa: PLR0913
             _delete_execution_results(database, target_execution)
 
         if result.output_bundle_filename:
-            if mode != ReingestMode.additive:
-                database.session.execute(
-                    delete(ExecutionOutput).where(ExecutionOutput.execution_id == target_execution.id)
-                )
+            database.session.execute(
+                delete(ExecutionOutput).where(ExecutionOutput.execution_id == target_execution.id)
+            )
             _handle_reingest_output_bundle(
                 config,
                 database,
@@ -435,9 +457,8 @@ def _apply_reingest_mode(  # noqa: PLR0913
 
         _ingest_metrics(database, result, target_execution, cv, additive=mode == ReingestMode.additive)
 
-        if mode == ReingestMode.versioned:
-            assert result.metric_bundle_filename is not None
-            target_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
+        assert result.metric_bundle_filename is not None
+        target_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
 
     return target_execution
 
@@ -470,6 +491,8 @@ def _copy_scratch_to_results(
 ) -> None:
     """Copy re-extracted files from scratch to the results tree after DB success."""
     target_results_dir = config.paths.results / target_execution.output_fragment
+    if not target_results_dir.is_relative_to(config.paths.results):
+        raise ValueError(f"Unsafe target path: {target_results_dir} is not under {config.paths.results}")
     if mode == ReingestMode.versioned:
         if target_results_dir.exists():
             shutil.rmtree(target_results_dir)

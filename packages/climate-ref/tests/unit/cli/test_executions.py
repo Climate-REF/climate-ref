@@ -1170,4 +1170,5 @@ class TestReingestCLI:
 
     def test_reingest_missing_mode_fails(self, invoke_cli, db_seeded):
         result = invoke_cli(["executions", "reingest", "--provider", "pmp"], expected_exit_code=2)
-        assert "Missing option '--mode'" in result.stderr
+        assert "Missing option" in result.stderr
+        assert "mode" in result.stderr

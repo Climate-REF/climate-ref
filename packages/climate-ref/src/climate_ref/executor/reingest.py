@@ -28,16 +28,11 @@ from loguru import logger
 from sqlalchemy import delete
 
 from climate_ref.datasets import get_slug_column
-from climate_ref.executor.result_handling import (
-    ingest_scalar_values,
-    ingest_series_values,
-    register_execution_outputs,
-)
+from climate_ref.executor.result_handling import ingest_execution_result
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
     ExecutionOutput,
-    ResultOutputType,
     execution_datasets,
     get_execution_group_and_latest_filtered,
 )
@@ -49,7 +44,6 @@ from climate_ref_core.datasets import (
 )
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.pycmec.controlled_vocabulary import CV
-from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
@@ -233,7 +227,6 @@ def _sync_reingest_files_to_results(
 
 def _delete_execution_metric_values(database: "Database", execution: Execution) -> None:
     """Delete all metric values for an execution (outputs are handled separately)."""
-    # MetricValue uses single-table inheritance so we delete from the base table
     database.session.execute(delete(MetricValue).where(MetricValue.execution_id == execution.id))
 
 
@@ -293,48 +286,27 @@ def _apply_reingest_mode(  # noqa: PLR0913
             database.session.execute(
                 delete(ExecutionOutput).where(ExecutionOutput.execution_id == target_execution.id)
             )
-            cmec_output_bundle = CMECOutput.load_from_json(
-                result.to_output_path(result.output_bundle_filename)
-            )
-            results_base = config.paths.results / target_execution.output_fragment
-            scratch_base = config.paths.scratch / execution.output_fragment
-            for attr, output_type in [
-                ("plots", ResultOutputType.Plot),
-                ("data", ResultOutputType.Data),
-                ("html", ResultOutputType.HTML),
-            ]:
-                register_execution_outputs(
-                    database,
-                    target_execution,
-                    getattr(cmec_output_bundle, attr),
-                    output_type=output_type,
-                    base_path=results_base,
-                    fallback_path=scratch_base,
-                )
 
-        _ingest_metrics(database, result, target_execution, cv, additive=mode == ReingestMode.additive)
+        existing = (
+            _get_existing_metric_dimensions(database, target_execution)
+            if mode == ReingestMode.additive
+            else None
+        )
+
+        ingest_execution_result(
+            database,
+            target_execution,
+            result,
+            cv,
+            output_base_path=config.paths.results / target_execution.output_fragment,
+            output_fallback_path=config.paths.scratch / execution.output_fragment,
+            existing_metrics=existing,
+        )
 
         assert result.metric_bundle_filename is not None
         target_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
 
     return target_execution
-
-
-def _ingest_metrics(
-    database: "Database",
-    result: ExecutionResult,
-    execution: Execution,
-    cv: CV,
-    *,
-    additive: bool,
-) -> None:
-    """Ingest scalar and series metric values, using additive dedup when requested."""
-    existing = _get_existing_metric_dimensions(database, execution) if additive else None
-
-    if result.series_filename:
-        ingest_series_values(database=database, result=result, execution=execution, cv=cv, existing=existing)
-
-    ingest_scalar_values(database=database, result=result, execution=execution, cv=cv, existing=existing)
 
 
 def reingest_execution(
@@ -347,10 +319,11 @@ def reingest_execution(
     """
     Reingest an existing execution.
 
-    Re-runs ``build_execution_result()`` against the scratch directory (which
-    contains the raw outputs from the original diagnostic run) and re-ingests
-    the results into the database.  Updated CMEC bundles are then copied from
-    scratch to the results directory, backing up previous versions.
+    Re-runs ``build_execution_result()`` against the scratch directory
+    (which contains the raw outputs from the original diagnostic run) and re-ingests
+    the results into the database.
+    Updated CMEC bundles are then copied from scratch to the results directory,
+    backing up previous versions.
 
     Parameters
     ----------
@@ -384,9 +357,6 @@ def reingest_execution(
         )
         return False
 
-    # The scratch directory contains the raw outputs from the original
-    # diagnostic run and is never cleaned up.  build_execution_result()
-    # writes CMEC bundles here.
     scratch_dir = config.paths.scratch / execution.output_fragment
     if not scratch_dir.exists():
         logger.error(f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}.")

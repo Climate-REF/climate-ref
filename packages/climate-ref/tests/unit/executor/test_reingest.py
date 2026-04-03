@@ -13,13 +13,17 @@ from climate_ref.executor.reingest import (
     _delete_execution_metric_values,
     _extract_dataset_attributes,
     _get_existing_metric_dimensions,
-    _ingest_metrics,
     _sync_reingest_files_to_results,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
 )
-from climate_ref.executor.result_handling import register_execution_outputs
+from climate_ref.executor.result_handling import (
+    ingest_execution_result,
+    ingest_scalar_values,
+    ingest_series_values,
+    register_execution_outputs,
+)
 from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
@@ -885,7 +889,9 @@ class TestIngestMetrics:
         mock_result = mock_result_factory(scratch_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
-        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        ingest_scalar_values(
+            database=reingest_db, result=mock_result, execution=reingest_execution_obj, cv=cv
+        )
         reingest_db.session.commit()
 
         scalars = (
@@ -905,14 +911,23 @@ class TestIngestMetrics:
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         # First ingest
-        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        ingest_scalar_values(
+            database=reingest_db, result=mock_result, execution=reingest_execution_obj, cv=cv
+        )
         reingest_db.session.commit()
         count_first = (
             reingest_db.session.query(MetricValue).filter_by(execution_id=reingest_execution_obj.id).count()
         )
 
         # Second ingest in additive mode should not duplicate
-        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=True)
+        existing = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
+        ingest_scalar_values(
+            database=reingest_db,
+            result=mock_result,
+            execution=reingest_execution_obj,
+            cv=cv,
+            existing=existing,
+        )
         reingest_db.session.commit()
         count_second = (
             reingest_db.session.query(MetricValue).filter_by(execution_id=reingest_execution_obj.id).count()
@@ -930,7 +945,9 @@ class TestIngestMetricsWithSeries:
         mock_result = mock_result_factory(scratch_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
-        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        ingest_series_values(
+            database=reingest_db, result=mock_result, execution=reingest_execution_obj, cv=cv
+        )
         reingest_db.session.commit()
 
         series = (
@@ -949,7 +966,9 @@ class TestIngestMetricsWithSeries:
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         # First ingest
-        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        ingest_series_values(
+            database=reingest_db, result=mock_result, execution=reingest_execution_obj, cv=cv
+        )
         reingest_db.session.commit()
 
         count_first = (
@@ -959,7 +978,14 @@ class TestIngestMetricsWithSeries:
         )
 
         # Second ingest in additive mode
-        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=True)
+        existing = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
+        ingest_series_values(
+            database=reingest_db,
+            result=mock_result,
+            execution=reingest_execution_obj,
+            cv=cv,
+            existing=existing,
+        )
         reingest_db.session.commit()
 
         count_second = (
@@ -1289,3 +1315,90 @@ class TestGetExecutionsForReingest:
 
         results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id])
         assert len(results) == 0
+
+
+def _snapshot_scalars(db, execution):
+    """Snapshot scalar metrics as a set of (value, dimensions) for comparison."""
+    values = db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).all()
+    return {(v.value, tuple(sorted(v.dimensions.items()))) for v in values}
+
+
+def _snapshot_series(db, execution):
+    """Snapshot series metrics as a set of (values_tuple, dimensions) for comparison."""
+    values = db.session.query(SeriesMetricValue).filter_by(execution_id=execution.id).all()
+    return {(tuple(v.values), tuple(sorted(v.dimensions.items()))) for v in values}
+
+
+def _snapshot_outputs(db, execution):
+    """Snapshot outputs as a set of (short_name, output_type, filename) for comparison."""
+    outputs = db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).all()
+    return {(o.short_name, o.output_type, o.filename) for o in outputs}
+
+
+class TestVersionedReingestEquivalence:
+    """Versioned reingest should produce the same DB state as fresh ingestion."""
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_versioned_reingest_matches_original(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_data,
+        mock_result_factory,
+        mocker,
+    ):
+        """Versioned reingest should produce equivalent metrics and outputs to the original."""
+        execution = reingest_execution_obj
+        mock_result = mock_result_factory(scratch_dir_with_data)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        # Original ingestion via the shared path
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+        ingest_execution_result(
+            reingest_db,
+            execution,
+            mock_result,
+            cv,
+            output_base_path=config.paths.scratch / execution.output_fragment,
+        )
+        execution.mark_successful(mock_result.as_relative_path(mock_result.metric_bundle_filename))
+        reingest_db.session.commit()
+
+        # Snapshot original DB state
+        original_scalars = _snapshot_scalars(reingest_db, execution)
+        original_series = _snapshot_series(reingest_db, execution)
+        original_outputs = _snapshot_outputs(reingest_db, execution)
+
+        assert original_scalars, "Original ingestion should produce scalar values"
+
+        # Versioned reingest creates a new execution from the same data
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=execution,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.versioned,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        # Find the new execution created by versioned reingest
+        new_execution = reingest_db.session.query(Execution).filter(Execution.id != execution.id).one()
+
+        # Snapshot reingest DB state
+        reingest_scalars = _snapshot_scalars(reingest_db, new_execution)
+        reingest_series = _snapshot_series(reingest_db, new_execution)
+        reingest_outputs = _snapshot_outputs(reingest_db, new_execution)
+
+        # Both paths go through ingest_execution_result, so results must match
+        assert original_scalars == reingest_scalars, (
+            f"Scalar values differ: original={original_scalars}, reingest={reingest_scalars}"
+        )
+        assert original_series == reingest_series, (
+            f"Series values differ: original={original_series}, reingest={reingest_series}"
+        )
+        assert original_outputs == reingest_outputs, (
+            f"Output entries differ: original={original_outputs}, reingest={reingest_outputs}"
+        )

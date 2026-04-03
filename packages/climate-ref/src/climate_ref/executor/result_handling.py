@@ -211,6 +211,82 @@ def ingest_series_values(
         database.session.execute(insert(SeriesMetricValue), new_values)
 
 
+def ingest_execution_result(  # noqa: PLR0913
+    database: Database,
+    execution: Execution,
+    result: "ExecutionResult",
+    cv: CV,
+    *,
+    output_base_path: pathlib.Path,
+    output_fallback_path: "pathlib.Path | None" = None,
+    existing_metrics: "set[tuple[tuple[str, str], ...]] | None" = None,
+) -> None:
+    """
+    Ingest a successful execution result into the database.
+
+    Registers output entries and ingests scalar and series metric values.
+
+    Parameters
+    ----------
+    database
+        The active database session to use
+    execution
+        The execution record to associate results with
+    result
+        The successful execution result
+    cv
+        The controlled vocabulary to validate metrics against
+    output_base_path
+        Primary base directory for resolving output filenames
+    output_fallback_path
+        Secondary base directory when filenames aren't relative to ``output_base_path``
+    existing_metrics
+        When provided, metric values whose dimension signatures are in this set
+        are skipped (additive dedup).  When ``None``, all values are inserted.
+
+    Notes
+    -----
+    Callers are responsible for:
+
+    * File copying (scratch -> results)
+    * Transaction boundaries
+    * Marking the execution as successful (``execution.mark_successful()``)
+    * Setting the dirty flag on the execution group
+    """
+    if result.output_bundle_filename:
+        cmec_output_bundle = CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+        for attr, output_type in [
+            ("plots", ResultOutputType.Plot),
+            ("data", ResultOutputType.Data),
+            ("html", ResultOutputType.HTML),
+        ]:
+            register_execution_outputs(
+                database,
+                execution,
+                getattr(cmec_output_bundle, attr),
+                output_type=output_type,
+                base_path=output_base_path,
+                fallback_path=output_fallback_path,
+            )
+
+    if result.series_filename:
+        ingest_series_values(
+            database=database,
+            result=result,
+            execution=execution,
+            cv=cv,
+            existing=existing_metrics,
+        )
+
+    ingest_scalar_values(
+        database=database,
+        result=result,
+        execution=execution,
+        cv=cv,
+        existing=existing_metrics,
+    )
+
+
 def register_execution_outputs(  # noqa: PLR0913
     database: Database,
     execution: Execution,
@@ -265,56 +341,6 @@ def register_execution_outputs(  # noqa: PLR0913
                 dimensions=output_info.dimensions or {},
             )
         )
-
-
-def _process_execution_scalar(
-    database: Database,
-    result: "ExecutionResult",
-    execution: Execution,
-    cv: CV,
-) -> None:
-    """
-    Process the scalar values from the execution result and store them in the database
-
-    This also validates the scalar values against the controlled vocabulary
-    """
-    # Perform a bulk insert of scalar values
-    # The current implementation will swallow the exception, but display a log message
-    try:
-        with database.session.begin_nested():
-            ingest_scalar_values(database=database, result=result, execution=execution, cv=cv)
-    # This is a broad exception catch to ensure we log any issues
-    except Exception:
-        logger.exception("Something went wrong when ingesting diagnostic values")
-
-
-def _process_execution_series(
-    config: "Config",
-    database: Database,
-    result: "ExecutionResult",
-    execution: Execution,
-    cv: CV,
-) -> None:
-    """
-    Process the series values from the execution result and store them in the database
-
-    This also copies the series values file from the scratch directory to the results directory
-    and validates the series values against the controlled vocabulary.
-    """
-    assert result.series_filename, "Series filename must be set in the result"
-
-    _copy_file_to_results(
-        config.paths.scratch,
-        config.paths.results,
-        execution.output_fragment,
-        result.series_filename,
-    )
-
-    try:
-        with database.session.begin_nested():
-            ingest_series_values(database=database, result=result, execution=execution, cv=cv)
-    except Exception:
-        logger.exception("Something went wrong when ingesting diagnostic series values")
 
 
 def handle_execution_result(
@@ -384,23 +410,33 @@ def handle_execution_result(
             execution.output_fragment,
             result.output_bundle_filename,
         )
-        _handle_output_bundle(
+        _copy_output_bundle_files(
             config,
-            database,
             execution,
             result.to_output_path(result.output_bundle_filename),
         )
 
-    cv = CV.load_from_file(config.paths.dimensions_cv)
-
     if result.series_filename:
-        # Process the series values if they are present
-        # This will ingest the series values into the database
-        _process_execution_series(config=config, database=database, result=result, execution=execution, cv=cv)
+        _copy_file_to_results(
+            config.paths.scratch,
+            config.paths.results,
+            execution.output_fragment,
+            result.series_filename,
+        )
 
-    # Process the scalar values
-    # This will ingest the scalar values into the database
-    _process_execution_scalar(database=database, result=result, execution=execution, cv=cv)
+    # Ingest outputs and metrics into the database via the shared ingestion path
+    cv = CV.load_from_file(config.paths.dimensions_cv)
+    try:
+        with database.session.begin_nested():
+            ingest_execution_result(
+                database,
+                execution,
+                result,
+                cv,
+                output_base_path=config.paths.scratch / execution.output_fragment,
+            )
+    except Exception:
+        logger.exception("Something went wrong when ingesting execution result")
 
     # TODO: This should check if the result is the most recent for the execution,
     # if so then update the dirty fields
@@ -411,26 +447,17 @@ def handle_execution_result(
     execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
 
 
-def _handle_output_bundle(
+def _copy_output_bundle_files(
     config: "Config",
-    database: Database,
     execution: Execution,
     cmec_output_bundle_filename: pathlib.Path,
 ) -> None:
-    # Extract the registered outputs
-    # Copy the content to the output directory
-    # Track in the db
+    """Copy output bundle referenced files (plots, data, html) from scratch to results."""
     cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
     scratch_base = config.paths.scratch / execution.output_fragment
-    results_base = config.paths.results / execution.output_fragment
 
-    for attr, output_type in [
-        ("plots", ResultOutputType.Plot),
-        ("data", ResultOutputType.Data),
-        ("html", ResultOutputType.HTML),
-    ]:
-        outputs = getattr(cmec_output_bundle, attr) or {}
-        for output_info in outputs.values():
+    for attr in ("plots", "data", "html"):
+        for output_info in (getattr(cmec_output_bundle, attr) or {}).values():
             filename = ensure_relative_path(output_info.filename, scratch_base)
             _copy_file_to_results(
                 config.paths.scratch,
@@ -438,10 +465,3 @@ def _handle_output_bundle(
                 execution.output_fragment,
                 filename,
             )
-        register_execution_outputs(
-            database,
-            execution,
-            outputs,
-            output_type=output_type,
-            base_path=results_base,
-        )

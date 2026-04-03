@@ -865,12 +865,16 @@ def reingest(  # noqa: PLR0913
             console.print("Reingest cancelled.")
             return
 
+    # Ensure any autobegun transaction from the preview queries is closed
+    # so each reingest runs in its own top-level transaction (not a savepoint).
+    if db.session.in_transaction():
+        db.session.commit()
+
     # Process each execution in a separate transaction
     success_count = 0
     skip_count = 0
-    session = db.session
     for eg, ex in results:
-        with session.begin_nested() if session.in_transaction() else session.begin():
+        with db.session.begin():
             ok = reingest_execution(
                 config=config,
                 database=db,
@@ -879,10 +883,10 @@ def reingest(  # noqa: PLR0913
                 mode=mode,
             )
 
-            if ok:
-                success_count += 1
-            else:
-                skip_count += 1
+        if ok:
+            success_count += 1
+        else:
+            skip_count += 1
 
     console.print(f"\n[green]Reingest complete:[/] {success_count} succeeded, {skip_count} skipped.")
 

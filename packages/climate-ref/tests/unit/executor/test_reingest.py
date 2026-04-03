@@ -9,18 +9,17 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.executor.reingest import (
     ReingestMode,
-    _copy_results_to_scratch,
-    _copy_scratch_to_results,
-    _delete_execution_results,
+    _copy_with_backup,
+    _delete_execution_metric_values,
     _extract_dataset_attributes,
     _get_existing_metric_dimensions,
-    _handle_reingest_output_bundle,
-    _handle_reingest_outputs,
     _ingest_metrics,
+    _sync_reingest_files_to_results,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
 )
+from climate_ref.executor.result_handling import register_execution_outputs
 from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
@@ -102,31 +101,31 @@ SAMPLE_SERIES = [
 ]
 
 
-def _create_results_dir(config, execution):
-    """Create and return the results directory for an execution."""
-    results_dir = config.paths.results / execution.output_fragment
-    results_dir.mkdir(parents=True, exist_ok=True)
-    return results_dir
+def _create_scratch_dir(config, execution):
+    """Create and return the scratch directory for an execution."""
+    scratch_dir = config.paths.scratch / execution.output_fragment
+    scratch_dir.mkdir(parents=True, exist_ok=True)
+    return scratch_dir
 
 
 @pytest.fixture
-def output_dir_with_results(config, reingest_execution_obj):
-    """Create a results directory with empty CMEC template files."""
-    results_dir = _create_results_dir(config, reingest_execution_obj)
+def scratch_dir_with_results(config, reingest_execution_obj):
+    """Create a scratch directory with empty CMEC template files (simulates raw diagnostic output)."""
+    scratch_dir = _create_scratch_dir(config, reingest_execution_obj)
 
-    CMECMetric(**CMECMetric.create_template()).dump_to_json(results_dir / "diagnostic.json")
-    CMECOutput(**CMECOutput.create_template()).dump_to_json(results_dir / "output.json")
-    TSeries.dump_to_json(results_dir / "series.json", SAMPLE_SERIES)
+    CMECMetric(**CMECMetric.create_template()).dump_to_json(scratch_dir / "diagnostic.json")
+    CMECOutput(**CMECOutput.create_template()).dump_to_json(scratch_dir / "output.json")
+    TSeries.dump_to_json(scratch_dir / "series.json", SAMPLE_SERIES)
 
-    return results_dir
+    return scratch_dir
 
 
 @pytest.fixture
-def output_dir_with_data(config, reingest_execution_obj):
-    """Create a results directory with CMEC files containing actual metric/output data."""
-    results_dir = _create_results_dir(config, reingest_execution_obj)
+def scratch_dir_with_data(config, reingest_execution_obj):
+    """Create a scratch directory with CMEC files containing actual metric/output data."""
+    scratch_dir = _create_scratch_dir(config, reingest_execution_obj)
 
-    (results_dir / "diagnostic.json").write_text(
+    (scratch_dir / "diagnostic.json").write_text(
         json.dumps(
             {
                 "DIMENSIONS": {
@@ -139,8 +138,8 @@ def output_dir_with_data(config, reingest_execution_obj):
         )
     )
 
-    (results_dir / "plot.png").write_bytes(b"fake png")
-    (results_dir / "output.json").write_text(
+    (scratch_dir / "plot.png").write_bytes(b"fake png")
+    (scratch_dir / "output.json").write_text(
         json.dumps(
             {
                 "index": "index.html",
@@ -154,9 +153,9 @@ def output_dir_with_data(config, reingest_execution_obj):
         )
     )
 
-    TSeries.dump_to_json(results_dir / "series.json", SAMPLE_SERIES)
+    TSeries.dump_to_json(scratch_dir / "series.json", SAMPLE_SERIES)
 
-    return results_dir
+    return scratch_dir
 
 
 @pytest.fixture
@@ -239,9 +238,9 @@ class TestReconstructExecutionDefinition:
         assert str(definition.output_directory).startswith(str(config.paths.scratch))
 
 
-class TestDeleteExecutionResults:
-    def test_deletes_metric_values_and_outputs(self, reingest_db, reingest_execution_obj):
-        """Deleting results should remove all metric values and outputs."""
+class TestDeleteExecutionMetricValues:
+    def test_deletes_metric_values_only(self, reingest_db, reingest_execution_obj):
+        """Should remove metric values but leave outputs untouched."""
         execution = reingest_execution_obj
 
         reingest_db.session.add(
@@ -264,18 +263,19 @@ class TestDeleteExecutionResults:
         assert reingest_db.session.query(MetricValue).filter_by(execution_id=execution.id).count() == 1
         assert reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).count() == 1
 
-        _delete_execution_results(reingest_db, execution)
+        _delete_execution_metric_values(reingest_db, execution)
         reingest_db.session.commit()
 
         assert reingest_db.session.query(MetricValue).filter_by(execution_id=execution.id).count() == 0
-        assert reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).count() == 0
+        # Outputs are not deleted by this function (handled separately in _apply_reingest_mode)
+        assert reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).count() == 1
 
 
 class TestReingestExecution:
     def test_reingest_missing_output_dir(
         self, config, reingest_db, reingest_execution_obj, mock_provider_registry
     ):
-        """Should return False when output directory doesn't exist."""
+        """Should return unsuccessful result when output directory doesn't exist."""
         result = reingest_execution(
             config=config,
             database=reingest_db,
@@ -286,7 +286,7 @@ class TestReingestExecution:
         assert result is False
 
     def test_reingest_unresolvable_diagnostic(self, config, reingest_db, reingest_execution_obj):
-        """Should return False when provider registry can't resolve diagnostic."""
+        """Should return unsuccessful result when provider registry can't resolve diagnostic."""
         empty_registry = ProviderRegistry(providers=[])
         result = reingest_execution(
             config=config,
@@ -304,7 +304,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
@@ -323,7 +323,7 @@ class TestReingestExecution:
         old_count = reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
         assert old_count == 1
 
-        mock_result = mock_result_factory(output_dir_with_results)
+        mock_result = mock_result_factory(scratch_dir_with_results)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         ok = reingest_execution(
@@ -334,7 +334,6 @@ class TestReingestExecution:
             mode=ReingestMode.replace,
         )
         reingest_db.session.commit()
-
         assert ok is True
         old_vals = (
             reingest_db.session.query(ScalarMetricValue)
@@ -351,7 +350,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
@@ -359,7 +358,7 @@ class TestReingestExecution:
         original_id = reingest_execution_obj.id
         original_count = reingest_db.session.query(Execution).count()
 
-        mock_result = mock_result_factory(output_dir_with_results)
+        mock_result = mock_result_factory(scratch_dir_with_results)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         ok = reingest_execution(
@@ -370,7 +369,6 @@ class TestReingestExecution:
             mode=ReingestMode.versioned,
         )
         reingest_db.session.commit()
-
         assert ok is True
         new_count = reingest_db.session.query(Execution).count()
         assert new_count == original_count + 1
@@ -385,7 +383,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mocker,
     ):
         """Should return False and skip when build_execution_result raises."""
@@ -412,7 +410,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
@@ -427,7 +425,7 @@ class TestReingestExecution:
         reingest_db.session.commit()
 
         mock_result = mock_result_factory(
-            output_dir_with_results, output_bundle_filename=None, series_filename=None
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
@@ -439,7 +437,6 @@ class TestReingestExecution:
             mode=ReingestMode.replace,
         )
         reingest_db.session.commit()
-
         reingest_db.session.refresh(eg)
         assert eg.dirty is True
 
@@ -450,7 +447,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
@@ -468,7 +465,7 @@ class TestReingestExecution:
         reingest_db.session.commit()
 
         mock_result = mock_result_factory(
-            output_dir_with_results, output_bundle_filename=None, series_filename=None
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
@@ -480,7 +477,6 @@ class TestReingestExecution:
             mode=ReingestMode.additive,
         )
         reingest_db.session.commit()
-
         # The pre-existing value should still be there
         pre_existing = (
             reingest_db.session.query(ScalarMetricValue)
@@ -497,14 +493,14 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
         """Running additive reingest twice should not create duplicate rows."""
         execution = reingest_execution_obj
 
-        mock_result = mock_result_factory(output_dir_with_results)
+        mock_result = mock_result_factory(scratch_dir_with_results)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # First reingest
@@ -516,7 +512,6 @@ class TestReingestExecution:
             mode=ReingestMode.additive,
         )
         reingest_db.session.commit()
-
         count_after_first = (
             reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
         )
@@ -533,7 +528,6 @@ class TestReingestExecution:
             mode=ReingestMode.additive,
         )
         reingest_db.session.commit()
-
         count_after_second = (
             reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
         )
@@ -555,7 +549,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
@@ -577,12 +571,12 @@ class TestReingestExecution:
         assert original_count == 1
 
         mock_result = mock_result_factory(
-            output_dir_with_results, output_bundle_filename=None, series_filename=None
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # Make the scalar ingestion fail by corrupting the metric bundle
-        (output_dir_with_results / "diagnostic.json").write_text("not valid json")
+        (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
 
         ok = reingest_execution(
             config=config,
@@ -592,7 +586,6 @@ class TestReingestExecution:
             mode=ReingestMode.replace,
         )
         reingest_db.session.commit()
-
         assert ok is False
 
         # Original data should be preserved since the savepoint rolled back
@@ -610,12 +603,12 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
         """Running versioned reingest twice should create distinct output fragments."""
-        mock_result = mock_result_factory(output_dir_with_results)
+        mock_result = mock_result_factory(scratch_dir_with_results)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # First versioned reingest
@@ -655,7 +648,7 @@ class TestReingestExecution:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
@@ -665,7 +658,7 @@ class TestReingestExecution:
         assert reingest_execution_obj.successful is False
 
         mock_result = mock_result_factory(
-            output_dir_with_results, output_bundle_filename=None, series_filename=None
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
@@ -677,24 +670,23 @@ class TestReingestExecution:
             mode=ReingestMode.replace,
         )
         reingest_db.session.commit()
-
         assert ok is True
         reingest_db.session.refresh(reingest_execution_obj)
         assert reingest_execution_obj.successful is True
 
-    def test_scratch_directory_cleaned_up_on_success(
+    def test_scratch_directory_preserved_after_success(
         self,
         config,
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mock_result_factory,
         mocker,
     ):
-        """Scratch directory should be removed after successful reingest."""
+        """Scratch directory should be preserved after reingest (contains raw outputs)."""
         mock_result = mock_result_factory(
-            output_dir_with_results, output_bundle_filename=None, series_filename=None
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
@@ -708,18 +700,18 @@ class TestReingestExecution:
             mode=ReingestMode.additive,
         )
 
-        assert not scratch_dir.exists(), f"Scratch directory was not cleaned up: {scratch_dir}"
+        assert scratch_dir.exists(), "Scratch directory should be preserved after reingest"
 
-    def test_scratch_directory_cleaned_up_on_failure(
+    def test_scratch_directory_preserved_after_failure(
         self,
         config,
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mocker,
     ):
-        """Scratch directory should be removed even when reingest fails."""
+        """Scratch directory should be preserved even when reingest fails."""
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         mocker.patch.object(
             mock_diagnostic,
@@ -738,21 +730,99 @@ class TestReingestExecution:
         )
 
         assert result is False
-        assert not scratch_dir.exists(), f"Scratch directory was not cleaned up on failure: {scratch_dir}"
+        assert scratch_dir.exists(), "Scratch directory should be preserved after failure"
 
 
-class TestCopyResultsToScratch:
-    def test_path_traversal_raises(self, config):
-        """Should reject output fragments that escape the base directory."""
-        with pytest.raises(ValueError, match="Unsafe source path"):
-            _copy_results_to_scratch(config, "/etc/passwd")
+class TestCopyWithBackup:
+    def test_copies_file(self, tmp_path):
+        """Should copy file to destination."""
+        src = tmp_path / "src" / "file.json"
+        src.parent.mkdir()
+        src.write_text('{"key": "new"}')
+        dst = tmp_path / "dst" / "file.json"
 
-    def test_copies_directory(self, config, reingest_execution_obj, output_dir_with_results):
-        """Should copy the results directory to scratch."""
-        scratch = _copy_results_to_scratch(config, reingest_execution_obj.output_fragment)
-        assert scratch.exists()
-        assert (scratch / "diagnostic.json").exists()
-        assert (scratch / "output.json").exists()
+        _copy_with_backup(src, dst)
+
+        assert dst.exists()
+        assert dst.read_text() == '{"key": "new"}'
+
+    def test_backs_up_existing_file(self, tmp_path):
+        """Should create .bak copy when overwriting an existing file."""
+        src = tmp_path / "src" / "file.json"
+        src.parent.mkdir()
+        src.write_text('{"key": "new"}')
+        dst = tmp_path / "dst" / "file.json"
+        dst.parent.mkdir()
+        dst.write_text('{"key": "old"}')
+
+        _copy_with_backup(src, dst)
+
+        assert dst.read_text() == '{"key": "new"}'
+        backup = dst.with_suffix(".json.bak")
+        assert backup.exists()
+        assert backup.read_text() == '{"key": "old"}'
+
+    def test_no_backup_when_no_existing(self, tmp_path):
+        """Should not create .bak when destination doesn't exist."""
+        src = tmp_path / "src" / "file.json"
+        src.parent.mkdir()
+        src.write_text('{"key": "value"}')
+        dst = tmp_path / "dst" / "file.json"
+
+        _copy_with_backup(src, dst)
+
+        assert dst.exists()
+        assert not dst.with_suffix(".json.bak").exists()
+
+
+class TestSyncReingestFilesToResults:
+    def test_non_versioned_copies_with_backup(self, config, reingest_execution_obj, scratch_dir_with_results):
+        """Non-versioned mode should copy CMEC bundles with backup of existing files."""
+        fragment = reingest_execution_obj.output_fragment
+        results_dir = config.paths.results / fragment
+        results_dir.mkdir(parents=True, exist_ok=True)
+        (results_dir / "diagnostic.json").write_text('{"old": true}')
+
+        mock_result = type(
+            "R",
+            (),
+            {
+                "metric_bundle_filename": pathlib.Path("diagnostic.json"),
+                "output_bundle_filename": pathlib.Path("output.json"),
+                "series_filename": pathlib.Path("series.json"),
+            },
+        )()
+
+        _sync_reingest_files_to_results(config, fragment, fragment, mock_result, ReingestMode.additive)
+
+        assert (results_dir / "diagnostic.json").exists()
+        assert (results_dir / "diagnostic.json.bak").exists()
+        assert (results_dir / "diagnostic.json.bak").read_text() == '{"old": true}'
+
+    def test_versioned_copies_entire_tree(self, config, reingest_execution_obj, scratch_dir_with_results):
+        """Versioned mode should copy entire scratch tree to new results directory."""
+        src_fragment = reingest_execution_obj.output_fragment
+        dst_fragment = src_fragment + "_v123abc"
+
+        mock_result = type(
+            "R",
+            (),
+            {
+                "metric_bundle_filename": pathlib.Path("diagnostic.json"),
+                "output_bundle_filename": None,
+                "series_filename": None,
+            },
+        )()
+
+        _sync_reingest_files_to_results(
+            config, src_fragment, dst_fragment, mock_result, ReingestMode.versioned
+        )
+
+        dst_dir = config.paths.results / dst_fragment
+        assert dst_dir.exists()
+        assert (dst_dir / "diagnostic.json").exists()
+        assert (dst_dir / "output.json").exists()
+        assert (dst_dir / "series.json").exists()
 
 
 class TestGetExistingMetricDimensions:
@@ -780,18 +850,28 @@ class TestGetExistingMetricDimensions:
         assert any(k == "source_id" and v == "model-a" for k, v in sig)
 
 
-class TestHandleReingestOutputBundle:
+class TestRegisterExecutionOutputs:
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_registers_outputs_in_db(self, config, reingest_db, reingest_execution_obj, output_dir_with_data):
+    def test_registers_outputs_in_db(
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data
+    ):
         """Should register output entries from the bundle into the database."""
-        bundle_path = output_dir_with_data / "output.json"
+        execution = reingest_execution_obj
+        bundle_path = scratch_dir_with_data / "output.json"
+        cmec_output_bundle = CMECOutput.load_from_json(bundle_path)
 
-        _handle_reingest_output_bundle(config, reingest_db, reingest_execution_obj, bundle_path)
+        results_base = config.paths.results / execution.output_fragment
+        register_execution_outputs(
+            reingest_db,
+            execution,
+            cmec_output_bundle.plots,
+            output_type=ResultOutputType.Plot,
+            base_path=results_base,
+            fallback_path=scratch_dir_with_data,
+        )
         reingest_db.session.commit()
 
-        outputs = (
-            reingest_db.session.query(ExecutionOutput).filter_by(execution_id=reingest_execution_obj.id).all()
-        )
+        outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).all()
         assert len(outputs) >= 1
         assert any(o.short_name == "test_plot" for o in outputs)
 
@@ -799,10 +879,10 @@ class TestHandleReingestOutputBundle:
 class TestIngestMetrics:
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_ingest_scalar_values(
-        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
     ):
         """Should ingest scalar metric values from a real CMEC bundle."""
-        mock_result = mock_result_factory(output_dir_with_data)
+        mock_result = mock_result_factory(scratch_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
@@ -818,10 +898,10 @@ class TestIngestMetrics:
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_ingest_additive_skips_existing(
-        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
     ):
         """Additive mode should skip values with existing dimension signatures."""
-        mock_result = mock_result_factory(output_dir_with_data)
+        mock_result = mock_result_factory(scratch_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         # First ingest
@@ -844,10 +924,10 @@ class TestIngestMetrics:
 class TestIngestMetricsWithSeries:
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_ingest_series_values(
-        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
     ):
         """Should ingest series metric values from a real series file."""
-        mock_result = mock_result_factory(output_dir_with_data)
+        mock_result = mock_result_factory(scratch_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
@@ -862,10 +942,10 @@ class TestIngestMetricsWithSeries:
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_ingest_series_additive_skips_existing(
-        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
     ):
         """Additive mode should skip series with existing dimension signatures."""
-        mock_result = mock_result_factory(output_dir_with_data)
+        mock_result = mock_result_factory(scratch_dir_with_data)
         cv = CV.load_from_file(config.paths.dimensions_cv)
 
         # First ingest
@@ -975,7 +1055,7 @@ class TestReingestUnsuccessfulResult:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mocker,
     ):
         """Should return False when build_execution_result returns unsuccessful."""
@@ -1000,7 +1080,7 @@ class TestReingestUnsuccessfulResult:
         reingest_db,
         reingest_execution_obj,
         mock_provider_registry,
-        output_dir_with_results,
+        scratch_dir_with_results,
         mocker,
     ):
         """Should return False when result is successful but metric_bundle_filename is None."""
@@ -1039,73 +1119,20 @@ class TestHandleReingestOutputsScratchFallback:
             ),
         }
 
-        _handle_reingest_outputs(
-            outputs=outputs,
+        results_base = config.paths.results / execution.output_fragment
+        register_execution_outputs(
+            reingest_db,
+            execution,
+            outputs,
             output_type=ResultOutputType.Plot,
-            config=config,
-            database=reingest_db,
-            execution=execution,
+            base_path=results_base,
+            fallback_path=scratch_base,
         )
         reingest_db.session.commit()
 
         db_outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).all()
         assert len(db_outputs) == 1
         assert db_outputs[0].short_name == "test_plot"
-
-
-class TestCopyResultsToScratchExistingDst:
-    def test_existing_scratch_dir_is_replaced(self, config, reingest_execution_obj, output_dir_with_results):
-        """When scratch destination already exists, it should be removed and replaced."""
-        fragment = reingest_execution_obj.output_fragment
-        dst = config.paths.scratch / fragment
-        dst.mkdir(parents=True, exist_ok=True)
-        (dst / "stale_file.txt").write_text("stale")
-
-        result = _copy_results_to_scratch(config, fragment)
-        assert result.exists()
-        assert not (result / "stale_file.txt").exists()
-        assert (result / "diagnostic.json").exists()
-
-
-class TestCopyScratchToResults:
-    def test_versioned_copies_to_new_dir(self, config, reingest_db, reingest_execution_obj):
-        """Versioned mode should copy scratch to a new results directory."""
-        execution = reingest_execution_obj
-        scratch_dir = config.paths.scratch / execution.output_fragment
-        scratch_dir.mkdir(parents=True, exist_ok=True)
-        (scratch_dir / "metric.json").write_text("{}")
-
-        original_results = config.paths.results / execution.output_fragment
-        original_results.mkdir(parents=True, exist_ok=True)
-
-        _copy_scratch_to_results(config, scratch_dir, execution, ReingestMode.versioned, original_results)
-
-        target = config.paths.results / execution.output_fragment
-        assert target.exists()
-        assert (target / "metric.json").exists()
-
-    def test_non_versioned_copies_in_place(self, config, reingest_db, reingest_execution_obj):
-        """Non-versioned mode should copy scratch into original results dir."""
-        execution = reingest_execution_obj
-        scratch_dir = config.paths.scratch / execution.output_fragment
-        scratch_dir.mkdir(parents=True, exist_ok=True)
-        (scratch_dir / "new_file.json").write_text("{}")
-
-        original_results = config.paths.results / execution.output_fragment
-        original_results.mkdir(parents=True, exist_ok=True)
-        (original_results / "existing.txt").write_text("keep")
-
-        _copy_scratch_to_results(config, scratch_dir, execution, ReingestMode.additive, original_results)
-
-        assert (original_results / "existing.txt").exists()
-        assert (original_results / "new_file.json").exists()
-
-
-class TestCopyResultsToScratchMissing:
-    def test_source_not_exists(self, config):
-        """Should raise FileNotFoundError when source directory doesn't exist."""
-        with pytest.raises(FileNotFoundError):
-            _copy_results_to_scratch(config, "nonexistent/path/fragment")
 
 
 class TestGetExecutionsForReingest:

@@ -66,6 +66,207 @@ def _copy_file_to_results(
     shutil.copy(input_directory / filename, output_filename)
 
 
+def ingest_scalar_values(
+    database: Database,
+    result: "ExecutionResult",
+    execution: Execution,
+    cv: CV,
+    *,
+    existing: "set[tuple[tuple[str, str], ...]] | None" = None,
+) -> None:
+    """
+    Load, validate, and bulk-insert scalar metric values.
+
+    Parameters
+    ----------
+    database
+        The active database session to use
+    result
+        The execution result containing the metric bundle filename
+    execution
+        The execution record to associate values with
+    cv
+        The controlled vocabulary to validate against
+    existing
+        When provided, dimension signatures already in the DB; values whose
+        signature is in this set are skipped (additive dedup).  When None,
+        all values are inserted unconditionally.
+
+    Notes
+    -----
+    Callers are responsible for transaction boundaries; this function does not
+    open a nested transaction or catch exceptions.
+    """
+    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
+
+    try:
+        cv.validate_metrics(cmec_metric_bundle)
+    except (ResultValidationError, AssertionError):
+        # TODO: Remove once we have settled on a controlled vocabulary
+        logger.warning(
+            "Diagnostic scalar values do not conform with the controlled vocabulary", exc_info=True
+        )
+
+    new_values = []
+    total_count = 0
+    for metric_result in cmec_metric_bundle.iter_results():
+        total_count += 1
+        if existing is not None:
+            dims = tuple(sorted(metric_result.dimensions.items()))
+            if dims in existing:
+                continue
+        new_values.append(
+            {
+                "execution_id": execution.id,
+                "value": metric_result.value,
+                "attributes": metric_result.attributes,
+                **metric_result.dimensions,
+            }
+        )
+
+    skipped = total_count - len(new_values)
+    if existing is not None:
+        logger.debug(
+            f"Additive: {len(new_values)} new scalar values "
+            f"(skipped {skipped} existing) for execution {execution.id}"
+        )
+    else:
+        logger.debug(f"Ingesting {len(new_values)} scalar values for execution {execution.id}")
+
+    if new_values:
+        database.session.execute(insert(ScalarMetricValue), new_values)
+
+
+def ingest_series_values(
+    database: Database,
+    result: "ExecutionResult",
+    execution: Execution,
+    cv: CV,
+    *,
+    existing: "set[tuple[tuple[str, str], ...]] | None" = None,
+) -> None:
+    """
+    Load, validate, and bulk-insert series metric values.
+
+    Parameters
+    ----------
+    database
+        The active database session to use
+    result
+        The execution result containing the series filename
+    execution
+        The execution record to associate values with
+    cv
+        The controlled vocabulary to validate against
+    existing
+        When provided, dimension signatures already in the DB; series whose
+        signature is in this set are skipped (additive dedup).  When None,
+        all values are inserted unconditionally.
+
+    Notes
+    -----
+    Callers are responsible for transaction boundaries; this function does not
+    open a nested transaction or catch exceptions.
+    """
+    assert result.series_filename, "Series filename must be set in the result"
+
+    series_values_path = result.to_output_path(result.series_filename)
+    series_values = TSeries.load_from_json(series_values_path)
+
+    try:
+        cv.validate_metrics(series_values)
+    except (ResultValidationError, AssertionError):
+        # TODO: Remove once we have settled on a controlled vocabulary
+        logger.warning(
+            "Diagnostic series values do not conform with the controlled vocabulary", exc_info=True
+        )
+
+    new_values = []
+    for series_result in series_values:
+        if existing is not None:
+            dims = tuple(sorted(series_result.dimensions.items()))
+            if dims in existing:
+                continue
+        new_values.append(
+            {
+                "execution_id": execution.id,
+                "values": series_result.values,
+                "attributes": series_result.attributes,
+                "index": series_result.index,
+                "index_name": series_result.index_name,
+                **series_result.dimensions,
+            }
+        )
+
+    skipped = len(series_values) - len(new_values)
+    if existing is not None:
+        logger.debug(
+            f"Additive: {len(new_values)} new series values "
+            f"(skipped {skipped} existing) for execution {execution.id}"
+        )
+    else:
+        logger.debug(f"Ingesting {len(new_values)} series values for execution {execution.id}")
+
+    if new_values:
+        database.session.execute(insert(SeriesMetricValue), new_values)
+
+
+def register_execution_outputs(  # noqa: PLR0913
+    database: Database,
+    execution: Execution,
+    outputs: "dict[str, OutputDict] | None",
+    output_type: ResultOutputType,
+    *,
+    base_path: pathlib.Path,
+    fallback_path: "pathlib.Path | None" = None,
+) -> None:
+    """
+    Register output entries in the database.
+
+    Each entry in ``outputs`` is resolved relative to ``base_path``.  When a
+    filename is not relative to ``base_path`` (raises ``ValueError``), it is
+    resolved relative to ``fallback_path`` instead (if provided).
+
+    Parameters
+    ----------
+    database
+        The active database session to use
+    execution
+        The execution record to associate outputs with
+    outputs
+        Mapping of short name to ``OutputDict`` (may be None)
+    output_type
+        The type of output being registered
+    base_path
+        Primary base directory for resolving relative filenames
+    fallback_path
+        Secondary base directory used when ``ensure_relative_path`` raises
+        ``ValueError`` against ``base_path``
+
+    Notes
+    -----
+    Callers are responsible for transaction boundaries.
+    """
+    for key, output_info in (outputs or {}).items():
+        try:
+            filename = ensure_relative_path(output_info.filename, base_path)
+        except ValueError:
+            if fallback_path is None:
+                raise
+            filename = ensure_relative_path(output_info.filename, fallback_path)
+        database.session.add(
+            ExecutionOutput.build(
+                execution_id=execution.id,
+                output_type=output_type,
+                filename=str(filename),
+                description=output_info.description,
+                short_name=key,
+                long_name=output_info.long_name,
+                dimensions=output_info.dimensions or {},
+            )
+        )
+
+
 def _process_execution_scalar(
     database: Database,
     result: "ExecutionResult",
@@ -77,38 +278,11 @@ def _process_execution_scalar(
 
     This also validates the scalar values against the controlled vocabulary
     """
-    # Load the metric bundle from the file
-    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-
-    # Check that the diagnostic values conform with the controlled vocabulary
-    try:
-        cv.validate_metrics(cmec_metric_bundle)
-    except (ResultValidationError, AssertionError):
-        # TODO: Remove once we have settled on a controlled vocabulary
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-        # execution.mark_failed()
-
     # Perform a bulk insert of scalar values
     # The current implementation will swallow the exception, but display a log message
     try:
-        scalar_values = [
-            {
-                "execution_id": execution.id,
-                "value": result.value,
-                "attributes": result.attributes,
-                **result.dimensions,
-            }
-            for result in cmec_metric_bundle.iter_results()
-        ]
-        logger.debug(f"Ingesting {len(scalar_values)} scalar values for execution {execution.id}")
-        if scalar_values:
-            # Perform this in a nested transaction to rollback if something goes wrong
-            # We will lose the metric values for a given execution, but not the whole execution
-            with database.session.begin_nested():
-                database.session.execute(
-                    insert(ScalarMetricValue),
-                    scalar_values,
-                )
+        with database.session.begin_nested():
+            ingest_scalar_values(database=database, result=result, execution=execution, cv=cv)
     # This is a broad exception catch to ensure we log any issues
     except Exception:
         logger.exception("Something went wrong when ingesting diagnostic values")
@@ -136,39 +310,9 @@ def _process_execution_series(
         result.series_filename,
     )
 
-    # Load the series values from the file
-    series_values_path = result.to_output_path(result.series_filename)
-    series_values = TSeries.load_from_json(series_values_path)
-
     try:
-        cv.validate_metrics(series_values)
-    except (ResultValidationError, AssertionError):
-        # TODO: Remove once we have settled on a controlled vocabulary
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-        # execution.mark_failed()
-
-    # Perform a bulk insert of series values
-    try:
-        series_values_content = [
-            {
-                "execution_id": execution.id,
-                "values": series_result.values,
-                "attributes": series_result.attributes,
-                "index": series_result.index,
-                "index_name": series_result.index_name,
-                **series_result.dimensions,
-            }
-            for series_result in series_values
-        ]
-        logger.debug(f"Ingesting {len(series_values)} series values for execution {execution.id}")
-        if series_values:
-            # Perform this in a nested transaction to rollback if something goes wrong
-            # We will lose the metric values for a given execution, but not the whole execution
-            with database.session.begin_nested():
-                database.session.execute(
-                    insert(SeriesMetricValue),
-                    series_values_content,
-                )
+        with database.session.begin_nested():
+            ingest_series_values(database=database, result=result, execution=execution, cv=cv)
     except Exception:
         logger.exception("Something went wrong when ingesting diagnostic series values")
 
@@ -277,57 +421,27 @@ def _handle_output_bundle(
     # Copy the content to the output directory
     # Track in the db
     cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
-    _handle_outputs(
-        cmec_output_bundle.plots,
-        output_type=ResultOutputType.Plot,
-        config=config,
-        database=database,
-        execution=execution,
-    )
-    _handle_outputs(
-        cmec_output_bundle.data,
-        output_type=ResultOutputType.Data,
-        config=config,
-        database=database,
-        execution=execution,
-    )
-    _handle_outputs(
-        cmec_output_bundle.html,
-        output_type=ResultOutputType.HTML,
-        config=config,
-        database=database,
-        execution=execution,
-    )
+    scratch_base = config.paths.scratch / execution.output_fragment
+    results_base = config.paths.results / execution.output_fragment
 
-
-def _handle_outputs(
-    outputs: dict[str, OutputDict] | None,
-    output_type: ResultOutputType,
-    config: "Config",
-    database: Database,
-    execution: Execution,
-) -> None:
-    outputs = outputs or {}
-
-    for key, output_info in outputs.items():
-        filename = ensure_relative_path(
-            output_info.filename, config.paths.scratch / execution.output_fragment
-        )
-
-        _copy_file_to_results(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            filename,
-        )
-        database.session.add(
-            ExecutionOutput.build(
-                execution_id=execution.id,
-                output_type=output_type,
-                filename=str(filename),
-                description=output_info.description,
-                short_name=key,
-                long_name=output_info.long_name,
-                dimensions=output_info.dimensions or {},
+    for attr, output_type in [
+        ("plots", ResultOutputType.Plot),
+        ("data", ResultOutputType.Data),
+        ("html", ResultOutputType.HTML),
+    ]:
+        outputs = getattr(cmec_output_bundle, attr) or {}
+        for output_info in outputs.values():
+            filename = ensure_relative_path(output_info.filename, scratch_base)
+            _copy_file_to_results(
+                config.paths.scratch,
+                config.paths.results,
+                execution.output_fragment,
+                filename,
             )
+        register_execution_outputs(
+            database,
+            execution,
+            outputs,
+            output_type=output_type,
+            base_path=results_base,
         )

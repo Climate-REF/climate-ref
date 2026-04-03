@@ -25,10 +25,14 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from loguru import logger
-from sqlalchemy import delete, insert
+from sqlalchemy import delete
 
 from climate_ref.datasets import get_slug_column
-from climate_ref.models import ScalarMetricValue, SeriesMetricValue
+from climate_ref.executor.result_handling import (
+    ingest_scalar_values,
+    ingest_series_values,
+    register_execution_outputs,
+)
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
@@ -43,12 +47,9 @@ from climate_ref_core.datasets import (
     ExecutionDatasetCollection,
     SourceDatasetType,
 )
-from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
-from climate_ref_core.exceptions import ResultValidationError
-from climate_ref_core.metric_values import SeriesMetricValue as TSeries
+from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.pycmec.controlled_vocabulary import CV
-from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput, OutputDict
+from climate_ref_core.pycmec.output import CMECOutput
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
@@ -171,72 +172,6 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
     return attrs
 
 
-def _handle_reingest_output_bundle(
-    config: "Config",
-    database: "Database",
-    execution: Execution,
-    cmec_output_bundle_filename: pathlib.Path,
-) -> None:
-    """
-    Process the output bundle for reingest (no file copy, files already in results dir).
-    """
-    cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
-    _handle_reingest_outputs(
-        cmec_output_bundle.plots,
-        output_type=ResultOutputType.Plot,
-        config=config,
-        database=database,
-        execution=execution,
-    )
-    _handle_reingest_outputs(
-        cmec_output_bundle.data,
-        output_type=ResultOutputType.Data,
-        config=config,
-        database=database,
-        execution=execution,
-    )
-    _handle_reingest_outputs(
-        cmec_output_bundle.html,
-        output_type=ResultOutputType.HTML,
-        config=config,
-        database=database,
-        execution=execution,
-    )
-
-
-def _handle_reingest_outputs(
-    outputs: dict[str, OutputDict] | None,
-    output_type: "ResultOutputType",
-    config: "Config",
-    database: "Database",
-    execution: Execution,
-) -> None:
-    """Register outputs in the DB without copying files (they are already in place)."""
-    outputs = outputs or {}
-    results_base = config.paths.results / execution.output_fragment
-    scratch_base = config.paths.scratch / execution.output_fragment
-
-    for key, output_info in outputs.items():
-        # Output bundles produced during re-extraction may contain absolute
-        # paths under the scratch directory. Fall back to scratch_base when
-        # the filename is not relative to results_base.
-        try:
-            filename = ensure_relative_path(output_info.filename, results_base)
-        except ValueError:
-            filename = ensure_relative_path(output_info.filename, scratch_base)
-        database.session.add(
-            ExecutionOutput.build(
-                execution_id=execution.id,
-                output_type=output_type,
-                filename=str(filename),
-                description=output_info.description,
-                short_name=key,
-                long_name=output_info.long_name,
-                dimensions=output_info.dimensions or {},
-            )
-        )
-
-
 def _get_existing_metric_dimensions(
     database: "Database", execution: Execution
 ) -> set[tuple[tuple[str, str], ...]]:
@@ -253,147 +188,51 @@ def _get_existing_metric_dimensions(
     return sigs
 
 
-def _process_reingest_series(
-    database: "Database",
-    result: ExecutionResult,
-    execution: Execution,
-    cv: CV,
-    *,
-    existing: set[tuple[tuple[str, str], ...]] | None = None,
-) -> None:
-    """
-    Process series values for reingest.
-
-    When ``existing`` is provided, only inserts series whose dimension
-    signatures are not already present (additive mode).
-    """
-    assert result.series_filename, "Series filename must be set in the result"
-
-    series_values_path = result.to_output_path(result.series_filename)
-    series_values = TSeries.load_from_json(series_values_path)
-
-    try:
-        cv.validate_metrics(series_values)
-    except (ResultValidationError, AssertionError):
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-
-    new_values = []
-    for series_result in series_values:
-        if existing is not None:
-            dims = tuple(sorted(series_result.dimensions.items()))
-            if dims in existing:
-                continue
-        new_values.append(
-            {
-                "execution_id": execution.id,
-                "values": series_result.values,
-                "attributes": series_result.attributes,
-                "index": series_result.index,
-                "index_name": series_result.index_name,
-                **series_result.dimensions,
-            }
-        )
-
-    skipped = len(series_values) - len(new_values)
-    if existing is not None:
-        logger.debug(
-            f"Additive: {len(new_values)} new series values "
-            f"(skipped {skipped} existing) for execution {execution.id}"
-        )
-    else:
-        logger.debug(f"Ingesting {len(new_values)} series values for execution {execution.id}")
-
-    if new_values:
-        database.session.execute(insert(SeriesMetricValue), new_values)
-
-
-def _process_reingest_scalar(
-    database: "Database",
-    result: ExecutionResult,
-    execution: Execution,
-    cv: CV,
-    *,
-    existing: set[tuple[tuple[str, str], ...]] | None = None,
-) -> None:
-    """
-    Process scalar values for reingest.
-
-    When ``existing`` is provided, only inserts values whose dimension
-    signatures are not already present (additive mode).
-    """
-    cmec_metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-
-    try:
-        cv.validate_metrics(cmec_metric_bundle)
-    except (ResultValidationError, AssertionError):
-        logger.exception("Diagnostic values do not conform with the controlled vocabulary")
-
-    new_values = []
-    total_count = 0
-    for metric_result in cmec_metric_bundle.iter_results():
-        total_count += 1
-        if existing is not None:
-            dims = tuple(sorted(metric_result.dimensions.items()))
-            if dims in existing:
-                continue
-        new_values.append(
-            {
-                "execution_id": execution.id,
-                "value": metric_result.value,
-                "attributes": metric_result.attributes,
-                **metric_result.dimensions,
-            }
-        )
-
-    skipped = total_count - len(new_values)
-    if existing is not None:
-        logger.debug(
-            f"Additive: {len(new_values)} new scalar values "
-            f"(skipped {skipped} existing) for execution {execution.id}"
-        )
-    else:
-        logger.debug(f"Ingesting {len(new_values)} scalar values for execution {execution.id}")
-
-    if new_values:
-        database.session.execute(insert(ScalarMetricValue), new_values)
-
-
-def _copy_results_to_scratch(
-    config: "Config",
-    output_fragment: str,
-) -> pathlib.Path:
-    """
-    Copy an execution's results directory to scratch for safe re-extraction.
-
-    ``build_execution_result()`` may write files (CMEC bundles) into its
-    ``definition.output_directory``.  Running it directly against the live
-    results tree would mutate the original outputs before the DB savepoint
-    has a chance to roll back on failure.  Copying to scratch first keeps
-    the results tree unchanged until we decide to commit.
-
-    Returns the scratch output directory.
-
-    Note: the scratch path is deterministic (scratch/output_fragment), so
-    concurrent reingest of the same execution is not supported.  The CLI
-    is single-threaded, so this is not a practical concern.
-    """
-    src = config.paths.results / output_fragment
-    dst = config.paths.scratch / output_fragment
-
-    if not src.is_relative_to(config.paths.results):
-        raise ValueError(f"Unsafe source path: {src} is not under {config.paths.results}")
-    if not dst.is_relative_to(config.paths.scratch):
-        raise ValueError(f"Unsafe destination path: {dst} is not under {config.paths.scratch}")
-
+def _copy_with_backup(src: pathlib.Path, dst: pathlib.Path) -> None:
+    """Copy *src* to *dst*, backing up *dst* first if it already exists."""
+    dst.parent.mkdir(parents=True, exist_ok=True)
     if dst.exists():
-        shutil.rmtree(dst)
-    shutil.copytree(src, dst)
-    return dst
+        backup = dst.with_suffix(dst.suffix + ".bak")
+        shutil.copy2(dst, backup)
+    shutil.copyfile(src, dst)
 
 
-def _delete_execution_results(database: "Database", execution: Execution) -> None:
-    """Delete all metric values and outputs for an execution."""
-    database.session.execute(delete(ExecutionOutput).where(ExecutionOutput.execution_id == execution.id))
+def _sync_reingest_files_to_results(
+    config: "Config",
+    src_fragment: str,
+    dst_fragment: str,
+    result: ExecutionResult,
+    mode: ReingestMode,
+) -> None:
+    """
+    Copy re-extracted CMEC bundles from scratch to the results directory.
+
+    For **versioned** mode the entire scratch tree is copied to a new results
+    directory (no backup needed).  For other modes only the CMEC bundle files
+    are overwritten, with ``.bak`` copies of the previous versions.
+    """
+    src_dir = config.paths.scratch / src_fragment
+    dst_dir = config.paths.results / dst_fragment
+
+    if mode == ReingestMode.versioned:
+        dst_dir.parent.mkdir(parents=True, exist_ok=True)
+        if dst_dir.exists():
+            shutil.rmtree(dst_dir)
+        shutil.copytree(src_dir, dst_dir)
+    else:
+        dst_dir.mkdir(parents=True, exist_ok=True)
+        assert result.metric_bundle_filename is not None
+        _copy_with_backup(src_dir / result.metric_bundle_filename, dst_dir / result.metric_bundle_filename)
+        if result.output_bundle_filename:
+            _copy_with_backup(
+                src_dir / result.output_bundle_filename, dst_dir / result.output_bundle_filename
+            )
+        if result.series_filename:
+            _copy_with_backup(src_dir / result.series_filename, dst_dir / result.series_filename)
+
+
+def _delete_execution_metric_values(database: "Database", execution: Execution) -> None:
+    """Delete all metric values for an execution (outputs are handled separately)."""
     # MetricValue uses single-table inheritance so we delete from the base table
     database.session.execute(delete(MetricValue).where(MetricValue.execution_id == execution.id))
 
@@ -416,6 +255,9 @@ def _apply_reingest_mode(  # noqa: PLR0913
 
     with database.session.begin_nested():
         if mode == ReingestMode.versioned:
+            # Hash is intentionally deterministic for a given execution:
+            # re-running versioned reingest on the same execution produces the
+            # same base fragment, with _n{count} suffixes for repeats.
             version_hash = hashlib.sha1(  # noqa: S324
                 f"{execution.output_fragment}-reingest-{execution.id}".encode()
             ).hexdigest()[:12]
@@ -442,18 +284,33 @@ def _apply_reingest_mode(  # noqa: PLR0913
                     )
                 )
         elif mode == ReingestMode.replace:
-            _delete_execution_results(database, target_execution)
+            _delete_execution_metric_values(database, target_execution)
 
+        # Outputs are always refreshed regardless of mode.
+        # "Additive" only applies to metric values as keeping stale entries
+        # would be more confusing than helpful.
         if result.output_bundle_filename:
             database.session.execute(
                 delete(ExecutionOutput).where(ExecutionOutput.execution_id == target_execution.id)
             )
-            _handle_reingest_output_bundle(
-                config,
-                database,
-                target_execution,
-                result.to_output_path(result.output_bundle_filename),
+            cmec_output_bundle = CMECOutput.load_from_json(
+                result.to_output_path(result.output_bundle_filename)
             )
+            results_base = config.paths.results / target_execution.output_fragment
+            scratch_base = config.paths.scratch / execution.output_fragment
+            for attr, output_type in [
+                ("plots", ResultOutputType.Plot),
+                ("data", ResultOutputType.Data),
+                ("html", ResultOutputType.HTML),
+            ]:
+                register_execution_outputs(
+                    database,
+                    target_execution,
+                    getattr(cmec_output_bundle, attr),
+                    output_type=output_type,
+                    base_path=results_base,
+                    fallback_path=scratch_base,
+                )
 
         _ingest_metrics(database, result, target_execution, cv, additive=mode == ReingestMode.additive)
 
@@ -475,30 +332,9 @@ def _ingest_metrics(
     existing = _get_existing_metric_dimensions(database, execution) if additive else None
 
     if result.series_filename:
-        _process_reingest_series(
-            database=database, result=result, execution=execution, cv=cv, existing=existing
-        )
+        ingest_series_values(database=database, result=result, execution=execution, cv=cv, existing=existing)
 
-    _process_reingest_scalar(database=database, result=result, execution=execution, cv=cv, existing=existing)
-
-
-def _copy_scratch_to_results(
-    config: "Config",
-    scratch_dir: pathlib.Path,
-    target_execution: Execution,
-    mode: ReingestMode,
-    original_results_dir: pathlib.Path,
-) -> None:
-    """Copy re-extracted files from scratch to the results tree after DB success."""
-    target_results_dir = config.paths.results / target_execution.output_fragment
-    if not target_results_dir.is_relative_to(config.paths.results):
-        raise ValueError(f"Unsafe target path: {target_results_dir} is not under {config.paths.results}")
-    if mode == ReingestMode.versioned:
-        if target_results_dir.exists():
-            shutil.rmtree(target_results_dir)
-        shutil.copytree(scratch_dir, target_results_dir)
-    else:
-        shutil.copytree(scratch_dir, original_results_dir, dirs_exist_ok=True)
+    ingest_scalar_values(database=database, result=result, execution=execution, cv=cv, existing=existing)
 
 
 def reingest_execution(
@@ -511,7 +347,10 @@ def reingest_execution(
     """
     Reingest an existing execution.
 
-    Re-runs ``build_execution_result()`` and processes the results into the database.
+    Re-runs ``build_execution_result()`` against the scratch directory (which
+    contains the raw outputs from the original diagnostic run) and re-ingests
+    the results into the database.  Updated CMEC bundles are then copied from
+    scratch to the results directory, backing up previous versions.
 
     Parameters
     ----------
@@ -545,64 +384,60 @@ def reingest_execution(
         )
         return False
 
-    results_dir = config.paths.results / execution.output_fragment
-
-    # Verify output directory exists
-    if not results_dir.exists():
-        logger.error(f"Output directory does not exist: {results_dir}. Skipping execution {execution.id}.")
+    # The scratch directory contains the raw outputs from the original
+    # diagnostic run and is never cleaned up.  build_execution_result()
+    # writes CMEC bundles here.
+    scratch_dir = config.paths.scratch / execution.output_fragment
+    if not scratch_dir.exists():
+        logger.error(f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}.")
         return False
 
-    # Copy the results directory to scratch so that build_execution_result()
-    # can write CMEC bundles without mutating the live results tree.
-    # If anything fails, the original files remain untouched.
-    scratch_dir = _copy_results_to_scratch(config, execution.output_fragment)
+    definition = reconstruct_execution_definition(config, execution, diagnostic)
 
     try:
-        definition = reconstruct_execution_definition(config, execution, diagnostic)
-
-        try:
-            result = diagnostic.build_execution_result(definition)
-        except Exception:
-            logger.exception(
-                f"build_execution_result failed for execution {execution.id} "
-                f"({provider_slug}/{diagnostic_slug}). Skipping."
-            )
-            return False
-
-        if not result.successful or result.metric_bundle_filename is None:
-            logger.warning(
-                f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
-            )
-            return False
-
-        cv = CV.load_from_file(config.paths.dimensions_cv)
-
-        try:
-            target_execution = _apply_reingest_mode(
-                config=config,
-                database=database,
-                execution=execution,
-                result=result,
-                mode=mode,
-                cv=cv,
-            )
-        except Exception:
-            logger.exception(
-                f"Ingestion failed for execution {execution.id} "
-                f"({provider_slug}/{diagnostic_slug}). Rolling back changes."
-            )
-            return False
-
-        _copy_scratch_to_results(config, scratch_dir, target_execution, mode, results_dir)
-
-        logger.info(
-            f"Successfully reingested execution {execution.id} "
-            f"({provider_slug}/{diagnostic_slug}) in {mode.value} mode"
+        result = diagnostic.build_execution_result(definition)
+    except Exception:
+        logger.exception(
+            f"build_execution_result failed for execution {execution.id} "
+            f"({provider_slug}/{diagnostic_slug}). Skipping."
         )
-        return True
-    finally:
-        if scratch_dir.exists():
-            shutil.rmtree(scratch_dir)
+        return False
+
+    if not result.successful or result.metric_bundle_filename is None:
+        logger.warning(
+            f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
+        )
+        return False
+
+    cv = CV.load_from_file(config.paths.dimensions_cv)
+
+    try:
+        target_execution = _apply_reingest_mode(
+            config=config,
+            database=database,
+            execution=execution,
+            result=result,
+            mode=mode,
+            cv=cv,
+        )
+    except Exception:
+        logger.exception(
+            f"Ingestion failed for execution {execution.id} "
+            f"({provider_slug}/{diagnostic_slug}). Rolling back changes."
+        )
+        return False
+
+    # Copy re-extracted CMEC bundles from scratch to the results tree.
+    # For non-versioned modes, existing files are backed up with a .bak suffix.
+    _sync_reingest_files_to_results(
+        config, execution.output_fragment, target_execution.output_fragment, result, mode
+    )
+
+    logger.info(
+        f"Successfully reingested execution {execution.id} "
+        f"({provider_slug}/{diagnostic_slug}) in {mode.value} mode"
+    )
+    return True
 
 
 def get_executions_for_reingest(

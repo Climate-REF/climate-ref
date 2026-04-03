@@ -745,10 +745,6 @@ def stats(
 @app.command()
 def reingest(  # noqa: PLR0913
     ctx: typer.Context,
-    group_ids: Annotated[
-        list[int] | None,
-        typer.Argument(help="Execution group IDs to reingest. If omitted, uses filters."),
-    ] = None,
     mode: Annotated[
         ReingestMode,
         typer.Option(
@@ -756,7 +752,11 @@ def reingest(  # noqa: PLR0913
             "'replace' (delete existing, re-ingest), "
             "'versioned' (create new execution record)."
         ),
-    ] = ReingestMode.additive,
+    ],
+    group_ids: Annotated[
+        list[int] | None,
+        typer.Argument(help="Execution group IDs to reingest. If omitted, uses filters."),
+    ] = None,
     provider: Annotated[
         list[str] | None,
         typer.Option(
@@ -868,8 +868,9 @@ def reingest(  # noqa: PLR0913
     # Process each execution in a separate transaction
     success_count = 0
     skip_count = 0
+    session = db.session
     for eg, ex in results:
-        with db.session.begin():
+        with session.begin_nested() if session.in_transaction() else session.begin():
             ok = reingest_execution(
                 config=config,
                 database=db,

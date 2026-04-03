@@ -10,16 +10,18 @@ from climate_ref_pmp import provider as pmp_provider
 from climate_ref.executor.reingest import (
     ReingestMode,
     _copy_results_to_scratch,
+    _copy_scratch_to_results,
     _delete_execution_results,
     _extract_dataset_attributes,
     _get_existing_metric_dimensions,
     _handle_reingest_output_bundle,
+    _handle_reingest_outputs,
     _ingest_metrics,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
 )
-from climate_ref.models import ScalarMetricValue
+from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
 from climate_ref.models.execution import (
@@ -37,7 +39,7 @@ from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.pycmec.output import CMECOutput, OutputDict
 
 
 @pytest.fixture
@@ -839,6 +841,93 @@ class TestIngestMetrics:
         assert count_first == count_second
 
 
+class TestIngestMetricsWithSeries:
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_series_values(
+        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
+    ):
+        """Should ingest series metric values from a real series file."""
+        mock_result = mock_result_factory(output_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        reingest_db.session.commit()
+
+        series = (
+            reingest_db.session.query(SeriesMetricValue)
+            .filter_by(execution_id=reingest_execution_obj.id)
+            .all()
+        )
+        assert len(series) >= 1
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_series_additive_skips_existing(
+        self, config, reingest_db, reingest_execution_obj, output_dir_with_data, mock_result_factory
+    ):
+        """Additive mode should skip series with existing dimension signatures."""
+        mock_result = mock_result_factory(output_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        # First ingest
+        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=False)
+        reingest_db.session.commit()
+
+        count_first = (
+            reingest_db.session.query(SeriesMetricValue)
+            .filter_by(execution_id=reingest_execution_obj.id)
+            .count()
+        )
+
+        # Second ingest in additive mode
+        _ingest_metrics(reingest_db, mock_result, reingest_execution_obj, cv, additive=True)
+        reingest_db.session.commit()
+
+        count_second = (
+            reingest_db.session.query(SeriesMetricValue)
+            .filter_by(execution_id=reingest_execution_obj.id)
+            .count()
+        )
+
+        assert count_first == count_second
+
+
+class TestReconstructEmptyDataset:
+    def test_reconstruct_dataset_with_no_files(self, config, db_seeded, provider):
+        """Datasets with no files should produce an empty DataFrame."""
+        with db_seeded.session.begin():
+            diag = db_seeded.session.query(DiagnosticModel).first()
+            eg = ExecutionGroup(
+                key="empty-files",
+                diagnostic_id=diag.id,
+                selectors={"cmip6": [["source_id", "NONEXISTENT"]]},
+            )
+            db_seeded.session.add(eg)
+            db_seeded.session.flush()
+
+            # Link a dataset but it has no files
+            dataset = db_seeded.session.query(CMIP6Dataset).first()
+            ex = Execution(
+                execution_group_id=eg.id,
+                successful=True,
+                output_fragment="test/empty-files/abc",
+                dataset_hash="h1",
+            )
+            db_seeded.session.add(ex)
+            db_seeded.session.flush()
+
+            if dataset:
+                db_seeded.session.execute(
+                    execution_datasets.insert().values(
+                        execution_id=ex.id,
+                        dataset_id=dataset.id,
+                    )
+                )
+
+        diagnostic = provider.get("mock")
+        definition = reconstruct_execution_definition(config, ex, diagnostic)
+        assert definition.key == "empty-files"
+
+
 class TestReconstructWithDatasets:
     def test_reconstruct_with_linked_datasets(self, config, db_seeded, provider):
         """reconstruct_execution_definition should build dataset collections from linked datasets."""
@@ -877,6 +966,146 @@ class TestReconstructWithDatasets:
         assert definition.key == "recon-test"
         if dataset:
             assert SourceDatasetType.CMIP6 in definition.datasets
+
+
+class TestReingestUnsuccessfulResult:
+    def test_reingest_unsuccessful_build_result(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        output_dir_with_results,
+        mocker,
+    ):
+        """Should return False when build_execution_result returns unsuccessful."""
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.successful = False
+        mock_result.metric_bundle_filename = None
+        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.replace,
+        )
+        assert ok is False
+
+    def test_reingest_successful_but_no_metric_bundle(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        output_dir_with_results,
+        mocker,
+    ):
+        """Should return False when result is successful but metric_bundle_filename is None."""
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        mock_result = mocker.Mock(spec=ExecutionResult)
+        mock_result.successful = True
+        mock_result.metric_bundle_filename = None
+        mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+            mode=ReingestMode.replace,
+        )
+        assert ok is False
+
+
+class TestHandleReingestOutputsScratchFallback:
+    def test_scratch_path_fallback(self, config, reingest_db, reingest_execution_obj):
+        """When output filename is absolute under scratch, should fall back to scratch base."""
+        execution = reingest_execution_obj
+
+        # Create a scratch directory with a plot file
+        scratch_base = config.paths.scratch / execution.output_fragment
+        scratch_base.mkdir(parents=True, exist_ok=True)
+        (scratch_base / "plot.png").write_bytes(b"fake png")
+
+        # Build an OutputDict with an absolute path under scratch (not under results)
+        outputs = {
+            "test_plot": OutputDict(
+                filename=str(scratch_base / "plot.png"),
+                long_name="Test Plot",
+                description="A test plot",
+            ),
+        }
+
+        _handle_reingest_outputs(
+            outputs=outputs,
+            output_type=ResultOutputType.Plot,
+            config=config,
+            database=reingest_db,
+            execution=execution,
+        )
+        reingest_db.session.commit()
+
+        db_outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).all()
+        assert len(db_outputs) == 1
+        assert db_outputs[0].short_name == "test_plot"
+
+
+class TestCopyResultsToScratchExistingDst:
+    def test_existing_scratch_dir_is_replaced(self, config, reingest_execution_obj, output_dir_with_results):
+        """When scratch destination already exists, it should be removed and replaced."""
+        fragment = reingest_execution_obj.output_fragment
+        dst = config.paths.scratch / fragment
+        dst.mkdir(parents=True, exist_ok=True)
+        (dst / "stale_file.txt").write_text("stale")
+
+        result = _copy_results_to_scratch(config, fragment)
+        assert result.exists()
+        assert not (result / "stale_file.txt").exists()
+        assert (result / "diagnostic.json").exists()
+
+
+class TestCopyScratchToResults:
+    def test_versioned_copies_to_new_dir(self, config, reingest_db, reingest_execution_obj):
+        """Versioned mode should copy scratch to a new results directory."""
+        execution = reingest_execution_obj
+        scratch_dir = config.paths.scratch / execution.output_fragment
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        (scratch_dir / "metric.json").write_text("{}")
+
+        original_results = config.paths.results / execution.output_fragment
+        original_results.mkdir(parents=True, exist_ok=True)
+
+        _copy_scratch_to_results(config, scratch_dir, execution, ReingestMode.versioned, original_results)
+
+        target = config.paths.results / execution.output_fragment
+        assert target.exists()
+        assert (target / "metric.json").exists()
+
+    def test_non_versioned_copies_in_place(self, config, reingest_db, reingest_execution_obj):
+        """Non-versioned mode should copy scratch into original results dir."""
+        execution = reingest_execution_obj
+        scratch_dir = config.paths.scratch / execution.output_fragment
+        scratch_dir.mkdir(parents=True, exist_ok=True)
+        (scratch_dir / "new_file.json").write_text("{}")
+
+        original_results = config.paths.results / execution.output_fragment
+        original_results.mkdir(parents=True, exist_ok=True)
+        (original_results / "existing.txt").write_text("keep")
+
+        _copy_scratch_to_results(config, scratch_dir, execution, ReingestMode.additive, original_results)
+
+        assert (original_results / "existing.txt").exists()
+        assert (original_results / "new_file.json").exists()
+
+
+class TestCopyResultsToScratchMissing:
+    def test_source_not_exists(self, config):
+        """Should raise FileNotFoundError when source directory doesn't exist."""
+        with pytest.raises(FileNotFoundError):
+            _copy_results_to_scratch(config, "nonexistent/path/fragment")
 
 
 class TestGetExecutionsForReingest:
@@ -957,3 +1186,79 @@ class TestGetExecutionsForReingest:
         results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg1.id])
         assert len(results) == 1
         assert results[0][0].id == eg1.id
+
+    def test_filters_by_provider(self, db_seeded):
+        """Should filter executions by provider slug."""
+        with db_seeded.session.begin():
+            diag_pmp = db_seeded.session.query(DiagnosticModel).filter_by(slug="enso_tel").first()
+            diag_esm = db_seeded.session.query(DiagnosticModel).filter_by(slug="enso-characteristics").first()
+
+            eg1 = ExecutionGroup(key="prov-pmp", diagnostic_id=diag_pmp.id, selectors={})
+            eg2 = ExecutionGroup(key="prov-esm", diagnostic_id=diag_esm.id, selectors={})
+            db_seeded.session.add_all([eg1, eg2])
+            db_seeded.session.flush()
+
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg1.id,
+                    successful=True,
+                    output_fragment="out-pmp",
+                    dataset_hash="hp",
+                )
+            )
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg2.id,
+                    successful=True,
+                    output_fragment="out-esm",
+                    dataset_hash="he",
+                )
+            )
+
+        results = get_executions_for_reingest(db_seeded, provider_filters=["pmp"])
+        provider_slugs = {eg.diagnostic.provider.slug for eg, _ in results}
+        assert "pmp" in provider_slugs
+        assert "esmvaltool" not in provider_slugs
+
+    def test_filters_by_diagnostic(self, db_seeded):
+        """Should filter executions by diagnostic slug."""
+        with db_seeded.session.begin():
+            diag_pmp = db_seeded.session.query(DiagnosticModel).filter_by(slug="enso_tel").first()
+            diag_esm = db_seeded.session.query(DiagnosticModel).filter_by(slug="enso-characteristics").first()
+
+            eg1 = ExecutionGroup(key="diag-pmp", diagnostic_id=diag_pmp.id, selectors={})
+            eg2 = ExecutionGroup(key="diag-esm", diagnostic_id=diag_esm.id, selectors={})
+            db_seeded.session.add_all([eg1, eg2])
+            db_seeded.session.flush()
+
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg1.id,
+                    successful=True,
+                    output_fragment="out-d-pmp",
+                    dataset_hash="hdp",
+                )
+            )
+            db_seeded.session.add(
+                Execution(
+                    execution_group_id=eg2.id,
+                    successful=True,
+                    output_fragment="out-d-esm",
+                    dataset_hash="hde",
+                )
+            )
+
+        results = get_executions_for_reingest(db_seeded, diagnostic_filters=["enso_tel"])
+        diag_slugs = {eg.diagnostic.slug for eg, _ in results}
+        assert "enso_tel" in diag_slugs
+        assert "enso-characteristics" not in diag_slugs
+
+    def test_filters_out_none_executions(self, db_seeded):
+        """Should filter out execution groups that have no executions."""
+        with db_seeded.session.begin():
+            diag = db_seeded.session.query(DiagnosticModel).first()
+            eg = ExecutionGroup(key="no-exec", diagnostic_id=diag.id, selectors={})
+            db_seeded.session.add(eg)
+
+        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id])
+        assert len(results) == 0

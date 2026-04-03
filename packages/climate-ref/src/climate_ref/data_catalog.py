@@ -81,13 +81,13 @@ class DataCatalog:
         Finalise unfinalised datasets in the given subset.
 
         If the adapter supports finalization (implements FinaliseableDatasetAdapterMixin),
-        unfinalised datasets in the subset are finalized by opening their files.
+        unfinalised datasets in the subset are finalised by opening their files.
         The internal cache and database are updated accordingly.
 
         Parameters
         ----------
         subset
-            DataFrame subset to finalize (typically after filter+group_by)
+            DataFrame subset to finalise (typically after filter+group_by)
 
         Returns
         -------

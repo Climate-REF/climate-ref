@@ -1081,3 +1081,275 @@ class TestReingestEquivalence:
         assert original_outputs == reingest_outputs, (
             f"Output entries differ: original={original_outputs}, reingest={reingest_outputs}"
         )
+
+
+class TestReingestDatasetLinks:
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_copies_dataset_links(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """New execution should have the same dataset links as the original."""
+        execution = reingest_execution_obj
+
+        # Create a dataset to link to the execution
+        dataset = CMIP6Dataset(
+            slug="test-dataset.tas.gn",
+            instance_id="CMIP6.test.tas",
+            variable_id="tas",
+            source_id="ACCESS-ESM1-5",
+            experiment_id="historical",
+            table_id="Amon",
+            grid_label="gn",
+            member_id="r1i1p1f1",
+            variant_label="r1i1p1f1",
+            version="v20200101",
+            activity_id="CMIP",
+            institution_id="CSIRO",
+        )
+        reingest_db.session.add(dataset)
+        reingest_db.session.flush()
+
+        reingest_db.session.execute(
+            execution_datasets.insert().values(
+                execution_id=execution.id,
+                dataset_id=dataset.id,
+            )
+        )
+        reingest_db.session.commit()
+
+        original_dataset_ids = sorted(d.id for d in execution.datasets)
+        assert len(original_dataset_ids) >= 1
+
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=execution,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = reingest_db.session.query(Execution).filter(Execution.id != execution.id).one()
+        new_dataset_ids = sorted(d.id for d in new_execution.datasets)
+        assert original_dataset_ids == new_dataset_ids, (
+            f"Dataset links should be copied: original={original_dataset_ids}, new={new_dataset_ids}"
+        )
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_with_no_datasets(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Reingest should succeed even when original execution has no dataset links."""
+        assert len(reingest_execution_obj.datasets) == 0
+
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+        assert len(new_execution.datasets) == 0
+
+
+class TestReingestExecutionState:
+    """Verify the state of the new execution record after reingest."""
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_new_execution_marked_successful_with_correct_path(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """New execution should be marked successful with the correct metric bundle path."""
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+        assert new_execution.successful is True
+        assert new_execution.path is not None
+        assert "diagnostic.json" in new_execution.path
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_new_execution_belongs_to_same_group(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """New execution should belong to the same execution group as the original."""
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+        assert new_execution.execution_group_id == reingest_execution_obj.execution_group_id
+        assert new_execution.dataset_hash == reingest_execution_obj.dataset_hash
+
+
+class TestReingestFailureCleanup:
+    """Verify that failed reingest cleans up the results directory."""
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_results_dir_cleaned_on_ingestion_failure(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """If ingestion fails, the copied results directory should be removed."""
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
+        )
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        # Corrupt the metric bundle so ingestion fails
+        (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is False
+
+        # No versioned results directory should remain
+        # The original fragment dir may or may not exist, but no _v2 dir should exist
+        versioned_dir = config.paths.results / (reingest_execution_obj.output_fragment + "_v2")
+        assert not versioned_dir.exists(), "Failed reingest should clean up results directory"
+
+
+# --- ingest_execution_result standalone tests ---
+
+
+class TestIngestExecutionResultStandalone:
+    """Test ingest_execution_result with the simplified signature."""
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_with_all_outputs(
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
+    ):
+        """Should ingest scalars, series, and register outputs in one call."""
+        mock_result = mock_result_factory(scratch_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        ingest_execution_result(
+            reingest_db,
+            reingest_execution_obj,
+            mock_result,
+            cv,
+            output_base_path=scratch_dir_with_data,
+        )
+        reingest_db.session.commit()
+
+        execution_id = reingest_execution_obj.id
+
+        scalars = reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution_id).all()
+        assert len(scalars) >= 1, "Should have ingested scalar values"
+        assert scalars[0].value == 42.0
+
+        series = reingest_db.session.query(SeriesMetricValue).filter_by(execution_id=execution_id).all()
+        assert len(series) >= 1, "Should have ingested series values"
+
+        outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution_id).all()
+        assert len(outputs) >= 1, "Should have registered outputs"
+        assert any(o.short_name == "test_plot" for o in outputs)
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_without_optional_outputs(
+        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
+    ):
+        """Should work with no output_bundle and no series."""
+        mock_result = mock_result_factory(
+            scratch_dir_with_data, output_bundle_filename=None, series_filename=None
+        )
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        ingest_execution_result(
+            reingest_db,
+            reingest_execution_obj,
+            mock_result,
+            cv,
+            output_base_path=scratch_dir_with_data,
+        )
+        reingest_db.session.commit()
+
+        execution_id = reingest_execution_obj.id
+
+        scalars = reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution_id).all()
+        assert len(scalars) >= 1, "Should still ingest scalar values"
+
+        series = reingest_db.session.query(SeriesMetricValue).filter_by(execution_id=execution_id).all()
+        assert len(series) == 0, "Should have no series values"
+
+        outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution_id).all()
+        assert len(outputs) == 0, "Should have no registered outputs"

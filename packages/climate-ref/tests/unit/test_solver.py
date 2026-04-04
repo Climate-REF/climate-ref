@@ -1283,6 +1283,72 @@ def test_diagnostic_execution_build_definition(mock_diagnostic, provider, tmp_pa
     assert str(tmp_path.resolve()) in str(definition.output_directory)
 
 
+def test_build_definition_with_fragment_collision(mock_diagnostic, provider, tmp_path):
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+                "instance_id": ["CMIP6.test.tas"],
+            }
+        ),
+    }
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id",),
+        ),
+    )
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+    assert len(executions) == 1
+
+    # First definition: no collision
+    definition = executions[0].build_execution_definition(output_root=tmp_path)
+    base_fragment = str(definition.output_fragment())
+
+    # Second definition: simulate collision by passing existing_fragments
+    definition_v2 = executions[0].build_execution_definition(
+        output_root=tmp_path,
+        existing_fragments={base_fragment},
+        results_dir=tmp_path,
+    )
+    v2_fragment = str(definition_v2.output_fragment())
+
+    assert v2_fragment != base_fragment, "Should allocate a different fragment on collision"
+    assert v2_fragment == f"{base_fragment}_v2", f"Expected _v2 suffix, got {v2_fragment}"
+    assert str(tmp_path.resolve()) in str(definition_v2.output_directory)
+
+
+def test_build_definition_no_collision_params_skips_allocation(mock_diagnostic, provider, tmp_path):
+    data_catalog = {
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+                "instance_id": ["CMIP6.test.tas"],
+            }
+        ),
+    }
+    mock_diagnostic.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("variable_id",),
+        ),
+    )
+    executions = list(solve_executions(data_catalog, mock_diagnostic, provider))
+
+    # Without collision params, should return natural fragment
+    def1 = executions[0].build_execution_definition(output_root=tmp_path)
+    def2 = executions[0].build_execution_definition(
+        output_root=tmp_path, existing_fragments=None, results_dir=None
+    )
+    assert str(def1.output_fragment()) == str(def2.output_fragment())
+
+
 def test_diagnostic_execution_selectors(mock_diagnostic, provider):
     """Test DiagnosticExecution.selectors property."""
     data_catalog = {

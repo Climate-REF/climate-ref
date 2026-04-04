@@ -578,8 +578,11 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     total_count = 0
 
     for potential_execution in solver.solve(filters):
+        # The diagnostic output is first written to the scratch directory
+        definition = potential_execution.build_execution_definition(output_root=config.paths.scratch)
+
         logger.debug(
-            f"Identified candidate execution {potential_execution.dataset_key} "
+            f"Identified candidate execution {definition.key} "
             f"for {potential_execution.diagnostic.full_slug()}"
         )
 
@@ -602,7 +605,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             )
             execution_group, created = db.get_or_create(
                 ExecutionGroup,
-                key=potential_execution.dataset_key,
+                key=definition.key,
                 diagnostic_id=diagnostic.id,
                 defaults={
                     "selectors": potential_execution.selectors,
@@ -626,7 +629,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 f"provider_count={provider_count}"
             )
 
-            if execution_group.should_run(potential_execution.datasets.hash, rerun_failed=rerun_failed):
+            if execution_group.should_run(definition.datasets.hash, rerun_failed=rerun_failed):
                 if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
                     logger.info(
                         f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
@@ -642,7 +645,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                         break
                     continue
 
-                # Build the definition now that we know fragment collision info
+                # Rebuild the definition with fragment collision info
                 existing_fragments = {e.output_fragment for e in execution_group.executions}
                 definition = potential_execution.build_execution_definition(
                     output_root=config.paths.scratch,

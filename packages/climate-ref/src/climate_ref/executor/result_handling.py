@@ -71,8 +71,6 @@ def ingest_scalar_values(
     result: "ExecutionResult",
     execution: Execution,
     cv: CV,
-    *,
-    existing: "set[tuple[tuple[str, str], ...]] | None" = None,
 ) -> None:
     """
     Load, validate, and bulk-insert scalar metric values.
@@ -87,10 +85,6 @@ def ingest_scalar_values(
         The execution record to associate values with
     cv
         The controlled vocabulary to validate against
-    existing
-        When provided, dimension signatures already in the DB; values whose
-        signature is in this set are skipped (additive dedup).  When None,
-        all values are inserted unconditionally.
 
     Notes
     -----
@@ -108,13 +102,7 @@ def ingest_scalar_values(
         )
 
     new_values = []
-    total_count = 0
     for metric_result in cmec_metric_bundle.iter_results():
-        total_count += 1
-        if existing is not None:
-            dims = tuple(sorted(metric_result.dimensions.items()))
-            if dims in existing:
-                continue
         new_values.append(
             {
                 "execution_id": execution.id,
@@ -124,14 +112,7 @@ def ingest_scalar_values(
             }
         )
 
-    skipped = total_count - len(new_values)
-    if existing is not None:
-        logger.debug(
-            f"Additive: {len(new_values)} new scalar values "
-            f"(skipped {skipped} existing) for execution {execution.id}"
-        )
-    else:
-        logger.debug(f"Ingesting {len(new_values)} scalar values for execution {execution.id}")
+    logger.debug(f"Ingesting {len(new_values)} scalar values for execution {execution.id}")
 
     if new_values:
         database.session.execute(insert(ScalarMetricValue), new_values)
@@ -142,8 +123,6 @@ def ingest_series_values(
     result: "ExecutionResult",
     execution: Execution,
     cv: CV,
-    *,
-    existing: "set[tuple[tuple[str, str], ...]] | None" = None,
 ) -> None:
     """
     Load, validate, and bulk-insert series metric values.
@@ -158,10 +137,6 @@ def ingest_series_values(
         The execution record to associate values with
     cv
         The controlled vocabulary to validate against
-    existing
-        When provided, dimension signatures already in the DB; series whose
-        signature is in this set are skipped (additive dedup).  When None,
-        all values are inserted unconditionally.
 
     Notes
     -----
@@ -183,10 +158,6 @@ def ingest_series_values(
 
     new_values = []
     for series_result in series_values:
-        if existing is not None:
-            dims = tuple(sorted(series_result.dimensions.items()))
-            if dims in existing:
-                continue
         new_values.append(
             {
                 "execution_id": execution.id,
@@ -198,28 +169,19 @@ def ingest_series_values(
             }
         )
 
-    skipped = len(series_values) - len(new_values)
-    if existing is not None:
-        logger.debug(
-            f"Additive: {len(new_values)} new series values "
-            f"(skipped {skipped} existing) for execution {execution.id}"
-        )
-    else:
-        logger.debug(f"Ingesting {len(new_values)} series values for execution {execution.id}")
+    logger.debug(f"Ingesting {len(new_values)} series values for execution {execution.id}")
 
     if new_values:
         database.session.execute(insert(SeriesMetricValue), new_values)
 
 
-def ingest_execution_result(  # noqa: PLR0913
+def ingest_execution_result(
     database: Database,
     execution: Execution,
     result: "ExecutionResult",
     cv: CV,
     *,
     output_base_path: pathlib.Path,
-    output_fallback_path: "pathlib.Path | None" = None,
-    existing_metrics: "set[tuple[tuple[str, str], ...]] | None" = None,
 ) -> None:
     """
     Ingest a successful execution result into the database.
@@ -238,11 +200,6 @@ def ingest_execution_result(  # noqa: PLR0913
         The controlled vocabulary to validate metrics against
     output_base_path
         Primary base directory for resolving output filenames
-    output_fallback_path
-        Secondary base directory when filenames aren't relative to ``output_base_path``
-    existing_metrics
-        When provided, metric values whose dimension signatures are in this set
-        are skipped (additive dedup).  When ``None``, all values are inserted.
 
     Notes
     -----
@@ -266,7 +223,6 @@ def ingest_execution_result(  # noqa: PLR0913
                 getattr(cmec_output_bundle, attr),
                 output_type=output_type,
                 base_path=output_base_path,
-                fallback_path=output_fallback_path,
             )
 
     if result.series_filename:
@@ -275,7 +231,6 @@ def ingest_execution_result(  # noqa: PLR0913
             result=result,
             execution=execution,
             cv=cv,
-            existing=existing_metrics,
         )
 
     ingest_scalar_values(
@@ -283,25 +238,21 @@ def ingest_execution_result(  # noqa: PLR0913
         result=result,
         execution=execution,
         cv=cv,
-        existing=existing_metrics,
     )
 
 
-def register_execution_outputs(  # noqa: PLR0913
+def register_execution_outputs(
     database: Database,
     execution: Execution,
     outputs: "dict[str, OutputDict] | None",
     output_type: ResultOutputType,
     *,
     base_path: pathlib.Path,
-    fallback_path: "pathlib.Path | None" = None,
 ) -> None:
     """
     Register output entries in the database.
 
-    Each entry in ``outputs`` is resolved relative to ``base_path``.  When a
-    filename is not relative to ``base_path`` (raises ``ValueError``), it is
-    resolved relative to ``fallback_path`` instead (if provided).
+    Each entry in ``outputs`` is resolved relative to ``base_path``.
 
     Parameters
     ----------
@@ -314,22 +265,14 @@ def register_execution_outputs(  # noqa: PLR0913
     output_type
         The type of output being registered
     base_path
-        Primary base directory for resolving relative filenames
-    fallback_path
-        Secondary base directory used when ``ensure_relative_path`` raises
-        ``ValueError`` against ``base_path``
+        Base directory for resolving relative filenames
 
     Notes
     -----
     Callers are responsible for transaction boundaries.
     """
     for key, output_info in (outputs or {}).items():
-        try:
-            filename = ensure_relative_path(output_info.filename, base_path)
-        except ValueError:
-            if fallback_path is None:
-                raise
-            filename = ensure_relative_path(output_info.filename, fallback_path)
+        filename = ensure_relative_path(output_info.filename, base_path)
         database.session.add(
             ExecutionOutput.build(
                 execution_id=execution.id,

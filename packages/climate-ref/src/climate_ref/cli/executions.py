@@ -21,7 +21,6 @@ from sqlalchemy import case, func, or_
 
 from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
 from climate_ref.config import Config
-from climate_ref.executor.reingest import ReingestMode
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
@@ -745,14 +744,6 @@ def stats(
 @app.command()
 def reingest(  # noqa: PLR0913
     ctx: typer.Context,
-    mode: Annotated[
-        ReingestMode,
-        typer.Option(
-            help="Reingest mode: 'additive' (keep existing, add new), "
-            "'replace' (delete existing, re-ingest), "
-            "'versioned' (create new execution record)."
-        ),
-    ],
     group_ids: Annotated[
         list[int] | None,
         typer.Argument(help="Execution group IDs to reingest. If omitted, uses filters."),
@@ -794,14 +785,8 @@ def reingest(  # noqa: PLR0913
     the results into the database. Useful when new series definitions or
     metadata extraction logic has been added.
 
-    Three modes are available:
-
-    - additive: Keep existing metric values, add any new ones. Outputs are replaced.
-
-    - replace: Delete all existing metric values and outputs, then re-ingest from scratch.
-
-    - versioned: Create a new Execution record under the same ExecutionGroup,
-      leaving the original execution untouched.
+    A new Execution record is always created under the same ExecutionGroup,
+    leaving the original execution untouched. Results are treated as immutable.
 
     The dirty flag is never modified by this command.
     """
@@ -853,11 +838,11 @@ def reingest(  # noqa: PLR0913
     )
 
     if dry_run:
-        console.print(f"[bold]Dry run:[/] would reingest {len(results)} execution(s) in {mode.value} mode:")
+        console.print(f"[bold]Dry run:[/] would reingest {len(results)} execution(s):")
         pretty_print_df(preview_df, console=console)
         return
 
-    console.print(f"Will reingest {len(results)} execution(s) in [bold]{mode.value}[/] mode:")
+    console.print(f"Will reingest {len(results)} execution(s):")
     pretty_print_df(preview_df, console=console)
 
     if not force:
@@ -880,7 +865,6 @@ def reingest(  # noqa: PLR0913
                 database=db,
                 execution=ex,
                 provider_registry=provider_registry,
-                mode=mode,
             )
 
         if ok:

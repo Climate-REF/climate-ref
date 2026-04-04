@@ -1085,22 +1085,18 @@ class TestReingestCLI:
 
     def test_reingest_no_filters_error(self, invoke_cli, db_seeded):
         """Calling reingest with no filters should exit with code 1."""
-        result = invoke_cli(["executions", "reingest", "--mode", "additive"], expected_exit_code=1)
+        result = invoke_cli(["executions", "reingest"], expected_exit_code=1)
         assert "At least one filter is required" in result.stderr
 
     def test_reingest_no_results(self, db_with_executions, invoke_cli):
         """When filters match nothing, should print a message and exit cleanly."""
-        result = invoke_cli(
-            ["executions", "reingest", "--mode", "additive", "--provider", "nonexistent", "--force"]
-        )
+        result = invoke_cli(["executions", "reingest", "--provider", "nonexistent", "--force"])
         assert result.exit_code == 0
         assert "No executions found" in result.stdout
 
     def test_reingest_dry_run(self, db_with_executions, invoke_cli):
         """Dry run should show preview without making changes."""
-        result = invoke_cli(
-            ["executions", "reingest", "--mode", "additive", "--provider", "pmp", "--dry-run", "--force"]
-        )
+        result = invoke_cli(["executions", "reingest", "--provider", "pmp", "--dry-run", "--force"])
         assert result.exit_code == 0
         assert "Dry run" in result.stdout
         assert "enso_tel" in result.stdout
@@ -1108,14 +1104,14 @@ class TestReingestCLI:
     def test_reingest_cancellation(self, db_with_executions, invoke_cli):
         """User declining confirmation should cancel reingest."""
         with patch("climate_ref.cli.executions.typer.confirm", return_value=False):
-            result = invoke_cli(["executions", "reingest", "--mode", "additive", "--provider", "pmp"])
+            result = invoke_cli(["executions", "reingest", "--provider", "pmp"])
         assert result.exit_code == 0
         assert "Reingest cancelled" in result.stdout
 
     def test_reingest_force_runs(self, db_with_executions, invoke_cli, config):
         """Force mode should skip confirmation. Even if reingest_execution returns False
         (no output dirs), we exercise the CLI loop and get skip counts."""
-        result = invoke_cli(["executions", "reingest", "--mode", "additive", "--provider", "pmp", "--force"])
+        result = invoke_cli(["executions", "reingest", "--provider", "pmp", "--force"])
         assert result.exit_code == 0
         assert "Reingest complete" in result.stdout
         # Output dir doesn't exist so reingest_execution returns False -> skipped
@@ -1124,17 +1120,10 @@ class TestReingestCLI:
     def test_reingest_by_group_ids(self, db_with_executions, invoke_cli):
         """Passing group IDs directly should work."""
         eg = db_with_executions.session.query(ExecutionGroup).filter_by(key="reingest-1").first()
-        result = invoke_cli(["executions", "reingest", "--mode", "additive", str(eg.id), "--dry-run"])
+        result = invoke_cli(["executions", "reingest", str(eg.id), "--dry-run"])
         assert result.exit_code == 0
         assert "Dry run" in result.stdout
         assert "reingest-1" in result.stdout
-
-    @pytest.mark.parametrize("mode", ["additive", "replace", "versioned"])
-    def test_reingest_mode_option(self, db_with_executions, invoke_cli, mode):
-        """Each valid mode should be accepted and displayed."""
-        result = invoke_cli(["executions", "reingest", "--mode", mode, "--provider", "pmp", "--dry-run"])
-        assert result.exit_code == 0
-        assert mode in result.stdout
 
     def test_reingest_include_failed(self, db_with_executions, invoke_cli):
         """--include-failed should include failed executions in preview."""
@@ -1142,8 +1131,6 @@ class TestReingestCLI:
             [
                 "executions",
                 "reingest",
-                "--mode",
-                "additive",
                 "--provider",
                 "esmvaltool",
                 "--include-failed",
@@ -1163,12 +1150,7 @@ class TestReingestCLI:
 
         # Mock reingest_execution to return True (success)
         with patch("climate_ref.executor.reingest.reingest_execution", return_value=True):
-            result = invoke_cli(["executions", "reingest", "--mode", "additive", str(eg.id), "--force"])
+            result = invoke_cli(["executions", "reingest", str(eg.id), "--force"])
         assert result.exit_code == 0
         assert "1 succeeded" in result.stdout
         assert "0 skipped" in result.stdout
-
-    def test_reingest_missing_mode_fails(self, invoke_cli, db_seeded):
-        result = invoke_cli(["executions", "reingest", "--provider", "pmp"], expected_exit_code=2)
-        assert "Missing option" in result.stderr
-        assert "mode" in result.stderr

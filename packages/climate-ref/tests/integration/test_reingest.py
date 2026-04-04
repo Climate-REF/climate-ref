@@ -5,7 +5,6 @@ Integration tests for reingest functionality
 import pytest
 
 from climate_ref.executor.reingest import (
-    ReingestMode,
     reconstruct_execution_definition,
     reingest_execution,
 )
@@ -119,7 +118,7 @@ def provider_registry(config, db_seeded):
 
 @pytest.mark.usefixtures("_solved_example")
 class TestReingestAfterSolve:
-    """End-to-end: solve with example provider, then reingest in each mode."""
+    """End-to-end: solve with example provider, then reingest."""
 
     def _get_successful_execution(self, db_seeded):
         """Get the first successful execution with metric values."""
@@ -129,59 +128,8 @@ class TestReingestAfterSolve:
                 return ex
         pytest.skip("No successful execution with metric values found")
 
-    def test_reingest_replace_preserves_metric_count(self, config, db_seeded, provider_registry):
-        """Replace reingest should produce the same number of metrics as the original."""
-        execution = self._get_successful_execution(db_seeded)
-
-        original_scalars = _snapshot_scalars(db_seeded, execution)
-        original_series = _snapshot_series(db_seeded, execution)
-        assert original_scalars, "Execution should have scalar metric values"
-
-        if db_seeded.session.in_transaction():
-            db_seeded.session.commit()
-
-        with db_seeded.session.begin():
-            ok = reingest_execution(
-                config=config,
-                database=db_seeded,
-                execution=execution,
-                provider_registry=provider_registry,
-                mode=ReingestMode.replace,
-            )
-        assert ok is True
-
-        replaced_scalars = _snapshot_scalars(db_seeded, execution)
-        replaced_series = _snapshot_series(db_seeded, execution)
-
-        assert original_scalars == replaced_scalars, "Replace reingest should produce identical scalars"
-        assert original_series == replaced_series, "Replace reingest should produce identical series"
-
-    def test_reingest_additive_is_idempotent(self, config, db_seeded, provider_registry):
-        """Running additive reingest twice should not create duplicate metrics."""
-        execution = self._get_successful_execution(db_seeded)
-
-        count_before = db_seeded.session.query(MetricValue).filter_by(execution_id=execution.id).count()
-
-        if db_seeded.session.in_transaction():
-            db_seeded.session.commit()
-
-        with db_seeded.session.begin():
-            ok = reingest_execution(
-                config=config,
-                database=db_seeded,
-                execution=execution,
-                provider_registry=provider_registry,
-                mode=ReingestMode.additive,
-            )
-        assert ok is True
-
-        count_after = db_seeded.session.query(MetricValue).filter_by(execution_id=execution.id).count()
-        assert count_before == count_after, (
-            f"Additive reingest created duplicates: {count_before} -> {count_after}"
-        )
-
-    def test_reingest_versioned_creates_equivalent_execution(self, config, db_seeded, provider_registry):
-        """Versioned reingest should create a new execution with equivalent metrics and outputs."""
+    def test_reingest_creates_equivalent_execution(self, config, db_seeded, provider_registry):
+        """Reingest should create a new execution with equivalent metrics and outputs."""
         execution = self._get_successful_execution(db_seeded)
 
         original_scalars = _snapshot_scalars(db_seeded, execution)
@@ -199,7 +147,6 @@ class TestReingestAfterSolve:
                 database=db_seeded,
                 execution=execution,
                 provider_registry=provider_registry,
-                mode=ReingestMode.versioned,
             )
         assert ok is True
 
@@ -207,7 +154,7 @@ class TestReingestAfterSolve:
         execution_count_after = db_seeded.session.query(Execution).count()
         assert execution_count_after == execution_count_before + 1
 
-        # Find the versioned execution
+        # Find the new execution
         eg = execution.execution_group
         new_execution = (
             db_seeded.session.query(Execution)
@@ -221,13 +168,13 @@ class TestReingestAfterSolve:
         )
         assert new_execution is not None
 
-        versioned_scalars = _snapshot_scalars(db_seeded, new_execution)
-        versioned_series = _snapshot_series(db_seeded, new_execution)
-        versioned_outputs = _snapshot_outputs(db_seeded, new_execution)
+        new_scalars = _snapshot_scalars(db_seeded, new_execution)
+        new_series = _snapshot_series(db_seeded, new_execution)
+        new_outputs = _snapshot_outputs(db_seeded, new_execution)
 
-        assert original_scalars == versioned_scalars, "Versioned scalars should match original"
-        assert original_series == versioned_series, "Versioned series should match original"
-        assert original_outputs == versioned_outputs, "Versioned outputs should match original"
+        assert original_scalars == new_scalars, "Reingested scalars should match original"
+        assert original_series == new_series, "Reingested series should match original"
+        assert original_outputs == new_outputs, "Reingested outputs should match original"
 
         # Original execution should be untouched
         assert _snapshot_scalars(db_seeded, execution) == original_scalars

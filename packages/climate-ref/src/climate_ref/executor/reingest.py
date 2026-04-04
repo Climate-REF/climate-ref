@@ -6,18 +6,11 @@ re-ingest the results into the database for executions that have already complet
 This is useful when new series definitions or metadata extraction logic has been added
 and you want to apply it to existing outputs without re-executing the diagnostics.
 
-Three reingest modes are supported:
-
-* **additive** -- preserve existing metric values, insert only values with
-  dimension signatures not already present for the execution
-* **replace** -- delete all existing metric values and outputs, then re-ingest
-* **versioned** -- create a new ``Execution`` record under the same ``ExecutionGroup``
-  with its own output directory, leaving the original execution untouched
+Reingest always creates a new ``Execution`` record under the same ``ExecutionGroup``
+with its own output directory, leaving the original execution untouched.
+Results are treated as immutable.
 """
 
-import enum
-import hashlib
-import pathlib
 import shutil
 from collections import defaultdict
 from collections.abc import Sequence
@@ -25,24 +18,22 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from loguru import logger
-from sqlalchemy import delete
 
 from climate_ref.datasets import get_slug_column
+from climate_ref.executor.fragment import allocate_output_fragment
 from climate_ref.executor.result_handling import ingest_execution_result
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
-    ExecutionOutput,
     execution_datasets,
     get_execution_group_and_latest_filtered,
 )
-from climate_ref.models.metric_value import MetricValue
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,
     SourceDatasetType,
 )
-from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
+from climate_ref_core.diagnostics import ExecutionDefinition
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 
 if TYPE_CHECKING:
@@ -51,14 +42,6 @@ if TYPE_CHECKING:
     from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.diagnostics import Diagnostic
-
-
-class ReingestMode(enum.Enum):
-    """Mode for reingesting execution results."""
-
-    additive = "additive"
-    replace = "replace"
-    versioned = "versioned"
 
 
 def reconstruct_execution_definition(
@@ -85,7 +68,7 @@ def reconstruct_execution_definition(
     Returns
     -------
     :
-        A reconstructed ``ExecutionDefinition`` pointing at the results directory
+        A reconstructed ``ExecutionDefinition`` pointing at the scratch directory
     """
     execution_group = execution.execution_group
 
@@ -166,164 +149,21 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
     return attrs
 
 
-def _get_existing_metric_dimensions(
-    database: "Database", execution: Execution
-) -> set[tuple[tuple[str, str], ...]]:
-    """
-    Get the dimension signatures of all existing metric values for an execution.
-
-    Each signature is a sorted tuple of (dimension_name, value) pairs, making
-    it suitable for set-based deduplication.
-    """
-    sigs: set[tuple[tuple[str, str], ...]] = set()
-    for mv in database.session.query(MetricValue).filter(MetricValue.execution_id == execution.id).all():
-        dims = tuple(sorted(mv.dimensions.items()))
-        sigs.add(dims)
-    return sigs
-
-
-def _copy_with_backup(src: pathlib.Path, dst: pathlib.Path) -> None:
-    """Copy *src* to *dst*, backing up *dst* first if it already exists."""
-    dst.parent.mkdir(parents=True, exist_ok=True)
-    if dst.exists():
-        backup = dst.with_suffix(dst.suffix + ".bak")
-        shutil.copy2(dst, backup)
-    shutil.copyfile(src, dst)
-
-
-def _sync_reingest_files_to_results(
-    config: "Config",
-    src_fragment: str,
-    dst_fragment: str,
-    result: ExecutionResult,
-    mode: ReingestMode,
-) -> None:
-    """
-    Copy re-extracted CMEC bundles from scratch to the results directory.
-
-    For **versioned** mode the entire scratch tree is copied to a new results
-    directory (no backup needed).  For other modes only the CMEC bundle files
-    are overwritten, with ``.bak`` copies of the previous versions.
-    """
-    src_dir = config.paths.scratch / src_fragment
-    dst_dir = config.paths.results / dst_fragment
-
-    if mode == ReingestMode.versioned:
-        dst_dir.parent.mkdir(parents=True, exist_ok=True)
-        if dst_dir.exists():
-            shutil.rmtree(dst_dir)
-        shutil.copytree(src_dir, dst_dir)
-    else:
-        dst_dir.mkdir(parents=True, exist_ok=True)
-        assert result.metric_bundle_filename is not None
-        _copy_with_backup(src_dir / result.metric_bundle_filename, dst_dir / result.metric_bundle_filename)
-        if result.output_bundle_filename:
-            _copy_with_backup(
-                src_dir / result.output_bundle_filename, dst_dir / result.output_bundle_filename
-            )
-        if result.series_filename:
-            _copy_with_backup(src_dir / result.series_filename, dst_dir / result.series_filename)
-
-
-def _delete_execution_metric_values(database: "Database", execution: Execution) -> None:
-    """Delete all metric values for an execution (outputs are handled separately)."""
-    database.session.execute(delete(MetricValue).where(MetricValue.execution_id == execution.id))
-
-
-def _apply_reingest_mode(  # noqa: PLR0913
-    config: "Config",
-    database: "Database",
-    execution: Execution,
-    result: ExecutionResult,
-    mode: ReingestMode,
-    cv: CV,
-) -> Execution:
-    """
-    Apply mode-specific DB mutations inside a savepoint.
-
-    Returns the target execution (may differ from ``execution`` in versioned mode).
-    """
-    target_execution = execution
-    execution_group = execution.execution_group
-
-    with database.session.begin_nested():
-        if mode == ReingestMode.versioned:
-            # Hash is intentionally deterministic for a given execution:
-            # re-running versioned reingest on the same execution produces the
-            # same base fragment, with _n{count} suffixes for repeats.
-            version_hash = hashlib.sha1(  # noqa: S324
-                f"{execution.output_fragment}-reingest-{execution.id}".encode()
-            ).hexdigest()[:12]
-
-            base_fragment = f"{execution.output_fragment}_v{version_hash}"
-            existing_count = sum(
-                1 for e in execution_group.executions if e.output_fragment.startswith(base_fragment)
-            )
-            version_suffix = f"_n{existing_count + 1}" if existing_count > 0 else ""
-
-            target_execution = Execution(
-                execution_group=execution_group,
-                dataset_hash=execution.dataset_hash,
-                output_fragment=f"{base_fragment}{version_suffix}",
-            )
-            database.session.add(target_execution)
-            database.session.flush()
-
-            for dataset in execution.datasets:
-                database.session.execute(
-                    execution_datasets.insert().values(
-                        execution_id=target_execution.id,
-                        dataset_id=dataset.id,
-                    )
-                )
-        elif mode == ReingestMode.replace:
-            _delete_execution_metric_values(database, target_execution)
-
-        # Outputs are always refreshed regardless of mode.
-        # "Additive" only applies to metric values as keeping stale entries
-        # would be more confusing than helpful.
-        if result.output_bundle_filename:
-            database.session.execute(
-                delete(ExecutionOutput).where(ExecutionOutput.execution_id == target_execution.id)
-            )
-
-        existing = (
-            _get_existing_metric_dimensions(database, target_execution)
-            if mode == ReingestMode.additive
-            else None
-        )
-
-        ingest_execution_result(
-            database,
-            target_execution,
-            result,
-            cv,
-            output_base_path=config.paths.results / target_execution.output_fragment,
-            output_fallback_path=config.paths.scratch / execution.output_fragment,
-            existing_metrics=existing,
-        )
-
-        assert result.metric_bundle_filename is not None
-        target_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
-
-    return target_execution
-
-
 def reingest_execution(
     config: "Config",
     database: "Database",
     execution: Execution,
     provider_registry: "ProviderRegistry",
-    mode: ReingestMode = ReingestMode.additive,
 ) -> bool:
     """
     Reingest an existing execution.
 
     Re-runs ``build_execution_result()`` against the scratch directory
-    (which contains the raw outputs from the original diagnostic run) and re-ingests
-    the results into the database.
-    Updated CMEC bundles are then copied from scratch to the results directory,
-    backing up previous versions.
+    (which contains the raw outputs from the original diagnostic run),
+    creates a new ``Execution`` record with a unique output fragment,
+    copies results to the new location, and ingests metrics into the database.
+
+    The original execution is left untouched.
 
     Parameters
     ----------
@@ -335,8 +175,6 @@ def reingest_execution(
         The ``Execution`` record to reingest
     provider_registry
         Registry of active providers (used to resolve the live diagnostic)
-    mode
-        Reingest mode: additive, replace, or versioned
 
     Returns
     -------
@@ -379,33 +217,65 @@ def reingest_execution(
         )
         return False
 
+    # Allocate a new, non-colliding output fragment
+    existing_fragments = {e.output_fragment for e in execution_group.executions}
+    new_fragment = allocate_output_fragment(
+        execution.output_fragment, existing_fragments, config.paths.results
+    )
+
+    # Copy scratch tree to the new results location
+    dst_dir = config.paths.results / new_fragment
+    dst_dir.parent.mkdir(parents=True, exist_ok=True)
+    if dst_dir.exists():
+        shutil.rmtree(dst_dir)
+    shutil.copytree(scratch_dir, dst_dir)
+
     cv = CV.load_from_file(config.paths.dimensions_cv)
 
     try:
-        target_execution = _apply_reingest_mode(
-            config=config,
-            database=database,
-            execution=execution,
-            result=result,
-            mode=mode,
-            cv=cv,
-        )
+        with database.session.begin_nested():
+            # Create new Execution record
+            new_execution = Execution(
+                execution_group=execution_group,
+                dataset_hash=execution.dataset_hash,
+                output_fragment=new_fragment,
+            )
+            database.session.add(new_execution)
+            database.session.flush()
+
+            # Copy dataset links from the original execution
+            for dataset in execution.datasets:
+                database.session.execute(
+                    execution_datasets.insert().values(
+                        execution_id=new_execution.id,
+                        dataset_id=dataset.id,
+                    )
+                )
+
+            # Standard ingestion (same path as fresh executions)
+            ingest_execution_result(
+                database,
+                new_execution,
+                result,
+                cv,
+                output_base_path=config.paths.results / new_fragment,
+            )
+
+            assert result.metric_bundle_filename is not None
+            new_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
     except Exception:
         logger.exception(
             f"Ingestion failed for execution {execution.id} "
             f"({provider_slug}/{diagnostic_slug}). Rolling back changes."
         )
+        # Clean up the copied directory on failure
+        if dst_dir.exists():
+            shutil.rmtree(dst_dir)
         return False
-
-    # Copy re-extracted CMEC bundles from scratch to the results tree.
-    # For non-versioned modes, existing files are backed up with a .bak suffix.
-    _sync_reingest_files_to_results(
-        config, execution.output_fragment, target_execution.output_fragment, result, mode
-    )
 
     logger.info(
         f"Successfully reingested execution {execution.id} "
-        f"({provider_slug}/{diagnostic_slug}) in {mode.value} mode"
+        f"({provider_slug}/{diagnostic_slug}) -> new execution {new_execution.id}"
     )
     return True
 

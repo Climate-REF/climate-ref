@@ -1,4 +1,4 @@
-"""Tests for the reingest module."""
+"""Tests for the reingest module and allocate_output_fragment helper."""
 
 import json
 import pathlib
@@ -7,13 +7,9 @@ import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
+from climate_ref.executor.fragment import allocate_output_fragment
 from climate_ref.executor.reingest import (
-    ReingestMode,
-    _copy_with_backup,
-    _delete_execution_metric_values,
     _extract_dataset_attributes,
-    _get_existing_metric_dimensions,
-    _sync_reingest_files_to_results,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
@@ -34,7 +30,6 @@ from climate_ref.models.execution import (
     ResultOutputType,
     execution_datasets,
 )
-from climate_ref.models.metric_value import MetricValue
 from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref_core.datasets import SourceDatasetType
@@ -42,7 +37,7 @@ from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput, OutputDict
+from climate_ref_core.pycmec.output import CMECOutput
 
 
 @pytest.fixture
@@ -196,16 +191,48 @@ def _patch_build_result(mocker, registry, mock_result):
     return diagnostic
 
 
-class TestReingestMode:
-    def test_enum_values(self):
-        assert ReingestMode.additive.value == "additive"
-        assert ReingestMode.replace.value == "replace"
-        assert ReingestMode.versioned.value == "versioned"
+# --- allocate_output_fragment tests ---
 
-    def test_from_string(self):
-        assert ReingestMode("additive") == ReingestMode.additive
-        assert ReingestMode("replace") == ReingestMode.replace
-        assert ReingestMode("versioned") == ReingestMode.versioned
+
+class TestAllocateOutputFragment:
+    def test_returns_base_when_no_collision(self, tmp_path):
+        """Should return base_fragment unchanged when no collision exists."""
+        result = allocate_output_fragment("provider/diag/abc123", set(), tmp_path)
+        assert result == "provider/diag/abc123"
+
+    def test_appends_v2_on_db_collision(self, tmp_path):
+        """Should append _v2 when base_fragment exists in DB."""
+        existing = {"provider/diag/abc123"}
+        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
+        assert result == "provider/diag/abc123_v2"
+
+    def test_appends_v2_on_disk_collision(self, tmp_path):
+        """Should append _v2 when base_fragment directory exists on disk."""
+        (tmp_path / "provider/diag/abc123").mkdir(parents=True)
+        result = allocate_output_fragment("provider/diag/abc123", set(), tmp_path)
+        assert result == "provider/diag/abc123_v2"
+
+    def test_increments_version_on_multiple_collisions(self, tmp_path):
+        """Should increment to _v3 when both base and _v2 are taken."""
+        existing = {"provider/diag/abc123", "provider/diag/abc123_v2"}
+        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
+        assert result == "provider/diag/abc123_v3"
+
+    def test_mixed_db_and_disk_collisions(self, tmp_path):
+        """Should handle collisions from both DB and disk."""
+        existing = {"provider/diag/abc123"}
+        (tmp_path / "provider/diag/abc123_v2").mkdir(parents=True)
+        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
+        assert result == "provider/diag/abc123_v3"
+
+    def test_no_collision_returns_base_with_existing_other_fragments(self, tmp_path):
+        """Other fragments in DB should not cause collision."""
+        existing = {"provider/diag/xyz789"}
+        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
+        assert result == "provider/diag/abc123"
+
+
+# --- extract dataset attributes tests ---
 
 
 class TestExtractDatasetAttributes:
@@ -218,6 +245,9 @@ class TestExtractDatasetAttributes:
         assert "instance_id" in attrs
         assert "id" not in attrs
         assert "dataset_type" not in attrs
+
+
+# --- reconstruct_execution_definition tests ---
 
 
 class TestReconstructExecutionDefinition:
@@ -242,67 +272,35 @@ class TestReconstructExecutionDefinition:
         assert str(definition.output_directory).startswith(str(config.paths.scratch))
 
 
-class TestDeleteExecutionMetricValues:
-    def test_deletes_metric_values_only(self, reingest_db, reingest_execution_obj):
-        """Should remove metric values but leave outputs untouched."""
-        execution = reingest_execution_obj
-
-        reingest_db.session.add(
-            ScalarMetricValue(
-                execution_id=execution.id,
-                value=42.0,
-                attributes={"test": True},
-            )
-        )
-        reingest_db.session.add(
-            ExecutionOutput(
-                execution_id=execution.id,
-                output_type=ResultOutputType.Plot,
-                filename="test.png",
-                short_name="test",
-            )
-        )
-        reingest_db.session.commit()
-
-        assert reingest_db.session.query(MetricValue).filter_by(execution_id=execution.id).count() == 1
-        assert reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).count() == 1
-
-        _delete_execution_metric_values(reingest_db, execution)
-        reingest_db.session.commit()
-
-        assert reingest_db.session.query(MetricValue).filter_by(execution_id=execution.id).count() == 0
-        # Outputs are not deleted by this function (handled separately in _apply_reingest_mode)
-        assert reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).count() == 1
+# --- reingest_execution tests ---
 
 
 class TestReingestExecution:
     def test_reingest_missing_output_dir(
         self, config, reingest_db, reingest_execution_obj, mock_provider_registry
     ):
-        """Should return unsuccessful result when output directory doesn't exist."""
+        """Should return False when scratch directory doesn't exist."""
         result = reingest_execution(
             config=config,
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
         assert result is False
 
     def test_reingest_unresolvable_diagnostic(self, config, reingest_db, reingest_execution_obj):
-        """Should return unsuccessful result when provider registry can't resolve diagnostic."""
+        """Should return False when provider registry can't resolve diagnostic."""
         empty_registry = ProviderRegistry(providers=[])
         result = reingest_execution(
             config=config,
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=empty_registry,
-            mode=ReingestMode.replace,
         )
         assert result is False
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_reingest_replace_mode(
+    def test_reingest_creates_new_execution(
         self,
         config,
         reingest_db,
@@ -312,53 +310,7 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """Replace mode should delete existing values and re-ingest."""
-        execution = reingest_execution_obj
-
-        reingest_db.session.add(
-            ScalarMetricValue(
-                execution_id=execution.id,
-                value=99.0,
-                attributes={"old": True},
-            )
-        )
-        reingest_db.session.commit()
-
-        old_count = reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
-        assert old_count == 1
-
-        mock_result = mock_result_factory(scratch_dir_with_results)
-        _patch_build_result(mocker, mock_provider_registry, mock_result)
-
-        ok = reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=execution,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
-        )
-        reingest_db.session.commit()
-        assert ok is True
-        old_vals = (
-            reingest_db.session.query(ScalarMetricValue)
-            .filter_by(execution_id=execution.id)
-            .filter(ScalarMetricValue.value == 99.0)
-            .all()
-        )
-        assert len(old_vals) == 0
-
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_reingest_versioned_creates_new_execution(
-        self,
-        config,
-        reingest_db,
-        reingest_execution_obj,
-        mock_provider_registry,
-        scratch_dir_with_results,
-        mock_result_factory,
-        mocker,
-    ):
-        """Versioned mode should create a new Execution record."""
+        """Reingest should always create a new Execution record."""
         original_id = reingest_execution_obj.id
         original_count = reingest_db.session.query(Execution).count()
 
@@ -370,7 +322,6 @@ class TestReingestExecution:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.versioned,
         )
         reingest_db.session.commit()
         assert ok is True
@@ -380,6 +331,108 @@ class TestReingestExecution:
         # Original execution should be untouched
         original = reingest_db.session.get(Execution, original_id)
         assert original is not None
+        assert original.successful is True
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_creates_unique_fragment(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """New execution should have a different output_fragment from the original."""
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        all_executions = reingest_db.session.query(Execution).all()
+        fragments = [e.output_fragment for e in all_executions]
+        assert len(set(fragments)) == len(fragments), f"Expected unique fragments, got: {fragments}"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_twice_creates_distinct_fragments(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Running reingest twice should create distinct output fragments."""
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok1 = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok1 is True
+
+        reingest_db.session.refresh(reingest_execution_obj)
+        ok2 = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok2 is True
+
+        # Should have 3 executions total: original + 2 reingested
+        all_executions = reingest_db.session.query(Execution).all()
+        assert len(all_executions) == 3
+
+        fragments = [e.output_fragment for e in all_executions]
+        assert len(set(fragments)) == 3, f"Expected unique fragments, got: {fragments}"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_copies_results_to_new_directory(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Reingest should copy scratch tree to a new results directory."""
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+
+        results_dir = config.paths.results / new_execution.output_fragment
+        assert results_dir.exists(), "Results should be copied to new directory"
+        assert (results_dir / "diagnostic.json").exists()
 
     def test_reingest_build_execution_result_failure(
         self,
@@ -403,7 +456,6 @@ class TestReingestExecution:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
         assert result is False
 
@@ -418,12 +470,7 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """The dirty flag should remain unchanged after reingest.
-
-        Note: reingest_execution itself doesn't manage the dirty flag --
-        that's the CLI's responsibility. This test verifies that reingest_execution
-        does not set dirty=False (unlike handle_execution_result).
-        """
+        """The dirty flag should remain unchanged after reingest."""
         eg = reingest_execution_obj.execution_group
         eg.dirty = True
         reingest_db.session.commit()
@@ -438,14 +485,13 @@ class TestReingestExecution:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
         reingest_db.session.commit()
         reingest_db.session.refresh(eg)
         assert eg.dirty is True
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_additive_preserves_existing_values(
+    def test_reingest_preserves_original_execution(
         self,
         config,
         reingest_db,
@@ -455,115 +501,13 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """Additive mode should keep pre-existing metric values untouched."""
+        """Original execution should remain untouched after reingest."""
         execution = reingest_execution_obj
 
         reingest_db.session.add(
             ScalarMetricValue(
                 execution_id=execution.id,
-                value=42.0,
-                attributes={"pre_existing": True},
-                source_id="pre-existing-model",
-            )
-        )
-        reingest_db.session.commit()
-
-        mock_result = mock_result_factory(
-            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
-        )
-        _patch_build_result(mocker, mock_provider_registry, mock_result)
-
-        reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=execution,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.additive,
-        )
-        reingest_db.session.commit()
-        # The pre-existing value should still be there
-        pre_existing = (
-            reingest_db.session.query(ScalarMetricValue)
-            .filter_by(execution_id=execution.id)
-            .filter(ScalarMetricValue.value == 42.0)
-            .all()
-        )
-        assert len(pre_existing) == 1, "Additive mode should preserve pre-existing values"
-
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_additive_reingest_is_idempotent(
-        self,
-        config,
-        reingest_db,
-        reingest_execution_obj,
-        mock_provider_registry,
-        scratch_dir_with_results,
-        mock_result_factory,
-        mocker,
-    ):
-        """Running additive reingest twice should not create duplicate rows."""
-        execution = reingest_execution_obj
-
-        mock_result = mock_result_factory(scratch_dir_with_results)
-        _patch_build_result(mocker, mock_provider_registry, mock_result)
-
-        # First reingest
-        reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=execution,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.additive,
-        )
-        reingest_db.session.commit()
-        count_after_first = (
-            reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
-        )
-        series_count_first = (
-            reingest_db.session.query(MetricValue).filter_by(execution_id=execution.id).count()
-        )
-
-        # Second reingest (should be idempotent)
-        reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=execution,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.additive,
-        )
-        reingest_db.session.commit()
-        count_after_second = (
-            reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
-        )
-        series_count_second = (
-            reingest_db.session.query(MetricValue).filter_by(execution_id=execution.id).count()
-        )
-
-        assert count_after_first == count_after_second, (
-            f"Additive reingest created duplicates: {count_after_first} -> {count_after_second}"
-        )
-        assert series_count_first == series_count_second, (
-            f"Additive reingest created duplicate series: {series_count_first} -> {series_count_second}"
-        )
-
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_replace_preserves_data_on_ingestion_failure(
-        self,
-        config,
-        reingest_db,
-        reingest_execution_obj,
-        mock_provider_registry,
-        scratch_dir_with_results,
-        mock_result_factory,
-        mocker,
-    ):
-        """If ingestion fails in replace mode, original data should be preserved."""
-        execution = reingest_execution_obj
-
-        reingest_db.session.add(
-            ScalarMetricValue(
-                execution_id=execution.id,
-                value=42.0,
+                value=99.0,
                 attributes={"original": True},
             )
         )
@@ -572,7 +516,38 @@ class TestReingestExecution:
         original_count = (
             reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
         )
-        assert original_count == 1
+
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=execution,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        # Original execution's values should be unchanged
+        preserved_count = (
+            reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
+        )
+        assert preserved_count == original_count, "Original execution values should be untouched"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_ingestion_failure_rolls_back(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """If ingestion fails, no new execution should be created and results dir cleaned up."""
+        original_count = reingest_db.session.query(Execution).count()
 
         mock_result = mock_result_factory(
             scratch_dir_with_results, output_bundle_filename=None, series_filename=None
@@ -585,98 +560,15 @@ class TestReingestExecution:
         ok = reingest_execution(
             config=config,
             database=reingest_db,
-            execution=execution,
+            execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
         reingest_db.session.commit()
         assert ok is False
 
-        # Original data should be preserved since the savepoint rolled back
-        preserved_count = (
-            reingest_db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).count()
-        )
-        assert preserved_count == original_count, (
-            f"Replace mode lost data on failure: {original_count} -> {preserved_count}"
-        )
-
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_versioned_reingest_twice_creates_unique_fragments(
-        self,
-        config,
-        reingest_db,
-        reingest_execution_obj,
-        mock_provider_registry,
-        scratch_dir_with_results,
-        mock_result_factory,
-        mocker,
-    ):
-        """Running versioned reingest twice should create distinct output fragments."""
-        mock_result = mock_result_factory(scratch_dir_with_results)
-        _patch_build_result(mocker, mock_provider_registry, mock_result)
-
-        # First versioned reingest
-        ok1 = reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=reingest_execution_obj,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.versioned,
-        )
-        reingest_db.session.commit()
-        assert ok1 is True
-
-        # Second versioned reingest
-        reingest_db.session.refresh(reingest_execution_obj)
-        ok2 = reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=reingest_execution_obj,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.versioned,
-        )
-        reingest_db.session.commit()
-        assert ok2 is True
-
-        # Should have 3 executions total: original + 2 versioned
-        all_executions = reingest_db.session.query(Execution).all()
-        assert len(all_executions) == 3
-
-        fragments = [e.output_fragment for e in all_executions]
-        assert len(set(fragments)) == 3, f"Expected unique fragments, got: {fragments}"
-
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_reingest_marks_failed_execution_as_successful(
-        self,
-        config,
-        reingest_db,
-        reingest_execution_obj,
-        mock_provider_registry,
-        scratch_dir_with_results,
-        mock_result_factory,
-        mocker,
-    ):
-        """Reingest should mark a previously-failed execution as successful."""
-        reingest_execution_obj.successful = False
-        reingest_db.session.commit()
-        assert reingest_execution_obj.successful is False
-
-        mock_result = mock_result_factory(
-            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
-        )
-        _patch_build_result(mocker, mock_provider_registry, mock_result)
-
-        ok = reingest_execution(
-            config=config,
-            database=reingest_db,
-            execution=reingest_execution_obj,
-            provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
-        )
-        reingest_db.session.commit()
-        assert ok is True
-        reingest_db.session.refresh(reingest_execution_obj)
-        assert reingest_execution_obj.successful is True
+        # No new execution should have been created
+        new_count = reingest_db.session.query(Execution).count()
+        assert new_count == original_count, "Failed reingest should not create new execution"
 
     def test_scratch_directory_preserved_after_success(
         self,
@@ -701,7 +593,6 @@ class TestReingestExecution:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.additive,
         )
 
         assert scratch_dir.exists(), "Scratch directory should be preserved after reingest"
@@ -730,128 +621,13 @@ class TestReingestExecution:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
 
         assert result is False
         assert scratch_dir.exists(), "Scratch directory should be preserved after failure"
 
 
-class TestCopyWithBackup:
-    def test_copies_file(self, tmp_path):
-        """Should copy file to destination."""
-        src = tmp_path / "src" / "file.json"
-        src.parent.mkdir()
-        src.write_text('{"key": "new"}')
-        dst = tmp_path / "dst" / "file.json"
-
-        _copy_with_backup(src, dst)
-
-        assert dst.exists()
-        assert dst.read_text() == '{"key": "new"}'
-
-    def test_backs_up_existing_file(self, tmp_path):
-        """Should create .bak copy when overwriting an existing file."""
-        src = tmp_path / "src" / "file.json"
-        src.parent.mkdir()
-        src.write_text('{"key": "new"}')
-        dst = tmp_path / "dst" / "file.json"
-        dst.parent.mkdir()
-        dst.write_text('{"key": "old"}')
-
-        _copy_with_backup(src, dst)
-
-        assert dst.read_text() == '{"key": "new"}'
-        backup = dst.with_suffix(".json.bak")
-        assert backup.exists()
-        assert backup.read_text() == '{"key": "old"}'
-
-    def test_no_backup_when_no_existing(self, tmp_path):
-        """Should not create .bak when destination doesn't exist."""
-        src = tmp_path / "src" / "file.json"
-        src.parent.mkdir()
-        src.write_text('{"key": "value"}')
-        dst = tmp_path / "dst" / "file.json"
-
-        _copy_with_backup(src, dst)
-
-        assert dst.exists()
-        assert not dst.with_suffix(".json.bak").exists()
-
-
-class TestSyncReingestFilesToResults:
-    def test_non_versioned_copies_with_backup(self, config, reingest_execution_obj, scratch_dir_with_results):
-        """Non-versioned mode should copy CMEC bundles with backup of existing files."""
-        fragment = reingest_execution_obj.output_fragment
-        results_dir = config.paths.results / fragment
-        results_dir.mkdir(parents=True, exist_ok=True)
-        (results_dir / "diagnostic.json").write_text('{"old": true}')
-
-        mock_result = type(
-            "R",
-            (),
-            {
-                "metric_bundle_filename": pathlib.Path("diagnostic.json"),
-                "output_bundle_filename": pathlib.Path("output.json"),
-                "series_filename": pathlib.Path("series.json"),
-            },
-        )()
-
-        _sync_reingest_files_to_results(config, fragment, fragment, mock_result, ReingestMode.additive)
-
-        assert (results_dir / "diagnostic.json").exists()
-        assert (results_dir / "diagnostic.json.bak").exists()
-        assert (results_dir / "diagnostic.json.bak").read_text() == '{"old": true}'
-
-    def test_versioned_copies_entire_tree(self, config, reingest_execution_obj, scratch_dir_with_results):
-        """Versioned mode should copy entire scratch tree to new results directory."""
-        src_fragment = reingest_execution_obj.output_fragment
-        dst_fragment = src_fragment + "_v123abc"
-
-        mock_result = type(
-            "R",
-            (),
-            {
-                "metric_bundle_filename": pathlib.Path("diagnostic.json"),
-                "output_bundle_filename": None,
-                "series_filename": None,
-            },
-        )()
-
-        _sync_reingest_files_to_results(
-            config, src_fragment, dst_fragment, mock_result, ReingestMode.versioned
-        )
-
-        dst_dir = config.paths.results / dst_fragment
-        assert dst_dir.exists()
-        assert (dst_dir / "diagnostic.json").exists()
-        assert (dst_dir / "output.json").exists()
-        assert (dst_dir / "series.json").exists()
-
-
-class TestGetExistingMetricDimensions:
-    def test_returns_empty_for_no_values(self, reingest_db, reingest_execution_obj):
-        """Should return empty set when no metric values exist."""
-        result = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
-        assert result == set()
-
-    def test_returns_dimension_signatures(self, reingest_db, reingest_execution_obj):
-        """Should return sorted dimension tuples for existing metric values."""
-        reingest_db.session.add(
-            ScalarMetricValue(
-                execution_id=reingest_execution_obj.id,
-                value=1.0,
-                attributes={},
-                source_id="model-a",
-            )
-        )
-        reingest_db.session.commit()
-
-        result = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
-        assert len(result) == 1
-        sig = next(iter(result))
-        # Should contain source_id dimension
-        assert any(k == "source_id" and v == "model-a" for k, v in sig)
+# --- register_execution_outputs tests ---
 
 
 class TestRegisterExecutionOutputs:
@@ -864,20 +640,21 @@ class TestRegisterExecutionOutputs:
         bundle_path = scratch_dir_with_data / "output.json"
         cmec_output_bundle = CMECOutput.load_from_json(bundle_path)
 
-        results_base = config.paths.results / execution.output_fragment
         register_execution_outputs(
             reingest_db,
             execution,
             cmec_output_bundle.plots,
             output_type=ResultOutputType.Plot,
-            base_path=results_base,
-            fallback_path=scratch_dir_with_data,
+            base_path=scratch_dir_with_data,
         )
         reingest_db.session.commit()
 
         outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).all()
         assert len(outputs) >= 1
         assert any(o.short_name == "test_plot" for o in outputs)
+
+
+# --- ingest metrics tests ---
 
 
 class TestIngestMetrics:
@@ -902,39 +679,6 @@ class TestIngestMetrics:
         assert len(scalars) >= 1
         assert scalars[0].value == 42.0
 
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_ingest_additive_skips_existing(
-        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
-    ):
-        """Additive mode should skip values with existing dimension signatures."""
-        mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
-
-        # First ingest
-        ingest_scalar_values(
-            database=reingest_db, result=mock_result, execution=reingest_execution_obj, cv=cv
-        )
-        reingest_db.session.commit()
-        count_first = (
-            reingest_db.session.query(MetricValue).filter_by(execution_id=reingest_execution_obj.id).count()
-        )
-
-        # Second ingest in additive mode should not duplicate
-        existing = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
-        ingest_scalar_values(
-            database=reingest_db,
-            result=mock_result,
-            execution=reingest_execution_obj,
-            cv=cv,
-            existing=existing,
-        )
-        reingest_db.session.commit()
-        count_second = (
-            reingest_db.session.query(MetricValue).filter_by(execution_id=reingest_execution_obj.id).count()
-        )
-
-        assert count_first == count_second
-
 
 class TestIngestMetricsWithSeries:
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
@@ -957,44 +701,8 @@ class TestIngestMetricsWithSeries:
         )
         assert len(series) >= 1
 
-    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_ingest_series_additive_skips_existing(
-        self, config, reingest_db, reingest_execution_obj, scratch_dir_with_data, mock_result_factory
-    ):
-        """Additive mode should skip series with existing dimension signatures."""
-        mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
 
-        # First ingest
-        ingest_series_values(
-            database=reingest_db, result=mock_result, execution=reingest_execution_obj, cv=cv
-        )
-        reingest_db.session.commit()
-
-        count_first = (
-            reingest_db.session.query(SeriesMetricValue)
-            .filter_by(execution_id=reingest_execution_obj.id)
-            .count()
-        )
-
-        # Second ingest in additive mode
-        existing = _get_existing_metric_dimensions(reingest_db, reingest_execution_obj)
-        ingest_series_values(
-            database=reingest_db,
-            result=mock_result,
-            execution=reingest_execution_obj,
-            cv=cv,
-            existing=existing,
-        )
-        reingest_db.session.commit()
-
-        count_second = (
-            reingest_db.session.query(SeriesMetricValue)
-            .filter_by(execution_id=reingest_execution_obj.id)
-            .count()
-        )
-
-        assert count_first == count_second
+# --- reconstruct with datasets tests ---
 
 
 class TestReconstructEmptyDataset:
@@ -1074,6 +782,9 @@ class TestReconstructWithDatasets:
             assert SourceDatasetType.CMIP6 in definition.datasets
 
 
+# --- unsuccessful result tests ---
+
+
 class TestReingestUnsuccessfulResult:
     def test_reingest_unsuccessful_build_result(
         self,
@@ -1096,7 +807,6 @@ class TestReingestUnsuccessfulResult:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
         assert ok is False
 
@@ -1121,44 +831,11 @@ class TestReingestUnsuccessfulResult:
             database=reingest_db,
             execution=reingest_execution_obj,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.replace,
         )
         assert ok is False
 
 
-class TestHandleReingestOutputsScratchFallback:
-    def test_scratch_path_fallback(self, config, reingest_db, reingest_execution_obj):
-        """When output filename is absolute under scratch, should fall back to scratch base."""
-        execution = reingest_execution_obj
-
-        # Create a scratch directory with a plot file
-        scratch_base = config.paths.scratch / execution.output_fragment
-        scratch_base.mkdir(parents=True, exist_ok=True)
-        (scratch_base / "plot.png").write_bytes(b"fake png")
-
-        # Build an OutputDict with an absolute path under scratch (not under results)
-        outputs = {
-            "test_plot": OutputDict(
-                filename=str(scratch_base / "plot.png"),
-                long_name="Test Plot",
-                description="A test plot",
-            ),
-        }
-
-        results_base = config.paths.results / execution.output_fragment
-        register_execution_outputs(
-            reingest_db,
-            execution,
-            outputs,
-            output_type=ResultOutputType.Plot,
-            base_path=results_base,
-            fallback_path=scratch_base,
-        )
-        reingest_db.session.commit()
-
-        db_outputs = reingest_db.session.query(ExecutionOutput).filter_by(execution_id=execution.id).all()
-        assert len(db_outputs) == 1
-        assert db_outputs[0].short_name == "test_plot"
+# --- get_executions_for_reingest tests ---
 
 
 class TestGetExecutionsForReingest:
@@ -1317,6 +994,9 @@ class TestGetExecutionsForReingest:
         assert len(results) == 0
 
 
+# --- equivalence tests ---
+
+
 def _snapshot_scalars(db, execution):
     """Snapshot scalar metrics as a set of (value, dimensions) for comparison."""
     values = db.session.query(ScalarMetricValue).filter_by(execution_id=execution.id).all()
@@ -1335,11 +1015,11 @@ def _snapshot_outputs(db, execution):
     return {(o.short_name, o.output_type, o.filename) for o in outputs}
 
 
-class TestVersionedReingestEquivalence:
-    """Versioned reingest should produce the same DB state as fresh ingestion."""
+class TestReingestEquivalence:
+    """Reingest should produce the same DB state as fresh ingestion."""
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_versioned_reingest_matches_original(
+    def test_reingest_matches_original(
         self,
         config,
         reingest_db,
@@ -1349,7 +1029,7 @@ class TestVersionedReingestEquivalence:
         mock_result_factory,
         mocker,
     ):
-        """Versioned reingest should produce equivalent metrics and outputs to the original."""
+        """Reingest should produce equivalent metrics and outputs to the original."""
         execution = reingest_execution_obj
         mock_result = mock_result_factory(scratch_dir_with_data)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
@@ -1373,18 +1053,17 @@ class TestVersionedReingestEquivalence:
 
         assert original_scalars, "Original ingestion should produce scalar values"
 
-        # Versioned reingest creates a new execution from the same data
+        # Reingest creates a new execution from the same data
         ok = reingest_execution(
             config=config,
             database=reingest_db,
             execution=execution,
             provider_registry=mock_provider_registry,
-            mode=ReingestMode.versioned,
         )
         reingest_db.session.commit()
         assert ok is True
 
-        # Find the new execution created by versioned reingest
+        # Find the new execution created by reingest
         new_execution = reingest_db.session.query(Execution).filter(Execution.id != execution.id).one()
 
         # Snapshot reingest DB state

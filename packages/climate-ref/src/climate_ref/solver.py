@@ -23,6 +23,7 @@ from climate_ref.datasets import (
     PMPClimatologyDatasetAdapter,
     get_slug_column,
 )
+from climate_ref.executor.fragment import allocate_output_fragment
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
@@ -95,15 +96,39 @@ class DiagnosticExecution:
         """
         return self.datasets.selectors
 
-    def build_execution_definition(self, output_root: pathlib.Path) -> ExecutionDefinition:
+    def build_execution_definition(
+        self,
+        output_root: pathlib.Path,
+        *,
+        existing_fragments: set[str] | None = None,
+        results_dir: pathlib.Path | None = None,
+    ) -> ExecutionDefinition:
         """
         Build the execution definition for the current diagnostic execution
+
+        Parameters
+        ----------
+        output_root
+            Root directory for storing execution output (typically scratch)
+        existing_fragments
+            Output fragments already recorded in the database for this
+            execution group.  When provided together with *results_dir*,
+            the fragment is passed through
+            :func:`~climate_ref.executor.fragment.allocate_output_fragment`
+            to avoid collisions.
+        results_dir
+            Root results directory, used for on-disk collision checks
         """
         # Ensure that the output root is always an absolute path
         output_root = output_root.resolve()
 
         # This is the desired path relative to the output directory
-        fragment = pathlib.Path() / self.provider.slug / self.diagnostic.slug / self.datasets.hash
+        base_fragment = str(pathlib.Path() / self.provider.slug / self.diagnostic.slug / self.datasets.hash)
+
+        if existing_fragments is not None and results_dir is not None:
+            fragment = allocate_output_fragment(base_fragment, existing_fragments, results_dir)
+        else:
+            fragment = base_fragment
 
         return ExecutionDefinition(
             diagnostic=self.diagnostic,
@@ -553,11 +578,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     total_count = 0
 
     for potential_execution in solver.solve(filters):
-        # The diagnostic output is first written to the scratch directory
-        definition = potential_execution.build_execution_definition(output_root=config.paths.scratch)
-
         logger.debug(
-            f"Identified candidate execution {definition.key} "
+            f"Identified candidate execution {potential_execution.dataset_key} "
             f"for {potential_execution.diagnostic.full_slug()}"
         )
 
@@ -580,7 +602,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             )
             execution_group, created = db.get_or_create(
                 ExecutionGroup,
-                key=definition.key,
+                key=potential_execution.dataset_key,
                 diagnostic_id=diagnostic.id,
                 defaults={
                     "selectors": potential_execution.selectors,
@@ -604,7 +626,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 f"provider_count={provider_count}"
             )
 
-            if execution_group.should_run(definition.datasets.hash, rerun_failed=rerun_failed):
+            if execution_group.should_run(potential_execution.datasets.hash, rerun_failed=rerun_failed):
                 if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
                     logger.info(
                         f"Skipping execution due to one-of check: {potential_execution.execution_slug()!r}"
@@ -620,9 +642,18 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                         break
                     continue
 
+                # Build the definition now that we know fragment collision info
+                existing_fragments = {e.output_fragment for e in execution_group.executions}
+                definition = potential_execution.build_execution_definition(
+                    output_root=config.paths.scratch,
+                    existing_fragments=existing_fragments,
+                    results_dir=config.paths.results,
+                )
+
                 logger.info(
                     f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
                 )
+
                 execution = Execution(
                     execution_group=execution_group,
                     dataset_hash=definition.datasets.hash,

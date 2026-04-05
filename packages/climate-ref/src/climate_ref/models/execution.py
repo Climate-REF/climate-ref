@@ -406,9 +406,39 @@ def get_execution_group_and_latest(
     return query  # type: ignore
 
 
+def _selectors_match_facet(
+    selectors: dict[str, list[list[str]]],
+    facet_key: str,
+    facet_values: list[str],
+) -> bool:
+    """
+    Check if an execution group's selectors match a single facet filter.
+
+    Parameters
+    ----------
+    selectors
+        The execution group's selectors dict (dataset_type -> list of [key, value] pairs)
+    facet_key
+        Facet key, optionally prefixed with ``dataset_type.`` to scope to one type
+    facet_values
+        Allowed values (OR logic -- any match is sufficient)
+    """
+    if "." in facet_key:
+        dataset_type, key = facet_key.split(".", 1)
+        if dataset_type in selectors:
+            return any([key, fv] in selectors[dataset_type] for fv in facet_values)
+        return False
+
+    # Bare key: search across all dataset types
+    for ds_type_selectors in selectors.values():
+        if any([facet_key, fv] in ds_type_selectors for fv in facet_values):
+            return True
+    return False
+
+
 def _filter_executions_by_facets(
     results: Sequence[tuple[ExecutionGroup, Execution | None]],
-    facet_filters: dict[str, str],
+    facet_filters: dict[str, list[str]],
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Filter execution groups and their latest executions based on facet key-value pairs.
@@ -416,13 +446,13 @@ def _filter_executions_by_facets(
     This is a relatively expensive operation as it requires iterating over all results.
     This should be replaced once we have normalised the selectors into a separate table.
 
-
     Parameters
     ----------
     results
         List of tuples containing ExecutionGroup and its latest Execution (or None)
     facet_filters
-        Dictionary of facet key-value pairs to filter by (AND logic, exact match)
+        Dictionary mapping facet keys to lists of allowed values.
+        Different keys are ANDed; multiple values for the same key are ORed.
 
     Returns
     -------
@@ -434,41 +464,24 @@ def _filter_executions_by_facets(
       or dataset_type.key=value (searches specific dataset type)
     - Key=value filters search across all dataset types
     - dataset_type.key=value filters only search within the specified dataset type
-    - Multiple values within same filter type use OR logic
-    - All specified facets must match for an execution group to be included (AND logic)
+    - Multiple values for the same key use OR logic
+    - All specified keys must match for an execution group to be included (AND logic)
     """
-    filtered_results = []
-    for eg, execution in results:
-        all_filters_match = True
-        for facet_key, facet_value in facet_filters.items():
-            filter_match = False
-            if "." in facet_key:
-                # Handle dataset_type.key=value format
-                dataset_type, key = facet_key.split(".", 1)
-                if dataset_type in eg.selectors:
-                    if [key, facet_value] in eg.selectors[dataset_type]:
-                        filter_match = True
-                        break
-            else:
-                # Handle key=value format (search across all dataset types)
-                for ds_type_selectors in eg.selectors.values():
-                    if [facet_key, facet_value] in ds_type_selectors:
-                        filter_match = True
-                        break
-
-            if not filter_match:
-                all_filters_match = False
-                break
-        if all_filters_match:
-            filtered_results.append((eg, execution))
-    return filtered_results
+    return [
+        (eg, execution)
+        for eg, execution in results
+        if all(
+            _selectors_match_facet(eg.selectors, facet_key, facet_values)
+            for facet_key, facet_values in facet_filters.items()
+        )
+    ]
 
 
 def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     session: Session,
     diagnostic_filters: list[str] | None = None,
     provider_filters: list[str] | None = None,
-    facet_filters: dict[str, str] | None = None,
+    facet_filters: dict[str, list[str]] | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
@@ -484,7 +497,8 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     provider_filters
         List of provider slug substrings (OR logic, case-insensitive)
     facet_filters
-        Dictionary of facet key-value pairs (AND logic, exact match)
+        Dictionary mapping facet keys to lists of allowed values.
+        Different keys are ANDed; multiple values for the same key are ORed.
     dirty
         If True, only return dirty execution groups.
         If False, only return clean execution groups.

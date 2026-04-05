@@ -46,7 +46,7 @@ class TestFormatSize:
 
 def test_parse_facet_filters_valid_input():
     filters = ["source_id=GFDL-ESM4", "variable_id=tas"]
-    expected = {"source_id": "GFDL-ESM4", "variable_id": "tas"}
+    expected = {"source_id": ["GFDL-ESM4"], "variable_id": ["tas"]}
     assert parse_facet_filters(filters) == expected
 
 
@@ -60,17 +60,15 @@ def test_parse_facet_filters_none_input():
 
 def test_parse_facet_filters_with_whitespace():
     filters = ["  key1 = value1  ", "key2=value2 "]
-    expected = {"key1": "value1", "key2": "value2"}
+    expected = {"key1": ["value1"], "key2": ["value2"]}
     assert parse_facet_filters(filters) == expected
 
 
-def test_parse_facet_filters_duplicate_key(caplog):
+def test_parse_facet_filters_multiple_values_same_key():
+    """Multiple values for the same key are collected into a list (OR semantics)."""
     filters = ["key=value1", "key=value2"]
-    expected = {"key": "value2"}
-    with caplog.at_level("WARNING"):
-        result = parse_facet_filters(filters)
-    assert result == expected
-    assert "Filter key 'key' specified multiple times. Using last value: 'value2'" in caplog.text
+    result = parse_facet_filters(filters)
+    assert result == {"key": ["value1", "value2"]}
 
 
 def test_parse_facet_filters_invalid_format_no_equals():
@@ -90,12 +88,25 @@ def test_parse_facet_filters_empty_value():
 
 def test_parse_facet_filters_value_with_equals():
     filters = ["query=some_key=some_value"]
-    expected = {"query": "some_key=some_value"}
+    expected = {"query": ["some_key=some_value"]}
     assert parse_facet_filters(filters) == expected
 
 
-def test_parse_facet_filters_mixed_valid_and_invalid(caplog):
+def test_parse_facet_filters_mixed_valid_and_invalid():
     filters = ["key1=value1", "invalid", "key2=value2"]
     with pytest.raises(ValueError, match="Invalid filter format: 'invalid'"):
         parse_facet_filters(filters)
-    assert not caplog.text
+
+
+def test_parse_facet_filters_mixed_single_and_multi():
+    """Different keys can have different numbers of values."""
+    filters = ["source_id=A", "source_id=B", "variable_id=tas"]
+    result = parse_facet_filters(filters)
+    assert result == {"source_id": ["A", "B"], "variable_id": ["tas"]}
+
+
+def test_parse_facet_filters_dotted_key():
+    """Dotted keys (dataset_type.facet) are preserved as-is."""
+    filters = ["cmip6.source_id=ACCESS-CM2"]
+    result = parse_facet_filters(filters)
+    assert result == {"cmip6.source_id": ["ACCESS-CM2"]}

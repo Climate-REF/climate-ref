@@ -42,13 +42,14 @@ if TYPE_CHECKING:
     from climate_ref.database import Database
     from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
+    from climate_ref_core.diagnostics import Diagnostic
 
 
 def reconstruct_execution_definition(
     config: "Config",
     execution: Execution,
     diagnostic: "Diagnostic",
+    output_fragment: str | None = None,
 ) -> ExecutionDefinition:
     """
     Reconstruct an ``ExecutionDefinition`` from database state.
@@ -65,6 +66,10 @@ def reconstruct_execution_definition(
         The database ``Execution`` record to reconstruct from
     diagnostic
         The live ``Diagnostic`` instance resolved from the provider registry
+    output_fragment
+        If provided, use this fragment instead of the execution's own fragment
+        for the output directory. Used during reingest to point at the new
+        scratch location after copying.
 
     Returns
     -------
@@ -115,10 +120,8 @@ def reconstruct_execution_definition(
             selector=selector,
         )
 
-    # Point at the scratch directory -- the caller is expected to copy results
-    # to scratch before calling build_execution_result() to avoid mutating
-    # the live results tree.
-    output_directory = config.paths.scratch / execution.output_fragment
+    fragment = output_fragment if output_fragment is not None else execution.output_fragment
+    output_directory = config.paths.scratch / fragment
 
     return ExecutionDefinition(
         diagnostic=diagnostic,
@@ -164,15 +167,15 @@ def _validate_path_containment(path: "Path", base: "Path", label: str) -> None:
         raise ValueError(msg)
 
 
-def _build_execution_result(
+def _resolve_diagnostic_and_scratch(
     config: "Config",
     execution: Execution,
     provider_registry: "ProviderRegistry",
-) -> "tuple[ExecutionResult, Path] | None":
+) -> "tuple[Diagnostic, Path] | None":
     """
-    Resolve the diagnostic, validate paths, and build the execution result.
+    Resolve the diagnostic instance and validate the scratch directory.
 
-    Returns the result and scratch directory on success, or None on failure.
+    Returns the diagnostic and scratch directory on success, or None on failure.
     """
     execution_group = execution.execution_group
     diagnostic_model = execution_group.diagnostic
@@ -198,24 +201,7 @@ def _build_execution_result(
         logger.error(f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}.")
         return None
 
-    definition = reconstruct_execution_definition(config, execution, diagnostic)
-
-    try:
-        result = diagnostic.build_execution_result(definition)
-    except Exception:
-        logger.exception(
-            f"build_execution_result failed for execution {execution.id} "
-            f"({provider_slug}/{diagnostic_slug}). Skipping."
-        )
-        return None
-
-    if not result.successful or result.metric_bundle_filename is None:
-        logger.warning(
-            f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
-        )
-        return None
-
-    return result, scratch_dir
+    return diagnostic, scratch_dir
 
 
 def reingest_execution(
@@ -250,10 +236,10 @@ def reingest_execution(
     :
         True if reingest was successful, False if it was skipped due to an error
     """
-    built = _build_execution_result(config, execution, provider_registry)
-    if built is None:
+    resolved = _resolve_diagnostic_and_scratch(config, execution, provider_registry)
+    if resolved is None:
         return False
-    result, scratch_dir = built
+    diagnostic, scratch_dir = resolved
 
     execution_group = execution.execution_group
 
@@ -265,6 +251,20 @@ def reingest_execution(
     try:
         new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(scratch_dir, new_scratch_dir)
+
+        definition = reconstruct_execution_definition(
+            config, execution, diagnostic, output_fragment=new_fragment
+        )
+
+        result = diagnostic.build_execution_result(definition)
+
+        if not result.successful or result.metric_bundle_filename is None:
+            logger.warning(
+                f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
+            )
+            if new_scratch_dir.exists():
+                shutil.rmtree(new_scratch_dir)
+            return False
 
         with database.session.begin_nested():
             # Create new Execution record

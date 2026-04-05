@@ -397,6 +397,41 @@ class TestReingestExecution:
         assert ok is False
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_build_execution_result_called_with_new_scratch_dir(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+        spy = mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        spy.assert_called_once()
+        definition = spy.call_args[0][0]
+
+        # The definition's output_directory should be under scratch but NOT the original fragment
+        original_scratch = config.paths.scratch / reingest_execution_obj.output_fragment
+        assert definition.output_directory != original_scratch
+        assert definition.output_directory.parent == original_scratch.parent or str(
+            definition.output_directory
+        ).startswith(str(config.paths.scratch))
+        assert definition.output_directory.exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_creates_new_execution(
         self,
         config,

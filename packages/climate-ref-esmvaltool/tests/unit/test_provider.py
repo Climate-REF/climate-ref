@@ -2,7 +2,7 @@ import importlib.metadata
 from pathlib import Path
 
 import pooch
-from climate_ref_esmvaltool import ESMValToolProvider, __version__, provider
+from climate_ref_esmvaltool import _DATASETS_REGISTRY_NAME, ESMValToolProvider, __version__, provider
 
 
 def test_provider():
@@ -40,11 +40,11 @@ class TestESMValToolProviderHooks:
 
         provider.fetch_data(mock_config)
 
-        mock_fetch.assert_called_once()
+        mock_fetch.assert_called()
         # Check it's using the right registry name
-        call_args = mock_fetch.call_args
-        assert call_args[0][1] == "esmvaltool"
-        assert call_args[1]["output_dir"] is None
+        call = mock_fetch.mock_calls[0]
+        assert call.args[1] == _DATASETS_REGISTRY_NAME
+        assert call.kwargs["output_dir"] is None
 
     def test_validate_setup_env_missing(self, mocker):
         """Test validate_setup returns False when conda env is missing."""

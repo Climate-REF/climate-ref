@@ -245,14 +245,18 @@ class DatasetRegistryManager:
             This defaults to the value of `name` if not provided.
         """
         if cache_name is None:
-            cache_name = "climate_ref"
+            cache_name = name
+
+        if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
+            cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
+        else:
+            cache_dir = pooch.os_cache("climate_ref")
 
         registry = pooch.create(
-            path=pooch.os_cache(cache_name),
+            path=cache_dir / cache_name,
             base_url=base_url,
             version=version,
             retry_if_failed=10,
-            env="REF_DATASET_CACHE_DIR",
         )
         registry.load_registry(str(importlib.resources.files(package) / resource))
         self._registries[name] = registry

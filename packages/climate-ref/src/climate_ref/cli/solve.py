@@ -2,6 +2,8 @@ from typing import Annotated
 
 import typer
 
+from climate_ref.cli._utils import parse_facet_filters
+
 app = typer.Typer()
 
 
@@ -85,17 +87,10 @@ def solve(  # noqa: PLR0913
     config = ctx.obj.config
     db = ctx.obj.database
 
-    parsed_dataset_filters: dict[str, list[str]] | None = None
-    if dataset_filter:
-        parsed_dataset_filters = {}
-        for entry in dataset_filter:
-            if "=" not in entry:
-                raise typer.BadParameter(
-                    f"Invalid dataset filter {entry!r}. Expected key=value format.",
-                    param_hint="--dataset-filter",
-                )
-            key, value = entry.split("=", 1)
-            parsed_dataset_filters.setdefault(key, []).append(value)
+    try:
+        parsed_dataset_filters = parse_facet_filters(dataset_filter) or None
+    except ValueError as e:
+        raise typer.BadParameter(str(e), param_hint="--dataset-filter")
 
     filters = SolveFilterOptions(
         diagnostic=diagnostic,

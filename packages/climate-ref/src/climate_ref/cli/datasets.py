@@ -14,7 +14,7 @@ from typing import Annotated
 import typer
 from loguru import logger
 
-from climate_ref.cli._utils import pretty_print_df
+from climate_ref.cli._utils import parse_facet_filters, pretty_print_df
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models import Dataset
 from climate_ref.solver import apply_dataset_filters
@@ -60,15 +60,10 @@ def list_(  # noqa: PLR0913
     data_catalog = adapter.load_catalog(database, include_files=include_files, limit=limit)
 
     if dataset_filter:
-        parsed_filters: dict[str, list[str]] = {}
-        for entry in dataset_filter:
-            if "=" not in entry:
-                raise typer.BadParameter(
-                    f"Invalid dataset filter {entry!r}. Expected key=value format.",
-                    param_hint="--dataset-filter",
-                )
-            key, value = entry.split("=", 1)
-            parsed_filters.setdefault(key, []).append(value)
+        try:
+            parsed_filters = parse_facet_filters(dataset_filter)
+        except ValueError as e:
+            raise typer.BadParameter(str(e), param_hint="--dataset-filter")
 
         for facet in parsed_filters:
             if facet not in data_catalog.columns:
@@ -108,10 +103,7 @@ def list_columns(
     include_files: bool = typer.Option(False, help="Include files in the output"),
 ) -> None:
     """
-    Print the current climate_ref configuration
-
-    If a configuration directory is provided,
-    the configuration will attempt to load from the specified directory.
+    List the available columns in the data catalog for the given source type.
     """
     database = ctx.obj.database
 

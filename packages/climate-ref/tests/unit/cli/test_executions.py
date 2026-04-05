@@ -252,8 +252,8 @@ class TestListGroupsFiltering:
         assert "Applied filters: facet filters: ['source_id=NONEXISTENT']" in result.stderr
         assert "id" in result.stdout  # Ensure empty table headers are still printed
 
-    def test_facet_warning_multiple_same_key(self, db_with_groups, invoke_cli):
-        # This functionality might be useful in future, but not today
+    def test_facet_multiple_same_key_returns_both(self, db_with_groups, invoke_cli):
+        # Multiple values for the same key are ORed (both should appear)
         result = invoke_cli(
             [
                 "executions",
@@ -264,12 +264,8 @@ class TestListGroupsFiltering:
                 "source_id=ACCESS-ESM1-5",
             ]
         )
-        assert (
-            "Filter key 'source_id' specified multiple times. Using last value: 'ACCESS-ESM1-5'"
-            in result.stderr
-        )
         assert "ACCESS-ESM1-5" in result.stdout
-        assert "GFDL-ESM4" not in result.stdout
+        assert "GFDL-ESM4" in result.stdout
 
     def test_filter_successful(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "list-groups", "--successful"])

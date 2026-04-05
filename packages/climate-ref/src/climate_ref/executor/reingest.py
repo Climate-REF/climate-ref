@@ -37,11 +37,13 @@ from climate_ref_core.diagnostics import ExecutionDefinition
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 
 if TYPE_CHECKING:
+    from pathlib import Path
+
     from climate_ref.config import Config
     from climate_ref.database import Database
     from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.diagnostics import Diagnostic
+    from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
 
 
 def reconstruct_execution_definition(
@@ -149,6 +151,74 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
     return attrs
 
 
+def _validate_path_containment(path: "Path", base: "Path", label: str) -> None:
+    """
+    Check that *path* stays within *base* after resolving symlinks and ``..`` segments.
+
+    Raises
+    ------
+    ValueError
+        If the resolved *path* escapes *base*
+    """
+    if not path.resolve().is_relative_to(base.resolve()):
+        msg = f"Computed {label} path {path} escapes {base}."
+        raise ValueError(msg)
+
+
+def _build_execution_result(
+    config: "Config",
+    execution: Execution,
+    provider_registry: "ProviderRegistry",
+) -> "tuple[ExecutionResult, Path] | None":
+    """
+    Resolve the diagnostic, validate paths, and build the execution result.
+
+    Returns the result and scratch directory on success, or None on failure.
+    """
+    execution_group = execution.execution_group
+    diagnostic_model = execution_group.diagnostic
+    provider_slug = diagnostic_model.provider.slug
+    diagnostic_slug = diagnostic_model.slug
+
+    try:
+        diagnostic = provider_registry.get_metric(provider_slug, diagnostic_slug)
+    except KeyError:
+        logger.error(
+            f"Could not resolve diagnostic {provider_slug}/{diagnostic_slug} "
+            f"from provider registry. Skipping execution {execution.id}."
+        )
+        return None
+
+    scratch_dir = config.paths.scratch / execution.output_fragment
+    try:
+        _validate_path_containment(scratch_dir, config.paths.scratch, "scratch")
+    except ValueError:
+        logger.error(f"Skipping execution {execution.id}: scratch path escapes base.")
+        return None
+    if not scratch_dir.exists():
+        logger.error(f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}.")
+        return None
+
+    definition = reconstruct_execution_definition(config, execution, diagnostic)
+
+    try:
+        result = diagnostic.build_execution_result(definition)
+    except Exception:
+        logger.exception(
+            f"build_execution_result failed for execution {execution.id} "
+            f"({provider_slug}/{diagnostic_slug}). Skipping."
+        )
+        return None
+
+    if not result.successful or result.metric_bundle_filename is None:
+        logger.warning(
+            f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
+        )
+        return None
+
+    return result, scratch_dir
+
+
 def reingest_execution(
     config: "Config",
     database: "Database",
@@ -181,50 +251,24 @@ def reingest_execution(
     :
         True if reingest was successful, False if it was skipped due to an error
     """
+    built = _build_execution_result(config, execution, provider_registry)
+    if built is None:
+        return False
+    result, scratch_dir = built
+
     execution_group = execution.execution_group
-    diagnostic_model = execution_group.diagnostic
-    provider_slug = diagnostic_model.provider.slug
-    diagnostic_slug = diagnostic_model.slug
-
-    try:
-        diagnostic = provider_registry.get_metric(provider_slug, diagnostic_slug)
-    except KeyError:
-        logger.error(
-            f"Could not resolve diagnostic {provider_slug}/{diagnostic_slug} "
-            f"from provider registry. Skipping execution {execution.id}."
-        )
-        return False
-
-    scratch_dir = config.paths.scratch / execution.output_fragment
-    if not scratch_dir.exists():
-        logger.error(f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}.")
-        return False
-
-    definition = reconstruct_execution_definition(config, execution, diagnostic)
-
-    try:
-        result = diagnostic.build_execution_result(definition)
-    except Exception:
-        logger.exception(
-            f"build_execution_result failed for execution {execution.id} "
-            f"({provider_slug}/{diagnostic_slug}). Skipping."
-        )
-        return False
-
-    if not result.successful or result.metric_bundle_filename is None:
-        logger.warning(
-            f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
-        )
-        return False
 
     # Allocate a new output fragment with a timestamp suffix
-    new_fragment = allocate_output_fragment(execution.output_fragment)
+    new_fragment = allocate_output_fragment(execution.output_fragment, config.paths.results)
 
     # Copy scratch tree to the new results location
     dst_dir = config.paths.results / new_fragment
+    try:
+        _validate_path_containment(dst_dir, config.paths.results, "results")
+    except ValueError:
+        logger.error(f"Skipping execution {execution.id}: results path escapes base.")
+        return False
     dst_dir.parent.mkdir(parents=True, exist_ok=True)
-    if dst_dir.exists():
-        shutil.rmtree(dst_dir)
     shutil.copytree(scratch_dir, dst_dir)
 
     cv = CV.load_from_file(config.paths.dimensions_cv)
@@ -249,31 +293,26 @@ def reingest_execution(
                     )
                 )
 
-            # Standard ingestion (same path as fresh executions)
+            # Use scratch dir as the output base path since build_execution_result
+            # may produce absolute paths under scratch in output bundles
             ingest_execution_result(
                 database,
                 new_execution,
                 result,
                 cv,
-                output_base_path=config.paths.results / new_fragment,
+                output_base_path=scratch_dir,
             )
 
             assert result.metric_bundle_filename is not None
             new_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
     except Exception:
-        logger.exception(
-            f"Ingestion failed for execution {execution.id} "
-            f"({provider_slug}/{diagnostic_slug}). Rolling back changes."
-        )
+        logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
         # Clean up the copied directory on failure
         if dst_dir.exists():
             shutil.rmtree(dst_dir)
         return False
 
-    logger.info(
-        f"Successfully reingested execution {execution.id} "
-        f"({provider_slug}/{diagnostic_slug}) -> new execution {new_execution.id}"
-    )
+    logger.info(f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}")
     return True
 
 

@@ -397,7 +397,7 @@ class TestReingestExecution:
         assert ok is False
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_build_execution_result_called_with_new_scratch_dir(
+    def test_copies_scratch_before_build(
         self,
         config,
         reingest_db,
@@ -407,6 +407,43 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
+        """Scratch should be copied to new location before build_execution_result is called."""
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+
+        # Track whether the new scratch dir exists when build_execution_result is called
+        new_scratch_existed = []
+
+        def capture_build(definition):
+            original = config.paths.scratch / reingest_execution_obj.output_fragment
+            siblings = [p for p in original.parent.iterdir() if p != original and p.is_dir()]
+            new_scratch_existed.append(len(siblings) > 0)
+            return mock_result
+
+        mocker.patch.object(mock_diagnostic, "build_execution_result", side_effect=capture_build)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+        assert new_scratch_existed == [True], "New scratch dir should exist before build_execution_result"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_build_uses_new_output_directory(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """build_execution_result should receive a definition pointing at the new scratch dir."""
         mock_result = mock_result_factory(scratch_dir_with_results)
         mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
         spy = mocker.patch.object(mock_diagnostic, "build_execution_result", return_value=mock_result)
@@ -423,13 +460,71 @@ class TestReingestExecution:
         spy.assert_called_once()
         definition = spy.call_args[0][0]
 
-        # The definition's output_directory should be under scratch but NOT the original fragment
         original_scratch = config.paths.scratch / reingest_execution_obj.output_fragment
         assert definition.output_directory != original_scratch
-        assert definition.output_directory.parent == original_scratch.parent or str(
-            definition.output_directory
-        ).startswith(str(config.paths.scratch))
+        assert str(definition.output_directory).startswith(str(config.paths.scratch))
         assert definition.output_directory.exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_rewrites_absolute_paths_in_copied_scratch(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Absolute paths in YAML/JSON files should be rewritten to reference the new scratch dir."""
+        # Write a provenance file with absolute paths referencing the original scratch dir
+        original_scratch = config.paths.scratch / reingest_execution_obj.output_fragment
+        provenance_dir = original_scratch / "executions" / "recipe_test" / "run" / "diag" / "script"
+        provenance_dir.mkdir(parents=True, exist_ok=True)
+        provenance_file = provenance_dir / "diagnostic_provenance.yml"
+        provenance_file.write_text(
+            f"? {original_scratch}/executions/recipe_test/plots/plot.png\n: caption: Test plot\n"
+        )
+
+        mock_result = mock_result_factory(scratch_dir_with_results)
+        mock_diagnostic = mock_provider_registry.get_metric("mock_provider", "mock")
+
+        # Capture the new scratch dir from the definition
+        captured_definitions = []
+
+        def capture_build(definition):
+            captured_definitions.append(definition)
+            return mock_result
+
+        mocker.patch.object(mock_diagnostic, "build_execution_result", side_effect=capture_build)
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        # Verify the provenance file in the new scratch dir has rewritten paths
+        new_output_dir = captured_definitions[0].output_directory
+        new_provenance = (
+            new_output_dir
+            / "executions"
+            / "recipe_test"
+            / "run"
+            / "diag"
+            / "script"
+            / "diagnostic_provenance.yml"
+        )
+        assert new_provenance.exists()
+        content = new_provenance.read_text()
+        # The old path with a trailing slash should not appear — it should
+        # have been replaced with the new path. (We check with trailing /
+        # because the new fragment contains the old fragment as a prefix.)
+        assert f"{original_scratch}/" not in content
+        assert str(new_output_dir) in content
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_creates_new_execution(

@@ -69,7 +69,7 @@ def reconstruct_execution_definition(
     output_fragment
         If provided, use this fragment instead of the execution's own fragment
         for the output directory. Used during reingest to point at the new
-        scratch location after copying.
+        (copied) scratch location.
 
     Returns
     -------
@@ -204,6 +204,29 @@ def _resolve_diagnostic_and_scratch(
     return diagnostic, scratch_dir
 
 
+def _rewrite_paths_in_directory(directory: "Path", old_path: str, new_path: str) -> None:
+    """
+    Rewrite absolute path references in text files within a directory.
+
+    Diagnostic output files (e.g. ESMValTool's ``diagnostic_provenance.yml``)
+    embed absolute paths from the original run.  After copying the scratch
+    directory to a new location this function rewrites those stale references
+    so that ``build_execution_result()`` can resolve them against the new
+    output directory.
+
+    Only text-based files that are likely to contain path references are
+    touched (YAML, JSON, TXT, HTML).
+    """
+    for pattern in ("*.yml", "*.yaml", "*.json", "*.txt", "*.html", "*.log"):
+        for file in directory.rglob(pattern):
+            try:
+                content = file.read_text()
+            except (UnicodeDecodeError, OSError):
+                continue
+            if old_path in content:
+                file.write_text(content.replace(old_path, new_path))
+
+
 def reingest_execution(
     config: "Config",
     database: "Database",
@@ -213,12 +236,12 @@ def reingest_execution(
     """
     Reingest an existing execution.
 
-    Re-runs ``build_execution_result()`` against the scratch directory
-    (which contains the raw outputs from the original diagnostic run),
-    creates a new ``Execution`` record with a unique output fragment,
-    copies results to the new location, and ingests metrics into the database.
+    Copies the scratch directory to a new location, rewrites embedded
+    absolute paths so they reference the copy, then re-runs
+    ``build_execution_result()`` and ingests the results into the database.
 
-    The original execution is left untouched.
+    A new ``Execution`` record is created under the same ``ExecutionGroup``
+    and the original execution is left untouched.
 
     Parameters
     ----------
@@ -244,13 +267,22 @@ def reingest_execution(
     execution_group = execution.execution_group
 
     # Allocate a new output fragment with a timestamp suffix
-    # Previous execution scratch will be copied there
     new_fragment = allocate_output_fragment(execution.output_fragment, config.paths.results)
     new_scratch_dir = config.paths.scratch / new_fragment
 
     try:
         new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
         shutil.copytree(scratch_dir, new_scratch_dir)
+
+        # Rewrite embedded absolute paths so they reference the copy.
+        # Diagnostic output files (e.g. diagnostic_provenance.yml) contain
+        # absolute paths from the original run that must point at the new
+        # location for build_execution_result() to work.
+        _rewrite_paths_in_directory(
+            new_scratch_dir,
+            old_path=str(scratch_dir),
+            new_path=str(new_scratch_dir),
+        )
 
         definition = reconstruct_execution_definition(
             config, execution, diagnostic, output_fragment=new_fragment

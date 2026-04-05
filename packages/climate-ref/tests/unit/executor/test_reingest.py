@@ -117,6 +117,7 @@ def scratch_dir_with_results(config, reingest_execution_obj):
     CMECMetric(**CMECMetric.create_template()).dump_to_json(scratch_dir / "diagnostic.json")
     CMECOutput(**CMECOutput.create_template()).dump_to_json(scratch_dir / "output.json")
     TSeries.dump_to_json(scratch_dir / "series.json", SAMPLE_SERIES)
+    (scratch_dir / "execution.log").write_text("Execution log from original run\n")
 
     return scratch_dir
 
@@ -544,7 +545,7 @@ class TestReingestExecution:
         assert preserved_count == original_count, "Original execution values should be untouched"
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_reingest_ingestion_failure_rolls_back(
+    def test_reingest_ingestion_failure_logs_but_creates_execution(
         self,
         config,
         reingest_db,
@@ -554,7 +555,7 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """If ingestion fails, no new execution should be created and results dir cleaned up."""
+        """handle_execution_result swallows ingestion errors; reingest still creates new execution."""
         original_count = reingest_db.session.query(Execution).count()
 
         mock_result = mock_result_factory(
@@ -562,7 +563,8 @@ class TestReingestExecution:
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
-        # Make the scalar ingestion fail by corrupting the metric bundle
+        # Corrupt the metric bundle — ingestion will fail internally but handle_execution_result
+        # logs the error and continues rather than propagating.
         (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
 
         ok = reingest_execution(
@@ -572,11 +574,13 @@ class TestReingestExecution:
             provider_registry=mock_provider_registry,
         )
         reingest_db.session.commit()
-        assert ok is False
+        assert ok is True
 
-        # No new execution should have been created
+        # A new execution record should still have been created
         new_count = reingest_db.session.query(Execution).count()
-        assert new_count == original_count, "Failed reingest should not create new execution"
+        assert new_count == original_count + 1, (
+            "Reingest should create new execution even with ingestion error"
+        )
 
     def test_scratch_directory_preserved_after_success(
         self,
@@ -1298,7 +1302,7 @@ class TestReingestFailureCleanup:
     """Verify that failed reingest cleans up the results directory."""
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_results_dir_cleaned_on_ingestion_failure(
+    def test_results_dir_created_even_on_ingestion_error(
         self,
         config,
         reingest_db,
@@ -1308,13 +1312,13 @@ class TestReingestFailureCleanup:
         mock_result_factory,
         mocker,
     ):
-        """If ingestion fails, the copied results directory should be removed."""
+        """handle_execution_result logs ingestion errors; results dir is still created."""
         mock_result = mock_result_factory(
             scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
-        # Corrupt the metric bundle so ingestion fails
+        # Corrupt the metric bundle — ingestion will log an error but reingest still succeeds
         (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
 
         ok = reingest_execution(
@@ -1324,12 +1328,13 @@ class TestReingestFailureCleanup:
             provider_registry=mock_provider_registry,
         )
         reingest_db.session.commit()
-        assert ok is False
+        assert ok is True
 
-        # No versioned results directory should remain
-        # The original fragment dir may or may not exist, but no _v2 dir should exist
-        versioned_dir = config.paths.results / (reingest_execution_obj.output_fragment + "_v2")
-        assert not versioned_dir.exists(), "Failed reingest should clean up results directory"
+        new_execution = (
+            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        )
+        results_dir = config.paths.results / new_execution.output_fragment
+        assert results_dir.exists(), "Results directory should exist even when ingestion had errors"
 
 
 # --- ingest_execution_result standalone tests ---

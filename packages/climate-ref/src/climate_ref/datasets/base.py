@@ -6,10 +6,24 @@ from attrs import define
 from loguru import logger
 from sqlalchemy.orm import joinedload
 
-from climate_ref.database import Database, ModelState
+from climate_ref.database import Database, ModelState, _values_differ
 from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
+
+
+def _file_meta_differs(db_value: Any, new_value: Any) -> bool:
+    """
+    Compare a DB-stored file metadata value against an incoming value.
+
+    DatasetFile stores start_time/end_time as strings (via _coerce_time_to_str),
+    but incoming values from the parser may be cftime.datetime objects.
+    Coerce non-string values to strings before comparison to avoid
+    type-mismatch false positives.
+    """
+    if not isinstance(new_value, str) and new_value is not None:
+        new_value = str(new_value)
+    return _values_differ(db_value, new_value)
 
 
 @define
@@ -322,7 +336,7 @@ class DatasetAdapter(Protocol):
                 changed = any(
                     not _is_na(new_meta.get(c))
                     and hasattr(existing_file, c)
-                    and getattr(existing_file, c) != new_meta[c]
+                    and _file_meta_differs(getattr(existing_file, c), new_meta[c])
                     for c in file_meta_cols
                     if c in new_meta
                 )
@@ -409,10 +423,15 @@ class DatasetAdapter(Protocol):
 
         return catalog[catalog[self.version_metadata] == max_version_per_group]
 
-    def _get_dataset_files(self, db: Database, limit: int | None = None) -> pd.DataFrame:
+    def _get_dataset_files(
+        self,
+        db: Database,
+        limit: int | None = None,
+        filters: dict[str, list[str]] | None = None,
+    ) -> pd.DataFrame:
         dataset_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
 
-        result = (
+        query = (
             db.session.query(DatasetFile)
             # The join is necessary to be able to order by the dataset columns
             .join(DatasetFile.dataset)
@@ -420,10 +439,15 @@ class DatasetAdapter(Protocol):
             # The joinedload is necessary to avoid N+1 queries (one for each dataset)
             # https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#the-zen-of-joined-eager-loading
             .options(joinedload(DatasetFile.dataset.of_type(self.dataset_cls)))
-            .order_by(Dataset.updated_at.desc())
-            .limit(limit)
-            .all()
         )
+
+        if filters:
+            for key, values in filters.items():
+                column = getattr(self.dataset_cls, key, None)
+                if column is not None:
+                    query = query.where(column.in_(values))
+
+        result = query.order_by(Dataset.updated_at.desc()).limit(limit).all()
 
         return pd.DataFrame(
             [
@@ -437,10 +461,21 @@ class DatasetAdapter(Protocol):
             index=[file.dataset.id for file in result],
         )
 
-    def _get_datasets(self, db: Database, limit: int | None = None) -> pd.DataFrame:
-        result_datasets = (
-            db.session.query(self.dataset_cls).order_by(Dataset.updated_at.desc()).limit(limit).all()
-        )
+    def _get_datasets(
+        self,
+        db: Database,
+        limit: int | None = None,
+        filters: dict[str, list[str]] | None = None,
+    ) -> pd.DataFrame:
+        query = db.session.query(self.dataset_cls)
+
+        if filters:
+            for key, values in filters.items():
+                column = getattr(self.dataset_cls, key, None)
+                if column is not None:
+                    query = query.where(column.in_(values))
+
+        result_datasets = query.order_by(Dataset.updated_at.desc()).limit(limit).all()
 
         return pd.DataFrame(
             [{k: getattr(dataset, k) for k in self.dataset_specific_metadata} for dataset in result_datasets],
@@ -448,7 +483,11 @@ class DatasetAdapter(Protocol):
         )
 
     def load_catalog(
-        self, db: Database, include_files: bool = True, limit: int | None = None
+        self,
+        db: Database,
+        include_files: bool = True,
+        limit: int | None = None,
+        filters: dict[str, list[str]] | None = None,
     ) -> pd.DataFrame:
         """
         Load the data catalog containing the currently tracked datasets/files from the database
@@ -469,9 +508,9 @@ class DatasetAdapter(Protocol):
         with db.session.begin():
             # TODO: Paginate this query to avoid loading all the data at once
             if include_files:
-                catalog = self._get_dataset_files(db, limit)
+                catalog = self._get_dataset_files(db, limit, filters)
             else:
-                catalog = self._get_datasets(db, limit)
+                catalog = self._get_datasets(db, limit, filters)
 
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:

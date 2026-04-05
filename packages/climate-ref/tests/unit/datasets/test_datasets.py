@@ -1,5 +1,6 @@
 from pathlib import Path
 
+import cftime
 import numpy as np
 import pandas as pd
 import pytest
@@ -8,7 +9,7 @@ from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets import IngestionStats, get_dataset_adapter, ingest_datasets
 from climate_ref.datasets import base as base_module
-from climate_ref.datasets.base import DatasetAdapter, _is_na
+from climate_ref.datasets.base import DatasetAdapter, _file_meta_differs, _is_na
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref_core.datasets import SourceDatasetType
@@ -980,3 +981,34 @@ class TestIsNa:
 
     def test_empty_string(self):
         assert _is_na("") is False
+
+
+class TestFileMetaDiffers:
+    """Tests for _file_meta_differs, which compares DB-stored file metadata against incoming values."""
+
+    def test_cftime_vs_matching_string_is_not_different(self):
+        """cftime.datetime stringifies to the same value stored in the DB."""
+        db_value = "1850-01-16 12:00:00"
+        incoming = cftime.datetime(1850, 1, 16, 12, 0, 0, 0, calendar="proleptic_gregorian")
+        assert _file_meta_differs(db_value, incoming) is False
+
+    def test_cftime_vs_different_string_is_different(self):
+        """cftime.datetime with different date is detected as changed."""
+        db_value = "1850-01-01 00:00:00"
+        incoming = cftime.datetime(1850, 1, 16, 12, 0, 0, 0, calendar="standard")
+        assert _file_meta_differs(db_value, incoming) is True
+
+    def test_string_vs_string_equal(self):
+        assert _file_meta_differs("1850-01-01 00:00:00", "1850-01-01 00:00:00") is False
+
+    def test_string_vs_string_different(self):
+        assert _file_meta_differs("1850-01-01 00:00:00", "1851-01-01 00:00:00") is True
+
+    def test_none_vs_none(self):
+        assert _file_meta_differs(None, None) is False
+
+    def test_none_vs_value(self):
+        assert _file_meta_differs(None, "1850-01-01") is True
+
+    def test_value_vs_none(self):
+        assert _file_meta_differs("1850-01-01", None) is True

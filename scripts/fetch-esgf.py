@@ -2,8 +2,8 @@
 CLI tool for fetching the required CMIP6 and Obs4MIPs datasets from ESGF.
 
 This script can either run all predefined requests or a specific request by ID.
-By default, only one ensemble member per model is fetched to reduce the total data volume.
-This can be changed with the --no-remove-ensembles flag.
+By default, up to 10 ensemble members per source_id are fetched to reduce the total data volume.
+This can be changed with the --max-ensembles flag (0 = no limit).
 
 This fetches about 3TB of datasets into the default location for intake esgf.
 This can be adjusted via `~/.config/intake-esgf/config.yaml`.
@@ -24,15 +24,15 @@ class CMIP6Request:
     id: str
     facets: dict[str, str | tuple[str, ...] | list[str]]
 
-    def fetch(self, remove_ensembles: bool = True):
+    def fetch(self, max_members: int = 1):
         """
         Fetch CMIP6 data from the ESGF catalog and return it as a DataFrame.
 
         Parameters
         ----------
-        remove_ensembles : bool, default True
-            Whether to remove ensemble members, keeping only one per model.
-            If False, all ensemble members will be included.
+        max_members : int, default 10
+            Maximum number of ensemble members to fetch per source_id.
+            Set to 0 for no limit (fetch all ensemble members).
 
         Returns
         -------
@@ -48,8 +48,12 @@ class CMIP6Request:
         logger.debug(f"Fetching CMIP6 data: {search_parameters}")
         try:
             cmip6_data = catalog.search(**search_parameters)
-            if remove_ensembles:
-                cmip6_data = cmip6_data.remove_ensembles()
+            if max_members > 0 and cmip6_data.df is not None:
+                df = cmip6_data.df
+                mask = df.groupby("source_id")["member_id"].transform(
+                    lambda s: s.isin(sorted(s.unique())[:max_members])
+                )
+                cmip6_data.df = df[mask]
             return cmip6_data.to_path_dict()
         except Exception:
             logger.info(f"Error fetching CMIP6 data: {search_parameters}")
@@ -65,13 +69,13 @@ class Obs4MIPsRequest:
     id: str
     facets: dict[str, str | tuple[str, ...] | list[str]]
 
-    def fetch(self, remove_ensembles: bool = True):
+    def fetch(self, max_members: int = 1):
         """
         Fetch Obs4MIPs data from the ESGF catalog and return it as a DataFrame.
 
         Parameters
         ----------
-        remove_ensembles : bool, default True
+        max_members : int, default 1
             Ignored as Obs4MIPs data does not have ensembles.
 
         Returns
@@ -332,12 +336,12 @@ requests: list[Request] = [
 ]
 
 
-def run_request(request: Request, remove_ensembles: bool = True):
+def run_request(request: Request, max_members: int = 1):
     """
     Fetch and log the results of a request
     """
     print(f"Processing request: {request.id}")
-    df = request.fetch(remove_ensembles=remove_ensembles)
+    df = request.fetch(max_members=max_members)
     print(f"{len(df)} datasets")
     print("\n")
 
@@ -346,11 +350,11 @@ def main(
     request_id: str = typer.Option(
         None, help="ID of a specific request to run. If not provided, all requests will be run."
     ),
-    remove_ensembles: bool = typer.Option(
-        True,
+    max_members: int = typer.Option(
+        1,
         help=(
-            "Remove ensemble members, keeping only one per model. "
-            "Use --no-remove-ensembles to fetch all ensembles."
+            "Maximum number of ensemble members to fetch per source_id. "
+            "Set to 0 to fetch all ensemble members."
         ),
     ),
 ):
@@ -358,8 +362,8 @@ def main(
     Fetch CMIP6 datasets from ESGF.
 
     This script can either run all predefined requests or a specific request by ID.
-    By default, only one ensemble member per model is fetched, but this can be changed
-    with the --no-remove-ensembles flag.
+    By default, up to 1 ensemble members per source_id are fetched, but this can be
+    changed with --max-ensembles (use 0 for no limit).
     """
     if request_id:
         # Find and run the specific request
@@ -372,15 +376,15 @@ def main(
             raise typer.Exit(1)
 
         logger.info(f"Running single request: {request_id}")
-        if not remove_ensembles:
-            logger.info("Fetching all ensemble members")
-        run_request(matching_requests[0], remove_ensembles=remove_ensembles)
+        limit = max_members if max_members > 0 else "unlimited"
+        logger.info(f"Max ensemble members per source_id: {limit}")
+        run_request(matching_requests[0], max_members=max_members)
     else:
         logger.info("Running all requests...")
-        if not remove_ensembles:
-            logger.info("Fetching all ensemble members")
+        limit = max_members if max_members > 0 else "unlimited"
+        logger.info(f"Max ensemble members per source_id: {limit}")
         for request in requests:
-            run_request(request, remove_ensembles=remove_ensembles)
+            run_request(request, max_members=max_members)
 
 
 # joblib.Parallel(n_jobs=2)(joblib.delayed(run_request)(request) for request in requests)

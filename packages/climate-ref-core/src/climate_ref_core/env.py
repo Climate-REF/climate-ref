@@ -27,7 +27,7 @@ def get_env() -> Env:
 
     # Load the environment variables from the .env file
     # This will override any defaults set above
-    env.read_env(verbose=True)
+    env.read_env()
 
     return env
 

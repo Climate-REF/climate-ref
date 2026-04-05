@@ -21,4 +21,9 @@ from .local import LocalExecutor
 from .result_handling import handle_execution_result
 from .synchronous import SynchronousExecutor
 
-__all__ = ["HPCExecutor", "LocalExecutor", "SynchronousExecutor", "handle_execution_result"]
+__all__ = [
+    "HPCExecutor",
+    "LocalExecutor",
+    "SynchronousExecutor",
+    "handle_execution_result",
+]

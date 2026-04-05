@@ -553,7 +553,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     total_count = 0
 
     for potential_execution in solver.solve(filters):
-        # The diagnostic output is first written to the scratch directory
         definition = potential_execution.build_execution_definition(output_root=config.paths.scratch)
 
         logger.debug(
@@ -623,6 +622,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 logger.info(
                     f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
                 )
+
                 execution = Execution(
                     execution_group=execution_group,
                     dataset_hash=definition.datasets.hash,

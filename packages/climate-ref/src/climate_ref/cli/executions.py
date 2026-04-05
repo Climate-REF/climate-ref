@@ -742,6 +742,140 @@ def stats(
 
 
 @app.command()
+def reingest(  # noqa: PLR0913
+    ctx: typer.Context,
+    group_ids: Annotated[
+        list[int] | None,
+        typer.Argument(help="Execution group IDs to reingest. If omitted, uses filters."),
+    ] = None,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by provider slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by diagnostic slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    include_failed: Annotated[
+        bool,
+        typer.Option(
+            "--include-failed",
+            help="Also attempt reingest on failed executions.",
+        ),
+    ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(
+            "--dry-run",
+            help="Show what would be reingested without making changes.",
+        ),
+    ] = False,
+    force: bool = typer.Option(False, help="Skip confirmation prompt"),
+) -> None:
+    """
+    Reingest existing executions without re-running diagnostics.
+
+    Re-runs build_execution_result() on existing output files and re-ingests
+    the results into the database. Useful when new series definitions or
+    metadata extraction logic has been added.
+
+    A new Execution record is always created under the same ExecutionGroup,
+    leaving the original execution untouched. Results are treated as immutable.
+
+    The dirty flag is never modified by this command.
+    """
+    import pandas as pd
+
+    from climate_ref.executor.reingest import (
+        get_executions_for_reingest,
+        reingest_execution,
+    )
+    from climate_ref.provider_registry import ProviderRegistry
+
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console = ctx.obj.console
+
+    if not any([group_ids, provider, diagnostic]):
+        logger.error(
+            "At least one filter is required (group IDs, --provider, or --diagnostic). "
+            "This prevents accidental reingest of all executions."
+        )
+        raise typer.Exit(code=1)
+
+    provider_registry = ProviderRegistry.build_from_config(config, db)
+
+    results = get_executions_for_reingest(
+        db,
+        execution_group_ids=group_ids,
+        provider_filters=provider,
+        diagnostic_filters=diagnostic,
+        include_failed=include_failed,
+    )
+
+    if not results:
+        console.print("No executions found matching the specified criteria.")
+        return
+
+    preview_df = pd.DataFrame(
+        [
+            {
+                "group_id": eg.id,
+                "execution_id": ex.id,
+                "provider": eg.diagnostic.provider.slug,
+                "diagnostic": eg.diagnostic.slug,
+                "key": eg.key,
+                "successful": ex.successful,
+            }
+            for eg, ex in results
+        ]
+    )
+
+    if dry_run:
+        console.print(f"[bold]Dry run:[/] would reingest {len(results)} execution(s):")
+        pretty_print_df(preview_df, console=console)
+        return
+
+    console.print(f"Will reingest {len(results)} execution(s):")
+    pretty_print_df(preview_df, console=console)
+
+    if not force:
+        if not typer.confirm("\nProceed with reingest?"):
+            console.print("Reingest cancelled.")
+            return
+
+    # Ensure any autobegun transaction from the preview queries is closed
+    # so each reingest runs in its own top-level transaction (not a savepoint).
+    if db.session.in_transaction():
+        db.session.commit()
+
+    # Process each execution in a separate transaction
+    success_count = 0
+    skip_count = 0
+    for eg, ex in results:
+        with db.session.begin():
+            ok = reingest_execution(
+                config=config,
+                database=db,
+                execution=ex,
+                provider_registry=provider_registry,
+            )
+
+        if ok:
+            success_count += 1
+        else:
+            skip_count += 1
+
+    console.print(f"\n[green]Reingest complete:[/] {success_count} succeeded, {skip_count} skipped.")
+
+
+@app.command()
 def flag_dirty(ctx: typer.Context, execution_id: int) -> None:
     """
     Flag an execution group for recomputation

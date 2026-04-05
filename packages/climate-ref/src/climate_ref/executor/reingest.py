@@ -217,11 +217,8 @@ def reingest_execution(
         )
         return False
 
-    # Allocate a new, non-colliding output fragment
-    existing_fragments = {e.output_fragment for e in execution_group.executions}
-    new_fragment = allocate_output_fragment(
-        execution.output_fragment, existing_fragments, config.paths.results
-    )
+    # Allocate a new output fragment with a timestamp suffix
+    new_fragment = allocate_output_fragment(execution.output_fragment)
 
     # Copy scratch tree to the new results location
     dst_dir = config.paths.results / new_fragment

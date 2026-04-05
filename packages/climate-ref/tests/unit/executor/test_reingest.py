@@ -1,7 +1,9 @@
 """Tests for the reingest module and allocate_output_fragment helper."""
 
+import datetime
 import json
 import pathlib
+import time
 
 import pytest
 from climate_ref_esmvaltool import provider as esmvaltool_provider
@@ -195,41 +197,27 @@ def _patch_build_result(mocker, registry, mock_result):
 
 
 class TestAllocateOutputFragment:
-    def test_returns_base_when_no_collision(self, tmp_path):
-        """Should return base_fragment unchanged when no collision exists."""
-        result = allocate_output_fragment("provider/diag/abc123", set(), tmp_path)
-        assert result == "provider/diag/abc123"
+    def test_appends_timestamp_suffix(self):
+        """Should append a UTC timestamp suffix to the base fragment."""
+        result = allocate_output_fragment("provider/diag/abc123")
+        assert result.startswith("provider/diag/abc123_")
+        # Suffix should be a valid timestamp: YYYYMMDDTHHMMSS
+        suffix = result.split("_", 1)[1]
+        assert len(suffix) == 15  # 8 date + T + 6 time
+        assert "T" in suffix
 
-    def test_appends_v2_on_db_collision(self, tmp_path):
-        """Should append _v2 when base_fragment exists in DB."""
-        existing = {"provider/diag/abc123"}
-        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
-        assert result == "provider/diag/abc123_v2"
+    def test_preserves_base_fragment(self):
+        """The original fragment should be a prefix of the result."""
+        base = "my_provider/my_diag/hash123"
+        result = allocate_output_fragment(base)
+        assert result.startswith(base + "_")
 
-    def test_appends_v2_on_disk_collision(self, tmp_path):
-        """Should append _v2 when base_fragment directory exists on disk."""
-        (tmp_path / "provider/diag/abc123").mkdir(parents=True)
-        result = allocate_output_fragment("provider/diag/abc123", set(), tmp_path)
-        assert result == "provider/diag/abc123_v2"
-
-    def test_increments_version_on_multiple_collisions(self, tmp_path):
-        """Should increment to _v3 when both base and _v2 are taken."""
-        existing = {"provider/diag/abc123", "provider/diag/abc123_v2"}
-        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
-        assert result == "provider/diag/abc123_v3"
-
-    def test_mixed_db_and_disk_collisions(self, tmp_path):
-        """Should handle collisions from both DB and disk."""
-        existing = {"provider/diag/abc123"}
-        (tmp_path / "provider/diag/abc123_v2").mkdir(parents=True)
-        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
-        assert result == "provider/diag/abc123_v3"
-
-    def test_no_collision_returns_base_with_existing_other_fragments(self, tmp_path):
-        """Other fragments in DB should not cause collision."""
-        existing = {"provider/diag/xyz789"}
-        result = allocate_output_fragment("provider/diag/abc123", existing, tmp_path)
-        assert result == "provider/diag/abc123"
+    def test_different_calls_produce_different_fragments(self):
+        """Two calls at least a second apart should produce different fragments."""
+        result1 = allocate_output_fragment("provider/diag/abc123")
+        time.sleep(1.1)
+        result2 = allocate_output_fragment("provider/diag/abc123")
+        assert result1 != result2
 
 
 # --- extract dataset attributes tests ---
@@ -375,6 +363,14 @@ class TestReingestExecution:
         """Running reingest twice should create distinct output fragments."""
         mock_result = mock_result_factory(scratch_dir_with_results)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        # Mock datetime.datetime.now to return different timestamps for each call
+        t1 = datetime.datetime(2026, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
+        t2 = datetime.datetime(2026, 1, 1, 12, 0, 1, tzinfo=datetime.timezone.utc)
+        mocker.patch(
+            "climate_ref.executor.fragment.datetime.datetime",
+            **{"now.side_effect": [t1, t2]},
+        )
 
         ok1 = reingest_execution(
             config=config,

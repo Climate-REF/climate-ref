@@ -343,7 +343,7 @@ def handle_execution_result(
                 execution.execution_group.dirty = False
         return
 
-    logger.info(f"{execution} successful")
+    logger.info(f"Execution {execution.id} successful")
 
     _copy_file_to_results(
         config.paths.scratch,

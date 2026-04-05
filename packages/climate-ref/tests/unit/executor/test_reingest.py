@@ -117,7 +117,7 @@ def scratch_dir_with_results(config, reingest_execution_obj):
     CMECMetric(**CMECMetric.create_template()).dump_to_json(scratch_dir / "diagnostic.json")
     CMECOutput(**CMECOutput.create_template()).dump_to_json(scratch_dir / "output.json")
     TSeries.dump_to_json(scratch_dir / "series.json", SAMPLE_SERIES)
-    (scratch_dir / "execution.log").write_text("Execution log from original run\n")
+    (scratch_dir / "out.log").write_text("Execution log from original run\n")
 
     return scratch_dir
 
@@ -156,6 +156,7 @@ def scratch_dir_with_data(config, reingest_execution_obj):
     )
 
     TSeries.dump_to_json(scratch_dir / "series.json", SAMPLE_SERIES)
+    (scratch_dir / "out.log").write_text("Execution log from original run\n")
 
     return scratch_dir
 

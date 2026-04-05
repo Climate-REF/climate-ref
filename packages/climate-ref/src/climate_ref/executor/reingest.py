@@ -34,7 +34,6 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -259,25 +258,14 @@ def reingest_execution(
     execution_group = execution.execution_group
 
     # Allocate a new output fragment with a timestamp suffix
+    # Previous execution scratch will be copied there
     new_fragment = allocate_output_fragment(execution.output_fragment, config.paths.results)
-
-    # Copy previous scratch to new location to avoid overwriting CMEC results
     new_scratch_dir = config.paths.scratch / new_fragment
-    try:
-        _validate_path_containment(new_scratch_dir, config.paths.scratch, "scratch")
-    except ValueError:
-        logger.error(f"Skipping execution {execution.id}: new scratch path escapes base.")
-        return False
-    new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(scratch_dir, new_scratch_dir)
-
-    # Ensure a log file exists in the new scratch location
-    # handle_execution_result requires it and the original execution may not have produced one.
-    log_file = new_scratch_dir / EXECUTION_LOG_FILENAME
-    if not log_file.exists():
-        log_file.write_text("Reingested from original execution\n")
 
     try:
+        new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(scratch_dir, new_scratch_dir)
+
         with database.session.begin_nested():
             # Create new Execution record
             new_execution = Execution(
@@ -297,14 +285,15 @@ def reingest_execution(
                     )
                 )
 
-        # Save and restore dirty so reingest does not alter the execution group's
-        # pending-work state.
-        saved_dirty = execution_group.dirty
-        handle_execution_result(config, database, new_execution, result)
-        execution_group.dirty = saved_dirty
+        handle_execution_result(
+            config,
+            database,
+            new_execution,
+            result,
+            update_dirty=False,
+        )
     except Exception:
         logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
-        # Clean up the new scratch and any partial results on failure.
         if new_scratch_dir.exists():
             shutil.rmtree(new_scratch_dir)
         new_results_dir = config.paths.results / new_fragment

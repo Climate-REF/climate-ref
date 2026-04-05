@@ -327,6 +327,10 @@ def get_executions_for_reingest(
     """
     Query executions eligible for reingest.
 
+    Always selects the **oldest** (original) execution per group so that
+    reingest uses the execution whose scratch directory actually exists.
+    Reingested executions only have results directories, not scratch.
+
     Parameters
     ----------
     database
@@ -343,9 +347,9 @@ def get_executions_for_reingest(
     Returns
     -------
     :
-        List of (ExecutionGroup, latest Execution) tuples
+        List of (ExecutionGroup, oldest Execution) tuples
     """
-    # Use the existing filtered query
+    # Use the existing filtered query to identify matching execution groups
     results = get_execution_group_and_latest_filtered(
         database.session,
         diagnostic_filters=diagnostic_filters,
@@ -358,5 +362,17 @@ def get_executions_for_reingest(
         id_set = set(execution_group_ids)
         results = [(eg, ex) for eg, ex in results if eg.id in id_set]
 
-    # Filter out entries with no execution
-    return [(eg, ex) for eg, ex in results if ex is not None]
+    # Filter out entries with no execution, then select the oldest per group.
+    # ExecutionGroup.executions is ordered by created_at ascending,
+    # so [0] is the original execution whose scratch directory exists.
+    seen: set[int] = set()
+    out: list[tuple[ExecutionGroup, Execution]] = []
+    for eg, ex in results:
+        if ex is None or eg.id in seen:
+            continue
+        seen.add(eg.id)
+        oldest = eg.executions[0]
+        if not include_failed and not oldest.successful:
+            continue
+        out.append((eg, oldest))
+    return out

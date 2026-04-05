@@ -1001,6 +1001,42 @@ class TestGetExecutionsForReingest:
         results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id])
         assert len(results) == 0
 
+    def test_selects_oldest_execution(self, db_seeded):
+        """Should return the oldest (original) execution, not the latest.
+
+        Reingested executions only have results directories, not scratch.
+        Selecting the oldest ensures we always reingest from the execution
+        whose scratch directory actually exists.
+        """
+        with db_seeded.session.begin():
+            diag = db_seeded.session.query(DiagnosticModel).first()
+            eg = ExecutionGroup(key="multi-exec", diagnostic_id=diag.id, selectors={})
+            db_seeded.session.add(eg)
+            db_seeded.session.flush()
+
+            original = Execution(
+                execution_group_id=eg.id,
+                successful=True,
+                output_fragment="original_fragment",
+                dataset_hash="h-orig",
+            )
+            db_seeded.session.add(original)
+            db_seeded.session.flush()
+
+            reingested = Execution(
+                execution_group_id=eg.id,
+                successful=True,
+                output_fragment="original_fragment_20260405T120000000000",
+                dataset_hash="h-orig",
+            )
+            db_seeded.session.add(reingested)
+
+        results = get_executions_for_reingest(db_seeded, execution_group_ids=[eg.id])
+        assert len(results) == 1
+        _, selected_execution = results[0]
+        assert selected_execution.output_fragment == "original_fragment"
+        assert selected_execution.id == original.id
+
 
 # --- equivalence tests ---
 

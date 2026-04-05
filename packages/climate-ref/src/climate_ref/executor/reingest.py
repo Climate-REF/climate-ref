@@ -21,7 +21,7 @@ from loguru import logger
 
 from climate_ref.datasets import get_slug_column
 from climate_ref.executor.fragment import allocate_output_fragment
-from climate_ref.executor.result_handling import ingest_execution_result
+from climate_ref.executor.result_handling import handle_execution_result
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
@@ -34,7 +34,6 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.pycmec.controlled_vocabulary import CV
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -259,21 +258,14 @@ def reingest_execution(
     execution_group = execution.execution_group
 
     # Allocate a new output fragment with a timestamp suffix
+    # Previous execution scratch will be copied there
     new_fragment = allocate_output_fragment(execution.output_fragment, config.paths.results)
-
-    # Copy scratch tree to the new results location
-    dst_dir = config.paths.results / new_fragment
-    try:
-        _validate_path_containment(dst_dir, config.paths.results, "results")
-    except ValueError:
-        logger.error(f"Skipping execution {execution.id}: results path escapes base.")
-        return False
-    dst_dir.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(scratch_dir, dst_dir)
-
-    cv = CV.load_from_file(config.paths.dimensions_cv)
+    new_scratch_dir = config.paths.scratch / new_fragment
 
     try:
+        new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copytree(scratch_dir, new_scratch_dir)
+
         with database.session.begin_nested():
             # Create new Execution record
             new_execution = Execution(
@@ -293,23 +285,20 @@ def reingest_execution(
                     )
                 )
 
-            # Use scratch dir as the output base path since build_execution_result
-            # may produce absolute paths under scratch in output bundles
-            ingest_execution_result(
-                database,
-                new_execution,
-                result,
-                cv,
-                output_base_path=scratch_dir,
-            )
-
-            assert result.metric_bundle_filename is not None
-            new_execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
+        handle_execution_result(
+            config,
+            database,
+            new_execution,
+            result,
+            update_dirty=False,
+        )
     except Exception:
         logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
-        # Clean up the copied directory on failure
-        if dst_dir.exists():
-            shutil.rmtree(dst_dir)
+        if new_scratch_dir.exists():
+            shutil.rmtree(new_scratch_dir)
+        new_results_dir = config.paths.results / new_fragment
+        if new_results_dir.exists():
+            shutil.rmtree(new_results_dir)
         return False
 
     logger.info(f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}")

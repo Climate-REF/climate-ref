@@ -291,6 +291,8 @@ def handle_execution_result(
     database: Database,
     execution: Execution,
     result: "ExecutionResult",
+    *,
+    update_dirty: bool = True,
 ) -> None:
     """
     Handle the result of a diagnostic execution
@@ -308,6 +310,9 @@ def handle_execution_result(
         The diagnostic execution result DB object to update
     result
         The result of the diagnostic execution, either successful or failed
+    update_dirty
+        Whether to update the execution group's dirty flag.
+        Set to False for reingest which should not alter pending-work state.
     """
     # Always copy log data to the results directory
     try:
@@ -334,7 +339,8 @@ def handle_execution_result(
             # Leave dirty=True so the execution is retried on next solve
         else:
             logger.error(f"{execution} failed due to a diagnostic error")
-            execution.execution_group.dirty = False
+            if update_dirty:
+                execution.execution_group.dirty = False
         return
 
     logger.info(f"{execution} successful")
@@ -384,7 +390,8 @@ def handle_execution_result(
     # TODO: This should check if the result is the most recent for the execution,
     # if so then update the dirty fields
     # i.e. if there are outstanding executions don't make as clean
-    execution.execution_group.dirty = False
+    if update_dirty:
+        execution.execution_group.dirty = False
 
     # Finally, mark the execution as successful
     execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))

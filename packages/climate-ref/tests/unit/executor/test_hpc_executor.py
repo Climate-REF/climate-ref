@@ -1,6 +1,7 @@
 import os
 import re
 import resource
+import sys
 from unittest.mock import MagicMock, patch
 
 import parsl
@@ -193,6 +194,11 @@ class TestHPCExecutor:
             assert soft == expected_bytes
             assert hard >= expected_bytes
 
+    @pytest.mark.xfail(
+        sys.platform == "darwin",
+        reason="macOS does not support RLIMIT_AS",
+        raises=ValueError,
+    )
     def test_memory_limit_func(self):
         # Save original state
         os.environ.pop("MEMORY_LIMIT_PARSL_JOB_GB", None)
@@ -206,11 +212,11 @@ class TestHPCExecutor:
 
         unset_func()
         os.environ["MEMORY_LIMIT_PARSL_JOB_GB"] = "7"
+        expected_bytes = 7 * 1024 * 1024 * 1024
 
         @with_memory_limit(limit_from_env)
         def set_func():
             soft, hard = resource.getrlimit(resource.RLIMIT_AS)
-            expected_bytes = 7 * 1024 * 1024 * 1024
             assert soft == expected_bytes
             assert hard == -1 or hard >= expected_bytes
 

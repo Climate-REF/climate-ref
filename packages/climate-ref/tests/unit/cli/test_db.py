@@ -74,6 +74,12 @@ class TestDbBackup:
 
         assert "Backup created at" in result.stdout
 
+    def test_backup_no_database_file(self, invoke_cli):
+        # No migrate, so no database file exists on disk
+        result = invoke_cli(["db", "backup"], expected_exit_code=1)
+
+        assert "Database file not found" in result.stdout
+
 
 class TestDbSql:
     def test_select_query(self, invoke_cli):
@@ -101,6 +107,16 @@ class TestDbSql:
 
         assert "Query executed successfully" in result.stdout
 
+    def test_sql_no_tables(self, invoke_cli):
+        # No migrate, so database has no tables. SQLite auto-creates the file
+        # but querying a non-existent table should fail.
+        result = invoke_cli(
+            ["db", "sql", "SELECT * FROM provider"],
+            expected_exit_code=1,
+        )
+
+        assert result.exit_code == 1
+
 
 class TestDbTables:
     def test_tables(self, invoke_cli):
@@ -112,3 +128,11 @@ class TestDbTables:
         assert "provider" in result.stdout
         assert "dataset" in result.stdout
         assert "execution" in result.stdout
+
+    def test_tables_no_database(self, invoke_cli):
+        # No migrate -- empty database with no tables
+        result = invoke_cli(["db", "tables"])
+
+        assert "Database Tables" in result.stdout
+        # No application tables should be listed
+        assert "provider" not in result.stdout

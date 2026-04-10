@@ -122,6 +122,8 @@ def history(
 
     revisions = list(script.walk_revisions())
     if last is not None:
+        if last < 1:
+            raise typer.BadParameter("--last must be greater than or equal to 1")
         revisions = revisions[:last]
 
     table = Table(title="Migration History")
@@ -169,11 +171,15 @@ def sql(
         str,
         typer.Argument(help="SQL query to execute"),
     ],
+    limit: Annotated[
+        int,
+        typer.Option("--limit", "-l", help="Maximum number of rows to display"),
+    ] = 100,
 ) -> None:
     """
     Execute an arbitrary SQL query against the database.
 
-    SELECT queries display results as a table.
+    SELECT queries display results as a table (default limit: 100 rows).
     Other statements report the number of rows affected.
     """
     db = ctx.obj.database_unmigrated
@@ -184,9 +190,11 @@ def sql(
 
         if result.returns_rows:
             columns = list(result.keys())
-            rows = result.fetchall()
+            rows = result.fetchmany(limit)
+            total_remaining = len(result.fetchall())
 
-            table = Table(title=f"Results ({len(rows)} rows)")
+            total_rows = len(rows) + total_remaining
+            table = Table(title=f"Results ({len(rows)} of {total_rows} rows)")
             for col in columns:
                 table.add_column(str(col))
 
@@ -194,6 +202,11 @@ def sql(
                 table.add_row(*(str(v) for v in row))
 
             console.print(table)
+
+            if total_remaining > 0:
+                console.print(
+                    f"[yellow]{total_remaining} additional rows not shown. Use --limit to adjust.[/yellow]"
+                )
         else:
             connection.commit()
             console.print(f"[green]Query executed successfully. Rows affected: {result.rowcount}[/green]")

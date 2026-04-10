@@ -62,7 +62,7 @@ def _get_sqlite_path(database_url: str) -> Path | None:
     split_url = urlparse.urlsplit(database_url)
     if split_url.scheme != "sqlite":
         return None
-    path = split_url.path[1:]
+    path = urlparse.unquote(split_url.path[1:])
     if not path or path == ":memory:":
         return None
     return Path(path)

@@ -76,6 +76,16 @@ class TestDbHistory:
 
         assert "Migration History" in result.stdout
 
+    def test_history_last_invalid(self, invoke_cli):
+        result = invoke_cli(["db", "history", "--last", "0"], expected_exit_code=2)
+
+        assert "--last must be greater than or equal to 1" in result.stderr
+
+    def test_history_last_negative(self, invoke_cli):
+        result = invoke_cli(["db", "history", "--last", "-1"], expected_exit_code=2)
+
+        assert "--last must be greater than or equal to 1" in result.stderr
+
 
 class TestDbBackup:
     def test_backup(self, invoke_cli):
@@ -125,7 +135,7 @@ class TestDbSql:
 
         result = invoke_cli(["db", "sql", "SELECT * FROM provider"])
 
-        assert "Results (0 rows)" in result.stdout
+        assert "Results (0 of 0 rows)" in result.stdout
 
     def test_update_query(self, invoke_cli):
         invoke_cli(["db", "migrate"])
@@ -135,6 +145,18 @@ class TestDbSql:
         )
 
         assert "Query executed successfully" in result.stdout
+
+    def test_select_with_limit(self, invoke_cli):
+        invoke_cli(["db", "migrate"])
+        # Insert some rows
+        for i in range(5):
+            stmt = f"INSERT INTO provider (slug, name, version) VALUES ('t{i}', 'T{i}', '1.0')"  # noqa: S608
+            invoke_cli(["db", "sql", stmt])
+
+        result = invoke_cli(["db", "sql", "SELECT * FROM provider", "--limit", "2"])
+
+        assert "Results (2 of 5 rows)" in result.stdout
+        assert "additional rows not shown" in result.stdout
 
     def test_sql_no_tables(self, invoke_cli):
         # No migrate, so database has no tables. SQLite auto-creates the file

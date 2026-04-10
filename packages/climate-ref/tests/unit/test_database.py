@@ -29,6 +29,7 @@ class TestGetSqlitePath:
         [
             ("sqlite:///climate_ref.db", Path("climate_ref.db")),
             ("sqlite:////tmp/climate_ref.db", Path("/tmp/climate_ref.db")),  # noqa: S108
+            ("sqlite:///path%20with%20spaces/db.sqlite", Path("path with spaces/db.sqlite")),
         ],
     )
     def test_returns_path_for_file_databases(self, url, expected):

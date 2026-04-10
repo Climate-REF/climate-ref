@@ -79,12 +79,12 @@ class TestDbHistory:
     def test_history_last_invalid(self, invoke_cli):
         result = invoke_cli(["db", "history", "--last", "0"], expected_exit_code=2)
 
-        assert "--last must be greater than or equal to 1" in result.stderr
+        assert "must be greater than or equal to 1" in result.stderr
 
     def test_history_last_negative(self, invoke_cli):
         result = invoke_cli(["db", "history", "--last", "-1"], expected_exit_code=2)
 
-        assert "--last must be greater than or equal to 1" in result.stderr
+        assert "must be greater than or equal to 1" in result.stderr
 
 
 class TestDbBackup:

@@ -94,8 +94,8 @@ class TestSolve:
             expected_exit_code=2,
         )
 
-        assert "Invalid dataset filter" in result.stderr
-        assert "Expected key=value format" in result.stderr
+        assert "Invalid filter format" in result.stderr
+        assert "Expected format: 'key=value'" in result.stderr
 
     def test_solve_with_limit(self, sample_data_dir, db, invoke_cli, mocker):
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")

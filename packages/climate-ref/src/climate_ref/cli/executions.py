@@ -40,8 +40,8 @@ class ListGroupsFilterOptions:
     provider: list[str] | None = None
     """Filter by provider slug (substring, case-insensitive)"""
 
-    facets: dict[str, str] | None = None
-    """Filter by facet key-value pairs (exact match)"""
+    facets: dict[str, list[str]] | None = None
+    """Filter by facet key-value pairs (AND across keys, OR within key)"""
 
 
 @app.command()
@@ -486,7 +486,10 @@ def emit_no_results_warning(
     if filters.provider:
         filter_parts.append(f"provider filters: {filters.provider}")
     if filters.facets:
-        facet_strs = [f"{k}={v}" for k, v in filters.facets.items()]
+        facet_strs = [
+            f"{k}={','.join(values)}" if len(values) > 1 else f"{k}={values[0]}"
+            for k, values in filters.facets.items()
+        ]
         filter_parts.append(f"facet filters: {facet_strs}")
 
     logger.warning(

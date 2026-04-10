@@ -35,19 +35,24 @@ def format_size(size_bytes: int | float) -> str:
     return f"{size:.1f} TB"
 
 
-def parse_facet_filters(filters: list[str] | None) -> dict[str, str]:
+def parse_facet_filters(filters: list[str] | None) -> dict[str, list[str]]:
     """
     Parse facet filters from key=value format into a dictionary.
+
+    Multiple values for the same key are collected into a list (OR logic).
+    Different keys are ANDed together when used for filtering.
 
     Parameters
     ----------
     filters
-        List of filter strings in 'key=value' format
+        List of filter strings in 'key=value' format.
+        Multiple entries with the same key are ORed
+        (e.g., ``["source_id=A", "source_id=B"]`` matches A or B).
 
     Returns
     -------
-    dict[str, str]
-        Dictionary mapping facet keys to values
+    dict[str, list[str]]
+        Dictionary mapping facet keys to lists of allowed values
 
     Raises
     ------
@@ -57,12 +62,15 @@ def parse_facet_filters(filters: list[str] | None) -> dict[str, str]:
     Examples
     --------
     >>> parse_facet_filters(["source_id=GFDL-ESM4", "variable_id=tas"])
-    {'source_id': 'GFDL-ESM4', 'variable_id': 'tas'}
+    {'source_id': ['GFDL-ESM4'], 'variable_id': ['tas']}
+
+    >>> parse_facet_filters(["source_id=A", "source_id=B"])
+    {'source_id': ['A', 'B']}
     """
     if not filters:
         return {}
 
-    parsed: dict[str, str] = {}
+    parsed: dict[str, list[str]] = {}
     for filter_str in filters:
         if "=" not in filter_str:
             raise ValueError(
@@ -80,10 +88,7 @@ def parse_facet_filters(filters: list[str] | None) -> dict[str, str]:
         if not value:
             raise ValueError(f"Empty value in filter: '{filter_str}'")
 
-        if key in parsed:
-            logger.warning(f"Filter key '{key}' specified multiple times. Using last value: '{value}'")
-
-        parsed[key] = value
+        parsed.setdefault(key, []).append(value)
 
     return parsed
 

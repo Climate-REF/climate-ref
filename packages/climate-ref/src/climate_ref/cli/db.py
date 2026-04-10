@@ -2,9 +2,7 @@
 Database management commands
 """
 
-from pathlib import Path
 from typing import Annotated
-from urllib import parse as urlparse
 
 import sqlalchemy
 import typer
@@ -12,7 +10,7 @@ from alembic.script import ScriptDirectory
 from rich.table import Table
 
 from climate_ref.config import Config
-from climate_ref.database import Database, _create_backup, _get_database_revision
+from climate_ref.database import Database, _create_backup, _get_database_revision, _get_sqlite_path
 
 app = typer.Typer(help=__doc__)
 
@@ -151,17 +149,11 @@ def backup(ctx: typer.Context) -> None:
     config = ctx.obj.config
     console = ctx.obj.console
 
-    split_url = urlparse.urlsplit(config.db.database_url)
-
-    if split_url.scheme != "sqlite":
-        console.print("[red]Backup is only supported for SQLite databases.[/red]")
+    db_path = _get_sqlite_path(config.db.database_url)
+    if db_path is None:
+        console.print("[red]Backup is only supported for local SQLite databases.[/red]")
         raise typer.Exit(1)
 
-    if split_url.path == ":memory:":
-        console.print("[red]Cannot backup an in-memory database.[/red]")
-        raise typer.Exit(1)
-
-    db_path = Path(split_url.path[1:])
     if not db_path.exists():
         console.print(f"[red]Database file not found: {db_path}[/red]")
         raise typer.Exit(1)

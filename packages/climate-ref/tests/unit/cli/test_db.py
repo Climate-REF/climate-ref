@@ -1,3 +1,6 @@
+import pytest
+
+
 def test_without_subcommand(invoke_cli):
     result = invoke_cli(["db"], expected_exit_code=2)
     assert "Missing command." in result.stderr
@@ -25,6 +28,15 @@ class TestDbStatus:
         result = invoke_cli(["db", "status"])
 
         assert "Database is up to date" in result.stdout
+
+    def test_status_behind(self, invoke_cli):
+        # Migrate, then stamp with a fake old revision so the DB appears behind
+        invoke_cli(["db", "migrate"])
+        invoke_cli(["db", "sql", "UPDATE alembic_version SET version_num = 'fake_old_rev'"])
+
+        result = invoke_cli(["db", "status"])
+
+        assert "Database is behind" in result.stdout
 
 
 class TestDbMigrate:
@@ -79,6 +91,23 @@ class TestDbBackup:
         result = invoke_cli(["db", "backup"], expected_exit_code=1)
 
         assert "Database file not found" in result.stdout
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "postgresql://localhost/test",  # non-SQLite
+            "sqlite://",  # canonical SQLAlchemy in-memory format
+            "sqlite:///:memory:",  # alternative in-memory format
+            "sqlite://:memory:",  # :memory: parsed as netloc, empty path
+        ],
+    )
+    def test_backup_unsupported_database(self, config, invoke_cli, url):
+        config.db.database_url = url
+        config.save()
+
+        result = invoke_cli(["db", "backup"], expected_exit_code=1)
+
+        assert "only supported for local SQLite" in result.stdout
 
 
 class TestDbSql:

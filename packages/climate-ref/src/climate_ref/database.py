@@ -53,6 +53,21 @@ If a user's database contains these revisions then they need to delete their dat
 """
 
 
+def _get_sqlite_path(database_url: str) -> Path | None:
+    """
+    Extract the file path from a SQLite database URL.
+
+    Returns ``None`` for in-memory databases or non-SQLite URLs.
+    """
+    split_url = urlparse.urlsplit(database_url)
+    if split_url.scheme != "sqlite":
+        return None
+    path = split_url.path[1:]
+    if not path or path == ":memory:":
+        return None
+    return Path(path)
+
+
 def _get_database_revision(connection: sqlalchemy.engine.Connection) -> str | None:
     context = MigrationContext.configure(connection)
     current_rev = context.get_current_revision()
@@ -123,13 +138,13 @@ def validate_database_url(database_url: str) -> str:
         The validated database URL
     """
     split_url = urlparse.urlsplit(database_url)
-    path = split_url.path[1:]
 
     if split_url.scheme == "sqlite":
-        if path == ":memory:":
+        sqlite_path = _get_sqlite_path(database_url)
+        if sqlite_path is None:
             logger.warning("Using an in-memory database")
         else:
-            Path(path).parent.mkdir(parents=True, exist_ok=True)
+            sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     elif split_url.scheme == "postgresql":
         # We don't need to do anything special for PostgreSQL
         logger.warning("PostgreSQL support is currently experimental and untested")
@@ -260,9 +275,8 @@ class Database:
                 )
 
         # Create backup before running migrations (unless skipped)
-        split_url = urlparse.urlsplit(self.url)
-        if not skip_backup and split_url.scheme == "sqlite" and split_url.path != ":memory:":
-            db_path = Path(split_url.path[1:])
+        db_path = _get_sqlite_path(self.url)
+        if not skip_backup and db_path is not None:
             _create_backup(db_path, config.db.max_backups)
 
         alembic.command.upgrade(self.alembic_config(config), "heads")

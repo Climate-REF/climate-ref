@@ -1,0 +1,189 @@
+import pytest
+
+
+def test_without_subcommand(invoke_cli):
+    result = invoke_cli(["db"], expected_exit_code=2)
+    assert "Missing command." in result.stderr
+
+
+def test_db_help(invoke_cli):
+    result = invoke_cli(["db", "--help"])
+
+    assert "Database management commands" in result.stdout
+
+
+class TestDbStatus:
+    def test_status_fresh_database(self, invoke_cli):
+        result = invoke_cli(["db", "status"])
+
+        assert "Current revision:" in result.stdout
+        assert "Head revision:" in result.stdout
+        assert "Database URL:" in result.stdout
+        assert "no revision stamp" in result.stdout
+
+    def test_status_up_to_date(self, invoke_cli):
+        # Migrate first, then check status
+        invoke_cli(["db", "migrate"])
+
+        result = invoke_cli(["db", "status"])
+
+        assert "Database is up to date" in result.stdout
+
+    def test_status_behind(self, invoke_cli):
+        # Migrate, then stamp with a fake old revision so the DB appears behind
+        invoke_cli(["db", "migrate"])
+        invoke_cli(["db", "sql", "UPDATE alembic_version SET version_num = 'fake_old_rev'"])
+
+        result = invoke_cli(["db", "status"])
+
+        assert "Database is behind" in result.stdout
+
+
+class TestDbMigrate:
+    def test_migrate_fresh_database(self, invoke_cli):
+        result = invoke_cli(["db", "migrate"])
+
+        assert "Migrations applied successfully" in result.stdout
+
+    def test_migrate_already_up_to_date(self, invoke_cli):
+        # Migrate first
+        invoke_cli(["db", "migrate"])
+
+        # Second migrate should report up to date
+        result = invoke_cli(["db", "migrate"])
+
+        assert "already up to date" in result.stdout
+
+
+class TestDbHeads:
+    def test_heads(self, invoke_cli):
+        result = invoke_cli(["db", "heads"])
+
+        # Should show at least one head revision
+        assert result.exit_code == 0
+        assert result.stdout.strip() != ""
+
+
+class TestDbHistory:
+    def test_history(self, invoke_cli):
+        result = invoke_cli(["db", "history"])
+
+        assert "Migration History" in result.stdout
+        assert "Revision" in result.stdout
+
+    def test_history_last(self, invoke_cli):
+        result = invoke_cli(["db", "history", "--last", "3"])
+
+        assert "Migration History" in result.stdout
+
+    def test_history_last_invalid(self, invoke_cli):
+        result = invoke_cli(["db", "history", "--last", "0"], expected_exit_code=2)
+
+        assert "must be greater than or equal to 1" in result.stderr
+
+    def test_history_last_negative(self, invoke_cli):
+        result = invoke_cli(["db", "history", "--last", "-1"], expected_exit_code=2)
+
+        assert "must be greater than or equal to 1" in result.stderr
+
+
+class TestDbBackup:
+    def test_backup(self, invoke_cli):
+        # Trigger DB creation first
+        invoke_cli(["db", "migrate"])
+
+        result = invoke_cli(["db", "backup"])
+
+        assert "Backup created at" in result.stdout
+
+    def test_backup_no_database_file(self, invoke_cli):
+        # No migrate, so no database file exists on disk
+        result = invoke_cli(["db", "backup"], expected_exit_code=1)
+
+        assert "Database file not found" in result.stdout
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "postgresql://localhost/test",  # non-SQLite
+            "sqlite://",  # canonical SQLAlchemy in-memory format
+            "sqlite:///:memory:",  # alternative in-memory format
+            "sqlite://:memory:",  # :memory: parsed as netloc, empty path
+        ],
+    )
+    def test_backup_unsupported_database(self, config, invoke_cli, url):
+        config.db.database_url = url
+        config.save()
+
+        result = invoke_cli(["db", "backup"], expected_exit_code=1)
+
+        assert "only supported for local SQLite" in result.stdout
+
+
+class TestDbSql:
+    def test_select_query(self, invoke_cli):
+        # Trigger DB creation first
+        invoke_cli(["db", "migrate"])
+
+        result = invoke_cli(["db", "sql", "SELECT COUNT(*) AS cnt FROM provider"])
+
+        assert "cnt" in result.stdout
+        assert "Results" in result.stdout
+
+    def test_select_empty_table(self, invoke_cli):
+        invoke_cli(["db", "migrate"])
+
+        result = invoke_cli(["db", "sql", "SELECT * FROM provider"])
+
+        assert "Results (0 of 0 rows)" in result.stdout
+
+    def test_update_query(self, invoke_cli):
+        invoke_cli(["db", "migrate"])
+
+        result = invoke_cli(
+            ["db", "sql", "INSERT INTO provider (slug, name, version) VALUES ('test', 'Test', '1.0')"]
+        )
+
+        assert "Query executed successfully" in result.stdout
+
+    def test_select_with_limit(self, invoke_cli):
+        invoke_cli(["db", "migrate"])
+        # Insert some rows
+        for i in range(5):
+            stmt = f"INSERT INTO provider (slug, name, version) VALUES ('t{i}', 'T{i}', '1.0')"  # noqa: S608
+            invoke_cli(["db", "sql", stmt])
+
+        result = invoke_cli(["db", "sql", "SELECT * FROM provider", "--limit", "2"])
+
+        assert "Results (2 of 5 rows)" in result.stdout
+        assert "additional rows not shown" in result.stdout
+
+    def test_sql_no_tables(self, invoke_cli):
+        # No migrate, so database has no tables. SQLite auto-creates the file
+        # but querying a non-existent table should fail.
+        result = invoke_cli(
+            ["db", "sql", "SELECT * FROM provider"],
+            expected_exit_code=1,
+        )
+
+        assert result.exit_code == 1
+
+
+class TestDbTables:
+    def test_tables(self, invoke_cli):
+        invoke_cli(["db", "migrate"])
+
+        result = invoke_cli(["db", "tables"])
+
+        assert "Database Tables" in result.stdout
+        assert "provider" in result.stdout
+        assert "dataset" in result.stdout
+        assert "execution" in result.stdout
+
+    def test_tables_no_database(self, invoke_cli):
+        # No migrate -- empty database with no tables
+        result = invoke_cli(["db", "tables"])
+
+        assert "Database Tables" in result.stdout
+        # No application tables should be listed
+        assert "provider" not in result.stdout

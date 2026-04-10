@@ -8,11 +8,53 @@ import pytest
 import sqlalchemy
 from sqlalchemy import inspect
 
-from climate_ref.database import Database, _create_backup, _values_differ, validate_database_url
+from climate_ref.database import (
+    Database,
+    _create_backup,
+    _get_sqlite_path,
+    _values_differ,
+    validate_database_url,
+)
 from climate_ref.models import MetricValue
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.pycmec.controlled_vocabulary import CV
+
+
+class TestGetSqlitePath:
+    """Tests for _get_sqlite_path helper that extracts file paths from SQLite URLs."""
+
+    @pytest.mark.parametrize(
+        ("url", "expected"),
+        [
+            ("sqlite:///climate_ref.db", Path("climate_ref.db")),
+            ("sqlite:////tmp/climate_ref.db", Path("/tmp/climate_ref.db")),  # noqa: S108
+            ("sqlite:///path%20with%20spaces/db.sqlite", Path("path with spaces/db.sqlite")),
+        ],
+    )
+    def test_returns_path_for_file_databases(self, url, expected):
+        assert _get_sqlite_path(url) == expected
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "sqlite://",  # SQLAlchemy documented in-memory format
+            "sqlite:///:memory:",
+            "sqlite://:memory:",
+        ],
+    )
+    def test_returns_none_for_in_memory(self, url):
+        assert _get_sqlite_path(url) is None
+
+    @pytest.mark.parametrize(
+        "url",
+        [
+            "postgresql://localhost/db",
+            "mysql://localhost/db",
+        ],
+    )
+    def test_returns_none_for_non_sqlite(self, url):
+        assert _get_sqlite_path(url) is None
 
 
 @pytest.mark.parametrize(

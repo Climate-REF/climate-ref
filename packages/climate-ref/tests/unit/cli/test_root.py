@@ -97,7 +97,7 @@ def test_config_directory_append(config, invoke_cli):
 
 @pytest.fixture()
 def expected_groups() -> set[str]:
-    return {"config", "datasets", "executions", "providers", "celery", "test-cases"}
+    return {"config", "datasets", "db", "executions", "providers", "celery", "test-cases"}
 
 
 def test_build_app(expected_groups):

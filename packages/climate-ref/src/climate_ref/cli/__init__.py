@@ -25,6 +25,10 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("datasets", "list"),
     ("datasets", "list-columns"),
     ("datasets", "stats"),
+    ("db", "status"),
+    ("db", "heads"),
+    ("db", "history"),
+    ("db", "tables"),
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("executions", "stats"),
@@ -76,6 +80,7 @@ class CLIContext:
     console: Console
     skip_backup: bool = False
     _database: Database | None = field(default=None, alias="_database")
+    _database_unmigrated: Database | None = field(default=None, alias="_database_unmigrated")
 
     @property
     def database(self) -> Database:
@@ -89,10 +94,23 @@ class CLIContext:
             self._database = Database.from_config(self.config, skip_backup=self.skip_backup)
         return self._database
 
+    @property
+    def database_unmigrated(self) -> Database:
+        """
+        Get a database instance without running migrations.
+
+        Used by ``db`` subcommands that inspect or manage migration state directly.
+        """
+        if self._database_unmigrated is None:
+            self._database_unmigrated = Database.from_config(self.config, run_migrations=False)
+        return self._database_unmigrated
+
     def close(self) -> None:
         """Close the database connection if it was opened."""
         if self._database is not None:
             self._database.close()
+        if self._database_unmigrated is not None:
+            self._database_unmigrated.close()
 
 
 def _version_callback(value: bool) -> None:
@@ -155,6 +173,7 @@ def build_app() -> typer.Typer:
     from climate_ref.cli import (
         config,
         datasets,
+        db,
         executions,
         providers,
         solve,
@@ -166,6 +185,7 @@ def build_app() -> typer.Typer:
     app.command(name="solve")(solve.solve)
     app.add_typer(config.app, name="config")
     app.add_typer(datasets.app, name="datasets")
+    app.add_typer(db.app, name="db")
     app.add_typer(executions.app, name="executions")
     app.add_typer(providers.app, name="providers")
     app.add_typer(test_cases.app, name="test-cases")

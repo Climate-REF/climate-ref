@@ -206,6 +206,66 @@ class DatasetRegistryManager:
         """
         return list(self._registries.keys())
 
+    @staticmethod
+    def _resolve_cache_dir(cache_name: str) -> pathlib.Path:
+        """
+        Resolve the cache directory for a registry.
+
+        If the ``REF_DATASET_CACHE_DIR`` environment variable is set,
+        use that as the root. Otherwise, fall back to the OS cache
+        under ``climate_ref``.
+
+        Parameters
+        ----------
+        cache_name
+            Subdirectory name within the cache root.
+
+        Returns
+        -------
+            The resolved cache directory path.
+        """
+        if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
+            cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
+        else:
+            cache_dir = pooch.os_cache("climate_ref")
+
+        return cache_dir / cache_name
+
+    @staticmethod
+    def _migrate_cache(
+        registry: pooch.Pooch,
+        legacy_cache_dirs: list[pathlib.Path],
+    ) -> None:
+        """
+        Migrate cached files from legacy cache directories to the current location.
+
+        For each file in the registry,
+        if it does not already exist at the
+        current cache path but is found in one of the legacy directories,
+        move it to the new location.
+
+        Parameters
+        ----------
+        registry
+            The Pooch registry whose cache may need migrating.
+        legacy_cache_dirs
+            Directories where files may have been cached previously.
+        """
+        new_root: pathlib.Path = registry.abspath  # type: ignore[attr-defined]
+
+        for key in registry.registry:
+            new_path = new_root / key
+            if new_path.exists():
+                continue
+
+            for legacy_dir in legacy_cache_dirs:
+                old_path = legacy_dir / key
+                if old_path.exists():
+                    new_path.parent.mkdir(parents=True, exist_ok=True)
+                    logger.info(f"Migrating cached file {key}: {old_path} -> {new_path}")
+                    shutil.move(str(old_path), str(new_path))
+                    break
+
     def register(  # noqa: PLR0913
         self,
         name: str,
@@ -214,6 +274,7 @@ class DatasetRegistryManager:
         resource: str,
         cache_name: str | None = None,
         version: str | None = None,
+        legacy_cache_dirs: list[pathlib.Path] | None = None,
     ) -> None:
         """
         Register a new dataset registry
@@ -243,22 +304,29 @@ class DatasetRegistryManager:
             Name to use to generate the cache directory.
 
             This defaults to the value of `name` if not provided.
+        legacy_cache_dirs
+            Previous cache directories to migrate files from.
+
+            If provided, any files that exist in a legacy directory but not in
+            the current cache will be moved to the new location. This avoids
+            re-downloading data after a cache layout change.
         """
         if cache_name is None:
             cache_name = name
 
-        if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
-            cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
-        else:
-            cache_dir = pooch.os_cache("climate_ref")
+        cache_path = self._resolve_cache_dir(cache_name)
 
         registry = pooch.create(
-            path=cache_dir / cache_name,
+            path=cache_path,
             base_url=base_url,
             version=version,
             retry_if_failed=10,
         )
         registry.load_registry(str(importlib.resources.files(package) / resource))
+
+        if legacy_cache_dirs:
+            self._migrate_cache(registry, legacy_cache_dirs)
+
         self._registries[name] = registry
 
 

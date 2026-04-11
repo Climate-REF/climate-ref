@@ -13,6 +13,7 @@ from loguru import logger
 import climate_ref_esmvaltool.diagnostics
 from climate_ref_core.dataset_registry import (
     DATASET_URL,
+    DatasetRegistryManager,
     dataset_registry_manager,
     fetch_all_files,
     validate_registry_cache,
@@ -84,6 +85,10 @@ dataset_registry_manager.register(
     package="climate_ref_esmvaltool.dataset_registry",
     resource="data.txt",
     cache_name=_DATASETS_REGISTRY_NAME.replace("-", "/"),
+    legacy_cache_dirs=[
+        # As of v0.12.3, cached under pooch.os_cache("climate_ref") with no subdirectory.
+        DatasetRegistryManager._resolve_cache_dir("climate_ref")
+    ],
 )
 # Register the ESMValTool recipes.
 dataset_registry_manager.register(
@@ -92,4 +97,8 @@ dataset_registry_manager.register(
     package="climate_ref_esmvaltool",
     resource="recipes.txt",
     cache_name=_RECIPES_REGISTRY_NAME.replace("-", "/"),
+    legacy_cache_dirs=[
+        # As of v0.12.3, cached under pooch.os_cache("climate_ref_esmvaltool").
+        Path(pooch.os_cache("climate_ref_esmvaltool"))
+    ],
 )

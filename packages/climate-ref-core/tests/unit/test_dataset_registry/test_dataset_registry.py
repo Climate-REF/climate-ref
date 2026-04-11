@@ -108,11 +108,17 @@ class TestDatasetRegistry:
         }
         mock_pooch.create.assert_called_once_with(**expected_kwargs)
 
-    @pytest.mark.parametrize("env", [None, "", "/some/other/path"])
-    def test_with_environment_variable(self, monkeypatch, mocker, fake_registry_file, env):
+    @pytest.mark.parametrize(
+        "env, expected_path",
+        [
+            (None, Path("/path/to/climate_ref") / "test_registry"),
+            ("", Path("/path/to/climate_ref") / "test_registry"),
+            ("/some/other/path", Path("/some/other/path") / "test_registry"),
+        ],
+    )
+    def test_with_environment_variable(self, monkeypatch, mocker, fake_registry_file, env, expected_path):
         if env is not None:
             monkeypatch.setenv("REF_DATASET_CACHE_DIR", env)
-        expected_path = Path(env) / "test_registry" if env else Path("/path/to/climate_ref") / "test_registry"
 
         registry = DatasetRegistryManager()
         name = "test_registry"
@@ -132,6 +138,139 @@ class TestDatasetRegistry:
             "version": None,
         }
         mock_pooch.create.assert_called_once_with(**expected_kwargs)
+
+
+class TestMigrateCache:
+    """Tests for DatasetRegistryManager._migrate_cache."""
+
+    def test_migrate_moves_files_from_legacy_dir(self, tmp_path):
+        """Files in a legacy dir are moved to the new cache location."""
+        legacy_dir = tmp_path / "old_cache"
+        legacy_dir.mkdir()
+        (legacy_dir / "file1.txt").write_text("data1")
+        (legacy_dir / "subdir").mkdir()
+        (legacy_dir / "subdir" / "file2.txt").write_text("data2")
+
+        new_dir = tmp_path / "new_cache"
+        new_dir.mkdir()
+
+        mock_registry = type(
+            "R",
+            (),
+            {
+                "abspath": new_dir,
+                "registry": {"file1.txt": "sha256:a", "subdir/file2.txt": "sha256:b"},
+            },
+        )()
+
+        DatasetRegistryManager._migrate_cache(mock_registry, [legacy_dir])
+
+        assert (new_dir / "file1.txt").read_text() == "data1"
+        assert (new_dir / "subdir" / "file2.txt").read_text() == "data2"
+        assert not (legacy_dir / "file1.txt").exists()
+        assert not (legacy_dir / "subdir" / "file2.txt").exists()
+
+    def test_migrate_skips_existing_files(self, tmp_path):
+        """Files already in the new cache are not overwritten."""
+        legacy_dir = tmp_path / "old_cache"
+        legacy_dir.mkdir()
+        (legacy_dir / "file1.txt").write_text("old_data")
+
+        new_dir = tmp_path / "new_cache"
+        new_dir.mkdir()
+        (new_dir / "file1.txt").write_text("new_data")
+
+        mock_registry = type(
+            "R",
+            (),
+            {
+                "abspath": new_dir,
+                "registry": {"file1.txt": "sha256:a"},
+            },
+        )()
+
+        DatasetRegistryManager._migrate_cache(mock_registry, [legacy_dir])
+
+        assert (new_dir / "file1.txt").read_text() == "new_data"
+        assert (legacy_dir / "file1.txt").read_text() == "old_data"
+
+    def test_migrate_first_legacy_dir_wins(self, tmp_path):
+        """When a file exists in multiple legacy dirs, the first one is used."""
+        legacy1 = tmp_path / "old1"
+        legacy1.mkdir()
+        (legacy1 / "file1.txt").write_text("from_first")
+
+        legacy2 = tmp_path / "old2"
+        legacy2.mkdir()
+        (legacy2 / "file1.txt").write_text("from_second")
+
+        new_dir = tmp_path / "new_cache"
+        new_dir.mkdir()
+
+        mock_registry = type(
+            "R",
+            (),
+            {
+                "abspath": new_dir,
+                "registry": {"file1.txt": "sha256:a"},
+            },
+        )()
+
+        DatasetRegistryManager._migrate_cache(mock_registry, [legacy1, legacy2])
+
+        assert (new_dir / "file1.txt").read_text() == "from_first"
+        assert (legacy2 / "file1.txt").read_text() == "from_second"
+
+    def test_migrate_no_legacy_files(self, tmp_path):
+        """No error when legacy dirs are empty or missing."""
+        legacy_dir = tmp_path / "nonexistent"
+        new_dir = tmp_path / "new_cache"
+        new_dir.mkdir()
+
+        mock_registry = type(
+            "R",
+            (),
+            {
+                "abspath": new_dir,
+                "registry": {"file1.txt": "sha256:a"},
+            },
+        )()
+
+        DatasetRegistryManager._migrate_cache(mock_registry, [legacy_dir])
+
+        assert not (new_dir / "file1.txt").exists()
+
+    def test_register_with_legacy_cache_dirs(self, tmp_path, mocker, fake_registry_file):
+        """Integration test: register() with legacy_cache_dirs triggers migration."""
+        legacy_dir = tmp_path / "old_cache"
+        legacy_dir.mkdir()
+        (legacy_dir / "file1.txt").write_text("legacy_data")
+        (legacy_dir / "file2.txt").write_text("legacy_data2")
+
+        new_dir = tmp_path / "new_cache" / "test_registry"
+
+        mocker.patch.object(
+            DatasetRegistryManager,
+            "_resolve_cache_dir",
+            return_value=new_dir,
+        )
+
+        registry_path, package, resource = fake_registry_file
+        with registry_path.open("w") as f:
+            f.write("file1.txt sha256:checksum1\n")
+            f.write("file2.txt sha256:checksum2\n")
+
+        manager = DatasetRegistryManager()
+        manager.register(
+            "test_registry",
+            "http://example.com",
+            package,
+            resource,
+            legacy_cache_dirs=[legacy_dir],
+        )
+
+        assert (new_dir / "file1.txt").read_text() == "legacy_data"
+        assert (new_dir / "file2.txt").read_text() == "legacy_data2"
 
 
 @pytest.mark.parametrize("symlink", [True, False])

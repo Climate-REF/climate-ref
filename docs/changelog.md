@@ -21,6 +21,26 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.13.0 (2026-04-11)
+
+### Features
+
+- Added timeseries extraction for ESMValTool regional historical and ozone polar cap diagnostics, and updated file patterns to match the current ESMValTool output directory structure. ([#607](https://github.com/Climate-REF/climate-ref/pull/607))
+- Added `ref executions reingest` command to re-ingest existing execution results without re-running diagnostics. Creates a new immutable execution record with a timestamped output fragment, leaving the original execution untouched. ([#610](https://github.com/Climate-REF/climate-ref/pull/610))
+- Added `ref db` CLI subcommand group for database management. Includes commands for running migrations, checking schema status, viewing migration history, creating backups, executing SQL queries, and listing tables. ([#615](https://github.com/Climate-REF/climate-ref/pull/615))
+
+### Improvements
+
+- Fetch ESMValTool recipes when installing the provider. ([#582](https://github.com/Climate-REF/climate-ref/pull/582))
+- Unify facet filter parsing across CLI commands. `--filter` in `executions list-groups` and `delete-groups` now supports multiple values for the same key with OR semantics (e.g., `--filter source_id=A --filter source_id=B`), consistent with `--dataset-filter` in `datasets list` and `solve`. ([#613](https://github.com/Climate-REF/climate-ref/pull/613))
+- Improved solver performance by batching dataset finalisation before grouping, avoiding redundant file I/O when multiple groups share overlapping datasets. ([#616](https://github.com/Climate-REF/climate-ref/pull/616))
+
+### Bug Fixes
+
+- Fixed CLI test isolation by making the `invoke_cli` fixture depend on the `config` fixture, ensuring tests use an isolated database rather than the user's real one. Also marked `RLIMIT_AS` tests as expected failures on macOS where this resource limit is not supported. ([#611](https://github.com/Climate-REF/climate-ref/pull/611))
+- Copied the scratch directory for the previous execution when reingesting ([#612](https://github.com/Climate-REF/climate-ref/pull/612))
+
+
 ## climate-ref 0.12.3 (2026-03-30)
 
 ### Features

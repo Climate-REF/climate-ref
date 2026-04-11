@@ -316,6 +316,15 @@ class DatasetRegistryManager:
 
         cache_path = self._resolve_cache_dir(cache_name)
 
+        # Before v0.13.0 everything was cached directly under
+        # pooch.os_cache("climate_ref") with no per-registry subdirectory.
+        # Always include that as a legacy location so files are migrated
+        # automatically, regardless of whether the caller passes extra dirs.
+        default_legacy = pathlib.Path(pooch.os_cache("climate_ref"))
+        all_legacy_dirs = [default_legacy]
+        if legacy_cache_dirs:
+            all_legacy_dirs.extend(legacy_cache_dirs)
+
         registry = pooch.create(
             path=cache_path,
             base_url=base_url,
@@ -324,8 +333,8 @@ class DatasetRegistryManager:
         )
         registry.load_registry(str(importlib.resources.files(package) / resource))
 
-        if legacy_cache_dirs:
-            self._migrate_cache(registry, legacy_cache_dirs)
+        if cache_path != default_legacy:
+            self._migrate_cache(registry, all_legacy_dirs)
 
         self._registries[name] = registry
 

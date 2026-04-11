@@ -183,6 +183,13 @@ def extract_covered_datasets(
         logger.debug(f"No datasets found for requirement {requirement}")
         return {}
 
+    # Finalise all unfinalised datasets in the filtered subset upfront,
+    if data_catalog_source is not None:
+        subset = data_catalog_source.finalise(subset)
+        # Refresh catalog_df so constraints that reference the full catalog
+        # (e.g. AddParentDataset, AddSupplementaryDataset) see finalised data.
+        catalog_df = data_catalog_source.to_frame()
+
     if requirement.group_by is None:
         # Use a single group
         groups = [((), subset)]
@@ -198,13 +205,7 @@ def extract_covered_datasets(
         else:
             group_keys = tuple(zip(requirement.group_by, name))
 
-        # Finalise unfinalised datasets in this group before applying constraints.
-        # This ensures that time-range constraints have access to full metadata.
-        finalised_group = data_catalog_source.finalise(group) if data_catalog_source is not None else group
-
-        constrained_group = _process_group_constraints(
-            catalog_df, finalised_group, requirement, data_catalog_source
-        )
+        constrained_group = _process_group_constraints(catalog_df, group, requirement, data_catalog_source)
 
         if constrained_group is not None:
             results[group_keys] = constrained_group

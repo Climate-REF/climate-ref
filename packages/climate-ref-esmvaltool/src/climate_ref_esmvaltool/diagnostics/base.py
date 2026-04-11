@@ -29,6 +29,8 @@ from climate_ref_esmvaltool.recipe import (
 )
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
+_DATASETS_REGISTRY_NAME = "esmvaltool-datasets"
+
 
 def get_cmip_source_type(
     input_files: dict[SourceDatasetType, pandas.DataFrame],
@@ -202,13 +204,13 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         }
 
         # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
-        registry = dataset_registry_manager["esmvaltool"]
+        registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
         data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
         if not data_dir.exists():
             logger.warning(
                 "ESMValTool observational and reanalysis data is not available "
                 f"in {data_dir}, you may want to run the command "
-                "`ref datasets fetch-data --registry esmvaltool`."
+                f"`ref datasets fetch-data --registry {_DATASETS_REGISTRY_NAME}`."
             )
         else:
             config["projects"]["OBS"] = {

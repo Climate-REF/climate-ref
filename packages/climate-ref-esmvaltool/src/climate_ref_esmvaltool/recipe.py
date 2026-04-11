@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import importlib.resources
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 import cftime
 import pandas as pd
-import pooch
 import yaml
 
+from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_esmvaltool.types import Recipe
 
 if TYPE_CHECKING:
@@ -304,17 +303,10 @@ _ESMVALTOOL_URL = f"git+https://github.com/ESMValGroup/ESMValTool.git@{_ESMVALTO
 _ESMVALCORE_COMMIT = "da81d5f67158f3d2603831b56ab6b4fb8a388d86"
 _ESMVALCORE_URL = f"git+https://github.com/ESMValGroup/ESMValCore.git@{_ESMVALCORE_COMMIT}"
 
-_RECIPES = pooch.create(
-    path=pooch.os_cache("climate_ref_esmvaltool"),
-    # TODO: use a released version
-    # base_url="https://raw.githubusercontent.com/ESMValGroup/ESMValTool/refs/tags/v{version}/esmvaltool/recipes/",
-    # version=_ESMVALTOOL_VERSION,
-    base_url=f"https://raw.githubusercontent.com/ESMValGroup/ESMValTool/{_ESMVALTOOL_COMMIT}/esmvaltool/recipes/",
-    env="REF_METRICS_ESMVALTOOL_DATA_DIR",
-    retry_if_failed=10,
+_RECIPES_URL = (
+    f"https://raw.githubusercontent.com/ESMValGroup/ESMValTool/{_ESMVALTOOL_COMMIT}/esmvaltool/recipes/"
 )
-with importlib.resources.files("climate_ref_esmvaltool").joinpath("recipes.txt").open("rb") as _buffer:
-    _RECIPES.load_registry(_buffer)
+_RECIPES_REGISTRY_NAME = f"esmvaltool-recipes-v{_ESMVALTOOL_VERSION}"
 
 
 def fix_annual_statistics_keep_year(recipe: Recipe) -> None:
@@ -357,7 +349,7 @@ def load_recipe(recipe: str) -> Recipe:
     -------
         The loaded recipe.
     """
-    filename = _RECIPES.fetch(recipe)
+    filename = dataset_registry_manager[_RECIPES_REGISTRY_NAME].fetch(recipe)
 
     def normalize(obj: Any) -> Any:
         # Ensure objects in the recipe are not shared.

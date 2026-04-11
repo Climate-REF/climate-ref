@@ -87,8 +87,8 @@ class TestMetricSolver:
 class TestExtractCoveredDatasetsWithDataCatalog:
     """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""
 
-    def test_finalise_called_for_unfinalised_groups(self):
-        """When a DataCatalog has unfinalised data, finalise() is called per group."""
+    def test_finalise_called_for_unfinalised_data(self):
+        """When a DataCatalog has unfinalised data, finalise() is called."""
         catalog_df = pd.DataFrame(
             {
                 "variable_id": ["tas", "tas"],
@@ -115,6 +115,64 @@ class TestExtractCoveredDatasetsWithDataCatalog:
         # The finalised group should have finalised=True
         group_df = next(iter(result.values()))
         assert group_df["finalised"].all()
+
+    def test_finalise_called_once_for_multiple_groups(self):
+        """Finalise is called once on the full filtered subset, not once per group."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "pr", "pr"],
+                "experiment_id": ["historical"] * 4,
+                "source_id": ["MODEL-A", "MODEL-A", "MODEL-B", "MODEL-B"],
+                "finalised": [False, False, False, False],
+            }
+        )
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.return_value = catalog_df
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("source_id",),
+        )
+
+        result = extract_covered_datasets(mock_catalog, requirement)
+
+        # Finalise should be called exactly once (batch), not once per group
+        mock_catalog.finalise.assert_called_once()
+        # The single call should receive all 4 rows, not a 2-row group
+        call_args = mock_catalog.finalise.call_args[0][0]
+        assert len(call_args) == 4
+        assert len(result) == 2
+
+    def test_catalog_df_refreshed_after_batch_finalise(self):
+        """After batch finalisation, catalog_df is refreshed so constraints see updated data."""
+        catalog_df = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas"],
+                "experiment_id": ["historical", "historical"],
+                "source_id": ["MODEL-A", "MODEL-A"],
+                "finalised": [False, False],
+            }
+        )
+        refreshed_df = catalog_df.assign(finalised=True)
+
+        mock_catalog = mock.MagicMock(spec=DataCatalog)
+        mock_catalog.to_frame.side_effect = [catalog_df, refreshed_df]
+        mock_catalog.columns_requiring_finalisation = frozenset()
+        mock_catalog.finalise.side_effect = lambda group: group.assign(finalised=True)
+
+        requirement = DataRequirement(
+            source_type=SourceDatasetType.CMIP6,
+            filters=(),
+            group_by=("source_id",),
+        )
+
+        extract_covered_datasets(mock_catalog, requirement)
+
+        # to_frame() should be called twice: once for initial load, once after finalise
+        assert mock_catalog.to_frame.call_count == 2
 
     def test_finalise_not_called_for_raw_dataframe(self):
         """When a raw DataFrame is passed, no finalisation is attempted."""

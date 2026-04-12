@@ -12,10 +12,11 @@ from cattrs import IterableValidationError
 
 import climate_ref.config
 from climate_ref.config import (
+    DEFAULT_GREY_LIST_URL,
     DEFAULT_LOG_FORMAT,
     Config,
     PathConfig,
-    _get_default_ignore_datasets_file,
+    refresh_grey_list_file,
     transform_error,
 )
 from climate_ref_core.exceptions import InvalidExecutorException
@@ -153,9 +154,8 @@ filename = "sqlite://climate_ref.db"
         without_defaults = cfg.dump(defaults=False)
 
         assert without_defaults == {
-            "ignore_datasets_file": str(
-                platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
-            ),
+            "grey_list_file": str(platformdirs.user_cache_path("climate_ref") / "default_grey_list.yaml"),
+            "grey_list_url": DEFAULT_GREY_LIST_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -165,9 +165,8 @@ filename = "sqlite://climate_ref.db"
             ],
         }
         assert with_defaults == {
-            "ignore_datasets_file": str(
-                platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
-            ),
+            "grey_list_file": str(platformdirs.user_cache_path("climate_ref") / "default_grey_list.yaml"),
+            "grey_list_url": DEFAULT_GREY_LIST_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -270,51 +269,58 @@ def test_transform_error():
 
 
 @pytest.mark.parametrize("status", ["fresh", "stale", "missing"])
-def test_get_default_ignore_datasets_file(mocker, tmp_path, status):
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+def test_refresh_grey_list_file(mocker, tmp_path, status):
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
         return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
     )
-    expected_path = tmp_path / "default_ignore_datasets.yaml"
+    target = tmp_path / "nested" / "grey_list.yaml"
     if status != "missing":
-        expected_path.write_text("existing", encoding="utf-8")
-    if status == "stale":
-        mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("existing", encoding="utf-8")
+    max_age = timedelta(seconds=-1) if status == "stale" else timedelta(hours=6)
 
-    path = climate_ref.config._get_default_ignore_datasets_file()
+    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml", max_age=max_age)
 
-    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert target.parent.exists()
     if status == "fresh":
-        assert path.read_text(encoding="utf-8") == "existing"
+        assert target.read_text(encoding="utf-8") == "existing"
     else:
-        assert path.read_text(encoding="utf-8") == "downloaded"
+        assert target.read_text(encoding="utf-8") == "downloaded"
 
 
-def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+def test_refresh_grey_list_file_fail(mocker, tmp_path):
     result = mocker.MagicMock(status_code=404, content=b"{}")
     result.raise_for_status.side_effect = requests.RequestException
     mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
 
-    path = _get_default_ignore_datasets_file()
-    assert path == tmp_path / "default_ignore_datasets.yaml"
-    assert path.parent.exists()
-    assert path.read_text(encoding="utf-8") == ""
+    target = tmp_path / "grey_list.yaml"
+    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
+
+    assert target.exists()
+    assert target.read_text(encoding="utf-8") == ""
 
 
-def test_get_default_ignore_datasets_file_network_error(mocker, tmp_path):
-    """Test that network errors during requests.get() are handled gracefully."""
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
-    # Simulate network error (e.g., no network access in offline/HPC environment)
+def test_refresh_grey_list_file_network_error(mocker, tmp_path):
+    """Network errors (e.g. offline/HPC environment) are handled gracefully."""
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
         side_effect=requests.exceptions.ConnectionError("Network unreachable"),
     )
 
-    path = _get_default_ignore_datasets_file()
-    assert path == tmp_path / "default_ignore_datasets.yaml"
-    assert path.parent.exists()
-    assert path.read_text(encoding="utf-8") == ""
+    target = tmp_path / "grey_list.yaml"
+    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
+
+    assert target.exists()
+    assert target.read_text(encoding="utf-8") == ""
+
+
+def test_config_default_does_not_fetch(mocker):
+    """`Config.default()` must not perform any network I/O."""
+    get_mock = mocker.patch.object(climate_ref.config.requests, "get")
+
+    Config.default()
+
+    get_mock.assert_not_called()

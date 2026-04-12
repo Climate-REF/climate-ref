@@ -12,7 +12,7 @@ These diagnostics cannot be run locally, but can be executed using other executo
 from attrs import field, frozen
 from loguru import logger
 
-from climate_ref.config import Config, refresh_grey_list_file
+from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import Provider as ProviderModel
@@ -134,9 +134,6 @@ class ProviderRegistry:
         :
             A new ProviderRegistry instance
         """
-        if config.grey_list_url:
-            refresh_grey_list_file(config.grey_list_file, config.grey_list_url)
-
         providers = []
         for provider_info in config.diagnostic_providers:
             provider = import_provider(provider_info.provider)

@@ -86,7 +86,13 @@ class DiagnosticProvider:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        grey_list_all = yaml.safe_load(config.grey_list_file.read_text(encoding="utf-8")) or {}
+        # A missing file is treated as an empty grey list so offline/air-gapped
+        # users that disable fetching with `grey_list_url=""` can run without
+        # having to seed the file themselves.
+        if not config.grey_list_file.exists():
+            grey_list_all: dict[str, Any] = {}
+        else:
+            grey_list_all = yaml.safe_load(config.grey_list_file.read_text(encoding="utf-8")) or {}
         grey_list = grey_list_all.get(self.slug, {})
         if unknown_slugs := {slug for slug in grey_list} - {d.slug for d in self.diagnostics()}:
             logger.warning(

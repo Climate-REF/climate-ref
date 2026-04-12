@@ -199,6 +199,8 @@ filename = "sqlite://climate_ref.db"
         monkeypatch.setenv("REF_LOG_ROOT", "/my/test/logs")
         monkeypatch.setenv("REF_RESULTS_ROOT", "/my/test/executions")
         monkeypatch.setenv("REF_CMIP6_PARSER", "drs")
+        monkeypatch.setenv("REF_GREY_LIST_FILE", "/my/test/grey_list.yaml")
+        monkeypatch.setenv("REF_GREY_LIST_URL", "")
 
         config_new = config.refresh()
 
@@ -208,6 +210,11 @@ filename = "sqlite://climate_ref.db"
         assert config_new.paths.log == Path("/my/test/logs")
         assert config_new.paths.results == Path("/my/test/executions")
         assert config_new.cmip6_parser == "drs"
+        # Env overrides for grey_list_file must be coerced to Path so callers
+        # can use .read_text(), .exists(), etc.
+        assert config_new.grey_list_file == Path("/my/test/grey_list.yaml")
+        assert isinstance(config_new.grey_list_file, Path)
+        assert config_new.grey_list_url == ""
 
     def test_custom_env_variable(self, monkeypatch, tmp_path, config):
         monkeypatch.setenv("ABC", "/my")

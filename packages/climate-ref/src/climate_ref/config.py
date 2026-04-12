@@ -438,7 +438,11 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
-    grey_list_file: Path = env_field("GREY_LIST_FILE", factory=_default_grey_list_path)  # noqa: RUF009
+    grey_list_file: Path = env_field(  # noqa: RUF009
+        "GREY_LIST_FILE",
+        factory=_default_grey_list_path,
+        converter=Path,
+    )
     """
     Path to the grey list file.
 

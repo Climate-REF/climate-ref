@@ -85,6 +85,13 @@ class TestDiagnosticProvider:
         expected_constraint = IgnoreFacets(facets={"source_id": ("A",)})
         assert provider.diagnostics()[0].data_requirements[0][0].constraints[0] == expected_constraint
 
+    def test_configure_missing_grey_list_file(self, provider, mock_config):
+        # Offline/air-gapped users may run with grey_list_url="" and no file
+        # seeded yet; missing file should be treated as an empty grey list,
+        # not raise FileNotFoundError.
+        mock_config.grey_list_file.unlink()
+        provider.configure(mock_config)
+
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.grey_list_file.write_text(
             textwrap.dedent(

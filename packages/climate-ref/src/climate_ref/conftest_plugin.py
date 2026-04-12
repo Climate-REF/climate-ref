@@ -251,9 +251,9 @@ def data_catalog(
 
 @pytest.fixture(scope="session")
 def solve_config() -> Config:
-    """Session-scoped Config that uses the in-tree default_grey_list.yaml and never fetches."""
+    """Session-scoped Config that uses the in-tree grey list and never fetches."""
     cfg = Config.default()
-    local_grey_list = Path(__file__).parents[4] / "default_grey_list.yaml"
+    local_grey_list = Path(__file__).parents[4] / "config" / "default_grey_list.yaml"
     if not local_grey_list.is_file():
         raise ValueError(f"Could not find grey list file at {local_grey_list}")
     cfg.grey_list_file = local_grey_list

@@ -98,10 +98,8 @@ This is used to store the output of the tests that are run in the test suite for
 ## Grey list
 
 The *grey list* is a YAML file that lists facets which should be excluded from
-specific diagnostics — for example, datasets that are known to crash or
-produce invalid output. Each provider's `configure()` step prepends grey-list
-entries as `IgnoreFacets` constraints onto the relevant data requirements, so
-matching datasets are silently filtered out before solving.
+specific diagnostics — for example, datasets that are known to crash or produce invalid output.
+The datasets in the grey list are filtered before solving for the relevant diagnostic.
 
 The file format is:
 
@@ -118,25 +116,24 @@ in your `ref.toml` or via environment variables.
 
 ### `grey_list_file` / `REF_GREY_LIST_FILE`
 
-Path to the grey list file on disk. Defaults to a location under the user
-cache directory (the same locations listed under
-[`REF_DATASET_CACHE_DIR`](#ref_dataset_cache_dir)).
-
-Override this when the default cache location is not writable — for example
-on Kubernetes pods with a read-only home directory, or on HPC compute nodes
-where you want the file to live on a shared filesystem so every job sees the
-same list. The location is decoupled from fetching: when a URL is configured,
-the solver will refresh the file at this path regardless of where it lives.
+Path to the grey list file on disk.
+Defaults to `grey_list.yaml` inside your `REF_CONFIGURATION` directory (alongside `ref.toml`, the database,
+etc.). This location must be writable by the user as the grey
+list may be updated periodically.
 
 ### `grey_list_url` / `REF_GREY_LIST_URL`
 
-URL the solver fetches the grey list from. Defaults to the `default_grey_list.yaml`
-on the `main` branch of the `Climate-REF/climate-ref` GitHub repository.
-Override this to point at a fork or internal mirror.
+URL the solver fetches the grey list from.
+Defaults to
+`config/default_grey_list.yaml` on the `main` branch of the
+`Climate-REF/climate-ref` GitHub repository.
+Override this to point at a
+fork or internal mirror.
 
 The download is **lazy and explicit**: it only runs once at the start of a
 solve (`ExecutionSolver.build_from_db`), and only when the on-disk copy is
-missing or older than 6 hours. Read-only commands like `ref providers list`
+missing or older than 6 hours.
+Read-only commands like `ref providers list`
 or `ref datasets list` never touch the network.
 
 ### Offline / air-gapped use (HPC)
@@ -155,11 +152,13 @@ grey_list_url = ""
 ```
 
 When fetching is disabled the solver simply uses whatever file is at
-`grey_list_file`. A missing file is treated as an empty grey list, so you do
-not have to seed the file by hand; if you want to apply a specific grey list,
-either copy `default_grey_list.yaml` from the repository to your
-`grey_list_file` location ahead of time, or fetch it once on a login node
-before disabling the URL on the compute nodes.
+`grey_list_file`.
+A missing file is treated as an empty grey list, so you
+do not have to seed the file by hand;
+if you want to apply a specific
+grey list, either copy `config/default_grey_list.yaml` from the repository
+to your `grey_list_file` location ahead of time,
+or fetch it once before disabling the URL on the compute nodes.
 
 ## Configuration Options
 

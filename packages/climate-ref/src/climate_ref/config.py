@@ -20,7 +20,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
-import platformdirs
 import requests
 import tomlkit
 from attr import Factory
@@ -344,13 +343,19 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
 
 DEFAULT_GREY_LIST_MAX_AGE = datetime.timedelta(hours=6)
 DEFAULT_GREY_LIST_URL = (
-    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/default_grey_list.yaml"
+    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/config/default_grey_list.yaml"
 )
 
 
 def _default_grey_list_path() -> Path:
-    """Return the default location of the grey list file (no I/O, no network)."""
-    return platformdirs.user_cache_path("climate_ref") / "default_grey_list.yaml"
+    """Return the default location of the grey list file (no I/O, no network).
+
+    Lives under `REF_CONFIGURATION` (alongside `ref.toml`, the database, etc.)
+    so it inherits the same writable directory the user already has set up,
+    rather than the user cache directory which is often read-only on
+    container/HPC deployments.
+    """
+    return env.path("REF_CONFIGURATION").resolve() / "grey_list.yaml"
 
 
 def refresh_grey_list_file(
@@ -457,10 +462,9 @@ class Config:
           - another_facet: [another_value1, another_value2]
     ```
 
-    Defaults to a path under the user cache directory. Override this to put the
-    file somewhere writable in environments where the user cache is read-only
-    (e.g. a Kubernetes volume mount). The location is decoupled from fetching:
-    the solver will refresh the file at this location from `grey_list_url`.
+    Defaults to a path under the configuration directory.
+    This location must be writable as the solver may refresh the file from `grey_list_url`
+    if it is missing or stale.
     """
 
     grey_list_url: str = env_field("GREY_LIST_URL", default=DEFAULT_GREY_LIST_URL)

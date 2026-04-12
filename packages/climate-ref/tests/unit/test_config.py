@@ -4,7 +4,6 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
-import platformdirs
 import pytest
 import requests
 from attr import evolve
@@ -154,7 +153,7 @@ filename = "sqlite://climate_ref.db"
         without_defaults = cfg.dump(defaults=False)
 
         assert without_defaults == {
-            "grey_list_file": str(platformdirs.user_cache_path("climate_ref") / "default_grey_list.yaml"),
+            "grey_list_file": f"{default_path}/grey_list.yaml",
             "grey_list_url": DEFAULT_GREY_LIST_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
@@ -165,7 +164,7 @@ filename = "sqlite://climate_ref.db"
             ],
         }
         assert with_defaults == {
-            "grey_list_file": str(platformdirs.user_cache_path("climate_ref") / "default_grey_list.yaml"),
+            "grey_list_file": f"{default_path}/grey_list.yaml",
             "grey_list_url": DEFAULT_GREY_LIST_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,

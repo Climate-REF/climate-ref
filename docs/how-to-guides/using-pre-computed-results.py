@@ -5,9 +5,9 @@
 #       extension: .py
 #       format_name: percent
 #       format_version: '1.3'
-#       jupytext_version: 1.18.1
+#       jupytext_version: 1.19.1
 #   kernelspec:
-#     display_name: Python 3 (ipykernel)
+#     display_name: climate-ref-root (3.11.14)
 #     language: python
 #     name: python3
 # ---
@@ -38,7 +38,7 @@
 # !uvx --quiet --from openapi-python-client openapi-python-client generate --url https://api.climate-ref.org/api/v1/openapi.json --config /tmp/openapi-client-config.yaml --meta setup --output-path climate_ref_client --overwrite
 
 # %%
-# !pip install --quiet ./climate_ref_client
+# %pip install --quiet ./climate_ref_client
 
 # %% [markdown]
 # ## Set up the notebook
@@ -94,7 +94,7 @@ diagnostics[0]
 # %%
 txt = ""
 for diagnostic in sorted(diagnostics, key=lambda diagnostic: diagnostic.name):
-    title = f"### {diagnostic.name}"
+    title = f"### {diagnostic.name} - {diagnostic.slug}"
     description = diagnostic.description.strip()
     if not description.endswith("."):
         description += "."
@@ -102,8 +102,6 @@ for diagnostic in sorted(diagnostics, key=lambda diagnostic: diagnostic.name):
         description += f" {diagnostic.aft_link.short_description.strip()}"
         if not description.endswith("."):
             description += "."
-        if (aft_description := diagnostic.aft_link.description.strip()) != "nan":
-            description += f" {aft_description}"
         if not description.endswith("."):
             description += "."
     txt += f"{title}\n{description}\n\n"
@@ -182,12 +180,12 @@ _ = sns.heatmap(
 
 # %%
 # Select the "Sea Ice Area Basic Metrics" diagnostic as an example
-diagnostic_name = "Sea Ice Area Basic Metrics"
-diagnostic = next(d for d in diagnostics if d.name == diagnostic_name)
+diagnostic_slug = "sea-ice-area-basic"
+diagnostic = next(d for d in diagnostics if d.slug == diagnostic_slug)
 # Inspect an example series value:
 diagnostics_list_metric_values.sync(
     diagnostic.provider.slug,
-    diagnostic.slug,
+    diagnostic_slug=diagnostic_slug,
     value_type=MetricValueType.SERIES,
     client=client,
 ).data[0]
@@ -288,3 +286,5 @@ plot = ds.tas.plot.contourf(
     },
 )
 _ = plot.axes.coastlines()
+
+# %%

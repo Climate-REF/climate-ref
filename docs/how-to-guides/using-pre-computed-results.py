@@ -28,9 +28,14 @@
 #
 # We start by generating and installing a Python package for interacting with the API
 # from the OpenAPI-compatible [schema](https://api.climate-ref.org/api/v1/openapi.json).
+#
+# We pin the generated package name via an `openapi-python-client` config override so
+# that the Python import names below stay stable even if the API's `info.title` is
+# renamed upstream.
 
 # %%
-# !uvx --quiet --from openapi-python-client openapi-python-client generate --url https://api.climate-ref.org/api/v1/openapi.json --meta setup --output-path climate_ref_client --overwrite
+# !printf 'package_name_override: climate_ref_client\nproject_name_override: climate-ref-client\n' > /tmp/openapi-client-config.yaml
+# !uvx --quiet --from openapi-python-client openapi-python-client generate --url https://api.climate-ref.org/api/v1/openapi.json --config /tmp/openapi-client-config.yaml --meta setup --output-path climate_ref_client --overwrite
 
 # %%
 # !pip install --quiet ./climate_ref_client
@@ -51,13 +56,13 @@ import pandas as pd
 import requests
 import seaborn as sns
 import xarray as xr
-from climate_rapid_evaluation_framework_client import Client
-from climate_rapid_evaluation_framework_client.api.diagnostics import (
+from climate_ref_client import Client
+from climate_ref_client.api.diagnostics import (
     diagnostics_list,
     diagnostics_list_metric_values,
 )
-from climate_rapid_evaluation_framework_client.api.executions import executions_get
-from climate_rapid_evaluation_framework_client.models.metric_value_type import (
+from climate_ref_client.api.executions import executions_get
+from climate_ref_client.models.metric_value_type import (
     MetricValueType,
 )
 from IPython.display import Markdown

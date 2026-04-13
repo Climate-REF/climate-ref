@@ -23,14 +23,14 @@ text = "Apache-2.0"
 # These are the dependencies that are required to run the tests, build the docs, etc.
 # Each package can have its own dependencies in its own pyproject.toml file in addition to these.
 dev = [
-    "pytest>=9.0.0",
+    "pytest>=9.0.3",
     "pytest-celery>=1.1.3",
     "pytest-cov>=4.0.0",
     "pytest-mock >= 3.12",
     "pytest-regressions>=2.5.0",
     "coverage>=7.2.0",
-    "mypy>=1.19.0",
-    "ruff>=0.14.10",
+    "mypy>=1.20.1",
+    "ruff>=0.15.10",
     "pre-commit>=3.3.1",
     "towncrier>=25.8.0",
     "bump-my-version>=0.28.1",
@@ -39,7 +39,7 @@ dev = [
     "pip>=24.3.1",
     # Docs
     "mkdocs>=1.6.0",
-    "mkdocstrings[python]>=0.25.0",
+    "mkdocstrings[python]>=1.0.3",
     "mkdocs-material>=9.5.0",
     "mkdocs-gen-files>=0.5.0",
     "mkdocs-section-index>=0.3.9",
@@ -59,15 +59,15 @@ dev = [
     "pandas-indexing>=0.6.3",
     "prettyprinter>=0.18.0",
     "requests>=2.32.3",
-    "rich>=14.0.0",
+    "rich>=15.0.0",
     "seaborn>=0.13.2",
     "xarray>=2025.4.0",
     # Stubs
     "pandas-stubs>=2.2.3",
     "celery-types>=0.23.0",
-    "types-tqdm>=4.67",
+    "types-tqdm>=4.67.3.20260408",
     "pytest-xdist>=3.6.1",
-    "types-pyyaml>=6.0.12",
+    "types-pyyaml>=6.0.12.20260408",
     "mkdocs-typer>=0.0.3",
 ]
 

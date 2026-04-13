@@ -175,7 +175,7 @@ def esgf_data_catalog_trimmed(
     Uses a fixed set of CMIP6 source_ids to keep the catalog small and tests fast,
     while still covering multiple models.
     """
-    result = {}
+    result: dict[SourceDatasetType, pd.DataFrame] = {}
     for source_type, df in esgf_solve_catalog.items():
         if source_type in (SourceDatasetType.CMIP6, SourceDatasetType.CMIP7):
             source_ids = ["ACCESS-ESM1-5", "CESM2", "MPI-ESM1-2-LR", "GFDL-ESM4"]

@@ -414,6 +414,13 @@ class TestReadOnlyDatabase:
         assert url == "sqlite:///file:/tmp/foo.db?mode=ro&immutable=1&uri=true"
         assert connect_args == {"uri": True}
 
+    def test_make_readonly_sqlite_url_preserves_percent_encoding(self):
+        """Percent-encoded characters must survive the rewrite unchanged."""
+        original = "sqlite:///path%20with%20spaces/db.sqlite"
+        url, connect_args = _make_readonly_sqlite_url(original)
+        assert url == "sqlite:///file:path%20with%20spaces/db.sqlite?mode=ro&immutable=1&uri=true"
+        assert connect_args == {"uri": True}
+
     def test_make_readonly_sqlite_url_preserves_uri_form(self):
         original = "sqlite:///file:/tmp/foo.db?mode=ro&uri=true"
         url, connect_args = _make_readonly_sqlite_url(original)
@@ -442,6 +449,16 @@ class TestReadOnlyDatabase:
         # Should not create the parent directory
         assert validate_database_url(url) == url
         assert not missing.parent.exists()
+
+    def test_validate_uri_form_does_not_log_as_in_memory(self, tmp_path, mocker):
+        """URI-form on-disk URLs must not emit the 'Using an in-memory database' warning."""
+        warning = mocker.patch("climate_ref.database.logger.warning")
+        url = f"sqlite:///file:{tmp_path}/foo.db?mode=ro&uri=true"
+
+        validate_database_url(url)
+
+        for call in warning.call_args_list:
+            assert "in-memory" not in call.args[0]
 
     def test_from_config_read_only_on_existing_db(self, tmp_path, config):
         """A read-only Database can read but not write to a migrated SQLite file."""

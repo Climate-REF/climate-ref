@@ -87,15 +87,18 @@ def _make_readonly_sqlite_url(database_url: str) -> tuple[str, dict[str, Any]]:
         logger.warning("Read-only mode is only supported for SQLite databases; ignoring read-only flag")
         return database_url, {}
 
-    path = urlparse.unquote(split_url.path[1:])
-    if not path or path == ":memory:":
+    # Preserve the original URL encoding — the rewritten URL also needs to be
+    # parseable as a URI, so percent-encoded characters (e.g. spaces as ``%20``)
+    # must not be decoded back into raw characters here.
+    encoded_path = split_url.path[1:]
+    if not encoded_path or encoded_path == ":memory:":
         return database_url, {}
 
-    if path.startswith("file:"):
+    if encoded_path.startswith("file:"):
         # Already URI form — caller is responsible for any ro/immutable flags.
         return database_url, {"uri": True}
 
-    return f"sqlite:///file:{path}?mode=ro&immutable=1&uri=true", {"uri": True}
+    return f"sqlite:///file:{encoded_path}?mode=ro&immutable=1&uri=true", {"uri": True}
 
 
 def _get_database_revision(connection: sqlalchemy.engine.Connection) -> str | None:
@@ -170,11 +173,18 @@ def validate_database_url(database_url: str) -> str:
     split_url = urlparse.urlsplit(database_url)
 
     if split_url.scheme == "sqlite":
-        sqlite_path = _get_sqlite_path(database_url)
-        if sqlite_path is None:
-            logger.warning("Using an in-memory database")
+        # URI-form SQLite URLs (``sqlite:///file:...``) are passed through
+        # verbatim — the caller has supplied an explicit URI, possibly for a
+        # read-only on-disk file, and we should neither treat it as in-memory
+        # nor try to mkdir its (opaque) parent directory.
+        if split_url.path[1:].startswith("file:"):
+            logger.debug("Using URI-form SQLite URL; skipping parent directory creation")
         else:
-            sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+            sqlite_path = _get_sqlite_path(database_url)
+            if sqlite_path is None:
+                logger.warning("Using an in-memory database")
+            else:
+                sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     elif split_url.scheme == "postgresql":
         # We don't need to do anything special for PostgreSQL
         logger.warning("PostgreSQL support is currently experimental and untested")
@@ -390,12 +400,11 @@ class Database:
             If True, skip creating a backup before running migrations.
             Useful for read-only commands that don't modify the database.
         read_only
-            If True, open the database in read-only mode.
+            If True, open the database in read-only mode and skip migrations.
 
-            For SQLite databases this rewrites the URL to URI form with ``mode=ro&immutable=1``
-            and passes ``uri=True`` to the driver.
-            Migrations and backups are skipped.
-            For other backends this is a no-op.
+            SQLite URLs are rewritten to URI form with ``mode=ro&immutable=1``.
+            For other backends, callers must configure the connecting role as
+            read-only themselves.
 
         Returns
         -------

@@ -2,7 +2,7 @@
 # This docker container packages up the REF cli tool with the default set of diagnostic providers
 # used as part of the CMIP7 FastTrack process.
 
-FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim AS base
+FROM ghcr.io/astral-sh/uv:python3.11-bookworm-slim AS base
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     git \

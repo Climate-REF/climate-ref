@@ -395,7 +395,8 @@ def refresh_grey_list_file(
         response.raise_for_status()
     except requests.RequestException as exc:
         logger.warning(f"Failed to download grey list: {exc}")
-        path.touch(exist_ok=True)
+        if not path.exists():
+            path.touch()
     else:
         with path.open(mode="wb") as file:
             file.write(response.content)

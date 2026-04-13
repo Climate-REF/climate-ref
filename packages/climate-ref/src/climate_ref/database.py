@@ -22,6 +22,7 @@ import pandas as pd
 import sqlalchemy
 from alembic.config import Config as AlembicConfig
 from alembic.runtime.migration import MigrationContext
+from alembic.script import ScriptDirectory
 from loguru import logger
 from sqlalchemy.orm import Session
 
@@ -57,7 +58,8 @@ def _get_sqlite_path(database_url: str) -> Path | None:
     """
     Extract the file path from a SQLite database URL.
 
-    Returns ``None`` for in-memory databases or non-SQLite URLs.
+    Returns ``None`` for in-memory databases, URI-form URLs (``sqlite:///file:...``),
+    or non-SQLite URLs.
     """
     split_url = urlparse.urlsplit(database_url)
     if split_url.scheme != "sqlite":
@@ -65,7 +67,38 @@ def _get_sqlite_path(database_url: str) -> Path | None:
     path = urlparse.unquote(split_url.path[1:])
     if not path or path == ":memory:":
         return None
+    if path.startswith("file:"):
+        # URI-form SQLite URL — the path is opaque (may contain query params
+        # of its own for mode=ro etc.) and we shouldn't try to interpret it.
+        return None
     return Path(path)
+
+
+def _make_readonly_sqlite_url(database_url: str) -> tuple[str, dict[str, Any]]:
+    """
+    Rewrite a file-based SQLite URL to read-only URI form.
+
+    Returns the rewritten URL and connect_args to pass to SQLAlchemy.
+    For non-SQLite URLs, or URLs that can't be rewritten, the URL is returned unchanged
+    with empty connect_args.
+    """
+    split_url = urlparse.urlsplit(database_url)
+    if split_url.scheme != "sqlite":
+        logger.warning("Read-only mode is only supported for SQLite databases; ignoring read-only flag")
+        return database_url, {}
+
+    # Preserve the original URL encoding — the rewritten URL also needs to be
+    # parseable as a URI, so percent-encoded characters (e.g. spaces as ``%20``)
+    # must not be decoded back into raw characters here.
+    encoded_path = split_url.path[1:]
+    if not encoded_path or encoded_path == ":memory:":
+        return database_url, {}
+
+    if encoded_path.startswith("file:"):
+        # Already URI form — caller is responsible for any ro/immutable flags.
+        return database_url, {"uri": True}
+
+    return f"sqlite:///file:{encoded_path}?mode=ro&immutable=1&uri=true", {"uri": True}
 
 
 def _get_database_revision(connection: sqlalchemy.engine.Connection) -> str | None:
@@ -140,11 +173,18 @@ def validate_database_url(database_url: str) -> str:
     split_url = urlparse.urlsplit(database_url)
 
     if split_url.scheme == "sqlite":
-        sqlite_path = _get_sqlite_path(database_url)
-        if sqlite_path is None:
-            logger.warning("Using an in-memory database")
+        # URI-form SQLite URLs (``sqlite:///file:...``) are passed through
+        # verbatim — the caller has supplied an explicit URI, possibly for a
+        # read-only on-disk file, and we should neither treat it as in-memory
+        # nor try to mkdir its (opaque) parent directory.
+        if split_url.path[1:].startswith("file:"):
+            logger.debug("Using URI-form SQLite URL; skipping parent directory creation")
         else:
-            sqlite_path.parent.mkdir(parents=True, exist_ok=True)
+            sqlite_path = _get_sqlite_path(database_url)
+            if sqlite_path is None:
+                logger.warning("Using an in-memory database")
+            else:
+                sqlite_path.parent.mkdir(parents=True, exist_ok=True)
     elif split_url.scheme == "postgresql":
         # We don't need to do anything special for PostgreSQL
         logger.warning("PostgreSQL support is currently experimental and untested")
@@ -191,6 +231,17 @@ class ModelState(enum.Enum):
     DELETED = "deleted"
 
 
+class MigrationState(enum.Enum):
+    """
+    State of the database schema relative to the expected Alembic head.
+    """
+
+    UP_TO_DATE = "up_to_date"
+    BEHIND = "behind"
+    UNMANAGED = "unmanaged"
+    REMOVED = "removed"
+
+
 class Database:
     """
     Manage the database connection and migrations
@@ -198,10 +249,13 @@ class Database:
     The database migrations are optionally run after the connection to the database is established.
     """
 
-    def __init__(self, url: str) -> None:
+    def __init__(self, url: str, *, connect_args: dict[str, Any] | None = None) -> None:
         logger.info(f"Connecting to database at {url}")
         self.url = url
-        self._engine = sqlalchemy.create_engine(self.url)
+        engine_kwargs: dict[str, Any] = {}
+        if connect_args:
+            engine_kwargs["connect_args"] = connect_args
+        self._engine = sqlalchemy.create_engine(self.url, **engine_kwargs)
         # TODO: Set autobegin=False
         self.session = Session(self._engine)
 
@@ -248,6 +302,46 @@ class Database:
 
         return alembic_config
 
+    def migration_status(self, config: "Config") -> dict[str, Any]:
+        """
+        Report the current migration state of the database.
+
+        Returns a dict with ``current`` (the current revision or ``None``),
+        ``head`` (the latest available revision), and ``state`` (a
+        :class:`MigrationState`).
+
+        This is the canonical way for consumers of the library to check whether
+        the database schema matches what the installed ``climate_ref`` expects.
+        Prefer it over re-deriving Alembic plumbing in downstream code.
+
+        Parameters
+        ----------
+        config
+            REF Configuration, used to build the Alembic config.
+
+        Returns
+        -------
+        :
+            A dict with keys ``current``, ``head``, and ``state``.
+        """
+        alembic_cfg = self.alembic_config(config)
+        script = ScriptDirectory.from_config(alembic_cfg)
+        head_rev = script.get_current_head()
+
+        with self._engine.connect() as connection:
+            current_rev = _get_database_revision(connection)
+
+        if current_rev in _REMOVED_REVISIONS:
+            state = MigrationState.REMOVED
+        elif current_rev is None:
+            state = MigrationState.UNMANAGED
+        elif current_rev == head_rev:
+            state = MigrationState.UP_TO_DATE
+        else:
+            state = MigrationState.BEHIND
+
+        return {"current": current_rev, "head": head_rev, "state": state}
+
     def migrate(self, config: "Config", skip_backup: bool = False) -> None:
         """
         Migrate the database to the latest revision
@@ -282,7 +376,13 @@ class Database:
         alembic.command.upgrade(self.alembic_config(config), "heads")
 
     @staticmethod
-    def from_config(config: "Config", run_migrations: bool = True, skip_backup: bool = False) -> "Database":
+    def from_config(
+        config: "Config",
+        run_migrations: bool = True,
+        skip_backup: bool = False,
+        *,
+        read_only: bool = False,
+    ) -> "Database":
         """
         Create a Database instance from a Config instance
 
@@ -294,10 +394,17 @@ class Database:
         config
             The Config instance that includes information about where the database is located
         run_migrations
-            If True, run any outstanding database migrations
+            If True, run any outstanding database migrations.
+            Forced to False when ``read_only=True``.
         skip_backup
             If True, skip creating a backup before running migrations.
             Useful for read-only commands that don't modify the database.
+        read_only
+            If True, open the database in read-only mode and skip migrations.
+
+            SQLite URLs are rewritten to URI form with ``mode=ro&immutable=1``.
+            For other backends, callers must configure the connecting role as
+            read-only themselves.
 
         Returns
         -------
@@ -305,11 +412,16 @@ class Database:
             A new Database instance
         """
         database_url: str = config.db.database_url
+        connect_args: dict[str, Any] = {}
+
+        if read_only:
+            database_url, connect_args = _make_readonly_sqlite_url(database_url)
+            run_migrations = False
 
         database_url = validate_database_url(database_url)
 
         cv = CV.load_from_file(config.paths.dimensions_cv)
-        db = Database(database_url)
+        db = Database(database_url, connect_args=connect_args or None)
 
         if run_migrations:
             # Run any outstanding migrations

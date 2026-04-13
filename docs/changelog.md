@@ -21,6 +21,16 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.13.1 (2026-04-13)
+
+### Features
+
+- Added first-class read-only support and a migration-status helper to the `Database` API.
+
+  `Database.from_config(..., read_only=True)` rewrites file-based SQLite URLs to read-only URI form and skips migrations,
+  and `Database.migration_status(config)` reports the current/head revisions and state. ([#624](https://github.com/Climate-REF/climate-ref/pull/624))
+
+
 ## climate-ref 0.13.0 (2026-04-11)
 
 ### Features

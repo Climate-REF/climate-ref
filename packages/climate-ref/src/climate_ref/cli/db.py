@@ -10,7 +10,12 @@ from alembic.script import ScriptDirectory
 from rich.table import Table
 
 from climate_ref.config import Config
-from climate_ref.database import Database, _create_backup, _get_database_revision, _get_sqlite_path
+from climate_ref.database import (
+    Database,
+    MigrationState,
+    _create_backup,
+    _get_sqlite_path,
+)
 
 app = typer.Typer(help=__doc__)
 
@@ -33,13 +38,12 @@ def migrate(ctx: typer.Context) -> None:
     config = ctx.obj.config
     console = ctx.obj.console
 
-    script = _get_script_directory(db, config)
-    head_rev = script.get_current_head()
+    status_info = db.migration_status(config)
+    current_rev = status_info["current"]
+    head_rev = status_info["head"]
+    state = status_info["state"]
 
-    with db._engine.connect() as connection:
-        current_rev = _get_database_revision(connection)
-
-    if current_rev == head_rev:
+    if state is MigrationState.UP_TO_DATE:
         console.print(f"Database is already up to date at revision [bold]{current_rev}[/bold].")
         return
 
@@ -63,20 +67,24 @@ def status(ctx: typer.Context) -> None:
     config = ctx.obj.config
     console = ctx.obj.console
 
-    script = _get_script_directory(db, config)
-    head_rev = script.get_current_head()
-
-    with db._engine.connect() as connection:
-        current_rev = _get_database_revision(connection)
+    status_info = db.migration_status(config)
+    current_rev = status_info["current"]
+    head_rev = status_info["head"]
+    state = status_info["state"]
 
     console.print(f"Database URL:     [bold]{db.url}[/bold]")
     console.print(f"Current revision: [bold]{current_rev or '(empty)'}[/bold]")
     console.print(f"Head revision:    [bold]{head_rev}[/bold]")
 
-    if current_rev == head_rev:
+    if state is MigrationState.UP_TO_DATE:
         console.print("[green]Database is up to date.[/green]")
-    elif current_rev is None:
+    elif state is MigrationState.UNMANAGED:
         console.print("[yellow]Database has no revision stamp (new or unmanaged).[/yellow]")
+    elif state is MigrationState.REMOVED:
+        console.print(
+            f"[red]Database revision {current_rev!r} has been removed. "
+            "Please delete your database and start again.[/red]"
+        )
     else:
         console.print(
             "[yellow]Database is behind. Run 'ref db migrate' to apply pending migrations.[/yellow]"
@@ -116,9 +124,7 @@ def history(
     console = ctx.obj.console
 
     script = _get_script_directory(db, config)
-
-    with db._engine.connect() as connection:
-        current_rev = _get_database_revision(connection)
+    current_rev = db.migration_status(config)["current"]
 
     revisions = list(script.walk_revisions())
     if last is not None:

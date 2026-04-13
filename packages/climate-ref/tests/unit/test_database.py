@@ -10,8 +10,10 @@ from sqlalchemy import inspect
 
 from climate_ref.database import (
     Database,
+    MigrationState,
     _create_backup,
     _get_sqlite_path,
+    _make_readonly_sqlite_url,
     _values_differ,
     validate_database_url,
 )
@@ -402,3 +404,132 @@ class TestValuesDiffer:
         assert _values_differ(True, pd.NA)
         assert _values_differ(False, pd.NA)
         assert _values_differ(pd.NA, True)
+
+
+class TestReadOnlyDatabase:
+    """Tests for the read-only mode of ``Database.from_config``."""
+
+    def test_make_readonly_sqlite_url_rewrites_file_url(self):
+        url, connect_args = _make_readonly_sqlite_url("sqlite:////tmp/foo.db")
+        assert url == "sqlite:///file:/tmp/foo.db?mode=ro&immutable=1&uri=true"
+        assert connect_args == {"uri": True}
+
+    def test_make_readonly_sqlite_url_preserves_percent_encoding(self):
+        """Percent-encoded characters must survive the rewrite unchanged."""
+        original = "sqlite:///path%20with%20spaces/db.sqlite"
+        url, connect_args = _make_readonly_sqlite_url(original)
+        assert url == "sqlite:///file:path%20with%20spaces/db.sqlite?mode=ro&immutable=1&uri=true"
+        assert connect_args == {"uri": True}
+
+    def test_make_readonly_sqlite_url_preserves_uri_form(self):
+        original = "sqlite:///file:/tmp/foo.db?mode=ro&uri=true"
+        url, connect_args = _make_readonly_sqlite_url(original)
+        assert url == original
+        assert connect_args == {"uri": True}
+
+    def test_make_readonly_sqlite_url_passthrough_for_memory(self):
+        url, connect_args = _make_readonly_sqlite_url("sqlite:///:memory:")
+        assert url == "sqlite:///:memory:"
+        assert connect_args == {}
+
+    def test_make_readonly_sqlite_url_passthrough_for_non_sqlite(self):
+        url, connect_args = _make_readonly_sqlite_url("postgresql://localhost/db")
+        assert url == "postgresql://localhost/db"
+        assert connect_args == {}
+
+    def test_get_sqlite_path_returns_none_for_uri_form(self):
+        """URI-form URLs must not be interpreted as plain file paths."""
+        assert _get_sqlite_path("sqlite:///file:/tmp/foo.db?mode=ro&uri=true") is None
+
+    def test_validate_accepts_uri_form_without_mkdir(self, tmp_path):
+        """URI-form URLs are accepted verbatim and do not trigger parent mkdir."""
+        missing = tmp_path / "does-not-exist" / "foo.db"
+        url = f"sqlite:///file:{missing}?mode=ro&immutable=1&uri=true"
+
+        # Should not create the parent directory
+        assert validate_database_url(url) == url
+        assert not missing.parent.exists()
+
+    def test_validate_uri_form_does_not_log_as_in_memory(self, tmp_path, mocker):
+        """URI-form on-disk URLs must not emit the 'Using an in-memory database' warning."""
+        warning = mocker.patch("climate_ref.database.logger.warning")
+        url = f"sqlite:///file:{tmp_path}/foo.db?mode=ro&uri=true"
+
+        validate_database_url(url)
+
+        for call in warning.call_args_list:
+            assert "in-memory" not in call.args[0]
+
+    def test_from_config_read_only_on_existing_db(self, tmp_path, config):
+        """A read-only Database can read but not write to a migrated SQLite file."""
+        db_path = tmp_path / "climate_ref.db"
+        config.db.database_url = f"sqlite:///{db_path}"
+
+        # First, create and migrate the database normally
+        Database.from_config(config, run_migrations=True).close()
+        assert db_path.exists()
+
+        ro_db = Database.from_config(config, read_only=True)
+        try:
+            # Reads work
+            with ro_db._engine.connect() as connection:
+                connection.execute(sqlalchemy.text("SELECT 1"))
+
+            # Writes must fail
+            with pytest.raises(sqlalchemy.exc.OperationalError):
+                with ro_db._engine.connect() as connection:
+                    connection.execute(sqlalchemy.text("CREATE TABLE _rw_probe (id INTEGER)"))
+                    connection.commit()
+        finally:
+            ro_db.close()
+
+    def test_from_config_read_only_skips_migrations(self, tmp_path, config, mocker):
+        db_path = tmp_path / "climate_ref.db"
+        config.db.database_url = f"sqlite:///{db_path}"
+        # Seed the file so the read-only open can connect
+        Database.from_config(config, run_migrations=True).close()
+
+        migrate = mocker.patch.object(Database, "migrate")
+        Database.from_config(config, read_only=True).close()
+        migrate.assert_not_called()
+
+
+class TestMigrationStatus:
+    """Tests for ``Database.migration_status``."""
+
+    def test_up_to_date_after_migrate(self, db, config):
+        db.migrate(config)
+        status = db.migration_status(config)
+        assert status["state"] is MigrationState.UP_TO_DATE
+        assert status["current"] == status["head"]
+        assert status["head"] is not None
+
+    def test_unmanaged_before_migrate(self, config, tmp_path):
+        config.db.database_url = f"sqlite:///{tmp_path}/fresh.db"
+        db = Database(config.db.database_url)
+        try:
+            status = db.migration_status(config)
+            assert status["state"] is MigrationState.UNMANAGED
+            assert status["current"] is None
+            assert status["head"] is not None
+        finally:
+            db.close()
+
+    def test_removed_revision(self, db, config, mocker):
+        mocker.patch(
+            "climate_ref.database._get_database_revision",
+            return_value="ea2aa1134cb3",
+        )
+        status = db.migration_status(config)
+        assert status["state"] is MigrationState.REMOVED
+        assert status["current"] == "ea2aa1134cb3"
+
+    def test_behind(self, db, config, mocker):
+        mocker.patch(
+            "climate_ref.database._get_database_revision",
+            return_value="not_the_head_rev",
+        )
+        status = db.migration_status(config)
+        assert status["state"] is MigrationState.BEHIND
+        assert status["current"] == "not_the_head_rev"
+        assert status["head"] != "not_the_head_rev"

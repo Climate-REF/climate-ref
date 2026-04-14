@@ -86,9 +86,9 @@ class DiagnosticProvider:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        # A missing file is treated as an empty grey list so offline/air-gapped
-        # users that disable fetching with `grey_list_url=""` can run without
-        # having to seed the file themselves.
+        # A missing file is treated as an empty grey list
+        # so offline/air-gapped users that disable fetching with `grey_list_url=""`
+        # can run without having to seed the file themselves.
         if not config.grey_list_file.exists():
             grey_list_all: dict[str, Any] = {}
         else:

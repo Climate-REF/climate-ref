@@ -14,6 +14,7 @@ from climate_ref.config import (
     DEFAULT_GREY_LIST_URL,
     DEFAULT_LOG_FORMAT,
     Config,
+    GreyListRefreshError,
     PathConfig,
     refresh_grey_list_file,
     transform_error,
@@ -296,20 +297,21 @@ def test_refresh_grey_list_file(mocker, tmp_path, status):
         assert target.read_text(encoding="utf-8") == "downloaded"
 
 
-def test_refresh_grey_list_file_fail(mocker, tmp_path):
+def test_refresh_grey_list_file_fail_no_cache(mocker, tmp_path):
+    """A download failure with no cached copy must raise rather than create an empty placeholder."""
     result = mocker.MagicMock(status_code=404, content=b"{}")
     result.raise_for_status.side_effect = requests.RequestException
     mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
 
     target = tmp_path / "grey_list.yaml"
-    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
+    with pytest.raises(GreyListRefreshError, match="no cached copy"):
+        refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
 
-    assert target.exists()
-    assert target.read_text(encoding="utf-8") == ""
+    assert not target.exists()
 
 
-def test_refresh_grey_list_file_network_error(mocker, tmp_path):
-    """Network errors (e.g. offline/HPC environment) are handled gracefully."""
+def test_refresh_grey_list_file_network_error_no_cache(mocker, tmp_path):
+    """Network errors with no cached copy must raise (fail-safe)."""
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
@@ -317,10 +319,24 @@ def test_refresh_grey_list_file_network_error(mocker, tmp_path):
     )
 
     target = tmp_path / "grey_list.yaml"
-    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
+    with pytest.raises(GreyListRefreshError):
+        refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
 
-    assert target.exists()
-    assert target.read_text(encoding="utf-8") == ""
+    assert not target.exists()
+
+
+def test_refresh_grey_list_file_fail_uses_stale_cache(mocker, tmp_path):
+    """A download failure must preserve and reuse an existing cached copy."""
+    result = mocker.MagicMock(status_code=500, content=b"{}")
+    result.raise_for_status.side_effect = requests.RequestException
+    mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
+
+    target = tmp_path / "grey_list.yaml"
+    target.write_text("cached", encoding="utf-8")
+
+    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml", max_age=timedelta(seconds=-1))
+
+    assert target.read_text(encoding="utf-8") == "cached"
 
 
 def test_config_default_does_not_fetch(mocker):
@@ -330,3 +346,22 @@ def test_config_default_does_not_fetch(mocker):
     Config.default()
 
     get_mock.assert_not_called()
+
+
+def test_load_rejects_deprecated_ignore_datasets_file(tmp_path, monkeypatch):
+    """Old `ignore_datasets_file` toml key must hard-fail with a migration hint."""
+    monkeypatch.delenv("REF_IGNORE_DATASETS_FILE", raising=False)
+    config_file = tmp_path / "ref.toml"
+    config_file.write_text('ignore_datasets_file = "old.yaml"\n', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="ignore_datasets_file"):
+        Config.load(config_file)
+
+
+def test_load_rejects_deprecated_ignore_datasets_env(tmp_path, monkeypatch):
+    """`REF_IGNORE_DATASETS_FILE` env var must hard-fail with a migration hint."""
+    monkeypatch.setenv("REF_IGNORE_DATASETS_FILE", str(tmp_path / "old.yaml"))
+    config_file = tmp_path / "ref.toml"
+
+    with pytest.raises(ValueError, match="REF_IGNORE_DATASETS_FILE"):
+        Config.load(config_file)

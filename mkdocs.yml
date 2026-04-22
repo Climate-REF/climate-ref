@@ -151,6 +151,8 @@ plugins:
   # https://github.com/PLAYG0N/mkdocs-panzoom
   - panzoom:
       full_screen: true
+  # https://github.com/syn54x/mkdocs-typer2
+  - mkdocs-typer2
 
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/setup/extensions/python-markdown/#attribute-lists
@@ -191,11 +193,6 @@ markdown_extensions:
         - name: mermaid
           class: mermaid
           format: !!python/name:pymdownx.superfences.fence_code_format
-            # yamllint disable-line
-            # https://github.com/mkdocs/mkdocs-click
-
-
-  - mkdocs-typer:
 
 watch:
   - README.md

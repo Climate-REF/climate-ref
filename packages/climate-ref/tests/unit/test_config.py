@@ -4,7 +4,6 @@ import sys
 from datetime import timedelta
 from pathlib import Path
 
-import platformdirs
 import pytest
 import requests
 from attr import evolve
@@ -12,10 +11,12 @@ from cattrs import IterableValidationError
 
 import climate_ref.config
 from climate_ref.config import (
+    DEFAULT_GREY_LIST_URL,
     DEFAULT_LOG_FORMAT,
     Config,
+    GreyListRefreshError,
     PathConfig,
-    _get_default_ignore_datasets_file,
+    refresh_grey_list_file,
     transform_error,
 )
 from climate_ref_core.exceptions import InvalidExecutorException
@@ -153,9 +154,8 @@ filename = "sqlite://climate_ref.db"
         without_defaults = cfg.dump(defaults=False)
 
         assert without_defaults == {
-            "ignore_datasets_file": str(
-                platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
-            ),
+            "grey_list_file": f"{default_path}/grey_list.yaml",
+            "grey_list_url": DEFAULT_GREY_LIST_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -165,9 +165,8 @@ filename = "sqlite://climate_ref.db"
             ],
         }
         assert with_defaults == {
-            "ignore_datasets_file": str(
-                platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
-            ),
+            "grey_list_file": f"{default_path}/grey_list.yaml",
+            "grey_list_url": DEFAULT_GREY_LIST_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -200,6 +199,8 @@ filename = "sqlite://climate_ref.db"
         monkeypatch.setenv("REF_LOG_ROOT", "/my/test/logs")
         monkeypatch.setenv("REF_RESULTS_ROOT", "/my/test/executions")
         monkeypatch.setenv("REF_CMIP6_PARSER", "drs")
+        monkeypatch.setenv("REF_GREY_LIST_FILE", "/my/test/grey_list.yaml")
+        monkeypatch.setenv("REF_GREY_LIST_URL", "")
 
         config_new = config.refresh()
 
@@ -209,6 +210,11 @@ filename = "sqlite://climate_ref.db"
         assert config_new.paths.log == Path("/my/test/logs")
         assert config_new.paths.results == Path("/my/test/executions")
         assert config_new.cmip6_parser == "drs"
+        # Env overrides for grey_list_file must be coerced to Path so callers
+        # can use .read_text(), .exists(), etc.
+        assert config_new.grey_list_file == Path("/my/test/grey_list.yaml")
+        assert isinstance(config_new.grey_list_file, Path)
+        assert config_new.grey_list_url == ""
 
     def test_custom_env_variable(self, monkeypatch, tmp_path, config):
         monkeypatch.setenv("ABC", "/my")
@@ -270,51 +276,92 @@ def test_transform_error():
 
 
 @pytest.mark.parametrize("status", ["fresh", "stale", "missing"])
-def test_get_default_ignore_datasets_file(mocker, tmp_path, status):
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+def test_refresh_grey_list_file(mocker, tmp_path, status):
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
         return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
     )
-    expected_path = tmp_path / "default_ignore_datasets.yaml"
+    target = tmp_path / "nested" / "grey_list.yaml"
     if status != "missing":
-        expected_path.write_text("existing", encoding="utf-8")
-    if status == "stale":
-        mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("existing", encoding="utf-8")
+    max_age = timedelta(seconds=-1) if status == "stale" else timedelta(hours=6)
 
-    path = climate_ref.config._get_default_ignore_datasets_file()
+    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml", max_age=max_age)
 
-    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert target.parent.exists()
     if status == "fresh":
-        assert path.read_text(encoding="utf-8") == "existing"
+        assert target.read_text(encoding="utf-8") == "existing"
     else:
-        assert path.read_text(encoding="utf-8") == "downloaded"
+        assert target.read_text(encoding="utf-8") == "downloaded"
 
 
-def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+def test_refresh_grey_list_file_fail_no_cache(mocker, tmp_path):
+    """A download failure with no cached copy must raise rather than create an empty placeholder."""
     result = mocker.MagicMock(status_code=404, content=b"{}")
     result.raise_for_status.side_effect = requests.RequestException
     mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
 
-    path = _get_default_ignore_datasets_file()
-    assert path == tmp_path / "default_ignore_datasets.yaml"
-    assert path.parent.exists()
-    assert path.read_text(encoding="utf-8") == ""
+    target = tmp_path / "grey_list.yaml"
+    with pytest.raises(GreyListRefreshError, match="no cached copy"):
+        refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
+
+    assert not target.exists()
 
 
-def test_get_default_ignore_datasets_file_network_error(mocker, tmp_path):
-    """Test that network errors during requests.get() are handled gracefully."""
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
-    # Simulate network error (e.g., no network access in offline/HPC environment)
+def test_refresh_grey_list_file_network_error_no_cache(mocker, tmp_path):
+    """Network errors with no cached copy must raise (fail-safe)."""
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
         side_effect=requests.exceptions.ConnectionError("Network unreachable"),
     )
 
-    path = _get_default_ignore_datasets_file()
-    assert path == tmp_path / "default_ignore_datasets.yaml"
-    assert path.parent.exists()
-    assert path.read_text(encoding="utf-8") == ""
+    target = tmp_path / "grey_list.yaml"
+    with pytest.raises(GreyListRefreshError):
+        refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml")
+
+    assert not target.exists()
+
+
+def test_refresh_grey_list_file_fail_uses_stale_cache(mocker, tmp_path):
+    """A download failure must preserve and reuse an existing cached copy."""
+    result = mocker.MagicMock(status_code=500, content=b"{}")
+    result.raise_for_status.side_effect = requests.RequestException
+    mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
+
+    target = tmp_path / "grey_list.yaml"
+    target.write_text("cached", encoding="utf-8")
+
+    refresh_grey_list_file(target, "https://example.invalid/grey_list.yaml", max_age=timedelta(seconds=-1))
+
+    assert target.read_text(encoding="utf-8") == "cached"
+
+
+def test_config_default_does_not_fetch(mocker):
+    """`Config.default()` must not perform any network I/O."""
+    get_mock = mocker.patch.object(climate_ref.config.requests, "get")
+
+    Config.default()
+
+    get_mock.assert_not_called()
+
+
+def test_load_rejects_deprecated_ignore_datasets_file(tmp_path, monkeypatch):
+    """Old `ignore_datasets_file` toml key must hard-fail with a migration hint."""
+    monkeypatch.delenv("REF_IGNORE_DATASETS_FILE", raising=False)
+    config_file = tmp_path / "ref.toml"
+    config_file.write_text('ignore_datasets_file = "old.yaml"\n', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="ignore_datasets_file"):
+        Config.load(config_file)
+
+
+def test_load_rejects_deprecated_ignore_datasets_env(tmp_path, monkeypatch):
+    """`REF_IGNORE_DATASETS_FILE` env var must hard-fail with a migration hint."""
+    monkeypatch.setenv("REF_IGNORE_DATASETS_FILE", str(tmp_path / "old.yaml"))
+    config_file = tmp_path / "ref.toml"
+
+    with pytest.raises(ValueError, match="REF_IGNORE_DATASETS_FILE"):
+        Config.load(config_file)

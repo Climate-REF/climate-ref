@@ -13,7 +13,7 @@ import pandas as pd
 from attrs import define, frozen
 from loguru import logger
 
-from climate_ref.config import Config
+from climate_ref.config import Config, refresh_grey_list_file
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import (
@@ -470,6 +470,9 @@ class ExecutionSolver:
         :
             A new ExecutionSolver instance
         """
+        if config.grey_list_url:
+            refresh_grey_list_file(config.grey_list_file, config.grey_list_url)
+
         return ExecutionSolver(
             provider_registry=ProviderRegistry.build_from_config(config, db),
             data_catalog={

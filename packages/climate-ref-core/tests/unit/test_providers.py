@@ -247,7 +247,7 @@ class TestCondaDiagnosticProvider:
 
         mock_conda_exe = mocker.MagicMock(spec=Path, exists=lambda: exists)
         mock_conda_exe.open.return_value.__enter__.return_value.write = fake_file.write
-        mock_conda_exe.read_bytes = lambda: fake_file.getvalue()
+        mock_conda_exe.read_bytes = fake_file.getvalue
         mocker.patch.object(Path, "__truediv__", return_value=mock_conda_exe)
 
         mocker.patch.object(provider, "_is_stale", return_value=is_stale)

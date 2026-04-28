@@ -127,15 +127,14 @@ class TestBuildCatalog:
         assert "No matching files found" in caplog.text
 
     def test_adapter_exception_logged(self, caplog):
-        """Test exception from adapter is logged as warning and concat fails."""
+        """Failures in every parent_dir are logged and yield an empty DataFrame."""
         mock_adapter = MagicMock()
         mock_adapter.find_local_datasets.side_effect = Exception("Parse error")
 
         file_paths = [Path("/path/to/file.nc")]
-        # When all directories fail, pd.concat([]) raises ValueError
-        with pytest.raises(ValueError, match="No objects to concatenate"):
-            _build_catalog(mock_adapter, file_paths)
+        result = _build_catalog(mock_adapter, file_paths)
 
+        assert result.empty
         assert "Failed to parse" in caplog.text
 
 
@@ -310,6 +309,48 @@ class TestFetchTestDataCommand:
 
         result = invoke_cli(["test-cases", "fetch", "--test-case", "specific-case", "--dry-run"])
         assert result.exit_code == 0
+
+    @pytest.mark.parametrize(
+        "exception",
+        [
+            DatasetResolutionError("No datasets found for tc1"),
+            ValueError("No valid executions found for diagnostic test-diag"),
+        ],
+    )
+    def test_fetch_continues_on_test_case_failure(self, invoke_cli, mocker, exception):
+        """A per-test-case failure is logged and does not abort the loop.
+
+        Regression test for the cascade where a single bad parent_dir caused
+        ``pd.concat([])`` (or an empty solver result) to crash the entire
+        ``ref test-cases fetch`` command instead of moving on to the next
+        test case.
+        """
+        tc_bad = MagicMock(name="bad", description="bad", requests=[MagicMock()])
+        tc_bad.name = "bad"
+        tc_good = MagicMock(name="good", description="good", requests=[MagicMock()])
+        tc_good.name = "good"
+        mock_spec = MagicMock(test_cases=[tc_bad, tc_good])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        fetch_mock = mocker.patch(
+            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            side_effect=[exception, (MagicMock(), True)],
+        )
+
+        result = invoke_cli(["test-cases", "fetch"])
+
+        assert result.exit_code == 0
+        assert fetch_mock.call_count == 2
 
 
 class TestListCasesCommand:

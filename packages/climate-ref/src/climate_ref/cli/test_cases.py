@@ -72,6 +72,8 @@ def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> p
         except Exception as e:
             logger.warning(f"Failed to parse {parent_dir}: {e}")
 
+    if not catalog_dfs:
+        return pd.DataFrame()
     return pd.concat(catalog_dfs, ignore_index=True)
 
 
@@ -308,7 +310,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0915
                         _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
                         if not catalog_written:
                             logger.info(f"  Catalog unchanged for {tc.name}")
-                    except DatasetResolutionError as e:
+                    except (DatasetResolutionError, ValueError) as e:
                         logger.warning(f"  Could not build catalog for {tc.name}: {e}")
 
 

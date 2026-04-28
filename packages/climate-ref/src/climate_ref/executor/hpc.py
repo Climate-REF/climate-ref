@@ -426,7 +426,10 @@ class HPCExecutor:
         Parameters
         ----------
         timeout
-            Timeout in seconds. ``0`` or negative values mean "wait forever".
+            Timeout in seconds.
+            Positive values are capped by the configured Slurm/PBS walltime.
+            ``0`` or negative values disable the caller-provided timeout,
+            but this method still waits at most until the configured walltime if one is set.
 
         Raises
         ------

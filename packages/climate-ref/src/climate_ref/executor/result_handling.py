@@ -58,7 +58,7 @@ def process_result(
             )
         else:
             info_msg = ""
-        logger.exception(f"Error running {result.definition.execution_slug()}. {info_msg}")
+        logger.error(f"Error running {result.definition.execution_slug()}. {info_msg}")
 
     if execution:
         handle_execution_result(config, database, execution, result)

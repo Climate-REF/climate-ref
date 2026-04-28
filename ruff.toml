@@ -58,6 +58,7 @@ ignore = [
 
 [lint.isort]
 known-first-party = ["climate_ref", "climate_ref_core"]
+known-third-party = ["climate_ref_client"]
 
 [lint.pydocstyle]
 convention = "numpy"

@@ -10,7 +10,7 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - uses: docker/metadata-action@v5
+    - uses: docker/metadata-action@v6.0.0
       id: metadata
       with:
         images: ghcr.io/${{ github.repository_owner }}/${{ inputs.container-name }}
@@ -19,7 +19,7 @@ runs:
           type=ref,event=tag
           # set latest tag for default branch
           type=raw,value=main,enable={{is_default_branch}}
-    - uses: docker/build-push-action@v4
+    - uses: docker/build-push-action@v7.1.0
       id: push
       with:
         cache-from: type=gha
@@ -32,7 +32,7 @@ runs:
         labels: ${{ steps.metadata.outputs.labels }}
     - name: Attest to REF image
       if: ${{ ! github.event.pull_request.head.repo.fork }}
-      uses: actions/attest-build-provenance@v2
+      uses: actions/attest@v4.1.0
       with:
         subject-name: ghcr.io/${{ github.repository_owner }}/${{ inputs.container-name }}
         subject-digest: ${{ steps.push.outputs.digest }}

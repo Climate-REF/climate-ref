@@ -59,13 +59,11 @@ class TestHPCExecutor:
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog, base_config):
         with patch.object(HPCExecutor, "run", autospec=True) as mock_run:
             # Configure the mock to behave similarly to the original
-            mock_run.side_effect = lambda self, definition, execution=None: (
-                self.parsl_results.append(
-                    ExecutionFuture(
-                        future=MagicMock(),  # Mock the future object
-                        definition=definition,
-                        execution_id=execution.id if execution else None,
-                    )
+            mock_run.side_effect = lambda self, definition, execution=None: self.parsl_results.append(
+                ExecutionFuture(
+                    future=MagicMock(),  # Mock the future object
+                    definition=definition,
+                    execution_id=execution.id if execution else None,
                 )
             )
 

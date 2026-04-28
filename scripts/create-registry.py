@@ -39,7 +39,7 @@ def main(
         print(f"No .nc files found in {input_dir}")
         raise typer.Exit()
 
-    sorted_keys = sorted(contents.keys(), key=lambda p: str(p))
+    sorted_keys = sorted(contents.keys(), key=str)
 
     for key in sorted_keys:
         print(f"{key} md5:{contents[key]}")

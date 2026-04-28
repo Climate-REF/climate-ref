@@ -31,9 +31,9 @@ jobs:
           target: 'dist/'
           token: ${{ secrets.PAT }}
       - name: Install uv
-        uses: astral-sh/setup-uv@v7
+        uses: astral-sh/setup-uv@v8.1.0
         with:
-          version: "0.5.x"
+          version: "0.11.6"
           python-version: "3.12"
       - name: Verify installable
         # TODO: this step fails we fix https://github.com/Climate-REF/climate-ref/issues/217

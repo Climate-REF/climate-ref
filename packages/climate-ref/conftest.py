@@ -35,9 +35,7 @@ from climate_ref_core.pycmec.controlled_vocabulary import CV
 collect_ignore = ["src/climate_ref/migrations"]
 
 # Add a representer for pandas NaT in the regression tests
-RegressionYamlDumper.add_representer(
-    type(pd.NaT), lambda dumper, data: SafeRepresenter.represent_none(dumper, data)
-)
+RegressionYamlDumper.add_representer(type(pd.NaT), SafeRepresenter.represent_none)
 
 # cftime.datetime objects are not standard YAML types; represent them as strings
 # Register the base cftime.datetime class (used by the cftime.datetime() constructor)

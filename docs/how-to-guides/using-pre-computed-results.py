@@ -56,6 +56,7 @@ import pandas as pd
 import requests
 import seaborn as sns
 import xarray as xr
+from climate_ref_client import Client
 from climate_ref_client.api.diagnostics import (
     diagnostics_list,
     diagnostics_list_metric_values,
@@ -66,8 +67,6 @@ from climate_ref_client.models.metric_value_type import (
 )
 from IPython.display import Markdown
 from pandas_indexing import formatlevel
-
-from climate_ref_client import Client
 
 # %%
 # %load_ext rich

@@ -1,10 +1,9 @@
 import concurrent.futures
 import multiprocessing
 import time
-from concurrent.futures import Future, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from typing import Any
 
-from attrs import define
 from loguru import logger
 from tqdm import tqdm
 
@@ -16,53 +15,18 @@ from climate_ref_core.exceptions import ExecutionError
 from climate_ref_core.executor import execute_locally
 from climate_ref_core.logging import initialise_logging
 
-from .result_handling import handle_execution_result
+from .result_handling import (
+    ExecutionFuture,
+    mark_execution_failed,
+    process_result,
+)
 
-
-def process_result(
-    config: Config, database: Database, result: ExecutionResult, execution: Execution | None
-) -> None:
-    """
-    Process the result of a diagnostic execution
-
-    Parameters
-    ----------
-    config
-        The configuration object
-    database
-        The database object
-    result
-        The result of the diagnostic execution.
-
-        This could have either been a success or failure.
-    execution
-        A database model representing the execution of the diagnostic.
-    """
-    if not result.successful:
-        if execution is not None:  # pragma: no branch
-            info_msg = (
-                f"\nAdditional information about this execution can be viewed using: "
-                f"ref executions inspect {execution.execution_group_id}"
-            )
-        else:
-            info_msg = ""
-
-        logger.exception(f"Error running {result.definition.execution_slug()}. {info_msg}")
-
-    if execution:
-        handle_execution_result(config, database, execution, result)
-
-
-@define
-class ExecutionFuture:
-    """
-    A container to hold the future and execution definition
-    """
-
-    future: Future[ExecutionResult]
-    definition: ExecutionDefinition
-    execution_id: int | None = None
-    submitted_at: float = 0.0
+__all__ = [
+    "ExecutionFuture",
+    "LocalExecutor",
+    "execute_locally",
+    "process_result",
+]
 
 
 def _process_initialiser() -> None:  # pragma: no cover
@@ -112,7 +76,7 @@ class LocalExecutor:
         config: Config | None = None,
         n: int | None = None,
         pool: concurrent.futures.Executor | None = None,
-        task_timeout: float | None = None,
+        task_timeout: float = 6 * 60 * 60,
         **kwargs: Any,
     ) -> None:
         if config is None:
@@ -124,11 +88,10 @@ class LocalExecutor:
         self.database = database
         self.config = config
 
-        # Per-task wall-clock budget. Defaults to 6 hours, matching the Celery
-        # task_time_limit. Diagnostics that hang past this are considered lost
+        # Per-task wall-clock budget (default 6 hours, matching the Celery
+        # task_time_limit). Diagnostics that hang past this are considered lost
         # so the pool can recycle the slot rather than blocking ``join`` forever.
-        if task_timeout is None:
-            task_timeout = float(kwargs.pop("task_timeout_seconds", 6 * 60 * 60))
+        # Set to ``0`` to disable.
         self.task_timeout = task_timeout
 
         if pool is not None:
@@ -273,19 +236,15 @@ class LocalExecutor:
         logger.info("All executions completed successfully")
 
     def _mark_failed(self, result: ExecutionFuture, *, retryable: bool) -> None:
-        """Persist a failed-retryable result for an outstanding execution."""
-        try:
-            failure_result = ExecutionResult.build_from_failure(result.definition, retryable=retryable)
-            with self.database.session.begin():
-                execution = (
-                    self.database.session.get(Execution, result.execution_id) if result.execution_id else None
-                )
-                process_result(self.config, self.database, failure_result, execution)
-        except Exception:
-            logger.exception(f"Failed to record failure for {result.definition.execution_slug()!r}")
+        mark_execution_failed(
+            self.database,
+            self.config,
+            result.definition,
+            result.execution_id,
+            retryable=retryable,
+        )
 
     def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
-        """Mark every still-outstanding execution as failed-retryable."""
         for outstanding in list(results):
             logger.warning(
                 f"Execution {outstanding.definition.execution_slug()} did not complete within the timeout"

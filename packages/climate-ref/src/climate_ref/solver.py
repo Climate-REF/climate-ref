@@ -611,22 +611,30 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
     executor = config.executor.build(config, db)
 
-    diagnostic_count = {}
-    provider_count = {}
+    diagnostic_count: dict[str, int] = {}
+    provider_count: dict[str, int] = {}
     total_count = 0
+
+    # Prefetch all (provider_slug, diagnostic_slug) -> diagnostic_id mappings
+    # so the per-iteration loop body avoids an N+1 SELECT against the
+    # diagnostic table.
+    with db.session.begin():
+        diagnostic_id_by_slug: dict[tuple[str, str], int] = {
+            (provider_slug, diagnostic_slug): diagnostic_id
+            for diagnostic_id, diagnostic_slug, provider_slug in db.session.query(
+                DiagnosticModel.id, DiagnosticModel.slug, ProviderModel.slug
+            ).join(DiagnosticModel.provider)
+        }
 
     for potential_execution in solver.solve(filters):
         definition = potential_execution.build_execution_definition(output_root=config.paths.scratch)
+        provider_slug = potential_execution.provider.slug
+        diagnostic_full_slug = potential_execution.diagnostic.full_slug()
 
-        logger.debug(
-            f"Identified candidate execution {definition.key} "
-            f"for {potential_execution.diagnostic.full_slug()}"
-        )
+        logger.debug(f"Identified candidate execution {definition.key} for {diagnostic_full_slug}")
 
-        if potential_execution.provider.slug not in provider_count:
-            provider_count[potential_execution.provider.slug] = 0
-        if potential_execution.diagnostic.full_slug() not in diagnostic_count:
-            diagnostic_count[potential_execution.diagnostic.full_slug()] = 0
+        provider_count.setdefault(provider_slug, 0)
+        diagnostic_count.setdefault(diagnostic_full_slug, 0)
 
         # Submission to the executor must happen after the DB transaction commits.
         # Holding a transaction across a Redis send_task / process pool submit can
@@ -636,22 +644,15 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         pending: tuple[ExecutionDefinition, Execution] | None = None
         limit_reached = False
 
+        diagnostic_id = diagnostic_id_by_slug[(provider_slug, potential_execution.diagnostic.slug)]
+
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
         with db.session.begin():
-            diagnostic = (
-                db.session.query(DiagnosticModel)
-                .join(DiagnosticModel.provider)
-                .filter(
-                    ProviderModel.slug == potential_execution.provider.slug,
-                    DiagnosticModel.slug == potential_execution.diagnostic.slug,
-                )
-                .one()
-            )
             execution_group, created = db.get_or_create(
                 ExecutionGroup,
                 key=definition.key,
-                diagnostic_id=diagnostic.id,
+                diagnostic_id=diagnostic_id,
                 defaults={
                     "selectors": potential_execution.selectors,
                     "dirty": True,
@@ -664,9 +665,9 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
             # TODO: Move this logic to the solver
             # Check if we should run given the one_per_provider or one_per_diagnostic flags
-            one_of_check_failed = (
-                one_per_provider and provider_count.get(diagnostic.provider.slug, 0) > 0
-            ) or (one_per_diagnostic and diagnostic_count.get(diagnostic.full_slug(), 0) > 0)
+            one_of_check_failed = (one_per_provider and provider_count.get(provider_slug, 0) > 0) or (
+                one_per_diagnostic and diagnostic_count.get(diagnostic_full_slug, 0) > 0
+            )
 
             logger.debug(
                 f"one_per_provider={one_per_provider}, one_per_diagnostic={one_per_diagnostic}, "
@@ -684,8 +685,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 continue
 
             if dry_run:
-                provider_count[diagnostic.provider.slug] += 1
-                diagnostic_count[diagnostic.full_slug()] += 1
+                provider_count[provider_slug] += 1
+                diagnostic_count[diagnostic_full_slug] += 1
                 total_count += 1
                 if limit is not None and total_count >= limit:
                     limit_reached = True
@@ -708,8 +709,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 if execute:
                     pending = (definition, execution)
 
-                provider_count[diagnostic.provider.slug] += 1
-                diagnostic_count[diagnostic.full_slug()] += 1
+                provider_count[provider_slug] += 1
+                diagnostic_count[diagnostic_full_slug] += 1
                 total_count += 1
                 if limit is not None and total_count >= limit:
                     limit_reached = True

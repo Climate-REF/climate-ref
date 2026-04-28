@@ -43,8 +43,8 @@ from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import DiagnosticError
 from climate_ref_core.executor import execute_locally
 
-from .local import ExecutionFuture, process_result
 from .pbs_scheduler import SmartPBSProvider
+from .result_handling import ExecutionFuture, mark_execution_failed, process_result
 
 F = TypeVar("F", bound=Callable[..., Any])
 
@@ -457,7 +457,7 @@ class HPCExecutor:
                     if err is None:
                         try:
                             execution_result = result.future.result(timeout=0)
-                        except Exception as exc:
+                        except Exception:
                             # Result retrieval failed even though the future
                             # reported done; treat as retryable system failure.
                             logger.exception(
@@ -466,7 +466,6 @@ class HPCExecutor:
                             execution_result = ExecutionResult.build_from_failure(
                                 result.definition, retryable=True
                             )
-                            _ = exc  # keep linter happy; details already logged
                     elif isinstance(err, DiagnosticError):
                         execution_result = err.result
                     else:
@@ -518,16 +517,12 @@ class HPCExecutor:
             logger.warning(
                 f"HPC execution {outstanding.definition.execution_slug()!r} did not complete in time"
             )
-            execution_result = ExecutionResult.build_from_failure(outstanding.definition, retryable=True)
-            try:
-                with self.database.session.begin():
-                    execution = (
-                        self.database.session.get(Execution, outstanding.execution_id)
-                        if outstanding.execution_id
-                        else None
-                    )
-                    process_result(self.config, self.database, execution_result, execution)
-            except Exception:
-                logger.exception(f"Failed to mark {outstanding.definition.execution_slug()!r} as failed")
+            mark_execution_failed(
+                self.database,
+                self.config,
+                outstanding.definition,
+                outstanding.execution_id,
+                retryable=True,
+            )
             progress.update(n=1)
             results.remove(outstanding)

@@ -62,8 +62,10 @@ class TestLocalExecutor:
         future = Future()
         executor._results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
-        # Future isn't done yet -- timeout marks it failed-retryable and clears results
-        process_spy = mocker.patch("climate_ref.executor.local.process_result")
+        # Future isn't done yet -- timeout marks it failed-retryable and clears results.
+        # Failure recording flows through ``mark_execution_failed`` in
+        # ``executor.result_handling``, so patch ``process_result`` there.
+        process_spy = mocker.patch("climate_ref.executor.result_handling.process_result")
         with pytest.raises(TimeoutError):
             executor.join(0.1)
 
@@ -99,7 +101,7 @@ class TestLocalExecutor:
 
         future.set_exception(ValueError("Some thing bad went wrong"))
 
-        process_spy = mocker.patch("climate_ref.executor.local.process_result")
+        process_spy = mocker.patch("climate_ref.executor.result_handling.process_result")
         with pytest.raises(ExecutionError, match=re.escape("Failed to execute 'mock_provider/mock/key'")):
             executor.join(0.1)
 

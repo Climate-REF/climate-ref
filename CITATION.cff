@@ -1,4 +1,4 @@
-cff-version: 1.2.1
+cff-version: 1.2.0
 message: "If you use this software, please cite it as below."
 title: "Rapid Evaluation Framework"
 abstract: "An extensible framework for the evaluation of Earth System Models."

@@ -18,7 +18,10 @@ def solve(  # noqa: PLR0913
         bool,
         typer.Option(help="Solve the newly identified executions"),
     ] = True,
-    timeout: int = typer.Option(60, help="Timeout in seconds for waiting on executions to complete"),
+    timeout: int = typer.Option(
+        6 * 60 * 60,
+        help="Timeout in seconds for waiting on executions to complete. Defaults to 6 hours.",
+    ),
     wait: Annotated[
         bool,
         typer.Option(

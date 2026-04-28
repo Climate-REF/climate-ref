@@ -635,12 +635,13 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, mock_execut
 
     # Solver should be created
     assert mock_build_solver.call_count == 1
-    # A single run would have been run
+    # A single run would have been run.
+    # The solver detaches the execution from the session before submission,
+    # so compare by id rather than identity.
     assert mock_executor.return_value.run.call_count == 1
-    mock_executor.return_value.run.assert_called_with(
-        definition=mock_metric_execution.build_execution_definition(),
-        execution=execution_result,
-    )
+    run_kwargs = mock_executor.return_value.run.call_args.kwargs
+    assert run_kwargs["definition"] == mock_metric_execution.build_execution_definition()
+    assert run_kwargs["execution"].id == execution_result.id
 
 
 def test_solve_metrics(mocker, db_seeded, solver, data_regression, mock_executor):
@@ -1094,12 +1095,13 @@ def test_solve_with_one_per_provider(
     assert db_seeded.session.query(Execution).count() == 1
     execution_result = db_seeded.session.query(Execution).first()
 
-    # A single run would have been run
+    # A single run would have been run.
+    # The solver detaches the execution from the session before submission,
+    # so compare by id rather than identity.
     assert mock_executor.return_value.run.call_count == 1
-    mock_executor.return_value.run.assert_called_with(
-        definition=mock_metric_execution.build_execution_definition(),
-        execution=execution_result,
-    )
+    run_kwargs = mock_executor.return_value.run.call_args.kwargs
+    assert run_kwargs["definition"] == mock_metric_execution.build_execution_definition()
+    assert run_kwargs["execution"].id == execution_result.id
 
 
 def test_solve_with_one_per_diagnostic(
@@ -1119,12 +1121,13 @@ def test_solve_with_one_per_diagnostic(
     assert db_seeded.session.query(Execution).count() == 1
     execution_result = db_seeded.session.query(Execution).first()
 
-    # A single run would have been run
+    # A single run would have been run.
+    # The solver detaches the execution from the session before submission,
+    # so compare by id rather than identity.
     assert mock_executor.return_value.run.call_count == 1
-    mock_executor.return_value.run.assert_called_with(
-        definition=mock_metric_execution.build_execution_definition(),
-        execution=execution_result,
-    )
+    run_kwargs = mock_executor.return_value.run.call_args.kwargs
+    assert run_kwargs["definition"] == mock_metric_execution.build_execution_definition()
+    assert run_kwargs["execution"].id == execution_result.id
 
 
 def test_solve_with_one_per_diagnostic_different_diagnostics(

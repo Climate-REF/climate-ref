@@ -1,5 +1,4 @@
 import os
-import re
 import resource
 import sys
 from unittest.mock import MagicMock, patch
@@ -119,15 +118,23 @@ class TestHPCExecutor:
         )
         assert len(executor.parsl_results) == 0
 
-    def test_join_other_exception(self, metric_definition, base_config):
+    def test_join_other_exception(self, metric_definition, base_config, mocker):
         executor = HPCExecutor(**base_config)
         future = futures.AppFuture(1)
         executor.parsl_results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
         future.set_exception(ValueError("Some thing bad went wrong"))
 
-        with pytest.raises(AssertionError, match=re.escape("Execution result should not be None")):
-            executor.join(0.1)
+        process_spy = mocker.patch("climate_ref.executor.hpc.process_result")
+
+        executor.join(0.1)
+
+        assert len(executor.parsl_results) == 0
+        process_spy.assert_called_once()
+        forwarded = process_spy.call_args.args[2]
+        assert isinstance(forwarded, ExecutionResult)
+        assert forwarded.successful is False
+        assert forwarded.retryable is True
 
     @pytest.mark.parametrize(
         "field_name, invalid_value",

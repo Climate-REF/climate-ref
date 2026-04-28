@@ -1,10 +1,9 @@
 import concurrent.futures
 import multiprocessing
 import time
-from concurrent.futures import Future, ProcessPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from typing import Any
 
-from attrs import define
 from loguru import logger
 from tqdm import tqdm
 
@@ -16,52 +15,18 @@ from climate_ref_core.exceptions import ExecutionError
 from climate_ref_core.executor import execute_locally
 from climate_ref_core.logging import initialise_logging
 
-from .result_handling import handle_execution_result
+from .result_handling import (
+    ExecutionFuture,
+    mark_execution_failed,
+    process_result,
+)
 
-
-def process_result(
-    config: Config, database: Database, result: ExecutionResult, execution: Execution | None
-) -> None:
-    """
-    Process the result of a diagnostic execution
-
-    Parameters
-    ----------
-    config
-        The configuration object
-    database
-        The database object
-    result
-        The result of the diagnostic execution.
-
-        This could have either been a success or failure.
-    execution
-        A database model representing the execution of the diagnostic.
-    """
-    if not result.successful:
-        if execution is not None:  # pragma: no branch
-            info_msg = (
-                f"\nAdditional information about this execution can be viewed using: "
-                f"ref executions inspect {execution.execution_group_id}"
-            )
-        else:
-            info_msg = ""
-
-        logger.exception(f"Error running {result.definition.execution_slug()}. {info_msg}")
-
-    if execution:
-        handle_execution_result(config, database, execution, result)
-
-
-@define
-class ExecutionFuture:
-    """
-    A container to hold the future and execution definition
-    """
-
-    future: Future[ExecutionResult]
-    definition: ExecutionDefinition
-    execution_id: int | None = None
+__all__ = [
+    "ExecutionFuture",
+    "LocalExecutor",
+    "execute_locally",
+    "process_result",
+]
 
 
 def _process_initialiser() -> None:  # pragma: no cover
@@ -111,6 +76,7 @@ class LocalExecutor:
         config: Config | None = None,
         n: int | None = None,
         pool: concurrent.futures.Executor | None = None,
+        task_timeout: float = 6 * 60 * 60,
         **kwargs: Any,
     ) -> None:
         if config is None:
@@ -121,6 +87,12 @@ class LocalExecutor:
 
         self.database = database
         self.config = config
+
+        # Per-task wall-clock budget (default 6 hours, matching the Celery
+        # task_time_limit). Diagnostics that hang past this are considered lost
+        # so the pool can recycle the slot rather than blocking ``join`` forever.
+        # Set to ``0`` to disable.
+        self.task_timeout = task_timeout
 
         if pool is not None:
             self.pool = pool
@@ -161,6 +133,7 @@ class LocalExecutor:
                 future=future,
                 definition=definition,
                 execution_id=execution.id if execution else None,
+                submitted_at=time.time(),
             )
         )
 
@@ -169,17 +142,21 @@ class LocalExecutor:
         Wait for all diagnostics to finish
 
         This will block until all diagnostics have completed or the timeout is reached.
-        If the timeout is reached, the method will return and raise an exception.
+        Each individual execution is also bounded by ``self.task_timeout`` so that a
+        hung diagnostic cannot block the pool indefinitely. Outstanding executions
+        are always marked as failed-retryable before this method returns or raises,
+        so the next solve can pick them up rather than seeing them stuck with
+        ``successful=None``.
 
         Parameters
         ----------
         timeout
-            Timeout in seconds
+            Overall wall-clock timeout in seconds for the whole join
 
         Raises
         ------
         TimeoutError
-            If the timeout is reached
+            If the overall timeout is reached
         """
         start_time = time.time()
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
@@ -189,6 +166,8 @@ class LocalExecutor:
 
         try:
             while results:
+                now = time.time()
+
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
                     if result.future.done():
@@ -197,6 +176,8 @@ class LocalExecutor:
                         except Exception as e:
                             # Something went wrong when attempting to run the execution
                             # This is likely a failure in the execution itself not the diagnostic
+                            self._mark_failed(result, retryable=True)
+                            results.remove(result)
                             raise ExecutionError(
                                 f"Failed to execute {result.definition.execution_slug()!r}"
                             ) from e
@@ -214,8 +195,25 @@ class LocalExecutor:
                                 if result.execution_id
                                 else None
                             )
-                            process_result(self.config, self.database, result.future.result(), execution)
+                            process_result(self.config, self.database, execution_result, execution)
                         logger.debug(f"Execution completed: {result}")
+                        t.update(n=1)
+                        results.remove(result)
+                        continue
+
+                    # Per-task timeout: a runaway diagnostic cannot block the pool
+                    # forever. Cancel its future and mark the row failed-retryable.
+                    if (
+                        self.task_timeout > 0
+                        and result.submitted_at > 0
+                        and now - result.submitted_at > self.task_timeout
+                    ):
+                        logger.error(
+                            f"Execution {result.definition.execution_slug()!r} exceeded per-task "
+                            f"timeout of {self.task_timeout}s; marking failed-retryable"
+                        )
+                        result.future.cancel()
+                        self._mark_failed(result, retryable=True)
                         t.update(n=1)
                         results.remove(result)
 
@@ -226,11 +224,7 @@ class LocalExecutor:
                 elapsed_time = time.time() - start_time
 
                 if elapsed_time > timeout:
-                    for result in results:
-                        logger.warning(
-                            f"Execution {result.definition.execution_slug()} "
-                            f"did not complete within the timeout"
-                        )
+                    self._fail_outstanding(results, t)
                     self.pool.shutdown(wait=False, cancel_futures=True)
                     raise TimeoutError("Not all tasks completed within the specified timeout")
 
@@ -240,3 +234,21 @@ class LocalExecutor:
             t.close()
 
         logger.info("All executions completed successfully")
+
+    def _mark_failed(self, result: ExecutionFuture, *, retryable: bool) -> None:
+        mark_execution_failed(
+            self.database,
+            self.config,
+            result.definition,
+            result.execution_id,
+            retryable=retryable,
+        )
+
+    def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
+        for outstanding in list(results):
+            logger.warning(
+                f"Execution {outstanding.definition.execution_slug()} did not complete within the timeout"
+            )
+            self._mark_failed(outstanding, retryable=True)
+            progress.update(n=1)
+            results.remove(outstanding)

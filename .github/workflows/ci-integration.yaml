@@ -43,6 +43,7 @@ jobs:
           uv sync
           uv run ref datasets fetch-sample-data
           uv run ref datasets fetch-data --registry ilamb-test
+          uv run ref datasets fetch-data --registry ilamb
           uv run ref datasets fetch-data --registry obs4ref
           uv run ref providers setup
 

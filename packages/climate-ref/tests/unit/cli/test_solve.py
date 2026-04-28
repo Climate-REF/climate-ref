@@ -12,7 +12,7 @@ class TestSolve:
         assert mock_solve.call_count == 1
         _args, kwargs = mock_solve.call_args
 
-        assert kwargs["timeout"] == 60
+        assert kwargs["timeout"] == 6 * 60 * 60
         assert not kwargs["dry_run"]
         assert kwargs["execute"]
         assert kwargs["filters"].diagnostic is None

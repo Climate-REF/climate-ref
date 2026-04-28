@@ -46,6 +46,18 @@ class SynchronousExecutor:
             If provided, the result will be updated in the database when completed.
         """
         result = execute_locally(definition, log_level=self.config.log_level)
+
+        # Solver now commits the Execution row before submitting to the executor,
+        # so the instance handed to ``run`` is detached and DB writes inside
+        # ``handle_execution_result`` would not persist on their own. Always own
+        # the transaction here for real Execution rows. Test mocks (non-ORM
+        # objects) keep the legacy in-process behaviour.
+        if isinstance(execution, Execution):
+            with self.database.session.begin():
+                attached = self.database.session.merge(execution)
+                process_result(self.config, self.database, result, attached)
+            return
+
         process_result(self.config, self.database, result, execution)
 
     def join(self, timeout: float) -> None:

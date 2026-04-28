@@ -40,7 +40,7 @@ from climate_ref.database import Database
 from climate_ref.models import Execution
 from climate_ref.slurm import HAS_REAL_SLURM, SlurmChecker
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
-from climate_ref_core.exceptions import DiagnosticError, ExecutionError
+from climate_ref_core.exceptions import DiagnosticError
 from climate_ref_core.executor import execute_locally
 
 from .local import ExecutionFuture, process_result
@@ -412,25 +412,35 @@ class HPCExecutor:
             )
         )
 
-    def join(self, timeout: float) -> None:
+    def join(self, timeout: float) -> None:  # noqa: PLR0912
         """
         Wait for all diagnostics to finish
 
         This will block until all diagnostics have completed or the timeout is reached.
-        If the timeout is reached, the method will return and raise an exception.
+
+        The effective timeout is the smaller of the caller-provided ``timeout`` and
+        the configured Slurm/PBS walltime. When it is reached, any outstanding
+        executions are marked as failed (retryable) so the next solve can pick
+        them up rather than leaving them stuck with ``successful=None``.
 
         Parameters
         ----------
         timeout
-            Timeout in seconds (won't used in HPCExecutor)
+            Timeout in seconds. ``0`` or negative values mean "wait forever".
 
         Raises
         ------
         TimeoutError
-            If the timeout is reached
+            If the timeout is reached before all executions complete
         """
         start_time = time.time()
         refresh_time = 0.5
+
+        walltime_seconds = self.total_minutes * 60
+        if timeout and timeout > 0:
+            effective_timeout = min(timeout, walltime_seconds) if walltime_seconds else timeout
+        else:
+            effective_timeout = walltime_seconds
 
         results = self.parsl_results
         t = tqdm(total=len(results), desc="Waiting for executions to complete", unit="execution")
@@ -439,40 +449,51 @@ class HPCExecutor:
             while results:
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
-                    if result.future.done():
-                        # Cannot catch the execption raised by result.future.result
-                        if result.future.exception() is None:
-                            try:
-                                execution_result = result.future.result(timeout=0)
-                            except Exception as e:
-                                # Something went wrong when attempting to run the execution
-                                # This is likely a failure in the execution itself not the diagnostic
-                                raise ExecutionError(
-                                    f"Failed to execute {result.definition.execution_slug()!r}"
-                                ) from e
-                        else:
-                            err = result.future.exception()
-                            if isinstance(err, DiagnosticError):
-                                execution_result = err.result
-                            else:
-                                execution_result = None
+                    if not result.future.done():
+                        continue
 
-                        assert execution_result is not None, "Execution result should not be None"
-                        assert isinstance(execution_result, ExecutionResult), (
-                            "Execution result should be of type ExecutionResult"
-                        )
-                        # Process the result in the main process
-                        # The results should be committed after each execution
-                        with self.database.session.begin():
-                            execution = (
-                                self.database.session.get(Execution, result.execution_id)
-                                if result.execution_id
-                                else None
+                    err = result.future.exception()
+                    execution_result: ExecutionResult | None
+                    if err is None:
+                        try:
+                            execution_result = result.future.result(timeout=0)
+                        except Exception as exc:
+                            # Result retrieval failed even though the future
+                            # reported done; treat as retryable system failure.
+                            logger.exception(
+                                f"Failed to retrieve result for {result.definition.execution_slug()!r}"
                             )
-                            process_result(self.config, self.database, execution_result, execution)
-                        logger.debug(f"Execution completed: {result}")
-                        t.update(n=1)
-                        results.remove(result)
+                            execution_result = ExecutionResult.build_from_failure(
+                                result.definition, retryable=True
+                            )
+                            _ = exc  # keep linter happy; details already logged
+                    elif isinstance(err, DiagnosticError):
+                        execution_result = err.result
+                    else:
+                        # Walltime kill, ExecutionLost, OOM, segfault, etc.
+                        # Mark retryable so the next solve picks it up.
+                        logger.error(
+                            f"System-level failure for {result.definition.execution_slug()!r}: {err!r}"
+                        )
+                        execution_result = ExecutionResult.build_from_failure(
+                            result.definition, retryable=True
+                        )
+
+                    assert isinstance(execution_result, ExecutionResult), (
+                        "Execution result should be of type ExecutionResult"
+                    )
+                    # Process the result in the main process
+                    # The results should be committed after each execution
+                    with self.database.session.begin():
+                        execution = (
+                            self.database.session.get(Execution, result.execution_id)
+                            if result.execution_id
+                            else None
+                        )
+                        process_result(self.config, self.database, execution_result, execution)
+                    logger.debug(f"Execution completed: {result}")
+                    t.update(n=1)
+                    results.remove(result)
 
                 # Break early to avoid waiting for one more sleep cycle
                 if len(results) == 0:
@@ -480,8 +501,9 @@ class HPCExecutor:
 
                 elapsed_time = time.time() - start_time
 
-                if elapsed_time > self.total_minutes * 60:
-                    logger.debug(f"Time elasped {elapsed_time} for joining the results")
+                if effective_timeout and elapsed_time > effective_timeout:
+                    self._fail_outstanding(results, t)
+                    raise TimeoutError(f"Not all HPC executions completed within {effective_timeout}s")
 
                 # Wait for a short time before checking for completed executions
                 time.sleep(refresh_time)
@@ -489,3 +511,23 @@ class HPCExecutor:
             t.close()
             if parsl.dfk():
                 parsl.dfk().cleanup()
+
+    def _fail_outstanding(self, results: list[ExecutionFuture], progress: Any) -> None:
+        """Mark every outstanding execution as failed-retryable before raising."""
+        for outstanding in list(results):
+            logger.warning(
+                f"HPC execution {outstanding.definition.execution_slug()!r} did not complete in time"
+            )
+            execution_result = ExecutionResult.build_from_failure(outstanding.definition, retryable=True)
+            try:
+                with self.database.session.begin():
+                    execution = (
+                        self.database.session.get(Execution, outstanding.execution_id)
+                        if outstanding.execution_id
+                        else None
+                    )
+                    process_result(self.config, self.database, execution_result, execution)
+            except Exception:
+                logger.exception(f"Failed to mark {outstanding.definition.execution_slug()!r} as failed")
+            progress.update(n=1)
+            results.remove(outstanding)

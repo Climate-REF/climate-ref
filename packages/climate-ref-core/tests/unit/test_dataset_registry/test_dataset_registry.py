@@ -87,7 +87,8 @@ class TestDatasetRegistry:
     @pytest.mark.parametrize(
         "cache_name, expected", [(None, "test_registry"), ("custom_cache", "custom_cache")]
     )
-    def test_with_cache_name(self, mocker, fake_registry_file, cache_name, expected):
+    def test_with_cache_name(self, mocker, monkeypatch, fake_registry_file, cache_name, expected):
+        monkeypatch.delenv("REF_DATASET_CACHE_DIR", raising=False)
         registry = DatasetRegistryManager()
         name = "test_registry"
         base_url = "http://example.com"
@@ -117,7 +118,9 @@ class TestDatasetRegistry:
         ],
     )
     def test_with_environment_variable(self, monkeypatch, mocker, fake_registry_file, env, expected_path):
-        if env is not None:
+        if env is None:
+            monkeypatch.delenv("REF_DATASET_CACHE_DIR", raising=False)
+        else:
             monkeypatch.setenv("REF_DATASET_CACHE_DIR", env)
 
         registry = DatasetRegistryManager()

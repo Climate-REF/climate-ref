@@ -707,6 +707,13 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 execution.register_datasets(db, definition.datasets)
 
                 if execute:
+                    # Detach the row before the surrounding ``with begin()`` commits.
+                    # Otherwise expire-on-commit marks ``execution.id`` stale,
+                    # and the next attribute access inside ``executor.run`` autobegins a fresh transaction,
+                    # which collides with the ``with begin()`` at the top of the next loop iteration.
+                    # The detached instance keeps its loaded attributes
+                    # and is still mergeable for ``SynchronousExecutor``.
+                    db.session.expunge(execution)
                     pending = (definition, execution)
 
                 provider_count[provider_slug] += 1

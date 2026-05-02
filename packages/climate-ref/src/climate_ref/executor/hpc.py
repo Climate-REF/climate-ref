@@ -18,6 +18,7 @@ except ImportError:  # pragma: no cover
         "climate_ref_core.executor.hpc.HPCExecutor", "The HPCExecutor requires the `parsl` package"
     )
 
+import inspect
 import os
 import re
 import resource
@@ -47,6 +48,8 @@ from .pbs_scheduler import SmartPBSProvider
 from .result_handling import ExecutionFuture, mark_execution_failed, process_result
 
 F = TypeVar("F", bound=Callable[..., Any])
+
+T = TypeVar("T")
 
 
 class SlurmConfig(BaseModel):
@@ -215,8 +218,36 @@ class HPCExecutor:
         self.walltime = str(executor_config.get("walltime", "00:10:00"))
         self.log_dir = str(executor_config.get("log_dir", "runinfo"))
 
+        self.extra_slurm_provider: dict[str, Any] = cast(
+            dict[str, Any], executor_config.get("extra_slurm_provider") or {}
+        )
+        self.extra_executor: dict[str, Any] = cast(
+            dict[str, Any], executor_config.get("extra_executor") or {}
+        )
+
         self.cores_per_worker = _to_int(executor_config.get("cores_per_worker"))
         self.mem_per_worker = _to_float(executor_config.get("mem_per_worker"))
+
+        self.parsl_provider_base = {
+            "account",
+            "partition",
+            "qos",
+            "nodes_per_block",
+            "max_blocks",
+            "worker_init",
+            "walltime",
+            "cmd_timeout",
+        }
+
+        self.parsl_executor_base = {
+            "label",
+            "cores_per_worker",
+            "mem_per_worker",
+            "max_workers_per_node",
+            "cpu_affinity",
+        }
+
+        self._validate_extras()
 
         if self.scheduler == "slurm":
             self.slurm_config = SlurmConfig.model_validate(executor_config)
@@ -233,6 +264,52 @@ class HPCExecutor:
         self._initialize_parsl()
 
         self.parsl_results: list[ExecutionFuture] = []
+
+    def _validate_extras(self) -> None:
+
+        self._provider_extra = {}
+        self._executor_extra = {}
+
+        if self.scheduler == "slurm" and self.extra_slurm_provider:
+            self._provider_extra = type(self)._filter_extras(
+                self.extra_slurm_provider,
+                list(self.parsl_provider_base),
+                SlurmProvider,
+                "SlurmProvider",
+            )
+
+        if self.extra_executor:
+            self._executor_extra = type(self)._filter_extras(
+                self.extra_executor,
+                list(self.parsl_executor_base),
+                HighThroughputExecutor,
+                "HighThroughputExecutor",
+            )
+
+    @staticmethod
+    def _filter_extras(
+        extras: dict[str, Any], used_keys: list[str], cls: type[T], name: str = ""
+    ) -> dict[str, Any]:
+
+        # drop duplicates
+        duplicates = used_keys & extras.keys()
+        if duplicates:
+            logger.info(f"Ignoring duplicate {name} params: {sorted(duplicates)}")
+
+        filtered = {k: v for k, v in extras.items() if k not in used_keys}
+
+        # validate keys
+        sig = inspect.signature(cls.__init__)
+        has_var_kw = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+
+        if not has_var_kw:
+            valid = {k for k in sig.parameters if k != "self"}
+            invalid = set(filtered) - valid
+            if invalid:
+                logger.warning(f"Warning: Removing invalid {name} params: {sorted(invalid)}")
+                filtered = {k: v for k, v in filtered.items() if k in valid}
+
+        return filtered
 
     def _validate_slurm_params(self) -> None:
         """Validate the Slurm configuration using SlurmChecker.
@@ -323,6 +400,7 @@ class HPCExecutor:
                 ),
                 walltime=self.slurm_config.walltime,
                 cmd_timeout=self.slurm_config.cmd_timeout,
+                **self._provider_extra or {},
             )
 
             executor = HighThroughputExecutor(
@@ -332,6 +410,7 @@ class HPCExecutor:
                 max_workers_per_node=self.slurm_config.max_workers_per_node,
                 cpu_affinity=self.slurm_config.cpu_affinity,
                 provider=provider,
+                **self._executor_extra or {},
             )
 
             hpc_config = ParslConfig(
@@ -368,6 +447,7 @@ class HPCExecutor:
                 max_workers_per_node=_to_int(executor_config.get("max_workers_per_node", 16)),
                 cpu_affinity=str(executor_config.get("cpu_affinity")),
                 provider=provider,
+                **self._executor_extra or {},
             )
 
             hpc_config = ParslConfig(

@@ -55,6 +55,31 @@ class TestHPCExecutor:
         assert isinstance(executor, Executor)
         parsl.dfk().cleanup()
 
+    def test_extra_config(self, base_config):
+        base_config["extra_slurm_provider"] = None
+        base_config["extra_executor"] = None
+
+        executor = HPCExecutor(**base_config)
+        assert executor._provider_extra == {}
+        assert executor._executor_extra == {}
+        parsl.dfk().cleanup()
+
+        base_config["extra_slurm_provider"] = {
+            "invalid_option": 0,
+            "account": "name",
+            "exclusive": False,
+        }
+        base_config["extra_executor"] = {
+            "invalid_option": 0,
+            "mem_per_worker": 32,
+            "address": "127.0.0.1",
+        }
+        executor = HPCExecutor(**base_config)
+        assert executor._provider_extra == {"exclusive": False}
+        assert executor._executor_extra == {"address": "127.0.0.1"}
+
+        parsl.dfk().cleanup()
+
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog, base_config):
         with patch.object(HPCExecutor, "run", autospec=True) as mock_run:
             # Configure the mock to behave similarly to the original

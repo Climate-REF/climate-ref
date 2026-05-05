@@ -104,3 +104,12 @@ class TestComputeGroupShort:
         assert "g3" in out
         assert "v1" in out
         assert out.isascii()
+
+    def test_compute_group_short_hard_cap_enforced(self):
+        """Result must never exceed _GROUP_SHORT_MAX even with a huge group_id and long selectors."""
+        long_value = "X" * 30
+        selectors = {
+            "cmip6": [(f"facet_{i}", f"{long_value}_{i}") for i in range(10)],
+        }
+        out = compute_group_short(selectors, group_id=10**9, diagnostic_version=1)
+        assert len(out) <= 96, f"Expected len <= 96, got {len(out)}: {out!r}"

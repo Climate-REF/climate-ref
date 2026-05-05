@@ -7,10 +7,22 @@ import hashlib
 import re
 from collections.abc import Iterable, Mapping
 from pathlib import Path
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from sqlalchemy.orm import Session
+
+    from climate_ref.models.execution import Execution
 
 _TOKEN_RE = re.compile(r"[^A-Za-z0-9_-]+")
 _DEFAULT_TOKEN_LIMIT = 64
 _GROUP_SHORT_MAX = 96
+
+PLACEHOLDER_FRAGMENT = "_pending"
+"""Output-fragment placeholder used until ``Execution.id`` is known."""
+
+# PR-4 will replace this literal with the live ``Diagnostic.version``.
+_TEMP_DIAGNOSTIC_VERSION = 1
 
 
 def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
@@ -156,4 +168,31 @@ def compute_group_short(
         trimmed_token = _truncate_at_boundary(token_part, max(0, len(token_part) - overflow))
         result = f"{trimmed_token}{suffix}" if trimmed_token else suffix.lstrip("_")
 
+    # Hard cap: boundary-aware trimming above may still leave overflow when no
+    # underscore boundary exists close enough to the limit.
+    if len(result) > _GROUP_SHORT_MAX:
+        result = result[:_GROUP_SHORT_MAX]
+
     return result
+
+
+def assign_execution_fragment(  # noqa: PLR0913
+    session: "Session",
+    execution: "Execution",
+    *,
+    provider_slug: str,
+    diagnostic_slug: str,
+    selectors: Mapping[str, Iterable[tuple[str, str]]],
+    group_id: int,
+    diagnostic_version: int = _TEMP_DIAGNOSTIC_VERSION,
+) -> str:
+    """Flush *execution* to materialise its id, then assign the canonical output fragment.
+
+    Returns the assigned fragment string.
+    """
+    session.flush()
+    group_short = compute_group_short(selectors, group_id=group_id, diagnostic_version=diagnostic_version)
+    fragment = str(Path(provider_slug) / diagnostic_slug / group_short / str(execution.id))
+    execution.output_fragment = fragment
+    session.flush()
+    return fragment

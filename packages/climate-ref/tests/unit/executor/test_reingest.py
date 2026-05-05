@@ -1159,13 +1159,10 @@ class TestGetExecutionsForReingest:
             db_seeded.session.add(original)
             db_seeded.session.flush()
 
-            # Sentinel; the trailing timestamp is a leftover from the previous
-            # reingest path layout and is preserved here only to differentiate
-            # the row from the original.
             reingested = Execution(
                 execution_group_id=eg.id,
                 successful=True,
-                output_fragment="original_fragment_20260405T120000000000",
+                output_fragment="reingested_fragment",
                 dataset_hash="h-orig",
             )
             db_seeded.session.add(reingested)

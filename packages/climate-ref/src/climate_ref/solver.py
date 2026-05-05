@@ -25,7 +25,7 @@ from climate_ref.datasets import (
     PMPClimatologyDatasetAdapter,
     get_slug_column,
 )
-from climate_ref.executor.fragment import compute_group_short
+from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
@@ -102,19 +102,14 @@ class DiagnosticExecution:
         """
         Build the execution definition for the current diagnostic execution.
 
-        The returned definition uses a placeholder ``_pending`` fragment for the
-        output directory.
-        The solver rewrites ``output_directory`` via :func:`attrs.evolve` once
-        the new ``Execution.id`` has been flushed to the database;
-        the final path layout is
-        ``<provider>/<diagnostic>/<group_short>/<execution_id>/``.
+        The returned definition uses a placeholder fragment for the output directory.
+        ``solve_required_executions`` rewrites ``output_directory`` via
+        :func:`attrs.evolve` once the new ``Execution.id`` is known.
         """
         # Ensure that the output root is always an absolute path
         output_root = output_root.resolve()
 
-        # Placeholder fragment.  The real ``<group_short>/<execution_id>`` segments
-        # are filled in by ``solve_required_executions`` once ``execution.id`` is known.
-        fragment = pathlib.Path() / self.provider.slug / self.diagnostic.slug / "_pending"
+        fragment = pathlib.Path() / self.provider.slug / self.diagnostic.slug / PLACEHOLDER_FRAGMENT
 
         return ExecutionDefinition(
             diagnostic=self.diagnostic,
@@ -705,40 +700,26 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                     f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
                 )
 
-                # Insert with a placeholder fragment so we can flush and obtain
-                # ``execution.id``,
-                # which becomes the final path's uniqueness segment.
                 execution = Execution(
                     execution_group=execution_group,
                     dataset_hash=definition.datasets.hash,
-                    output_fragment="_pending",
+                    output_fragment=PLACEHOLDER_FRAGMENT,
                 )
                 db.session.add(execution)
-                db.session.flush()
 
-                # Compute the human-readable group-short hint.
-                # Diagnostic version is hard-coded to ``1`` here;
-                # PR-4 will plumb the real ``Diagnostic.version`` through.
-                group_short = compute_group_short(
-                    potential_execution.selectors,
+                fragment = assign_execution_fragment(
+                    db.session,
+                    execution,
+                    provider_slug=provider_slug,
+                    diagnostic_slug=potential_execution.diagnostic.slug,
+                    selectors=potential_execution.selectors,
                     group_id=execution_group.id,
-                    diagnostic_version=1,
                 )
-                fragment = (
-                    pathlib.Path(provider_slug)
-                    / potential_execution.diagnostic.slug
-                    / group_short
-                    / str(execution.id)
-                )
-                execution.output_fragment = str(fragment)
-                # Flush the rewritten ``output_fragment`` so the value survives the
-                # subsequent ``expunge`` below.
-                db.session.flush()
 
                 # Rebuild the definition so the executor sees the resolved output path.
                 definition = attrs.evolve(
                     definition,
-                    output_directory=config.paths.scratch.resolve() / fragment,
+                    output_directory=config.paths.scratch.resolve() / pathlib.Path(fragment),
                 )
 
                 # Add links to the datasets used in the execution

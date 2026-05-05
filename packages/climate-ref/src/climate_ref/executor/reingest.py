@@ -11,7 +11,6 @@ with its own output directory, leaving the original execution untouched.
 Results are treated as immutable.
 """
 
-import pathlib
 import shutil
 from collections import defaultdict
 from collections.abc import Sequence
@@ -21,7 +20,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.datasets import get_slug_column
-from climate_ref.executor.fragment import compute_group_short
+from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
 from climate_ref.executor.result_handling import handle_execution_result
 from climate_ref.models.execution import (
     Execution,
@@ -261,34 +260,23 @@ def reingest_execution(
     new_execution: Execution | None = None
 
     try:
-        # Pre-allocate the new ``Execution`` row inside a nested savepoint so the
-        # row + filesystem work can be rolled back together if the soft-fail path
-        # triggers.
-        # We raise ``_ReingestSavepointAbort`` to pop the savepoint cleanly when
-        # ``build_execution_result`` returns an unsuccessful result.
         try:
             with database.session.begin_nested():
                 new_execution = Execution(
                     execution_group=execution_group,
                     dataset_hash=execution.dataset_hash,
-                    output_fragment="_pending",
+                    output_fragment=PLACEHOLDER_FRAGMENT,
                 )
                 database.session.add(new_execution)
-                database.session.flush()
 
-                # The new ``Execution.id`` is the uniqueness guarantee;
-                # no timestamp suffix.
-                group_short = compute_group_short(
-                    selectors,
+                new_fragment = assign_execution_fragment(
+                    database.session,
+                    new_execution,
+                    provider_slug=provider_slug,
+                    diagnostic_slug=diagnostic_slug,
+                    selectors=selectors,
                     group_id=execution_group.id,
-                    diagnostic_version=1,
                 )
-                new_fragment_path = (
-                    pathlib.Path(provider_slug) / diagnostic_slug / group_short / str(new_execution.id)
-                )
-                new_fragment = str(new_fragment_path)
-                new_execution.output_fragment = new_fragment
-                database.session.flush()
 
                 new_scratch_dir = config.paths.scratch / new_fragment
                 new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
@@ -316,16 +304,10 @@ def reingest_execution(
                         )
                     )
         except _ReingestSavepointAbort:
-            # Soft-fail: the savepoint has rolled back the new ``Execution`` row.
-            # Clean up any scratch artefacts we created before bailing.
             if new_scratch_dir is not None and new_scratch_dir.exists():
                 shutil.rmtree(new_scratch_dir)
             return False
 
-        # Savepoint committed; ``new_execution`` is persisted.
-        # ``handle_execution_result`` swallows its own ingestion errors today --
-        # mirror the pre-refactor behaviour so the row stays created even when
-        # ingestion fails.
         handle_execution_result(
             config,
             database,

@@ -1,0 +1,67 @@
+# Standalone ILAMB integration test workflow.
+#
+# Reuses the cached datasets / software populated by the main CI Integration Tests workflow,
+# so this skips the populate-cache step entirely.
+# Runs ILAMB integration tests in isolation with unbuffered pytest output and a periodic memory snapshot
+# so the last running test name reaches the log before any SIGKILL from the runner.
+#
+# Manual trigger:
+#   gh workflow run ci-ilamb-debug.yaml --ref <branch>
+name: CI ILAMB Debug
+on:
+  workflow_dispatch:
+    inputs:
+      python-version:
+        description: "Python version"
+        required: false
+        default: "3.13"
+      pytest-args:
+        description: "Extra pytest args"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+
+jobs:
+  tests-slow-ilamb:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: "arc-climate-ref"
+    env:
+      REF_TEST_OUTPUT: "test-outputs-ilamb"
+      PYTEST_ADDOPTS: "--slow"
+      TQDM_DISABLE: "1"
+      PYTHONUNBUFFERED: "1"
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: ${{ inputs.python-version }}
+      - name: Log memory while tests run
+        run: |
+          (
+            while true; do
+              echo "[mem $(date -u +%H:%M:%S)] $(grep -E '^(MemTotal|MemAvailable|MemFree):' /proc/meminfo | tr '\n' ' ')"
+              sleep 15
+            done
+          ) &
+          echo $! > /tmp/memlogger.pid
+      - name: Run ILAMB integration tests
+        run: |
+          uv sync
+          uv run pytest packages/climate-ref-ilamb --slow --no-docker -m "not test_cases" -r a -v ${{ inputs.pytest-args }}
+      - name: Stop memory logger
+        if: always()
+        run: |
+          if [ -f /tmp/memlogger.pid ]; then kill "$(cat /tmp/memlogger.pid)" || true; fi
+      - name: Upload scratch artifacts
+        uses: actions/upload-artifact@v7
+        if: always()
+        with:
+          name: integration-output-ilamb-${{ inputs.python-version }}
+          path: ${{ env.REF_TEST_OUTPUT }}
+          retention-days: 7

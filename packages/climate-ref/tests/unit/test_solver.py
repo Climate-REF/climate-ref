@@ -623,7 +623,12 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, mock_execut
     # Check that a result is created
     assert db_seeded.session.query(Execution).count() == 1
     execution_result = db_seeded.session.query(Execution).first()
-    assert execution_result.output_fragment == "output_fragment"
+    # Output fragment now follows ``<provider>/<diag>/<group_short>/<execution_id>``
+    fragment_parts = execution_result.output_fragment.split("/")
+    assert len(fragment_parts) == 4
+    assert fragment_parts[0] == "mock_provider"
+    assert fragment_parts[1] == "mock"
+    assert fragment_parts[3] == str(execution_result.id)
     assert execution_result.dataset_hash == "123456"
     assert execution_result.execution_group.key == "key"
     # Nested tuples are converted into nested lists after going through the DB
@@ -640,8 +645,61 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, mock_execut
     # so compare by id rather than identity.
     assert mock_executor.return_value.run.call_count == 1
     run_kwargs = mock_executor.return_value.run.call_args.kwargs
-    assert run_kwargs["definition"] == mock_metric_execution.build_execution_definition()
+    # The solver rewrites ``output_directory`` to the resolved
+    # ``<provider>/<diag>/<group_short>/<execution_id>`` path,
+    # so the run definition is no longer the same object as the placeholder
+    # returned by ``mock_metric_execution.build_execution_definition()``.
+    assert (
+        run_kwargs["definition"].diagnostic == mock_metric_execution.build_execution_definition().diagnostic
+    )
+    assert str(run_kwargs["definition"].output_directory).endswith(execution_result.output_fragment)
     assert run_kwargs["execution"].id == execution_result.id
+
+
+def test_two_executions_same_group_distinct_output_fragments(
+    mocker, mock_metric_execution, mock_executor, db_seeded
+):
+    """
+    Two solve passes against the same execution group should produce distinct
+    ``Execution.output_fragment`` values whose final ``/<execution_id>`` segment
+    differs while the leading ``<provider>/<diag>/<group_short>/`` prefix matches.
+    """
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver_mock = mock.MagicMock(spec=ExecutionSolver)
+    solver_mock.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver_mock
+
+    # First solve creates the execution group + first execution.
+    solve_required_executions(db_seeded)
+
+    first = db_seeded.session.query(Execution).order_by(Execution.id.asc()).all()
+    assert len(first) == 1
+
+    # Mark the first execution successful and the group dirty so the next solve
+    # is willing to schedule a fresh execution against the same group.
+    execution = first[0]
+    execution.successful = True
+    execution.path = "diagnostic.json"
+    execution.execution_group.dirty = True
+    db_seeded.session.commit()
+
+    # Second solve adds a second execution to the same group.
+    solver_mock.solve.return_value = [mock_metric_execution]
+    solve_required_executions(db_seeded)
+
+    executions = db_seeded.session.query(Execution).order_by(Execution.id.asc()).all()
+    assert len(executions) == 2
+    fragment_a = executions[0].output_fragment
+    fragment_b = executions[1].output_fragment
+
+    # Fragments differ overall but share the leading ``<provider>/<diag>/<group_short>``.
+    assert fragment_a != fragment_b
+    prefix_a = "/".join(fragment_a.split("/")[:-1])
+    prefix_b = "/".join(fragment_b.split("/")[:-1])
+    assert prefix_a == prefix_b
+    # The trailing segment is the new ``Execution.id``.
+    assert fragment_a.split("/")[-1] == str(executions[0].id)
+    assert fragment_b.split("/")[-1] == str(executions[1].id)
 
 
 def test_solve_metrics(mocker, db_seeded, solver, data_regression, mock_executor):
@@ -1100,7 +1158,8 @@ def test_solve_with_one_per_provider(
     # so compare by id rather than identity.
     assert mock_executor.return_value.run.call_count == 1
     run_kwargs = mock_executor.return_value.run.call_args.kwargs
-    assert run_kwargs["definition"] == mock_metric_execution.build_execution_definition()
+    # ``output_directory`` is rewritten by the solver after flushing the new ``Execution`` row.
+    assert str(run_kwargs["definition"].output_directory).endswith(execution_result.output_fragment)
     assert run_kwargs["execution"].id == execution_result.id
 
 
@@ -1126,7 +1185,8 @@ def test_solve_with_one_per_diagnostic(
     # so compare by id rather than identity.
     assert mock_executor.return_value.run.call_count == 1
     run_kwargs = mock_executor.return_value.run.call_args.kwargs
-    assert run_kwargs["definition"] == mock_metric_execution.build_execution_definition()
+    # ``output_directory`` is rewritten by the solver after flushing the new ``Execution`` row.
+    assert str(run_kwargs["definition"].output_directory).endswith(execution_result.output_fragment)
     assert run_kwargs["execution"].id == execution_result.id
 
 
@@ -1342,6 +1402,12 @@ def test_diagnostic_execution_build_definition(mock_diagnostic, provider, tmp_pa
     assert mock_diagnostic.slug in str(definition.output_directory)
     # output_directory should be under the resolved tmp_path
     assert str(tmp_path.resolve()) in str(definition.output_directory)
+    # ``build_execution_definition`` no longer reaches the dataset hash;
+    # it returns a placeholder fragment that the solver rewrites once
+    # ``Execution.id`` is known.
+    assert definition.output_directory.name == "_pending"
+    assert definition.output_directory.parent.name == mock_diagnostic.slug
+    assert definition.output_directory.parent.parent.name == provider.slug
 
 
 def test_diagnostic_execution_selectors(mock_diagnostic, provider):

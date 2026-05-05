@@ -8,6 +8,7 @@ This module provides:
 - Result validation helpers
 """
 
+import pathlib
 import shutil
 from pathlib import Path
 
@@ -17,6 +18,7 @@ from loguru import logger
 from climate_ref import SAMPLE_DATA_VERSION
 from climate_ref.config import Config
 from climate_ref.database import Database
+from climate_ref.executor.fragment import compute_group_short
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.datasets import ExecutionDatasetCollection
@@ -105,12 +107,24 @@ def validate_result(
     database.session.add(execution_group)
     database.session.flush()
 
+    # Insert with a placeholder fragment, flush to obtain ``execution.id``,
+    # then rewrite ``output_fragment`` to the new
+    # ``<provider>/<diag>/<group_short>/<execution_id>`` layout.
     execution = Execution(
         execution_group_id=execution_group.id,
         dataset_hash=result.definition.datasets.hash,
-        output_fragment=str(result.definition.output_fragment()),
+        output_fragment="_pending",
     )
     database.session.add(execution)
+    database.session.flush()
+
+    group_short = compute_group_short(
+        result.definition.datasets.selectors,
+        group_id=execution_group.id,
+        diagnostic_version=1,
+    )
+    fragment = pathlib.Path(diagnostic.provider.slug) / diagnostic.slug / group_short / str(execution.id)
+    execution.output_fragment = str(fragment)
     database.session.flush()
 
     assert result.successful

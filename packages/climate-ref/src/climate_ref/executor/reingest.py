@@ -11,6 +11,7 @@ with its own output directory, leaving the original execution untouched.
 Results are treated as immutable.
 """
 
+import pathlib
 import shutil
 from collections import defaultdict
 from collections.abc import Sequence
@@ -20,7 +21,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref.datasets import get_slug_column
-from climate_ref.executor.fragment import allocate_output_fragment
+from climate_ref.executor.fragment import compute_group_short
 from climate_ref.executor.result_handling import handle_execution_result
 from climate_ref.models.execution import (
     Execution,
@@ -43,6 +44,10 @@ if TYPE_CHECKING:
     from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.diagnostics import Diagnostic
+
+
+class _ReingestSavepointAbort(Exception):
+    """Internal sentinel used to roll back the savepoint on a soft-fail path."""
 
 
 def reconstruct_execution_definition(
@@ -242,49 +247,85 @@ def reingest_execution(
     diagnostic, scratch_dir = resolved
 
     execution_group = execution.execution_group
+    provider_slug = execution_group.diagnostic.provider.slug
+    diagnostic_slug = execution_group.diagnostic.slug
 
-    # Allocate a new output fragment with a timestamp suffix
-    # Previous execution scratch will be copied there
-    new_fragment = allocate_output_fragment(execution.output_fragment, config.paths.results)
-    new_scratch_dir = config.paths.scratch / new_fragment
+    # Convert the JSON-stored selector dict (lists-of-pairs) back into the
+    # mapping[str, iterable[tuple[str, str]]] shape that ``compute_group_short`` expects.
+    selectors = {
+        source_key: [tuple(pair) for pair in pairs] for source_key, pairs in execution_group.selectors.items()
+    }
+
+    new_fragment: str | None = None
+    new_scratch_dir: Path | None = None
+    new_execution: Execution | None = None
 
     try:
-        new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(scratch_dir, new_scratch_dir)
+        # Pre-allocate the new ``Execution`` row inside a nested savepoint so the
+        # row + filesystem work can be rolled back together if the soft-fail path
+        # triggers.
+        # We raise ``_ReingestSavepointAbort`` to pop the savepoint cleanly when
+        # ``build_execution_result`` returns an unsuccessful result.
+        try:
+            with database.session.begin_nested():
+                new_execution = Execution(
+                    execution_group=execution_group,
+                    dataset_hash=execution.dataset_hash,
+                    output_fragment="_pending",
+                )
+                database.session.add(new_execution)
+                database.session.flush()
 
-        definition = reconstruct_execution_definition(
-            config, execution, diagnostic, output_fragment=new_fragment
-        )
+                # The new ``Execution.id`` is the uniqueness guarantee;
+                # no timestamp suffix.
+                group_short = compute_group_short(
+                    selectors,
+                    group_id=execution_group.id,
+                    diagnostic_version=1,
+                )
+                new_fragment_path = (
+                    pathlib.Path(provider_slug) / diagnostic_slug / group_short / str(new_execution.id)
+                )
+                new_fragment = str(new_fragment_path)
+                new_execution.output_fragment = new_fragment
+                database.session.flush()
 
-        result = diagnostic.build_execution_result(definition)
+                new_scratch_dir = config.paths.scratch / new_fragment
+                new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copytree(scratch_dir, new_scratch_dir)
 
-        if not result.successful or result.metric_bundle_filename is None:
-            logger.warning(
-                f"build_execution_result returned unsuccessful result for execution {execution.id}. Skipping."
-            )
-            if new_scratch_dir.exists():
+                definition = reconstruct_execution_definition(
+                    config, execution, diagnostic, output_fragment=new_fragment
+                )
+
+                result = diagnostic.build_execution_result(definition)
+
+                if not result.successful or result.metric_bundle_filename is None:
+                    logger.warning(
+                        f"build_execution_result returned unsuccessful result "
+                        f"for execution {execution.id}. Skipping."
+                    )
+                    raise _ReingestSavepointAbort
+
+                # Copy dataset links from the original execution
+                for dataset in execution.datasets:
+                    database.session.execute(
+                        execution_datasets.insert().values(
+                            execution_id=new_execution.id,
+                            dataset_id=dataset.id,
+                        )
+                    )
+        except _ReingestSavepointAbort:
+            # Soft-fail: the savepoint has rolled back the new ``Execution`` row.
+            # Clean up any scratch artefacts we created before bailing.
+            if new_scratch_dir is not None and new_scratch_dir.exists():
                 shutil.rmtree(new_scratch_dir)
             return False
 
-        with database.session.begin_nested():
-            # Create new Execution record
-            new_execution = Execution(
-                execution_group=execution_group,
-                dataset_hash=execution.dataset_hash,
-                output_fragment=new_fragment,
-            )
-            database.session.add(new_execution)
-            database.session.flush()
-
-            # Copy dataset links from the original execution
-            for dataset in execution.datasets:
-                database.session.execute(
-                    execution_datasets.insert().values(
-                        execution_id=new_execution.id,
-                        dataset_id=dataset.id,
-                    )
-                )
-
+        # Savepoint committed; ``new_execution`` is persisted.
+        # ``handle_execution_result`` swallows its own ingestion errors today --
+        # mirror the pre-refactor behaviour so the row stays created even when
+        # ingestion fails.
         handle_execution_result(
             config,
             database,
@@ -294,11 +335,12 @@ def reingest_execution(
         )
     except Exception:
         logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
-        if new_scratch_dir.exists():
+        if new_scratch_dir is not None and new_scratch_dir.exists():
             shutil.rmtree(new_scratch_dir)
-        new_results_dir = config.paths.results / new_fragment
-        if new_results_dir.exists():
-            shutil.rmtree(new_results_dir)
+        if new_fragment is not None:
+            new_results_dir = config.paths.results / new_fragment
+            if new_results_dir.exists():
+                shutil.rmtree(new_results_dir)
         return False
 
     logger.info(f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}")

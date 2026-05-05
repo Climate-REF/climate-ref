@@ -3,7 +3,14 @@ Helpers for allocating non-colliding output fragment paths.
 """
 
 import datetime
+import hashlib
+import re
+from collections.abc import Iterable, Mapping
 from pathlib import Path
+
+_TOKEN_RE = re.compile(r"[^A-Za-z0-9_-]+")
+_DEFAULT_TOKEN_LIMIT = 64
+_GROUP_SHORT_MAX = 96
 
 
 def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
@@ -42,3 +49,111 @@ def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
         )
 
     return fragment
+
+
+def _sanitize_token(value: str) -> str:
+    """
+    Sanitize a single selector value to ``[A-Za-z0-9_-]+``.
+
+    Non-conforming characters are collapsed to a single underscore.
+    Leading/trailing underscores are stripped.
+    """
+    cleaned = _TOKEN_RE.sub("_", value).strip("_")
+    return cleaned
+
+
+def _truncate_at_boundary(text: str, limit: int) -> str:
+    """
+    Truncate *text* at *limit* characters, preferring an underscore boundary.
+
+    If *text* is at or below *limit*, return it unchanged.
+    Otherwise truncate to the rightmost ``_`` at or before *limit*; fall back to a
+    hard cut if no boundary exists.
+    """
+    if len(text) <= limit:
+        return text
+    head = text[:limit]
+    boundary = head.rfind("_")
+    if boundary > 0:
+        return head[:boundary]
+    return head
+
+
+def compute_group_short(
+    selectors: Mapping[str, Iterable[tuple[str, str]]],
+    group_id: int,
+    diagnostic_version: int,
+    *,
+    token_limit: int = _DEFAULT_TOKEN_LIMIT,
+) -> str:
+    """
+    Compute a short, deterministic, human-readable path segment for an execution group.
+
+    Human-readable hint for operators browsing the filesystem.
+    Not unique -- ``execution_id`` is the uniqueness guarantee.
+
+    Selector values across all source types are sorted (first by source-type key,
+    then by facet key),
+    sanitized to ``[A-Za-z0-9_-]``,
+    joined by ``_``,
+    and truncated to *token_limit* characters at an underscore boundary.
+    A suffix ``_g{group_id}_v{diagnostic_version}_{sha1[:8]}`` is appended,
+    where the SHA1 hash is computed over the canonical
+    ``group_id|diagnostic_version|sorted_selectors`` representation.
+
+    The returned string is ASCII, capped at roughly 96 characters,
+    and deterministic for fixed inputs.
+
+    Parameters
+    ----------
+    selectors
+        Mapping from source-type key (e.g. ``"cmip6"``) to an iterable of
+        ``(facet_key, facet_value)`` tuples.
+    group_id
+        The ``ExecutionGroup.id`` this fragment belongs to.
+    diagnostic_version
+        The integer ``Diagnostic.version`` at solve time.
+    token_limit
+        Maximum length of the sanitized selector portion before the suffix.
+
+    Returns
+    -------
+    :
+        A short, sanitized, deterministic identifier suitable for use as a
+        filesystem path segment.
+    """
+    # Build a canonical representation: sort source types, then facet pairs.
+    canonical_pairs: list[tuple[str, tuple[tuple[str, str], ...]]] = []
+    for source_type in sorted(selectors.keys()):
+        pairs = tuple(sorted((str(k), str(v)) for k, v in selectors[source_type]))
+        canonical_pairs.append((source_type, pairs))
+
+    # Build the human-readable token portion from the values only.
+    raw_tokens: list[str] = []
+    for _, pairs in canonical_pairs:
+        for _, value in pairs:
+            token = _sanitize_token(value)
+            if token:
+                raw_tokens.append(token)
+
+    token_part = _truncate_at_boundary("_".join(raw_tokens), token_limit)
+
+    # Stable hash input: group_id, version, and the canonical selector pairs.
+    hash_payload = repr((group_id, diagnostic_version, canonical_pairs)).encode("utf-8")
+    digest = hashlib.sha1(hash_payload).hexdigest()[:8]  # noqa: S324
+
+    suffix = f"_g{group_id}_v{diagnostic_version}_{digest}"
+
+    if token_part:
+        result = f"{token_part}{suffix}"
+    else:
+        # Strip leading underscore so we don't start with one.
+        result = suffix.lstrip("_")
+
+    if len(result) > _GROUP_SHORT_MAX:
+        # Trim the token portion further so the suffix is preserved.
+        overflow = len(result) - _GROUP_SHORT_MAX
+        trimmed_token = _truncate_at_boundary(token_part, max(0, len(token_part) - overflow))
+        result = f"{trimmed_token}{suffix}" if trimmed_token else suffix.lstrip("_")
+
+    return result

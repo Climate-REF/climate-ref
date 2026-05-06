@@ -21,8 +21,8 @@ _GROUP_SHORT_MAX = 96
 PLACEHOLDER_FRAGMENT = "_pending"
 """Output-fragment placeholder used until ``Execution.id`` is known."""
 
-# PR-4 will replace this literal with the live ``Diagnostic.version``.
-_TEMP_DIAGNOSTIC_VERSION = 1
+_DEFAULT_DIAGNOSTIC_VERSION = 1
+"""Default ``Diagnostic.version`` used when a diagnostic does not declare its own."""
 
 
 def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
@@ -184,7 +184,7 @@ def assign_execution_fragment(  # noqa: PLR0913
     diagnostic_slug: str,
     selectors: Mapping[str, Iterable[tuple[str, str]]],
     group_id: int,
-    diagnostic_version: int = _TEMP_DIAGNOSTIC_VERSION,
+    diagnostic_version: int = _DEFAULT_DIAGNOSTIC_VERSION,
 ) -> str:
     """Flush *execution* to materialise its id, then assign the canonical output fragment.
 

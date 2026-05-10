@@ -13,7 +13,7 @@ class TestSynchronousExecutor:
         assert isinstance(executor, Executor)
 
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog):
-        mock_handle_result = mocker.patch("climate_ref.executor.result_handling.handle_execution_result")
+        mock_handle_result = mocker.patch("climate_ref.executor.local.handle_execution_result")
         mock_execution_result = mocker.MagicMock()
         executor = self.executor()
 
@@ -31,7 +31,7 @@ class TestSynchronousExecutor:
         assert (metric_definition.output_directory / "out.log").exists()
 
     def test_raises_exception(self, mocker, provider, metric_definition, mock_diagnostic):
-        mock_handle_result = mocker.patch("climate_ref.executor.result_handling.handle_execution_result")
+        mock_handle_result = mocker.patch("climate_ref.executor.local.handle_execution_result")
         mock_execution_result = mocker.MagicMock()
 
         executor = self.executor()

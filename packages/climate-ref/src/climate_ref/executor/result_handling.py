@@ -11,17 +11,15 @@ This is useful for local testing and debugging.
 
 import pathlib
 import shutil
-from concurrent.futures import Future
 from typing import TYPE_CHECKING
 
-from attrs import define
 from loguru import logger
 from sqlalchemy import insert
 
 from climate_ref.database import Database
 from climate_ref.models import ScalarMetricValue, SeriesMetricValue
 from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutputType
-from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
+from climate_ref_core.diagnostics import ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
@@ -31,60 +29,6 @@ from climate_ref_core.pycmec.output import CMECOutput, OutputDict
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
-
-
-@define
-class ExecutionFuture:
-    """A container linking a submitted future to its execution metadata."""
-
-    future: Future[ExecutionResult]
-    definition: ExecutionDefinition
-    execution_id: int | None = None
-    submitted_at: float = 0.0
-
-
-def process_result(
-    config: "Config",
-    database: Database,
-    result: ExecutionResult,
-    execution: Execution | None,
-) -> None:
-    """Process the result of a diagnostic execution, persisting outcome to the DB."""
-    if not result.successful:
-        if execution is not None:  # pragma: no branch
-            info_msg = (
-                f"\nAdditional information about this execution can be viewed using: "
-                f"ref executions inspect {execution.execution_group_id}"
-            )
-        else:
-            info_msg = ""
-        logger.error(f"Error running {result.definition.execution_slug()}. {info_msg}")
-
-    if execution:
-        handle_execution_result(config, database, execution, result)
-
-
-def mark_execution_failed(
-    database: Database,
-    config: "Config",
-    definition: ExecutionDefinition,
-    execution_id: int | None,
-    *,
-    retryable: bool,
-) -> None:
-    """Persist a failed result for an outstanding execution.
-
-    Used when an executor abandons a future (per-task timeout, overall timeout,
-    worker crash) so the corresponding ``Execution`` row never stays stuck in
-    ``successful=None`` state.
-    """
-    try:
-        failure_result = ExecutionResult.build_from_failure(definition, retryable=retryable)
-        with database.session.begin():
-            execution = database.session.get(Execution, execution_id) if execution_id else None
-            process_result(config, database, failure_result, execution)
-    except Exception:
-        logger.exception(f"Failed to record failure for {definition.execution_slug()!r}")
 
 
 def _copy_file_to_results(

@@ -57,28 +57,18 @@ class TestLocalExecutor:
         # This directory is created by the executor
         assert process_pool.submit.call_count == 1
 
-    def test_join(self, metric_definition, mocker):
+    def test_join(self, metric_definition):
         executor = LocalExecutor(n=1)
         future = Future()
         executor._results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
-        # Future isn't done yet -- timeout marks it failed-retryable and clears results.
-        # Failure recording flows through ``mark_execution_failed`` in
-        # ``executor.result_handling``, so patch ``process_result`` there.
-        process_spy = mocker.patch("climate_ref.executor.result_handling.process_result")
+        # Future isn't done yet
         with pytest.raises(TimeoutError):
             executor.join(0.1)
 
-        assert len(executor._results) == 0
-        process_spy.assert_called_once()
-        forwarded = process_spy.call_args.args[2]
-        assert isinstance(forwarded, ExecutionResult)
-        assert forwarded.successful is False
-        assert forwarded.retryable is True
+        # The executor should still have the future
+        assert len(executor._results) == 1
 
-    def test_join_completes(self, metric_definition, mocker):
-        executor = LocalExecutor(n=1)
-        future = Future()
         future.set_result(
             ExecutionResult(
                 definition=metric_definition,
@@ -87,28 +77,17 @@ class TestLocalExecutor:
                 metric_bundle_filename=None,
             )
         )
-        executor._results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
-        mocker.patch("climate_ref.executor.local.process_result")
 
         executor.join(0.1)
 
         assert len(executor._results) == 0
 
-    def test_join_exception(self, metric_definition, mocker):
+    def test_join_exception(self, metric_definition):
         executor = LocalExecutor(n=1)
         future = Future()
         executor._results = [ExecutionFuture(future, definition=metric_definition, execution_id=None)]
 
         future.set_exception(ValueError("Some thing bad went wrong"))
 
-        process_spy = mocker.patch("climate_ref.executor.result_handling.process_result")
         with pytest.raises(ExecutionError, match=re.escape("Failed to execute 'mock_provider/mock/key'")):
             executor.join(0.1)
-
-        # The failed execution must be flushed out of the tracker so the next
-        # solve does not see a stuck successful=None row.
-        assert len(executor._results) == 0
-        process_spy.assert_called_once()
-        forwarded = process_spy.call_args.args[2]
-        assert isinstance(forwarded, ExecutionResult)
-        assert forwarded.retryable is True

@@ -21,6 +21,31 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.13.2 (2026-05-10)
+
+### Features
+
+- Added support for Python 3.14. ([#625](https://github.com/Climate-REF/climate-ref/pull/625))
+
+### Improvements
+
+- Add extra options for users to ingest options other than base to parsl functions ([#651](https://github.com/Climate-REF/climate-ref/pull/651))
+- Updated ESMValCore to v2.14.0 and ESMValTool to 2.15.0.dev15+gdead90ca8. ([#652](https://github.com/Climate-REF/climate-ref/pull/652))
+
+### Bug Fixes
+
+- Fixed `ref test-cases fetch` aborting the entire run when a single test case could not be parsed (for example because of a `PermissionError` on a cached CMIP6 file); the failing test case is now logged as a warning and the loop continues. ([#639](https://github.com/Climate-REF/climate-ref/pull/639))
+- Fixed `ref solve` periodically reporting executions as never finishing. Stuck executions left in the in-progress state by a crashed worker, walltime kill, or hung diagnostic are now reaped and retried on the next solve, the CLI `--timeout` default has been raised to 6 hours to match the worker time limit, and per-task timeouts in the local executor cancel hung diagnostics instead of blocking the whole pool. ([#641](https://github.com/Climate-REF/climate-ref/pull/641))
+
+### Improved Documentation
+
+- Updated CITATION.cff with extra author names and orcid ids. ([#636](https://github.com/Climate-REF/climate-ref/pull/636))
+
+### Trivial/Internal Changes
+
+- [#619](https://github.com/Climate-REF/climate-ref/pull/619), [#637](https://github.com/Climate-REF/climate-ref/pull/637), [#638](https://github.com/Climate-REF/climate-ref/pull/638)
+
+
 ## climate-ref 0.13.1 (2026-04-13)
 
 ### Features

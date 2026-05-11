@@ -25,10 +25,6 @@ from climate_ref.models.execution import Execution, ExecutionGroup, get_executio
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import ExecutionSolver, solve_required_executions
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
-
 
 def _get_columns(engine, table_name: str) -> set[str]:
     insp = inspect(engine)
@@ -38,11 +34,6 @@ def _get_columns(engine, table_name: str) -> set[str]:
 def _get_unique_constraints(engine, table_name: str) -> list[dict]:
     insp = inspect(engine)
     return insp.get_unique_constraints(table_name)
-
-
-# ---------------------------------------------------------------------------
-# Test case 1: migration up/down + backfill
-# ---------------------------------------------------------------------------
 
 
 class TestMigrationUpDown:
@@ -122,11 +113,6 @@ class TestMigrationUpDown:
         db.close()
 
 
-# ---------------------------------------------------------------------------
-# Test case 2: helper version filtering
-# ---------------------------------------------------------------------------
-
-
 class TestHelperVersionFiltering:
     """get_execution_group_and_latest_filtered respects include_superseded."""
 
@@ -163,11 +149,6 @@ class TestHelperVersionFiltering:
         returned_versions = {eg.diagnostic_version for eg, _ in results}
         assert 1 in returned_versions
         assert 2 in returned_versions
-
-
-# ---------------------------------------------------------------------------
-# Test case 3: recompute_promoted_version helper
-# ---------------------------------------------------------------------------
 
 
 class TestRecomputePromotedVersion:
@@ -243,11 +224,6 @@ class TestRecomputePromotedVersion:
         assert fresh_diag.promoted_version == 1
 
 
-# ---------------------------------------------------------------------------
-# Test case 4: stats() aggregation filter
-# ---------------------------------------------------------------------------
-
-
 class TestStatsPromotedVersionFilter:
     """stats() CLI command only counts groups at the promoted version."""
 
@@ -318,11 +294,6 @@ class TestStatsPromotedVersionFilter:
         )
 
 
-# ---------------------------------------------------------------------------
-# Test case 5: mark_failed_running operational invariant
-# ---------------------------------------------------------------------------
-
-
 class TestMarkFailedRunningVersionAgnostic:
     """fail-running must surface in-flight executions regardless of diagnostic_version."""
 
@@ -367,16 +338,9 @@ class TestMarkFailedRunningVersionAgnostic:
         assert remaining_running == 0, "All in-flight executions must be marked failed"
 
 
-# ---------------------------------------------------------------------------
-# Test case 6: dormancy regression
-# ---------------------------------------------------------------------------
-
-
 class TestDormancyRegression:
-    """The solver must not branch on ``Diagnostic.version``.
-
-    The solver's get_or_create still uses only (diagnostic_id, key) as lookup
-    keys, so newly created groups must always have diagnostic_version=1
+    """The solver's get_or_create still uses only (diagnostic_id, key) as lookup keys
+    Newly created groups must always have diagnostic_version=1
     regardless of the Python-side Diagnostic.version class attribute.
     """
 

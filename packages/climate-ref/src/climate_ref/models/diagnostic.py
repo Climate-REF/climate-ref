@@ -78,16 +78,13 @@ def recompute_promoted_version(diagnostic_id: int, session: Session) -> int:
 
     The largest ``diagnostic_version`` seen across this diagnostic's groups
     becomes the version that default queries return.
-    A v2 group with zero successful executions still becomes the promoted
-    version; success-gated promotion is not implemented.
+    A v2 group with zero successful executions still becomes the promoted version.
 
-    This helper is called explicitly from the solver after a new ``ExecutionGroup``
-    is inserted.
+    This helper is called explicitly from the solver after a new ``ExecutionGroup`` is inserted.
     It is not a SQLAlchemy event listener because event-driven recomputation is
     harder to reason about during flush and harder to test in isolation.
 
-    If the diagnostic has no execution groups yet, ``promoted_version`` is left at
-    its default of 1.
+    If the diagnostic has no execution groups yet, ``promoted_version`` is left at its default of 1.
 
     Parameters
     ----------

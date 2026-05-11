@@ -550,14 +550,13 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     - Different filter types use AND logic
     - Facet filters can either be key=value (searches all dataset types)
       or dataset_type.key=value (searches specific dataset type)
-    - This helper is the only sanctioned path for new callers that should respect
-      the promoted-version filter. The one acknowledged exception is the
-      ``cli/executions.py::stats`` aggregation, which inlines
+    - This helper is the only sanctioned path for new callers that should respect the promoted-version filter.
+      The one acknowledged exception is the ``cli/executions.py::stats`` aggregation,
+      which inlines
       ``.join(Diagnostic).filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)``
-      because it returns aggregate rows rather than a list of tuples and so cannot
-      reuse this helper. Operational queries that must remain version-agnostic
-      (e.g. ``mark_failed_running`` in the same module) intentionally do not use
-      this helper at all.
+      because it returns aggregate rows rather than a list of tuples and so cannot reuse this helper.
+      Operational queries that must remain version-agnostic
+      (e.g. ``mark_failed_running`` in the same module) intentionally do not use this helper at all.
     """
     # Start with base query
     query = get_execution_group_and_latest(session)

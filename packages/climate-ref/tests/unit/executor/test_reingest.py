@@ -1,6 +1,5 @@
 """Tests for the reingest module."""
 
-import datetime
 import json
 import pathlib
 
@@ -475,16 +474,12 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """Running reingest twice should create distinct output fragments."""
+        """
+        Running reingest twice should create distinct output fragments whose
+        final segment is the new ``Execution.id`` (no timestamp suffix).
+        """
         mock_result = mock_result_factory(scratch_dir_with_results)
         _patch_build_result(mocker, mock_provider_registry, mock_result)
-
-        t1 = datetime.datetime(2026, 1, 1, 12, 0, 0, tzinfo=datetime.timezone.utc)
-        t2 = datetime.datetime(2026, 1, 1, 12, 0, 1, tzinfo=datetime.timezone.utc)
-        mocker.patch(
-            "climate_ref.executor.fragment.datetime.datetime",
-            **{"now.side_effect": [t1, t2]},
-        )
 
         ok1 = reingest_execution(
             config=config,
@@ -505,10 +500,15 @@ class TestReingestExecution:
         reingest_db.session.commit()
         assert ok2 is True
 
-        all_executions = reingest_db.session.query(Execution).all()
+        all_executions = reingest_db.session.query(Execution).order_by(Execution.id.asc()).all()
         assert len(all_executions) == 3
         fragments = [e.output_fragment for e in all_executions]
         assert len(set(fragments)) == 3, f"Expected unique fragments, got: {fragments}"
+
+        # The two new (reingested) executions must end with their own ``Execution.id``;
+        # there is no longer a timestamp suffix.
+        for execution in all_executions[1:]:
+            assert execution.output_fragment.split("/")[-1] == str(execution.id)
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_copies_results_to_new_directory(
@@ -1138,6 +1138,11 @@ class TestGetExecutionsForReingest:
         Reingested executions only have results directories, not scratch.
         Selecting the oldest ensures we always reingest from the execution
         whose scratch directory actually exists.
+
+        The ``output_fragment`` strings used here are literal sentinels;
+        they intentionally distinguish two rows for the ordering check and
+        are *not* meant to mirror the path layout produced by the
+        production code.
         """
         with db_seeded.session.begin():
             diag = db_seeded.session.query(DiagnosticModel).first()
@@ -1157,7 +1162,7 @@ class TestGetExecutionsForReingest:
             reingested = Execution(
                 execution_group_id=eg.id,
                 successful=True,
-                output_fragment="original_fragment_20260405T120000000000",
+                output_fragment="reingested_fragment",
                 dataset_hash="h-orig",
             )
             db_seeded.session.add(reingested)

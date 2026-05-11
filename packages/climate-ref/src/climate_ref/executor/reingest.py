@@ -368,6 +368,7 @@ def get_executions_for_reingest(
         diagnostic_filters=diagnostic_filters,
         provider_filters=provider_filters,
         successful=None if include_failed else True,
+        include_superseded=True,
     )
 
     # Filter by execution group IDs if provided

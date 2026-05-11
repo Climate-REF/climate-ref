@@ -10,6 +10,7 @@ from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
     DataRequirement,
+    Diagnostic,
     ExecutionDefinition,
     ExecutionResult,
     ensure_relative_path,
@@ -126,6 +127,39 @@ class TestDiagnostic:
         mock_diagnostic.provider = None
         with pytest.raises(ValueError, match=r"register .* with a DiagnosticProvider before using"):
             mock_diagnostic.provider
+
+    def test_version_default_is_1(self):
+        """Diagnostic.version defaults to 1 when not overridden."""
+
+        class DefaultVersionDiag(Diagnostic):
+            name = "test-default-version"
+            slug = "test-default-version"
+            data_requirements = (
+                DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),
+            )
+
+            def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+                return ExecutionResult.build_from_failure(definition)
+
+        assert DefaultVersionDiag.version == 1
+        assert DefaultVersionDiag().version == 1
+
+    def test_version_can_be_overridden(self):
+        """A subclass can set version = 2."""
+
+        class V2Diagnostic(Diagnostic):
+            name = "test-v2"
+            slug = "test-v2"
+            version = 2
+            data_requirements = (
+                DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),
+            )
+
+            def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+                return ExecutionResult.build_from_failure(definition)
+
+        assert V2Diagnostic.version == 2
+        assert V2Diagnostic().version == 2
 
 
 class TestCommandLineDiagnostic:

@@ -39,7 +39,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     """
 
     __tablename__ = "execution_group"
-    __table_args__ = (UniqueConstraint("diagnostic_id", "key", name="execution_ident"),)
+    __table_args__ = (UniqueConstraint("diagnostic_id", "key", "diagnostic_version", name="execution_ident"),)
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
@@ -51,6 +51,15 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
     key: Mapped[str] = mapped_column(index=True)
     """
     Key for the datasets in this Execution group.
+    """
+
+    diagnostic_version: Mapped[int] = mapped_column(default=1, server_default="1")
+    """
+    Diagnostic version that produced this group.
+
+    Read from the live ``Diagnostic.version`` class attribute at solve time.
+    Combined with ``diagnostic_id`` and ``key`` to form the unique identifier,
+    so v1 and v2 groups for the same key coexist as separate rows.
     """
 
     dirty: Mapped[bool] = mapped_column(default=False)
@@ -204,6 +213,15 @@ class Execution(CreatedUpdatedMixin, Base):
     This may happen if a dataset has been retracted, or if the diagnostic execution was incorrect.
     Rather than delete the values, they are marked as retracted.
     These data may still be visible in the UI, but should be marked as retracted.
+    """
+
+    provider_version: Mapped[str | None] = mapped_column(nullable=True)
+    """
+    Provider version recorded by the worker at run time.
+
+    Snapshot of the worker-installed ``provider.version`` when the execution ran.
+    Purely informational for audit; not used for validation or recomputation triggers.
+    Rows that predate the column stay NULL.
     """
 
     execution_group: Mapped["ExecutionGroup"] = relationship(back_populates="executions")
@@ -484,9 +502,15 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     facet_filters: dict[str, list[str]] | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
+    include_superseded: bool = False,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
     Query execution groups with filtering capabilities.
+
+    By default, returns only execution groups whose ``diagnostic_version`` matches
+    the parent diagnostic's ``promoted_version`` so consumers see exactly one
+    version's worth of results.
+    Pass ``include_superseded=True`` to bypass the version filter and see the full history.
 
     Parameters
     ----------
@@ -507,6 +531,13 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         If True, only return execution groups whose latest execution was successful.
         If False, only return execution groups whose latest execution was unsuccessful or has no executions.
         If None, do not filter by execution success.
+    include_superseded
+        If True, include execution groups for diagnostic versions older than the
+        currently promoted version.
+        If False (default), join ``Diagnostic`` and filter to ``ExecutionGroup.diagnostic_version
+        == Diagnostic.promoted_version``.
+        Set this for recovery / audit callers that need the full version history
+        (e.g. ``executor/reingest.py``).
 
     Returns
     -------
@@ -519,13 +550,25 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     - Different filter types use AND logic
     - Facet filters can either be key=value (searches all dataset types)
       or dataset_type.key=value (searches specific dataset type)
+    - This helper is the only sanctioned path for new callers that should respect
+      the promoted-version filter. The one acknowledged exception is the
+      ``cli/executions.py::stats`` aggregation, which inlines
+      ``.join(Diagnostic).filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)``
+      because it returns aggregate rows rather than a list of tuples and so cannot
+      reuse this helper. Operational queries that must remain version-agnostic
+      (e.g. ``mark_failed_running`` in the same module) intentionally do not use
+      this helper at all.
     """
     # Start with base query
     query = get_execution_group_and_latest(session)
 
-    if diagnostic_filters or provider_filters:
-        # Join through to the Diagnostic table
+    # Join Diagnostic when needed for filtering (by name or by promoted version).
+    needs_diagnostic_join = bool(diagnostic_filters or provider_filters) or not include_superseded
+    if needs_diagnostic_join:
         query = query.join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+
+    if not include_superseded:
+        query = query.filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
 
     # Apply diagnostic filter (OR logic for multiple values)
     if diagnostic_filters:

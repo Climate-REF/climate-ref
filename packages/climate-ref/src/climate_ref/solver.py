@@ -29,6 +29,7 @@ from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
+from climate_ref.models.diagnostic import recompute_promoted_version
 from climate_ref.models.execution import Execution
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.constraints import apply_constraint
@@ -667,6 +668,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             if created:
                 logger.info(f"Created new execution group: {potential_execution.execution_slug()!r}")
                 db.session.flush()
+                recompute_promoted_version(diagnostic_id, db.session)
 
             # TODO: Move this logic to the solver
             # Check if we should run given the one_per_provider or one_per_diagnostic flags

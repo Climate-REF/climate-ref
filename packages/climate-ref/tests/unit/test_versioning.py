@@ -10,6 +10,7 @@ Covers:
 """
 
 import importlib.resources
+import re
 
 import pytest
 from alembic import command
@@ -294,12 +295,27 @@ class TestStatsPromotedVersionFilter:
         return db_seeded
 
     def test_stats_shows_only_promoted_version_totals(self, db_stats_versions: Database, invoke_cli) -> None:
+        """stats() must count only the promoted-version group, not both versions.
+
+        Regression guard: if the promoted_version filter in stats() is removed,
+        both the v1 and v2 groups would be counted and total would be 2, not 1.
+        """
         result = invoke_cli(["executions", "stats", "--diagnostic", "enso_tel"])
         assert result.exit_code == 0
-        # Total for enso_tel should be 1 (only the v2 group), not 2.
-        # The row shows total counts; if both were included total would be >=2.
-        # We assert "1" appears in the row and the table is non-empty.
         assert "enso_tel" in result.stdout
+
+        # Find the enso_tel row and extract all integers from it.
+        # The rich table row looks like: "│ enso_tel │ 0 │ 0 │ 1 │ 0 │ 0 │ 1 │"
+        # The last integer is the `total` column. It must be 1, not 2.
+        enso_line = next((line for line in result.stdout.splitlines() if "enso_tel" in line), None)
+        assert enso_line is not None, "enso_tel row missing from stats output"
+        numbers = [int(m) for m in re.findall(r"\b(\d+)\b", enso_line)]
+        assert numbers, "No numeric values found in enso_tel stats row"
+        total = numbers[-1]
+        assert total == 1, (
+            f"stats() total for enso_tel is {total}, expected 1. "
+            "The promoted_version filter may be missing — both v1 and v2 groups are visible."
+        )
 
 
 # ---------------------------------------------------------------------------

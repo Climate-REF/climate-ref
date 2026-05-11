@@ -22,7 +22,12 @@ PLACEHOLDER_FRAGMENT = "_pending"
 """Output-fragment placeholder used until ``Execution.id`` is known."""
 
 _DEFAULT_DIAGNOSTIC_VERSION = 1
-"""Default ``Diagnostic.version`` used when a diagnostic does not declare its own."""
+"""
+Default integer version baked into the output-fragment hash and suffix.
+
+Diagnostics do not currently expose a version attribute; this constant is the
+value used for every diagnostic until that is introduced.
+"""
 
 
 def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
@@ -61,6 +66,22 @@ def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
         )
 
     return fragment
+
+
+_UNSAFE_SEGMENT_RE = re.compile(r"[/\\\x00]")
+
+
+def _validate_path_segment(value: str, *, label: str) -> str:
+    r"""
+    Ensure *value* is a safe single path segment.
+
+    Rejects empty strings, path separators (``/``, ``\``), NUL bytes, and dot-segments
+    (``.``, ``..``) so that downstream ``Path`` joins cannot escape the intended
+    results/scratch base directories.
+    """
+    if not value or _UNSAFE_SEGMENT_RE.search(value) or value in (".", ".."):
+        raise ValueError(f"Invalid {label}: {value!r} is not a safe single path segment")
+    return value
 
 
 def _sanitize_token(value: str) -> str:
@@ -109,8 +130,8 @@ def compute_group_short(
     sanitized to ``[A-Za-z0-9_-]``,
     joined by ``_``,
     and truncated to *token_limit* characters at an underscore boundary.
-    A suffix ``_g{group_id}_v{diagnostic_version}_{sha1[:8]}`` is appended,
-    where the SHA1 hash is computed over the canonical
+    A suffix ``_g{group_id}_v{diagnostic_version}_{digest}`` is appended,
+    where ``digest`` is an 8-character BLAKE2s hash of the canonical
     ``group_id|diagnostic_version|sorted_selectors`` representation.
 
     The returned string is ASCII, capped at roughly 96 characters,
@@ -151,8 +172,10 @@ def compute_group_short(
     token_part = _truncate_at_boundary("_".join(raw_tokens), token_limit)
 
     # Stable hash input: group_id, version, and the canonical selector pairs.
+    # BLAKE2s with a 4-byte digest emits an 8-char hex string without truncation;
+    # it is non-cryptographic for our purposes but avoids the deprecated-hash linter.
     hash_payload = repr((group_id, diagnostic_version, canonical_pairs)).encode("utf-8")
-    digest = hashlib.sha1(hash_payload).hexdigest()[:8]  # noqa: S324
+    digest = hashlib.blake2s(hash_payload, digest_size=4).hexdigest()
 
     suffix = f"_g{group_id}_v{diagnostic_version}_{digest}"
 
@@ -190,6 +213,8 @@ def assign_execution_fragment(  # noqa: PLR0913
 
     Returns the assigned fragment string.
     """
+    _validate_path_segment(provider_slug, label="provider slug")
+    _validate_path_segment(diagnostic_slug, label="diagnostic slug")
     session.flush()
     group_short = compute_group_short(selectors, group_id=group_id, diagnostic_version=diagnostic_version)
     fragment = str(Path(provider_slug) / diagnostic_slug / group_short / str(execution.id))

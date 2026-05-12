@@ -266,6 +266,7 @@ def reingest_execution(
                     execution_group=execution_group,
                     dataset_hash=execution.dataset_hash,
                     output_fragment=PLACEHOLDER_FRAGMENT,
+                    provider_version=diagnostic.provider.version,
                 )
                 database.session.add(new_execution)
 

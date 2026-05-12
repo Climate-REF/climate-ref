@@ -651,14 +651,18 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         limit_reached = False
 
         diagnostic_id = diagnostic_id_by_slug[(provider_slug, potential_execution.diagnostic.slug)]
+        diagnostic_version = potential_execution.diagnostic.version
 
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
         with db.session.begin():
+            # diagnostic_version is part of the lookup key so bumping
+            # ``Diagnostic.version`` produces a fresh v2 group instead of reusing the v1 row.
             execution_group, created = db.get_or_create(
                 ExecutionGroup,
                 key=definition.key,
                 diagnostic_id=diagnostic_id,
+                diagnostic_version=diagnostic_version,
                 defaults={
                     "selectors": potential_execution.selectors,
                     "dirty": True,
@@ -706,6 +710,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                     execution_group=execution_group,
                     dataset_hash=definition.datasets.hash,
                     output_fragment=PLACEHOLDER_FRAGMENT,
+                    provider_version=potential_execution.provider.version,
                 )
                 db.session.add(execution)
 

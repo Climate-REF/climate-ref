@@ -21,6 +21,36 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.0 (2026-05-12)
+
+### Features
+
+- Write the diagnostic `version` to the database.
+
+  Bumping a diagnostic's ``version`` now creates a fresh execution group
+  (preserving the prior version's group and results) instead of overwriting it,
+  and each execution is stamped with the provider version that produced it. ([#667](https://github.com/Climate-REF/climate-ref/pull/667))
+
+### Improvements
+
+- Reworked the layout of execution output directories.
+  New executions now write to ``<provider>/<diagnostic>/<group_short>/<execution_id>/``
+  instead of ``<provider>/<diagnostic>/<dataset_hash>/``,
+  so reruns of the same diagnostic group no longer overwrite earlier outputs.
+  Existing rows on disk continue to resolve through their stored ``Execution.output_fragment``. ([#655](https://github.com/Climate-REF/climate-ref/pull/655))
+- Added diagnostic versioning read-path foundations.
+  New database columns track the diagnostic version for each execution group,
+  the promoted version for each diagnostic, and the provider version for each execution.
+  Default queries now return only results at the promoted version, and the ``ref executions stats`` command reflects the same filter. ([#665](https://github.com/Climate-REF/climate-ref/pull/665))
+
+### Bug Fixes
+
+- `ref datasets ingest` now exits with a non-zero status when one or more input directories fail to ingest,
+  so cron- and Kubernetes-based deployments can detect failures.
+  The CMIP6, CMIP7, and obs4MIPs adapters also now tolerate individual files with missing DRS components:
+  those files are logged and skipped instead of aborting the whole batch. ([#668](https://github.com/Climate-REF/climate-ref/pull/668))
+
+
 ## climate-ref 0.13.2 (2026-05-10)
 
 ### Features

@@ -10,7 +10,7 @@ from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
-from climate_ref.datasets.utils import clean_branch_time, parse_cftime_dates
+from climate_ref.datasets.utils import build_instance_id, clean_branch_time, parse_cftime_dates
 from climate_ref.models.dataset import CMIP6Dataset
 
 
@@ -220,9 +220,7 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             *self.dataset_id_metadata,
             self.version_metadata,
         ]
-        datasets["instance_id"] = datasets.apply(
-            lambda row: "CMIP6." + ".".join([row[item] for item in drs_items]), axis=1
-        )
+        datasets = build_instance_id(datasets, drs_items, prefix="CMIP6")
 
         # Add in any missing metadata columns
         missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(

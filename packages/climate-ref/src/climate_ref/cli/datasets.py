@@ -148,18 +148,22 @@ def ingest(  # noqa
     # Create a data catalog from the specified file or directory
     adapter = get_dataset_adapter(source_type.value, **kwargs)
 
+    failed_dirs: list[Path] = []
+
     for _dir in file_or_directory:
         _dir = Path(_dir).expanduser()
         logger.info(f"Ingesting {_dir}")
 
         if not _dir.exists():
             logger.error(f"File or directory {_dir} does not exist")
+            failed_dirs.append(_dir)
             continue
 
         # TODO: This assumes that all datasets are nc files.
         # This is true for CMIP6 and obs4MIPs but may not be true for other dataset types in the future.
-        if not next(_dir.rglob("*.nc")):
+        if next(_dir.rglob("*.nc"), None) is None:
             logger.error(f"No .nc files found in {_dir}")
+            failed_dirs.append(_dir)
             continue
 
         try:
@@ -167,6 +171,7 @@ def ingest(  # noqa
             data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
         except Exception as e:
             logger.exception(f"Error ingesting datasets from {_dir}: {e}")
+            failed_dirs.append(_dir)
             continue
 
         if data_catalog.empty:
@@ -202,6 +207,13 @@ def ingest(  # noqa
             db=db,
             dry_run=dry_run,
         )
+
+    if failed_dirs:
+        logger.error(
+            f"Ingestion failed for {len(failed_dirs)} of {len(file_or_directory)} input(s): "
+            f"{', '.join(str(p) for p in failed_dirs)}"
+        )
+        raise typer.Exit(code=1)
 
 
 _ALLOWED_GROUP_BY = ("source_id", "variable_id")

@@ -16,7 +16,7 @@ from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
-from climate_ref.datasets.utils import clean_branch_time, parse_cftime_dates
+from climate_ref.datasets.utils import build_instance_id, clean_branch_time, parse_cftime_dates
 from climate_ref.models.dataset import CMIP7Dataset
 
 
@@ -224,9 +224,7 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             *self.dataset_id_metadata,
             self.version_metadata,
         ]
-        datasets["instance_id"] = datasets.apply(
-            lambda row: "CMIP7." + ".".join([str(row[item]) for item in drs_items]), axis=1
-        )
+        datasets = build_instance_id(datasets, drs_items, prefix="CMIP7")
 
         # Add in any missing metadata columns
         missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
@@ -237,6 +235,9 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
                 datasets[column] = pd.NA
 
         # Add branded_variable for the raw catalog (before DB ingestion)
-        datasets["branded_variable"] = datasets["variable_id"] + "_" + datasets["branding_suffix"]
+        if not datasets.empty:
+            datasets["branded_variable"] = datasets["variable_id"] + "_" + datasets["branding_suffix"]
+        else:
+            datasets["branded_variable"] = pd.Series(dtype="object")
 
         return datasets

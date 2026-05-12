@@ -227,10 +227,31 @@ class TestIngest:
                 "--source-type",
                 "cmip6",
             ],
+            expected_exit_code=1,
         )
 
-        # Continues past the missing directory
+        # Logs the missing directory and exits non-zero so cron/k8s see the failure.
         assert f"File or directory {sample_data_dir / 'missing'} does not exist" in result.stderr
+        assert "Ingestion failed for 1 of 1 input(s)" in result.stderr
+
+    def test_ingest_partial_failure_exits_nonzero(self, sample_data_dir, db, invoke_cli):
+        # One valid dir, one missing dir: ingestion still runs for the valid dir,
+        # but the CLI exits non-zero so the failure is observable in cron/k8s.
+        result = invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(sample_data_dir / self.data_dir),
+                str(sample_data_dir / "missing"),
+                "--source-type",
+                "cmip6",
+            ],
+            expected_exit_code=1,
+        )
+
+        expected_dataset_count = 6
+        assert db.session.query(Dataset).count() == expected_dataset_count
+        assert "Ingestion failed for 1 of 2 input(s)" in result.stderr
 
     def test_ingest_dryrun(self, sample_data_dir, db, invoke_cli):
         invoke_cli(

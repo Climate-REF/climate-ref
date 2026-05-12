@@ -91,6 +91,37 @@ When a stable API needs to change:
 3. Remove the deprecated API in the next **major** release
 4. Maintain at least one minor release with the deprecation warning
 
+## Diagnostic Versioning
+
+Each diagnostic carries an integer ``version`` class attribute (default ``1``).
+The solver reads this attribute when creating an ``ExecutionGroup`` and
+stores it as ``ExecutionGroup.diagnostic_version``.
+
+```python
+class MyDiagnostic(Diagnostic):
+    name = "My diagnostic"
+    slug = "my-diagnostic"
+    version = 2  # bump when results change
+```
+
+Bump the version whenever a code or data-requirement change should invalidate previously computed results.
+The value is append-only: always increment, never reuse a previous number.
+
+### What happens when you bump a version
+
+- Existing ``ExecutionGroup`` rows for the previous version are preserved.
+- The next solve will creates fresh groups for the new version.
+- ``Diagnostic.promoted_version`` is recomputed to ``max(ExecutionGroup.diagnostic_version)``,
+  so default queries (CLI, API) immediately return only the new version's results.
+- Older versions remain reachable for audit via
+  ``get_execution_group_and_latest_filtered(..., include_superseded=True)``.
+
+### Provider version stamping
+
+Each ``Execution`` records ``provider_version`` -- a snapshot of the worker-installed ``DiagnosticProvider.version`` at run time.
+This is informational only; it is not used for validation or recomputation triggers,
+but is useful for auditing which provider release produced a given result.
+
 ## Provider Dependency Guidelines
 
 ### For provider authors

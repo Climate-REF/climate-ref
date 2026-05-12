@@ -1,4 +1,4 @@
-"""Tests for diagnostic versioning read-path foundations.
+"""Tests for diagnostic versioning
 
 Covers:
 1. Migration up/down + backfill
@@ -6,7 +6,8 @@ Covers:
 3. recompute_promoted_version helper
 4. stats() aggregation filter (promoted_version only)
 5. mark_failed_running operational invariant (version-agnostic)
-6. Dormancy regression (solver does NOT branch on Diagnostic.version)
+6. solver branches on Diagnostic.version
+7. Execution.provider_version stamping
 """
 
 import importlib.resources
@@ -338,39 +339,78 @@ class TestMarkFailedRunningVersionAgnostic:
         assert remaining_running == 0, "All in-flight executions must be marked failed"
 
 
-class TestDormancyRegression:
-    """The solver's get_or_create still uses only (diagnostic_id, key) as lookup keys
-    Newly created groups must always have diagnostic_version=1
-    regardless of the Python-side Diagnostic.version class attribute.
+class TestSolverVersionBranching:
+    """The solver branches on ``Diagnostic.version`` when creating ExecutionGroups.
+
+    Bumping the class attribute produces a fresh v2 row instead of reusing the v1 row,
+    and ``recompute_promoted_version`` advances the diagnostic's promoted version.
     """
 
-    def test_solver_creates_group_at_version_1_even_when_diagnostic_version_is_2(
+    def _solve_with_example_provider(self, db: Database, config) -> None:
+        local_solver = ExecutionSolver.build_from_db(config, db)
+        local_solver.provider_registry = ProviderRegistry(providers=[example_provider])
+        solve_required_executions(db, config=config, solver=local_solver, dry_run=False)
+
+    def _example_diagnostic_row(self, db: Database) -> Diagnostic:
+        slug = example_provider.diagnostics()[0].slug
+        return db.session.query(Diagnostic).filter_by(slug=slug).one()
+
+    def test_solver_creates_v2_group_when_diagnostic_version_bumped(
         self, db_seeded: Database, config, monkeypatch
     ) -> None:
-        # Monkeypatch the version attribute on the example diagnostic class to 2.
-        example_diag_cls = type(example_provider.diagnostics()[0])
-        monkeypatch.setattr(example_diag_cls, "version", 2, raising=False)
-
-        # Build a solver with the example provider (same as test_solver.py `solver` fixture).
-        local_solver = ExecutionSolver.build_from_db(config, db_seeded)
-        local_solver.provider_registry = ProviderRegistry(providers=[example_provider])
-
-        # dry_run=True so we get the group creation side effects without running diagnostics.
-        solve_required_executions(db_seeded, config=config, solver=local_solver, dry_run=True)
-
-        # All newly created groups must have diagnostic_version=1 (write-path not activated)
-        groups = db_seeded.session.query(ExecutionGroup).all()
-        assert groups, "Solver should create at least one ExecutionGroup"
-        for eg in groups:
-            assert eg.diagnostic_version == 1, (
-                f"ExecutionGroup {eg.key!r} has diagnostic_version={eg.diagnostic_version}; "
-                "solver must not branch on Diagnostic.version"
+        # Pre-seed a v1 group directly so we can detect that the solver does
+        # not overwrite or reuse it when the live class attribute is bumped to 2.
+        with db_seeded.session.begin():
+            diag = self._example_diagnostic_row(db_seeded)
+            diagnostic_id = diag.id
+            db_seeded.session.add(
+                ExecutionGroup(
+                    key="preexisting-v1",
+                    diagnostic_id=diagnostic_id,
+                    diagnostic_version=1,
+                    selectors={"cmip6": [["source_id", "MODEL-X"]]},
+                )
             )
 
-        # promoted_version on all diagnostics must also remain at 1
-        diags = db_seeded.session.query(Diagnostic).all()
-        for d in diags:
-            assert d.promoted_version == 1, (
-                f"Diagnostic {d.slug!r} has promoted_version={d.promoted_version}; "
-                "recompute_promoted_version must not promote beyond 1 when all groups are v1"
+        # Bump the example diagnostic to v2 and run the solver.
+        example_diag_cls = type(example_provider.diagnostics()[0])
+        monkeypatch.setattr(example_diag_cls, "version", 2, raising=False)
+        self._solve_with_example_provider(db_seeded, config)
+
+        # The pre-seeded v1 group must survive.
+        assert (
+            db_seeded.session.query(ExecutionGroup)
+            .filter_by(diagnostic_id=diagnostic_id, diagnostic_version=1, key="preexisting-v1")
+            .first()
+            is not None
+        ), "Solver must not delete the pre-existing v1 ExecutionGroup"
+
+        # Newly created groups for this diagnostic must be at version 2.
+        v2_groups = (
+            db_seeded.session.query(ExecutionGroup)
+            .filter_by(diagnostic_id=diagnostic_id, diagnostic_version=2)
+            .all()
+        )
+        assert v2_groups, "Solver must create v2 ExecutionGroups when Diagnostic.version=2"
+
+    def test_promoted_version_advances_after_version_bump(
+        self, db_seeded: Database, config, monkeypatch
+    ) -> None:
+        example_diag_cls = type(example_provider.diagnostics()[0])
+        monkeypatch.setattr(example_diag_cls, "version", 2, raising=False)
+        self._solve_with_example_provider(db_seeded, config)
+
+        diag = self._example_diagnostic_row(db_seeded)
+        assert diag.promoted_version == 2, (
+            f"Expected promoted_version=2 after solver run at version=2, got {diag.promoted_version}"
+        )
+
+    def test_solver_records_provider_version_on_execution(self, db_seeded: Database, config) -> None:
+        self._solve_with_example_provider(db_seeded, config)
+        executions = db_seeded.session.query(Execution).all()
+        assert executions, "Solver must create Execution rows"
+        for execution in executions:
+            assert execution.provider_version == example_provider.version, (
+                f"Execution {execution.id} provider_version={execution.provider_version!r}; "
+                f"expected {example_provider.version!r}"
             )

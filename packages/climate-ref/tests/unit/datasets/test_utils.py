@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import ClassVar
 
 import cftime
 import numpy as np
@@ -6,6 +7,7 @@ import pandas as pd
 import pytest
 
 from climate_ref.datasets.utils import (
+    build_instance_id,
     clean_branch_time,
     parse_cftime_dates,
     parse_drs_daterange,
@@ -180,3 +182,75 @@ class TestParseCftimeDates:
         )
         assert result.iloc[0] == cftime.datetime(2000, 1, 15, calendar="standard")
         assert result.iloc[1] == cftime.datetime(2000, 1, 15, calendar="360_day")
+
+
+class TestBuildInstanceId:
+    drs_items: ClassVar[list[str]] = ["activity_id", "variable_id", "version"]
+
+    def _frame(self, rows):
+        return pd.DataFrame(rows)
+
+    def test_all_components_present(self):
+        df = self._frame(
+            [
+                {"activity_id": "CMIP", "variable_id": "tas", "version": "v1", "path": "/a.nc"},
+                {"activity_id": "CMIP", "variable_id": "pr", "version": "v1", "path": "/b.nc"},
+            ]
+        )
+        out = build_instance_id(df, self.drs_items, prefix="CMIP6")
+        assert out["instance_id"].tolist() == ["CMIP6.CMIP.tas.v1", "CMIP6.CMIP.pr.v1"]
+        assert len(out) == 2
+
+    def test_drops_rows_with_none_component(self, caplog):
+        df = self._frame(
+            [
+                {"activity_id": "CMIP", "variable_id": "tas", "version": "v1", "path": "/a.nc"},
+                {"activity_id": "CMIP", "variable_id": None, "version": "v1", "path": "/bad.nc"},
+                {"activity_id": "CMIP", "variable_id": "pr", "version": np.nan, "path": "/bad2.nc"},
+            ]
+        )
+        out = build_instance_id(df, self.drs_items, prefix="CMIP6")
+
+        assert out["instance_id"].tolist() == ["CMIP6.CMIP.tas.v1"]
+        # Two warnings, one per dropped row, naming the path + missing column(s).
+        warning_messages = [r.message for r in caplog.records]
+        assert any("/bad.nc" in m and "variable_id" in m for m in warning_messages)
+        assert any("/bad2.nc" in m and "version" in m for m in warning_messages)
+
+    def test_empty_input(self):
+        df = pd.DataFrame(columns=["activity_id", "variable_id", "version", "path"])
+        out = build_instance_id(df, self.drs_items, prefix="CMIP6")
+        assert out.empty
+        assert "instance_id" in out.columns
+
+    def test_custom_transform(self):
+        df = self._frame(
+            [
+                {
+                    "activity_id": "obs4MIPs",
+                    "variable_id": "tas",
+                    "nominal_resolution": "100 km",
+                    "version": "v1",
+                    "path": "/a.nc",
+                }
+            ]
+        )
+        out = build_instance_id(
+            df,
+            ["activity_id", "nominal_resolution", "variable_id", "version"],
+            prefix="obs4MIPs",
+            transform=lambda item, value: (
+                str(value).replace(" ", "") if item == "nominal_resolution" else str(value)
+            ),
+        )
+        assert out["instance_id"].iloc[0] == "obs4MIPs.obs4MIPs.100km.tas.v1"
+
+    def test_does_not_mutate_input(self):
+        df = self._frame(
+            [
+                {"activity_id": "CMIP", "variable_id": "tas", "version": "v1", "path": "/a.nc"},
+            ]
+        )
+        original = df.copy()
+        build_instance_id(df, self.drs_items, prefix="CMIP6")
+        pd.testing.assert_frame_equal(df, original)

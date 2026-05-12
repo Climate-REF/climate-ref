@@ -5,6 +5,7 @@ Shared utility functions for dataset adapters
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -213,6 +214,65 @@ def parse_drs_daterange(date_range: str) -> tuple[str | None, str | None]:
     except ValueError:
         logger.error(f"Invalid date range format: {date_range}")
         return None, None
+
+
+def build_instance_id(
+    datasets: pd.DataFrame,
+    drs_items: list[str],
+    prefix: str,
+    transform: Callable[[str, Any], str] | None = None,
+) -> pd.DataFrame:
+    """
+    Add an ``instance_id`` column built from DRS components.
+
+    Rows where any required DRS component is None/NA are dropped with a warning
+    so a single malformed file does not abort the whole ingestion batch.
+
+    Parameters
+    ----------
+    datasets
+        Data catalog with one row per file.
+    drs_items
+        Column names that make up the instance id, in order.
+    prefix
+        Prefix to use for the instance id (e.g. ``"CMIP6"``).
+    transform
+        Optional per-column value transform; defaults to ``str(value)``.
+
+    Returns
+    -------
+    :
+        Catalog with the ``instance_id`` column added and invalid rows removed.
+    """
+    if datasets.empty:
+        datasets = datasets.copy()
+        datasets["instance_id"] = pd.Series(dtype="object")
+        return datasets
+
+    def _build(row: pd.Series) -> str | None:
+        parts: list[str] = []
+        for item in drs_items:
+            val = row[item]
+            if _is_na(val):
+                return None
+            parts.append(transform(item, val) if transform else str(val))
+        return f"{prefix}." + ".".join(parts)
+
+    datasets = datasets.copy()
+    datasets["instance_id"] = pd.Series(
+        [_build(row) for _, row in datasets.iterrows()],
+        index=datasets.index,
+        dtype="object",
+    )
+    invalid_mask = datasets["instance_id"].isna()
+    if invalid_mask.any():
+        invalid_rows = datasets.loc[invalid_mask]
+        for _, row in invalid_rows.iterrows():
+            missing = [c for c in drs_items if _is_na(row[c])]
+            path = row.get("path", "<unknown>")
+            logger.warning(f"Skipping {path}: missing required DRS components for instance_id: {missing}")
+        datasets = datasets.loc[~invalid_mask].copy()
+    return datasets
 
 
 def validate_path(raw_path: str) -> Path:

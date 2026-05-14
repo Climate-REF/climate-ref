@@ -185,11 +185,11 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
         """
         Apply CMIP6 post-parse enrichment to a raw catalog DataFrame.
 
-        Shared by :meth:`find_local_datasets` (whole-tree) and
-        :meth:`iter_local_datasets` (chunked) so behaviour stays identical.
+        Shared by :meth:`find_local_datasets` (whole-tree) and  :meth:`iter_local_datasets` (chunked)
+        so behaviour stays identical.
 
-        The caller owns ``datasets`` and the result, so we mutate in place to
-        avoid an extra full-table copy in :func:`build_instance_id`.
+        The caller owns ``datasets`` and the result,
+        so we mutate in place to avoid an extra full-table copy in :func:`build_instance_id`.
         """
         if "init_year" in datasets.columns:
             datasets = datasets.drop(["init_year"], axis=1)

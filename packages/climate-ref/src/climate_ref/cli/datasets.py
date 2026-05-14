@@ -131,7 +131,7 @@ def ingest(  # noqa
             help=(
                 "Stream the catalog in chunks of this many files instead of loading the whole "
                 "directory at once. Bounds peak memory for large archives. Only supported by "
-                "adapters that implement iter_local_datasets (currently CMIP6)."
+                "adapters that implement iter_local_datasets (currently CMIP6 and CMIP7)."
             )
         ),
     ] = None,

@@ -55,13 +55,6 @@ ignore = [
 "*/cli/*.py" = [
     "PLC0415",  # Import outside top-level (lazy imports for performance)
 ]
-# Diagnostic scripts use lazy imports and don't need full docstrings
-"scripts/*.py" = [
-    "D",
-    "PLC0415",
-    "PLR0913",
-    "PLR2004",
-]
 
 [lint.isort]
 known-first-party = ["climate_ref", "climate_ref_core"]

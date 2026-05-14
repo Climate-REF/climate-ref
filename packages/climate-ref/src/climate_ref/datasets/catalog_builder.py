@@ -171,10 +171,9 @@ def iter_discovered_chunks(
     """
     Yield batches of discovered file paths in chunks.
 
-    Walks the directory tree once and yields batches of up to ``chunk_size``
-    paths. Batches only flush at directory boundaries, so files within a
-    single directory are kept together — important for DRS-style layouts
-    where one directory holds all files for a single dataset.
+    Walks the directory tree once and yields batches of up to ``chunk_size`` paths.
+    Batches only flush at directory boundaries, so files within a single directory are kept together.
+    This assumption holds for the current directory structures used by CMIP6 and CMIP7.
 
     Parameters
     ----------
@@ -240,9 +239,8 @@ def _filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
     """
     Drop INVALID_ASSET rows from a parsed catalog DataFrame.
 
-    Warns once per call summarising the count, logs each invalid path
-    at warning level, then returns a DataFrame with the INVALID_ASSET
-    and TRACEBACK columns removed.
+    Warns once per call summarising the count, logs each invalid path at warning level,
+    then returns a DataFrame with the INVALID_ASSET and TRACEBACK columns removed.
     """
     if INVALID_ASSET not in df.columns:
         return df
@@ -267,8 +265,7 @@ def iter_built_catalogs(  # noqa: PLR0913
     Yield catalog DataFrames in chunks, parsing files chunk by chunk.
 
     Peak memory is bounded by ``chunk_size`` files because each chunk's
-    parsed entries and DataFrame are released before the next chunk
-    starts parsing.
+    parsed entries and DataFrame are released before the next chunk starts parsing.
 
     Parameters
     ----------

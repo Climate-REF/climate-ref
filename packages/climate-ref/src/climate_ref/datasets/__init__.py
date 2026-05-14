@@ -144,17 +144,18 @@ def ingest_datasets(  # noqa: PLR0913
     db
         Database instance
     data_catalog
-        Optional pre-validated data catalog. If provided, directory is ignored and
-        the catalog is used directly. This avoids redundant find/validate operations.
-        When supplied, ``chunk_size`` is ignored because the catalog is already
-        fully materialised.
+        Optional pre-validated data catalog.
+
+        If provided, directory is ignored and the catalog is used directly.
+        This avoids redundant find/validate operations.
+        When supplied, ``chunk_size`` is ignored because the catalog is already fully materialised.
     skip_invalid
         If True, skip datasets that fail validation (default True)
     chunk_size
-        When provided and ``data_catalog`` is None, stream the directory in
-        batches of ``chunk_size`` files so peak memory is bounded regardless
-        of how many files live under ``directory``. Requires the adapter to
-        implement ``iter_local_datasets``.
+        When provided and ``data_catalog`` is None,
+        stream the directory in batches of ``chunk_size`` files so peak memory is bounded regardless
+        of how many files live under ``directory``.
+        Requires the adapter to implement ``iter_local_datasets``.
 
     Returns
     -------

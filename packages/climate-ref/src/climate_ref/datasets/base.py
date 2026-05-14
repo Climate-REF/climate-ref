@@ -316,10 +316,8 @@ class DatasetAdapter(Protocol):
             raise NotImplementedError("Removing files is not yet supported")
 
         # Update existing files if any file-specific metadata has changed.
-        # Compare via _to_db_str on the incoming value so it matches the
-        # on-disk str form (DatasetFile.@validates coerces cftime -> str).
-        # Without this, a fresh cftime parse compared to the str loaded from
-        # the DB always evaluates !=, forcing spurious updates every run.
+        # Compare via _to_db_str on the incoming value so it matches the on-disk str form
+        # (DatasetFile.@validates coerces cftime -> str).
         for file_path, existing_file in current_file_paths.items():
             if file_path in new_file_lookup:
                 new_meta = new_file_lookup[file_path]

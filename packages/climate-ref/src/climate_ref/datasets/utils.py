@@ -29,12 +29,11 @@ def _to_db_str(value: Any) -> str | None:
     """
     Coerce a value to its on-disk string form.
 
-    Matches the @validates coercion used by DatasetFile (e.g.
-    cftime.datetime -> str(cftime_obj)). This is the normalised form for
-    comparing a freshly-parsed in-memory value against the str loaded back
-    from the database. Without it, a cross-type ``str != cftime.datetime``
-    comparison always evaluates True and every file appears changed on
-    re-ingest.
+    Matches the @validates coercion used by DatasetFile (e.g. cftime.datetime -> str(cftime_obj)).
+    This is the normalised form for comparing a freshly-parsed in-memory value
+    against the str loaded back from the database.
+    Without it, a cross-type ``str != cftime.datetime`` comparison always evaluates True
+    and every file appears changed onre-ingest.
     """
     if value is None:
         return None

@@ -7,7 +7,7 @@ from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
+from climate_ref.datasets.utils import _is_na, _to_db_str, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
 
@@ -315,14 +315,16 @@ class DatasetAdapter(Protocol):
             logger.warning(f"Files to remove: {files_removed}")
             raise NotImplementedError("Removing files is not yet supported")
 
-        # Update existing files if any file-specific metadata has changed
+        # Update existing files if any file-specific metadata has changed.
+        # Compare via _to_db_str on the incoming value so it matches the on-disk str form
+        # (DatasetFile.@validates coerces cftime -> str).
         for file_path, existing_file in current_file_paths.items():
             if file_path in new_file_lookup:
                 new_meta = new_file_lookup[file_path]
                 changed = any(
                     not _is_na(new_meta.get(c))
                     and hasattr(existing_file, c)
-                    and getattr(existing_file, c) != new_meta[c]
+                    and getattr(existing_file, c) != _to_db_str(new_meta[c])
                     for c in file_meta_cols
                     if c in new_meta
                 )

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections.abc import Iterator
 from pathlib import Path
 
 import pandas as pd
@@ -7,7 +8,7 @@ from loguru import logger
 
 from climate_ref.config import Config
 from climate_ref.datasets.base import DatasetAdapter, DatasetParsingFunction
-from climate_ref.datasets.catalog_builder import build_catalog
+from climate_ref.datasets.catalog_builder import build_catalog, iter_built_catalogs
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.mixins import FinaliseableDatasetAdapterMixin
 from climate_ref.datasets.utils import build_instance_id, clean_branch_time, parse_cftime_dates
@@ -180,6 +181,37 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             logger.info(f"Using DRS CMIP6 parser (config value: {parser_type})")
             return parse_cmip6_drs
 
+    def _enrich_parsed_catalog(self, datasets: pd.DataFrame) -> pd.DataFrame:
+        """
+        Apply CMIP6 post-parse enrichment to a raw catalog DataFrame.
+
+        Shared by :meth:`find_local_datasets` (whole-tree) and  :meth:`iter_local_datasets` (chunked)
+        so behaviour stays identical.
+
+        The caller owns ``datasets`` and the result,
+        so we mutate in place to avoid an extra full-table copy in :func:`build_instance_id`.
+        """
+        if "init_year" in datasets.columns:
+            datasets = datasets.drop(["init_year"], axis=1)
+
+        cal = datasets["calendar"] if "calendar" in datasets.columns else "standard"
+        if "start_time" in datasets.columns:
+            datasets["start_time"] = parse_cftime_dates(datasets["start_time"], cal)
+        if "end_time" in datasets.columns:
+            datasets["end_time"] = parse_cftime_dates(datasets["end_time"], cal)
+
+        drs_items = [*self.dataset_id_metadata, self.version_metadata]
+        datasets = build_instance_id(datasets, drs_items, prefix="CMIP6", copy=False)
+
+        missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
+            datasets.columns
+        )
+        for column in missing_columns:
+            datasets[column] = pd.NA
+
+        # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
+        return _apply_fixes(datasets)
+
     def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
         """
         Generate a data catalog from the specified file or directory
@@ -207,31 +239,44 @@ class CMIP6DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             n_jobs=self.n_jobs,
         )
 
-        datasets = datasets.drop(["init_year"], axis=1)
+        return self._enrich_parsed_catalog(datasets)
 
-        # Convert the start_time and end_time columns to cftime objects
-        cal = datasets["calendar"] if "calendar" in datasets.columns else "standard"
-        if "start_time" in datasets.columns:
-            datasets["start_time"] = parse_cftime_dates(datasets["start_time"], cal)
-        if "end_time" in datasets.columns:
-            datasets["end_time"] = parse_cftime_dates(datasets["end_time"], cal)
+    def iter_local_datasets(
+        self, file_or_directory: Path, chunk_size: int = 10_000
+    ) -> Iterator[pd.DataFrame]:
+        """
+        Stream the data catalog in chunks to bound peak memory.
 
-        drs_items = [
-            *self.dataset_id_metadata,
-            self.version_metadata,
-        ]
-        datasets = build_instance_id(datasets, drs_items, prefix="CMIP6")
+        Discovery walks the tree once, but parsing and DataFrame construction
+        happen ``chunk_size`` files at a time. Chunks flush at directory
+        boundaries so files belonging to the same dataset (which share a DRS
+        version directory) stay together in a single chunk.
 
-        # Add in any missing metadata columns
-        missing_columns = set(self.dataset_specific_metadata + self.file_specific_metadata) - set(
-            datasets.columns
-        )
-        if missing_columns:
-            for column in missing_columns:
-                datasets[column] = pd.NA
+        Parameters
+        ----------
+        file_or_directory
+            Root of the CMIP6 archive (or a single file) to ingest.
+        chunk_size
+            Soft target for the number of files per chunk. Increasing this
+            trades higher peak memory for fewer per-chunk overheads.
 
-        # Temporary fix for some datasets
-        # TODO: Replace with a standalone package that contains metadata fixes for CMIP6 datasets
-        datasets = _apply_fixes(datasets)
+        Yields
+        ------
+        :
+            Catalog DataFrames, each containing metadata for one chunk of files.
+            Empty chunks are skipped.
+        """
+        parsing_function = self.get_parsing_function()
 
-        return datasets
+        for raw_chunk in iter_built_catalogs(
+            paths=[str(file_or_directory)],
+            parsing_func=parsing_function,
+            include_patterns=["*.nc"],
+            depth=10,
+            n_jobs=self.n_jobs,
+            chunk_size=chunk_size,
+        ):
+            enriched = self._enrich_parsed_catalog(raw_chunk)
+            if enriched.empty:
+                continue
+            yield enriched

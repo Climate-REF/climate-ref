@@ -53,6 +53,48 @@ class TestCMIP6Adapter:
         assert new_instance_id in latest_instance_ids
 
 
+class TestCMIP6IterLocalDatasets:
+    def test_streaming_matches_whole_tree(self, sample_data, sample_data_dir):
+        """``iter_local_datasets`` must yield the same rows as ``find_local_datasets``."""
+        adapter = CMIP6DatasetAdapter()
+        cmip6_root = sample_data_dir / "CMIP6"
+
+        whole = adapter.find_local_datasets(cmip6_root)
+        streamed = pd.concat(list(adapter.iter_local_datasets(cmip6_root, chunk_size=5)))
+
+        # The streaming path may interleave chunks differently, so normalise both.
+        pd.testing.assert_frame_equal(
+            sort_data_catalog(whole.reset_index(drop=True)),
+            sort_data_catalog(streamed.reset_index(drop=True)),
+        )
+
+    def test_streaming_yields_nonempty_chunks(self, sample_data, sample_data_dir):
+        adapter = CMIP6DatasetAdapter()
+        chunks = list(adapter.iter_local_datasets(sample_data_dir / "CMIP6", chunk_size=3))
+        assert chunks, "expected at least one chunk for the sample archive"
+        for chunk in chunks:
+            assert not chunk.empty
+            assert "instance_id" in chunk.columns
+
+    def test_streaming_skips_empty_enriched_chunk(self, monkeypatch, tmp_path):
+        """Chunks whose post-enrichment DataFrame is empty are not yielded."""
+        adapter = CMIP6DatasetAdapter()
+        data_dir = tmp_path / "CMIP6"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        empty_df = pd.DataFrame()
+
+        def _fake_iter(**kwargs):
+            yield empty_df
+
+        monkeypatch.setattr("climate_ref.datasets.cmip6.iter_built_catalogs", _fake_iter)
+        monkeypatch.setattr(adapter, "_enrich_parsed_catalog", lambda df: df)
+
+        chunks = list(adapter.iter_local_datasets(data_dir, chunk_size=10))
+        assert chunks == []
+
+
 def test_apply_fixes():
     df = pd.DataFrame(
         {

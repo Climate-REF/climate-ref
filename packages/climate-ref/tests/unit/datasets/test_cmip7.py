@@ -1,5 +1,7 @@
 """Tests for the CMIP7 dataset adapter."""
 
+from typing import ClassVar
+
 import pandas as pd
 
 from climate_ref.datasets.base import _is_na
@@ -11,8 +13,39 @@ from climate_ref.datasets.cmip7_parsers import (
     parse_cmip7_drs,
     parse_cmip7_using_directories,
 )
+from climate_ref.datasets.utils import sort_data_catalog
 from climate_ref.models.dataset import CMIP7Dataset
 from climate_ref_core.datasets import SourceDatasetType
+
+
+def _build_cmip7_archive(root, datasets):
+    """Create a minimal CMIP7 DRS tree under ``root`` for the given datasets."""
+    for ds in datasets:
+        drs_dir = (
+            root
+            / "MIP-DRS7"
+            / "CMIP7"
+            / ds["activity_id"]
+            / ds["institution_id"]
+            / ds["source_id"]
+            / ds["experiment_id"]
+            / ds["variant_label"]
+            / ds["region"]
+            / ds["frequency"]
+            / ds["variable_id"]
+            / ds["branding_suffix"]
+            / ds["grid_label"]
+            / ds["version"]
+        )
+        drs_dir.mkdir(parents=True, exist_ok=True)
+        for time_range in ds["time_ranges"]:
+            name = (
+                f"{ds['variable_id']}_{ds['branding_suffix']}_{ds['frequency']}_"
+                f"{ds['region']}_{ds['grid_label']}_{ds['source_id']}_"
+                f"{ds['experiment_id']}_{ds['variant_label']}_{time_range}.nc"
+            )
+            (drs_dir / name).touch()
+    return root
 
 
 class TestCMIP7Adapter:
@@ -195,6 +228,103 @@ class TestCMIP7Adapter:
             df["instance_id"].iloc[0]
             == "CMIP7.CMIP.NCAR.CESM3.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v20250622"
         )
+
+
+class TestCMIP7IterLocalDatasets:
+    """Streaming ingest tests for the CMIP7 adapter."""
+
+    DATASETS: ClassVar[list[dict]] = [
+        {
+            "activity_id": "CMIP",
+            "institution_id": "NCAR",
+            "source_id": "CESM3",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "region": "glb",
+            "frequency": "mon",
+            "variable_id": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "grid_label": "gn",
+            "version": "v20250622",
+            "time_ranges": ["185001-189912", "190001-194912", "195001-201412"],
+        },
+        {
+            "activity_id": "CMIP",
+            "institution_id": "NCAR",
+            "source_id": "CESM3",
+            "experiment_id": "historical",
+            "variant_label": "r1i1p1f1",
+            "region": "glb",
+            "frequency": "mon",
+            "variable_id": "pr",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "grid_label": "gn",
+            "version": "v20250622",
+            "time_ranges": ["185001-201412"],
+        },
+        {
+            "activity_id": "CMIP",
+            "institution_id": "NCAR",
+            "source_id": "CESM3",
+            "experiment_id": "ssp585",
+            "variant_label": "r1i1p1f1",
+            "region": "glb",
+            "frequency": "mon",
+            "variable_id": "tas",
+            "branding_suffix": "tavg-h2m-hxy-u",
+            "grid_label": "gn",
+            "version": "v20250622",
+            "time_ranges": ["201501-210012"],
+        },
+    ]
+
+    def test_streaming_matches_whole_tree(self, tmp_path, config):
+        """``iter_local_datasets`` must yield the same rows as ``find_local_datasets``."""
+        config.cmip7_parser = "drs"
+        adapter = CMIP7DatasetAdapter(config=config)
+        _build_cmip7_archive(tmp_path / "archive", self.DATASETS)
+        # CMIP7DatasetAdapter walks with depth=10, so point it at the
+        # activity_id parent (MIP-DRS7/CMIP7) rather than the bare archive root.
+        root = tmp_path / "archive" / "MIP-DRS7" / "CMIP7" / "CMIP"
+
+        whole = adapter.find_local_datasets(root)
+        streamed = pd.concat(list(adapter.iter_local_datasets(root, chunk_size=2)))
+
+        pd.testing.assert_frame_equal(
+            sort_data_catalog(whole.reset_index(drop=True)),
+            sort_data_catalog(streamed.reset_index(drop=True)),
+        )
+
+    def test_streaming_yields_nonempty_chunks(self, tmp_path, config):
+        config.cmip7_parser = "drs"
+        adapter = CMIP7DatasetAdapter(config=config)
+        _build_cmip7_archive(tmp_path / "archive", self.DATASETS)
+        root = tmp_path / "archive" / "MIP-DRS7" / "CMIP7" / "CMIP"
+
+        chunks = list(adapter.iter_local_datasets(root, chunk_size=2))
+        assert chunks, "expected at least one chunk for the synthetic archive"
+        for chunk in chunks:
+            assert not chunk.empty
+            assert "instance_id" in chunk.columns
+            assert "branded_variable" in chunk.columns
+
+    def test_streaming_skips_empty_enriched_chunk(self, monkeypatch, tmp_path, config):
+        """Chunks whose post-enrichment DataFrame is empty are not yielded."""
+        adapter = CMIP7DatasetAdapter(config=config)
+        data_dir = tmp_path / "CMIP7"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        empty_df = pd.DataFrame()
+
+        def _fake_iter(**kwargs):
+            yield empty_df
+
+        monkeypatch.setattr("climate_ref.datasets.cmip7.iter_built_catalogs", _fake_iter)
+        monkeypatch.setattr(adapter, "_enrich_parsed_catalog", lambda df: df)
+
+        chunks = list(adapter.iter_local_datasets(data_dir, chunk_size=10))
+        assert chunks == []
 
 
 class TestCMIP7Model:

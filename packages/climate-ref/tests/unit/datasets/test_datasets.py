@@ -338,6 +338,33 @@ def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):
             adapter.register_dataset(db=db, data_catalog_dataset=df)
 
 
+def test_register_dataset_inconsistent_metadata_raises(monkeypatch, test_db):
+    """Callers that bypass validate_data_catalog must still be protected from
+    silently registering a slice whose dataset-specific metadata varies."""
+    adapter, db = test_db
+
+    df = _mk_df(
+        rows=[
+            {
+                "path": "a.nc",
+                "start_time": "2001-01-01",
+                "end_time": "2001-12-31",
+                "experiment_id": "historical",
+            },
+            {
+                "path": "b.nc",
+                "start_time": "2002-01-01",
+                "end_time": "2002-12-31",
+                "experiment_id": "ssp585",
+            },
+        ]
+    )
+
+    with pytest.raises(RefException, match="inconsistent dataset-specific metadata"):
+        with db.session.begin():
+            adapter.register_dataset(db=db, data_catalog_dataset=df)
+
+
 def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     """Test that changes to dataset metadata are properly captured and result in UPDATED state"""
     adapter, db = test_db

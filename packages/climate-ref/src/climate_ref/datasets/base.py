@@ -204,12 +204,23 @@ class DatasetAdapter(Protocol):
         """
         Register a dataset in the database using the data catalog
 
+        This assumes that the data catalog has already been validated with `validate_data_catalog`
+        to ensure that the dataset-specific metadata is consistent across all files in the dataset.
+
         Parameters
         ----------
         db
             Database instance
         data_catalog_dataset
             A subset of the data catalog containing the metadata for a single dataset
+
+
+        Raises
+        ------
+        RefException
+            If the data catalog contains validation errors that should have been caught by
+                `validate_data_catalog` (i.e. multiple unique slugs in `slug_column`).
+
 
         Returns
         -------
@@ -218,11 +229,19 @@ class DatasetAdapter(Protocol):
         """
         DatasetModel = self.dataset_cls
 
-        self.validate_data_catalog(data_catalog_dataset)
         unique_slugs = data_catalog_dataset[self.slug_column].unique()
         if len(unique_slugs) != 1:
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")
         slug = unique_slugs[0]
+
+        # Callers are responsible for validating the catalog with  ``validate_data_catalog`` before invoking.
+        # This is a strict subset of ``validate_data_catalog`` to catch skipping upstream validation.
+        slice_meta = data_catalog_dataset[list(self.dataset_specific_metadata)]
+        if (slice_meta.nunique(dropna=False) > 1).any():
+            raise RefException(
+                f"Dataset {slug} has inconsistent dataset-specific metadata; "
+                "callers must pre-validate the catalog with validate_data_catalog."
+            )
 
         # Check if the incoming data is unfinalised (DRS parser) and the dataset
         # already exists as finalised.  In that case, skip the entire update to

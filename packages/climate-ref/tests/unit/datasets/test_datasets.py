@@ -360,7 +360,7 @@ def test_register_dataset_inconsistent_metadata_raises(monkeypatch, test_db):
         ]
     )
 
-    with pytest.raises(ValueError, match="inconsistent dataset-specific metadata"):
+    with pytest.raises(RefException, match="inconsistent dataset-specific metadata"):
         with db.session.begin():
             adapter.register_dataset(db=db, data_catalog_dataset=df)
 

@@ -160,6 +160,9 @@ def ingest(  # noqa
 
     failed_dirs: list[Path] = []
 
+    if chunk_size is not None and chunk_size < 1:
+        raise typer.BadParameter(f"chunk_size must be >= 1, got {chunk_size}", param_hint="--chunk-size")
+
     streaming = chunk_size is not None and hasattr(adapter, "iter_local_datasets")
     if chunk_size is not None and not streaming:
         logger.warning(

@@ -180,6 +180,8 @@ def ingest_datasets(  # noqa: PLR0913
         raise ValueError(f"No .nc files found in {directory}")
 
     if chunk_size is not None:
+        if chunk_size < 1:
+            raise ValueError(f"chunk_size must be >= 1, got {chunk_size}")
         iter_fn = getattr(adapter, "iter_local_datasets", None)
         if iter_fn is None:
             raise ValueError(

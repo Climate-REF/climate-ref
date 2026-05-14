@@ -76,6 +76,24 @@ class TestCMIP6IterLocalDatasets:
             assert not chunk.empty
             assert "instance_id" in chunk.columns
 
+    def test_streaming_skips_empty_enriched_chunk(self, monkeypatch, tmp_path):
+        """Chunks whose post-enrichment DataFrame is empty are not yielded."""
+        adapter = CMIP6DatasetAdapter()
+        data_dir = tmp_path / "CMIP6"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        empty_df = pd.DataFrame()
+
+        def _fake_iter(**kwargs):
+            yield empty_df
+
+        monkeypatch.setattr("climate_ref.datasets.cmip6.iter_built_catalogs", _fake_iter)
+        monkeypatch.setattr(adapter, "_enrich_parsed_catalog", lambda df: df)
+
+        chunks = list(adapter.iter_local_datasets(data_dir, chunk_size=10))
+        assert chunks == []
+
 
 def test_apply_fixes():
     df = pd.DataFrame(

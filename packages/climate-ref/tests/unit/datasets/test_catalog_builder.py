@@ -289,3 +289,93 @@ class TestIterBuiltCatalogs:
             )
         )
         assert chunks == []
+
+    def test_chunk_larger_than_total_yields_single_chunk(self, tmp_path):
+        root = _flat_tree(tmp_path, n=3)
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                depth=5,
+                n_jobs=1,
+                chunk_size=100,
+            )
+        )
+        assert len(chunks) == 1
+        assert len(chunks[0]) == 3
+
+    def test_all_invalid_chunk_skipped(self, tmp_tree):
+        def _all_invalid(file: str, **kwargs: Any) -> dict[str, Any]:
+            return {"INVALID_ASSET": file, "TRACEBACK": "always fails"}
+
+        with pytest.warns(UserWarning, match="Unable to parse"):
+            chunks = list(
+                iter_built_catalogs(
+                    paths=[str(tmp_tree)],
+                    parsing_func=_all_invalid,
+                    include_patterns=["*.nc"],
+                    depth=10,
+                    chunk_size=2,
+                )
+            )
+        # Every chunk filters down to empty, so nothing is yielded.
+        assert chunks == []
+
+    def test_no_invalid_column_passes_through(self, tmp_path):
+        """A parser that never emits INVALID_ASSET goes through the no-filter branch."""
+        root = _flat_tree(tmp_path, n=4)
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                depth=5,
+                chunk_size=2,
+            )
+        )
+        for df in chunks:
+            assert "INVALID_ASSET" not in df.columns
+
+
+class TestDiscoverEdgeCases:
+    def test_iter_discovered_chunks_skips_nonexistent_paths(self, tmp_path):
+        root = _flat_tree(tmp_path, n=3)
+        chunks = list(
+            iter_discovered_chunks(
+                ["/does/not/exist", str(root)],
+                include_patterns=["*.nc"],
+                depth=5,
+                chunk_size=10,
+            )
+        )
+        flat = [p for chunk in chunks for p in chunk]
+        assert len(flat) == 3
+
+    def test_iter_discovered_chunks_directory_overflow_kept_together(self, tmp_path):
+        """A single directory larger than chunk_size still flushes intact."""
+        root = tmp_path / "big"
+        root.mkdir()
+        for i in range(6):
+            (root / f"f_{i}.nc").touch()
+
+        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], depth=5, chunk_size=2))
+        # All six files come from one directory; the buffer flushes once at the end.
+        assert sum(len(c) for c in chunks) == 6
+        for chunk in chunks:
+            dirs = {str(Path(p).parent) for p in chunk}
+            assert len(dirs) == 1
+
+    def test_iter_discovered_chunks_multiple_roots(self, tmp_path):
+        a = tmp_path / "a"
+        a.mkdir()
+        (a / "1.nc").touch()
+        b = tmp_path / "b"
+        b.mkdir()
+        (b / "2.nc").touch()
+
+        chunks = list(
+            iter_discovered_chunks([str(a), str(b)], include_patterns=["*.nc"], depth=5, chunk_size=10)
+        )
+        flat = [p for chunk in chunks for p in chunk]
+        assert len(flat) == 2

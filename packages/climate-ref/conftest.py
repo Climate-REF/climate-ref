@@ -84,16 +84,19 @@ def db_seeded_template(tmp_path_session, cmip6_data_catalog, obs4mips_data_catal
     database = Database(f"sqlite:///{template_db_path}")
     database.migrate(config)
 
-    # Seed the CMIP6 sample datasets
+    # Seed the CMIP6 sample datasets. ``register_dataset`` trusts callers to
+    # have already validated the catalog, so do that here before iterating.
     adapter = CMIP6DatasetAdapter()
+    cmip6_validated = adapter.validate_data_catalog(cmip6_data_catalog)
     with database.session.begin():
-        for instance_id, data_catalog_dataset in cmip6_data_catalog.groupby(adapter.slug_column):
+        for instance_id, data_catalog_dataset in cmip6_validated.groupby(adapter.slug_column):
             adapter.register_dataset(database, data_catalog_dataset)
 
     # Seed the obs4MIPs sample datasets
     adapter_obs = Obs4MIPsDatasetAdapter()
+    obs4mips_validated = adapter_obs.validate_data_catalog(obs4mips_data_catalog)
     with database.session.begin():
-        for instance_id, data_catalog_dataset in obs4mips_data_catalog.groupby(adapter_obs.slug_column):
+        for instance_id, data_catalog_dataset in obs4mips_validated.groupby(adapter_obs.slug_column):
             adapter_obs.register_dataset(database, data_catalog_dataset)
 
     with database.session.begin():

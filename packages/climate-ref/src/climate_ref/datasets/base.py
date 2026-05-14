@@ -218,7 +218,11 @@ class DatasetAdapter(Protocol):
         """
         DatasetModel = self.dataset_cls
 
-        self.validate_data_catalog(data_catalog_dataset)
+        # Callers are responsible for validating the catalog with
+        # ``validate_data_catalog`` before invoking ``register_dataset``. The
+        # production ingest path (``ingest_datasets`` / CLI) already validates
+        # the catalog (and any streamed chunk) once up-front, so re-running
+        # validation on every per-dataset slice would be pure duplication.
         unique_slugs = data_catalog_dataset[self.slug_column].unique()
         if len(unique_slugs) != 1:
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")

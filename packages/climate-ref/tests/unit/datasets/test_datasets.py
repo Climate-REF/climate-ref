@@ -685,6 +685,140 @@ class TestIngestDatasets:
         with pytest.raises(ValueError, match="No valid datasets found"):
             ingest_datasets(adapter, data_dir, db)
 
+    @pytest.mark.parametrize("bad_size", [0, -1, -100])
+    def test_chunk_size_must_be_positive(self, test_db, tmp_path, bad_size):
+        """Non-positive ``chunk_size`` is rejected before any iteration starts."""
+        adapter, db = test_db
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        with pytest.raises(ValueError, match=r"chunk_size must be >= 1"):
+            ingest_datasets(adapter, data_dir, db, chunk_size=bad_size)
+
+    def test_chunk_size_rejected_when_adapter_lacks_iter(self, test_db, tmp_path):
+        """``chunk_size`` requires the adapter to implement ``iter_local_datasets``."""
+        adapter, db = test_db
+        # The mock CMIP6 adapter inherits iter_local_datasets — drop it for this test.
+        if hasattr(adapter, "iter_local_datasets"):
+            delattr(type(adapter), "iter_local_datasets")  # type: ignore[arg-type]
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        with pytest.raises(ValueError, match="does not support streaming ingest"):
+            ingest_datasets(adapter, data_dir, db, chunk_size=10)
+
+    def test_chunk_size_ignored_when_data_catalog_provided(self, monkeypatch, test_db):
+        """If a pre-validated catalog is given, ``chunk_size`` is ignored (whole-catalog path)."""
+        adapter, db = test_db
+
+        df = _mk_df(
+            rows=[
+                {"path": "f1.nc", "start_time": "2001-01-01", "end_time": "2001-12-31"},
+            ]
+        )
+
+        # iter_local_datasets must NOT be consulted when data_catalog is provided.
+        sentinel = {"called": False}
+
+        def _fail_iter(*args, **kwargs):  # pragma: no cover - asserts it isn't called
+            sentinel["called"] = True
+            raise AssertionError("iter_local_datasets should not be called when data_catalog is provided")
+
+        monkeypatch.setattr(adapter, "iter_local_datasets", _fail_iter, raising=False)
+
+        stats = ingest_datasets(adapter, None, db, data_catalog=df, chunk_size=1)
+        assert sentinel["called"] is False
+        assert stats.datasets_created == 1
+        assert stats.files_added == 1
+
+    def test_streaming_ingest_aggregates_chunks(self, monkeypatch, test_db, tmp_path):
+        """Streaming mode aggregates stats across multiple chunks."""
+        adapter, db = test_db
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        chunk1 = _mk_df(
+            instance_id="CESM2.tas.gn",
+            rows=[
+                {"path": "f1.nc", "start_time": "2001-01-01", "end_time": "2001-12-31"},
+            ],
+        )
+        chunk2 = _mk_df(
+            instance_id="CESM2.pr.gn",
+            rows=[
+                {"path": "f2.nc", "start_time": "2002-01-01", "end_time": "2002-12-31"},
+            ],
+        )
+        chunk2.loc[:, "variable_id"] = "pr"
+
+        def _fake_iter(directory, chunk_size):
+            assert chunk_size == 5
+            yield chunk1
+            yield chunk2
+
+        monkeypatch.setattr(adapter, "iter_local_datasets", _fake_iter, raising=False)
+
+        stats = ingest_datasets(adapter, data_dir, db, chunk_size=5)
+        assert stats.datasets_created == 2
+        assert stats.files_added == 2
+
+    def test_streaming_ingest_skips_empty_validated_chunks(self, monkeypatch, test_db, tmp_path):
+        """Chunks that become empty after validation are skipped without affecting overall stats."""
+        adapter, db = test_db
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        good = _mk_df(
+            rows=[
+                {"path": "f1.nc", "start_time": "2001-01-01", "end_time": "2001-12-31"},
+            ]
+        )
+        # First raw chunk is non-empty but validate strips every row.
+        bad = _mk_df(
+            rows=[
+                {"path": "g1.nc", "start_time": "2001-01-01", "end_time": "2001-12-31"},
+            ]
+        )
+        bad.attrs["_strip"] = True
+
+        def _fake_iter(directory, chunk_size):
+            yield bad
+            yield good
+
+        def _validate(df, skip_invalid=False):
+            if df.attrs.get("_strip"):
+                return df.iloc[0:0]
+            return df
+
+        monkeypatch.setattr(adapter, "iter_local_datasets", _fake_iter, raising=False)
+        monkeypatch.setattr(adapter, "validate_data_catalog", _validate)
+
+        stats = ingest_datasets(adapter, data_dir, db, chunk_size=10)
+        assert stats.datasets_created == 1
+        assert stats.files_added == 1
+
+    def test_streaming_all_empty_raises(self, monkeypatch, test_db, tmp_path):
+        """If every chunk validates empty, the stream raises 'No valid datasets found'."""
+        adapter, db = test_db
+        data_dir = tmp_path / "data"
+        data_dir.mkdir()
+        (data_dir / "test.nc").touch()
+
+        empty = _mk_df(rows=[])
+
+        def _fake_iter(directory, chunk_size):
+            yield empty
+
+        monkeypatch.setattr(adapter, "iter_local_datasets", _fake_iter, raising=False)
+        monkeypatch.setattr(adapter, "validate_data_catalog", lambda df, **kwargs: empty)
+
+        with pytest.raises(ValueError, match="No valid datasets found"):
+            ingest_datasets(adapter, data_dir, db, chunk_size=5)
+
     def test_ingest_datasets_updated_state(self, monkeypatch, test_db):
         """Test that ingest_datasets correctly tracks updated datasets."""
         adapter, db = test_db

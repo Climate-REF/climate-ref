@@ -210,9 +210,7 @@ def ingest(  # noqa
                                 if not dataset:
                                     logger.info(f"Would save dataset {instance_id} to the database")
                     else:
-                        stats += ingest_datasets(
-                            adapter, None, db, data_catalog=validated_chunk, skip_invalid=False
-                        )
+                        stats += ingest_datasets(adapter, None, db, data_catalog=validated_chunk)
                     del raw_chunk, validated_chunk
             except Exception as e:
                 logger.exception(f"Error ingesting datasets from {_dir}: {e}")

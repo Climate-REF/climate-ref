@@ -4,8 +4,8 @@ Benchmark peak memory and runtime for whole-tree vs chunked ingest.
 Creates a synthetic CMIP6 DRS tree of empty ``.nc`` files (the DRS parser
 only reads filenames, so empty files suffice). Runs the ingest pipeline in
 two modes — the legacy whole-tree mode and the streaming chunked mode added
-in this PR — under ``tracemalloc`` and reports the peak resident allocation
-and elapsed time for each.
+in this PR — under ``tracemalloc`` and reports the peak traced Python
+allocation (not RSS) and elapsed time for each.
 
 Run example::
 
@@ -70,7 +70,7 @@ def build_synthetic_archive(
         requested values due to rounding.
     """
     if files_per_dataset is None:
-        files_per_dataset = max(1, num_files // num_datasets)
+        files_per_dataset = max(1, -(-num_files // num_datasets))
 
     actual_files = 0
     actual_datasets = 0

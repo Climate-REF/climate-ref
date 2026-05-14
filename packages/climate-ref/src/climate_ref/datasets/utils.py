@@ -25,6 +25,24 @@ def _is_na(value: Any) -> bool:
         return False
 
 
+def _to_db_str(value: Any) -> str | None:
+    """
+    Coerce a value to its on-disk string form.
+
+    Matches the @validates coercion used by DatasetFile (e.g.
+    cftime.datetime -> str(cftime_obj)). This is the normalised form for
+    comparing a freshly-parsed in-memory value against the str loaded back
+    from the database. Without it, a cross-type ``str != cftime.datetime``
+    comparison always evaluates True and every file appears changed on
+    re-ingest.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    return str(value)
+
+
 def sort_data_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
     """
     Sort a dataset catalog DataFrame by instance_id and start_time (with NA values last).

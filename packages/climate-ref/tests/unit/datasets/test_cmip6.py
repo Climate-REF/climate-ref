@@ -53,6 +53,30 @@ class TestCMIP6Adapter:
         assert new_instance_id in latest_instance_ids
 
 
+class TestCMIP6IterLocalDatasets:
+    def test_streaming_matches_whole_tree(self, sample_data, sample_data_dir):
+        """``iter_local_datasets`` must yield the same rows as ``find_local_datasets``."""
+        adapter = CMIP6DatasetAdapter()
+        cmip6_root = sample_data_dir / "CMIP6"
+
+        whole = adapter.find_local_datasets(cmip6_root)
+        streamed = pd.concat(list(adapter.iter_local_datasets(cmip6_root, chunk_size=5)))
+
+        # The streaming path may interleave chunks differently, so normalise both.
+        pd.testing.assert_frame_equal(
+            sort_data_catalog(whole.reset_index(drop=True)),
+            sort_data_catalog(streamed.reset_index(drop=True)),
+        )
+
+    def test_streaming_yields_nonempty_chunks(self, sample_data, sample_data_dir):
+        adapter = CMIP6DatasetAdapter()
+        chunks = list(adapter.iter_local_datasets(sample_data_dir / "CMIP6", chunk_size=3))
+        assert chunks, "expected at least one chunk for the sample archive"
+        for chunk in chunks:
+            assert not chunk.empty
+            assert "instance_id" in chunk.columns
+
+
 def test_apply_fixes():
     df = pd.DataFrame(
         {

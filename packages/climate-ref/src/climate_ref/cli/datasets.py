@@ -125,6 +125,16 @@ def ingest(  # noqa
     skip_invalid: Annotated[
         bool, typer.Option(help="Ignore (but log) any datasets that don't pass validation")
     ] = True,
+    chunk_size: Annotated[
+        int | None,
+        typer.Option(
+            help=(
+                "Stream the catalog in chunks of this many files instead of loading the whole "
+                "directory at once. Bounds peak memory for large archives. Only supported by "
+                "adapters that implement iter_local_datasets (currently CMIP6)."
+            )
+        ),
+    ] = None,
 ) -> None:
     """
     Ingest a directory of datasets into the database
@@ -134,7 +144,7 @@ def ingest(  # noqa
 
     A table of the datasets will be printed to the console at the end of the operation.
     """
-    from climate_ref.datasets import ingest_datasets
+    from climate_ref.datasets import IngestionStats, ingest_datasets
 
     config = ctx.obj.config
     db = ctx.obj.database
@@ -150,6 +160,13 @@ def ingest(  # noqa
 
     failed_dirs: list[Path] = []
 
+    streaming = chunk_size is not None and hasattr(adapter, "iter_local_datasets")
+    if chunk_size is not None and not streaming:
+        logger.warning(
+            f"Adapter for {source_type.value} does not support streaming ingest; "
+            "falling back to whole-catalog mode."
+        )
+
     for _dir in file_or_directory:
         _dir = Path(_dir).expanduser()
         logger.info(f"Ingesting {_dir}")
@@ -164,6 +181,53 @@ def ingest(  # noqa
         if next(_dir.rglob("*.nc"), None) is None:
             logger.error(f"No .nc files found in {_dir}")
             failed_dirs.append(_dir)
+            continue
+
+        if streaming:
+            stats = IngestionStats()
+            preview_printed = False
+            total_files = 0
+            total_datasets = 0
+            try:
+                for raw_chunk in adapter.iter_local_datasets(_dir, chunk_size=chunk_size):  # type: ignore[attr-defined]
+                    validated_chunk = adapter.validate_data_catalog(raw_chunk, skip_invalid=skip_invalid)
+                    if validated_chunk.empty:
+                        continue
+                    if not preview_printed:
+                        pretty_print_df(adapter.pretty_subset(validated_chunk), console=console)
+                        preview_printed = True
+                    total_files += len(validated_chunk)
+                    total_datasets += validated_chunk[adapter.slug_column].nunique()
+
+                    if dry_run:
+                        for instance_id in validated_chunk[adapter.slug_column].unique():
+                            with db.session.begin():
+                                dataset = (
+                                    db.session.query(Dataset)
+                                    .filter_by(slug=instance_id, dataset_type=source_type)
+                                    .first()
+                                )
+                                if not dataset:
+                                    logger.info(f"Would save dataset {instance_id} to the database")
+                    else:
+                        stats += ingest_datasets(
+                            adapter, None, db, data_catalog=validated_chunk, skip_invalid=False
+                        )
+                    del raw_chunk, validated_chunk
+            except Exception as e:
+                logger.exception(f"Error ingesting datasets from {_dir}: {e}")
+                failed_dirs.append(_dir)
+                continue
+
+            if total_files == 0:
+                logger.warning(f"No valid datasets found in {_dir}")
+                continue
+
+            logger.info(
+                f"Streamed {total_files} files across approximately {total_datasets} datasets from {_dir}"
+            )
+            if not dry_run:
+                stats.log_summary()
             continue
 
         try:

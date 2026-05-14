@@ -4,7 +4,12 @@ from typing import Any
 import pandas as pd
 import pytest
 
-from climate_ref.datasets.catalog_builder import build_catalog, discover_files
+from climate_ref.datasets.catalog_builder import (
+    build_catalog,
+    discover_files,
+    iter_built_catalogs,
+    iter_discovered_chunks,
+)
 
 
 @pytest.fixture
@@ -172,3 +177,115 @@ class TestBuildCatalog:
                 depth=10,
             )
         assert df.empty
+
+
+def _flat_tree(tmp_path: Path, n: int) -> Path:
+    """Create ``n`` .nc files in a single directory."""
+    root = tmp_path / "flat"
+    root.mkdir()
+    for i in range(n):
+        (root / f"file_{i:04d}.nc").touch()
+    return root
+
+
+def _wide_tree(tmp_path: Path, num_dirs: int, files_per_dir: int) -> Path:
+    """Create ``num_dirs`` sibling directories, each with ``files_per_dir`` .nc files."""
+    root = tmp_path / "wide"
+    root.mkdir()
+    for d in range(num_dirs):
+        sub = root / f"ds_{d:03d}"
+        sub.mkdir()
+        for i in range(files_per_dir):
+            (sub / f"file_{d:03d}_{i:03d}.nc").touch()
+    return root
+
+
+class TestIterDiscoveredChunks:
+    def test_yields_all_files(self, tmp_path):
+        root = _flat_tree(tmp_path, n=25)
+        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], depth=5, chunk_size=10))
+        flat = [p for chunk in chunks for p in chunk]
+        assert len(flat) == 25
+        assert all(p.endswith(".nc") for p in flat)
+
+    def test_chunk_size_respected_at_directory_boundaries(self, tmp_path):
+        # 5 directories x 4 files = 20 files. chunk_size=8 forces splits between dirs.
+        root = _wide_tree(tmp_path, num_dirs=5, files_per_dir=4)
+        chunks = list(iter_discovered_chunks([str(root)], include_patterns=["*.nc"], depth=5, chunk_size=8))
+        # Every chunk groups whole directories together (no directory split across chunks).
+        for chunk in chunks:
+            dirs = {str(Path(p).parent) for p in chunk}
+            for d in dirs:
+                files_in_dir = sum(1 for p in chunk if str(Path(p).parent) == d)
+                total_in_tree = sum(1 for p in root.rglob("*.nc") if str(p.parent) == d)
+                assert files_in_dir == total_in_tree, "directory was split across chunks"
+
+        total = sum(len(c) for c in chunks)
+        assert total == 20
+
+    def test_empty_root_yields_nothing(self, tmp_path):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        chunks = list(iter_discovered_chunks([str(empty)], include_patterns=["*.nc"], depth=5, chunk_size=10))
+        assert chunks == []
+
+    def test_single_file_path(self, tmp_tree):
+        nc_file = tmp_tree / "root.nc"
+        chunks = list(
+            iter_discovered_chunks([str(nc_file)], include_patterns=["*.nc"], depth=0, chunk_size=10)
+        )
+        assert chunks == [[str(nc_file)]]
+
+
+class TestIterBuiltCatalogs:
+    def test_streams_chunks(self, tmp_path):
+        root = _wide_tree(tmp_path, num_dirs=4, files_per_dir=3)
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(root)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                depth=5,
+                n_jobs=1,
+                chunk_size=5,
+            )
+        )
+        # Each chunk is a DataFrame, total rows == total files.
+        assert len(chunks) >= 2, "expected at least two chunks for chunk_size=5"
+        total_rows = sum(len(df) for df in chunks)
+        assert total_rows == 12
+        for df in chunks:
+            assert isinstance(df, pd.DataFrame)
+            assert "path" in df.columns
+
+    def test_invalid_rows_filtered_per_chunk(self, tmp_tree):
+        with pytest.warns(UserWarning, match="Unable to parse"):
+            chunks = list(
+                iter_built_catalogs(
+                    paths=[str(tmp_tree)],
+                    parsing_func=_mixed_parser,
+                    include_patterns=["*.nc", "*.txt"],
+                    depth=10,
+                    chunk_size=2,
+                )
+            )
+        for df in chunks:
+            assert "INVALID_ASSET" not in df.columns
+            assert "TRACEBACK" not in df.columns
+        total = sum(len(df) for df in chunks)
+        # 4 .nc files survive, .txt files filtered as INVALID.
+        assert total == 4
+
+    def test_empty_input_yields_nothing(self, tmp_path):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        chunks = list(
+            iter_built_catalogs(
+                paths=[str(empty)],
+                parsing_func=_good_parser,
+                include_patterns=["*.nc"],
+                depth=5,
+                chunk_size=10,
+            )
+        )
+        assert chunks == []

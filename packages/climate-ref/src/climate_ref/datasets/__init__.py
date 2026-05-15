@@ -70,66 +70,30 @@ class IngestionStats:
             " (created/updated/removed/unchanged)"
         )
 
+    def __iadd__(self, other: "IngestionStats") -> "IngestionStats":
+        """Accumulate counts in place from another :class:`IngestionStats`."""
+        self.datasets_created += other.datasets_created
+        self.datasets_updated += other.datasets_updated
+        self.datasets_unchanged += other.datasets_unchanged
+        self.files_added += other.files_added
+        self.files_updated += other.files_updated
+        self.files_removed += other.files_removed
+        self.files_unchanged += other.files_unchanged
+        return self
 
-def ingest_datasets(
+
+def _ingest_catalog(
     adapter: DatasetAdapter,
-    directory: Path | None,
     db: Database,
-    *,
-    data_catalog: pd.DataFrame | None = None,
-    skip_invalid: bool = True,
+    data_catalog: pd.DataFrame,
 ) -> IngestionStats:
     """
-    Ingest datasets from a directory into the database.
+    Register every dataset in ``data_catalog``, committing per-dataset.
 
-    This is the common ingestion logic shared between the CLI ingest command
-    and provider setup.
-
-    Parameters
-    ----------
-    adapter
-        The dataset adapter to use for parsing and registering datasets
-    directory
-        Directory containing the datasets to ingest. Can be None if data_catalog is provided.
-    db
-        Database instance
-    data_catalog
-        Optional pre-validated data catalog. If provided, directory is ignored and
-        the catalog is used directly. This avoids redundant find/validate operations.
-    skip_invalid
-        If True, skip datasets that fail validation (default True)
-
-    Returns
-    -------
-    :
-        Statistics about the ingestion (created/updated/unchanged counts)
-
-    Raises
-    ------
-    ValueError
-        If no valid datasets are found in the directory
+    The ORM session identity map is expired after each commit so memory
+    use stays bounded by the largest single dataset, not by the size of
+    ``data_catalog``.
     """
-    if data_catalog is None:
-        if directory is None:
-            raise ValueError("Either directory or data_catalog must be provided")
-
-        if not directory.exists():
-            raise ValueError(f"Directory {directory} does not exist")
-
-        # Check for .nc files
-        if not list(directory.rglob("*.nc")):
-            raise ValueError(f"No .nc files found in {directory}")
-
-        data_catalog = adapter.find_local_datasets(directory)
-        data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
-
-        if data_catalog.empty:
-            raise ValueError(f"No valid datasets found in {directory}")
-
-        logger.info(
-            f"Found {len(data_catalog)} files for {len(data_catalog[adapter.slug_column].unique())} datasets"
-        )
-
     stats = IngestionStats()
 
     for instance_id, data_catalog_dataset in data_catalog.groupby(adapter.slug_column):
@@ -154,6 +118,111 @@ def ingest_datasets(
         db.session.expire_all()
 
     return stats
+
+
+def ingest_datasets(  # noqa: PLR0913
+    adapter: DatasetAdapter,
+    directory: Path | None,
+    db: Database,
+    *,
+    data_catalog: pd.DataFrame | None = None,
+    skip_invalid: bool = True,
+    chunk_size: int | None = None,
+) -> IngestionStats:
+    """
+    Ingest datasets from a directory into the database.
+
+    This is the common ingestion logic shared between the CLI ingest command
+    and provider setup.
+
+    Parameters
+    ----------
+    adapter
+        The dataset adapter to use for parsing and registering datasets
+    directory
+        Directory containing the datasets to ingest. Can be None if data_catalog is provided.
+    db
+        Database instance
+    data_catalog
+        Optional pre-validated data catalog.
+
+        If provided, directory is ignored and the catalog is used directly.
+        This avoids redundant find/validate operations.
+        When supplied, ``chunk_size`` is ignored because the catalog is already fully materialised.
+    skip_invalid
+        If True, skip datasets that fail validation (default True)
+    chunk_size
+        When provided and ``data_catalog`` is None,
+        stream the directory in batches of ``chunk_size`` files so peak memory is bounded regardless
+        of how many files live under ``directory``.
+        Requires the adapter to implement ``iter_local_datasets``.
+
+    Returns
+    -------
+    :
+        Statistics about the ingestion (created/updated/unchanged counts)
+
+    Raises
+    ------
+    ValueError
+        If no valid datasets are found in the directory
+    """
+    if data_catalog is not None:
+        return _ingest_catalog(adapter, db, data_catalog)
+
+    if directory is None:
+        raise ValueError("Either directory or data_catalog must be provided")
+
+    if not directory.exists():
+        raise ValueError(f"Directory {directory} does not exist")
+
+    # Check for .nc files
+    if not any(directory.rglob("*.nc")):
+        raise ValueError(f"No .nc files found in {directory}")
+
+    if chunk_size is not None:
+        if chunk_size < 1:
+            raise ValueError(f"chunk_size must be >= 1, got {chunk_size}")
+        iter_fn = getattr(adapter, "iter_local_datasets", None)
+        if iter_fn is None:
+            raise ValueError(
+                f"Adapter {type(adapter).__name__} does not support streaming ingest "
+                "(missing iter_local_datasets); omit chunk_size to use whole-catalog mode."
+            )
+
+        stats = IngestionStats()
+        total_files = 0
+        total_datasets = 0
+        emitted = False
+        for raw_chunk in iter_fn(directory, chunk_size=chunk_size):
+            validated_chunk = adapter.validate_data_catalog(raw_chunk, skip_invalid=skip_invalid)
+            if validated_chunk.empty:
+                continue
+            emitted = True
+            total_files += len(validated_chunk)
+            total_datasets += validated_chunk[adapter.slug_column].nunique()
+            stats += _ingest_catalog(adapter, db, validated_chunk)
+            # Drop chunk references so the per-chunk pandas memory can be
+            # reclaimed before the next chunk is parsed.
+            del raw_chunk, validated_chunk
+
+        if not emitted:
+            raise ValueError(f"No valid datasets found in {directory}")
+
+        logger.info(f"Ingested {total_files} files across approximately {total_datasets} datasets (streamed)")
+        return stats
+
+    data_catalog = adapter.find_local_datasets(directory)
+    data_catalog = adapter.validate_data_catalog(data_catalog, skip_invalid=skip_invalid)
+
+    if data_catalog.empty:
+        raise ValueError(f"No valid datasets found in {directory}")
+
+    logger.info(
+        f"Found {len(data_catalog)} files for {len(data_catalog[adapter.slug_column].unique())} datasets"
+    )
+
+    return _ingest_catalog(adapter, db, data_catalog)
 
 
 def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:

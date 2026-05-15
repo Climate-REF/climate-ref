@@ -7,7 +7,7 @@ from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
+from climate_ref.datasets.utils import _is_na, _to_db_str, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
 
@@ -204,12 +204,23 @@ class DatasetAdapter(Protocol):
         """
         Register a dataset in the database using the data catalog
 
+        This assumes that the data catalog has already been validated with `validate_data_catalog`
+        to ensure that the dataset-specific metadata is consistent across all files in the dataset.
+
         Parameters
         ----------
         db
             Database instance
         data_catalog_dataset
             A subset of the data catalog containing the metadata for a single dataset
+
+
+        Raises
+        ------
+        RefException
+            If the data catalog contains validation errors that should have been caught by
+                `validate_data_catalog` (i.e. multiple unique slugs in `slug_column`).
+
 
         Returns
         -------
@@ -218,11 +229,19 @@ class DatasetAdapter(Protocol):
         """
         DatasetModel = self.dataset_cls
 
-        self.validate_data_catalog(data_catalog_dataset)
         unique_slugs = data_catalog_dataset[self.slug_column].unique()
         if len(unique_slugs) != 1:
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")
         slug = unique_slugs[0]
+
+        # Callers are responsible for validating the catalog with  ``validate_data_catalog`` before invoking.
+        # This is a strict subset of ``validate_data_catalog`` to catch skipping upstream validation.
+        slice_meta = data_catalog_dataset[list(self.dataset_specific_metadata)]
+        if (slice_meta.nunique(dropna=False) > 1).any():
+            raise RefException(
+                f"Dataset {slug} has inconsistent dataset-specific metadata; "
+                "callers must pre-validate the catalog with validate_data_catalog."
+            )
 
         # Check if the incoming data is unfinalised (DRS parser) and the dataset
         # already exists as finalised.  In that case, skip the entire update to
@@ -315,14 +334,16 @@ class DatasetAdapter(Protocol):
             logger.warning(f"Files to remove: {files_removed}")
             raise NotImplementedError("Removing files is not yet supported")
 
-        # Update existing files if any file-specific metadata has changed
+        # Update existing files if any file-specific metadata has changed.
+        # Compare via _to_db_str on the incoming value so it matches the on-disk str form
+        # (DatasetFile.@validates coerces cftime -> str).
         for file_path, existing_file in current_file_paths.items():
             if file_path in new_file_lookup:
                 new_meta = new_file_lookup[file_path]
                 changed = any(
                     not _is_na(new_meta.get(c))
                     and hasattr(existing_file, c)
-                    and getattr(existing_file, c) != new_meta[c]
+                    and getattr(existing_file, c) != _to_db_str(new_meta[c])
                     for c in file_meta_cols
                     if c in new_meta
                 )

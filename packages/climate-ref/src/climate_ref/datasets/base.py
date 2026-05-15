@@ -304,10 +304,10 @@ class DatasetAdapter(Protocol):
         db.session.flush()
 
         # Initialize result tracking
-        files_added = []
-        files_updated = []
-        files_removed = []
-        files_unchanged = []
+        files_added: list[str] = []
+        files_updated: list[str] = []
+        files_removed: list[str] = []
+        files_unchanged: list[str] = []
 
         # Get current files for this dataset
         current_files = db.session.query(DatasetFile).filter_by(dataset_id=dataset.id).all()
@@ -326,13 +326,21 @@ class DatasetAdapter(Protocol):
         new_file_paths = set(new_file_lookup.keys())
         existing_file_paths = set(current_file_paths.keys())
 
-        # TODO: support removing files that are no longer present
-        # We want to keep a record of the dataset if it was used by a diagnostic in the past
+        # Files that exist in the database but are absent from the incoming catalog
+        # slice. Removal isn't supported yet (we want to preserve a record of
+        # diagnostics that already used the file), but raising here aborts the
+        # whole ingest -- including the streaming path, where a dataset can appear
+        # in two different chunks (e.g. a CMIP6 mirror that stores the same
+        # netCDF file under both an "actual" activity directory and a misfiled
+        # parent activity directory). Emit a warning and keep the existing rows
+        # in place so subsequent register_dataset calls for the same slug just
+        # add their own paths.
         files_to_remove = existing_file_paths - new_file_paths
         if files_to_remove:
-            files_removed = list(files_to_remove)
-            logger.warning(f"Files to remove: {files_removed}")
-            raise NotImplementedError("Removing files is not yet supported")
+            logger.warning(
+                f"Dataset {slug}: {len(files_to_remove)} file(s) absent from the current ingest "
+                f"are being kept (removal not yet supported): {sorted(files_to_remove)}"
+            )
 
         # Update existing files if any file-specific metadata has changed.
         # Compare via _to_db_str on the incoming value so it matches the on-disk str form

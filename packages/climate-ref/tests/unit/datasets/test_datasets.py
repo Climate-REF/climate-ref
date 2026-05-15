@@ -266,10 +266,16 @@ def test_register_dataset_updates_and_adds_without_removal(monkeypatch, test_db)
     assert f2_file.end_time == "2001-12-31"
 
 
-def test_register_dataset_raises_on_removal(monkeypatch, test_db):
+def test_register_dataset_keeps_absent_files_with_warning(monkeypatch, test_db, caplog):
+    """
+    Files that exist in the DB but are absent from the current register_dataset call
+    are kept in place with a warning, instead of aborting the run. This lets streaming
+    ingest survive the case where the same dataset (same slug) appears in two chunks
+    with different file paths -- e.g. a CMIP6 mirror that stores the same netCDF file
+    under two different parent activity directories.
+    """
     adapter, db = test_db
 
-    # First, create initial dataset with files
     initial_df = _mk_df(
         rows=[
             {
@@ -288,7 +294,8 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
     with db.session.begin():
         adapter.register_dataset(db=db, data_catalog_dataset=initial_df)
 
-    # New catalog omits "remove.nc" -> triggers removal path
+    # New catalog omits "remove.nc" and adds "added.nc" — exercises both the
+    # "absent from current chunk" path and the regular add path.
     updated_df = _mk_df(
         rows=[
             {
@@ -296,12 +303,34 @@ def test_register_dataset_raises_on_removal(monkeypatch, test_db):
                 "start_time": "2001-01-01",
                 "end_time": "2001-12-31",
             },
+            {
+                "path": "added.nc",
+                "start_time": "2002-01-01",
+                "end_time": "2002-12-31",
+            },
         ]
     )
 
-    with pytest.raises(NotImplementedError, match="Removing files is not yet supported"):
-        with db.session.begin():
-            adapter.register_dataset(db=db, data_catalog_dataset=updated_df)
+    caplog.clear()
+    with db.session.begin():
+        result = adapter.register_dataset(db=db, data_catalog_dataset=updated_df)
+
+    assert set(result.files_added) == {"added.nc"}
+    assert set(result.files_unchanged) == {"keep.nc"}
+    assert result.files_removed == []
+
+    dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
+    paths_in_db = {f.path for f in db.session.query(DatasetFile).filter_by(dataset_id=dataset.id)}
+    # All three paths are now in the DB — the absent file was kept, not removed.
+    assert paths_in_db == {"keep.nc", "remove.nc", "added.nc"}
+
+    warnings = [
+        r
+        for r in caplog.records
+        if r.levelname == "WARNING" and "absent from the current ingest" in r.message
+    ]
+    assert len(warnings) == 1
+    assert "remove.nc" in warnings[0].message
 
 
 def test_register_dataset_multiple_datasets_error(monkeypatch, test_db):

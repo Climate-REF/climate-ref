@@ -21,6 +21,13 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.2 (2026-05-15)
+
+### Bug Fixes
+
+- Changed the behaviour for `register_dataset` treatment of files absent from the current ingest slice as kept-in-place with a warning, instead of raising NotImplementedError. ([#677](https://github.com/Climate-REF/climate-ref/pull/677))
+
+
 ## climate-ref 0.14.1 (2026-05-14)
 
 ### Features

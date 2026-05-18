@@ -21,6 +21,40 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.2 (2026-05-15)
+
+### Bug Fixes
+
+- Changed the behaviour for `register_dataset` treatment of files absent from the current ingest slice as kept-in-place with a warning, instead of raising NotImplementedError. ([#677](https://github.com/Climate-REF/climate-ref/pull/677))
+
+
+## climate-ref 0.14.1 (2026-05-14)
+
+### Features
+
+- Added a `--chunk-size` option to `ref datasets ingest` (CMIP6 and CMIP7) that streams the catalog in directory-aligned batches
+  instead of loading the whole archive into memory at once.
+  Peak memory is now bounded by `chunk_size` rather than by the total number of files in the input tree. ([#674](https://github.com/Climate-REF/climate-ref/pull/674))
+
+### Improvements
+
+- Skip the redundant per-dataset `validate_data_catalog` call inside `register_dataset`.
+  The production ingest path already validates the catalog (and each streamed chunk) once
+  up-front, so the inner re-validation only duplicated work. Cuts ~20% off ingest wall time
+  on a 50k-file / 500-dataset synthetic CMIP6 archive. A cheap per-slice guard (no groupby)
+  remains so callers that bypass the upstream validation contract still get a clear error
+  instead of silently registering inconsistent metadata. ([#675](https://github.com/Climate-REF/climate-ref/pull/675))
+
+### Bug Fixes
+
+- Stopped re-ingesting unchanged CMIP6 files on every run.
+  Previously, `ref datasets ingest` reported every file as updated and emitted a
+  "Updating file metadata" warning per file even when nothing on disk had changed,
+  because the file-metadata comparison treated a `str` loaded from the database as
+  unequal to a freshly parsed `cftime.datetime`. Re-ingesting an unchanged directory
+  is now a no-op. ([#673](https://github.com/Climate-REF/climate-ref/pull/673))
+
+
 ## climate-ref 0.14.0 (2026-05-12)
 
 ### Features

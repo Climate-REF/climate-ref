@@ -7,7 +7,7 @@ from loguru import logger
 from sqlalchemy.orm import joinedload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import _is_na, parse_cftime_dates, validate_path
+from climate_ref.datasets.utils import _is_na, _to_db_str, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.exceptions import RefException
 
@@ -204,12 +204,23 @@ class DatasetAdapter(Protocol):
         """
         Register a dataset in the database using the data catalog
 
+        This assumes that the data catalog has already been validated with `validate_data_catalog`
+        to ensure that the dataset-specific metadata is consistent across all files in the dataset.
+
         Parameters
         ----------
         db
             Database instance
         data_catalog_dataset
             A subset of the data catalog containing the metadata for a single dataset
+
+
+        Raises
+        ------
+        RefException
+            If the data catalog contains validation errors that should have been caught by
+                `validate_data_catalog` (i.e. multiple unique slugs in `slug_column`).
+
 
         Returns
         -------
@@ -218,11 +229,19 @@ class DatasetAdapter(Protocol):
         """
         DatasetModel = self.dataset_cls
 
-        self.validate_data_catalog(data_catalog_dataset)
         unique_slugs = data_catalog_dataset[self.slug_column].unique()
         if len(unique_slugs) != 1:
             raise RefException(f"Found multiple datasets in the same directory: {unique_slugs}")
         slug = unique_slugs[0]
+
+        # Callers are responsible for validating the catalog with  ``validate_data_catalog`` before invoking.
+        # This is a strict subset of ``validate_data_catalog`` to catch skipping upstream validation.
+        slice_meta = data_catalog_dataset[list(self.dataset_specific_metadata)]
+        if (slice_meta.nunique(dropna=False) > 1).any():
+            raise RefException(
+                f"Dataset {slug} has inconsistent dataset-specific metadata; "
+                "callers must pre-validate the catalog with validate_data_catalog."
+            )
 
         # Check if the incoming data is unfinalised (DRS parser) and the dataset
         # already exists as finalised.  In that case, skip the entire update to
@@ -285,10 +304,10 @@ class DatasetAdapter(Protocol):
         db.session.flush()
 
         # Initialize result tracking
-        files_added = []
-        files_updated = []
-        files_removed = []
-        files_unchanged = []
+        files_added: list[str] = []
+        files_updated: list[str] = []
+        files_removed: list[str] = []
+        files_unchanged: list[str] = []
 
         # Get current files for this dataset
         current_files = db.session.query(DatasetFile).filter_by(dataset_id=dataset.id).all()
@@ -307,22 +326,32 @@ class DatasetAdapter(Protocol):
         new_file_paths = set(new_file_lookup.keys())
         existing_file_paths = set(current_file_paths.keys())
 
-        # TODO: support removing files that are no longer present
-        # We want to keep a record of the dataset if it was used by a diagnostic in the past
+        # Files that exist in the database but are absent from the incoming catalog
+        # slice. Removal isn't supported yet (we want to preserve a record of
+        # diagnostics that already used the file), but raising here aborts the
+        # whole ingest -- including the streaming path, where a dataset can appear
+        # in two different chunks (e.g. a CMIP6 mirror that stores the same
+        # netCDF file under both an "actual" activity directory and a misfiled
+        # parent activity directory). Emit a warning and keep the existing rows
+        # in place so subsequent register_dataset calls for the same slug just
+        # add their own paths.
         files_to_remove = existing_file_paths - new_file_paths
         if files_to_remove:
-            files_removed = list(files_to_remove)
-            logger.warning(f"Files to remove: {files_removed}")
-            raise NotImplementedError("Removing files is not yet supported")
+            logger.warning(
+                f"Dataset {slug}: {len(files_to_remove)} file(s) absent from the current ingest "
+                f"are being kept (removal not yet supported): {sorted(files_to_remove)}"
+            )
 
-        # Update existing files if any file-specific metadata has changed
+        # Update existing files if any file-specific metadata has changed.
+        # Compare via _to_db_str on the incoming value so it matches the on-disk str form
+        # (DatasetFile.@validates coerces cftime -> str).
         for file_path, existing_file in current_file_paths.items():
             if file_path in new_file_lookup:
                 new_meta = new_file_lookup[file_path]
                 changed = any(
                     not _is_na(new_meta.get(c))
                     and hasattr(existing_file, c)
-                    and getattr(existing_file, c) != new_meta[c]
+                    and getattr(existing_file, c) != _to_db_str(new_meta[c])
                     for c in file_meta_cols
                     if c in new_meta
                 )

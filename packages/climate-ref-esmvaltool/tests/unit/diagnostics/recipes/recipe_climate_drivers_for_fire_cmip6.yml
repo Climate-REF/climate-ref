@@ -35,7 +35,7 @@ diagnostics:
         mip: Amon
         preprocessor: preproc
         short_name: pr
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6
@@ -50,7 +50,7 @@ diagnostics:
         mip: Amon
         preprocessor: preproc
         short_name: tasmax
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6
@@ -80,7 +80,7 @@ diagnostics:
         mip: Emon
         preprocessor: preproc_fraction
         short_name: vegFrac
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6
@@ -95,7 +95,7 @@ diagnostics:
         mip: Lmon
         preprocessor: preproc
         short_name: cVeg
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6
@@ -110,7 +110,7 @@ diagnostics:
         mip: Amon
         preprocessor: preproc
         short_name: tas
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6
@@ -125,7 +125,7 @@ diagnostics:
         mip: Amon
         preprocessor: preproc
         short_name: hurs
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6

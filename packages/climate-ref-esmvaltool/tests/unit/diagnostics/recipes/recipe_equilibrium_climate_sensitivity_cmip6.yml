@@ -8,29 +8,8 @@ documentation:
     '
   authors:
   - schlund_manuel
-  maintainer:
-  - schlund_manuel
   references:
   - gregory04grl
-  projects:
-  - crescendo
-preprocessors:
-  spatial_mean:
-    area_statistics:
-      operator: mean
-diagnostics:
-  ecs:
-    description: Calculate ECS.
-    variables:
-      tas:
-        preprocessor: spatial_mean
-      rtnt:
-        preprocessor: spatial_mean
-        derive: true
-    scripts:
-      calculate:
-        script: climate_metrics/ecs.py
-        calculate_mmm: false
 datasets:
 - project: CMIP6
   activity: CMIP
@@ -50,3 +29,26 @@ datasets:
   grid: gn
   mip: Amon
   timerange: 0101/0250
+preprocessors:
+  spatial_mean:
+    area_statistics:
+      operator: mean
+diagnostics:
+  ecs:
+    description: Calculate ECS for CMIP7 models.
+    variables:
+      tas:
+        mip: atmos
+        frequency: mon
+        region: glb
+        preprocessor: spatial_mean
+      rtnt:
+        mip: atmos
+        frequency: mon
+        region: glb
+        derive: true
+        preprocessor: spatial_mean
+    scripts:
+      calculate:
+        script: climate_metrics/ecs.py
+        calculate_mmm: false

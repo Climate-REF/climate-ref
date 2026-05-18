@@ -1,5 +1,4 @@
 import re
-import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -20,7 +19,6 @@ from climate_ref.database import (
     validate_database_url,
 )
 from climate_ref.models import MetricValue
-from climate_ref.models.base import Base
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
 from climate_ref.models.provider import Provider
 from climate_ref_core.datasets import SourceDatasetType
@@ -412,89 +410,100 @@ class TestValuesDiffer:
 
 class TestConcurrentCreate:
     """
-    Two writers racing on the same unique key must not crash with IntegrityError.
+    Regression for the solver race exposed by celery fan-out: two writers both
+    SELECT (see nothing), both INSERT, second hits UNIQUE.  ``get_or_create``
+    must recover by re-fetching the winner's row.
 
-    Regression for the solver race exposed by celery fan-out: two transactions both
-    SELECT (see nothing), both INSERT, second hits UNIQUE.
+    Reproduced deterministically: the initial SELECT inside ``get_or_create``
+    is patched to miss (simulating a stale snapshot), with the conflicting row
+    pre-inserted via a separate connection so the SAVEPOINT INSERT fails with
+    ``IntegrityError`` exactly once per call.  No threads, no SQLite locking
+    timing dependencies.
     """
 
     @staticmethod
-    def _bootstrap(db_path: Path) -> str:
-        """Create the schema on a fresh file-based SQLite DB and return the URL."""
-        url = f"sqlite:///{db_path}"
-        db = Database(url)
-        Base.metadata.create_all(db._engine)
-        db.close()
-        return url
+    def _commit_conflict_row(url: str, **fields) -> None:
+        """Commit a ``Provider`` row on an independent connection."""
+        with Database(url) as other, other.session.begin():
+            other.session.add(Provider(**fields))
 
-    def _run_two_writers(self, url: str, op):
-        """Run ``op(db)`` in two threads, gated by a barrier so both SELECT before either commits."""
-        barrier = threading.Barrier(2)
-        results: list = []
-        errors: list = []
+    @staticmethod
+    def _make_initial_select_miss(mocker, db, model) -> None:
+        """Force the next ``session.query(model).filter_by(...).first()`` to return None.
 
-        def worker(name: str) -> None:
-            db = Database(url)
-            try:
-                with db.session.begin():
-                    instance, state = op(db)
-                    barrier.wait()
-                    db.session.flush()
-                    row_id = instance.id
-                results.append((name, state, row_id))
-            except BaseException as e:
-                errors.append((name, e))
-            finally:
-                db.close()
+        Subsequent queries (including the recovery SELECT inside the
+        ``IntegrityError`` handler) run normally and see committed rows.
+        """
+        original_query = db.session.query
+        consumed: list = []
 
-        t1 = threading.Thread(target=worker, args=("A",))
-        t2 = threading.Thread(target=worker, args=("B",))
-        t1.start()
-        t2.start()
-        t1.join()
-        t2.join()
-        return results, errors
+        def patched_query(*args, **kwargs):
+            q = original_query(*args, **kwargs)
+            if args == (model,) and not consumed:
+                consumed.append(True)
+                original_filter_by = q.filter_by
 
-    def test_get_or_create_handles_unique_race(self, tmp_path):
-        url = self._bootstrap(tmp_path / "race.db")
+                def filter_by_miss(**kw):
+                    chained = original_filter_by(**kw)
+                    chained.first = lambda: None
+                    return chained
 
-        def op(db: Database):
-            return db.get_or_create(
+                q.filter_by = filter_by_miss
+            return q
+
+        mocker.patch.object(db.session, "query", side_effect=patched_query)
+
+    def test_get_or_create_recovers_from_unique_conflict(self, db, mocker):
+        # Racing winner is already committed by the time our INSERT runs.
+        self._commit_conflict_row(db.url, slug="example", name="winner", version="1.0")
+        self._make_initial_select_miss(mocker, db, Provider)
+
+        with db.session.begin():
+            instance, state = db.get_or_create(
                 Provider,
-                defaults={"name": "Example", "version": "1.0"},
+                defaults={"name": "loser", "version": "2.0"},
                 slug="example",
             )
 
-        results, errors = self._run_two_writers(url, op)
+        # IntegrityError handler ran; loser fetched the winner's row instead of crashing.
+        assert state is None
+        assert instance.name == "winner"
+        assert instance.version == "1.0"
+        # And the row count stayed at one — no duplicate slipped in.
+        assert db.session.query(Provider).filter_by(slug="example").count() == 1
 
-        assert errors == [], errors
-        assert len(results) == 2
-        # Both threads must agree on the same row.
-        assert results[0][2] == results[1][2]
-        # Exactly one thread reports CREATED; the other reports None (fetched winner's row).
-        states = sorted(r[1] for r in results if r[1] is not None)
-        assert states == [ModelState.CREATED]
+    def test_update_or_create_recovers_from_unique_conflict(self, db, mocker):
+        self._commit_conflict_row(db.url, slug="example", name="winner", version="1.0")
+        self._make_initial_select_miss(mocker, db, Provider)
 
-    def test_update_or_create_handles_unique_race(self, tmp_path):
-        url = self._bootstrap(tmp_path / "race.db")
-
-        def op(db: Database):
-            return db.update_or_create(
+        with db.session.begin():
+            instance, state = db.update_or_create(
                 Provider,
-                defaults={"name": "Example", "version": "1.0"},
+                defaults={"name": "loser", "version": "2.0"},
                 slug="example",
             )
 
-        results, errors = self._run_two_writers(url, op)
+        # Loser found the racing row via the IntegrityError recovery path, then
+        # applied its own defaults on top (last-writer-wins update semantics).
+        assert state is ModelState.UPDATED
+        assert instance.name == "loser"
+        assert instance.version == "2.0"
+        assert db.session.query(Provider).filter_by(slug="example").count() == 1
 
-        assert errors == [], errors
-        assert len(results) == 2
-        # Both threads see the same surviving row.
-        assert results[0][2] == results[1][2]
-        # One winner reports CREATED; loser reports either UPDATED or None
-        # (depending on whether its defaults differed from the winner's row).
-        states = [r[1] for r in results]
-        assert ModelState.CREATED in states
+    def test_get_or_create_reraises_unrelated_integrity_errors(self, db, mocker):
+        """Non-race integrity violations (NOT NULL, etc.) must surface, not be swallowed."""
+        self._make_initial_select_miss(mocker, db, Provider)
+
+        # ``version`` is NOT NULL; passing None triggers an IntegrityError that has
+        # nothing to do with a racing writer.  The recovery SELECT still misses, so
+        # the original error must be re-raised.
+        with pytest.raises(sqlalchemy.exc.IntegrityError):
+            with db.session.begin():
+                db.get_or_create(
+                    Provider,
+                    defaults={"name": "broken", "version": None},
+                    slug="broken-row",
+                )
 
 
 class TestReadOnlyDatabase:

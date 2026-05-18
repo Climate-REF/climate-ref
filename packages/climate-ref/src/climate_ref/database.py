@@ -525,8 +525,11 @@ class Database:
                 self.session.add(instance)
             return instance, ModelState.CREATED
         except IntegrityError:
-            # Another transaction inserted a matching row between our SELECT and INSERT.
-            # Drop cached state so the re-SELECT hits the database and returns the winner.
-            self.session.expire_all()
-            instance = self.session.query(model).filter_by(**kwargs).one()
+            # Could be a racing INSERT on the same unique key, OR a genuine integrity
+            # bug (NOT NULL violation, missing FK, failed CHECK).  Distinguish by
+            # re-running the lookup: a racing winner will now be visible; a real bug
+            # leaves the SELECT empty, in which case we re-raise the original error.
+            instance = self.session.query(model).filter_by(**kwargs).first()
+            if instance is None:
+                raise
             return instance, None

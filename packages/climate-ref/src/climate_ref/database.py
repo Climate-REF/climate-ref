@@ -24,6 +24,7 @@ from alembic.config import Config as AlembicConfig
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from loguru import logger
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
 from climate_ref.models import MetricValue, Table
@@ -443,7 +444,15 @@ class Database:
         """
         Update an existing instance or create a new one
 
-        This doesn't commit the transaction,
+        Safe under concurrent writers: creation goes through :meth:`get_or_create`,
+        which wraps the INSERT in a SAVEPOINT so a racing writer's UNIQUE conflict
+        resolves to fetching the winner's row. Field updates are then applied on top.
+
+        Note: last-writer-wins for the update step. If two callers update the same
+        pre-existing row concurrently, the later-committing transaction's values win.
+        This race is inherent to update semantics and is not addressed here.
+
+        This doesn't commit the outer transaction,
         so you will need to call `session.commit()` after this method
         or use a transaction context manager.
 
@@ -461,23 +470,19 @@ class Database:
         :
             A tuple containing the instance and a state enum indicating if the instance was created or updated
         """
-        instance = self.session.query(model).filter_by(**kwargs).first()
-        state: ModelState | None = None
-        if instance:
-            # Update existing instance with defaults
-            if defaults:
-                for key, value in defaults.items():
-                    if _values_differ(getattr(instance, key), value):
-                        logger.debug(f"Updating {model.__name__} {key} to {value}")
-                        setattr(instance, key, value)
-                        state = ModelState.UPDATED
+        instance, state = self.get_or_create(model, defaults=defaults, **kwargs)
+        if state is ModelState.CREATED:
             return instance, state
-        else:
-            # Create new instance
-            params = {**kwargs, **(defaults or {})}
-            instance = model(**params)
-            self.session.add(instance)
-            return instance, ModelState.CREATED
+
+        # Row pre-existed (or a racing writer's row was fetched).
+        # Apply caller-provided defaults as updates on top.
+        if defaults:
+            for key, value in defaults.items():
+                if _values_differ(getattr(instance, key), value):
+                    logger.debug(f"Updating {model.__name__} {key} to {value}")
+                    setattr(instance, key, value)
+                    state = ModelState.UPDATED
+        return instance, state
 
     def get_or_create(
         self, model: type[Table], defaults: dict[str, Any] | None = None, **kwargs: Any
@@ -485,7 +490,12 @@ class Database:
         """
         Get or create an instance of a model
 
-        This doesn't commit the transaction,
+        To support concurrent writers, a SAVEPOINT is wrapped around the INSERT operation.
+        This allows for a UNIQUE-constraint violation from a racing transaction to be caught
+        and the row inserted by the winner to be re-fetched instead of crashing.
+        The surrounding transaction (if any) is left intact.
+
+        This doesn't commit the outer transaction,
         so you will need to call `session.commit()` after this method
         or use a transaction context manager.
 
@@ -506,8 +516,17 @@ class Database:
         instance = self.session.query(model).filter_by(**kwargs).first()
         if instance:
             return instance, None
-        else:
-            params = {**kwargs, **(defaults or {})}
-            instance = model(**params)
-            self.session.add(instance)
+
+        params = {**kwargs, **(defaults or {})}
+        try:
+            # Avoiding dialect-specific on_conflict_do_nothing syntax to maintain compatibility
+            with self.session.begin_nested():
+                instance = model(**params)
+                self.session.add(instance)
             return instance, ModelState.CREATED
+        except IntegrityError:
+            # Another transaction inserted a matching row between our SELECT and INSERT.
+            # Drop cached state so the re-SELECT hits the database and returns the winner.
+            self.session.expire_all()
+            instance = self.session.query(model).filter_by(**kwargs).one()
+            return instance, None

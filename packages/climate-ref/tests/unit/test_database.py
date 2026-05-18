@@ -1,4 +1,5 @@
 import re
+import threading
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -11,6 +12,7 @@ from sqlalchemy import inspect
 from climate_ref.database import (
     Database,
     MigrationState,
+    ModelState,
     _create_backup,
     _get_sqlite_path,
     _make_readonly_sqlite_url,
@@ -18,7 +20,9 @@ from climate_ref.database import (
     validate_database_url,
 )
 from climate_ref.models import MetricValue
+from climate_ref.models.base import Base
 from climate_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
+from climate_ref.models.provider import Provider
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 
@@ -404,6 +408,93 @@ class TestValuesDiffer:
         assert _values_differ(True, pd.NA)
         assert _values_differ(False, pd.NA)
         assert _values_differ(pd.NA, True)
+
+
+class TestConcurrentCreate:
+    """
+    Two writers racing on the same unique key must not crash with IntegrityError.
+
+    Regression for the solver race exposed by celery fan-out: two transactions both
+    SELECT (see nothing), both INSERT, second hits UNIQUE.
+    """
+
+    @staticmethod
+    def _bootstrap(db_path: Path) -> str:
+        """Create the schema on a fresh file-based SQLite DB and return the URL."""
+        url = f"sqlite:///{db_path}"
+        db = Database(url)
+        Base.metadata.create_all(db._engine)
+        db.close()
+        return url
+
+    def _run_two_writers(self, url: str, op):
+        """Run ``op(db)`` in two threads, gated by a barrier so both SELECT before either commits."""
+        barrier = threading.Barrier(2)
+        results: list = []
+        errors: list = []
+
+        def worker(name: str) -> None:
+            db = Database(url)
+            try:
+                with db.session.begin():
+                    instance, state = op(db)
+                    barrier.wait()
+                    db.session.flush()
+                    row_id = instance.id
+                results.append((name, state, row_id))
+            except BaseException as e:
+                errors.append((name, e))
+            finally:
+                db.close()
+
+        t1 = threading.Thread(target=worker, args=("A",))
+        t2 = threading.Thread(target=worker, args=("B",))
+        t1.start()
+        t2.start()
+        t1.join()
+        t2.join()
+        return results, errors
+
+    def test_get_or_create_handles_unique_race(self, tmp_path):
+        url = self._bootstrap(tmp_path / "race.db")
+
+        def op(db: Database):
+            return db.get_or_create(
+                Provider,
+                defaults={"name": "Example", "version": "1.0"},
+                slug="example",
+            )
+
+        results, errors = self._run_two_writers(url, op)
+
+        assert errors == [], errors
+        assert len(results) == 2
+        # Both threads must agree on the same row.
+        assert results[0][2] == results[1][2]
+        # Exactly one thread reports CREATED; the other reports None (fetched winner's row).
+        states = sorted(r[1] for r in results if r[1] is not None)
+        assert states == [ModelState.CREATED]
+
+    def test_update_or_create_handles_unique_race(self, tmp_path):
+        url = self._bootstrap(tmp_path / "race.db")
+
+        def op(db: Database):
+            return db.update_or_create(
+                Provider,
+                defaults={"name": "Example", "version": "1.0"},
+                slug="example",
+            )
+
+        results, errors = self._run_two_writers(url, op)
+
+        assert errors == [], errors
+        assert len(results) == 2
+        # Both threads see the same surviving row.
+        assert results[0][2] == results[1][2]
+        # One winner reports CREATED; loser reports either UPDATED or None
+        # (depending on whether its defaults differed from the winner's row).
+        states = [r[1] for r in results]
+        assert ModelState.CREATED in states
 
 
 class TestReadOnlyDatabase:

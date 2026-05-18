@@ -79,29 +79,33 @@ class DiagnosticProvider:
         config :
             A configuration.
         """
-        logger.debug(
-            f"Configuring provider {self.slug} using ignore_datasets_file {config.ignore_datasets_file}"
-        )
-        # The format of the configuration file is:
+        logger.debug(f"Configuring provider {self.slug} using grey_list_file {config.grey_list_file}")
+        # The format of the grey list file is:
         # provider:
         #   diagnostic:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        ignore_datasets_all = yaml.safe_load(config.ignore_datasets_file.read_text(encoding="utf-8")) or {}
-        ignore_datasets = ignore_datasets_all.get(self.slug, {})
-        if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:
+        # A missing file is treated as an empty grey list
+        # so offline/air-gapped users that disable fetching with `grey_list_url=""`
+        # can run without having to seed the file themselves.
+        if not config.grey_list_file.exists():
+            grey_list_all: dict[str, Any] = {}
+        else:
+            grey_list_all = yaml.safe_load(config.grey_list_file.read_text(encoding="utf-8")) or {}
+        grey_list = grey_list_all.get(self.slug, {})
+        if unknown_slugs := {slug for slug in grey_list} - {d.slug for d in self.diagnostics()}:
             logger.warning(
-                f"Unknown diagnostics found in {config.ignore_datasets_file} "
+                f"Unknown diagnostics found in {config.grey_list_file} "
                 f"for provider {self.slug}: {', '.join(sorted(unknown_slugs))}"
             )
 
         known_source_types = {s.value for s in iter(SourceDatasetType)}
         for diagnostic in self.diagnostics():
-            if diagnostic.slug in ignore_datasets:
-                if unknown_source_types := set(ignore_datasets[diagnostic.slug]) - known_source_types:
+            if diagnostic.slug in grey_list:
+                if unknown_source_types := set(grey_list[diagnostic.slug]) - known_source_types:
                     logger.warning(
-                        f"Unknown source types found in {config.ignore_datasets_file} for "
+                        f"Unknown source types found in {config.grey_list_file} for "
                         f"diagnostic '{diagnostic.slug}' by provider {self.slug}: "
                         f"{', '.join(sorted(unknown_source_types))}"
                     )
@@ -114,7 +118,7 @@ class DiagnosticProvider:
                             data_requirement,
                             constraints=tuple(
                                 IgnoreFacets(facets)
-                                for facets in ignore_datasets[diagnostic.slug].get(
+                                for facets in grey_list[diagnostic.slug].get(
                                     data_requirement.source_type.value, []
                                 )
                             )

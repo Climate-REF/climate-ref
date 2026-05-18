@@ -1,6 +1,6 @@
-# This file is used to specify datasets that should be ignored by default.
+# Grey list: datasets that should be excluded from diagnostics by default.
 #
-# It can be used to ignore datasets that are known to have issues and keep
+# It can be used to skip datasets that are known to have issues and keep
 # diagnostics that use multiple datasets from running.
 #
 # The format used in this configuration file is:
@@ -14,9 +14,10 @@
 # instances that will be prepended to the constraints of the data requirements
 # of the diagnostics that the facets are listed under.
 #
-# If no `ignore_datasets_file` is specified in the REF configuration, this file
-# will be downloaded from GitHub and used. If the local copy of this file is
-# older than 6 hours, it will be updated.
+# `Config.grey_list_file` controls the location this file lives at and
+# `Config.grey_list_url` controls where the solver refreshes it from
+# (set the URL to None to disable fetching). The default cache is refreshed
+# at most every `DEFAULT_GREY_LIST_MAX_AGE` (6 hours).
 #
 esmvaltool:
   sea-ice-sensitivity:

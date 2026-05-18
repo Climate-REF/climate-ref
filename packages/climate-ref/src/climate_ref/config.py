@@ -20,7 +20,6 @@ import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
-import platformdirs
 import requests
 import tomlkit
 from attr import Factory
@@ -328,6 +327,30 @@ def default_providers() -> list[DiagnosticProviderConfig]:
     ]
 
 
+# TODO(1.0.0): drop the deprecated ignore_datasets_file / REF_IGNORE_DATASETS_FILE
+# migration shim below (constants, _check_deprecated_grey_list_config, and the
+# associated tests).
+_DEPRECATED_IGNORE_DATASETS_KEY = "ignore_datasets_file"
+_DEPRECATED_IGNORE_DATASETS_ENV = f"{env_prefix}_IGNORE_DATASETS_FILE"
+_GREY_LIST_MIGRATION_HINT = (
+    "`ignore_datasets_file` / `REF_IGNORE_DATASETS_FILE` has been renamed to "
+    "`grey_list_file` / `REF_GREY_LIST_FILE`. Update your configuration accordingly. "
+    "Set `REF_GREY_LIST_URL=` (empty) to disable automatic refresh if you previously "
+    "managed the file manually."
+)
+
+
+def _check_deprecated_grey_list_config(config_file: str | Path, doc: dict[str, Any]) -> None:
+    """Hard-fail when deprecated grey list configuration is detected."""
+    problems: list[str] = []
+    if _DEPRECATED_IGNORE_DATASETS_KEY in doc:
+        problems.append(f"`{_DEPRECATED_IGNORE_DATASETS_KEY}` found in configuration file {config_file}")
+    if os.environ.get(_DEPRECATED_IGNORE_DATASETS_ENV) is not None:
+        problems.append(f"`{_DEPRECATED_IGNORE_DATASETS_ENV}` environment variable is set")
+    if problems:
+        raise ValueError("; ".join(problems) + ". " + _GREY_LIST_MIGRATION_HINT)
+
+
 def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
     # Try loading the configuration with strict validation
     try:
@@ -342,44 +365,85 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
     return _converter_defaults_relaxed.structure(doc, Config)
 
 
-DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
-DEFAULT_IGNORE_DATASETS_URL = (
-    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/default_ignore_datasets.yaml"
+class GreyListRefreshError(RuntimeError):
+    """Raised when the grey list cannot be refreshed and no cached copy is available."""
+
+
+DEFAULT_GREY_LIST_MAX_AGE = datetime.timedelta(hours=6)
+DEFAULT_GREY_LIST_URL = (
+    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/config/default_grey_list.yaml"
 )
 
 
-def _get_default_ignore_datasets_file() -> Path:
-    """
-    Get the path to the ignore datasets file
-    """
-    cache_dir = platformdirs.user_cache_path("climate_ref")
-    cache_dir.mkdir(parents=True, exist_ok=True)
-    ignore_datasets_file = cache_dir / "default_ignore_datasets.yaml"
+def _default_grey_list_path() -> Path:
+    """Return the default location of the grey list file (no I/O, no network).
 
-    download = True
-    if ignore_datasets_file.exists():
-        # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
-        modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
+    Lives under `REF_CONFIGURATION` (alongside `ref.toml`, the database, etc.)
+    so it inherits the same writable directory the user already has set up,
+    rather than the user cache directory
+    which is often read-only on container/HPC deployments.
+    """
+    return env.path("REF_CONFIGURATION").resolve() / "grey_list.yaml"
+
+
+def refresh_grey_list_file(
+    path: Path,
+    url: str,
+    *,
+    max_age: datetime.timedelta = DEFAULT_GREY_LIST_MAX_AGE,
+) -> None:
+    """
+    Download the grey list file to ``path`` from ``url`` if it is missing or stale.
+
+    If the file already exists and was modified within ``max_age``,
+    no network request is made.
+
+    On network failure:
+    if a cached file already exists at ``path`` it is left untouched
+    (and used as the last-known-good copy).
+    If no cached file exists a `GreyListRefreshError` is raised
+    so the solver fails loudly rather than silently running without grey list protections.
+
+    Parameters
+    ----------
+    path
+        Destination path for the grey list file.
+        Parent directories are created as needed
+        so that user-supplied paths (e.g. a writable k8s volume) work.
+    url
+        URL to fetch the grey list from.
+    max_age
+        Maximum age of an existing file before it is considered stale.
+
+    Raises
+    ------
+    GreyListRefreshError
+        If the download fails and no cached file exists at ``path``.
+    """
+    path.parent.mkdir(parents=True, exist_ok=True)
+
+    if path.exists():
+        modification_time = datetime.datetime.fromtimestamp(path.stat().st_mtime)
         age = datetime.datetime.now() - modification_time
-        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
-            download = False
+        if age < max_age:
+            return
 
-    if download:
-        logger.info(
-            f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
-            f"to {ignore_datasets_file}"
-        )
-        try:
-            response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.warning(f"Failed to download default ignore datasets file: {exc}")
-            ignore_datasets_file.touch(exist_ok=True)
-        else:
-            with ignore_datasets_file.open(mode="wb") as file:
-                file.write(response.content)
-
-    return ignore_datasets_file
+    logger.info(f"Downloading grey list from {url} to {path}")
+    try:
+        response = requests.get(url, timeout=120)
+        response.raise_for_status()
+    except requests.RequestException as exc:
+        if path.exists():
+            logger.warning(f"Failed to refresh grey list from {url}; using cached copy at {path}: {exc}")
+            return
+        raise GreyListRefreshError(
+            f"Failed to download grey list from {url} and no cached copy exists at {path}. "
+            "Set `REF_GREY_LIST_URL=` (empty) to disable automatic refresh and use a "
+            f"manually managed file. Original error: {exc}"
+        ) from exc
+    else:
+        with path.open(mode="wb") as file:
+            file.write(response.content)
 
 
 @define(auto_attribs=True)
@@ -424,11 +488,15 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
-    ignore_datasets_file: Path = field(factory=_get_default_ignore_datasets_file)
+    grey_list_file: Path = env_field(  # noqa: RUF009
+        "GREY_LIST_FILE",
+        factory=_default_grey_list_path,
+        converter=Path,
+    )
     """
-    Path to the file containing the ignore datasets
+    Path to the grey list file.
 
-    This file is a YAML file that contains a list of facets to ignore per diagnostic.
+    The grey list is a YAML file that lists facets to exclude per diagnostic.
 
     The format is:
     ```yaml
@@ -439,9 +507,18 @@ class Config:
           - another_facet: [another_value1, another_value2]
     ```
 
-    If this is not specified, a default ignore datasets file will be used.
-    The default file is downloaded from the Climate-REF GitHub repository
-    if it does not exist or is older than 6 hours.
+    Defaults to a path under the configuration directory.
+    This location must be writable
+    as the solver may refresh the file from `grey_list_url` if it is missing or stale.
+    """
+
+    grey_list_url: str = env_field("GREY_LIST_URL", default=DEFAULT_GREY_LIST_URL)
+    """
+    URL to fetch the grey list from at solve time.
+
+    Set to an empty string (e.g. `REF_GREY_LIST_URL=`) to disable fetching entirely;
+    in that case the solver will use whatever file already exists at `grey_list_file`.
+    Override the URL to point at a fork or mirror.
     """
 
     paths: PathConfig = Factory(PathConfig)
@@ -477,6 +554,8 @@ class Config:
 
             doc = TOMLDocument()
             raw = None
+
+        _check_deprecated_grey_list_config(config_file, doc)
 
         try:
             config = _load_config(config_file, doc)

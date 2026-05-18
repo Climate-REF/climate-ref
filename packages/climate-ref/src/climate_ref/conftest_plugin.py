@@ -251,12 +251,13 @@ def data_catalog(
 
 @pytest.fixture(scope="session")
 def solve_config() -> Config:
-    """Session-scoped Config that uses the local default_ignore_datasets.yaml"""
+    """Session-scoped Config that uses the in-tree grey list and never fetches."""
     cfg = Config.default()
-    local_ignore_file = Path(__file__).parents[4] / "default_ignore_datasets.yaml"
-    if not local_ignore_file.is_file():
-        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
-    cfg.ignore_datasets_file = local_ignore_file
+    local_grey_list = Path(__file__).parents[4] / "config" / "default_grey_list.yaml"
+    if not local_grey_list.is_file():
+        raise ValueError(f"Could not find grey list file at {local_grey_list}")
+    cfg.grey_list_file = local_grey_list
+    cfg.grey_list_url = ""
     return cfg
 
 
@@ -274,6 +275,10 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
     cfg.paths.software = software_path
     cfg.diagnostic_providers = [DiagnosticProviderConfig(provider="climate_ref_example")]
     cfg.executor.executor = "climate_ref.executor.SynchronousExecutor"
+    # Isolate tests from the user's grey list cache and disable fetching.
+    cfg.grey_list_file = tmp_path / "grey_list.yaml"
+    cfg.grey_list_file.touch()
+    cfg.grey_list_url = ""
     cfg.save()
 
     return cfg

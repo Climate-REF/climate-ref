@@ -26,8 +26,8 @@ def mock_config(tmp_path, mocker):
     """Use a mock config to avoid depending on `climate_ref.config.Config`."""
     config = mocker.Mock()
     config.paths.software = tmp_path / "software"
-    config.ignore_datasets_file = tmp_path / "ignore_datasets.yaml"
-    config.ignore_datasets_file.touch()
+    config.grey_list_file = tmp_path / "grey_list.yaml"
+    config.grey_list_file.touch()
     return config
 
 
@@ -70,7 +70,7 @@ class TestDiagnosticProvider:
         assert isinstance(result, Diagnostic)
 
     def test_configure(self, provider, mock_config):
-        mock_config.ignore_datasets_file.write_text(
+        mock_config.grey_list_file.write_text(
             textwrap.dedent(
                 """
                 mock_provider:
@@ -85,8 +85,15 @@ class TestDiagnosticProvider:
         expected_constraint = IgnoreFacets(facets={"source_id": ("A",)})
         assert provider.diagnostics()[0].data_requirements[0][0].constraints[0] == expected_constraint
 
+    def test_configure_missing_grey_list_file(self, provider, mock_config):
+        # Offline/air-gapped users may run with grey_list_url="" and no file
+        # seeded yet; missing file should be treated as an empty grey list,
+        # not raise FileNotFoundError.
+        mock_config.grey_list_file.unlink()
+        provider.configure(mock_config)
+
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
-        mock_config.ignore_datasets_file.write_text(
+        mock_config.grey_list_file.write_text(
             textwrap.dedent(
                 """
                 mock_provider:
@@ -100,13 +107,13 @@ class TestDiagnosticProvider:
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
         expected_msg = (
-            f"Unknown diagnostics found in {mock_config.ignore_datasets_file} "
+            f"Unknown diagnostics found in {mock_config.grey_list_file} "
             "for provider mock_provider: invalid_diagnostic"
         )
         assert expected_msg in caplog.text
 
     def test_configure_unknown_source_type(self, provider, mock_config, caplog):
-        mock_config.ignore_datasets_file.write_text(
+        mock_config.grey_list_file.write_text(
             textwrap.dedent(
                 """
                 mock_provider:
@@ -120,7 +127,7 @@ class TestDiagnosticProvider:
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
         expected_msg = (
-            f"Unknown source types found in {mock_config.ignore_datasets_file} "
+            f"Unknown source types found in {mock_config.grey_list_file} "
             "for diagnostic 'mock' by provider mock_provider: invalid_source_type"
         )
         assert expected_msg in caplog.text

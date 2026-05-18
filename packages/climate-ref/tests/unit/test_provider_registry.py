@@ -17,6 +17,17 @@ class TestProviderRegistry:
         assert mock_import.call_count == 1
         mock_register.assert_called_once_with(db, mock_import.return_value)
 
+    def test_build_from_config_does_not_fetch_grey_list(self, config, mocker):
+        """Read-only commands (providers/datasets list) must not hit the network."""
+        db = mocker.MagicMock()
+        mocker.patch("climate_ref.provider_registry.import_provider")
+        mocker.patch("climate_ref.provider_registry._register_provider")
+        get_mock = mocker.patch("climate_ref.config.requests.get")
+
+        ProviderRegistry.build_from_config(config, db)
+
+        get_mock.assert_not_called()
+
     def test_get_provider_found(self, mocker):
         """Test get() returns provider when found."""
         mock_provider = mocker.MagicMock()

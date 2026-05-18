@@ -21,6 +21,15 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.3 (2026-05-18)
+
+### Bug Fixes
+
+- Fixed a race condition when trying to create the same `ExecutionGroup` concurrently.
+  `Database.get_or_create` and `Database.update_or_create` now wrap the INSERT in a SAVEPOINT
+  and re-fetch the winning row on conflict instead of aborting the transaction. ([#679](https://github.com/Climate-REF/climate-ref/pull/679))
+
+
 ## climate-ref 0.14.2 (2026-05-15)
 
 ### Bug Fixes

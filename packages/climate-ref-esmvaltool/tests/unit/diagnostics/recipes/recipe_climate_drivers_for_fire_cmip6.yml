@@ -65,7 +65,7 @@ diagnostics:
         mip: Lmon
         preprocessor: preproc_fraction
         short_name: treeFrac
-        start_year: 2013
+        start_year: 1994
         end_year: 2014
         additional_datasets:
         - project: CMIP6

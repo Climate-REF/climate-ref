@@ -227,10 +227,112 @@ class TestIngest:
                 "--source-type",
                 "cmip6",
             ],
+            expected_exit_code=1,
         )
 
-        # Continues past the missing directory
+        # Logs the missing directory and exits non-zero so cron/k8s see the failure.
         assert f"File or directory {sample_data_dir / 'missing'} does not exist" in result.stderr
+        assert "Ingestion failed for 1 of 1 input(s)" in result.stderr
+
+    def test_ingest_partial_failure_exits_nonzero(self, sample_data_dir, db, invoke_cli):
+        # One valid dir, one missing dir: ingestion still runs for the valid dir,
+        # but the CLI exits non-zero so the failure is observable in cron/k8s.
+        result = invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(sample_data_dir / self.data_dir),
+                str(sample_data_dir / "missing"),
+                "--source-type",
+                "cmip6",
+            ],
+            expected_exit_code=1,
+        )
+
+        expected_dataset_count = 6
+        assert db.session.query(Dataset).count() == expected_dataset_count
+        assert "Ingestion failed for 1 of 2 input(s)" in result.stderr
+
+    def test_ingest_chunk_size(self, sample_data_dir, db, invoke_cli):
+        invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(sample_data_dir / self.data_dir),
+                "--source-type",
+                "cmip6",
+                "--chunk-size",
+                "2",
+            ]
+        )
+
+        expected_dataset_count = 6
+        assert db.session.query(Dataset).count() == expected_dataset_count
+        assert db.session.query(CMIP6Dataset).count() == expected_dataset_count
+        assert db.session.query(DatasetFile).count() == expected_dataset_count
+
+    def test_ingest_chunk_size_dry_run(self, sample_data_dir, db, invoke_cli):
+        invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(sample_data_dir / self.data_dir),
+                "--source-type",
+                "cmip6",
+                "--chunk-size",
+                "2",
+                "--dry-run",
+            ]
+        )
+
+        assert db.session.query(Dataset).count() == 0
+
+    def test_ingest_chunk_size_zero_rejected(self, sample_data_dir, db, invoke_cli):
+        result = invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(sample_data_dir / self.data_dir),
+                "--source-type",
+                "cmip6",
+                "--chunk-size",
+                "0",
+            ],
+            expected_exit_code=2,
+        )
+        assert "chunk_size must be >= 1" in result.stderr
+
+    def test_ingest_chunk_size_negative_rejected(self, sample_data_dir, db, invoke_cli):
+        result = invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(sample_data_dir / self.data_dir),
+                "--source-type",
+                "cmip6",
+                "--chunk-size",
+                "-3",
+            ],
+            expected_exit_code=2,
+        )
+        assert "chunk_size must be >= 1" in result.stderr
+
+    def test_ingest_chunk_size_unsupported_adapter_falls_back(self, sample_data_dir, db, invoke_cli):
+        """``--chunk-size`` on an adapter without ``iter_local_datasets`` warns and falls back."""
+        obs_dir = sample_data_dir / "obs4MIPs"
+        result = invoke_cli(
+            [
+                "datasets",
+                "ingest",
+                str(obs_dir),
+                "--source-type",
+                "obs4mips",
+                "--chunk-size",
+                "5",
+                "--dry-run",
+            ]
+        )
+        assert "does not support streaming ingest" in result.stderr
 
     def test_ingest_dryrun(self, sample_data_dir, db, invoke_cli):
         invoke_cli(

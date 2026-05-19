@@ -17,6 +17,7 @@ from loguru import logger
 from climate_ref import SAMPLE_DATA_VERSION
 from climate_ref.config import Config
 from climate_ref.database import Database
+from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.datasets import ExecutionDatasetCollection
@@ -108,10 +109,18 @@ def validate_result(
     execution = Execution(
         execution_group_id=execution_group.id,
         dataset_hash=result.definition.datasets.hash,
-        output_fragment=str(result.definition.output_fragment()),
+        output_fragment=PLACEHOLDER_FRAGMENT,
     )
     database.session.add(execution)
-    database.session.flush()
+
+    assign_execution_fragment(
+        database.session,
+        execution,
+        provider_slug=diagnostic.provider.slug,
+        diagnostic_slug=diagnostic.slug,
+        selectors=result.definition.datasets.selectors,
+        group_id=execution_group.id,
+    )
 
     assert result.successful
 

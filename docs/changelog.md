@@ -21,6 +21,104 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.3 (2026-05-18)
+
+### Bug Fixes
+
+- Fixed a race condition when trying to create the same `ExecutionGroup` concurrently.
+  `Database.get_or_create` and `Database.update_or_create` now wrap the INSERT in a SAVEPOINT
+  and re-fetch the winning row on conflict instead of aborting the transaction. ([#679](https://github.com/Climate-REF/climate-ref/pull/679))
+
+
+## climate-ref 0.14.2 (2026-05-15)
+
+### Bug Fixes
+
+- Changed the behaviour for `register_dataset` treatment of files absent from the current ingest slice as kept-in-place with a warning, instead of raising NotImplementedError. ([#677](https://github.com/Climate-REF/climate-ref/pull/677))
+
+
+## climate-ref 0.14.1 (2026-05-14)
+
+### Features
+
+- Added a `--chunk-size` option to `ref datasets ingest` (CMIP6 and CMIP7) that streams the catalog in directory-aligned batches
+  instead of loading the whole archive into memory at once.
+  Peak memory is now bounded by `chunk_size` rather than by the total number of files in the input tree. ([#674](https://github.com/Climate-REF/climate-ref/pull/674))
+
+### Improvements
+
+- Skip the redundant per-dataset `validate_data_catalog` call inside `register_dataset`.
+  The production ingest path already validates the catalog (and each streamed chunk) once
+  up-front, so the inner re-validation only duplicated work. Cuts ~20% off ingest wall time
+  on a 50k-file / 500-dataset synthetic CMIP6 archive. A cheap per-slice guard (no groupby)
+  remains so callers that bypass the upstream validation contract still get a clear error
+  instead of silently registering inconsistent metadata. ([#675](https://github.com/Climate-REF/climate-ref/pull/675))
+
+### Bug Fixes
+
+- Stopped re-ingesting unchanged CMIP6 files on every run.
+  Previously, `ref datasets ingest` reported every file as updated and emitted a
+  "Updating file metadata" warning per file even when nothing on disk had changed,
+  because the file-metadata comparison treated a `str` loaded from the database as
+  unequal to a freshly parsed `cftime.datetime`. Re-ingesting an unchanged directory
+  is now a no-op. ([#673](https://github.com/Climate-REF/climate-ref/pull/673))
+
+
+## climate-ref 0.14.0 (2026-05-12)
+
+### Features
+
+- Write the diagnostic `version` to the database.
+
+  Bumping a diagnostic's ``version`` now creates a fresh execution group
+  (preserving the prior version's group and results) instead of overwriting it,
+  and each execution is stamped with the provider version that produced it. ([#667](https://github.com/Climate-REF/climate-ref/pull/667))
+
+### Improvements
+
+- Reworked the layout of execution output directories.
+  New executions now write to ``<provider>/<diagnostic>/<group_short>/<execution_id>/``
+  instead of ``<provider>/<diagnostic>/<dataset_hash>/``,
+  so reruns of the same diagnostic group no longer overwrite earlier outputs.
+  Existing rows on disk continue to resolve through their stored ``Execution.output_fragment``. ([#655](https://github.com/Climate-REF/climate-ref/pull/655))
+- Added diagnostic versioning read-path foundations.
+  New database columns track the diagnostic version for each execution group,
+  the promoted version for each diagnostic, and the provider version for each execution.
+  Default queries now return only results at the promoted version, and the ``ref executions stats`` command reflects the same filter. ([#665](https://github.com/Climate-REF/climate-ref/pull/665))
+
+### Bug Fixes
+
+- `ref datasets ingest` now exits with a non-zero status when one or more input directories fail to ingest,
+  so cron- and Kubernetes-based deployments can detect failures.
+  The CMIP6, CMIP7, and obs4MIPs adapters also now tolerate individual files with missing DRS components:
+  those files are logged and skipped instead of aborting the whole batch. ([#668](https://github.com/Climate-REF/climate-ref/pull/668))
+
+
+## climate-ref 0.13.2 (2026-05-10)
+
+### Features
+
+- Added support for Python 3.14. ([#625](https://github.com/Climate-REF/climate-ref/pull/625))
+
+### Improvements
+
+- Add extra options for users to ingest options other than base to parsl functions ([#651](https://github.com/Climate-REF/climate-ref/pull/651))
+- Updated ESMValCore to v2.14.0 and ESMValTool to 2.15.0.dev15+gdead90ca8. ([#652](https://github.com/Climate-REF/climate-ref/pull/652))
+
+### Bug Fixes
+
+- Fixed `ref test-cases fetch` aborting the entire run when a single test case could not be parsed (for example because of a `PermissionError` on a cached CMIP6 file); the failing test case is now logged as a warning and the loop continues. ([#639](https://github.com/Climate-REF/climate-ref/pull/639))
+- Fixed `ref solve` periodically reporting executions as never finishing. Stuck executions left in the in-progress state by a crashed worker, walltime kill, or hung diagnostic are now reaped and retried on the next solve, the CLI `--timeout` default has been raised to 6 hours to match the worker time limit, and per-task timeouts in the local executor cancel hung diagnostics instead of blocking the whole pool. ([#641](https://github.com/Climate-REF/climate-ref/pull/641))
+
+### Improved Documentation
+
+- Updated CITATION.cff with extra author names and orcid ids. ([#636](https://github.com/Climate-REF/climate-ref/pull/636))
+
+### Trivial/Internal Changes
+
+- [#619](https://github.com/Climate-REF/climate-ref/pull/619), [#637](https://github.com/Climate-REF/climate-ref/pull/637), [#638](https://github.com/Climate-REF/climate-ref/pull/638)
+
+
 ## climate-ref 0.13.1 (2026-04-13)
 
 ### Features

@@ -10,6 +10,7 @@ import pathlib
 import typing
 from collections.abc import Mapping, Sequence
 
+import attrs
 import pandas as pd
 from attrs import define, frozen
 from loguru import logger
@@ -24,9 +25,11 @@ from climate_ref.datasets import (
     PMPClimatologyDatasetAdapter,
     get_slug_column,
 )
+from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
 from climate_ref.models import Diagnostic as DiagnosticModel
 from climate_ref.models import ExecutionGroup
 from climate_ref.models import Provider as ProviderModel
+from climate_ref.models.diagnostic import recompute_promoted_version
 from climate_ref.models.execution import Execution
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.constraints import apply_constraint
@@ -98,13 +101,16 @@ class DiagnosticExecution:
 
     def build_execution_definition(self, output_root: pathlib.Path) -> ExecutionDefinition:
         """
-        Build the execution definition for the current diagnostic execution
+        Build the execution definition for the current diagnostic execution.
+
+        The returned definition uses a placeholder fragment for the output directory.
+        ``solve_required_executions`` rewrites ``output_directory`` via
+        :func:`attrs.evolve` once the new ``Execution.id`` is known.
         """
         # Ensure that the output root is always an absolute path
         output_root = output_root.resolve()
 
-        # This is the desired path relative to the output directory
-        fragment = pathlib.Path() / self.provider.slug / self.diagnostic.slug / self.datasets.hash
+        fragment = pathlib.Path() / self.provider.slug / self.diagnostic.slug / PLACEHOLDER_FRAGMENT
 
         return ExecutionDefinition(
             diagnostic=self.diagnostic,
@@ -645,14 +651,18 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         limit_reached = False
 
         diagnostic_id = diagnostic_id_by_slug[(provider_slug, potential_execution.diagnostic.slug)]
+        diagnostic_version = potential_execution.diagnostic.version
 
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
         with db.session.begin():
+            # diagnostic_version is part of the lookup key so bumping
+            # ``Diagnostic.version`` produces a fresh v2 group instead of reusing the v1 row.
             execution_group, created = db.get_or_create(
                 ExecutionGroup,
                 key=definition.key,
                 diagnostic_id=diagnostic_id,
+                diagnostic_version=diagnostic_version,
                 defaults={
                     "selectors": potential_execution.selectors,
                     "dirty": True,
@@ -662,6 +672,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             if created:
                 logger.info(f"Created new execution group: {potential_execution.execution_slug()!r}")
                 db.session.flush()
+                recompute_promoted_version(diagnostic_id, db.session)
 
             # TODO: Move this logic to the solver
             # Check if we should run given the one_per_provider or one_per_diagnostic flags
@@ -698,10 +709,25 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 execution = Execution(
                     execution_group=execution_group,
                     dataset_hash=definition.datasets.hash,
-                    output_fragment=str(definition.output_fragment()),
+                    output_fragment=PLACEHOLDER_FRAGMENT,
+                    provider_version=potential_execution.provider.version,
                 )
                 db.session.add(execution)
-                db.session.flush()
+
+                fragment = assign_execution_fragment(
+                    db.session,
+                    execution,
+                    provider_slug=provider_slug,
+                    diagnostic_slug=potential_execution.diagnostic.slug,
+                    selectors=potential_execution.selectors,
+                    group_id=execution_group.id,
+                )
+
+                # Rebuild the definition so the executor sees the resolved output path.
+                definition = attrs.evolve(
+                    definition,
+                    output_directory=config.paths.scratch.resolve() / pathlib.Path(fragment),
+                )
 
                 # Add links to the datasets used in the execution
                 execution.register_datasets(db, definition.datasets)

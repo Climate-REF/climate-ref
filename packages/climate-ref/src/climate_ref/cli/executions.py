@@ -688,6 +688,7 @@ def stats(
             func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
         )
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
+        .filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
         .join(Provider, Diagnostic.provider_id == Provider.id)
         .outerjoin(latest_exec_subquery, ExecutionGroup.id == latest_exec_subquery.c.execution_group_id)
         .outerjoin(

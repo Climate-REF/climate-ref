@@ -7,6 +7,7 @@ from __future__ import annotations
 import fnmatch
 import os
 import warnings
+from collections.abc import Iterator
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Any
@@ -154,19 +155,155 @@ def build_catalog(
 
     entries = parse_files(assets, parsing_func, n_jobs=n_jobs)
     df = pd.DataFrame(entries)
-
-    # Remove invalid assets
-    if INVALID_ASSET in df.columns:
-        invalid = df[df[INVALID_ASSET].notnull()]
-        if not invalid.empty:
-            warnings.warn(
-                f"Unable to parse {len(invalid)} assets.",
-                stacklevel=2,
-            )
-            for _, row in invalid.iterrows():
-                logger.warning(f"Invalid asset: {row[INVALID_ASSET]}")
-        df = df[df[INVALID_ASSET].isnull()].drop(columns=[INVALID_ASSET, TRACEBACK])
+    df = _filter_invalid_rows(df)
 
     logger.info(f"Built catalog with {len(df)} valid entries ({len(assets) - len(df)} invalid)")
 
     return df
+
+
+def iter_discovered_chunks(
+    paths: list[str],
+    include_patterns: list[str] | None = None,
+    depth: int = 0,
+    chunk_size: int = 10_000,
+) -> Iterator[list[str]]:
+    """
+    Yield batches of discovered file paths in chunks.
+
+    Walks the directory tree once and yields batches of up to ``chunk_size`` paths.
+    Batches only flush at directory boundaries, so files within a single directory are kept together.
+    This assumption holds for the current directory structures used by CMIP6 and CMIP7.
+
+    Parameters
+    ----------
+    paths
+        Root directories (or single files) to search.
+    include_patterns
+        Glob patterns to include (e.g. ``["*.nc"]``).
+        Defaults to ``["*"]``.
+    depth
+        Maximum directory depth below each root to search.
+    chunk_size
+        Soft target for the number of files per batch. A batch may exceed
+        this if a single directory contains more matching files.
+
+    Yields
+    ------
+    :
+        Lists of file paths. Each list is sorted and deduplicated.
+    """
+    include_patterns = include_patterns or ["*"]
+    buffer: list[str] = []
+
+    def _flush() -> Iterator[list[str]]:
+        nonlocal buffer
+        if buffer:
+            yield sorted(set(buffer))
+            buffer = []
+
+    for root_path in paths:
+        root = Path(root_path)
+        if not root.exists():
+            continue
+
+        if root.is_file():
+            if any(fnmatch.fnmatch(root.name, pat) for pat in include_patterns):
+                buffer.append(str(root))
+            if len(buffer) >= chunk_size:
+                yield from _flush()
+            continue
+
+        for dirpath, dirnames, filenames in os.walk(root):
+            dirnames.sort()
+            current_depth = len(Path(dirpath).relative_to(root).parts)
+            if current_depth >= depth:
+                dirnames.clear()
+
+            matched = [
+                os.path.join(dirpath, fn)
+                for fn in filenames
+                if any(fnmatch.fnmatch(fn, pat) for pat in include_patterns)
+            ]
+            if not matched:
+                continue
+
+            if buffer and len(buffer) + len(matched) > chunk_size:
+                yield from _flush()
+            buffer.extend(matched)
+
+    yield from _flush()
+
+
+def _filter_invalid_rows(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Drop INVALID_ASSET rows from a parsed catalog DataFrame.
+
+    Warns once per call summarising the count, logs each invalid path at warning level,
+    then returns a DataFrame with the INVALID_ASSET and TRACEBACK columns removed.
+    """
+    if INVALID_ASSET not in df.columns:
+        return df
+
+    invalid = df[df[INVALID_ASSET].notnull()]
+    if not invalid.empty:
+        warnings.warn(f"Unable to parse {len(invalid)} assets.", stacklevel=3)
+        for _, row in invalid.iterrows():
+            logger.warning(f"Invalid asset: {row[INVALID_ASSET]}")
+    return df[df[INVALID_ASSET].isnull()].drop(columns=[INVALID_ASSET, TRACEBACK])
+
+
+def iter_built_catalogs(  # noqa: PLR0913
+    paths: list[str],
+    parsing_func: DatasetParsingFunction,
+    include_patterns: list[str] | None = None,
+    depth: int = 0,
+    n_jobs: int = 1,
+    chunk_size: int = 10_000,
+) -> Iterator[pd.DataFrame]:
+    """
+    Yield catalog DataFrames in chunks, parsing files chunk by chunk.
+
+    Peak memory is bounded by ``chunk_size`` files because each chunk's
+    parsed entries and DataFrame are released before the next chunk starts parsing.
+
+    Parameters
+    ----------
+    paths
+        Root directories to search for files.
+    parsing_func
+        Function that parses each file and returns a metadata dictionary.
+        Must return a dict with an ``INVALID_ASSET`` key on failure.
+    include_patterns
+        Glob patterns to include (e.g. ``["*.nc"]``).
+    depth
+        Maximum directory depth to search.
+    n_jobs
+        Number of parallel workers per chunk for parsing.
+    chunk_size
+        Soft target for the number of files per chunk.
+
+    Yields
+    ------
+    :
+        DataFrames with parsed metadata for each chunk. Empty chunks
+        (all invalid) are skipped.
+    """
+    any_emitted = False
+    for chunk_paths in iter_discovered_chunks(
+        paths, include_patterns=include_patterns, depth=depth, chunk_size=chunk_size
+    ):
+        logger.info(f"Parsing chunk of {len(chunk_paths)} files")
+        entries = parse_files(chunk_paths, parsing_func, n_jobs=n_jobs)
+        df = pd.DataFrame(entries)
+        del entries
+
+        df = _filter_invalid_rows(df)
+        if df.empty:
+            continue
+
+        any_emitted = True
+        yield df
+
+    if not any_emitted:
+        logger.info(f"No valid files found in {paths} matching {include_patterns}")

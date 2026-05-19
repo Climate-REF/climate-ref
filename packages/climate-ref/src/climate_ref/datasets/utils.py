@@ -5,6 +5,7 @@ Shared utility functions for dataset adapters
 from __future__ import annotations
 
 import re
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 
@@ -22,6 +23,23 @@ def _is_na(value: Any) -> bool:
         return bool(pd.isna(value))
     except (TypeError, ValueError):
         return False
+
+
+def _to_db_str(value: Any) -> str | None:
+    """
+    Coerce a value to its on-disk string form.
+
+    Matches the @validates coercion used by DatasetFile (e.g. cftime.datetime -> str(cftime_obj)).
+    This is the normalised form for comparing a freshly-parsed in-memory value
+    against the str loaded back from the database.
+    Without it, a cross-type ``str != cftime.datetime`` comparison always evaluates True
+    and every file appears changed onre-ingest.
+    """
+    if value is None:
+        return None
+    if isinstance(value, str):
+        return value
+    return str(value)
 
 
 def sort_data_catalog(catalog: pd.DataFrame) -> pd.DataFrame:
@@ -213,6 +231,78 @@ def parse_drs_daterange(date_range: str) -> tuple[str | None, str | None]:
     except ValueError:
         logger.error(f"Invalid date range format: {date_range}")
         return None, None
+
+
+def build_instance_id(
+    datasets: pd.DataFrame,
+    drs_items: list[str],
+    prefix: str,
+    transform: Callable[[str, Any], str] | None = None,
+    *,
+    copy: bool = True,
+) -> pd.DataFrame:
+    """
+    Add an ``instance_id`` column built from DRS components.
+
+    Rows where any required DRS component is None/NA are dropped with a warning
+    so a single malformed file does not abort the whole ingestion batch.
+
+    Parameters
+    ----------
+    datasets
+        Data catalog with one row per file.
+    drs_items
+        Column names that make up the instance id, in order.
+    prefix
+        Prefix to use for the instance id (e.g. ``"CMIP6"``).
+    transform
+        Optional per-column value transform; defaults to ``str(value)``.
+    copy
+        If ``True`` (the default), the input DataFrame is left untouched and a
+        new one is returned. Set to ``False`` when the caller owns ``datasets``
+        and wants to avoid the extra full-table copy — important for streaming
+        ingest where ``datasets`` already represents a transient chunk.
+
+    Returns
+    -------
+    :
+        Catalog with the ``instance_id`` column added and invalid rows removed.
+    """
+    if datasets.empty:
+        if copy:
+            datasets = datasets.copy()
+        datasets["instance_id"] = pd.Series(dtype="object")
+        return datasets
+
+    # Build instance_id from individual column views to avoid the per-row pandas
+    # accessor overhead of iterrows() and avoid materialising one Series per row.
+    columns = [datasets[item].to_numpy() for item in drs_items]
+    instance_ids: list[str | None] = []
+    for values in zip(*columns):
+        parts: list[str] = []
+        valid = True
+        for item, val in zip(drs_items, values):
+            if _is_na(val):
+                valid = False
+                break
+            parts.append(transform(item, val) if transform else str(val))
+        instance_ids.append(f"{prefix}." + ".".join(parts) if valid else None)
+
+    if copy:
+        datasets = datasets.copy()
+    datasets["instance_id"] = pd.array(instance_ids, dtype="object")
+
+    invalid_mask = datasets["instance_id"].isna()
+    if not invalid_mask.any():
+        return datasets
+
+    invalid_cols = list(drs_items) + (["path"] if "path" in datasets.columns else [])
+    invalid_rows = datasets.loc[invalid_mask, invalid_cols]
+    for _, row in invalid_rows.iterrows():
+        missing = [c for c in drs_items if _is_na(row[c])]
+        path = row.get("path", "<unknown>") if "path" in invalid_rows.columns else "<unknown>"
+        logger.warning(f"Skipping {path}: missing required DRS components for instance_id: {missing}")
+    return datasets.loc[~invalid_mask]
 
 
 def validate_path(raw_path: str) -> Path:

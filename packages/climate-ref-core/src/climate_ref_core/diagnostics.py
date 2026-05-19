@@ -551,6 +551,17 @@ class Diagnostic(AbstractDiagnostic):
     See (climate_ref_example.example.ExampleDiagnostic)[] for an example implementation.
     """
 
+    version: int = 1
+    """
+    Diagnostic version.
+
+    Bump when the diagnostic's results change in a way that requires recomputation
+    (algorithm tweaks, bug fixes, data-requirement changes).
+    The value is append-only: always increment, never reuse a previous number.
+
+    Existing diagnostics inherit ``version = 1`` implicitly.
+    """
+
     series: Sequence[SeriesDefinition] = tuple()
     files: Sequence[FileDefinition] = tuple()
     test_data_spec: TestDataSpecification | None = None

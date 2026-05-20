@@ -8,6 +8,8 @@ documentation:
     '
   authors:
   - schlund_manuel
+  maintainer:
+  - schlund_manuel
   references:
   - gregory04grl
 datasets:
@@ -39,19 +41,13 @@ preprocessors:
       operator: mean
 diagnostics:
   ecs:
-    description: Calculate ECS for CMIP7 models.
+    description: Calculate ECS.
     variables:
       tas:
         branding_suffix: tavg-h2m-hxy-u
-        mip: atmos
-        frequency: mon
-        region: glb
         preprocessor: spatial_mean
       rtnt:
         branding_suffix: tavg-u-hxy-u
-        mip: atmos
-        frequency: mon
-        region: glb
         derive: true
         preprocessor: spatial_mean
     scripts:

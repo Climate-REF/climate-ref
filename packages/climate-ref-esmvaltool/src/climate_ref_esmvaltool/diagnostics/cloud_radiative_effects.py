@@ -9,7 +9,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -208,6 +208,21 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                         },
                         remove_ensembles=True,
                         time_span=("1996", "2014"),
+                    ),
+                    Obs4MIPsRequest(
+                        slug="obs4mips",
+                        facets={
+                            "frequency": "mon",
+                            "source_id": "CERES-EBAF-4-2",
+                            "variable_id": (
+                                "rlut",
+                                "rlutcs",
+                                "rsut",
+                                "rsutcs",
+                            ),
+                        },
+                        remove_ensembles=False,
+                        time_span=("2001", "2021"),
                     ),
                 ),
             ),

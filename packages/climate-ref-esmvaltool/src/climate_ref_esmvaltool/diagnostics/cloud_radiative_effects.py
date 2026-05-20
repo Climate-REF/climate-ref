@@ -80,7 +80,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(2001, 1),
+                        start=PartialDateTime(2002, 1),
                         end=PartialDateTime(2021, 12),
                     ),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
@@ -108,13 +108,12 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(2001, 1),
+                        start=PartialDateTime(2002, 1),
                         end=PartialDateTime(2021, 12),
                     ),
                 ),
             ),
         ),
-        # TODO: Use CERES-EBAF, ESACCI-CLOUD, and ISCCP-FH from obs4MIPs once available.
     )
 
     facets = ()
@@ -161,9 +160,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
             attributes=[],
         )
         for var_name in ["lwcre", "swcre"]
-        for i, source_id in enumerate(
-            ["CERES-EBAF-Ed4.2", "ESACCI-CLOUD-AVHRR-AMPM-fv3.0", "ISCCP-FH"], start=1
-        )
+        for i, source_id in enumerate(["CERES-EBAF-4-2"], start=1)
     )
 
     test_data_spec = TestDataSpecification(

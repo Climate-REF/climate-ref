@@ -24,7 +24,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
 
     name = "Climatologies and zonal mean profiles of cloud radiative effects"
     slug = "cloud-radiative-effects"
-    base_recipe = "ref/recipe_ref_cre.yml"
+    base_recipe = "ref/recipe_ref_cre_cmip7.yml"
 
     variables = (
         "rlut",
@@ -80,12 +80,37 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(1996, 1),
-                        end=PartialDateTime(2014, 12),
+                        start=PartialDateTime(2001, 1),
+                        end=PartialDateTime(2021, 12),
                     ),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
                     RequireFacets("variable_id", variables),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
+                ),
+            ),
+            DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "frequency": "mon",
+                            "source_id": "CERES-EBAF-4-2",
+                            "variable_id": (
+                                "rlut",
+                                "rlutcs",
+                                "rsut",
+                                "rsutcs",
+                            ),
+                        }
+                    ),
+                ),
+                group_by=("source_id",),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(2001, 1),
+                        end=PartialDateTime(2021, 12),
+                    ),
                 ),
             ),
         ),

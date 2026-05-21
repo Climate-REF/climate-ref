@@ -300,7 +300,7 @@ class AnnualCycle(CommandLineDiagnostic):
         ("va", "ERA-5"),
         ("zg", "ERA-5"),
         # Other reference datasets, spatial 2-D variables
-        ("pr", "GPCP-Monthly-3-2"),
+        ("pr", "GPCP-3-3"),
         ("rlds", "CERES-EBAF-4-2"),
         ("rlus", "CERES-EBAF-4-2"),
         ("rlut", "CERES-EBAF-4-2"),
@@ -342,13 +342,13 @@ class AnnualCycle(CommandLineDiagnostic):
             ),
             TestCase(
                 name="cmip6-pr",
-                description="Test with CMIP6 pr data and GPCP-Monthly-3-2 climatology. "
+                description="Test with CMIP6 pr data and GPCP-3-3 climatology. "
                 "Produces double ITCZ pattern in the diagnostics.",
                 requests=(
                     RegistryRequest(
                         slug="annual-cycle-gpcp-pr",
                         registry_name="pmp-climatology",
-                        facets={"variable_id": "pr", "source_id": "GPCP-Monthly-3-2"},
+                        facets={"variable_id": "pr", "source_id": "GPCP-3-3"},
                     ),
                     CMIP6Request(
                         slug="annual-cycle-cmip6-pr",

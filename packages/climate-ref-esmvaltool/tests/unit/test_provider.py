@@ -31,7 +31,7 @@ class TestESMValToolProviderHooks:
         data_path = provider.get_data_path()
         assert data_path is not None
         assert isinstance(data_path, Path)
-        assert data_path == Path(pooch.os_cache("climate_ref"))
+        assert data_path == Path(pooch.os_cache("climate_ref")) / "esmvaltool"
 
     def test_fetch_data(self, mocker):
         """Test that fetch_data calls fetch_all_files."""

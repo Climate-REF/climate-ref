@@ -252,11 +252,7 @@ class TestMigrateCache:
 
         new_dir = tmp_path / "new_cache" / "test_registry"
 
-        mocker.patch.object(
-            DatasetRegistryManager,
-            "_resolve_cache_dir",
-            return_value=new_dir,
-        )
+        mocker.patch("climate_ref_core.dataset_registry.resolve_cache_dir", return_value=new_dir)
 
         registry_path, package, resource = fake_registry_file
         with registry_path.open("w") as f:

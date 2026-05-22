@@ -287,6 +287,7 @@ class AnnualCycle(CommandLineDiagnostic):
         "statistic",
         "season",
     )
+    version = 2
 
     _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables

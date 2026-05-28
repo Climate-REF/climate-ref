@@ -94,7 +94,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "frequency": "mon",
-                            "source_id": "CERES-EBAF-4-2",
+                            "source_id": "CERES-EBAF-4-2-1",
                             "variable_id": (
                                 "rlut",
                                 "rlutcs",
@@ -210,7 +210,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                         slug="obs4mips",
                         facets={
                             "frequency": "mon",
-                            "source_id": "CERES-EBAF-4-2",
+                            "source_id": "CERES-EBAF-4-2-1",
                             "variable_id": (
                                 "rlut",
                                 "rlutcs",

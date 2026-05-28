@@ -12,7 +12,6 @@ import importlib.resources
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-import pooch
 import yaml
 from loguru import logger
 
@@ -20,6 +19,7 @@ from climate_ref_core.dataset_registry import (
     DATASET_URL,
     dataset_registry_manager,
     fetch_all_files,
+    resolve_cache_dir,
     validate_registry_cache,
 )
 from climate_ref_core.providers import DiagnosticProvider
@@ -64,7 +64,8 @@ class ILAMBProvider(DiagnosticProvider):
     def get_data_path(self) -> Path | None:
         """Get the path where ILAMB data is cached."""
         # All ILAMB registries use the same cache
-        return Path(pooch.os_cache("climate_ref"))
+        # TODO: There are more than one registry
+        return resolve_cache_dir("ilamb")
 
 
 provider = ILAMBProvider("ILAMB", __version__)

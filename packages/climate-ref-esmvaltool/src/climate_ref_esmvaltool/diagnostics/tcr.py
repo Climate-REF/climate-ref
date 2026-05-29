@@ -7,7 +7,6 @@ from climate_ref_core.constraints import (
     AddParentDataset,
     AddSupplementaryDataset,
     RequireContiguousTimerange,
-    RequireFacets,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -32,7 +31,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
 
     name = "Transient Climate Response"
     slug = "transient-climate-response"
-    base_recipe = "recipe_tcr.yml"
+    base_recipe = "ref/recipe_ref_tcr.yml"
 
     experiments = (
         "1pctCO2",
@@ -67,7 +66,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                     FacetFilter(
                         facets={
                             "branded_variable": "tas_tavg-h2m-hxy-u",
-                            "experiment_id": experiments,
+                            "experiment_id": "1pctCO2",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -75,8 +74,8 @@ class TransientClimateResponse(ESMValToolDiagnostic):
                 ),
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP7),
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireFacets("experiment_id", experiments),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
@@ -156,27 +155,8 @@ class TransientClimateResponse(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        # Only run the diagnostic that computes TCR for a single model.
-        recipe["diagnostics"] = {
-            "tcr": {
-                "description": "Calculate TCR.",
-                "variables": {
-                    "tas": {
-                        "preprocessor": "spatial_mean",
-                    },
-                },
-                "scripts": {
-                    "calculate": {
-                        "script": "climate_metrics/tcr.py",
-                        "calculate_mmm": False,
-                    },
-                },
-            },
-        }
-
-        # Prepare updated datasets section in recipe. It contains two
-        # datasets, one for the "1pctCO2" and one for the "piControl"
-        # experiment.
+        # Prepare updated datasets section in recipe. It contains two datasets,
+        # one for the "1pctCO2" and one for the "piControl" experiment.
         cmip_source = get_cmip_source_type(input_files)
         df = input_files[cmip_source]
         recipe["datasets"] = get_child_and_parent_dataset(
@@ -187,14 +167,15 @@ class TransientClimateResponse(ESMValToolDiagnostic):
             parent_duration_in_years=140,
         )
 
-        # Remove keys from the recipe that are only used for YAML anchors
-        keys_to_remove = [
-            "TCR",
-            "SCATTERPLOT",
-            "VAR_SETTING",
-        ]
-        for key in keys_to_remove:
-            recipe.pop(key, None)
+        # Delete branding suffixes from dataset entries because they are
+        # variable-specific
+        for dataset in recipe["datasets"]:
+            dataset.pop("branding_suffix", None)
+
+        # For CMIP6, delete all appearances of branding suffixes
+        if cmip_source == SourceDatasetType.CMIP6:
+            for variable in recipe["diagnostics"]["tcr"]["variables"].values():
+                variable.pop("branding_suffix", None)
 
     @staticmethod
     def format_result(

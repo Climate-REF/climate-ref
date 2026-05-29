@@ -3,7 +3,6 @@ recipe_calculate_gwl_exceedance_stats.yml   9f28304b85f7043fb76eb29ee84da46e0849
 recipe_ecs.yml                              0cc57034fcb64e32015b4ff949ece5df8cdb8c6f493618b50ceded119fb37918
 recipe_seaice_sensitivity.yml               07270818ebf04a58713dc989720cc9ace77f28d42b1ea189c3bdaf22f5d64577
 recipe_tcr.yml                              35f9ef035a4e71aff5cac5dd26c49da2162fc00291bf3b0bd16b661b7b2f606b
-recipe_tcre.yml                             48fc9e3baf541bbcef7491853ea3a774053771dca33352b41466425faeaa38af
 recipe_zec.yml                              b0af7f789b7610ab3f29a6617124aa40c40866ead958204fc199eaf82863de51
 ref/recipe_enso_basicclimatology.yml        9ea7deb7ee668e39ac44618b96496d898bd82285c22dcee4fce4695e0c9fa82b
 ref/recipe_enso_characteristics.yml         34c2518b138068ac96d212910b979d54a8fcedee2c0089b5acd56a42c41dc3e4
@@ -13,5 +12,6 @@ ref/recipe_ref_fire.yml                     2ad82effaca4e742d8abe6a0aa07bb46e1e9
 ref/recipe_ref_ozone.yml                    388aaf01721c0856ab7143b47b9d2f1efeaaae4ef57e11572c1e133b49aad0a6
 ref/recipe_ref_sea_ice_area_basic.yml       7d01a8527880663ca28284772f83a8356d9972fb4f022a4000e50a56ce044b09
 ref/recipe_ref_scatterplot.yml              b99d1736e16256d161847b025811d7088ad9f892d4887fb009fa99c4079135a0
+ref/recipe_ref_tcre.yml                     13ae406bbb96fa31e137f62fa44e455927902b9e50765da56a247cd82e4cbe5a
 ref/recipe_ref_timeseries_region.yml        deee4403ea25867401e163f6c9d7fcc4fee09d3088009007fcad6a29d01247a8
 ref/recipe_ref_trend_regions.yml            18fe246a51474bd12172ab1ba141efac999a247de7774822f77ae6ef144645fe

@@ -41,10 +41,6 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         "rsut",
         "tas",
     )
-    experiments = (
-        "abrupt-4xCO2",
-        "piControl",
-    )
 
     data_requirements = (
         (

@@ -21,6 +21,30 @@ from climate_ref_core.env import env
 DATASET_URL = env.str("REF_DATASET_URL", default="https://obs4ref.climate-ref.org")
 
 
+def resolve_cache_dir(cache_name: str) -> pathlib.Path:
+    """
+    Resolve the cache directory for a registry.
+
+    If the ``REF_DATASET_CACHE_DIR`` environment variable is set, use that as the root.
+    Otherwise, fall back to the OS cache under ``climate_ref``.
+
+    Parameters
+    ----------
+    cache_name
+        Subdirectory name within the cache root.
+
+    Returns
+    -------
+        The resolved cache directory path.
+    """
+    if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
+        cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
+    else:
+        cache_dir = pooch.os_cache("climate_ref")
+
+    return cache_dir / cache_name
+
+
 def _verify_hash_matches(fname: str | pathlib.Path, known_hash: str) -> bool:
     """
     Check if the hash of a file matches a known hash.
@@ -207,30 +231,6 @@ class DatasetRegistryManager:
         return list(self._registries.keys())
 
     @staticmethod
-    def _resolve_cache_dir(cache_name: str) -> pathlib.Path:
-        """
-        Resolve the cache directory for a registry.
-
-        If the ``REF_DATASET_CACHE_DIR`` environment variable is set,
-        use that as the root. Otherwise, fall back to the OS cache
-        under ``climate_ref``.
-
-        Parameters
-        ----------
-        cache_name
-            Subdirectory name within the cache root.
-
-        Returns
-        -------
-            The resolved cache directory path.
-        """
-        if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
-            cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
-        else:
-            cache_dir = pooch.os_cache("climate_ref")
-
-        return cache_dir / cache_name
-
     @staticmethod
     def _migrate_cache(
         registry: pooch.Pooch,
@@ -314,7 +314,7 @@ class DatasetRegistryManager:
         if cache_name is None:
             cache_name = name
 
-        cache_path = self._resolve_cache_dir(cache_name)
+        cache_path = resolve_cache_dir(cache_name)
 
         # Before v0.13.0 everything was cached directly under
         # pooch.os_cache("climate_ref") with no per-registry subdirectory.

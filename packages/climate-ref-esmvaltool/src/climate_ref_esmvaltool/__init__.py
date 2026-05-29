@@ -15,6 +15,7 @@ from climate_ref_core.dataset_registry import (
     DATASET_URL,
     dataset_registry_manager,
     fetch_all_files,
+    resolve_cache_dir,
     validate_registry_cache,
 )
 from climate_ref_core.providers import CondaDiagnosticProvider
@@ -62,7 +63,7 @@ class ESMValToolProvider(CondaDiagnosticProvider):
 
     def get_data_path(self) -> Path | None:
         """Get the path where ESMValTool data is cached."""
-        return Path(pooch.os_cache("climate_ref"))
+        return resolve_cache_dir("esmvaltool")
 
 
 # Initialise the diagnostics manager.

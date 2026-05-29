@@ -48,12 +48,14 @@ build: clean  ## build the packages to be deployed to PyPI
 	cp LICENCE NOTICE packages/climate-ref-esmvaltool
 	cp LICENCE NOTICE packages/climate-ref-ilamb
 	cp LICENCE NOTICE packages/climate-ref-pmp
+	cp LICENCE NOTICE packages/climate-ref-example
 	uv build --package climate-ref --no-sources
 	uv build --package climate-ref-core --no-sources
 	uv build --package climate-ref-celery --no-sources
 	uv build --package climate-ref-esmvaltool --no-sources
 	uv build --package climate-ref-ilamb --no-sources
 	uv build --package climate-ref-pmp --no-sources
+	uv build --package climate-ref-example --no-sources
 
 .PHONY: ruff-fixes
 ruff-fixes:  ## fix the code using ruff

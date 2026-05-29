@@ -160,7 +160,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
             attributes=[],
         )
         for var_name in ["lwcre", "swcre"]
-        for i, source_id in enumerate(["CERES-EBAF-4-2"], start=1)
+        for i, source_id in enumerate(["CERES-EBAF-4-2-1"], start=1)
     )
 
     test_data_spec = TestDataSpecification(

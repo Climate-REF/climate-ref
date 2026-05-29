@@ -33,11 +33,6 @@ class TransientClimateResponse(ESMValToolDiagnostic):
     slug = "transient-climate-response"
     base_recipe = "ref/recipe_ref_tcr.yml"
 
-    experiments = (
-        "1pctCO2",
-        "piControl",
-    )
-
     data_requirements = (
         (
             DataRequirement(

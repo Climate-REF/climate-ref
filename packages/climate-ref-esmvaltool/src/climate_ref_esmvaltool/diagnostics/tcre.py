@@ -84,7 +84,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                                 "fco2antt_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
                             ),
-                            "experiment_id": "esm-1pctCO2",
+                            "experiment_id": "esm-flat10",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -101,7 +101,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireFacets("experiment_id", ("esm-1pctCO2", "esm-piControl")),
+                    RequireFacets("experiment_id", ("esm-flat10", "esm-piControl")),
                     RequireFacets("variable_id", variables),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
@@ -147,7 +147,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                     CMIP7Request(
                         slug="cmip7",
                         facets={
-                            "experiment_id": ["esm-1pctCO2", "esm-piControl"],
+                            "experiment_id": ["esm-flat10", "esm-piControl"],
                             "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
                             "branded_variable": [
@@ -173,31 +173,35 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Prepare updated datasets section in recipe. It contains three
-        # datasets, "tas" and "fco2antt" for the "esm-1pctCO2" and just "tas"
-        # for the "esm-piControl" experiment.
+        # datasets, "tas" and "fco2antt" for a scenario with steady CO2
+        # increase (i.e., "esm-flat10" for CMIP7 and "esm-1pctCO2" for CMIP6)
+        # and just "tas" for the "esm-piControl" experiment.
         cmip_source = get_cmip_source_type(input_files)
         df = input_files[cmip_source]
-        tas_esm_1pctCO2, tas_esm_piControl = get_child_and_parent_dataset(
+        if cmip_source == SourceDatasetType.CMIP6:
+            exp_duration_in_years = 65
+        else:
+            exp_duration_in_years = 110
+        tas_co2_increase, tas_esm_piControl = get_child_and_parent_dataset(
             df[df.variable_id == "tas"],
             parent_experiment="esm-piControl",
-            child_duration_in_years=65,
+            child_duration_in_years=exp_duration_in_years,
             parent_offset_in_years=0,
-            parent_duration_in_years=65,
+            parent_duration_in_years=exp_duration_in_years,
         )
         recipe_variables = dataframe_to_recipe(df[df.variable_id == "fco2antt"])
 
         fco2antt_esm_1pctCO2 = next(
             ds for ds in recipe_variables["fco2antt"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
         )
-        fco2antt_esm_1pctCO2["timerange"] = tas_esm_1pctCO2["timerange"]
+        fco2antt_esm_1pctCO2["timerange"] = tas_co2_increase["timerange"]
 
         recipe["diagnostics"]["tcre"]["variables"] = {
-            "tas_esm-1pctCO2": {
-                "short_name": "tas",
+            "tas": {
                 "preprocessor": "global_annual_mean_anomaly",
-                "additional_datasets": [tas_esm_1pctCO2],
+                "additional_datasets": [tas_co2_increase],
             },
-            "tas_esm-piControl": {
+            "tas_control": {
                 "short_name": "tas",
                 "preprocessor": "global_annual_mean_anomaly",
                 "additional_datasets": [tas_esm_piControl],
@@ -207,18 +211,13 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 "additional_datasets": [fco2antt_esm_1pctCO2],
             },
         }
-        recipe["diagnostics"].pop("barplot")
 
-        # Update descriptions.
-        dataset = tas_esm_1pctCO2["dataset"]
-        ensemble = tas_esm_1pctCO2["ensemble"]
-        settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate_tcre"]
-        settings["caption"] = (
-            settings["caption"].replace("MPI-ESM1-2-LR", dataset).replace("r1i1p1f1", ensemble)
-        )
-        settings["pyplot_kwargs"]["title"] = (
-            settings["pyplot_kwargs"]["title"].replace("MPI-ESM1-2-LR", dataset).replace("r1i1p1f1", ensemble)
-        )
+        # For CMIP6, some special settings are necessary because the esm-flat10
+        # experiment did not experiment yet
+        if cmip_source == SourceDatasetType.CMIP6:
+            diag_settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate_tcre"]
+            diag_settings["calc_tcre_period"] = [45, 65]
+            diag_settings["exp_target"] = "esm-1pctCO2"
 
     @staticmethod
     def format_result(

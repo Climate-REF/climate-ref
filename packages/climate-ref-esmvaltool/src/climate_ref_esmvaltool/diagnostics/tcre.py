@@ -225,7 +225,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         }
 
         # For CMIP6, some special settings are necessary because the esm-flat10
-        # experiment did not experiment yet
+        # experiment does not exist
         if cmip_source == SourceDatasetType.CMIP6:
             diag_settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate"]
             diag_settings["calc_tcre_period"] = [45, 65]

@@ -80,19 +80,8 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable": (
-                                "fco2antt_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                            ),
-                            "experiment_id": "esm-flat10",
-                            "frequency": "mon",
-                            "region": "glb",
-                        },
-                    ),
-                    FacetFilter(
-                        facets={
                             "branded_variable": "tas_tavg-h2m-hxy-u",
-                            "experiment_id": "esm-piControl",
+                            "experiment_id": "esm-flat10",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -100,9 +89,23 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 ),
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP7),
+                    AddSupplementaryDataset(
+                        supplementary_facets={
+                            "branded_variable": "fco2antt_tavg-u-hxy-u",
+                            "experiment_id": "esm-flat10",
+                            "frequency": "mon",
+                            "region": "glb",
+                        },
+                        matching_facets=(
+                            "source_id",
+                            "variant_label",
+                            "grid_label",
+                        ),
+                        optional_matching_facets=("version",),
+                    ),
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireFacets("experiment_id", ("esm-flat10", "esm-piControl")),
-                    RequireFacets("variable_id", variables),
+                    RequireFacets("variable_id", ("tas", "fco2antt")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),

@@ -217,6 +217,14 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         if cmip_source == SourceDatasetType.CMIP6:
             diag_settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate_tcre"]
             diag_settings["calc_tcre_period"] = [45, 65]
+            diag_settings["caption"] = (
+                "Global annual mean near-surface air temperature anomaly ΔT vs. "
+                "global annual cumulative CO2 emissions E of the emission-driven "
+                "1% CO2 increase per year experiment. The transient climate "
+                "response to cumulative CO2 Emissions (TCRE) is defined as the "
+                "20-year average ΔT centered at the time where cumulative CO2 "
+                "emissions E reach 1000 PgC (i.e., after 55 years)."
+            )
             diag_settings["exp_target"] = "esm-1pctCO2"
 
     @staticmethod

@@ -72,7 +72,7 @@ diagnostics:
           mip: Amon
           timerange: 1850/1914
     scripts:
-      calculate_tcre:
+      calculate:
         script: climate_metrics/tcre.py
         caption: "Global annual mean near-surface air temperature anomaly \u0394T\
           \ vs. global annual cumulative CO2 emissions E of the emission-driven 1%\

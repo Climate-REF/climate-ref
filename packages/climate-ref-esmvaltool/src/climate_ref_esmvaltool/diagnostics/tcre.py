@@ -116,11 +116,11 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     series = tuple()
     files = (
         FileDefinition(
-            file_pattern="plots/tcre/calculate_tcre/*.png",
+            file_pattern="plots/tcre/calculate/*.png",
             dimensions={"statistic": "tcre"},
         ),
         FileDefinition(
-            file_pattern="work/tcre/calculate_tcre/tcre.nc",
+            file_pattern="work/tcre/calculate/tcre.nc",
             dimensions={"metric": "tcre"},
         ),
     )
@@ -218,7 +218,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         # For CMIP6, some special settings are necessary because the esm-flat10
         # experiment did not experiment yet
         if cmip_source == SourceDatasetType.CMIP6:
-            diag_settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate_tcre"]
+            diag_settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate"]
             diag_settings["calc_tcre_period"] = [45, 65]
             diag_settings["caption"] = (
                 "Global annual mean near-surface air temperature anomaly ΔT vs. "
@@ -238,7 +238,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         output_args: OutputBundleArgs,
     ) -> tuple[CMECMetric, CMECOutput]:
         """Format the result."""
-        tcre_ds = xarray.open_dataset(result_dir / "work" / "tcre" / "calculate_tcre" / "tcre.nc")
+        tcre_ds = xarray.open_dataset(result_dir / "work" / "tcre" / "calculate" / "tcre.nc")
         tcre = float(fillvalues_to_nan(tcre_ds["tcre"].values)[0])
 
         # Update the diagnostic bundle arguments with the computed diagnostics.

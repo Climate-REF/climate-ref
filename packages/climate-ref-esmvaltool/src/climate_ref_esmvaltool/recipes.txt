@@ -12,6 +12,6 @@ ref/recipe_ref_fire.yml                     2ad82effaca4e742d8abe6a0aa07bb46e1e9
 ref/recipe_ref_ozone.yml                    09ded4946ecd762ba000916c9f8618120a2e6269930427ae5129da466165f3e5
 ref/recipe_ref_sea_ice_area_basic.yml       7d01a8527880663ca28284772f83a8356d9972fb4f022a4000e50a56ce044b09
 ref/recipe_ref_scatterplot.yml              b99d1736e16256d161847b025811d7088ad9f892d4887fb009fa99c4079135a0
-ref/recipe_ref_tcre.yml                     13ae406bbb96fa31e137f62fa44e455927902b9e50765da56a247cd82e4cbe5a
+ref/recipe_ref_tcre.yml                     85bd9ffc42a4eb70dc7e3d984f0f7c1085232ac8dd977d04d58b27a982254ebd
 ref/recipe_ref_timeseries_region.yml        deee4403ea25867401e163f6c9d7fcc4fee09d3088009007fcad6a29d01247a8
 ref/recipe_ref_trend_regions.yml            18fe246a51474bd12172ab1ba141efac999a247de7774822f77ae6ef144645fe

@@ -274,10 +274,6 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        # Make sure only grid cells south of 80N are considered as there are no
-        # measurements north of 80N in March. Specifying 85N as northern boundary
-        # in the orignal 'recipe_ref_ozone_cmip7.yml' is a bug!
-        recipe["preprocessors"]["create_time_series_NH"]["extract_region"]["end_latitude"] = 80
         recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["toz"]["additional_datasets"][0]
         # set model (CMIP6) time range to 1950...2014

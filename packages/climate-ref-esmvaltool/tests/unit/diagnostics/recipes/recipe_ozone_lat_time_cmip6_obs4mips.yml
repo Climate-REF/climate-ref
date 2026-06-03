@@ -33,7 +33,7 @@ preprocessors:
       operator: mean
     extract_region:
       start_latitude: 60
-      end_latitude: 85
+      end_latitude: 80
       start_longitude: 0
       end_longitude: 360
     extract_month:

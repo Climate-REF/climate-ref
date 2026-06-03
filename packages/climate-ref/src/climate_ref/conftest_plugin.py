@@ -62,6 +62,7 @@ from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionD
 from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
+from climate_ref_core.testing import validate_series_regression
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -464,15 +465,16 @@ class ExecutionRegression:
             for file in output_dir.rglob(glob):
                 self._replace_file(file, replacements)
 
+    def output_replacements(self, output_directory: Path) -> dict[str, str]:
+        """Map real paths to regression placeholders for a given output directory."""
+        return {str(output_directory): "<OUTPUT_DIR>", **self.replacements}
+
     def check(self, key: str, output_directory: Path) -> None:
         """Check and optionally regenerate regression data."""
         if not self.request.config.getoption("force_regen"):
             logger.info("Not regenerating regression results")
             return
-        self.replace_references(
-            output_directory,
-            {str(output_directory): "<OUTPUT_DIR>", **self.replacements},
-        )
+        self.replace_references(output_directory, self.output_replacements(output_directory))
         logger.info(f"Regenerating regression output for {self.diagnostic.full_slug()}")
         output_dir = self.path(key)
         if output_dir.exists():
@@ -546,10 +548,16 @@ class DiagnosticValidator:
             self.execution_regression.check(key=definition.key, output_directory=definition.output_directory)
 
     def validate(self, definition: ExecutionDefinition) -> None:
-        """Validate CMEC bundles and store the execution result."""
+        """Validate CMEC bundles and series, and store the execution result."""
         result = self.diagnostic.build_execution_result(definition)
         result.to_output_path("out.log").touch()
         validate_result(self.diagnostic, self.config, result)
+        validate_series_regression(
+            expected_path=self.execution_regression.path(definition.key) / "series.json",
+            actual_path=definition.output_directory / "series.json",
+            slug=self.diagnostic.slug,
+            replacements=self.execution_regression.output_replacements(definition.output_directory),
+        )
 
 
 @pytest.fixture

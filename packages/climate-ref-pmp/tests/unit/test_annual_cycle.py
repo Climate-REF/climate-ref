@@ -25,7 +25,7 @@ def test_expected_executions():
             columns=("variable_id", "source_id", "experiment_id", "member_id", "frequency", "grid_label"),
         ),
         SourceDatasetType.PMPClimatology: pd.DataFrame(
-            [["ERA-5", "ts"], ["ERA-5", "pr"], ["GPCP-Monthly-3-2", "pr"]],
+            [["ERA-5", "ts"], ["ERA-5", "pr"], ["GPCP-3-3", "pr"]],
             columns=["source_id", "variable_id"],
         ),
     }
@@ -67,7 +67,7 @@ def test_expected_executions():
         ("variable_id", "pr"),
     )
     assert executions[2].datasets[SourceDatasetType.PMPClimatology].selector == (
-        ("source_id", "GPCP-Monthly-3-2"),
+        ("source_id", "GPCP-3-3"),
         ("variable_id", "pr"),
     )
 

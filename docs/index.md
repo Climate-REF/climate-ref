@@ -72,18 +72,20 @@ This provides the ability to:
 
 This CLI tool is the main interface to the REF and is used to manage the REF.
 
-
 ## Where to next?
 
 We recommend starting with the [Getting Started](getting-started/01-configure.md) guide,
 which will walk you through the initial steps of configuring and using the REF.
+Modelling centres preparing local or pre-publication model output should also review the
+[modelling centre onboarding guide](getting-started/modelling-centres.md).
 
 Some other potential points of interest:
 
-- [Installation][installation]
-- [Basic Concepts][basic-concepts]
-- [Architecture overview][architecture]
-- [How to Guides][how-to-guides]
+* [Installation][installation]
+* [Modelling centre onboarding](getting-started/modelling-centres.md)
+* [Basic Concepts][basic-concepts]
+* [Architecture overview][architecture]
+* [How to Guides][how-to-guides]
 
 ---
 

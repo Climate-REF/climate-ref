@@ -11,6 +11,7 @@ nav:
   - Installation: installation.md
   - In a Nutshell: nutshell.md
   - Getting Started:
+      - Modelling Centres: getting-started/modelling-centres.md
       - Configure: getting-started/01-configure.md
       - Download Datasets: getting-started/02-download-datasets.md
       - Ingest: getting-started/03-ingest.md

@@ -296,7 +296,7 @@ def get_child_and_parent_dataset(
     return [child_dataset, parent_dataset]
 
 
-_ESMVALTOOL_COMMIT = "777b8773090ca3235136f2d2d2c41a9a93ab92d8"
+_ESMVALTOOL_COMMIT = "b827ce01b109f75af6117be120f89a6214c7db1f"
 _ESMVALTOOL_VERSION = f"2.14.0.dev65+g{_ESMVALTOOL_COMMIT[:9]}"
 _ESMVALTOOL_URL = f"git+https://github.com/ESMValGroup/ESMValTool.git@{_ESMVALTOOL_COMMIT}"
 

@@ -42,10 +42,9 @@ class _RelationshipTimeTransform(ILAMBTransform):
     """
     Keep relationship-variable datasets aligned with the primary variable.
 
-    ILAMB loads relationship variables into the same dataset as the primary
-    variable before running all analyses. If the relationship variable spans a
-    different time range, xarray's outer merge can make the primary analyses use
-    the relationship variable's time bounds.
+    ILAMB loads relationship variables into the same dataset as the primary variable before running.
+    If the relationship variable spans a different time range,
+    xarray's outer merge can make the primary analyses use the relationship variable's time bounds.
     """
 
     def __init__(self, variable_id: str):

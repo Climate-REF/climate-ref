@@ -5,10 +5,12 @@ from typing import Any
 import dask.config
 import ilamb3
 import ilamb3.regions as ilr
+import ilamb3.transform
 import pandas as pd
 import pooch
 import xarray as xr
 from ilamb3 import run
+from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
 from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
@@ -34,6 +36,50 @@ from climate_ref_ilamb.datasets import (
 # CMIP6 tables to search, ordered by likelihood for land vs ocean registries
 _LAND_TABLES = ("Lmon", "Emon", "LImon", "Amon", "CFmon", "AERmonZ", "EmonZ")
 _OCEAN_TABLES = ("Omon", "SImon", "Ofx")
+
+
+class _RelationshipTimeTransform(ILAMBTransform):
+    """
+    Keep relationship-variable datasets aligned with the primary variable.
+
+    ILAMB loads relationship variables into the same dataset as the primary
+    variable before running all analyses. If the relationship variable spans a
+    different time range, xarray's outer merge can make the primary analyses use
+    the relationship variable's time bounds.
+    """
+
+    def __init__(self, variable_id: str):
+        self.variable_id = variable_id
+
+    def required_variables(self) -> list[str]:
+        return [self.variable_id]
+
+    def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        if "time" not in ds.coords:
+            return ds
+
+        if ds["time"].dtype == object:
+            try:
+                ds = ds.convert_calendar("proleptic_gregorian", use_cftime=False)
+            except ValueError:
+                pass
+
+        if self.variable_id not in ds or "time" not in ds[self.variable_id].dims:
+            return ds
+
+        valid = ds[self.variable_id].notnull()
+        other_dims = [dim for dim in valid.dims if dim != "time"]
+        if other_dims:
+            valid = valid.any(dim=other_dims)
+        valid = valid.compute()
+
+        if not valid.any():
+            return ds
+
+        return ds.sel(time=ds["time"].where(valid, drop=True))
+
+
+ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_relationship_time", _RelationshipTimeTransform)
 
 
 def _get_branded_variable(
@@ -174,11 +220,11 @@ def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
     """
     # TODO: Handle the reference data
     # reference_df = df[df["source"] == "Reference"]
-    model_df = df[df["source"] != "Reference"]
+    model_df = df[df["source"] != "Reference"].copy()
 
     # Strip out units from the name (available in the attributes)
-    extracted_source = model_df.name.str.extract(r"(.*)\s\[.*\]")
-    model_df.loc[:, "name"] = extracted_source[0]
+    extracted_source = model_df.name.str.extract(r"(.*)\s\[.*\]")[0]
+    model_df = model_df.assign(name=extracted_source.where(extracted_source.notna(), model_df["name"]))
 
     model_df = model_df.rename(
         columns={
@@ -188,11 +234,12 @@ def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
     )
 
     # Convert the value column to numeric, coercing errors to NaN
-    model_df.loc[:, "value"] = pd.to_numeric(model_df["value"], errors="coerce")
-    model_df = model_df.astype({"value": "float64"})
+    model_df = model_df.assign(value=pd.to_numeric(model_df["value"], errors="coerce").astype("float64"))
 
     dimensions = ["experiment_id", "source_id", "member_id", "grid_label", "region", "metric", "statistic"]
     attributes = ["type", "units"]
+    for dimension in dimensions:
+        model_df[dimension] = model_df[dimension].where(model_df[dimension].notna(), "None")
 
     bundle = format_cmec_output_bundle(
         model_df,
@@ -203,7 +250,7 @@ def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
 
     ilamb_regions = ilr.Regions()
     for region, region_info in bundle["DIMENSIONS"]["region"].items():
-        if region == "None":
+        if region in {"None", "nan", "<NA>"}:
             region_info["LongName"] = "None"
             region_info["Description"] = "Reference data extents"
             region_info["Generator"] = "N/A"
@@ -451,6 +498,15 @@ class ILAMBStandard(Diagnostic):
             ilamb_kwargs["sources"] = sources
         if "relationships" not in ilamb_kwargs:
             ilamb_kwargs["relationships"] = {}
+        if ilamb_kwargs["relationships"]:
+            transforms = list(ilamb_kwargs.get("transforms", []))
+            transform_names = [
+                next(iter(transform.keys())) if isinstance(transform, dict) else transform
+                for transform in transforms
+            ]
+            if "climate_ref_relationship_time" not in transform_names:
+                transforms.append({"climate_ref_relationship_time": {"variable_id": self.variable_id}})
+            ilamb_kwargs["transforms"] = transforms
 
         # Allow per-diagnostic override of the test source_id
         # (not all variables are available from CanESM5)
@@ -767,6 +823,8 @@ class ILAMBStandard(Diagnostic):
 
 def _caption_from_filename(filename: Path, common_dimensions: dict[str, str]) -> tuple[str, dict[str, str]]:
     source, region, plot = filename.stem.split("_")
+    if region.lower() in {"none", "nan", "<na>"}:
+        region = "None"
     plot_texts = {
         "bias": "bias",
         "biasscore": "bias score",

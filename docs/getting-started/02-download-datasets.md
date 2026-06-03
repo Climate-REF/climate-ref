@@ -12,6 +12,10 @@ Note that not all of these datasets are required. The Climate-REF will determine
 
 The data used by the Climate-REF do not necessarily need to have been previously published to ESGF. As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process they can be evaluated via the REF.
 
+If you are preparing data for a modelling centre,
+start with the [modelling centre onboarding guide](modelling-centres.md)
+to capture any additional requirements before ingesting local output.
+
 ## Reference dataset requirements
 
 Climate-REF uses public, open-license reference data.

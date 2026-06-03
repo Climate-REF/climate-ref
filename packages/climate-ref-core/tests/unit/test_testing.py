@@ -8,6 +8,7 @@ import yaml
 
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import ExecutionResult
+from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.testing import (
     RegressionValidator,
     TestCase,
@@ -19,6 +20,7 @@ from climate_ref_core.testing import (
     load_datasets_from_yaml,
     save_datasets_to_yaml,
     validate_cmec_bundles,
+    validate_series_regression,
 )
 
 
@@ -912,3 +914,120 @@ class TestRegressionValidator:
 
         # Verify build_execution_result was called
         mock_diagnostic.build_execution_result.assert_called_once_with(mock_definition)
+
+
+def _series(value: float, *, dim: str = "M1", index_name: str = "year", attrs=None) -> SeriesMetricValue:
+    """Build a small SeriesMetricValue for testing."""
+    return SeriesMetricValue(
+        dimensions={"source_id": dim},
+        values=[value, value + 1.0],
+        index=["2000", "2001"],
+        index_name=index_name,
+        attributes=attrs,
+    )
+
+
+def _write_series(path: Path, series: list[SeriesMetricValue]) -> Path:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    SeriesMetricValue.dump_to_json(path, series)
+    return path
+
+
+class TestValidateSeriesRegression:
+    def test_matching_series_passes(self, tmp_path):
+        series = [_series(1.0), _series(5.0, dim="M2")]
+        expected = _write_series(tmp_path / "expected" / "series.json", series)
+        actual = _write_series(tmp_path / "actual" / "series.json", series)
+
+        validate_series_regression(expected, actual, slug="my-diag")
+
+    def test_order_insensitive(self, tmp_path):
+        a, b = _series(1.0, dim="M1"), _series(5.0, dim="M2")
+        expected = _write_series(tmp_path / "expected" / "series.json", [a, b])
+        actual = _write_series(tmp_path / "actual" / "series.json", [b, a])
+
+        validate_series_regression(expected, actual, slug="my-diag")
+
+    def test_missing_expected_is_skipped(self, tmp_path):
+        actual = _write_series(tmp_path / "actual" / "series.json", [_series(1.0)])
+        missing_expected = tmp_path / "expected" / "series.json"
+
+        # Must not raise, even though actual is non-empty.
+        validate_series_regression(missing_expected, actual, slug="my-diag")
+
+    def test_count_mismatch_raises(self, tmp_path):
+        """A different number of series fails with a count message (Check for #703)."""
+        expected = _write_series(tmp_path / "expected" / "series.json", [])
+        actual = _write_series(tmp_path / "actual" / "series.json", [_series(1.0)])
+
+        with pytest.raises(AssertionError, match=r"produced 1 series but the committed series\.json has 0"):
+            validate_series_regression(expected, actual, slug="my-diag")
+
+    def test_value_mismatch_raises(self, tmp_path):
+        """Same count but different values fails with a content message."""
+        expected = _write_series(tmp_path / "expected" / "series.json", [_series(1.0)])
+        actual = _write_series(tmp_path / "actual" / "series.json", [_series(2.0)])
+
+        with pytest.raises(AssertionError, match="produced series that differ"):
+            validate_series_regression(expected, actual, slug="my-diag")
+
+    def test_attribute_mismatch_raises(self, tmp_path):
+        """Differences in series attributes are detected."""
+        expected = _write_series(
+            tmp_path / "expected" / "series.json", [_series(1.0, attrs={"caption": "old"})]
+        )
+        actual = _write_series(tmp_path / "actual" / "series.json", [_series(1.0, attrs={"caption": "new"})])
+
+        with pytest.raises(AssertionError, match="produced series that differ"):
+            validate_series_regression(expected, actual, slug="my-diag")
+
+    def test_slug_in_error_message(self, tmp_path):
+        """The diagnostic slug is surfaced in failure messages."""
+        expected = _write_series(tmp_path / "expected" / "series.json", [])
+        actual = _write_series(tmp_path / "actual" / "series.json", [_series(1.0)])
+
+        with pytest.raises(AssertionError, match="Diagnostic some-slug"):
+            validate_series_regression(expected, actual, slug="some-slug")
+
+    def test_sanitised_path_placeholders_are_normalised(self, tmp_path):
+        """Committed placeholders compare equal to expanded regenerated paths."""
+        expected = _write_series(
+            tmp_path / "expected" / "series.json",
+            [_series(1.0, attrs={"source_file": "<TEST_DATA_DIR>/input.nc"})],
+        )
+        actual = _write_series(
+            tmp_path / "actual" / "series.json",
+            [_series(1.0, attrs={"source_file": f"{tmp_path}/input.nc"})],
+        )
+
+        validate_series_regression(
+            expected,
+            actual,
+            slug="my-diag",
+            replacements={str(tmp_path): "<TEST_DATA_DIR>"},
+        )
+
+    def test_nested_replacements(self, tmp_path):
+        """A nested output dir is substituted before its parent test-data dir."""
+        test_data_dir = tmp_path / "test-data"
+        output_dir = test_data_dir / "diag" / "default" / "output"
+        output_dir.mkdir(parents=True)
+
+        expected = _write_series(
+            test_data_dir / "expected" / "series.json",
+            [_series(1.0, attrs={"plot": "<OUTPUT_DIR>/plot.png", "input": "<TEST_DATA_DIR>/in.nc"})],
+        )
+        actual = _write_series(
+            output_dir / "series.json",
+            [_series(1.0, attrs={"plot": f"{output_dir}/plot.png", "input": f"{test_data_dir}/in.nc"})],
+        )
+
+        validate_series_regression(
+            expected,
+            actual,
+            slug="my-diag",
+            replacements={
+                str(output_dir): "<OUTPUT_DIR>",
+                str(test_data_dir): "<TEST_DATA_DIR>",
+            },
+        )

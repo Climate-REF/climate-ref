@@ -10,6 +10,7 @@ This module provides:
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -28,6 +29,7 @@ from climate_ref_core.datasets import (
 )
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
+from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -499,6 +501,13 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     AssertionError
         If the result is not successful or bundles are invalid
     """
+    # TODO: Add content regression checks for the CMEC bundles (diagnostic.json /
+    # output.json), mirroring `validate_series_regression`. These bundles are only
+    # structurally validated here, so a diagnostic can change the metric/output
+    # values without any regression test failing (see issue #703 for the series
+    # equivalent). A content comparison must sanitise the regenerated bundle first
+    # via `ExecutionRegression.output_replacements`, since the committed bundles
+    # store `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` placeholders.
     assert result.successful, f"Execution failed: {result}"
 
     # Validate metric bundle
@@ -515,6 +524,71 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
 
     # Validate output bundle
     CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+
+
+def _load_series_sanitised(path: Path, replacements: dict[str, str]) -> list[SeriesMetricValue]:
+    """
+    Load series from ``path``, replacing real paths with regression placeholders.
+    """
+    text = path.read_text(encoding="utf-8")
+    # Apply replacements longest-key-first in case of nested repleacements
+    for real, placeholder in sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True):
+        text = text.replace(real, placeholder)
+    data = json.loads(text)
+    if not isinstance(data, list):
+        raise ValueError(f"Expected a list of series values, got {type(data)}")
+    return [SeriesMetricValue.model_validate(s, strict=True) for s in data]
+
+
+def validate_series_regression(
+    expected_path: Path,
+    actual_path: Path,
+    *,
+    slug: str,
+    replacements: dict[str, str] | None = None,
+) -> None:
+    """
+    Assert that regenerated series match the committed regression series.
+
+    If ``expected_path`` does not exist (legacy regression data without a stored series),
+    the check is skipped.
+
+    Parameters
+    ----------
+    expected_path
+        Path to the committed ``series.json`` regression artifact. This file
+        stores sanitized placeholders (e.g. ``<OUTPUT_DIR>``).
+    actual_path
+        Path to the freshly regenerated ``series.json`` in the output directory.
+        This file contains expanded absolute paths.
+    slug
+        The diagnostic slug, used for error messages.
+    replacements
+        Optional ``real path -> placeholder`` mapping applied to the regenerated series before comparison,
+        mirroring the sanitisation used when the regression data was written.
+
+    Raises
+    ------
+    AssertionError
+        If the regenerated series differ from the committed series.
+    """
+    if not expected_path.exists():
+        return
+
+    expected = SeriesMetricValue.load_from_json(expected_path)
+    actual = _load_series_sanitised(actual_path, replacements or {})
+
+    def _sorted_dump(series: list[SeriesMetricValue]) -> list[dict[str, Any]]:
+        return sorted((s.model_dump(mode="json") for s in series), key=lambda s: repr(s["dimensions"]))
+
+    assert len(actual) == len(expected), (
+        f"Diagnostic {slug} produced {len(actual)} series but the committed series.json "
+        f"has {len(expected)}. Regenerate the regression data with `--force-regen`."
+    )
+    assert _sorted_dump(actual) == _sorted_dump(expected), (
+        f"Diagnostic {slug} produced series that differ from the committed series.json. "
+        f"Regenerate the regression data with `--force-regen`."
+    )
 
 
 @frozen
@@ -585,10 +659,19 @@ class RegressionValidator:
         )
 
     def validate(self, definition: ExecutionDefinition) -> None:
-        """Validate CMEC bundles in the regression output."""
+        """Validate CMEC bundles and series in the regression output."""
         result = self.diagnostic.build_execution_result(definition)
         result.to_output_path("out.log").touch()  # Log file not tracked in regression
         validate_cmec_bundles(self.diagnostic, result)
+        validate_series_regression(
+            expected_path=self.paths.regression / "series.json",
+            actual_path=definition.output_directory / "series.json",
+            slug=self.diagnostic.slug,
+            replacements={
+                str(definition.output_directory): "<OUTPUT_DIR>",
+                str(self.test_data_dir): "<TEST_DATA_DIR>",
+            },
+        )
 
 
 def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:

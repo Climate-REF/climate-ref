@@ -641,7 +641,7 @@ wheels = [
 
 [[package]]
 name = "climate-ref"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref" }
 dependencies = [
     { name = "alembic" },
@@ -720,7 +720,7 @@ dev = []
 
 [[package]]
 name = "climate-ref-celery"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref-celery" }
 dependencies = [
     { name = "celery", extra = ["redis"] },
@@ -757,7 +757,7 @@ dev = [
 
 [[package]]
 name = "climate-ref-core"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref-core" }
 dependencies = [
     { name = "attrs" },
@@ -809,7 +809,7 @@ dev = [{ name = "types-requests" }]
 
 [[package]]
 name = "climate-ref-esmvaltool"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref-esmvaltool" }
 dependencies = [
     { name = "cftime" },
@@ -832,7 +832,7 @@ requires-dist = [
 
 [[package]]
 name = "climate-ref-example"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref-example" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -854,7 +854,7 @@ dev = []
 
 [[package]]
 name = "climate-ref-ilamb"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref-ilamb" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -881,7 +881,7 @@ dev = [{ name = "types-pyyaml", specifier = ">=6.0.12" }]
 
 [[package]]
 name = "climate-ref-pmp"
-version = "0.14.3"
+version = "0.14.4"
 source = { editable = "packages/climate-ref-pmp" }
 dependencies = [
     { name = "climate-ref-core" },
@@ -895,7 +895,7 @@ dev = []
 
 [[package]]
 name = "climate-ref-root"
-version = "0.14.3"
+version = "0.14.4"
 source = { virtual = "." }
 dependencies = [
     { name = "climate-ref", extra = ["postgres"] },
@@ -3251,16 +3251,16 @@ name = "parsl"
 version = "2026.2.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "dill", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "filelock", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "psutil", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "pyzmq", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "requests", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "setproctitle", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "sortedcontainers", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "tblib", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "typeguard", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
-    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "dill", marker = "sys_platform != 'win32'" },
+    { name = "filelock", marker = "sys_platform != 'win32'" },
+    { name = "psutil", marker = "sys_platform != 'win32'" },
+    { name = "pyzmq", marker = "sys_platform != 'win32'" },
+    { name = "requests", marker = "sys_platform != 'win32'" },
+    { name = "setproctitle", marker = "sys_platform != 'win32'" },
+    { name = "sortedcontainers", marker = "sys_platform != 'win32'" },
+    { name = "tblib", marker = "sys_platform != 'win32'" },
+    { name = "typeguard", marker = "sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d6/ba/40228c8e434304d959eb4d47924d60967bdf490401720efb8af81dd52db2/parsl-2026.2.16.tar.gz", hash = "sha256:dc34015c07d8a05157f0e62b88eda42087be86856fe1fbc1f513109fcd38b7b8", size = 375580, upload-time = "2026-02-16T22:51:04.583Z" }
 wheels = [
@@ -5087,7 +5087,7 @@ name = "typeguard"
 version = "4.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "platform_machine != 'ARM64' or sys_platform != 'win32'" },
+    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2b/e8/66e25efcc18542d58706ce4e50415710593721aae26e794ab1dec34fb66f/typeguard-4.5.1.tar.gz", hash = "sha256:f6f8ecbbc819c9bc749983cc67c02391e16a9b43b8b27f15dc70ed7c4a007274", size = 80121, upload-time = "2026-02-19T16:09:03.392Z" }
 wheels = [

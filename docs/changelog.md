@@ -21,6 +21,31 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.4 (2026-06-04)
+
+### Improvements
+
+- Added GPCP dataset version to 3.3 for the PMP precipitation climatology reference dataset. ([#672](https://github.com/Climate-REF/climate-ref/pull/672))
+- Updated GPCP dataset version to 3.3 for the PMP precipitation climatology reference dataset. ([#684](https://github.com/Climate-REF/climate-ref/pull/684))
+- Removed the pandas upper bound and fixed pandas 3 compatibility in catalog and ILAMB result handling. ([#708](https://github.com/Climate-REF/climate-ref/pull/708))
+
+### Bug Fixes
+
+- Updates the PMP provider data directory ([#685](https://github.com/Climate-REF/climate-ref/pull/685))
+- Fixed a `KeyError: 'branded_variable'` when solving diagnostics against CMIP7 datasets.
+  The `branded_variable` facet is now reconstructed when a data catalog is loaded from the database,
+  so it is available to data requirement filters. ([#712](https://github.com/Climate-REF/climate-ref/pull/712))
+
+### Improved Documentation
+
+- Added a Zenodo DOI badge to the README and documentation landing page so users can easily find how to cite the REF. ([#634](https://github.com/Climate-REF/climate-ref/pull/634))
+- Added a getting-started guide for modelling centres that explains how to evaluate local or pre-publication CMOR-compliant model output with Climate-REF, including deployment options, accessing results, and a suggested first run. ([#709](https://github.com/Climate-REF/climate-ref/pull/709))
+
+### Trivial/Internal Changes
+
+- [#706](https://github.com/Climate-REF/climate-ref/pull/706)
+
+
 ## climate-ref 0.14.3 (2026-05-18)
 
 ### Bug Fixes

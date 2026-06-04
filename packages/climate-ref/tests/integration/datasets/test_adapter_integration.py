@@ -142,12 +142,12 @@ class TestRoundTripAndFinalisation:
                     adapter.register_dataset(database, data_catalog_dataset)
 
             local_data_catalog = sort_data_catalog(
-                catalog.drop(columns=adapter_config.non_roundtrip_columns, errors="ignore")
+                catalog.drop(columns=adapter_config.roundtrip_exclude_columns, errors="ignore")
             ).reset_index(drop=True)
 
             db_data_catalog = sort_data_catalog(
                 adapter.load_catalog(database).drop(
-                    columns=adapter_config.non_roundtrip_columns, errors="ignore"
+                    columns=adapter_config.roundtrip_exclude_columns, errors="ignore"
                 )
             ).reset_index(drop=True)
 
@@ -164,7 +164,7 @@ class TestRoundTripAndFinalisation:
 
     @pytest.mark.parametrize("parser", ["complete", "drs"])
     def test_derived_columns_survive_round_trip(self, parser, config, adapter_config, adapter_local_catalogs):
-        """Derived columns (e.g. CMIP7 branded_variable) are reconstructed by load_catalog."""
+        """Every column an adapter declares in ``derived_metadata`` is present after a DB load."""
         setattr(config, adapter_config.parser_config_attr, parser)
         catalog = adapter_local_catalogs[parser]
 
@@ -176,7 +176,7 @@ class TestRoundTripAndFinalisation:
 
             db_catalog = adapter.load_catalog(database)
 
-            for column in adapter_config.derived_columns:
+            for column in adapter.derived_metadata:
                 assert column in db_catalog.columns, (
                     f"Derived column '{column}' missing from DB-loaded catalog: {sorted(db_catalog.columns)}"
                 )

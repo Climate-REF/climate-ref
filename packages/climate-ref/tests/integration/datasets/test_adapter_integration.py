@@ -162,6 +162,25 @@ class TestRoundTripAndFinalisation:
                 check_like=True,
             )
 
+    @pytest.mark.parametrize("parser", ["complete", "drs"])
+    def test_derived_columns_survive_round_trip(self, parser, config, adapter_config, adapter_local_catalogs):
+        """Derived columns (e.g. CMIP7 branded_variable) are reconstructed by load_catalog."""
+        setattr(config, adapter_config.parser_config_attr, parser)
+        catalog = adapter_local_catalogs[parser]
+
+        with Database.from_config(config, run_migrations=True) as database:
+            adapter = adapter_config.adapter_cls()
+            with database.session.begin():
+                for _instance_id, data_catalog_dataset in catalog.groupby(adapter.slug_column):
+                    adapter.register_dataset(database, data_catalog_dataset)
+
+            db_catalog = adapter.load_catalog(database)
+
+            for column in adapter_config.derived_columns:
+                assert column in db_catalog.columns, (
+                    f"Derived column '{column}' missing from DB-loaded catalog: {sorted(db_catalog.columns)}"
+                )
+
     def test_finalise_datasets(self, config, adapter_config, adapter_data_dir):
         """DRS ingest -> register -> finalise -> verify metadata populated."""
         setattr(config, adapter_config.parser_config_attr, "drs")

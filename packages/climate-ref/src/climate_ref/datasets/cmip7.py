@@ -216,12 +216,23 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             datasets[column] = pd.NA
 
         # Add branded_variable for the raw catalog (before DB ingestion)
-        if not datasets.empty:
-            datasets["branded_variable"] = datasets["variable_id"] + "_" + datasets["branding_suffix"]
-        else:
-            datasets["branded_variable"] = pd.Series(dtype="object")
+        datasets = self._add_derived_columns(datasets)
 
         return datasets
+
+    def _add_derived_columns(self, catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add the derived ``branded_variable`` column (``{variable_id}_{branding_suffix}``).
+
+        ``branded_variable`` is not stored in the database as it is derived from
+        ``variable_id`` and ``branding_suffix``.
+        """
+        if {"variable_id", "branding_suffix"}.issubset(catalog.columns):
+            if catalog.empty:
+                catalog["branded_variable"] = pd.Series(dtype="object")
+            else:
+                catalog["branded_variable"] = catalog["variable_id"] + "_" + catalog["branding_suffix"]
+        return catalog
 
     def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
         """

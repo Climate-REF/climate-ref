@@ -184,6 +184,10 @@ class AdapterTestConfig:
     # Round-trip columns to drop (not persisted through the DB)
     non_roundtrip_columns: list[str]
 
+    # Columns derived on load from stored metadata (e.g. CMIP7 branded_variable).
+    # Not persisted as DB columns, but must be reconstructed by load_catalog.
+    derived_columns: list[str]
+
     # Complete parser core fields (must be non-NA after parsing)
     complete_parser_core_fields: list[str]
 
@@ -217,6 +221,7 @@ ADAPTER_CONFIGS = {
         instance_id_prefix="CMIP6",
         instance_id_part_count=10,
         non_roundtrip_columns=["time_range"],
+        derived_columns=[],
         complete_parser_core_fields=[
             "source_id",
             "experiment_id",
@@ -253,7 +258,8 @@ ADAPTER_CONFIGS = {
         parser_config_attr="cmip7_parser",
         instance_id_prefix="CMIP7",
         instance_id_part_count=12,
-        non_roundtrip_columns=["time_range", "branded_variable", "tracking_id"],
+        non_roundtrip_columns=["time_range", "tracking_id"],
+        derived_columns=["branded_variable"],
         complete_parser_core_fields=[
             "source_id",
             "experiment_id",

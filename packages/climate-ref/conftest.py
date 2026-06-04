@@ -181,8 +181,11 @@ class AdapterTestConfig:
     instance_id_prefix: str
     instance_id_part_count: int
 
-    # Round-trip columns to drop (not persisted through the DB)
-    non_roundtrip_columns: list[str]
+    # Columns excluded from the raw-vs-DB round-trip equality comparison, because they are
+    # either parse-only intermediates dropped before storage (e.g. time_range) or stored
+    # values that do not compare equal across the round-trip (e.g. tracking_id).
+    # Derived columns are NOT listed here.
+    roundtrip_exclude_columns: list[str]
 
     # Complete parser core fields (must be non-NA after parsing)
     complete_parser_core_fields: list[str]
@@ -216,7 +219,7 @@ ADAPTER_CONFIGS = {
         parser_config_attr="cmip6_parser",
         instance_id_prefix="CMIP6",
         instance_id_part_count=10,
-        non_roundtrip_columns=["time_range"],
+        roundtrip_exclude_columns=["time_range"],
         complete_parser_core_fields=[
             "source_id",
             "experiment_id",
@@ -253,7 +256,7 @@ ADAPTER_CONFIGS = {
         parser_config_attr="cmip7_parser",
         instance_id_prefix="CMIP7",
         instance_id_part_count=12,
-        non_roundtrip_columns=["time_range", "branded_variable", "tracking_id"],
+        roundtrip_exclude_columns=["time_range", "tracking_id"],
         complete_parser_core_fields=[
             "source_id",
             "experiment_id",

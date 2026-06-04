@@ -42,7 +42,7 @@ dependencies = [
     "netCDF4>=1.6.0",
     "platformdirs>=4.3.6",
     "tqdm>=4.67.1",
-    "gitpython>=3.1.0",
+    "gitpython>=3.1.50",
     # parsl doesn't support Windows yet
     # We don't target Windows either, but this __might__ allow Windows users to install the package
     'parsl>=2025.5.19; sys_platform != "win32"'

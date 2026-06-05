@@ -223,7 +223,6 @@ class TestCaseRunner:
 
         output_dir.mkdir(parents=True, exist_ok=True)
 
-        # Create execution definition
         definition = ExecutionDefinition(
             diagnostic=diagnostic,
             key=f"test-{test_case_name}",
@@ -232,10 +231,8 @@ class TestCaseRunner:
             root_directory=output_dir.parent,
         )
 
-        # Run the diagnostic. This mirrors ``Diagnostic.run`` but inserts the
-        # regression-capture hook between execution and result building, so a
-        # provider can normalise non-deterministic native output (e.g. ESMValTool's
-        # timestamped session directory) before it is baked into the bundle.
+        # Run the diagnostic.
+        # This mirrors ``Diagnostic.run`` but inserts the regression-capture hook before bundling.
         diagnostic.execute(definition)
         diagnostic.prepare_regression_output(definition)
         return diagnostic.build_execution_result(definition)

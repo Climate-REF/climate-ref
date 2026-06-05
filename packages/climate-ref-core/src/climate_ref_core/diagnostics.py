@@ -618,13 +618,12 @@ class Diagnostic(AbstractDiagnostic):
         Normalise native output for deterministic regression capture.
 
         Hook called by the test-case regression runner *between*
-        :meth:`execute` and :meth:`build_execution_result`, allowing a provider
-        to remove avoidable non-determinism (e.g. timestamped directory names)
+        :meth:`execute` and :meth:`build_execution_result`,
+        allowing a provider to remove avoidable non-determinism (e.g. timestamped directory names)
         before the output bundle is built and captured as a baseline.
 
-        This is **not** called during normal execution (:meth:`run`), so it must
-        only be used for regression-capture concerns, never for behaviour that
-        affects production results.
+        This is **not** called during normal execution (:meth:`run`),
+        so it must only be used for regression-capture concerns.
 
         The default implementation does nothing.
 

@@ -613,6 +613,26 @@ class Diagnostic(AbstractDiagnostic):
         # Build the result from the output bundle
         return self.build_execution_result(definition)
 
+    def prepare_regression_output(self, definition: ExecutionDefinition) -> None:
+        """
+        Normalise native output for deterministic regression capture.
+
+        Hook called by the test-case regression runner *between*
+        :meth:`execute` and :meth:`build_execution_result`,
+        allowing a provider to remove avoidable non-determinism (e.g. timestamped directory names)
+        before the output bundle is built and captured as a baseline.
+
+        This is **not** called during normal execution (:meth:`run`),
+        so it must only be used for regression-capture concerns.
+
+        The default implementation does nothing.
+
+        Parameters
+        ----------
+        definition
+            The configuration the diagnostic was run on.
+        """
+
 
 class CommandLineDiagnostic(Diagnostic):
     """

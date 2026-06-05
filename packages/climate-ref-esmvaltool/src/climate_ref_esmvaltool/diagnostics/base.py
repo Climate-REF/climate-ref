@@ -1,4 +1,5 @@
 import fnmatch
+import shutil
 from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
@@ -30,6 +31,13 @@ from climate_ref_esmvaltool.recipe import (
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 _DATASETS_REGISTRY_NAME = "esmvaltool-datasets"
+
+_STABLE_SESSION_NAME = "recipe"
+"""Stable name for the ESMValTool session directory.
+
+ESMValTool writes each run into a timestamped ``recipe_<YYYYMMDD>_<HHMMSS>`` session directory.
+We rename it to this fixed name after the run so that the captured regression output is deterministic.
+"""
 
 
 def get_cmip_source_type(
@@ -102,6 +110,52 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             The arguments needed to create a CMEC diagnostic and output bundle.
         """
         return CMECMetric.model_validate(metric_args), CMECOutput.model_validate(output_args)
+
+    def prepare_regression_output(self, definition: ExecutionDefinition) -> None:
+        """
+        Stabilise the timestamped ESMValTool session directory for regression capture.
+
+        Called only by the regression test-case runner (not during normal execution),
+        so the timestamp rewriting never affects production runs.
+
+        Parameters
+        ----------
+        definition
+            A description of the information needed for this execution of the diagnostic
+        """
+        self._stabilise_execution_dir(definition)
+
+    @staticmethod
+    def _stabilise_execution_dir(definition: ExecutionDefinition) -> None:
+        """
+        Rename the timestamped ESMValTool session directory to a stable name.
+
+        Rename the directory to :data:`_STABLE_SESSION_NAME`
+        and rewrite the timestamped name embedded in the text outputs (provenance, ``index.html``, logs)
+        so the paths they contain resolve to the renamed directory.
+
+        Parameters
+        ----------
+        definition
+            A description of the information needed for this execution of the diagnostic
+        """
+        executions_dir = definition.to_output_path("executions")
+        session_dirs = sorted(path for path in executions_dir.glob("recipe_*") if path.is_dir())
+        if not session_dirs:
+            return
+
+        session_dir = session_dirs[-1]
+        old_name = session_dir.name
+        stable_dir = executions_dir / _STABLE_SESSION_NAME
+        if stable_dir.exists():
+            shutil.rmtree(stable_dir)
+        session_dir.rename(stable_dir)
+
+        for pattern in ("*.json", "*.yml", "*.yaml", "*.txt", "*.html"):
+            for file in stable_dir.rglob(pattern):
+                content = file.read_text(encoding="utf-8")
+                if old_name in content:
+                    file.write_text(content.replace(old_name, _STABLE_SESSION_NAME), encoding="utf-8")
 
     def write_recipe(self, definition: ExecutionDefinition) -> Path:
         """
@@ -285,7 +339,11 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The resulting diagnostic.
         """
-        result_dir = max(definition.to_output_path("executions").glob("*"))
+        executions_dir = definition.to_output_path("executions")
+        stable_dir = executions_dir / _STABLE_SESSION_NAME
+        # Prefer the stabilised directory; fall back to the timestamped directory
+        # for regression baselines generated before stabilisation was introduced.
+        result_dir = stable_dir if stable_dir.exists() else max(executions_dir.glob("*"))
 
         metric_args = CMECMetric.create_template()
         output_args = CMECOutput.create_template()

@@ -232,5 +232,10 @@ class TestCaseRunner:
             root_directory=output_dir.parent,
         )
 
-        # Run the diagnostic
-        return diagnostic.run(definition)
+        # Run the diagnostic. This mirrors ``Diagnostic.run`` but inserts the
+        # regression-capture hook between execution and result building, so a
+        # provider can normalise non-deterministic native output (e.g. ESMValTool's
+        # timestamped session directory) before it is baked into the bundle.
+        diagnostic.execute(definition)
+        diagnostic.prepare_regression_output(definition)
+        return diagnostic.build_execution_result(definition)

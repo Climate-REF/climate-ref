@@ -30,6 +30,7 @@ from climate_ref_core.datasets import (
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
+from climate_ref_core.output_files import from_placeholders
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -639,15 +640,8 @@ class RegressionValidator:
         output_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
 
-        # Replace placeholders with actual paths
-        for pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
-            for file in output_dir.rglob(pattern):
-                content = file.read_text()
-                content = content.replace("<OUTPUT_DIR>", str(output_dir))
-                content = content.replace("<TEST_DATA_DIR>", str(self.test_data_dir))
-                file.write_text(content)
+        from_placeholders(output_dir, output_dir=output_dir, test_data_dir=self.test_data_dir)
 
-        # Load datasets from catalog
         datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
 
         return ExecutionDefinition(

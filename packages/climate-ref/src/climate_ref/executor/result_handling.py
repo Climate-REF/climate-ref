@@ -10,7 +10,6 @@ This is useful for local testing and debugging.
 """
 
 import pathlib
-import shutil
 from concurrent.futures import Future
 from typing import TYPE_CHECKING
 
@@ -25,6 +24,7 @@ from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, e
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
+from climate_ref_core.output_files import copy_execution_outputs, copy_output_file
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputDict
@@ -85,41 +85,6 @@ def mark_execution_failed(
             process_result(config, database, failure_result, execution)
     except Exception:
         logger.exception(f"Failed to record failure for {definition.execution_slug()!r}")
-
-
-def _copy_file_to_results(
-    scratch_directory: pathlib.Path,
-    results_directory: pathlib.Path,
-    fragment: pathlib.Path | str,
-    filename: pathlib.Path | str,
-) -> None:
-    """
-    Copy a file from the scratch directory to the executions directory
-
-    Parameters
-    ----------
-    scratch_directory
-        The directory where the file is currently located
-    results_directory
-        The directory where the file should be copied to
-    fragment
-        The fragment of the executions directory where the file should be copied
-    filename
-        The name of the file to be copied
-    """
-    assert results_directory != scratch_directory
-    input_directory = scratch_directory / fragment
-    output_directory = results_directory / fragment
-
-    filename = ensure_relative_path(filename, input_directory)
-
-    if not (input_directory / filename).exists():
-        raise FileNotFoundError(f"Could not find {filename} in {input_directory}")
-
-    output_filename = output_directory / filename
-    output_filename.parent.mkdir(parents=True, exist_ok=True)
-
-    shutil.copy(input_directory / filename, output_filename)
 
 
 def ingest_scalar_values(
@@ -372,7 +337,7 @@ def handle_execution_result(
     """
     # Always copy log data to the results directory
     try:
-        _copy_file_to_results(
+        copy_output_file(
             config.paths.scratch,
             config.paths.results,
             execution.output_fragment,
@@ -401,33 +366,15 @@ def handle_execution_result(
 
     logger.info(f"{execution} successful")
 
-    _copy_file_to_results(
+    # Copy the curated persisted output subset (metric bundle, output bundle and the
+    # files it references, series) from scratch to results. This is the same code path
+    # regression capture reuses, so the captured set cannot diverge from production.
+    copy_execution_outputs(
         config.paths.scratch,
         config.paths.results,
         execution.output_fragment,
-        result.metric_bundle_filename,
+        result,
     )
-
-    if result.output_bundle_filename:
-        _copy_file_to_results(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            result.output_bundle_filename,
-        )
-        _copy_output_bundle_files(
-            config,
-            execution,
-            result.to_output_path(result.output_bundle_filename),
-        )
-
-    if result.series_filename:
-        _copy_file_to_results(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            result.series_filename,
-        )
 
     # Ingest outputs and metrics into the database via the shared ingestion path
     cv = CV.load_from_file(config.paths.dimensions_cv)
@@ -451,23 +398,3 @@ def handle_execution_result(
 
     # Finally, mark the execution as successful
     execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
-
-
-def _copy_output_bundle_files(
-    config: "Config",
-    execution: Execution,
-    cmec_output_bundle_filename: pathlib.Path,
-) -> None:
-    """Copy output bundle referenced files (plots, data, html) from scratch to results."""
-    cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
-    scratch_base = config.paths.scratch / execution.output_fragment
-
-    for attr in ("plots", "data", "html"):
-        for output_info in (getattr(cmec_output_bundle, attr) or {}).values():
-            filename = ensure_relative_path(output_info.filename, scratch_base)
-            _copy_file_to_results(
-                config.paths.scratch,
-                config.paths.results,
-                execution.output_fragment,
-                filename,
-            )

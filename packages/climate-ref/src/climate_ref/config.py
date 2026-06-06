@@ -40,6 +40,7 @@ from climate_ref._config_helpers import (
     transform_error,
 )
 from climate_ref.constants import CONFIG_FILENAME
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
@@ -156,6 +157,53 @@ class PathConfig:
     def _dimensions_cv_factory(self) -> Path:
         filename = "cv_cmip7_aft.yaml"
         return Path(str(importlib.resources.files("climate_ref_core.pycmec") / filename))
+
+
+@config(prefix=env_prefix)
+class NativeStoreConfig:
+    """
+    Configuration for the content-addressed native-bundle object store.
+
+    The native store holds the curated native outputs (NetCDF, PNG, ...) produced by each
+    test case, keyed by their sha256 digest.
+    Read operations (``has``, ``fetch``) are always anonymous and credential-free.
+    Write operations are gated to the ``mint`` verb only.
+    """
+
+    url: str = env_field(name="NATIVE_STORE_URL", default="https://baselines.climate-ref.org")
+    """
+    Base URL of the native-bundle object store.
+
+    Blobs are served at ``{url}/{digest}``.
+    Defaults to the production Climate-REF baselines endpoint.
+
+    Set ``REF_NATIVE_STORE_URL`` to a local ``file:///path/to/dir`` (or a plain filesystem path)
+    for offline development and testing.
+    """
+
+    credentials: str = env_field(name="NATIVE_STORE_CREDENTIALS", default="")
+    """
+    Credentials for write access to the native-bundle object store.
+
+    Only consumed by the ``mint`` verb (object-store upload).
+    Anonymous read (``fetch`` / ``has``) never requires credentials.
+    Set ``REF_NATIVE_STORE_CREDENTIALS`` to the appropriate token or key material.
+    """
+
+    @property
+    def cache_dir(self) -> Path:
+        """
+        Local pooch cache directory for downloaded native blobs.
+
+        Reuses :func:`~climate_ref_core.dataset_registry.resolve_cache_dir` so the
+        ``REF_DATASET_CACHE_DIR`` environment variable applies here too.
+
+        Returns
+        -------
+        :
+            The resolved cache directory path.
+        """
+        return resolve_cache_dir("native-baselines")
 
 
 @config(prefix=env_prefix)
@@ -445,6 +493,7 @@ class Config:
     """
 
     paths: PathConfig = Factory(PathConfig)
+    native_store: NativeStoreConfig = Factory(NativeStoreConfig)
     db: DbConfig = Factory(DbConfig)
     executor: ExecutorConfig = Factory(ExecutorConfig)
     diagnostic_providers: list[DiagnosticProviderConfig] = Factory(default_providers)  # noqa: RUF009, RUF100

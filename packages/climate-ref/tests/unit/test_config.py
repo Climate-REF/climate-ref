@@ -179,6 +179,10 @@ filename = "sqlite://climate_ref.db"
                 },
             ],
             "executor": {"executor": "climate_ref.executor.LocalExecutor", "config": {}},
+            "native_store": {
+                "url": "https://baselines.climate-ref.org",
+                "credentials": "",
+            },
             "paths": {
                 "log": f"{default_path}/log",
                 "results": f"{default_path}/results",

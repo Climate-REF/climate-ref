@@ -1,20 +1,14 @@
 """
-Regression-baseline primitives for diagnostic test cases (RFC 0005).
+Regression-baseline primitives for diagnostic test cases.
 
-This package holds the building blocks for the two-bundle regression model:
+This package holds the building blocks for the two-bundle regression model,
+where we capture and commit a small, sanitised **committed bundle** of artefacts for a test case.
+These committed bundles are tracked in git and form the regression baseline for the test case.
 
-- :mod:`~climate_ref_core.regression.manifest` — the ``manifest.json`` model and
-  sha256 digest helpers coupling a committed bundle to its native outputs.
-- :mod:`~climate_ref_core.regression.store` — the content-addressed ``NativeStore``
-  Protocol and its local / public-read implementations.
-- :mod:`~climate_ref_core.regression.compare` — the tolerant JSON comparator used
-  to gate committed bundles.
-- :mod:`~climate_ref_core.regression.capture` — capture of a committed bundle and a
-  native snapshot, built on :func:`climate_ref_core.output_files.copy_execution_outputs`
-  so the captured set is exactly what production persists.
-
-These primitives are pure: they take plain paths and data, with no dependency on the
-application ``Config`` or database. The ``ref test-cases`` CLI wires them together.
+We also snapshot the native files persisted by the execution.
+These files are typically large and not always portable,
+so we keep them out of git and refer to them by their sha256 digest in the committed bundle.
+These data will be able to be fetched from an object store in CI and replayed locally for debugging.
 """
 
 from climate_ref_core.regression.capture import (

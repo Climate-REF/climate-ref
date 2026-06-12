@@ -52,6 +52,25 @@ Binary outputs (``.nc``, ``.png``, ...) are never rewritten.
 """
 
 
+def ordered_replacements(replacements: dict[str, str]) -> list[tuple[str, str]]:
+    """Order ``replacements`` longest-key-first.
+
+    This is the canonical replacement ordering for all sanitisation:
+    an overlapping shorter key cannot partially shadow a longer one.
+
+    Parameters
+    ----------
+    replacements
+        Mapping of substring to replacement.
+
+    Returns
+    -------
+    :
+        The ``(old, new)`` pairs ordered longest-``old``-first.
+    """
+    return sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
+
+
 def rewrite_tree(
     directory: Path,
     replacements: dict[str, str],
@@ -72,7 +91,7 @@ def rewrite_tree(
     globs
         File globs whose contents are rewritten.
     """
-    ordered = sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
+    ordered = ordered_replacements(replacements)
     for glob in globs:
         for file in sorted(directory.rglob(glob)):
             text = file.read_text(encoding="utf-8")

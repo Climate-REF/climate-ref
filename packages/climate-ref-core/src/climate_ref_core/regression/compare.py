@@ -1,17 +1,5 @@
 """
-Tolerant content comparator for committed regression bundles.
-
-Key design points:
-
-- ``compare_json_content`` recurses through parsed JSON,
-  comparing floats with relative/absolute tolerance and all other scalars exactly.
-  It returns a *list* of human-readable mismatch descriptions with JSON-path
-  precision so failures are immediately actionable.
-- ``assert_bundle_regression`` handles the byte-equal fast path,
-  placeholder sanitisation of both dict *keys* and leaf string *values*,
-  and raises ``AssertionError`` with the mismatch list on divergence.
-- ``resolve_tolerance`` merges the global default with any per-case override
-  stored in a ``TestCase.tolerances`` mapping.
+Content comparison utilities for regression testing.
 """
 
 from __future__ import annotations
@@ -22,6 +10,8 @@ from pathlib import Path
 from typing import Any
 
 from attrs import frozen
+
+from climate_ref_core.output_files import ordered_replacements
 
 
 @frozen
@@ -158,7 +148,7 @@ def compare_json_content(
         An empty list means the values are equivalent within tolerance.
     """
     mismatches: list[str] = []
-    _compare_recursive(expected, actual, tol=tol, path=path or "<root>", out=mismatches)
+    _compare_recursive(expected, actual, tol=tol, path=path, out=mismatches)
     return mismatches
 
 
@@ -170,20 +160,26 @@ def _compare_recursive(
     path: str,
     out: list[str],
 ) -> None:
-    """Recursive helper; appends to ``out``."""
+    """Recursive helper; appends to ``out``.
+
+    ``path`` is empty at the top level; ``label`` substitutes ``<root>`` in messages
+    so top-level keys render bare (``key``) while a root-level scalar/type mismatch
+    is still identifiable.
+    """
+    label = path or "<root>"
     # Type mismatch (treat int/float as numeric together)
     if type(expected) is not type(actual):
         if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
-            _compare_numeric(float(expected), float(actual), tol=tol, path=path, out=out)
+            _compare_numeric(float(expected), float(actual), tol=tol, path=label, out=out)
             return
         out.append(
-            f"{path}: type mismatch — expected {type(expected).__name__} ({expected!r}), "
+            f"{label}: type mismatch — expected {type(expected).__name__} ({expected!r}), "
             f"got {type(actual).__name__} ({actual!r})"
         )
         return
 
     if isinstance(expected, float):
-        _compare_numeric(expected, actual, tol=tol, path=path, out=out)
+        _compare_numeric(expected, actual, tol=tol, path=label, out=out)
 
     elif isinstance(expected, dict):
         expected_keys = set(expected.keys())
@@ -191,23 +187,23 @@ def _compare_recursive(
         missing = expected_keys - actual_keys
         extra = actual_keys - expected_keys
         if missing:
-            out.append(f"{path}: missing keys {sorted(missing)!r}")
+            out.append(f"{label}: missing keys {sorted(missing)!r}")
         if extra:
-            out.append(f"{path}: unexpected extra keys {sorted(extra)!r}")
+            out.append(f"{label}: unexpected extra keys {sorted(extra)!r}")
         for key in expected_keys & actual_keys:
             child_path = f"{path}.{key}" if path else str(key)
             _compare_recursive(expected[key], actual[key], tol=tol, path=child_path, out=out)
 
     elif isinstance(expected, list):
         if len(expected) != len(actual):
-            out.append(f"{path}: length mismatch — expected {len(expected)}, got {len(actual)}")
+            out.append(f"{label}: length mismatch — expected {len(expected)}, got {len(actual)}")
         # Compare the common prefix so partial mismatches are visible.
         for i, (e, a) in enumerate(zip(expected, actual)):
             _compare_recursive(e, a, tol=tol, path=f"{path}[{i}]", out=out)
 
     # int, bool, str, None — exact equality
     elif expected != actual:
-        out.append(f"{path}: expected {expected!r}, got {actual!r}")
+        out.append(f"{label}: expected {expected!r}, got {actual!r}")
 
 
 def _compare_numeric(
@@ -255,6 +251,11 @@ def assert_bundle_regression(
     infrastructure: keys are real runtime values (absolute paths, recipe-dir
     timestamps), values are the committed-bundle placeholders (e.g.
     ``"<OUTPUT_DIR>"``, ``"<TEST_DATA_DIR>"``, ``"<RECIPE_RUN>"``).
+    Only the *actual* document is rewritten: the committed *expected* file is
+    assumed to already contain placeholders, which
+    :func:`~climate_ref_core.regression.capture.write_committed_bundle` guarantees
+    at capture time. A hand-edited baseline with raw paths will surface as ordinary
+    value mismatches.
 
     Both ``<OUTPUT_DIR>`` and ``<RECIPE_RUN>`` participate in dict-KEY rewriting
     because ESMValTool's ``output.json`` embeds absolute paths as object keys.
@@ -280,8 +281,7 @@ def assert_bundle_regression(
         If ``expected_path`` does not exist (legacy regression without committed bundle).
     """
     if not expected_path.exists():
-        # Legacy regression data without this bundle file — skip silently,
-        # matching the behaviour of validate_series_regression.
+        # Legacy regression data without this bundle file — skip silently
         return
 
     expected_bytes = expected_path.read_bytes()
@@ -294,11 +294,8 @@ def assert_bundle_regression(
     expected_obj = json.loads(expected_bytes.decode("utf-8"))
     actual_obj = json.loads(actual_bytes.decode("utf-8"))
 
-    # Build ordered replacement list: longest real-value string first.
-    ordered = sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
-
     # Rewrite actual — both keys and leaf values — before comparison.
-    actual_sanitised = _rewrite_keys_and_values(actual_obj, ordered)
+    actual_sanitised = _rewrite_keys_and_values(actual_obj, ordered_replacements(replacements))
 
     mismatches = compare_json_content(expected_obj, actual_sanitised, tol=tol)
     if mismatches:

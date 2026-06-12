@@ -143,6 +143,24 @@ class TestDumpLoad:
         loaded = Manifest.load(p)
         assert loaded.native["path/to/file.nc"] == entry
 
+    def test_load_missing_keys_raises_value_error(self, tmp_path: Path) -> None:
+        p = tmp_path / "manifest.json"
+        p.write_text(json.dumps({"schema": SCHEMA_VERSION, "committed": {}}), encoding="utf-8")
+        with pytest.raises(ValueError, match=r"missing required keys \['test_case_version', 'native'\]"):
+            Manifest.load(p)
+
+    def test_load_malformed_native_entry_raises_value_error(self, tmp_path: Path) -> None:
+        p = tmp_path / "manifest.json"
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": 1,
+            "committed": {},
+            "native": {"file.nc": {"sha256": "aa" * 32}},  # missing "size"
+        }
+        p.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="malformed 'native' entry"):
+            Manifest.load(p)
+
 
 class TestComputeCommittedDigests:
     def test_all_three_present(self, regression_dir: Path) -> None:

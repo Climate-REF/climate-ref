@@ -27,8 +27,11 @@ from attrs import asdict, frozen
 SCHEMA_VERSION: int = 1
 """Current manifest schema version."""
 
-# The committed regression artefacts whose digests are tracked in ``manifest.committed``.
-_COMMITTED_FILES: tuple[str, ...] = ("series.json", "diagnostic.json", "output.json")
+COMMITTED_BUNDLE_FILES: tuple[str, ...] = ("series.json", "diagnostic.json", "output.json")
+"""The committed CMEC artefacts tracked in git.
+
+Their digests are tracked in :attr:`Manifest.committed`.
+"""
 
 
 def sha256_file(path: Path) -> str:
@@ -113,12 +116,31 @@ class Manifest:
         -------
         :
             The parsed manifest.
+
+        Raises
+        ------
+        ValueError
+            If the manifest is missing required keys or has malformed native entries
+            (e.g. hand-edited or written by an incompatible version).
         """
         data = json.loads(path.read_text(encoding="utf-8"))
-        native = {
-            relpath: NativeEntry(sha256=entry["sha256"], size=entry["size"])
-            for relpath, entry in data["native"].items()
-        }
+        missing = [key for key in ("schema", "test_case_version", "committed", "native") if key not in data]
+        if missing:
+            raise ValueError(
+                f"Invalid manifest {path}: missing required keys {missing}. "
+                "The manifest may be corrupted or written by an incompatible version; "
+                "regenerate it with `ref test-cases run --force-regen`."
+            )
+        try:
+            native = {
+                relpath: NativeEntry(sha256=entry["sha256"], size=entry["size"])
+                for relpath, entry in data["native"].items()
+            }
+        except (KeyError, TypeError, AttributeError) as exc:
+            raise ValueError(
+                f"Invalid manifest {path}: malformed 'native' entry ({exc!r}). "
+                "Each entry must be a mapping with 'sha256' and 'size' keys."
+            ) from exc
         return cls(
             schema=data["schema"],
             test_case_version=data["test_case_version"],
@@ -141,7 +163,7 @@ class Manifest:
         payload = {
             "schema": self.schema,
             "test_case_version": self.test_case_version,
-            "committed": dict(self.committed),
+            "committed": self.committed,
             "native": {relpath: asdict(entry) for relpath, entry in self.native.items()},
         }
         text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
@@ -188,7 +210,7 @@ def compute_committed_digests(regression_dir: Path) -> dict[str, str]:
         Mapping of ``{relpath: sha256}`` for each present committed artefact.
     """
     digests: dict[str, str] = {}
-    for relpath in _COMMITTED_FILES:
+    for relpath in COMMITTED_BUNDLE_FILES:
         candidate = regression_dir / relpath
         if candidate.exists():
             digests[relpath] = sha256_file(candidate)

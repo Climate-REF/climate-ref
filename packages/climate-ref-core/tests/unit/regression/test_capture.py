@@ -100,11 +100,40 @@ def test_capture_execution_end_to_end(tmp_path):
 
     # Committed bundle is the three CMEC artefacts.
     assert set(committed) == {"series.json", "diagnostic.json", "output.json"}
-    # Native snapshot is exactly what copy_execution_outputs persisted: log + 3 bundles.
-    assert set(native) == {EXECUTION_LOG_FILENAME, "diagnostic.json", "output.json", "series.json"}
+    # Native snapshot is exactly what copy_execution_outputs persists in production:
+    # the 3 bundles, without the execution log (the production default).
+    assert set(native) == {"diagnostic.json", "output.json", "series.json"}
     # Persisted files actually landed in the results directory.
     for relpath in native:
         assert (results / fragment / relpath).exists()
+
+
+def test_capture_execution_include_log(tmp_path):
+    scratch = (tmp_path / "scratch").resolve()
+    results = (tmp_path / "results").resolve()
+    fragment = "frag"
+    output_dir = (scratch / fragment).resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    _seed_execution(scratch, fragment, output_dir=output_dir, test_data_dir=test_data_dir)
+
+    result = _FakeResult(
+        metric_bundle_filename="diagnostic.json",
+        output_bundle_filename="output.json",
+        series_filename="series.json",
+    )
+
+    _, native = capture_execution(
+        scratch,
+        results,
+        fragment,
+        result,
+        regression_dir=tmp_path / "regression",
+        output_dir=output_dir,
+        test_data_dir=test_data_dir,
+        include_log=True,
+    )
+
+    assert set(native) == {EXECUTION_LOG_FILENAME, "diagnostic.json", "output.json", "series.json"}
 
 
 def test_capture_execution_requires_metric_bundle(tmp_path):

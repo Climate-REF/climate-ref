@@ -1,16 +1,19 @@
 """
 Capture of regression baselines from a diagnostic execution.
 
-Capture reuses :func:`climate_ref_core.output_files.copy_execution_outputs` — the
-exact code path production uses to persist a successful execution — so the captured
-native set is, by construction, identical to what REF actually persists (no drift,
-no separate "what counts as output" heuristic).
+Capture reuses :func:`climate_ref_core.output_files.copy_execution_outputs`,
+so the captured native set is identical to what REF actually persists when handling an execution.
+
+Note that this is not the raw output from an execution (the "scratch" directory),
+but the curated subset of files copied into the "results" directory for persistence and comparison.
+This avoids the need to maintain a separate ignore list for regression captures.
 
 It produces two things:
 
-- the small **committed bundle** (``series.json`` / ``diagnostic.json`` /
-  ``output.json``) written into the test case ``regression/`` directory, sanitised
-  text-only for portability and tracked in git, and
+- the small **committed bundle**
+  (``series.json`` / ``diagnostic.json`` / ``output.json``)
+  written into the test case ``regression/`` directory,
+  sanitised text-only for portability and tracked in git
 - a **native snapshot**: a ``{relpath: NativeEntry}`` map recording the sha256 digest
   and size of every persisted native file, for the manifest and the object store.
 """
@@ -23,6 +26,7 @@ from typing import TYPE_CHECKING
 
 from climate_ref_core.output_files import copy_execution_outputs, to_placeholders
 from climate_ref_core.regression.manifest import (
+    COMMITTED_BUNDLE_FILES,
     NativeEntry,
     compute_committed_digests,
     sha256_file,
@@ -31,9 +35,6 @@ from climate_ref_core.regression.manifest import (
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import ExecutionResult
     from climate_ref_core.regression.store import NativeStore
-
-COMMITTED_BUNDLE_FILES: tuple[str, ...] = ("series.json", "diagnostic.json", "output.json")
-"""The committed CMEC artefacts tracked in git (the human-reviewable diff signal)."""
 
 
 def write_committed_bundle(
@@ -48,8 +49,8 @@ def write_committed_bundle(
 
     Copies each committed artefact present in ``source_dir`` into ``regression_dir``,
     then rewrites absolute paths to portable placeholders in place
-    (:func:`~climate_ref_core.output_files.to_placeholders`). Missing source files
-    are skipped.
+    (:func:`~climate_ref_core.output_files.to_placeholders`).
+    Missing source files are skipped.
 
     Parameters
     ----------
@@ -113,15 +114,16 @@ def capture_execution(  # noqa: PLR0913
     regression_dir: Path,
     output_dir: Path,
     test_data_dir: Path,
-    include_log: bool = True,
+    # TODO: Unify the log handling
+    include_log: bool = False,
 ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
     """
     Persist a successful execution and capture its committed bundle + native snapshot.
 
     Copies the curated output set from scratch to results via
-    :func:`~climate_ref_core.output_files.copy_execution_outputs` (the production
-    persistence path), then writes the committed bundle and snapshots every
-    persisted native file.
+    :func:`~climate_ref_core.output_files.copy_execution_outputs`
+    (the production persistence path),
+    then writes the committed bundle and snapshots every persisted native file.
 
     Parameters
     ----------
@@ -141,6 +143,9 @@ def capture_execution(  # noqa: PLR0913
         The absolute provider test-data directory, for path substitution.
     include_log
         If True, the execution log is included in the persisted/native set.
+
+        Defaults to False, matching the behaviour of
+        :func:`~climate_ref_core.output_files.copy_execution_outputs`.
 
     Returns
     -------

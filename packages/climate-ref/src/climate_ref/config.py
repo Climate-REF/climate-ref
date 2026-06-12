@@ -190,19 +190,16 @@ class NativeStoreConfig:
     Set ``REF_NATIVE_STORE_CREDENTIALS`` to the appropriate token or key material.
     """
 
-    @property
-    def cache_dir(self) -> Path:
-        """
-        Local pooch cache directory for downloaded native blobs.
+    cache_dir: Path = env_field(name="NATIVE_STORE_CACHE_DIR", converter=Path)
+    """
+    Local pooch cache directory for downloaded native blobs.
 
-        Reuses :func:`~climate_ref_core.dataset_registry.resolve_cache_dir` so the
-        ``REF_DATASET_CACHE_DIR`` environment variable applies here too.
+    Defaults via :func:`~climate_ref_core.dataset_registry.resolve_cache_dir`,
+    so the ``REF_DATASET_CACHE_DIR`` environment variable applies here too.
+    """
 
-        Returns
-        -------
-        :
-            The resolved cache directory path.
-        """
+    @cache_dir.default
+    def _cache_dir_factory(self) -> Path:
         return resolve_cache_dir("native-baselines")
 
 

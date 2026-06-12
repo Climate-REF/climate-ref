@@ -222,7 +222,7 @@ class TestPoochReadStore:
 
 class TestR2WriteStore:
     def test_construction_raises_not_implemented(self) -> None:
-        with pytest.raises(NotImplementedError, match="R2 backend deferred"):
+        with pytest.raises(NotImplementedError, match="deferred to a follow-up PR"):
             R2WriteStore()
 
 
@@ -281,3 +281,21 @@ class TestBuildNativeStore:
             # Must not raise — no credentials required.
             store = build_native_store(cfg, writable=False)
             assert isinstance(store, NativeStore)
+
+    def test_file_url_resolves_to_absolute_root(self, tmp_path: Path) -> None:
+        root = tmp_path / "store"
+        for url in [root.as_uri(), f"file:{root}"]:  # file:///abs and single-slash file:/abs
+            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
+            store = build_native_store(cfg, writable=False)
+            assert isinstance(store, LocalFilesystemStore)
+            assert store.root == root
+
+    def test_file_url_with_host_raises_value_error(self, tmp_path: Path) -> None:
+        cfg = _StubConfig(url="file://store/blobs", cache_dir=tmp_path / "cache")
+        with pytest.raises(ValueError, match="host component"):
+            build_native_store(cfg, writable=False)
+
+    def test_writable_true_remote_url_raises_not_implemented(self, tmp_path: Path) -> None:
+        cfg = _StubConfig(url="https://baselines.example.com", cache_dir=tmp_path / "cache")
+        with pytest.raises(NotImplementedError, match="deferred to a follow-up PR"):
+            build_native_store(cfg, writable=True)

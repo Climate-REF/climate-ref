@@ -171,6 +171,19 @@ class TestCompareJsonDicts:
         result = compare_json_content({"x": 1}, {"x": 2}, tol=TOL, path="parent")
         assert "parent" in result[0]
 
+    def test_top_level_key_path_is_bare(self) -> None:
+        """A mismatch under a top-level key renders as ``key``, not ``<root>.key``."""
+        result = compare_json_content({"x": 1}, {"x": 2}, tol=TOL)
+        assert result[0].startswith("x: ")
+
+    def test_root_scalar_mismatch_labelled_root(self) -> None:
+        result = compare_json_content(1, "1", tol=TOL)
+        assert result[0].startswith("<root>: ")
+
+    def test_root_missing_key_labelled_root(self) -> None:
+        result = compare_json_content({"a": 1}, {}, tol=TOL)
+        assert result[0].startswith("<root>: missing keys")
+
 
 class TestAssertBundleRegressionBasic:
     def test_byte_equal_fast_path_passes(self, tmp_path: Path) -> None:

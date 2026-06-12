@@ -17,7 +17,7 @@ based on the application :class:`~climate_ref.config.Config` and the ``writable`
 
 Blobs are keyed by their **sha256 hex digest**.
 The :class:`LocalFilesystemStore` uses a two-level directory layout
-``<root>/<digest[:2]>/<digest>`` (content-addressed, mirrors common git-object conventions).
+``<root>/<digest[:2]>/<digest>`` similar to git's object storage.
 """
 
 from __future__ import annotations
@@ -25,13 +25,14 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from typing import Protocol, runtime_checkable
+from urllib.parse import urlsplit
 
 import pooch
-import pooch.hashes
 from attrs import frozen
 from loguru import logger
 
 from climate_ref_core.dataset_registry import _verify_hash_matches
+from climate_ref_core.regression.manifest import sha256_file
 
 
 @runtime_checkable
@@ -41,8 +42,7 @@ class NativeStore(Protocol):
 
     Blobs are keyed by their sha256 hex digest.
     Read operations (``has``, ``fetch``) are anonymous and credential-free.
-    ``put`` requires write credentials and raises :class:`NotImplementedError`
-    on read-only implementations.
+    ``put`` requires write credentials and raises :class:`NotImplementedError` on read-only implementations.
     """
 
     def has(self, digest: str) -> bool:
@@ -174,8 +174,7 @@ class LocalFilesystemStore:
         """
         Store the file at ``path`` in the content-addressed store.
 
-        Computes the sha256 digest, copies the file to its canonical location,
-        and returns the digest.
+        Computes the sha256 digest, copies the file to its canonical location, and returns the digest.
         If a blob with the same digest already exists, the copy is skipped.
 
         Parameters
@@ -188,7 +187,7 @@ class LocalFilesystemStore:
         :
             The sha256 hex digest of the stored blob.
         """
-        digest = pooch.hashes.file_hash(str(path), alg="sha256")
+        digest = sha256_file(path)
         blob = self._blob_path(digest)
         if not blob.exists():
             blob.parent.mkdir(parents=True, exist_ok=True)
@@ -332,6 +331,9 @@ class _NativeStoreConfigProtocol(Protocol):
 
     Both :class:`climate_ref.config.NativeStoreConfig` and test doubles satisfy
     this interface without an import dependency on the app package.
+
+    This keeps ``climate_ref_core`` free of any import dependency on ``climate_ref``.
+
     """
 
     @property
@@ -348,7 +350,6 @@ def build_native_store(config: _NativeStoreConfigProtocol, *, writable: bool) ->
     Accepts any object that exposes ``url: str`` and ``cache_dir: Path``
     (satisfying :class:`_NativeStoreConfigProtocol`), so callers pass
     ``config.native_store`` rather than the full :class:`~climate_ref.config.Config`.
-    This keeps ``climate_ref_core`` free of any import dependency on ``climate_ref``.
 
     With ``writable=False`` the returned store is always anonymous and
     credential-free (suitable for CI read/replay paths).
@@ -374,12 +375,22 @@ def build_native_store(config: _NativeStoreConfigProtocol, *, writable: bool) ->
     url: str = config.url
     cache_dir: Path = config.cache_dir
 
-    # Determine whether the URL refers to a local path (file:// or bare path).
-    is_local = url.startswith("file://") or not url.startswith(("http://", "https://"))
+    parts = urlsplit(url)
+    is_local = parts.scheme not in ("http", "https")
 
     if is_local:
-        # Strip file:// prefix if present to get the directory path.
-        local_root = Path(url[len("file://") :]) if url.startswith("file://") else Path(url)
+        if parts.scheme == "file":
+            # Parse properly so malformed variants fail loudly instead of
+            # silently producing a wrong (e.g. relative) path.
+            if parts.netloc not in ("", "localhost"):
+                raise ValueError(
+                    f"Unsupported file URL {url!r}: a host component ({parts.netloc!r}) is not "
+                    "supported. Use the file:///absolute/path form (three slashes)."
+                )
+            local_root = Path(parts.path)
+        else:
+            # A bare filesystem path.
+            local_root = Path(url)
         return LocalFilesystemStore(root=local_root)
     elif writable:
         # Remote writable store — R2 backend is deferred.

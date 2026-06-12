@@ -61,6 +61,7 @@ from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollect
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
+from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.testing import validate_series_regression
 
@@ -432,38 +433,17 @@ class ExecutionRegression:
     request: pytest.FixtureRequest
     replacements: dict[str, str]
 
-    sanitised_file_globs: tuple[str, ...] = (
-        "*.json",
-        "*.txt",
-        "*.yaml",
-        "*.yml",
-        "*.html",
-        "*.xml",
-    )
-
-    def _replace_file(self, file: Path, replacements: dict[str, str]) -> None:
-        with open(file, encoding="utf-8") as f:
-            content = f.read()
-            for key, value in replacements.items():
-                content = content.replace(key, value)
-        with open(file, "w") as f:
-            f.write(content)
-
     def path(self, key: str) -> Path:
         """Return the regression data path for the given key."""
         return self.regression_data_dir / self.diagnostic.provider.slug / self.diagnostic.slug / key
 
     def replace_references(self, output_dir: Path, replacements: dict[str, str]) -> None:
         """Replace any references to local directories with a placeholder."""
-        for glob in self.sanitised_file_globs:
-            for file in output_dir.rglob(glob):
-                self._replace_file(file, replacements)
+        rewrite_tree(output_dir, replacements, SANITISED_FILE_GLOBS)
 
     def hydrate_output_directory(self, output_dir: Path, replacements: dict[str, str]) -> None:
         """Replace any references to the placeholder with the actual output directory."""
-        for glob in self.sanitised_file_globs:
-            for file in output_dir.rglob(glob):
-                self._replace_file(file, replacements)
+        rewrite_tree(output_dir, replacements, SANITISED_FILE_GLOBS)
 
     def output_replacements(self, output_directory: Path) -> dict[str, str]:
         """Map real paths to regression placeholders for a given output directory."""

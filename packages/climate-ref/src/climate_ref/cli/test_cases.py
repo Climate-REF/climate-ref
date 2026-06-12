@@ -25,6 +25,7 @@ from climate_ref_core.exceptions import (
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
+from climate_ref_core.output_files import to_placeholders
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -579,14 +580,12 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
         shutil.copytree(result.definition.output_directory, paths.regression, dirs_exist_ok=True)
 
         # Replace absolute paths with placeholders for portability
-        # We don't touch binary files, only text-based ones
         # TODO: Symlink regression datasets instead of any paths on users' systems
-        for glob_pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
-            for file in paths.regression.rglob(glob_pattern):
-                content = file.read_text()
-                content = content.replace(str(result.definition.output_directory), "<OUTPUT_DIR>")
-                content = content.replace(str(paths.test_data_dir), "<TEST_DATA_DIR>")
-                file.write_text(content)
+        to_placeholders(
+            paths.regression,
+            output_dir=result.definition.output_directory,
+            test_data_dir=paths.test_data_dir,
+        )
 
         # Store catalog hash for change detection
         catalog_hash = get_catalog_hash(paths.catalog)

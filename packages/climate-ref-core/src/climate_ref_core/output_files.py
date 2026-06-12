@@ -3,9 +3,15 @@ Raw-file operations on diagnostic execution outputs.
 
 This module groups every operation that manipulates the files produced by a diagnostic execution.
 Execution output is written to the ``scratch`` directory.
-When the execution is ingested, a curated subset of outputs
-(log + metric bundle + output bundle + the files the output bundle references + series)
-are copied from the scratch directory to the results directory.
+When the execution is ingested,
+a curated subset of outputs are copied from the scratch directory to the results directory:
+
+- logs
+- the metric bundle
+- the output bundle
+- the files the output bundle references (plots/data/html)
+- the series bundle
+
 Only files in the results directory are accessed by the API/public.
 
 For some tests we must sanitise paths to files as well as the contents of text files
@@ -46,11 +52,25 @@ Binary outputs (``.nc``, ``.png``, ...) are never rewritten.
 """
 
 
-def _rewrite_tree(directory: Path, replacements: dict[str, str], globs: tuple[str, ...]) -> None:
+def rewrite_tree(
+    directory: Path,
+    replacements: dict[str, str],
+    globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
+) -> None:
     """Apply ``replacements`` to the text content of every matching file under ``directory``.
 
     Keys are applied longest-first so that an overlapping shorter path cannot
     partially shadow a longer one.
+    Only files matching ``globs`` are rewritten while binary artefacts are never touched.
+
+    Parameters
+    ----------
+    directory
+        The tree of files to rewrite in place.
+    replacements
+        Mapping of substring to replacement, applied to every matching file.
+    globs
+        File globs whose contents are rewritten.
     """
     ordered = sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True)
     for glob in globs:
@@ -74,8 +94,8 @@ def to_placeholders(
     Rewrite absolute paths in committed artefacts to portable placeholders ("to").
 
     Replaces the absolute ``output_dir`` with ``<OUTPUT_DIR>`` and the absolute
-    ``test_data_dir`` with ``<TEST_DATA_DIR>`` in every text artefact under
-    ``directory``. Binary files are never touched.
+    ``test_data_dir`` with ``<TEST_DATA_DIR>`` in every text artefact under ``directory``.
+    Binary files are never touched.
 
     Parameters
     ----------
@@ -88,7 +108,7 @@ def to_placeholders(
     globs
         File globs whose contents are rewritten.
     """
-    _rewrite_tree(
+    rewrite_tree(
         directory,
         {str(output_dir): PLACEHOLDER_OUTPUT_DIR, str(test_data_dir): PLACEHOLDER_TEST_DATA_DIR},
         globs,
@@ -105,9 +125,9 @@ def from_placeholders(
     """
     Rewrite portable placeholders back to absolute paths ("from").
 
-    Inverse of :func:`to_placeholders`: replaces ``<OUTPUT_DIR>`` with the absolute
-    ``output_dir`` and ``<TEST_DATA_DIR>`` with the absolute ``test_data_dir`` in
-    every text artefact under ``directory``.
+    Inverse of :func:`to_placeholders`: replaces ``<OUTPUT_DIR>`` with the absolute ``output_dir``
+    and ``<TEST_DATA_DIR>`` with the absolute ``test_data_dir`` in every text artefact under ``directory``.
+    Binary files are never touched.
 
     Parameters
     ----------
@@ -120,7 +140,7 @@ def from_placeholders(
     globs
         File globs whose contents are rewritten.
     """
-    _rewrite_tree(
+    rewrite_tree(
         directory,
         {PLACEHOLDER_OUTPUT_DIR: str(output_dir), PLACEHOLDER_TEST_DATA_DIR: str(test_data_dir)},
         globs,
@@ -153,7 +173,9 @@ def copy_output_file(
     :
         The copied file's path, relative to ``fragment``.
     """
-    assert results_directory != scratch_directory
+    if results_directory == scratch_directory:
+        raise ValueError("results_directory and scratch_directory must differ")
+
     input_directory = scratch_directory / fragment
     output_directory = results_directory / fragment
 
@@ -200,7 +222,6 @@ def copy_execution_outputs(
 
     This is the canonical definition of *what REF persists* for a successful execution,
 
-
     - the metric bundle
     - the output bundle
     - every file it references (plots/data/html)
@@ -240,11 +261,11 @@ def copy_execution_outputs(
     )
 
     if result.output_bundle_filename:
-        copied.append(
-            copy_output_file(scratch_directory, results_directory, fragment, result.output_bundle_filename)
+        output_bundle_relpath = copy_output_file(
+            scratch_directory, results_directory, fragment, result.output_bundle_filename
         )
-        scratch_base = scratch_directory / fragment
-        bundle_path = scratch_base / ensure_relative_path(result.output_bundle_filename, scratch_base)
+        copied.append(output_bundle_relpath)
+        bundle_path = scratch_directory / fragment / output_bundle_relpath
         copied.extend(_copy_output_bundle_files(scratch_directory, results_directory, fragment, bundle_path))
 
     if result.series_filename:

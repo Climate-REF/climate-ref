@@ -128,8 +128,7 @@ def test_handle_execution_result_with_series(
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    # The log is copied directly (health check); the curated set (metric, series, ...)
-    # is delegated to copy_execution_outputs.
+    # The log is copied directly
     mock_copy.assert_called_once_with(
         config.paths.scratch,
         config.paths.results,

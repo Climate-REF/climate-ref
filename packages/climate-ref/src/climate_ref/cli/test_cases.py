@@ -579,7 +579,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
         paths.regression.mkdir(parents=True, exist_ok=True)
         shutil.copytree(result.definition.output_directory, paths.regression, dirs_exist_ok=True)
 
-        # Replace absolute paths with placeholders for portability (text files only).
+        # Replace absolute paths with placeholders for portability
         # TODO: Symlink regression datasets instead of any paths on users' systems
         to_placeholders(
             paths.regression,

@@ -25,9 +25,10 @@ from climate_ref_core.exceptions import (
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
-from climate_ref_core.output_files import to_placeholders
 
 if TYPE_CHECKING:
+    from collections.abc import Iterator
+
     import pandas as pd
 
     from climate_ref.datasets import DatasetAdapter
@@ -400,18 +401,6 @@ def list_cases(
     console.print(table)
 
 
-def _find_diagnostic(
-    registry: ProviderRegistry, provider_slug: str, diagnostic_slug: str
-) -> Diagnostic | None:
-    """Find a diagnostic by provider and diagnostic slugs."""
-    for provider_instance in registry.providers:
-        if provider_instance.slug == provider_slug:
-            for d in provider_instance.diagnostics():
-                if d.slug == diagnostic_slug:
-                    return d
-    return None
-
-
 def _print_regression_summary(  # pragma: no cover
     console: Console,
     regression_dir: Path,
@@ -493,7 +482,11 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
 
     Returns True if successful, False otherwise.
     """
+    import tempfile
+
     from climate_ref.testing import TestCaseRunner
+    from climate_ref_core.regression.capture import capture_execution
+    from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.testing import (
         TestCasePaths,
         get_catalog_hash,
@@ -573,19 +566,42 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
         paths.create()
 
     if force_regen or not paths.regression.exists():
-        # Save full output directory as regression data
         if paths.regression.exists():
             shutil.rmtree(paths.regression)
         paths.regression.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(result.definition.output_directory, paths.regression, dirs_exist_ok=True)
 
-        # Replace absolute paths with placeholders for portability
-        # TODO: Symlink regression datasets instead of any paths on users' systems
-        to_placeholders(
-            paths.regression,
-            output_dir=result.definition.output_directory,
-            test_data_dir=paths.test_data_dir,
-        )
+        defn = result.definition
+        output_dir = defn.output_directory
+        fragment = defn.output_fragment()
+        scratch_root = output_dir.parent
+
+        # results_base must differ from the scratch root for copy_execution_outputs.
+        # Keep it alive only until capture completes (run() does not mint to a store).
+        with tempfile.TemporaryDirectory() as results_base:
+            committed_digests, native = capture_execution(
+                scratch_root,
+                Path(results_base),
+                fragment,
+                result,
+                regression_dir=paths.regression,
+                output_dir=output_dir,
+                test_data_dir=paths.test_data_dir,
+            )
+
+        # Refresh the manifest's committed block only; the native block is mint-owned.
+        if paths.manifest.exists():
+            previous = Manifest.load(paths.manifest)
+            manifest = Manifest(
+                schema=previous.schema,
+                test_case_version=previous.test_case_version,
+                committed=committed_digests,
+                native=previous.native,
+            )
+        else:
+            manifest = Manifest.seed_v1(committed_digests)
+        manifest.dump(paths.manifest)
+
+        logger.info(f"Captured {len(native)} native output file(s) (not minted)")
 
         # Store catalog hash for change detection
         catalog_hash = get_catalog_hash(paths.catalog)
@@ -782,3 +798,441 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         for case in failed_cases:
             console.print(f"  - {case}")
         raise typer.Exit(code=1)
+
+
+def _iter_test_cases(
+    registry: ProviderRegistry,
+    *,
+    provider: str | None = None,
+    diagnostic: str | None = None,
+    test_case: str | None = None,
+) -> Iterator[tuple[Diagnostic, TestCase]]:
+    """
+    Yield ``(diagnostic, test_case)`` pairs from the registry, applying filters.
+
+    Parameters
+    ----------
+    registry
+        The provider registry to enumerate.
+    provider
+        Optional provider slug filter.
+    diagnostic
+        Optional diagnostic slug filter.
+    test_case
+        Optional test case name filter.
+
+    Yields
+    ------
+    :
+        Matching ``(diagnostic, test_case)`` pairs.
+    """
+    for provider_instance in registry.providers:
+        if provider and provider_instance.slug != provider:
+            continue
+        for diag in provider_instance.diagnostics():
+            if diagnostic and diag.slug != diagnostic:
+                continue
+            if diag.test_data_spec is None:
+                continue
+            for tc in diag.test_data_spec.test_cases:
+                if test_case and tc.name != test_case:
+                    continue
+                yield diag, tc
+
+
+@app.command(name="sync")
+def sync_native(
+    ctx: typer.Context,
+    provider: Annotated[
+        str | None,
+        typer.Option(help="Limit sync to a single provider slug"),
+    ] = None,
+    diagnostic: Annotated[
+        str | None,
+        typer.Option(help="Limit sync to a single diagnostic slug"),
+    ] = None,
+    test_case: Annotated[
+        str | None,
+        typer.Option(help="Limit sync to a single test case name"),
+    ] = None,
+) -> None:
+    """
+    Fetch native baseline blobs referenced by committed manifests into the store cache.
+
+    Reads each committed ``manifest.json``'s ``native`` block
+    and ensures every referenced blob is present in the read store (public, credential-free).
+    Blobs already cached are skipped (idempotent).
+    A referenced digest the store cannot serve is a hard failure.
+
+    Examples
+    --------
+        ref test-cases sync                  # Sync all providers
+        ref test-cases sync --provider ilamb # Sync a single provider
+    """
+    import tempfile
+
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.regression.manifest import Manifest
+    from climate_ref_core.regression.store import build_native_store
+    from climate_ref_core.testing import TestCasePaths
+
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console: Console = ctx.obj.console
+
+    registry = ProviderRegistry.build_from_config(config, db)
+    store = build_native_store(config.native_store, writable=False)
+
+    # When a specific case is named, a missing manifest is a hard failure.
+    named = bool(diagnostic or test_case)
+
+    fetched = 0
+    skipped = 0
+    failures: list[str] = []
+
+    for diag, tc in _iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case):
+        case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
+        paths = TestCasePaths.from_diagnostic(diag, tc.name)
+        if paths is None or not paths.manifest.exists():
+            if named:
+                logger.error(f"No manifest.json for {case_id}; run `ref test-cases mint` first")
+                failures.append(case_id)
+            continue
+        manifest = Manifest.load(paths.manifest)
+        for relpath, entry in manifest.native.items():
+            if store.has(entry.sha256):
+                skipped += 1
+                continue
+            with tempfile.TemporaryDirectory() as tmp:
+                try:
+                    store.fetch(entry.sha256, Path(tmp) / "blob")
+                except Exception as exc:
+                    failures.append(f"{case_id}: cannot serve native blob {entry.sha256} ({relpath}): {exc}")
+                    continue
+            fetched += 1
+
+    console.print(f"[green]Synced native blobs:[/green] {fetched} fetched, {skipped} already cached")
+    if failures:
+        console.print("[red]Failed to fetch referenced native blobs:[/red]")
+        for failure in failures:
+            console.print(f"  - {failure}")
+        raise typer.Exit(code=1)
+
+
+@app.command(name="replay")
+def replay_test_case(  # noqa: PLR0912, PLR0915
+    ctx: typer.Context,
+    provider: Annotated[
+        str,
+        typer.Option(help="Provider slug (required, e.g., 'example', 'ilamb')"),
+    ],
+    diagnostic: Annotated[
+        str | None,
+        typer.Option(help="Specific diagnostic slug to replay"),
+    ] = None,
+    test_case: Annotated[
+        str | None,
+        typer.Option(help="Specific test case name to replay"),
+    ] = None,
+) -> None:
+    """
+    Replay committed baselines from native blobs and compare to the committed bundle.
+
+    Materialises the committed manifest's native blobs (public, credential-free)
+    into a fresh output directory at their stored relative paths, re-runs ``build_execution_result``,
+    and compares the regenerated committed bundle to the in-repo copy using the tolerant content comparator.
+
+    Exits non-zero on drift.
+
+    Examples
+    --------
+        ref test-cases replay --provider example
+        ref test-cases replay --provider example --diagnostic global-mean-timeseries
+    """
+    import tempfile
+
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.diagnostics import ExecutionDefinition
+    from climate_ref_core.output_files import from_placeholders
+    from climate_ref_core.regression import (
+        Manifest,
+        Tolerance,
+        assert_bundle_regression,
+        build_native_store,
+        materialise_native,
+        verify_committed_integrity,
+    )
+    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
+
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console: Console = ctx.obj.console
+
+    registry = ProviderRegistry.build_from_config(config, db)
+    store = build_native_store(config.native_store, writable=False)
+
+    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
+    if not cases:
+        logger.warning(f"No test cases found for provider {provider!r}")
+        raise typer.Exit(code=0)
+
+    # When a specific case is named, a missing manifest/catalog is a hard failure.
+    named = bool(diagnostic or test_case)
+
+    successes = 0
+    failures: list[str] = []
+
+    for diag, tc in cases:
+        paths = TestCasePaths.from_diagnostic(diag, tc.name)
+        case_id = f"{provider}/{diag.slug}/{tc.name}"
+        if paths is None:
+            logger.warning(f"Could not determine test case directory for {case_id}")
+            continue
+        if not paths.manifest.exists():
+            message = f"No manifest.json for {case_id}; run `ref test-cases mint` first"
+            if named:
+                logger.error(message)
+                failures.append(case_id)
+            else:
+                logger.warning(message)
+            continue
+        if not paths.catalog.exists():
+            logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
+            failures.append(case_id)
+            continue
+
+        manifest = Manifest.load(paths.manifest)
+
+        # The committed bundle must be intact before we trust it as the comparison baseline.
+        mismatches = verify_committed_integrity(manifest, paths.regression)
+        if mismatches:
+            logger.error(f"{case_id}: committed bundle integrity check failed:")
+            for mismatch in mismatches:
+                logger.error(f"  - {mismatch}")
+            failures.append(case_id)
+            continue
+
+        if not manifest.native:
+            logger.error(
+                f"{case_id}: manifest has no native baselines — not yet minted. "
+                "Run `ref test-cases mint` first."
+            )
+            failures.append(case_id)
+            continue
+
+        with tempfile.TemporaryDirectory() as tmp:
+            tmp_dir = Path(tmp)
+            output_dir = tmp_dir / "output"
+            output_dir.mkdir(parents=True, exist_ok=True)
+
+            try:
+                materialise_native(manifest.native, store, output_dir)
+            except Exception as exc:
+                logger.error(f"{case_id}: failed to materialise native blobs: {exc}")
+                failures.append(case_id)
+                continue
+
+            # Expand placeholders so the re-run reads concrete paths (mirrors the validator).
+            from_placeholders(output_dir, output_dir=output_dir, test_data_dir=paths.test_data_dir)
+
+            datasets = load_datasets_from_yaml(paths.catalog)
+            definition = ExecutionDefinition(
+                diagnostic=diag,
+                key=f"test-{tc.name}",
+                datasets=datasets,
+                output_directory=output_dir,
+                root_directory=tmp_dir,
+            )
+
+            try:
+                result = diag.build_execution_result(definition)
+            except Exception as exc:
+                logger.error(f"{case_id}: build_execution_result failed during replay: {exc}")
+                failures.append(case_id)
+                continue
+
+            replacements = {
+                str(output_dir): "<OUTPUT_DIR>",
+                str(paths.test_data_dir): "<TEST_DATA_DIR>",
+            }
+            try:
+                for filename in ("series.json", "diagnostic.json", "output.json"):
+                    assert_bundle_regression(
+                        paths.regression / filename,
+                        result.to_output_path(filename),
+                        slug=diag.slug,
+                        tol=Tolerance(),
+                        replacements=replacements,
+                    )
+            except AssertionError as exc:
+                logger.error(f"{case_id}: replay drift detected:\n{exc}")
+                failures.append(case_id)
+                continue
+
+        successes += 1
+        logger.info(f"Replay matched committed bundle: {case_id}")
+
+    console.print()
+    if failures:
+        console.print(f"[yellow]Replay: {successes} passed, {len(failures)} failed[/yellow]")
+        console.print("[red]Failed replays:[/red]")
+        for case in failures:
+            console.print(f"  - {case}")
+        raise typer.Exit(code=1)
+    console.print(f"[green]All {successes} replay(s) matched the committed bundle[/green]")
+
+
+@app.command(name="mint")
+def mint_native(  # noqa: PLR0912, PLR0915
+    ctx: typer.Context,
+    provider: Annotated[
+        str,
+        typer.Option(help="Provider slug (required, e.g., 'example', 'ilamb')"),
+    ],
+    diagnostic: Annotated[
+        str | None,
+        typer.Option(help="Specific diagnostic slug to mint"),
+    ] = None,
+    test_case: Annotated[
+        str | None,
+        typer.Option(help="Specific test case name to mint"),
+    ] = None,
+    bump_version: Annotated[
+        bool,
+        typer.Option(help="Increment test_case_version when authoring the manifest"),
+    ] = False,
+) -> None:
+    """
+    Mint canonical native baselines
+
+    Runs each test case, stores its native snapshot in the writable store,
+    and authors the committed ``manifest.json``'s ``native`` block.
+
+    This requires write credentials and is generally run by the CI.
+
+    Examples
+    --------
+        ref test-cases mint --provider example
+        ref test-cases mint --provider example --bump-version
+    """
+    import tempfile
+
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref.testing import TestCaseRunner
+    from climate_ref_core.regression.capture import capture_execution
+    from climate_ref_core.regression.manifest import Manifest
+    from climate_ref_core.regression.store import build_native_store
+    from climate_ref_core.testing import TestCasePaths, get_catalog_hash, load_datasets_from_yaml
+
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console: Console = ctx.obj.console
+
+    try:
+        store = build_native_store(config.native_store, writable=True)
+    except NotImplementedError as exc:
+        logger.error(
+            "Cannot mint: no writable native store is configured. "
+            "Set REF_NATIVE_STORE_URL to a writable location\n"
+            f"(a local file:// path for development): {exc}"
+        )
+        raise typer.Exit(code=1) from exc
+
+    registry = ProviderRegistry.build_from_config(config, db)
+    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
+    if not cases:
+        logger.warning(f"No test cases found for provider {provider!r}")
+        raise typer.Exit(code=0)
+
+    minted = 0
+    failures: list[str] = []
+
+    for diag, tc in cases:
+        case_id = f"{provider}/{diag.slug}/{tc.name}"
+        paths = TestCasePaths.from_diagnostic(diag, tc.name)
+        if paths is None:
+            logger.warning(f"Could not determine test case directory for {case_id}")
+            continue
+        if not paths.catalog.exists():
+            logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
+            failures.append(case_id)
+            continue
+
+        datasets = load_datasets_from_yaml(paths.catalog)
+        runner = TestCaseRunner(config=config, datasets=datasets)
+        try:
+            result = runner.run(diag, tc.name, None, clean=True)
+        except Exception as exc:
+            logger.error(f"{case_id}: execution failed during mint: {exc}")
+            failures.append(case_id)
+            continue
+        if not result.successful:
+            logger.error(f"{case_id}: execution was not successful")
+            failures.append(case_id)
+            continue
+
+        defn = result.definition
+        output_dir = defn.output_directory
+        fragment = defn.output_fragment()
+        scratch_root = output_dir.parent
+
+        # Any existing results are wiped to make sure we have a clean slate
+        paths.create()
+        if paths.regression.exists():
+            shutil.rmtree(paths.regression)
+        paths.regression.mkdir(parents=True, exist_ok=True)
+
+        with tempfile.TemporaryDirectory() as results_base:
+            results_dir = Path(results_base)
+            committed_digests, native = capture_execution(
+                scratch_root,
+                results_dir,
+                fragment,
+                result,
+                regression_dir=paths.regression,
+                output_dir=output_dir,
+                test_data_dir=paths.test_data_dir,
+            )
+
+            base_dir = results_dir / fragment
+            mismatch = False
+            for relpath, entry in native.items():
+                digest = store.put(base_dir / relpath)
+                if digest != entry.sha256:
+                    logger.error(
+                        f"{case_id}: digest mismatch for {relpath} (store={digest}, captured={entry.sha256})"
+                    )
+                    mismatch = True
+            if mismatch:
+                failures.append(case_id)
+                continue
+
+        # Author the committed manifest: native block written ONLY here.
+        if paths.manifest.exists():
+            previous = Manifest.load(paths.manifest)
+            version = previous.test_case_version + 1 if bump_version else previous.test_case_version
+        else:
+            version = 1
+        manifest = Manifest(
+            schema=1,
+            test_case_version=version,
+            committed=committed_digests,
+            native=native,
+        )
+        manifest.dump(paths.manifest)
+
+        catalog_hash = get_catalog_hash(paths.catalog)
+        if catalog_hash:
+            paths.regression_catalog_hash.write_text(catalog_hash)
+
+        minted += 1
+        logger.info(f"Minted native baseline: {case_id} (test_case_version={version})")
+
+    console.print()
+    if failures:
+        console.print(f"[yellow]Mint: {minted} minted, {len(failures)} failed[/yellow]")
+        console.print("[red]Failed mints:[/red]")
+        for case in failures:
+            console.print(f"  - {case}")
+        raise typer.Exit(code=1)
+    console.print(f"[green]Minted {minted} native baseline(s)[/green]")

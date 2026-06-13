@@ -2,8 +2,6 @@
 Tests for :mod:`climate_ref_core.regression.manifest`.
 """
 
-from __future__ import annotations
-
 import hashlib
 import json
 from pathlib import Path

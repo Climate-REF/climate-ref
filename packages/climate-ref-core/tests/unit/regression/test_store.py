@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import hashlib
 import http.server
 import os
@@ -123,11 +121,6 @@ class TestLocalFilesystemStore:
         local_store.put(blob_file)
         expected = local_store.root / blob_digest[:2] / blob_digest
         assert expected.exists()
-
-
-# ---------------------------------------------------------------------------
-# PoochReadStore
-# ---------------------------------------------------------------------------
 
 
 class TestPoochReadStore:

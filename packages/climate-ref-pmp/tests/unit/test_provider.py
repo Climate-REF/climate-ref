@@ -90,8 +90,8 @@ class TestPMPProviderHooks:
         test_provider = PMPDiagnosticProvider("PMP-Test", "1.0")
         mock_config = mocker.Mock()
         mock_config.paths.software = tmp_path / "software"
-        mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
-        mock_config.ignore_datasets_file.touch()
+        mock_config.grey_list_file = tmp_path / "ignore.yaml"
+        mock_config.grey_list_file.touch()
 
         mocker.patch.object(test_provider, "get_conda_exe", return_value=Path("/path/to/conda"))
 

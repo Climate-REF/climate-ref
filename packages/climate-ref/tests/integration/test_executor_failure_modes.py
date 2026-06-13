@@ -270,7 +270,7 @@ class TestStaleExecutionSweep:
     """``fail_stale_in_progress_executions`` reaps abandoned in-progress rows."""
 
     def _backdate(self, db, execution_id: int, hours: int) -> None:
-        # Match the naive-UTC convention used by ``fail_stale_in_progress_executions``.
+        # TODO: Using a naive UTC datetime
         old = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) - datetime.timedelta(
             hours=hours
         )

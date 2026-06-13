@@ -122,9 +122,7 @@ def db_seeded(db_seeded_template, config) -> Database:
 def esgf_example_solve_results(esgf_data_catalog) -> list[dict[str, Any]]:
     """Session-cached example-provider solve over the full ESGF catalog.
 
-    The solve is expensive (tens of seconds) and side-effect free, so it is shared
-    by the solve-helpers and solve-regression suites instead of being recomputed
-    once per module.
+    The solve is expensive (tens of seconds) so we cache the results.
     """
     return solve_to_results(esgf_data_catalog, providers=[example_provider])
 

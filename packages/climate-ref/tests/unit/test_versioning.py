@@ -347,12 +347,9 @@ class TestSolverVersionBranching:
     """
 
     def _solve_with_example_provider(self, db: Database, config) -> None:
-        # ``execute=False`` still creates the ExecutionGroup and Execution rows
-        # (with ``provider_version``) and advances ``promoted_version`` — everything
-        # these solver-branching tests assert on — but skips the expensive diagnostic
-        # run, which otherwise dominates the test runtime.
         local_solver = ExecutionSolver.build_from_db(config, db)
         local_solver.provider_registry = ProviderRegistry(providers=[example_provider])
+        # We don't execute the runs, just create the ExecutionGroups
         solve_required_executions(db, config=config, solver=local_solver, dry_run=False, execute=False)
 
     def _example_diagnostic_row(self, db: Database) -> Diagnostic:

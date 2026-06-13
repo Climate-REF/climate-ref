@@ -151,9 +151,7 @@ class TestRoundTripAndFinalisation:
                 )
             ).reset_index(drop=True)
 
-            # Normalize null values for consistent comparison. Pandas >=4 no longer
-            # silently downcasts, so the deprecated ``future.no_silent_downcasting``
-            # option context is unnecessary.
+            # Normalize null values for consistent comparison.
             local_normalized = local_data_catalog.fillna(np.nan).infer_objects()
             db_normalized = db_data_catalog.fillna(np.nan).infer_objects()
 

@@ -38,9 +38,6 @@ def calculate_annual_mean_timeseries(input_files: list[Path]) -> xr.Dataset:
         The annual mean timeseries of the dataset
     """
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    # Pass the historical defaults for ``data_vars`` and ``compat`` explicitly so the
-    # diagnostic output stays stable: xarray is changing these defaults and emits a
-    # FutureWarning otherwise (see xarray ``use_new_combine_kwarg_defaults``).
     xr_ds = xr.open_mfdataset(
         input_files,
         combine="by_coords",

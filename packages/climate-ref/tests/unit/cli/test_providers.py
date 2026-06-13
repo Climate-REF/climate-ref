@@ -1,3 +1,5 @@
+import pytest
+
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider
 from climate_ref_core.summary import (
@@ -92,7 +94,10 @@ class TestProvidersList:
         assert "(not fetched)" not in result.stdout
 
 
+@pytest.mark.filterwarnings("ignore:create-env is deprecated:DeprecationWarning")
 class TestProvidersCreateEnv:
+    """These tests deliberately exercise the deprecated ``create-env`` command."""
+
     def test_create_env(self, config, invoke_cli):
         result = invoke_cli(["providers", "create-env"])
         assert result.exit_code == 0

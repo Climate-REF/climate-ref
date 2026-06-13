@@ -23,6 +23,7 @@ from climate_ref.datasets.cmip7_parsers import parse_cmip7_complete, parse_cmip7
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models.metric_value import MetricValue
 from climate_ref.provider_registry import _register_provider
+from climate_ref.solve_helpers import solve_to_results
 from climate_ref_core.cmip6_to_cmip7 import (
     convert_cmip6_dataset,
     create_cmip7_filename,
@@ -115,6 +116,17 @@ def db_seeded(db_seeded_template, config) -> Database:
     database = Database.from_config(config, run_migrations=True)
     yield database
     database.close()
+
+
+@pytest.fixture(scope="session")
+def esgf_example_solve_results(esgf_data_catalog) -> list[dict[str, Any]]:
+    """Session-cached example-provider solve over the full ESGF catalog.
+
+    The solve is expensive (tens of seconds) and side-effect free, so it is shared
+    by the solve-helpers and solve-regression suites instead of being recomputed
+    once per module.
+    """
+    return solve_to_results(esgf_data_catalog, providers=[example_provider])
 
 
 @pytest.fixture

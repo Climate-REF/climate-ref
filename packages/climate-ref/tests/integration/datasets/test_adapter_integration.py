@@ -151,10 +151,11 @@ class TestRoundTripAndFinalisation:
                 )
             ).reset_index(drop=True)
 
-            # Normalize null values for consistent comparison
-            with pd.option_context("future.no_silent_downcasting", True):
-                local_normalized = local_data_catalog.fillna(np.nan).infer_objects()
-                db_normalized = db_data_catalog.fillna(np.nan).infer_objects()
+            # Normalize null values for consistent comparison. Pandas >=4 no longer
+            # silently downcasts, so the deprecated ``future.no_silent_downcasting``
+            # option context is unnecessary.
+            local_normalized = local_data_catalog.fillna(np.nan).infer_objects()
+            db_normalized = db_data_catalog.fillna(np.nan).infer_objects()
 
             pd.testing.assert_frame_equal(
                 local_normalized,

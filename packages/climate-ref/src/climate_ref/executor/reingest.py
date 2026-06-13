@@ -17,17 +17,6 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any
 
 import pandas as pd
-from loguru import logger
-
-from climate_ref.datasets import get_slug_column
-from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
-from climate_ref.executor.result_handling import handle_execution_result
-from climate_ref.models.execution import (
-    Execution,
-    ExecutionGroup,
-    execution_datasets,
-    get_execution_group_and_latest_filtered,
-)
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,
@@ -35,15 +24,31 @@ from climate_ref_core.datasets import (
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
 from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
+from climate_ref_core.paths import safe_path
+from loguru import logger
+
+from climate_ref.datasets import get_slug_column
+from climate_ref.executor.fragment import (
+    PLACEHOLDER_FRAGMENT,
+    assign_execution_fragment,
+)
+from climate_ref.executor.result_handling import handle_execution_result
+from climate_ref.models.execution import (
+    Execution,
+    ExecutionGroup,
+    execution_datasets,
+    get_execution_group_and_latest_filtered,
+)
 
 if TYPE_CHECKING:
     from pathlib import Path
+
+    from climate_ref_core.diagnostics import Diagnostic
 
     from climate_ref.config import Config
     from climate_ref.database import Database
     from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.diagnostics import Diagnostic
 
 
 class _ReingestSavepointAbort(Exception):
@@ -117,7 +122,9 @@ def reconstruct_execution_definition(
 
         # Retrieve the selector for this source type from the execution group
         selector_key = source_type.value
-        selector = tuple(tuple(pair) for pair in execution_group.selectors.get(selector_key, []))
+        selector = tuple(
+            tuple(pair) for pair in execution_group.selectors.get(selector_key, [])
+        )
 
         collection[source_type] = DatasetCollection(
             datasets=df,
@@ -125,7 +132,9 @@ def reconstruct_execution_definition(
             selector=selector,
         )
 
-    fragment = output_fragment if output_fragment is not None else execution.output_fragment
+    fragment = (
+        output_fragment if output_fragment is not None else execution.output_fragment
+    )
     output_directory = config.paths.scratch / fragment
 
     return ExecutionDefinition(
@@ -158,20 +167,6 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
     return attrs
 
 
-def _validate_path_containment(path: "Path", base: "Path", label: str) -> None:
-    """
-    Check that *path* stays within *base* after resolving symlinks and ``..`` segments.
-
-    Raises
-    ------
-    ValueError
-        If the resolved *path* escapes *base*
-    """
-    if not path.resolve().is_relative_to(base.resolve()):
-        msg = f"Computed {label} path {path} escapes {base}."
-        raise ValueError(msg)
-
-
 def _resolve_diagnostic_and_scratch(
     config: "Config",
     execution: Execution,
@@ -196,14 +191,17 @@ def _resolve_diagnostic_and_scratch(
         )
         return None
 
-    scratch_dir = config.paths.scratch / execution.output_fragment
     try:
-        _validate_path_containment(scratch_dir, config.paths.scratch, "scratch")
+        scratch_dir = safe_path(
+            execution.output_fragment, config.paths.scratch, label="scratch"
+        )
     except ValueError:
         logger.error(f"Skipping execution {execution.id}: scratch path escapes base.")
         return None
     if not scratch_dir.exists():
-        logger.error(f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}.")
+        logger.error(
+            f"Scratch directory does not exist: {scratch_dir}. Skipping execution {execution.id}."
+        )
         return None
 
     return diagnostic, scratch_dir
@@ -253,7 +251,8 @@ def reingest_execution(
     # Convert the JSON-stored selector dict (lists-of-pairs) back into the
     # mapping[str, iterable[tuple[str, str]]] shape that ``compute_group_short`` expects.
     selectors = {
-        source_key: [tuple(pair) for pair in pairs] for source_key, pairs in execution_group.selectors.items()
+        source_key: [tuple(pair) for pair in pairs]
+        for source_key, pairs in execution_group.selectors.items()
     }
 
     new_fragment: str | None = None
@@ -327,7 +326,9 @@ def reingest_execution(
             update_dirty=False,
         )
     except Exception:
-        logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
+        logger.exception(
+            f"Ingestion failed for execution {execution.id}. Rolling back changes."
+        )
         if new_scratch_dir is not None and new_scratch_dir.exists():
             shutil.rmtree(new_scratch_dir)
         if new_fragment is not None:
@@ -336,7 +337,9 @@ def reingest_execution(
                 shutil.rmtree(new_results_dir)
         return False
 
-    logger.info(f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}")
+    logger.info(
+        f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}"
+    )
     return True
 
 

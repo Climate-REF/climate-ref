@@ -20,8 +20,6 @@ The :class:`LocalFilesystemStore` uses a two-level directory layout
 ``<root>/<digest[:2]>/<digest>`` similar to git's object storage.
 """
 
-from __future__ import annotations
-
 import shutil
 from pathlib import Path
 from typing import Protocol, runtime_checkable

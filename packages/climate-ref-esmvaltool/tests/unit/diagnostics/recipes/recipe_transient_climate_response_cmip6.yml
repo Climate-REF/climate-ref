@@ -11,22 +11,6 @@ documentation:
   - schlund_manuel
   references:
   - gregory08jgr
-  projects:
-  - crescendo
-preprocessors:
-  spatial_mean:
-    area_statistics:
-      operator: mean
-diagnostics:
-  tcr:
-    description: Calculate TCR.
-    variables:
-      tas:
-        preprocessor: spatial_mean
-    scripts:
-      calculate:
-        script: climate_metrics/tcr.py
-        calculate_mmm: false
 datasets:
 - project: CMIP6
   activity: CMIP
@@ -46,3 +30,17 @@ datasets:
   grid: gn
   mip: Amon
   timerange: 0101/0240
+preprocessors:
+  spatial_mean:
+    area_statistics:
+      operator: mean
+diagnostics:
+  tcr:
+    description: Calculate TCR.
+    variables:
+      tas:
+        preprocessor: spatial_mean
+    scripts:
+      calculate:
+        script: climate_metrics/tcr.py
+        calculate_mmm: false

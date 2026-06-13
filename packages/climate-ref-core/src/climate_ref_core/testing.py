@@ -196,6 +196,11 @@ class TestCasePaths:
         return self.root / "regression"
 
     @property
+    def manifest(self) -> Path:
+        """Path to manifest.json (the regression bundle manifest, tracked in git)."""
+        return self.root / "manifest.json"
+
+    @property
     def regression_catalog_hash(self) -> Path:
         """Path to catalog hash file in regression directory."""
         return self.regression / ".catalog_hash"

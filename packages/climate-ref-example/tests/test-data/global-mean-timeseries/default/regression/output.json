@@ -6,7 +6,14 @@
     "obsdata": {},
     "log": "cmec_output.log"
   },
-  "data": {},
+  "data": {
+    "annual_mean_timeseries": {
+      "filename": "annual_mean_global_mean_timeseries.nc",
+      "long_name": "Annual Mean Global Mean Timeseries",
+      "description": "Area-weighted annual mean global mean timeseries for the input variable.",
+      "dimensions": null
+    }
+  },
   "plots": {},
   "html": {},
   "metrics": null,

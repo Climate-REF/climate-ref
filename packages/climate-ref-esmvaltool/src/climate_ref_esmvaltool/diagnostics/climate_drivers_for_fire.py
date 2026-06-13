@@ -56,7 +56,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(2013, 1),
+                        start=PartialDateTime(1994, 1),
                         end=PartialDateTime(2014, 12),
                     ),
                     AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
@@ -110,8 +110,8 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(2013, 1),
-                        end=PartialDateTime(2014, 12),
+                        start=PartialDateTime(2001, 1),
+                        end=PartialDateTime(2021, 12),
                     ),
                     AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
                     RequireFacets(
@@ -233,8 +233,12 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 else:
                     short_name = cmip6_short_name
                 variable["short_name"] = short_name
-                variable["start_year"] = 2013
-                variable["end_year"] = 2014
+                if cmip_source == SourceDatasetType.CMIP7:
+                    variable["start_year"] = 2001
+                    variable["end_year"] = 2021
+                else:
+                    variable["start_year"] = 1994
+                    variable["end_year"] = 2014
                 datasets = recipe_variables[short_name]["additional_datasets"]
                 for dataset in datasets:
                     dataset.pop("timerange", None)

@@ -30,7 +30,8 @@ from attrs import frozen
 from loguru import logger
 
 from climate_ref_core.dataset_registry import _verify_hash_matches
-from climate_ref_core.regression.manifest import sha256_file
+
+from .manifest import _validate_digest, sha256_file
 
 
 @runtime_checkable
@@ -122,7 +123,12 @@ class LocalFilesystemStore:
     root: Path
 
     def _blob_path(self, digest: str) -> Path:
-        """Return the canonical on-disk path for a blob with the given digest."""
+        """Return the canonical on-disk path for a blob with the given digest.
+
+        The digest is validated as 64-character lowercase hex first,
+        so a malformed or hostile digest cannot be used to construct a path outside the store root.
+        """
+        _validate_digest(digest)
         return self.root / digest[:2] / digest
 
     def has(self, digest: str) -> bool:

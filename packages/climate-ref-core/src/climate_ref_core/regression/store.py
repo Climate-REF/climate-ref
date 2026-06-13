@@ -23,7 +23,7 @@ The :class:`LocalFilesystemStore` uses a two-level directory layout
 import shutil
 from pathlib import Path
 from typing import Protocol, runtime_checkable
-from urllib.parse import urlsplit
+from urllib.parse import unquote, urlsplit
 
 import pooch
 from attrs import frozen
@@ -385,7 +385,8 @@ def build_native_store(config: _NativeStoreConfigProtocol, *, writable: bool) ->
                     f"Unsupported file URL {url!r}: a host component ({parts.netloc!r}) is not "
                     "supported. Use the file:///absolute/path form (three slashes)."
                 )
-            local_root = Path(parts.path)
+            # Percent-decode the path so escaped characters (e.g. %20) resolve to the real on-disk directory.
+            local_root = Path(unquote(parts.path))
         else:
             # A bare filesystem path.
             local_root = Path(url)

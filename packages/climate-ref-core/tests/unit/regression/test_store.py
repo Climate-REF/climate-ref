@@ -100,7 +100,7 @@ class TestLocalFilesystemStore:
         blob_path = local_store._blob_path(blob_digest)
         blob_path.write_bytes(b"corrupted content")
         dest = tmp_path / "out.nc"
-        with pytest.raises((ValueError, Exception)):
+        with pytest.raises(ValueError):
             local_store.fetch(blob_digest, dest)
 
     def test_put_idempotent(
@@ -176,41 +176,44 @@ class TestPoochReadStore:
 
     def test_fetch_hash_verified(
         self,
-        blob_content: bytes,
         blob_digest: str,
         tmp_path: Path,
+        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """
-        A blob served with corrupt content under the correct digest filename
-        must be detected by ``_verify_hash_matches`` and raise.
+        A downloaded blob whose content does not hash to the requested digest must be
+        rejected by ``_verify_hash_matches`` with a ``ValueError``.
+
+        The pooch download is mocked so the store's own hash verification is exercised
+        deterministically, without standing up an HTTP server (a real server combined
+        with pooch's ``retry_if_failed`` makes connect timeouts raise unrelated network
+        errors and can hang the test for minutes).
         """
-        flat_root = tmp_path / "serve"
-        flat_root.mkdir()
-        # Write corrupt bytes under the correct digest name.
-        (flat_root / blob_digest).write_bytes(b"corrupt bytes -- digest will not match")
+        cache_dir = tmp_path / "cache"
 
-        class _Handler(http.server.SimpleHTTPRequestHandler):
-            def log_message(self, *args: object) -> None:
-                pass
+        class _FakeRegistry:
+            """Stand-in for the pooch registry that "downloads" corrupt content."""
 
-        orig_cwd = os.getcwd()
-        os.chdir(flat_root)
-        try:
-            with http.server.HTTPServer(("127.0.0.1", 0), _Handler) as httpd:
-                port = httpd.server_address[1]
-                thread = threading.Thread(target=httpd.handle_request, daemon=True)
-                thread.start()
+            def __init__(self) -> None:
+                self.registry: dict[str, str] = {}
 
-                store = PoochReadStore(
-                    base_url=f"http://127.0.0.1:{port}",
-                    cache_dir=tmp_path / "cache",
-                )
-                dest = tmp_path / "out.nc"
-                with pytest.raises(Exception):
-                    store.fetch(blob_digest, dest)
-                thread.join(timeout=5)
-        finally:
-            os.chdir(orig_cwd)
+            def fetch(self, fname: str) -> str:
+                # Yield content that does not hash to ``fname``, bypassing pooch's own
+                # hash check so the store-level verification is the failure point.
+                cache_dir.mkdir(parents=True, exist_ok=True)
+                cached = cache_dir / fname
+                cached.write_bytes(b"corrupt bytes -- digest will not match")
+                return str(cached)
+
+        monkeypatch.setattr(
+            "climate_ref_core.regression.store.pooch.create",
+            lambda *args, **kwargs: _FakeRegistry(),
+        )
+
+        store = PoochReadStore(base_url="http://example.invalid", cache_dir=cache_dir)
+        dest = tmp_path / "out.nc"
+        with pytest.raises(ValueError):
+            store.fetch(blob_digest, dest)
 
 
 class TestR2WriteStore:

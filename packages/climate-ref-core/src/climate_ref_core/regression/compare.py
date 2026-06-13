@@ -160,7 +160,8 @@ def _compare_recursive(
             out.append(f"{label}: missing keys {sorted(missing)!r}")
         if extra:
             out.append(f"{label}: unexpected extra keys {sorted(extra)!r}")
-        for key in expected_keys & actual_keys:
+        # Sort shared keys for deterministic mismatch ordering across runs.
+        for key in sorted(expected_keys & actual_keys):
             child_path = f"{path}.{key}" if path else str(key)
             _compare_recursive(expected[key], actual[key], tol=tol, path=child_path, out=out)
 
@@ -247,8 +248,11 @@ def assert_bundle_regression(
     ------
     AssertionError
         If the bundles differ beyond tolerance after sanitisation.
-    FileNotFoundError
-        If ``expected_path`` does not exist (legacy regression without committed bundle).
+
+    Notes
+    -----
+    If ``expected_path`` does not exist (a legacy regression without a committed bundle),
+    the comparison is skipped silently and the function returns.
     """
     if not expected_path.exists():
         # Legacy regression data without this bundle file — skip silently

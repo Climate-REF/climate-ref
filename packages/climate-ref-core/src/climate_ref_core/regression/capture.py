@@ -50,7 +50,8 @@ def write_committed_bundle(
     Copies each committed artefact present in ``source_dir`` into ``regression_dir``,
     then rewrites absolute paths to portable placeholders in place
     (:func:`~climate_ref_core.output_files.to_placeholders`).
-    Missing source files are skipped.
+    When a committed artefact is absent from ``source_dir``,
+    any stale copy left in ``regression_dir`` from a previous capture is removed so it is not re-digested.
 
     Parameters
     ----------
@@ -74,8 +75,12 @@ def write_committed_bundle(
 
     for filename in COMMITTED_BUNDLE_FILES:
         source = source_dir / filename
+        dest = regression_dir / filename
         if source.exists():
-            shutil.copy(source, regression_dir / filename)
+            shutil.copy(source, dest)
+        else:
+            # Drop a stale copy from a previous capture so it is not re-digested.
+            dest.unlink(missing_ok=True)
 
     to_placeholders(regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
     return compute_committed_digests(regression_dir)

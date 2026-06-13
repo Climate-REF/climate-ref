@@ -349,7 +349,8 @@ class TestSolverVersionBranching:
     def _solve_with_example_provider(self, db: Database, config) -> None:
         local_solver = ExecutionSolver.build_from_db(config, db)
         local_solver.provider_registry = ProviderRegistry(providers=[example_provider])
-        solve_required_executions(db, config=config, solver=local_solver, dry_run=False)
+        # We don't execute the runs, just create the ExecutionGroups
+        solve_required_executions(db, config=config, solver=local_solver, dry_run=False, execute=False)
 
     def _example_diagnostic_row(self, db: Database) -> Diagnostic:
         slug = example_provider.diagnostics()[0].slug

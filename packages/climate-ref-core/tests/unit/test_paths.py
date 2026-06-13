@@ -26,6 +26,24 @@ class TestLexicalLayer:
             safe_path(relpath)
 
 
+class TestSingleSegment:
+    """``single_segment`` requires a lone path component (e.g. a slug)."""
+
+    @pytest.mark.parametrize("relpath", ["esmvaltool", "my-diag", "foo_bar", "..hidden"])
+    def test_accepts_single_segments(self, relpath):
+        assert safe_path(relpath, single_segment=True) == Path(relpath)
+
+    @pytest.mark.parametrize("relpath", ["sub/dir", "a/b/c.json", "foo\\bar", "."])
+    def test_rejects_separators_and_dot(self, relpath):
+        with pytest.raises(ValueError, match="single path segment"):
+            safe_path(relpath, single_segment=True)
+
+    @pytest.mark.parametrize("relpath", ["", "/abs", "../escape"])
+    def test_lexical_layer_still_applies(self, relpath):
+        with pytest.raises(ValueError, match="contained relative path"):
+            safe_path(relpath, single_segment=True)
+
+
 class TestContainmentLayer:
     """When a base is supplied the join is resolved and confirmed within base."""
 

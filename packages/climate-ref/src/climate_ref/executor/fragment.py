@@ -199,8 +199,8 @@ def assign_execution_fragment(  # noqa: PLR0913
 
     Returns the assigned fragment string.
     """
-    safe_path(provider_slug, label="provider slug")
-    safe_path(diagnostic_slug, label="diagnostic slug")
+    safe_path(provider_slug, label="provider slug", single_segment=True)
+    safe_path(diagnostic_slug, label="diagnostic slug", single_segment=True)
     session.flush()
     group_short = compute_group_short(selectors, group_id=group_id, diagnostic_version=diagnostic_version)
     fragment = str(Path(provider_slug) / diagnostic_slug / group_short / str(execution.id))

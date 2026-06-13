@@ -2,8 +2,6 @@
 Unit tests for :mod:`climate_ref_core.regression.compare`.
 """
 
-from __future__ import annotations
-
 import json
 import math
 from pathlib import Path
@@ -11,11 +9,9 @@ from pathlib import Path
 import pytest
 
 from climate_ref_core.regression.compare import (
-    DEFAULT_TOLERANCE,
     Tolerance,
     assert_bundle_regression,
     compare_json_content,
-    resolve_tolerance,
 )
 
 
@@ -23,7 +19,7 @@ def _write_json(path: Path, obj: object) -> None:
     path.write_text(json.dumps(obj, indent=2) + "\n", encoding="utf-8")
 
 
-TOL = DEFAULT_TOLERANCE
+TOL = Tolerance()
 
 
 class TestTolerance:
@@ -36,25 +32,6 @@ class TestTolerance:
         t = Tolerance(rtol=0.01, atol=1e-9)
         assert t.rtol == 0.01
         assert t.atol == 1e-9
-
-    def test_default_tolerance_singleton(self) -> None:
-        assert DEFAULT_TOLERANCE.rtol == 1e-6
-        assert DEFAULT_TOLERANCE.atol == 0.0
-
-
-class TestResolveTolerance:
-    def test_returns_default(self) -> None:
-        t = resolve_tolerance("some-diagnostic")
-        assert t == DEFAULT_TOLERANCE
-
-    def test_returns_default_with_test_case(self) -> None:
-        t = resolve_tolerance("some-diagnostic", test_case="default")
-        assert t == DEFAULT_TOLERANCE
-
-
-# ---------------------------------------------------------------------------
-# compare_json_content — scalars
-# ---------------------------------------------------------------------------
 
 
 class TestCompareJsonScalars:

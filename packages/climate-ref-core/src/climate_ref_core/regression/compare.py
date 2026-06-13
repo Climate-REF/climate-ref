@@ -33,34 +33,6 @@ class Tolerance:
     atol: float = 0.0
 
 
-DEFAULT_TOLERANCE = Tolerance()
-"""Global default tolerance applied when no per-case override is configured."""
-
-
-def resolve_tolerance(diagnostic_slug: str, test_case: str | None = None) -> Tolerance:
-    """
-    Resolve the effective float tolerance for a diagnostic / test-case pair.
-
-    Currently returns :data:`DEFAULT_TOLERANCE` for all inputs.
-    Per-case overrides may be wired in future by consulting a ``TestCase.tolerances``
-    mapping (see the plan's "Tolerance config surface" note); this function is the
-    single call-site to update when that happens.
-
-    Parameters
-    ----------
-    diagnostic_slug
-        The diagnostic slug (e.g. ``"global-mean-timeseries"``).
-    test_case
-        Optional test-case name for per-case overrides.
-
-    Returns
-    -------
-    :
-        The resolved :class:`Tolerance` to use for comparisons.
-    """
-    return DEFAULT_TOLERANCE
-
-
 def _rewrite_keys_and_values(obj: Any, replacements: list[tuple[str, str]]) -> Any:
     """
     Recursively rewrite both dict *keys* and leaf string *values* in ``obj``.
@@ -230,7 +202,7 @@ def assert_bundle_regression(
     actual_path: Path,
     *,
     slug: str,
-    tol: Tolerance,
+    tol: Tolerance = Tolerance(),
     replacements: dict[str, str],
 ) -> None:
     """

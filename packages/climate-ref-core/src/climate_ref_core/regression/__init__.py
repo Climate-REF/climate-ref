@@ -18,11 +18,9 @@ from climate_ref_core.regression.capture import (
     write_committed_bundle,
 )
 from climate_ref_core.regression.compare import (
-    DEFAULT_TOLERANCE,
     Tolerance,
     assert_bundle_regression,
     compare_json_content,
-    resolve_tolerance,
 )
 from climate_ref_core.regression.manifest import (
     SCHEMA_VERSION,
@@ -42,7 +40,6 @@ from climate_ref_core.regression.store import (
 )
 
 __all__ = [
-    "DEFAULT_TOLERANCE",
     "SCHEMA_VERSION",
     "LocalFilesystemStore",
     "Manifest",
@@ -58,7 +55,6 @@ __all__ = [
     "compare_json_content",
     "compute_committed_digests",
     "materialise_native",
-    "resolve_tolerance",
     "sha256_bytes",
     "sha256_file",
     "verify_committed_integrity",

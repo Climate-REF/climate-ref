@@ -18,6 +18,7 @@ from climate_ref.config import (
     _get_default_ignore_datasets_file,
     transform_error,
 )
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.executor import Executor
 
@@ -179,6 +180,11 @@ filename = "sqlite://climate_ref.db"
                 },
             ],
             "executor": {"executor": "climate_ref.executor.LocalExecutor", "config": {}},
+            "native_store": {
+                "url": "https://baselines.climate-ref.org",
+                "credentials": "",
+                "cache_dir": str(resolve_cache_dir("native-baselines")),
+            },
             "paths": {
                 "log": f"{default_path}/log",
                 "results": f"{default_path}/results",

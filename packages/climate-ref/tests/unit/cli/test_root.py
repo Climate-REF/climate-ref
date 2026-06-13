@@ -156,6 +156,30 @@ def test_cli_context_skip_backup(config, mocker):
     mock_from_config.assert_called_once_with(config, skip_backup=True)
 
 
+@pytest.mark.parametrize(
+    "command, expected",
+    [
+        # test-cases commands operate on test artifacts, never the database.
+        (["test-cases", "fetch"], True),
+        (["test-cases", "list"], True),
+        (["test-cases", "run", "--provider", "example"], True),
+        (["test-cases", "sync"], True),
+        (["test-cases", "replay", "--provider", "example"], True),
+        (["test-cases", "mint", "--provider", "example"], True),
+        # Data-modifying commands must still take a pre-migration backup.
+        (["datasets", "ingest"], False),
+        (["providers", "create-env"], False),
+        (["solve"], False),
+    ],
+)
+def test_is_read_only_command(command, expected, monkeypatch):
+    """Read-only commands skip the pre-migration backup; data-modifying ones do not."""
+    from climate_ref.cli import _is_read_only_command
+
+    monkeypatch.setattr("sys.argv", ["ref", *command])
+    assert _is_read_only_command() is expected
+
+
 def test_cli_context_close_without_database(config):
     """Test that CLIContext.close() works when database was never accessed."""
     ctx = CLIContext(config=config, console=Console())

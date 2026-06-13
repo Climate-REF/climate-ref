@@ -34,7 +34,14 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "stats"),
     ("providers", "list"),
     ("providers", "show"),
+    # test-cases commands operate on test artifacts (filesystem, native store, manifests).
+    # None persist diagnostic executions to the database, so they never need a pre-migration backup.
+    ("test-cases", "fetch"),
     ("test-cases", "list"),
+    ("test-cases", "run"),
+    ("test-cases", "sync"),
+    ("test-cases", "replay"),
+    ("test-cases", "mint"),
 }
 
 

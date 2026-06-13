@@ -9,8 +9,14 @@ It is a sanity check that the executions are not colliding or escaping the inten
 from pathlib import Path, PurePosixPath
 
 
-def safe_path(relpath: str | Path, base: Path | None = None, *, label: str = "path") -> Path:
-    """
+def safe_path(
+    relpath: str | Path,
+    base: Path | None = None,
+    *,
+    label: str = "path",
+    single_segment: bool = False,
+) -> Path:
+    r"""
     Validate ``relpath`` is a contained relative path and return it.
 
     The check has two layers:
@@ -30,6 +36,12 @@ def safe_path(relpath: str | Path, base: Path | None = None, *, label: str = "pa
         When ``None`` only the lexical layer runs and the validated relative path is returned unchanged.
     label
         A human-readable description of ``relpath`` used in error messages.
+    single_segment
+        When ``True`` ``relpath`` must be a single path component:
+        any separator (``/`` or ``\\``) or a bare ``.`` is rejected.
+        Use this for trusted identifiers (e.g. provider or diagnostic slugs)
+        that are joined onto a base before further path segments are appended,
+        so an embedded separator cannot restructure the resulting tree.
 
     Returns
     -------
@@ -39,7 +51,8 @@ def safe_path(relpath: str | Path, base: Path | None = None, *, label: str = "pa
     Raises
     ------
     ValueError
-        If ``relpath`` is empty, absolute, contains ``..`` or a NUL byte
+        If ``relpath`` is empty, absolute, contains ``..`` or a NUL byte,
+        or (when ``single_segment`` is set) is not a single path component.
 
         When ``base`` is given, if the resolved path escapes ``base``.
     """
@@ -49,6 +62,10 @@ def safe_path(relpath: str | Path, base: Path | None = None, *, label: str = "pa
         raise ValueError(
             f"Unsafe {label} {text!r}: must be a contained relative path "
             "(no absolute paths, no '..', no NUL bytes)."
+        )
+    if single_segment and (len(pure.parts) != 1 or "\\" in text):
+        raise ValueError(
+            f"Unsafe {label} {text!r}: must be a single path segment (no '/' or '\\' separators)."
         )
     if base is None:
         return Path(relpath)

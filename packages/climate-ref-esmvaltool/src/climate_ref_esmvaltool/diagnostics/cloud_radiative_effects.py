@@ -9,7 +9,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -24,7 +24,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
 
     name = "Climatologies and zonal mean profiles of cloud radiative effects"
     slug = "cloud-radiative-effects"
-    base_recipe = "ref/recipe_ref_cre.yml"
+    base_recipe = "ref/recipe_ref_cre_cmip7.yml"
 
     variables = (
         "rlut",
@@ -80,16 +80,40 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(1996, 1),
-                        end=PartialDateTime(2014, 12),
+                        start=PartialDateTime(2002, 1),
+                        end=PartialDateTime(2021, 12),
                     ),
                     RequireOverlappingTimerange(group_by=("instance_id",)),
                     RequireFacets("variable_id", variables),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
+            DataRequirement(
+                source_type=SourceDatasetType.obs4MIPs,
+                filters=(
+                    FacetFilter(
+                        facets={
+                            "frequency": "mon",
+                            "source_id": "CERES-EBAF-4-2-1",
+                            "variable_id": (
+                                "rlut",
+                                "rlutcs",
+                                "rsut",
+                                "rsutcs",
+                            ),
+                        }
+                    ),
+                ),
+                group_by=("source_id",),
+                constraints=(
+                    RequireTimerange(
+                        group_by=("instance_id",),
+                        start=PartialDateTime(2002, 1),
+                        end=PartialDateTime(2021, 12),
+                    ),
+                ),
+            ),
         ),
-        # TODO: Use CERES-EBAF, ESACCI-CLOUD, and ISCCP-FH from obs4MIPs once available.
     )
 
     facets = ()
@@ -136,9 +160,7 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
             attributes=[],
         )
         for var_name in ["lwcre", "swcre"]
-        for i, source_id in enumerate(
-            ["CERES-EBAF-Ed4.2", "ESACCI-CLOUD-AVHRR-AMPM-fv3.0", "ISCCP-FH"], start=1
-        )
+        for i, source_id in enumerate(["CERES-EBAF-4-2-1"], start=1)
     )
 
     test_data_spec = TestDataSpecification(
@@ -183,6 +205,21 @@ class CloudRadiativeEffects(ESMValToolDiagnostic):
                         },
                         remove_ensembles=True,
                         time_span=("1996", "2014"),
+                    ),
+                    Obs4MIPsRequest(
+                        slug="obs4mips",
+                        facets={
+                            "frequency": "mon",
+                            "source_id": "CERES-EBAF-4-2-1",
+                            "variable_id": (
+                                "rlut",
+                                "rlutcs",
+                                "rsut",
+                                "rsutcs",
+                            ),
+                        },
+                        remove_ensembles=False,
+                        time_span=("2001", "2021"),
                     ),
                 ),
             ),

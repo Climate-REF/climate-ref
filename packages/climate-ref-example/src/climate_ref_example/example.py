@@ -38,7 +38,14 @@ def calculate_annual_mean_timeseries(input_files: list[Path]) -> xr.Dataset:
         The annual mean timeseries of the dataset
     """
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    xr_ds = xr.open_mfdataset(input_files, combine="by_coords", chunks=None, decode_times=time_coder)
+    xr_ds = xr.open_mfdataset(
+        input_files,
+        combine="by_coords",
+        chunks=None,
+        decode_times=time_coder,
+        data_vars="all",
+        compat="no_conflicts",
+    )
 
     annual_mean = xr_ds.resample(time="YS").mean()
 

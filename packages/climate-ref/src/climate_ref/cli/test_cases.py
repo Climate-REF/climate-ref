@@ -959,10 +959,10 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
         Manifest,
         Tolerance,
         assert_bundle_regression,
-        build_native_store,
         materialise_native,
         verify_committed_integrity,
     )
+    from climate_ref_core.regression.store import build_native_store
     from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
     config: Config = ctx.obj.config

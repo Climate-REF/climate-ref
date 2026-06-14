@@ -61,7 +61,7 @@ jobs:
         # than here -- both jobs upload to the same `core` flag.
         run: |
           uv run coverage report --fail-under=0
-          uv run coverage xml
+          uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v7
         with:
@@ -98,7 +98,7 @@ jobs:
       - name: Coverage report
         run: |
           uv run coverage report --fail-under=0
-          uv run coverage xml
+          uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v7
         with:
@@ -142,7 +142,7 @@ jobs:
         # same `providers` flag) rather than here.
         run: |
           uv run coverage report --fail-under=0
-          uv run coverage xml
+          uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v7
         with:

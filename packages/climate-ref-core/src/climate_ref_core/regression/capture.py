@@ -25,7 +25,9 @@ from pathlib import Path
 from typing import TYPE_CHECKING
 
 from climate_ref_core.output_files import copy_execution_outputs, to_placeholders
-from climate_ref_core.regression.manifest import (
+from climate_ref_core.paths import safe_path
+
+from .manifest import (
     COMMITTED_BUNDLE_FILES,
     NativeEntry,
     compute_committed_digests,
@@ -192,6 +194,8 @@ def materialise_native(native: dict[str, NativeEntry], store: NativeStore, dest:
         The destination directory the snapshot is materialised into.
     """
     for relpath, entry in native.items():
-        target = dest / relpath
+        # Defend against path traversal: a hand-edited or hostile manifest could
+        # carry an absolute path or one with '..' components that escapes dest.
+        target = safe_path(relpath, dest, label="native path")
         target.parent.mkdir(parents=True, exist_ok=True)
         store.fetch(entry.sha256, target)

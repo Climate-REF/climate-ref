@@ -53,6 +53,11 @@ def test_validate_test_case_regression(
         pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
     if not validator.has_regression_data():
         pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
+    # Offline validation opens the diagnostic's NetCDF output via the committed bundle.
+    # A case whose committed regression dir ships only the JSON bundle (no *.nc) cannot be
+    # validated offline; skip until its data baseline is generated and committed (e.g. cmip7).
+    if not any(paths.regression.glob("*.nc")):
+        pytest.skip(f"No committed NetCDF baseline for {diagnostic.slug}/{test_case_name}")
 
     definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
     validator.validate(definition)

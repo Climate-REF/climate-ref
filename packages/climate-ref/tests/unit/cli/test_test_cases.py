@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -7,14 +8,29 @@ import pytest
 from climate_ref.cli.test_cases import (
     _build_catalog,
     _fetch_and_build_catalog,
-    _find_diagnostic,
+    _iter_test_cases,
     _solve_test_case,
 )
+from climate_ref.models.diagnostic import Diagnostic
+from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
+from climate_ref_core.pycmec.output import CMECOutput
+
+
+def _find_diagnostic(
+    registry: ProviderRegistry, provider_slug: str, diagnostic_slug: str
+) -> Diagnostic | None:
+    """Find a diagnostic by provider and diagnostic slugs."""
+    for provider_instance in registry.providers:
+        if provider_instance.slug == provider_slug:
+            for d in provider_instance.diagnostics():
+                if d.slug == diagnostic_slug:
+                    return d
+    return None
 
 
 @pytest.fixture
@@ -689,7 +705,7 @@ class TestRunTestCaseCommand:
         )
 
     def test_run_with_force_regen(self, invoke_cli, mocker, tmp_path):
-        """Test run command with force_regen regenerates baseline."""
+        """Test run command with force_regen regenerates the committed bundle and manifest."""
         mock_tc = MagicMock()
         mock_tc.name = "default"
         mock_tc.description = "test"
@@ -707,30 +723,35 @@ class TestRunTestCaseCommand:
         catalog_path = test_case_dir / "catalog.yaml"
         catalog_path.touch()
 
-        # Create a mock output directory with files
-        output_dir = tmp_path / "output"
-        output_dir.mkdir()
-        metrics_file = output_dir / "metrics.json"
-        metrics_file.write_text('{"test": "data"}')
+        # Create a scratch output directory holding the curated committed bundle.
+        # capture_execution copies from scratch_root / fragment into a temp results dir,
+        # so output_dir.parent (scratch_root) must differ from the temp dir it picks.
+        scratch_root = tmp_path / "scratch"
+        fragment = "frag"
+        output_dir = scratch_root / fragment
+        output_dir.mkdir(parents=True)
+        (output_dir / "diagnostic.json").write_text('{"test": "data"}')
+        (output_dir / "output.json").write_text(json.dumps(CMECOutput.create_template()))
+        (output_dir / "series.json").write_text("[]")
 
-        # Regression dir is within the test case directory
+        # Regression dir + manifest live within the test case directory.
         regression_dir = test_case_dir / "regression"
 
-        mock_paths = MagicMock()
-        mock_paths.catalog = catalog_path
-        mock_paths.root = test_case_dir
-        mock_paths.regression = regression_dir
-        mock_paths.regression_catalog_hash = regression_dir / ".catalog_hash"
-        mock_paths.test_data_dir = tmp_path
-        mock_paths.create = MagicMock()
+        from climate_ref_core.testing import TestCasePaths
+
+        real_paths = TestCasePaths(root=test_case_dir)
 
         mock_definition = MagicMock()
         mock_definition.output_directory = output_dir
+        mock_definition.output_fragment.return_value = Path(fragment)
 
         mock_result = MagicMock(
-            successful=True, metric_bundle_filename="metrics.json", output_bundle_filename=None
+            successful=True,
+            metric_bundle_filename=Path("diagnostic.json"),
+            output_bundle_filename=Path("output.json"),
+            series_filename=Path("series.json"),
         )
-        mock_result.to_output_path.return_value = metrics_file
+        mock_result.to_output_path.side_effect = lambda f: output_dir / f
         mock_result.definition = mock_definition
         mock_runner = MagicMock()
         mock_runner.run.return_value = mock_result
@@ -739,7 +760,7 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=real_paths)
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
         mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value="abc123")
@@ -749,9 +770,19 @@ class TestRunTestCaseCommand:
         )
         assert result.exit_code == 0
 
-        # The full output directory is now copied to regression dir
+        # The committed CMEC bundle (not the full output dir) is written to regression.
         assert regression_dir.exists()
-        assert (regression_dir / "metrics.json").exists()
+        assert (regression_dir / "diagnostic.json").exists()
+        assert (regression_dir / "output.json").exists()
+        assert (regression_dir / "series.json").exists()
+
+        # A seeded manifest exists with the native block left untouched (mint-owned).
+        from climate_ref_core.regression.manifest import Manifest
+
+        manifest = Manifest.load(real_paths.manifest)
+        assert manifest.test_case_version == 1
+        assert manifest.native == {}
+        assert set(manifest.committed) == {"diagnostic.json", "output.json", "series.json"}
 
     def test_run_with_existing_baseline(self, invoke_cli, mocker, tmp_path):
         """Test run command logs when baseline exists."""
@@ -1131,3 +1162,331 @@ class TestListCasesCommandEdgeCases:
         assert result.exit_code == 0
         assert "test-provider" in result.stdout
         assert "test-diag" in result.stdout
+
+
+class TestIterTestCases:
+    """Tests for the _iter_test_cases helper."""
+
+    def _registry(self):
+        mock_tc_a = MagicMock()
+        mock_tc_a.name = "default"
+        mock_tc_b = MagicMock()
+        mock_tc_b.name = "short"
+        spec = MagicMock()
+        spec.test_cases = [mock_tc_a, mock_tc_b]
+        diag = MagicMock(slug="diag-1", test_data_spec=spec)
+        provider = MagicMock(slug="example")
+        provider.diagnostics.return_value = [diag]
+        return MagicMock(providers=[provider]), diag, mock_tc_a, mock_tc_b
+
+    def test_yields_all_cases(self):
+        registry, diag, tc_a, tc_b = self._registry()
+        result = list(_iter_test_cases(registry))
+        assert result == [(diag, tc_a), (diag, tc_b)]
+
+    def test_filters_by_test_case(self):
+        registry, diag, tc_a, _ = self._registry()
+        result = list(_iter_test_cases(registry, test_case="default"))
+        assert result == [(diag, tc_a)]
+
+    def test_skips_diag_without_spec(self):
+        diag = MagicMock(slug="diag-1", test_data_spec=None)
+        provider = MagicMock(slug="example")
+        provider.diagnostics.return_value = [diag]
+        registry = MagicMock(providers=[provider])
+        assert list(_iter_test_cases(registry)) == []
+
+
+def _make_case_mocks():
+    """Build a (registry, diag, tc) trio with realistic slugs for the native verbs."""
+    tc = MagicMock()
+    tc.name = "default"
+    tc.description = "test"
+    spec = MagicMock()
+    spec.test_cases = [tc]
+    diag = MagicMock(slug="test-diag", test_data_spec=spec)
+    diag.provider = MagicMock(slug="example")
+    provider = MagicMock(slug="example")
+    provider.diagnostics.return_value = [diag]
+    registry = MagicMock(providers=[provider])
+    return registry, diag, tc
+
+
+class TestSyncCommand:
+    """Tests for the `test-cases sync` CLI verb."""
+
+    def test_sync_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "sync", "--help"])
+        assert "native baseline blobs" in result.stdout
+
+    def test_sync_fetches_missing_blob(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        # A populated store + a manifest referencing one of its blobs.
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        blob = tmp_path / "blob.nc"
+        blob.write_bytes(b"native-data")
+        digest = store.put(blob)
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        paths = TestCasePaths(root=case_dir)
+        Manifest(
+            schema=1,
+            test_case_version=1,
+            committed={},
+            native={"out.nc": NativeEntry(sha256=digest, size=len(b"native-data"))},
+        ).dump(paths.manifest)
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        result = invoke_cli(["test-cases", "sync", "--provider", "example"])
+        assert result.exit_code == 0
+
+    def test_sync_hard_fails_on_unservable_blob(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        store = LocalFilesystemStore(root=tmp_path / "store")  # empty store
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        paths = TestCasePaths(root=case_dir)
+        Manifest(
+            schema=1,
+            test_case_version=1,
+            committed={},
+            native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
+        ).dump(paths.manifest)
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        invoke_cli(["test-cases", "sync", "--provider", "example"], expected_exit_code=1)
+
+
+class TestReplayCommand:
+    """Tests for the `test-cases replay` CLI verb."""
+
+    def test_replay_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "replay", "--help"])
+        assert "Replay committed baselines" in result.stdout
+
+    def test_replay_empty_native_is_hard_failure(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import Manifest
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        regression_dir = case_dir / "regression"
+        regression_dir.mkdir(parents=True)
+        (case_dir / "catalog.yaml").touch()
+        # Committed bundle present and consistent with the manifest digests.
+        from climate_ref_core.regression.manifest import compute_committed_digests
+
+        (regression_dir / "diagnostic.json").write_text("{}")
+        digests = compute_committed_digests(regression_dir)
+        paths = TestCasePaths(root=case_dir)
+        Manifest(schema=1, test_case_version=1, committed=digests, native={}).dump(paths.manifest)
+
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        result = invoke_cli(
+            ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
+            expected_exit_code=1,
+        )
+        assert "not yet minted" in result.stderr.lower() or "mint" in result.stderr.lower()
+
+    def test_replay_integrity_mismatch_warns_and_continues(self, invoke_cli, mocker, tmp_path):
+        """An integrity mismatch is advisory, not a gate."""
+        from climate_ref_core.regression.manifest import Manifest
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        regression_dir = case_dir / "regression"
+        regression_dir.mkdir(parents=True)
+        (case_dir / "catalog.yaml").touch()
+        (regression_dir / "diagnostic.json").write_text("{}")
+        paths = TestCasePaths(root=case_dir)
+        # Committed digest deliberately wrong -> integrity mismatch (now a warning, not a gate).
+        Manifest(
+            schema=1,
+            test_case_version=1,
+            committed={"diagnostic.json": "00" * 32},
+            native={},
+        ).dump(paths.manifest)
+
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        result = invoke_cli(
+            ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
+            expected_exit_code=1,
+        )
+        # The mismatch warned rather than gated, and execution fell through to the native guard.
+        assert "differs from the digests recorded" in result.stderr
+        assert "not yet minted" in result.stderr.lower()
+
+    def test_replay_reconciles_integrity_mismatch_within_tolerance(self, invoke_cli, mocker, tmp_path):
+        """A byte-level baseline difference forgiven by the tolerant comparison is reported as reconciled.
+
+        This proves the follow-up comparison actually ran after the integrity warning: the success line
+        names the bundle files compared and states they are equivalent within tolerance, rather than
+        silently claiming a match.
+        """
+        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        regression_dir = case_dir / "regression"
+        regression_dir.mkdir(parents=True)
+        (case_dir / "catalog.yaml").touch()
+        for name in ("series.json", "diagnostic.json", "output.json"):
+            (regression_dir / name).write_text("{}")
+        paths = TestCasePaths(root=case_dir)
+        # Wrong committed digest -> integrity warns; native present -> passes the mint guard.
+        Manifest(
+            schema=1,
+            test_case_version=1,
+            committed={"series.json": "00" * 32},
+            native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
+        ).dump(paths.manifest)
+
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+        # Stub the heavy replay internals so we deterministically reach the success branch:
+        # native materialisation, placeholder expansion, dataset load, definition, and the tolerant
+        # comparison itself (a no-op assert == "equivalent within tolerance").
+        mocker.patch("climate_ref_core.regression.materialise_native")
+        mocker.patch("climate_ref_core.output_files.from_placeholders")
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=[])
+        mocker.patch("climate_ref_core.diagnostics.ExecutionDefinition")
+        mocker.patch("climate_ref_core.regression.assert_bundle_regression")
+
+        result = invoke_cli(["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"])
+        assert "Replay reconciled committed bundle" in result.stderr
+        assert "equivalent within tolerance" in result.stderr
+        assert "3 bundle file(s)" in result.stderr
+
+
+class TestMintCommand:
+    """Tests for the `test-cases mint` CLI verb."""
+
+    def test_mint_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "mint", "--help"])
+        assert "Mint canonical native baselines" in result.stdout
+
+    def test_mint_refuses_without_writable_store(self, invoke_cli, mocker, tmp_path):
+        registry, _diag, _tc = _make_case_mocks()
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            side_effect=NotImplementedError("R2 backend deferred"),
+        )
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "example"],
+            expected_exit_code=1,
+        )
+        assert "Cannot mint" in result.stderr
+
+    def test_mint_writes_blobs_and_manifest(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import Manifest
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        (case_dir / "catalog.yaml").touch()
+        paths = TestCasePaths(root=case_dir)
+
+        # A scratch execution holding the curated bundle + a native data file.
+        scratch_root = tmp_path / "scratch"
+        fragment = "frag"
+        output_dir = scratch_root / fragment
+        output_dir.mkdir(parents=True)
+        (output_dir / "diagnostic.json").write_text("{}")
+        out_bundle = CMECOutput.create_template()
+        (output_dir / "output.json").write_text(json.dumps(out_bundle))
+        (output_dir / "series.json").write_text("[]")
+
+        defn = MagicMock()
+        defn.output_directory = output_dir
+        defn.output_fragment.return_value = Path(fragment)
+        result_obj = MagicMock(
+            successful=True,
+            metric_bundle_filename=Path("diagnostic.json"),
+            output_bundle_filename=Path("output.json"),
+            series_filename=Path("series.json"),
+        )
+        result_obj.definition = defn
+        runner = MagicMock()
+        runner.run.return_value = result_obj
+
+        store = LocalFilesystemStore(root=tmp_path / "store")
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
+        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=runner)
+        mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value=None)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        result = invoke_cli(["test-cases", "mint", "--provider", "example"])
+        assert result.exit_code == 0
+
+        manifest = Manifest.load(paths.manifest)
+        assert manifest.test_case_version == 1
+        # mint authored the native block from the captured snapshot.
+        assert set(manifest.native) == {"diagnostic.json", "output.json", "series.json"}
+        # Each native blob was PUT into the store.
+        for entry in manifest.native.values():
+            assert store.has(entry.sha256)

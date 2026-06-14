@@ -70,27 +70,15 @@ def format_cmec_output_bundle(dataset: xr.Dataset) -> dict[str, Any]:
     -------
         A CMEC output bundle ready to be written to disk
     """
-    # TODO: Check how timeseries data are generally serialised
-    # All keys listed in the sample are the CMEC keywords.
-    # The value of diagnostics is the json file following the
-    # CMEC diagnostic bundle standard. Only provenance is required,
-    # others are optional
-
-    # cmec_output = {
-    #    "index": "index.html",
-    #    "provenance": {
-    #        "environment": {},
-    #        "modeldata": [],
-    #        "obsdata": {},
-    #        "log": "cmec_output.log",
-    #    },
-    #    "data": {},
-    #    "html": {},
-    #    "metrics": {},
-    #    "plots": {},
-    # }
-    # create_template will generate the same above dictionary
     cmec_output = CMECOutput.create_template()
+
+    # Register the NetCDF output to persists it from an execution.
+    # The `data` section holds non-plot output files.
+    cmec_output["data"]["annual_mean_timeseries"] = {
+        "filename": "annual_mean_global_mean_timeseries.nc",
+        "long_name": "Annual Mean Global Mean Timeseries",
+        "description": "Area-weighted annual mean global mean timeseries for the input variable.",
+    }
 
     CMECOutput.model_validate(cmec_output)
 

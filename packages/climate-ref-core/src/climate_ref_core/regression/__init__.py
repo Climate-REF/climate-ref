@@ -23,6 +23,7 @@ from climate_ref_core.regression.compare import (
     compare_json_content,
 )
 from climate_ref_core.regression.manifest import (
+    COMMITTED_BUNDLE_FILES,
     SCHEMA_VERSION,
     Manifest,
     NativeEntry,
@@ -40,6 +41,7 @@ from climate_ref_core.regression.store import (
 )
 
 __all__ = [
+    "COMMITTED_BUNDLE_FILES",
     "SCHEMA_VERSION",
     "LocalFilesystemStore",
     "Manifest",

@@ -11,21 +11,54 @@ It records:
   so that a CI recompute is deterministic.
 - ``native``: digests of the curated native output files, authored ONLY by ``mint``.
 
-Digests use sha256 throughout, reusing pooch's hashing helper
-so that file digests agree with the rest of the codebase.
+Digests use sha256 throughout for hashing files.
 """
 
 from __future__ import annotations
 
 import hashlib
 import json
+import re
 from pathlib import Path
 
 import pooch.hashes
 from attrs import asdict, frozen
 
+from climate_ref_core.paths import safe_path
+
 SCHEMA_VERSION: int = 1
 """Current manifest schema version."""
+
+_DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
+"""A 64-character lowercase hex sha256 digest."""
+
+
+def _validate_digest(digest: str) -> str:
+    """
+    Validate that ``digest`` is a 64-character lowercase hex sha256 string.
+
+    Used wherever a digest is taken from untrusted input (a hand-edited manifest,
+    a store key) before it is used to build a filesystem path.
+
+    Parameters
+    ----------
+    digest
+        The candidate sha256 hex digest.
+
+    Returns
+    -------
+    :
+        The validated digest, unchanged.
+
+    Raises
+    ------
+    ValueError
+        If ``digest`` is not a 64-character lowercase hex string.
+    """
+    if not isinstance(digest, str) or not _DIGEST_RE.match(digest):
+        raise ValueError(f"Invalid sha256 digest {digest!r}: expected 64 lowercase hex characters.")
+    return digest
+
 
 COMMITTED_BUNDLE_FILES: tuple[str, ...] = ("series.json", "diagnostic.json", "output.json")
 """The committed CMEC artefacts tracked in git.
@@ -141,6 +174,14 @@ class Manifest:
                 f"Invalid manifest {path}: malformed 'native' entry ({exc!r}). "
                 "Each entry must be a mapping with 'sha256' and 'size' keys."
             ) from exc
+        # Reject hand-edited or hostile manifests that could escape the
+        # destination directory or carry a malformed digest when materialised.
+        for relpath, entry in native.items():
+            try:
+                safe_path(relpath, label="native path")
+            except ValueError as exc:
+                raise ValueError(f"Invalid manifest {path}: {exc}") from exc
+            _validate_digest(entry.sha256)
         return cls(
             schema=data["schema"],
             test_case_version=data["test_case_version"],
@@ -221,7 +262,7 @@ def verify_committed_integrity(manifest: Manifest, regression_dir: Path) -> list
     """
     Check that the committed regression artefacts match the manifest digests.
 
-    Used by the CI integrity gate. An empty return value means the bundle is intact.
+    Used by the CI integrity check. An empty return value means the bundle is intact.
 
     Parameters
     ----------
@@ -239,9 +280,14 @@ def verify_committed_integrity(manifest: Manifest, regression_dir: Path) -> list
     for relpath, expected in manifest.committed.items():
         candidate = regression_dir / relpath
         if not candidate.exists():
-            mismatches.append(f"{relpath}: missing on disk (expected sha256 {expected})")
+            mismatches.append(
+                f"{relpath}: missing on disk — expected at {candidate} (manifest sha256 {expected})"
+            )
             continue
         actual = sha256_file(candidate)
         if actual != expected:
-            mismatches.append(f"{relpath}: sha256 mismatch (expected {expected}, got {actual})")
+            mismatches.append(
+                f"{relpath}: content differs from manifest — {candidate} "
+                f"(manifest sha256 {expected}, on-disk sha256 {actual})"
+            )
     return mismatches

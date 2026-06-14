@@ -34,6 +34,7 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
+from climate_ref_core.paths import safe_path
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -157,20 +158,6 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
     return attrs
 
 
-def _validate_path_containment(path: "Path", base: "Path", label: str) -> None:
-    """
-    Check that *path* stays within *base* after resolving symlinks and ``..`` segments.
-
-    Raises
-    ------
-    ValueError
-        If the resolved *path* escapes *base*
-    """
-    if not path.resolve().is_relative_to(base.resolve()):
-        msg = f"Computed {label} path {path} escapes {base}."
-        raise ValueError(msg)
-
-
 def _resolve_diagnostic_and_scratch(
     config: "Config",
     execution: Execution,
@@ -195,9 +182,8 @@ def _resolve_diagnostic_and_scratch(
         )
         return None
 
-    scratch_dir = config.paths.scratch / execution.output_fragment
     try:
-        _validate_path_containment(scratch_dir, config.paths.scratch, "scratch")
+        scratch_dir = safe_path(execution.output_fragment, config.paths.scratch, label="scratch")
     except ValueError:
         logger.error(f"Skipping execution {execution.id}: scratch path escapes base.")
         return None

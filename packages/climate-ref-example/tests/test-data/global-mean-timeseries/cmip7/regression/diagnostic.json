@@ -1,0 +1,59 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "json_structure": [
+      "source_id",
+      "variable_id",
+      "experiment_id",
+      "variant_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "metric": {
+      "pr": {},
+      "tas": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "mb": {},
+      "rmse": {}
+    },
+    "variable_id": {
+      "tas": {}
+    },
+    "variant_label": {
+      "r1i1p1f1": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "ACCESS-ESM1-5": {
+      "tas": {
+        "historical": {
+          "r1i1p1f1": {
+            "global": {
+              "pr": {
+                "mb": 0,
+                "rmse": 0
+              },
+              "tas": {
+                "mb": 0,
+                "rmse": 0
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

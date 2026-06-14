@@ -40,10 +40,6 @@ class TestProvidersList:
     def test_list_with_data_path_not_fetched(self, config, invoke_cli, mocker):
         """Test list command shows data path not fetched info."""
         # Create a mock provider with data_path that doesn't exist.
-        # Use a short, fixed path rather than ``tmp_path`` so the rendered
-        # rich table never truncates the trailing "(not fetched)" marker: under
-        # pytest-xdist ``tmp_path`` includes a per-worker segment (popen-gwN)
-        # that can push the path past the table width and drop the suffix.
         mock_provider = mocker.MagicMock(spec=DiagnosticProvider)
         mock_provider.slug = "data-test"
         mock_provider.version = "1.0.0"

@@ -66,11 +66,6 @@ ruff-fixes:  ## fix the code using ruff
 # module-level code in entry-point plugins is tracked from process start.
 # Each target appends to .coverage; the `test` target runs a final report.
 
-# The climate-ref suite is split into a fast unit target and a slower
-# integration target so CI can run them as separate, parallel jobs (the
-# integration tests carry the expensive solver-parity fixtures). ``test-ref``
-# runs both for local use. The src tree (and its doctests) is collected by the
-# unit target via ``--doctest-modules`` so module-level coverage stays tracked.
 .PHONY: test-ref
 test-ref: test-ref-unit test-ref-integration  ## run all the climate-ref tests (unit + integration)
 

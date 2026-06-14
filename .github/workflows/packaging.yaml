@@ -15,8 +15,8 @@ permissions:
   attestations: write
   id-token: write
 
-# Cancel superseded in-progress PR runs to free up runner slots; never cancel
-# main / tag builds.
+# Cancel superseded in-progress PR runs to free up runner slots.
+# Never cancel main / tag builds.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}

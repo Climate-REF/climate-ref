@@ -1320,8 +1320,9 @@ class TestReplayCommand:
         )
         assert "not yet minted" in result.stderr.lower() or "mint" in result.stderr.lower()
 
-    def test_replay_integrity_mismatch_is_hard_failure(self, invoke_cli, mocker, tmp_path):
-        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+    def test_replay_integrity_mismatch_warns_and_continues(self, invoke_cli, mocker, tmp_path):
+        """An integrity mismatch is advisory, not a gate."""
+        from climate_ref_core.regression.manifest import Manifest
         from climate_ref_core.regression.store import LocalFilesystemStore
         from climate_ref_core.testing import TestCasePaths
 
@@ -1333,12 +1334,12 @@ class TestReplayCommand:
         (case_dir / "catalog.yaml").touch()
         (regression_dir / "diagnostic.json").write_text("{}")
         paths = TestCasePaths(root=case_dir)
-        # Committed digest deliberately wrong -> integrity check fails before native guard.
+        # Committed digest deliberately wrong -> integrity mismatch (now a warning, not a gate).
         Manifest(
             schema=1,
             test_case_version=1,
             committed={"diagnostic.json": "00" * 32},
-            native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
+            native={},
         ).dump(paths.manifest)
 
         store = LocalFilesystemStore(root=tmp_path / "store")
@@ -1349,10 +1350,62 @@ class TestReplayCommand:
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
-        invoke_cli(
+        result = invoke_cli(
             ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
             expected_exit_code=1,
         )
+        # The mismatch warned rather than gated, and execution fell through to the native guard.
+        assert "differs from the digests recorded" in result.stderr
+        assert "not yet minted" in result.stderr.lower()
+
+    def test_replay_reconciles_integrity_mismatch_within_tolerance(self, invoke_cli, mocker, tmp_path):
+        """A byte-level baseline difference forgiven by the tolerant comparison is reported as reconciled.
+
+        This proves the follow-up comparison actually ran after the integrity warning: the success line
+        names the bundle files compared and states they are equivalent within tolerance, rather than
+        silently claiming a match.
+        """
+        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, _diag, _tc = _make_case_mocks()
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        regression_dir = case_dir / "regression"
+        regression_dir.mkdir(parents=True)
+        (case_dir / "catalog.yaml").touch()
+        for name in ("series.json", "diagnostic.json", "output.json"):
+            (regression_dir / name).write_text("{}")
+        paths = TestCasePaths(root=case_dir)
+        # Wrong committed digest -> integrity warns; native present -> passes the mint guard.
+        Manifest(
+            schema=1,
+            test_case_version=1,
+            committed={"series.json": "00" * 32},
+            native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
+        ).dump(paths.manifest)
+
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+        # Stub the heavy replay internals so we deterministically reach the success branch:
+        # native materialisation, placeholder expansion, dataset load, definition, and the tolerant
+        # comparison itself (a no-op assert == "equivalent within tolerance").
+        mocker.patch("climate_ref_core.regression.materialise_native")
+        mocker.patch("climate_ref_core.output_files.from_placeholders")
+        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=[])
+        mocker.patch("climate_ref_core.diagnostics.ExecutionDefinition")
+        mocker.patch("climate_ref_core.regression.assert_bundle_regression")
+
+        result = invoke_cli(["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"])
+        assert "Replay reconciled committed bundle" in result.stderr
+        assert "equivalent within tolerance" in result.stderr
+        assert "3 bundle file(s)" in result.stderr
 
 
 class TestMintCommand:

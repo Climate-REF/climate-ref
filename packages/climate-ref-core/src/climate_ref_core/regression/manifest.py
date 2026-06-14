@@ -262,7 +262,7 @@ def verify_committed_integrity(manifest: Manifest, regression_dir: Path) -> list
     """
     Check that the committed regression artefacts match the manifest digests.
 
-    Used by the CI integrity gate. An empty return value means the bundle is intact.
+    Used by the CI integrity check. An empty return value means the bundle is intact.
 
     Parameters
     ----------
@@ -280,9 +280,14 @@ def verify_committed_integrity(manifest: Manifest, regression_dir: Path) -> list
     for relpath, expected in manifest.committed.items():
         candidate = regression_dir / relpath
         if not candidate.exists():
-            mismatches.append(f"{relpath}: missing on disk (expected sha256 {expected})")
+            mismatches.append(
+                f"{relpath}: missing on disk — expected at {candidate} (manifest sha256 {expected})"
+            )
             continue
         actual = sha256_file(candidate)
         if actual != expected:
-            mismatches.append(f"{relpath}: sha256 mismatch (expected {expected}, got {actual})")
+            mismatches.append(
+                f"{relpath}: content differs from manifest — {candidate} "
+                f"(manifest sha256 {expected}, on-disk sha256 {actual})"
+            )
     return mismatches

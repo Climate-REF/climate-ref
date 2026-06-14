@@ -1,3 +1,5 @@
+from pathlib import Path
+
 import pytest
 
 from climate_ref.provider_registry import ProviderRegistry
@@ -35,13 +37,17 @@ class TestProvidersList:
         assert "conda-test" in result.stdout
         assert "(not installed)" in result.stdout
 
-    def test_list_with_data_path_not_fetched(self, config, invoke_cli, mocker, tmp_path):
+    def test_list_with_data_path_not_fetched(self, config, invoke_cli, mocker):
         """Test list command shows data path not fetched info."""
-        # Create a mock provider with data_path that doesn't exist
+        # Create a mock provider with data_path that doesn't exist.
+        # Use a short, fixed path rather than ``tmp_path`` so the rendered
+        # rich table never truncates the trailing "(not fetched)" marker: under
+        # pytest-xdist ``tmp_path`` includes a per-worker segment (popen-gwN)
+        # that can push the path past the table width and drop the suffix.
         mock_provider = mocker.MagicMock(spec=DiagnosticProvider)
         mock_provider.slug = "data-test"
         mock_provider.version = "1.0.0"
-        mock_provider.get_data_path.return_value = tmp_path / "nonexistent_data"
+        mock_provider.get_data_path.return_value = Path("/ref-nonexistent-data")
 
         mock_registry = mocker.MagicMock(spec=ProviderRegistry)
         mock_registry.providers = [mock_provider]

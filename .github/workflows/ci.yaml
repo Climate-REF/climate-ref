@@ -6,6 +6,13 @@ on:
     branches: [main]
     tags: ['v*']
 
+# Cancel superseded in-progress runs for the same PR to free up runner slots.
+# Pushes to main / tags keep running (cancel-in-progress is false there) so
+# release-relevant builds are never interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
@@ -17,6 +24,9 @@ jobs:
       - name: pre-commit
         run: make pre-commit
 
+  # Core, celery and the climate-ref *unit* tests. The slower climate-ref
+  # integration suite runs in the separate tests-integration job below so the
+  # two execute in parallel rather than serially in one runner.
   tests-core:
     runs-on: ubuntu-latest
     defaults:
@@ -35,15 +45,50 @@ jobs:
           echo "::group::test-core"
           time make test-core
           echo "::endgroup::"
-      - name: Test ref
+      - name: Test ref (unit)
         run: |
-          echo "::group::test-ref"
-          time make test-ref
+          echo "::group::test-ref-unit"
+          time make test-ref-unit
           echo "::endgroup::"
       - name: Test celery
         run: |
           echo "::group::test-celery"
           time make test-celery
+          echo "::endgroup::"
+      - name: Coverage report
+        # Per-job coverage is partial (the integration job covers the rest), so
+        # the aggregate fail_under gate is enforced by codecov/project rather
+        # than here -- both jobs upload to the same `core` flag.
+        run: |
+          uv run coverage report --fail-under=0
+          uv run coverage xml
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v7
+        with:
+          flags: core
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # The climate-ref integration suite (expensive solver-parity fixtures) plus
+  # the top-level cross-package integration tests, split out from tests-core so
+  # the critical path is the slower of the two jobs rather than their sum.
+  tests-integration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Fetch sample data
+        run: uv run ref datasets fetch-sample-data
+      - name: Test ref (integration)
+        run: |
+          echo "::group::test-ref-integration"
+          time make test-ref-integration
           echo "::endgroup::"
       - name: Test integration
         run: |
@@ -52,7 +97,7 @@ jobs:
           echo "::endgroup::"
       - name: Coverage report
         run: |
-          uv run coverage report
+          uv run coverage report --fail-under=0
           uv run coverage xml
       - name: Upload coverage reports to Codecov with GitHub Action
         uses: codecov/codecov-action@v7

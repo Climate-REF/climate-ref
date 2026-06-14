@@ -66,12 +66,28 @@ ruff-fixes:  ## fix the code using ruff
 # module-level code in entry-point plugins is tracked from process start.
 # Each target appends to .coverage; the `test` target runs a final report.
 
+# The climate-ref suite is split into a fast unit target and a slower
+# integration target so CI can run them as separate, parallel jobs (the
+# integration tests carry the expensive solver-parity fixtures). ``test-ref``
+# runs both for local use. The src tree (and its doctests) is collected by the
+# unit target via ``--doctest-modules`` so module-level coverage stays tracked.
 .PHONY: test-ref
-test-ref:  ## run the tests
+test-ref: test-ref-unit test-ref-integration  ## run all the climate-ref tests (unit + integration)
+
+.PHONY: test-ref-unit
+test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 	uv run --package climate-ref \
 		coverage run --append --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref \
+		--ignore=packages/climate-ref/tests/integration \
 		-r a -v --doctest-modules --durations=20
+
+.PHONY: test-ref-integration
+test-ref-integration:  ## run the climate-ref integration tests
+	uv run --package climate-ref \
+		coverage run --append --source=packages/climate-ref/src \
+		-m pytest packages/climate-ref/tests/integration \
+		-r a -v --durations=20
 
 .PHONY: test-core
 test-core:  ## run the tests

@@ -56,11 +56,17 @@ def _validate_digest(digest: str) -> str:
         If ``digest`` is not a 64-character lowercase hex string.
     """
     if not isinstance(digest, str) or not _DIGEST_RE.match(digest):
-        raise ValueError(f"Invalid sha256 digest {digest!r}: expected 64 lowercase hex characters.")
+        raise ValueError(
+            f"Invalid sha256 digest {digest!r}: expected 64 lowercase hex characters."
+        )
     return digest
 
 
-COMMITTED_BUNDLE_FILES: tuple[str, ...] = ("series.json", "diagnostic.json", "output.json")
+COMMITTED_BUNDLE_FILES: tuple[str, ...] = (
+    "series.json",
+    "diagnostic.json",
+    "output.json",
+)
 """The committed CMEC artefacts tracked in git.
 
 Their digests are tracked in :attr:`Manifest.committed`.
@@ -156,11 +162,43 @@ class Manifest:
             If the manifest is missing required keys or has malformed native entries
             (e.g. hand-edited or written by an incompatible version).
         """
-        data = json.loads(path.read_text(encoding="utf-8"))
-        missing = [key for key in ("schema", "test_case_version", "committed", "native") if key not in data]
+        return cls.loads(path.read_text(encoding="utf-8"), source=str(path))
+
+    @classmethod
+    def loads(cls, text: str, *, source: str = "<string>") -> Manifest:
+        """
+        Parse a manifest from its JSON text.
+
+        Used when the manifest does not live on disk at parse time,
+        e.g. when reading the base-branch copy via ``git show`` for the CI coupling gate.
+
+        Parameters
+        ----------
+        text
+            The manifest JSON.
+        source
+            A label for the text's origin, used in error messages.
+
+        Returns
+        -------
+        :
+            The parsed manifest.
+
+        Raises
+        ------
+        ValueError
+            If the manifest is missing required keys or has malformed native entries
+            (e.g. hand-edited or written by an incompatible version).
+        """
+        data = json.loads(text)
+        missing = [
+            key
+            for key in ("schema", "test_case_version", "committed", "native")
+            if key not in data
+        ]
         if missing:
             raise ValueError(
-                f"Invalid manifest {path}: missing required keys {missing}. "
+                f"Invalid manifest {source}: missing required keys {missing}. "
                 "The manifest may be corrupted or written by an incompatible version; "
                 "regenerate it with `ref test-cases run --force-regen`."
             )
@@ -171,7 +209,7 @@ class Manifest:
             }
         except (KeyError, TypeError, AttributeError) as exc:
             raise ValueError(
-                f"Invalid manifest {path}: malformed 'native' entry ({exc!r}). "
+                f"Invalid manifest {source}: malformed 'native' entry ({exc!r}). "
                 "Each entry must be a mapping with 'sha256' and 'size' keys."
             ) from exc
         # Reject hand-edited or hostile manifests that could escape the
@@ -180,7 +218,7 @@ class Manifest:
             try:
                 safe_path(relpath, label="native path")
             except ValueError as exc:
-                raise ValueError(f"Invalid manifest {path}: {exc}") from exc
+                raise ValueError(f"Invalid manifest {source}: {exc}") from exc
             _validate_digest(entry.sha256)
         return cls(
             schema=data["schema"],
@@ -205,7 +243,9 @@ class Manifest:
             "schema": self.schema,
             "test_case_version": self.test_case_version,
             "committed": self.committed,
-            "native": {relpath: asdict(entry) for relpath, entry in self.native.items()},
+            "native": {
+                relpath: asdict(entry) for relpath, entry in self.native.items()
+            },
         }
         text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
         path.write_text(text, encoding="utf-8")

@@ -22,6 +22,12 @@ from climate_ref_core.regression.compare import (
     assert_bundle_regression,
     compare_json_content,
 )
+from climate_ref_core.regression.gate import (
+    Action,
+    GateDecision,
+    decide_coupling,
+    paths_under,
+)
 from climate_ref_core.regression.manifest import (
     COMMITTED_BUNDLE_FILES,
     SCHEMA_VERSION,
@@ -43,6 +49,8 @@ from climate_ref_core.regression.store import (
 __all__ = [
     "COMMITTED_BUNDLE_FILES",
     "SCHEMA_VERSION",
+    "Action",
+    "GateDecision",
     "LocalFilesystemStore",
     "Manifest",
     "NativeEntry",
@@ -56,7 +64,9 @@ __all__ = [
     "capture_execution",
     "compare_json_content",
     "compute_committed_digests",
+    "decide_coupling",
     "materialise_native",
+    "paths_under",
     "sha256_bytes",
     "sha256_file",
     "verify_committed_integrity",

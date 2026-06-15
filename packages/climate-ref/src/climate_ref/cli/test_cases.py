@@ -35,7 +35,8 @@ if TYPE_CHECKING:
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.datasets import ExecutionDatasetCollection, SourceDatasetType
     from climate_ref_core.diagnostics import Diagnostic
-    from climate_ref_core.testing import TestCase
+    from climate_ref_core.regression.manifest import Manifest, NativeEntry
+    from climate_ref_core.testing import TestCase, TestCasePaths
 
 
 app = typer.Typer(help=__doc__)
@@ -466,6 +467,37 @@ def _print_regression_summary(  # pragma: no cover
     console.print(summary)
 
 
+def _write_test_case_manifest(
+    paths: TestCasePaths,
+    *,
+    test_case_version: int,
+    committed: dict[str, str],
+    native: dict[str, NativeEntry],
+    schema: int | None = None,
+) -> Manifest:
+    """
+    Construct and write a test case ``manifest.json``, recording the input catalog hash.
+
+    Shared by ``run`` (which preserves the existing version and native block) and
+    ``mint`` (which authors the native block and may bump the version); the two
+    callers differ only in the ``test_case_version`` and ``native`` they supply.
+    The ``catalog_hash`` is always (re)derived from the current ``catalog.yaml`` so
+    the manifest stays coupled to the inputs that produced the committed bundle.
+    """
+    from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest
+    from climate_ref_core.testing import get_catalog_hash
+
+    manifest = Manifest(
+        schema=SCHEMA_VERSION if schema is None else schema,
+        test_case_version=test_case_version,
+        committed=dict(committed),
+        native=native,
+        catalog_hash=get_catalog_hash(paths.catalog),
+    )
+    manifest.dump(paths.manifest)
+    return manifest
+
+
 def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
     config: Config,
     console: Console,
@@ -489,7 +521,6 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
     from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.testing import (
         TestCasePaths,
-        get_catalog_hash,
         load_datasets_from_yaml,
     )
 
@@ -588,26 +619,26 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
                 test_data_dir=paths.test_data_dir,
             )
 
-        # Refresh the manifest's committed block only; the native block is mint-owned.
+        # Refresh the manifest's committed block (and catalog hash) only; the native
+        # block is mint-owned, so preserve the previous one when the manifest exists.
         if paths.manifest.exists():
             previous = Manifest.load(paths.manifest)
-            manifest = Manifest(
-                schema=previous.schema,
+            _write_test_case_manifest(
+                paths,
                 test_case_version=previous.test_case_version,
                 committed=committed_digests,
                 native=previous.native,
+                schema=previous.schema,
             )
         else:
-            manifest = Manifest.seed_v1(committed_digests)
-        manifest.dump(paths.manifest)
+            _write_test_case_manifest(
+                paths,
+                test_case_version=1,
+                committed=committed_digests,
+                native={},
+            )
 
         logger.info(f"Captured {len(native)} native output file(s) (not minted)")
-
-        # Store catalog hash for change detection
-        catalog_hash = get_catalog_hash(paths.catalog)
-        if catalog_hash:
-            paths.regression_catalog_hash.write_text(catalog_hash)
-
         logger.info(f"Updated regression data: {paths.regression}")
         _print_regression_summary(console, paths.regression, size_threshold)
     elif paths.regression.exists():
@@ -953,7 +984,11 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
 
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.diagnostics import ExecutionDefinition
-    from climate_ref_core.output_files import from_placeholders
+    from climate_ref_core.output_files import (
+        PLACEHOLDER_OUTPUT_DIR,
+        PLACEHOLDER_TEST_DATA_DIR,
+        from_placeholders,
+    )
     from climate_ref_core.regression import (
         COMMITTED_BUNDLE_FILES,
         Manifest,
@@ -1054,8 +1089,8 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
                 continue
 
             replacements = {
-                str(output_dir): "<OUTPUT_DIR>",
-                str(paths.test_data_dir): "<TEST_DATA_DIR>",
+                str(output_dir): PLACEHOLDER_OUTPUT_DIR,
+                str(paths.test_data_dir): PLACEHOLDER_TEST_DATA_DIR,
             }
             # The comparator silently skips a bundle file with no committed copy,
             compared = [f for f in COMMITTED_BUNDLE_FILES if (paths.regression / f).exists()]
@@ -1138,7 +1173,7 @@ def mint_native(  # noqa: PLR0912, PLR0915
     from climate_ref_core.regression.capture import capture_execution
     from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.regression.store import build_native_store
-    from climate_ref_core.testing import TestCasePaths, get_catalog_hash, load_datasets_from_yaml
+    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
     config: Config = ctx.obj.config
     db = ctx.obj.database
@@ -1229,17 +1264,12 @@ def mint_native(  # noqa: PLR0912, PLR0915
             version = previous.test_case_version + 1 if bump_version else previous.test_case_version
         else:
             version = 1
-        manifest = Manifest(
-            schema=1,
+        _write_test_case_manifest(
+            paths,
             test_case_version=version,
             committed=committed_digests,
             native=native,
         )
-        manifest.dump(paths.manifest)
-
-        catalog_hash = get_catalog_hash(paths.catalog)
-        if catalog_hash:
-            paths.regression_catalog_hash.write_text(catalog_hash)
 
         minted += 1
         logger.info(
@@ -1295,13 +1325,22 @@ def _provider_source_root(diag: Diagnostic, repo_root: Path) -> str | None:
         return None
 
 
-def _core_regression_root(repo_root: Path) -> str | None:
+def _core_extraction_roots(repo_root: Path) -> list[str]:
     """
-    Return the core regression package directory, relative to the repo root.
+    Return the core paths whose change affects replay/execute for every test case.
 
-    A change anywhere under this directory affects replay/execute for every test case,
-    so it is treated as an extraction change. Derived from the installed package
-    location (rather than a hardcoded path) so it survives a package move.
+    ``build_execution_result`` (the function replay/execute re-run) depends on more
+    than the regression package: it builds and reads CMEC bundles via
+    :mod:`climate_ref_core.pycmec`, persists curated outputs via
+    :mod:`climate_ref_core.output_files`, and is dispatched through
+    :mod:`climate_ref_core.diagnostics`. A change under any of these can alter the
+    regenerated bundle, so all of them count as an extraction change.
+
+    Detection is deliberately coarse and errs toward REPLAY (cheap, credential-free):
+    a false positive only triggers an unnecessary replay, never a missed one.
+    Roots are derived from the installed package location (rather than hardcoded
+    paths) so they survive a package move; any root outside the repository
+    (e.g. an installed wheel) is dropped.
 
     Parameters
     ----------
@@ -1311,16 +1350,25 @@ def _core_regression_root(repo_root: Path) -> str | None:
     Returns
     -------
     :
-        The ``climate_ref_core.regression`` directory relative to ``repo_root``, or
-        ``None`` if it lies outside the repository (e.g. an installed wheel).
+        Repo-relative POSIX paths for the core extraction surfaces that lie inside the repo.
     """
-    import climate_ref_core.regression as regression_pkg
+    import climate_ref_core
 
-    package_dir = Path(regression_pkg.__file__).resolve().parent
-    try:
-        return package_dir.relative_to(repo_root.resolve()).as_posix()
-    except ValueError:
-        return None
+    core_dir = Path(climate_ref_core.__file__).resolve().parent
+    repo_root_resolved = repo_root.resolve()
+    candidates = [
+        core_dir / "regression",
+        core_dir / "pycmec",
+        core_dir / "output_files.py",
+        core_dir / "diagnostics.py",
+    ]
+    roots: list[str] = []
+    for candidate in candidates:
+        try:
+            roots.append(candidate.relative_to(repo_root_resolved).as_posix())
+        except ValueError:
+            continue
+    return roots
 
 
 @app.command(name="ci-gate")
@@ -1371,7 +1419,7 @@ def ci_gate(  # noqa: PLR0912, PLR0915
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.regression.gate import Action, decide_coupling, paths_under
     from climate_ref_core.regression.manifest import Manifest, compute_committed_digests
-    from climate_ref_core.testing import TestCasePaths
+    from climate_ref_core.testing import TestCasePaths, get_catalog_hash
 
     config: Config = ctx.obj.config
     db = ctx.obj.database
@@ -1393,14 +1441,19 @@ def ci_gate(  # noqa: PLR0912, PLR0915
         raise typer.Exit(code=1) from exc
     changed_files = [line.strip() for line in diff_output.splitlines() if line.strip()]
 
-    # The core regression machinery affects every replay/execute, so a change there
-    # counts as an extraction change for all cases. Extraction-change detection is
-    # deliberately coarse: any change under a diagnostic's provider package (see
-    # `_provider_source_root`) or under the core regression package counts for every
-    # case in that provider. This errs toward REPLAY (cheap, credential-free), never
-    # away from it.
-    core_root = _core_regression_root(repo_root)
-    core_changed = paths_under(changed_files, [core_root] if core_root else [])
+    # The core machinery behind build_execution_result affects every replay/execute,
+    # so a change there counts as an extraction change for all cases. Extraction-change
+    # detection is deliberately coarse: any change under a diagnostic's provider package
+    # (see `_provider_source_root`) or under the core extraction surfaces counts for
+    # every case in that provider. This errs toward REPLAY (cheap, credential-free),
+    # never away from it.
+    core_changed = paths_under(changed_files, _core_extraction_roots(repo_root))
+
+    # Hoisted once: repo_root.resolve() is filesystem-touching, and a provider's source
+    # root is identical for every case in that provider, so memoise it per provider slug
+    # rather than recomputing find_spec on each case.
+    repo_root_resolved = repo_root.resolve()
+    source_root_cache: dict[str, str | None] = {}
 
     registry = ProviderRegistry.build_from_config(config, db)
 
@@ -1431,7 +1484,7 @@ def ci_gate(  # noqa: PLR0912, PLR0915
         base_manifest: Manifest | None = None
         if paths is not None:
             try:
-                rel_manifest = paths.manifest.resolve().relative_to(repo_root.resolve()).as_posix()
+                rel_manifest = paths.manifest.resolve().relative_to(repo_root_resolved).as_posix()
             except ValueError:
                 rel_manifest = None
             if rel_manifest is not None:
@@ -1451,7 +1504,10 @@ def ci_gate(  # noqa: PLR0912, PLR0915
                         )
                         base_manifest = None
 
-        source_root = _provider_source_root(diag, repo_root)
+        provider_slug = diag.provider.slug
+        if provider_slug not in source_root_cache:
+            source_root_cache[provider_slug] = _provider_source_root(diag, repo_root)
+        source_root = source_root_cache[provider_slug]
         extraction_roots = [r for r in (source_root,) if r]
         extraction_changed = core_changed or paths_under(changed_files, extraction_roots)
 
@@ -1459,14 +1515,21 @@ def ci_gate(  # noqa: PLR0912, PLR0915
         # A drift (edited/added/removed committed file without regenerating the
         # manifest) must fail closed rather than slip through as SKIP.
         committed_integrity_ok = True
+        # Verify the input catalog still matches the manifest's recorded hash. A catalog
+        # edit without regenerating the baseline leaves it silently stale; fail closed.
+        # Legacy manifests without a catalog_hash have nothing to compare, so stay OK.
+        catalog_integrity_ok = True
         if manifest is not None and paths is not None:
             committed_integrity_ok = compute_committed_digests(paths.regression) == manifest.committed
+            if manifest.catalog_hash is not None:
+                catalog_integrity_ok = get_catalog_hash(paths.catalog) == manifest.catalog_hash
 
         decision = decide_coupling(
             manifest,
             base_manifest,
             extraction_changed=extraction_changed,
             committed_integrity_ok=committed_integrity_ok,
+            catalog_integrity_ok=catalog_integrity_ok,
         )
         record(case_id, decision.action, decision.reason)
 

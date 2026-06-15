@@ -302,3 +302,10 @@ class TestBuildNativeStore:
         cfg = _StubConfig(url="https://baselines.example.com", cache_dir=tmp_path / "cache")
         with pytest.raises(NotImplementedError, match="deferred to a follow-up PR"):
             build_native_store(cfg, writable=True)
+
+    def test_unsupported_scheme_raises_value_error(self, tmp_path: Path) -> None:
+        # An unrecognised remote scheme must fail loudly, not be coerced to a local path.
+        for url in ["s3://bucket/blobs", "gs://bucket/blobs", "ftp://host/blobs"]:
+            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
+            with pytest.raises(ValueError, match="not recognised"):
+                build_native_store(cfg, writable=False)

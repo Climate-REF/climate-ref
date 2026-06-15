@@ -58,10 +58,10 @@ def safe_path(
     """
     text = str(relpath)
     pure = PurePosixPath(text)
-    if not text or "\x00" in text or pure.is_absolute() or ".." in pure.parts:
+    if not text or "\x00" in text or pure.is_absolute() or ".." in pure.parts or not pure.parts:
         raise ValueError(
             f"Unsafe {label} {text!r}: must be a contained relative path "
-            "(no absolute paths, no '..', no NUL bytes)."
+            "(no absolute paths, no '.' or '..', no NUL bytes)."
         )
     if single_segment and (len(pure.parts) != 1 or "\\" in text):
         raise ValueError(

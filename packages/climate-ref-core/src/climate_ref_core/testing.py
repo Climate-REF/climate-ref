@@ -30,9 +30,10 @@ from climate_ref_core.datasets import (
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
-from climate_ref_core.output_files import from_placeholders
+from climate_ref_core.output_files import from_placeholders, ordered_replacements
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.regression.manifest import Manifest
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
@@ -201,11 +202,6 @@ class TestCasePaths:
         return self.root / "manifest.json"
 
     @property
-    def regression_catalog_hash(self) -> Path:
-        """Path to catalog hash file in regression directory."""
-        return self.regression / ".catalog_hash"
-
-    @property
     def test_data_dir(self) -> Path:
         """Path to the test-data directory (parent of diagnostic slug dir)."""
         return self.root.parent.parent
@@ -366,10 +362,14 @@ def catalog_changed_since_regression(paths: TestCasePaths) -> bool:
     """
     Check if the catalog has changed since regression data was generated.
 
+    The baseline's input hash is read from ``manifest.json`` (``catalog_hash``),
+    the single coupling record; there is no separate sidecar.
+
     Returns True if:
     - No regression data exists (new test case)
-    - No stored catalog hash exists (legacy regression data)
-    - The catalog hash differs from the stored one
+    - No manifest, or the manifest records no ``catalog_hash`` (legacy regression data)
+    - No catalog file exists
+    - The current catalog hash differs from the one recorded in the manifest
 
     Parameters
     ----------
@@ -383,15 +383,16 @@ def catalog_changed_since_regression(paths: TestCasePaths) -> bool:
     """
     if not paths.regression.exists():
         return True  # No regression data, needs to run
-    if not paths.regression_catalog_hash.exists():
-        return True  # No stored hash, needs to run
     if not paths.catalog.exists():
         return True  # No catalog file, needs to run
+    if not paths.manifest.exists():
+        return True  # No manifest, needs to run
 
-    stored_hash = paths.regression_catalog_hash.read_text().strip()
-    current_hash = get_catalog_hash(paths.catalog)
+    stored_hash = Manifest.load(paths.manifest).catalog_hash
+    if stored_hash is None:
+        return True  # Legacy manifest without a recorded catalog hash, needs to run
 
-    return stored_hash != current_hash
+    return stored_hash != get_catalog_hash(paths.catalog)
 
 
 def _sanitize_for_yaml(value: Any) -> Any:
@@ -537,8 +538,9 @@ def _load_series_sanitised(path: Path, replacements: dict[str, str]) -> list[Ser
     Load series from ``path``, replacing real paths with regression placeholders.
     """
     text = path.read_text(encoding="utf-8")
-    # Apply replacements longest-key-first in case of nested repleacements
-    for real, placeholder in sorted(replacements.items(), key=lambda kv: len(kv[0]), reverse=True):
+    # Apply replacements longest-key-first so a shorter key cannot shadow a longer one
+    # (the canonical ordering shared with all other sanitisation).
+    for real, placeholder in ordered_replacements(replacements):
         text = text.replace(real, placeholder)
     data = json.loads(text)
     if not isinstance(data, list):

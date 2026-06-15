@@ -21,6 +21,7 @@ The :class:`LocalFilesystemStore` uses a two-level directory layout
 """
 
 import shutil
+from functools import cache
 from pathlib import Path
 from typing import Protocol, runtime_checkable
 from urllib.parse import unquote, urlsplit
@@ -32,6 +33,23 @@ from loguru import logger
 from climate_ref_core.dataset_registry import _verify_hash_matches
 
 from .manifest import _validate_digest, sha256_file
+
+
+@cache
+def _pooch_manager(base_url: str, cache_dir: str) -> pooch.Pooch:
+    """
+    Build (and cache) a pooch manager for a ``(base_url, cache_dir)`` pair.
+
+    ``pooch.create`` rebuilds the whole manager and registry, so doing it per
+    ``fetch`` is wasteful when many blobs are pulled from the same store.
+    The manager is keyed by its immutable inputs and reused across fetches;
+    per-blob registry entries are added on the shared instance at fetch time.
+    """
+    return pooch.create(
+        path=Path(cache_dir),
+        base_url=base_url + "/",
+        retry_if_failed=10,
+    )
 
 
 @runtime_checkable
@@ -265,17 +283,11 @@ class PoochReadStore:
         ValueError
             If the downloaded blob's sha256 does not match ``digest``.
         """
-        # Build a single-file pooch registry: the URL path component is the digest
-        # and the expected hash IS the digest (content-addressed).
-        registry = pooch.create(
-            path=self.cache_dir,
-            base_url=self.base_url + "/",
-            retry_if_failed=10,
-        )
+        registry = _pooch_manager(self.base_url, str(self.cache_dir))
         registry.registry[digest] = digest  # content-addressed: hash == name
 
         cached = registry.fetch(digest)
-        # Verify the cached copy against the expected digest.
+        # pooch should already verify the hash against the registry entry
         _verify_hash_matches(cached, digest)
 
         dest.parent.mkdir(parents=True, exist_ok=True)
@@ -380,26 +392,29 @@ def build_native_store(config: _NativeStoreConfigProtocol, *, writable: bool) ->
     cache_dir: Path = config.cache_dir
 
     parts = urlsplit(url)
-    is_local = parts.scheme not in ("http", "https")
+    scheme = parts.scheme
 
-    if is_local:
-        if parts.scheme == "file":
-            # Parse properly so malformed variants fail loudly instead of
-            # silently producing a wrong (e.g. relative) path.
-            if parts.netloc not in ("", "localhost"):
-                raise ValueError(
-                    f"Unsupported file URL {url!r}: a host component ({parts.netloc!r}) is not "
-                    "supported. Use the file:///absolute/path form (three slashes)."
-                )
-            # Percent-decode the path so escaped characters (e.g. %20) resolve to the real on-disk directory.
-            local_root = Path(unquote(parts.path))
-        else:
-            # A bare filesystem path.
-            local_root = Path(url)
-        return LocalFilesystemStore(root=local_root)
-    elif writable:
-        # Remote writable store — R2 backend is deferred.
-        # Construction raises NotImplementedError until the follow-up lands.
-        return R2WriteStore()
-    else:
+    if scheme in ("http", "https"):
+        if writable:
+            # TODO: Construction raises NotImplementedError until the follow-up lands.
+            return R2WriteStore()
         return PoochReadStore(base_url=url.rstrip("/"), cache_dir=cache_dir)
+
+    if scheme == "file":
+        # Parse properly so malformed variants fail loudly instead of
+        # silently producing a wrong (e.g. relative) path.
+        if parts.netloc not in ("", "localhost"):
+            raise ValueError(
+                f"Unsupported file URL {url!r}: a host component ({parts.netloc!r}) is not "
+                "supported. Use the file:///absolute/path form (three slashes)."
+            )
+        return LocalFilesystemStore(root=Path(unquote(parts.path)))
+
+    if scheme == "":
+        return LocalFilesystemStore(root=Path(url))
+
+    raise ValueError(
+        f"Unsupported native store URL {url!r}: scheme {scheme!r} is not recognised. "
+        "Use http(s):// for a remote store, or file:///absolute/path or a bare filesystem "
+        "path for a local store."
+    )

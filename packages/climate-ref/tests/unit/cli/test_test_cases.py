@@ -1736,12 +1736,22 @@ class TestCIGateCommand:
         repo.git.show.return_value = _json.dumps(payload, indent=2, sort_keys=True)
 
     def test_seeding_replays(self, invoke_cli, mocker, tmp_path):
-        # Current manifest present, no base manifest -> seeding -> REPLAY.
-        self._setup(mocker, tmp_path, current_version=1)
+        # Current manifest present with a native baseline, no base manifest -> seeding -> REPLAY.
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        self._setup(mocker, tmp_path, current_version=1, native={"data.nc": NativeEntry("a" * 64, 10)})
 
         result = invoke_cli(["test-cases", "ci-gate"])
         assert result.exit_code == 0
         assert "replay" in result.output
+
+    def test_seeding_without_native_skips(self, invoke_cli, mocker, tmp_path):
+        # Current manifest present with an empty native set, no base manifest -> seeding -> SKIP.
+        self._setup(mocker, tmp_path, current_version=1)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "skip" in result.output
 
     def test_version_bump_executes(self, invoke_cli, mocker, tmp_path):
         repo, _, digests = self._setup(mocker, tmp_path, current_version=2)
@@ -1859,10 +1869,33 @@ class TestCIGateCommand:
 
     def test_corrupt_base_manifest_treated_as_seeding(self, invoke_cli, mocker, tmp_path):
         # git show returns non-JSON for the base manifest: must not crash; seed (replay).
-        repo, _, _ = self._setup(mocker, tmp_path, current_version=1)
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        repo, _, _ = self._setup(
+            mocker, tmp_path, current_version=1, native={"data.nc": NativeEntry("a" * 64, 10)}
+        )
         repo.git.show.side_effect = None
         repo.git.show.return_value = "}}not json"
 
         result = invoke_cli(["test-cases", "ci-gate"])
         assert result.exit_code == 0
         assert "replay" in result.output
+
+    def test_catalog_drift_fails(self, invoke_cli, mocker, tmp_path):
+        # The manifest records a catalog_hash that the on-disk catalog no longer matches.
+        from climate_ref_core.regression.manifest import Manifest
+
+        _, paths, _ = self._setup(mocker, tmp_path, current_version=1)
+        manifest = Manifest.load(paths.manifest)
+        Manifest(
+            schema=manifest.schema,
+            test_case_version=manifest.test_case_version,
+            committed=manifest.committed,
+            native=manifest.native,
+            catalog_hash="expected_hash",
+        ).dump(paths.manifest)
+        paths.catalog.write_text("_metadata:\n  hash: different_hash\ncmip6:\n  datasets: []\n")
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output

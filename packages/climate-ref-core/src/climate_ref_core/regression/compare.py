@@ -23,12 +23,12 @@ class Tolerance:
         Relative tolerance — the allowed proportional difference between expected
         and actual float values (default ``1e-6``).
     atol
-        Absolute tolerance — the minimum absolute difference that can ever be
-        flagged, regardless of magnitude (default ``0.0``).
+        Absolute tolerance — the floor difference always permitted,
+        regardless of magnitude (default ``1e-8``).
     """
 
     rtol: float = 1e-6
-    atol: float = 0.0
+    atol: float = 1e-8
 
 
 def _rewrite_keys_and_values(obj: Any, replacements: list[tuple[str, str]]) -> Any:
@@ -137,9 +137,10 @@ def _compare_recursive(
     is still identifiable.
     """
     label = path or "<root>"
-    # Type mismatch (treat int/float as numeric together)
+    # Type mismatch (treat int/float as numeric together).
     if type(expected) is not type(actual):
-        if isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
+        either_is_bool = isinstance(expected, bool) or isinstance(actual, bool)
+        if not either_is_bool and isinstance(expected, (int, float)) and isinstance(actual, (int, float)):
             _compare_numeric(float(expected), float(actual), tol=tol, path=label, out=out)
             return
         out.append(

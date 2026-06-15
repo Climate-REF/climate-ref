@@ -66,9 +66,34 @@ class TestDecideCoupling:
         assert "native baseline changed" in decision.reason
 
     def test_newly_added_manifest_seeds_with_replay(self) -> None:
-        decision = decide_coupling(make_manifest(1), None)
+        # Seeding with a native baseline present: replay verifies it reproduces the bundle.
+        manifest = make_manifest(1, native={"data.nc": NativeEntry("a" * 64, 10)})
+        decision = decide_coupling(manifest, None)
         assert decision.action is Action.REPLAY
         assert "seeding" in decision.reason
+
+    def test_newly_added_manifest_without_native_skips(self) -> None:
+        # Seeding with no native baseline: nothing to replay; the committed bundle is the signal.
+        decision = decide_coupling(make_manifest(1), None)
+        assert decision.action is Action.SKIP
+        assert "seeding" in decision.reason
+
+    def test_catalog_integrity_failure_fails(self) -> None:
+        # The input catalog drifted from the manifest's recorded hash.
+        base = make_manifest(1, {"output.json": "a" * 64})
+        current = make_manifest(1, {"output.json": "a" * 64})
+        decision = decide_coupling(current, base, catalog_integrity_ok=False)
+        assert decision.action is Action.FAIL
+        assert "catalog.yaml does not match" in decision.reason
+
+    def test_native_demint_skips_with_warning(self) -> None:
+        # Native baseline removed (de-mint) with committed bundle unchanged: warn, do not fail.
+        base = make_manifest(1, {"output.json": "a" * 64}, {"data.nc": NativeEntry("a" * 64, 10)})
+        current = make_manifest(1, {"output.json": "a" * 64}, {})
+        decision = decide_coupling(current, base)
+        assert decision.action is Action.SKIP
+        assert "WARNING" in decision.reason
+        assert "de-mint" in decision.reason
 
     def test_version_bump_executes(self) -> None:
         base = make_manifest(1)
@@ -99,11 +124,20 @@ class TestDecideCoupling:
         assert "monotonic" in decision.reason
 
     def test_extraction_change_replays_when_bundle_unchanged(self) -> None:
-        base = make_manifest(1, {"output.json": "a" * 64})
-        current = make_manifest(1, {"output.json": "a" * 64})
+        native = {"data.nc": NativeEntry("a" * 64, 10)}
+        base = make_manifest(1, {"output.json": "a" * 64}, native)
+        current = make_manifest(1, {"output.json": "a" * 64}, native)
         decision = decide_coupling(current, base, extraction_changed=True)
         assert decision.action is Action.REPLAY
         assert "extraction code changed" in decision.reason
+
+    def test_extraction_change_without_native_skips(self) -> None:
+        # Extraction code changed but no native baseline exists to replay.
+        base = make_manifest(1, {"output.json": "a" * 64})
+        current = make_manifest(1, {"output.json": "a" * 64})
+        decision = decide_coupling(current, base, extraction_changed=True)
+        assert decision.action is Action.SKIP
+        assert "no native baseline exists to replay" in decision.reason
 
     def test_no_change_skips(self) -> None:
         base = make_manifest(1, {"output.json": "a" * 64})

@@ -9,6 +9,7 @@ import yaml
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.metric_values.typing import SeriesMetricValue
+from climate_ref_core.regression.manifest import Manifest
 from climate_ref_core.testing import (
     RegressionValidator,
     TestCase,
@@ -155,13 +156,6 @@ class TestTestCasePaths:
 
         assert default.root != custom.root
         assert default.regression != custom.regression
-
-    def test_regression_catalog_hash_property(self, tmp_path):
-        """Test regression_catalog_hash returns correct path."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
-
-        expected = tmp_path / "my-diag" / "default" / "regression" / ".catalog_hash"
-        assert paths.regression_catalog_hash == expected
 
 
 class TestYamlSerialization:
@@ -544,6 +538,12 @@ cmip6:
 class TestCatalogChangedSinceRegression:
     """Tests for catalog_changed_since_regression function."""
 
+    @staticmethod
+    def _seed_manifest(paths, catalog_hash):
+        """Write a minimal manifest recording ``catalog_hash`` for the test case."""
+        paths.regression.mkdir(parents=True, exist_ok=True)
+        Manifest.seed_v1({}, catalog_hash=catalog_hash).dump(paths.manifest)
+
     def test_returns_true_when_no_regression_exists(self, tmp_path):
         """Test returns True when regression directory doesn't exist."""
         paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
@@ -553,13 +553,23 @@ class TestCatalogChangedSinceRegression:
         result = catalog_changed_since_regression(paths)
         assert result is True
 
-    def test_returns_true_when_no_catalog_hash_file(self, tmp_path):
-        """Test returns True when catalog hash file doesn't exist."""
+    def test_returns_true_when_no_manifest(self, tmp_path):
+        """Test returns True when manifest.json doesn't exist."""
         paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
         paths.regression.mkdir(parents=True)
-        # No .catalog_hash file
+        # No manifest.json
+
+        result = catalog_changed_since_regression(paths)
+        assert result is True
+
+    def test_returns_true_when_manifest_has_no_catalog_hash(self, tmp_path):
+        """Test returns True for a legacy manifest with no recorded catalog hash."""
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths.create()
+        paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
+        self._seed_manifest(paths, catalog_hash=None)
 
         result = catalog_changed_since_regression(paths)
         assert result is True
@@ -568,42 +578,28 @@ class TestCatalogChangedSinceRegression:
         """Test returns True when catalog file doesn't exist."""
         paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
         paths.create()
-        paths.regression.mkdir(parents=True)
-        paths.regression_catalog_hash.write_text("abc123")
+        self._seed_manifest(paths, catalog_hash="abc123")
         # No catalog file
 
         result = catalog_changed_since_regression(paths)
         assert result is True
 
     def test_returns_true_when_hash_differs(self, tmp_path):
-        """Test returns True when catalog hash differs from stored hash."""
+        """Test returns True when catalog hash differs from the manifest hash."""
         paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: new_hash_456\ncmip6:\n  datasets: []\n")
-        paths.regression.mkdir(parents=True)
-        paths.regression_catalog_hash.write_text("old_hash_123")
+        self._seed_manifest(paths, catalog_hash="old_hash_123")
 
         result = catalog_changed_since_regression(paths)
         assert result is True
 
     def test_returns_false_when_hash_matches(self, tmp_path):
-        """Test returns False when catalog hash matches stored hash."""
+        """Test returns False when catalog hash matches the manifest hash."""
         paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: same_hash_789\ncmip6:\n  datasets: []\n")
-        paths.regression.mkdir(parents=True)
-        paths.regression_catalog_hash.write_text("same_hash_789")
-
-        result = catalog_changed_since_regression(paths)
-        assert result is False
-
-    def test_handles_whitespace_in_stored_hash(self, tmp_path):
-        """Test handles whitespace in stored hash file."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
-        paths.create()
-        paths.catalog.write_text("_metadata:\n  hash: hash_value\ncmip6:\n  datasets: []\n")
-        paths.regression.mkdir(parents=True)
-        paths.regression_catalog_hash.write_text("  hash_value  \n")
+        self._seed_manifest(paths, catalog_hash="same_hash_789")
 
         result = catalog_changed_since_regression(paths)
         assert result is False

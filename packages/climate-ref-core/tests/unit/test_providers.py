@@ -85,6 +85,14 @@ class TestDiagnosticProvider:
         expected_constraint = IgnoreFacets(facets={"source_id": ("A",)})
         assert provider.diagnostics()[0].data_requirements[0][0].constraints[0] == expected_constraint
 
+    def test_configure_missing_ignore_file(self, provider, mock_config, caplog):
+        # A missing ignore datasets file (e.g. the cache could not be written) must not raise;
+        # it is treated as "ignore nothing".
+        mock_config.ignore_datasets_file.unlink()
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+        assert f"Ignore datasets file {mock_config.ignore_datasets_file} not found" in caplog.text
+
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(
             textwrap.dedent(

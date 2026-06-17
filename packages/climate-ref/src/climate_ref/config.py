@@ -398,31 +398,39 @@ def _get_default_ignore_datasets_file() -> Path:
     Get the path to the ignore datasets file
     """
     cache_dir = platformdirs.user_cache_path("climate_ref")
-    cache_dir.mkdir(parents=True, exist_ok=True)
     ignore_datasets_file = cache_dir / "default_ignore_datasets.yaml"
 
-    download = True
-    if ignore_datasets_file.exists():
-        # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
-        modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
-        age = datetime.datetime.now() - modification_time
-        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
-            download = False
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
 
-    if download:
-        logger.info(
-            f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
-            f"to {ignore_datasets_file}"
-        )
-        try:
-            response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.warning(f"Failed to download default ignore datasets file: {exc}")
-            ignore_datasets_file.touch(exist_ok=True)
-        else:
-            with ignore_datasets_file.open(mode="wb") as file:
-                file.write(response.content)
+        download = True
+        if ignore_datasets_file.exists():
+            # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
+            modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
+            age = datetime.datetime.now() - modification_time
+            if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+                download = False
+
+        if download:
+            logger.info(
+                f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
+                f"to {ignore_datasets_file}"
+            )
+            try:
+                response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
+                response.raise_for_status()
+            except requests.RequestException as exc:
+                logger.warning(f"Failed to download default ignore datasets file: {exc}")
+                ignore_datasets_file.touch(exist_ok=True)
+            else:
+                with ignore_datasets_file.open(mode="wb") as file:
+                    file.write(response.content)
+    except OSError as exc:
+        # Acquiring the default ignore datasets file is a best-effort optimisation.
+        # If the cache directory cannot be created or written to
+        # (e.g. a read-only or otherwise restricted environment),
+        # fall back to the (possibly missing) path rather than breaking configuration loading.
+        logger.warning(f"Unable to prepare default ignore datasets file at {ignore_datasets_file}: {exc}")
 
     return ignore_datasets_file
 

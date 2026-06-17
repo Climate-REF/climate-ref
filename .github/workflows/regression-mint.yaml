@@ -1,20 +1,14 @@
-# Gated mint of native regression baselines.
+# Mint the native regression baselines.
 #
-# Minting is the only credentialed step in the baseline lifecycle: it executes a test
-# case, uploads its curated native outputs to the Cloudflare R2 object store, and
-# rewrites the committed `manifest.json` to record their digests. It is therefore
-# manually dispatched and gated behind the `native-baselines` GitHub Environment
-# (configure it with required reviewers), and never runs on fork pull-request code.
+# Minting executes a test case, uploads its curated native outputs to the Cloudflare R2 object store,
+# and rewrites the committed `manifest.json` to record their digests.
+# It requires credentials to access the object store.
+# It is therefore manually dispatched and gated behind the `native-baselines` GitHub Environment, and never runs on fork pull-request code.
 #
-# Dispatch this workflow on the *feature branch* that should receive the regenerated
-# manifest -- the job commits the result back to that branch so the change is reviewed
-# through its pull request, and so individual developers never need write credentials.
+# Dispatch this workflow on the *feature branch* that should receive the regenerated manifest.
+# The action commits the result back to that branch so the change is reviewed through its pull request,
+# and so individual developers never need write credentials.
 #
-# Required repository configuration (Settings -> Environments -> native-baselines):
-#   - Required reviewers (the human gate on writing baselines).
-#   - Secrets R2_ACCESS_KEY_ID and R2_SECRET_ACCESS_KEY (an object-scoped R2 token).
-# The endpoint and bucket default to the production R2 account; override with the
-# REF_NATIVE_STORE_S3_ENDPOINT_URL / REF_NATIVE_STORE_BUCKET env vars if needed.
 name: Regression baselines (mint)
 
 on:
@@ -104,6 +98,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           # Stage only the committed bundle and manifest; native blobs live in the
           # object store, not the tree, and nothing else should change during a mint.
           git add ':(glob)packages/**/test-data/**/manifest.json' \

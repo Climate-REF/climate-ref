@@ -157,8 +157,9 @@ the `--json` output drives CI's dispatch of the `replay` and `execute` jobs.
 
 ## Continuous integration
 
-The lifecycle commands are wired into three workflows, split along the trust boundary
-so that credentials are confined to a single, manually gated step.
+The lifecycle commands are wired into three GitHub Action workflows.
+The minting process requires credentials to upload data.
+Since this is a public project we have to be careful about when this is run to not leak these credentials.
 
 | Workflow | Trigger | Credentials | What it does |
 | --- | --- | --- | --- |
@@ -174,36 +175,31 @@ branch and acts on each decision:
 - **`fail`** aborts the job with the offending cases and their reasons.
 - **`replay`** is verified in place against the public native baseline.
 - **`execute`** is surfaced as a warning: a `test_case_version` bump authorises a new
-  baseline that only the credentialed mint tier can publish, so the PR tier flags it
-  rather than failing.
+  baseline that only the credentialed mint tier can publish, so the PR tier flags it rather than failing.
 
-The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on
-fork pull requests — every command is anonymous public read. The decision-to-replay
-fan-out lives in `scripts/ci/regression-pr-gate.sh`.
+The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on fork pull requests.
+The decision-to-replay fan-out lives in `scripts/ci/regression-pr-gate.sh`.
 
 ### Gated mint (`regression-mint.yaml`)
 
-Minting is the only step that writes to the object store, so it is **manually
-dispatched** and gated behind the `native-baselines` GitHub Environment. Dispatch it on
-the feature branch that should receive the new baseline: the job preflights the store
-credentials, runs `mint`, and commits the regenerated `manifest.json` (and committed
-bundle) back to that branch, so the change is reviewed through its pull request and no
-developer ever needs write credentials. A `dry_run` input previews without uploading or
-committing, and the job refuses to run on the default branch.
+Minting is the only step that writes to the object store,
+so it is **manually dispatched** and gated behind the `native-baselines` GitHub Environment.
+Dispatch it on the feature branch that should receive the new baseline:
+the job runs `mint`, and commits the regenerated `manifest.json` (and committed bundle) back to that branch,
+so the change is reviewed through its pull request and no developer ever needs write credentials.
+A `dry_run` input previews without uploading or committing, and the job refuses to run on the default branch.
 
 !!! note "Required repository configuration"
-    Create a `native-baselines` Environment (Settings → Environments) with **required
-    reviewers**, and add two secrets to it holding an object-scoped R2 token:
+    Create a `native-baselines` Environment (Settings -> Environments) with **required reviewers**,
+    and add two secrets to it holding an object-scoped R2 token:
 
-    - `R2_ACCESS_KEY_ID` → `REF_NATIVE_STORE_ACCESS_KEY_ID`
-    - `R2_SECRET_ACCESS_KEY` → `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
+    - `R2_ACCESS_KEY_ID` -> `REF_NATIVE_STORE_ACCESS_KEY_ID`
+    - `R2_SECRET_ACCESS_KEY` -> `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
 
     The endpoint and bucket default to the production R2 account
     (`REF_NATIVE_STORE_S3_ENDPOINT_URL` / `REF_NATIVE_STORE_BUCKET` override them).
 
 ### Nightly drift (`regression-drift.yaml`)
 
-A scheduled (and manually dispatchable) job `sync`s every referenced native blob and
-`replay`s it against the committed bundle. Because replay is tolerant, this catches a
-baseline that no longer reproduces within tolerance — for example after a dependency
-upgrade — independently of any pull request. It is read-only and credential-free.
+A scheduled (and manually dispatchable) job `sync`s every referenced native blob and `replay`s it against the committed bundle.
+This catches a baseline that no longer reproduce the committed results within tolerance — for example after a dependency upgrade. It is read-only and credential-free.

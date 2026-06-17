@@ -1,10 +1,13 @@
 # Nightly native-baseline drift check.
 #
-# Fetches every native blob referenced by a committed manifest and replays it against
-# the committed bundle, catching baselines that no longer reproduce within tolerance
-# (e.g. after a dependency upgrade) even when no pull request touched them. Read-only
-# and credential-free, so it runs on the public runner. A failure here means a stored
-# baseline has drifted and needs investigation (and possibly a re-mint).
+# Fetches every native blob referenced by a committed manifest and replays it against the committed bundle,
+# catching baselines that no longer reproduce within tolerance (e.g. after a dependency upgrade)
+# even when no pull request touched them.
+#
+# Run on the public runners with no credentials (read-only access to the public repository and public read access to the native blobs),
+# so it is safe on untrusted fork pull-request code.
+# A failure here means a stored baseline has drifted and needs investigation (and possibly a re-mint).
+# See docs/background/regression-baselines.md.
 name: Regression baselines (nightly drift)
 
 on:
@@ -38,7 +41,7 @@ jobs:
       - name: Fetch sample data
         run: uv run ref datasets fetch-sample-data
       - name: Restore test-case catalog paths
-        # Only the example provider is migrated to the native-baseline layout today;
+        # Only the example provider is migrated to the native-baseline layout today
         # extend this (and the replay step below) as providers migrate.
         run: uv run ref test-cases fetch --provider example || echo "::warning::test-case fetch incomplete"
       - name: Sync native baselines

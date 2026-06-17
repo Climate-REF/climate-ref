@@ -1,19 +1,17 @@
 #!/usr/bin/env bash
 # PR-tier regression baseline gate.
 #
-# Runs the coupling gate (`ref test-cases ci-gate`) against the pull request's base
-# branch and, for every case it routes to `replay`, re-checks the cached native
-# baseline. `execute` cases are surfaced as warnings (a `test_case_version` bump
-# authorises a new baseline that only the credentialed mint tier can publish, so the
-# PR tier cannot verify it); `fail` cases abort the job.
+# Runs the coupling gate (`ref test-cases ci-gate`) against the pull request's base branch and,
+# for every case it routes to `replay`, re-checks the cached native baseline.
+# `execute` cases are surfaced as warnings
+# (a `test_case_version` bump authorises a new baseline that only the credentialed mint tier can publish, so the PR tier cannot verify it);
+# `fail` cases abort the job.
 #
-# No credentials are used: every command here is anonymous public read, so this is
-# safe to run on untrusted fork pull-request code.
+# All baseline data can be fetched with public read access so this does not require credentials.
 #
-# `ci-gate` reads only manifests and the git diff, so it needs no input data. The
-# (slower) sample-data and catalog fetch is therefore deferred until the gate has
-# found at least one case that actually needs replaying -- the common pull request
-# touches no baselines and skips the download entirely.
+# `ci-gate` reads only manifests and the git diff, so it needs no input data.
+# The (slower) sample-data and catalog fetch is therefore deferred until the gate hasfound at least one case that actually needs replaying.
+# The common pull request touches no baselines and skips the download entirely.
 #
 # Environment:
 #   GITHUB_BASE_REF  the PR's base branch (set automatically on pull_request events).

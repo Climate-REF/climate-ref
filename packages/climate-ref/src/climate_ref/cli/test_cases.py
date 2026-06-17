@@ -1152,6 +1152,10 @@ def mint_native(  # noqa: PLR0912, PLR0915
         bool,
         typer.Option(help="Increment test_case_version when authoring the manifest"),
     ] = False,
+    dry_run: Annotated[
+        bool,
+        typer.Option(help="Preflight the store and list what would be minted, without running or uploading"),
+    ] = False,
 ) -> None:
     """
     Mint canonical native baselines
@@ -1165,6 +1169,7 @@ def mint_native(  # noqa: PLR0912, PLR0915
     --------
         ref test-cases mint --provider example
         ref test-cases mint --provider example --bump-version
+        ref test-cases mint --provider example --dry-run
     """
     import tempfile
 
@@ -1172,7 +1177,7 @@ def mint_native(  # noqa: PLR0912, PLR0915
     from climate_ref.testing import TestCaseRunner
     from climate_ref_core.regression.capture import capture_execution
     from climate_ref_core.regression.manifest import Manifest
-    from climate_ref_core.regression.store import build_native_store
+    from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
     from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
     config: Config = ctx.obj.config
@@ -1181,12 +1186,22 @@ def mint_native(  # noqa: PLR0912, PLR0915
 
     try:
         store = build_native_store(config.native_store, writable=True)
-    except NotImplementedError as exc:
+    except (NotImplementedError, ValueError) as exc:
         logger.error(
-            "Cannot mint: no writable native store is configured. "
-            "Set REF_NATIVE_STORE_URL to a writable location\n"
-            f"(a local file:// path for development): {exc}"
+            "Cannot mint: no writable native store is configured. For the remote (R2) store set "
+            "REF_NATIVE_STORE_S3_ENDPOINT_URL and REF_NATIVE_STORE_BUCKET, and authenticate via "
+            "REF_NATIVE_STORE_ACCESS_KEY_ID / REF_NATIVE_STORE_SECRET_ACCESS_KEY or a named "
+            "REF_NATIVE_STORE_PROFILE; or set REF_NATIVE_STORE_URL to a local file:// path for "
+            f"development: {exc}"
         )
+        raise typer.Exit(code=1) from exc
+
+    # Preflight the store (credentials / bucket reachability) before running any diagnostics,
+    # so a misconfiguration fails fast instead of after the (slow) execution.
+    try:
+        store.preflight()
+    except NativeStoreUnavailableError as exc:
+        logger.error(f"Cannot mint: {exc}")
         raise typer.Exit(code=1) from exc
 
     registry = ProviderRegistry.build_from_config(config, db)
@@ -1194,6 +1209,15 @@ def mint_native(  # noqa: PLR0912, PLR0915
     if not cases:
         logger.warning(f"No test cases found for provider {provider!r}")
         raise typer.Exit(code=0)
+
+    if dry_run:
+        # The store preflight has already passed at this point; report scope and stop before
+        # running any diagnostics or uploading anything.
+        console.print(f"[cyan]Dry run — would mint {len(cases)} test case(s):[/cyan]")
+        for diag, tc in cases:
+            console.print(f"  - {provider}/{diag.slug}/{tc.name}")
+        console.print("[cyan]Store preflight passed; nothing was run or uploaded.[/cyan]")
+        return
 
     minted = 0
     failures: list[str] = []
@@ -1286,6 +1310,48 @@ def mint_native(  # noqa: PLR0912, PLR0915
             console.print(f"  - {case}")
         raise typer.Exit(code=1)
     console.print(f"[green]Minted {minted} native baseline(s)[/green]")
+
+
+@app.command(name="check-store")
+def check_store(
+    ctx: typer.Context,
+) -> None:
+    """
+    Check connectivity and credentials for the writable native baseline store.
+
+    Builds the writable store from the configuration and preflights it (an authenticated
+    no-op probe) without running any diagnostics or uploading anything. Use this to confirm a
+    mint will work — that the credentials (REF_NATIVE_STORE_PROFILE or the access-key env
+    vars) and the bucket are correct — before a slow mint run.
+
+    Examples
+    --------
+        ref test-cases check-store
+        REF_NATIVE_STORE_PROFILE=my-profile ref test-cases check-store
+    """
+    from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
+
+    config: Config = ctx.obj.config
+    console: Console = ctx.obj.console
+
+    try:
+        store = build_native_store(config.native_store, writable=True)
+    except (NotImplementedError, ValueError) as exc:
+        logger.error(
+            "Native store is not configured for writing. For the remote (R2) store set "
+            "REF_NATIVE_STORE_S3_ENDPOINT_URL and REF_NATIVE_STORE_BUCKET, and authenticate via "
+            "REF_NATIVE_STORE_ACCESS_KEY_ID / REF_NATIVE_STORE_SECRET_ACCESS_KEY or a named "
+            f"REF_NATIVE_STORE_PROFILE; or set REF_NATIVE_STORE_URL to a local file:// path: {exc}"
+        )
+        raise typer.Exit(code=1) from exc
+
+    try:
+        store.preflight()
+    except NativeStoreUnavailableError as exc:
+        logger.error(str(exc))
+        raise typer.Exit(code=1) from exc
+
+    console.print("[green]Native store OK:[/green] credentials accepted and the store is reachable.")
 
 
 def _provider_source_root(diag: Diagnostic, repo_root: Path) -> str | None:

@@ -181,13 +181,31 @@ class NativeStoreConfig:
     for offline development and testing.
     """
 
-    credentials: str = env_field(name="NATIVE_STORE_CREDENTIALS", default="")
+    s3_endpoint_url: str = env_field(
+        name="NATIVE_STORE_S3_ENDPOINT_URL",
+        default="https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
+    )
     """
-    Credentials for write access to the native-bundle object store.
+    S3 API endpoint for the writable (Cloudflare R2) backend, without the bucket.
 
-    Only consumed by the ``mint`` verb (object-store upload).
-    Anonymous read (``fetch`` / ``has``) never requires credentials.
-    Set ``REF_NATIVE_STORE_CREDENTIALS`` to the appropriate token or key material.
+    Non-secret routing config, consumed only by the ``mint`` verb. Defaults to the
+    production Climate-REF R2 account endpoint (default jurisdiction — note there is no
+    ``.eu`` in the host). Anonymous read (``fetch`` / ``has``) uses :attr:`url` instead and
+    never touches this.
+    Set ``REF_NATIVE_STORE_S3_ENDPOINT_URL`` to override (e.g. a staging account).
+    """
+
+    bucket: str = env_field(name="NATIVE_STORE_BUCKET", default="ref-baselines-public")
+    """
+    Name of the writable (Cloudflare R2) bucket.
+
+    Non-secret routing config, consumed only by the ``mint`` verb.
+    Set ``REF_NATIVE_STORE_BUCKET`` to override.
+
+    Write credentials are **not** stored here: the access-key id and secret-access-key are
+    read from ``REF_NATIVE_STORE_ACCESS_KEY_ID`` / ``REF_NATIVE_STORE_SECRET_ACCESS_KEY``
+    (falling back to boto3's default credential chain) at upload time only, so secrets never
+    land in a serialised config.
     """
 
     cache_dir: Path = env_field(name="NATIVE_STORE_CACHE_DIR", converter=Path)

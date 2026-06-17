@@ -56,6 +56,13 @@ dependencies = [
     "fastprogress==1.0.5"
 ]
 
+[project.optional-dependencies]
+# Credentialed S3-compatible write backend for the native baseline store (Cloudflare R2).
+# Only required for the `ref test-cases mint` upload path; read/replay never need it.
+aws = [
+    "boto3>=1.34",
+]
+
 [dependency-groups]
 dev = [
     "types-requests",

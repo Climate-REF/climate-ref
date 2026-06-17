@@ -409,50 +409,19 @@ def _sanitize_for_yaml(value: Any) -> Any:
     return value
 
 
-def save_datasets_to_yaml(
+def _serialise_datasets(
     datasets: ExecutionDatasetCollection,
-    path: Path,
-    *,
-    force: bool = False,
-) -> bool:
+) -> tuple[dict[str, Any], dict[str, str]]:
     """
-    Save ExecutionDatasetCollection to a YAML file.
+    Build the version-controlled catalog payload and its separate local-paths map.
 
-    Paths are saved to a separate `.paths.yaml` file to allow the main
-    catalog to be version-controlled while paths remain user-specific.
-
-    Multi-file datasets (e.g., time-chunked data) are stored as multiple rows,
-    one per file. Paths are keyed by `{instance_id}::{filename}` to support
-    multiple files per dataset.
-
-    By default, the catalog is only written if the content has changed
-    (detected via hash comparison). Use `force=True` to always write.
-
-    Parameters
-    ----------
-    datasets
-        The datasets to save
-    path
-        Path to write the YAML file
-    force
-        If True, always write the catalog even if unchanged
-
-    Returns
-    -------
-    :
-        True if the catalog was written, False if skipped (unchanged)
+    Returns a ``(data, paths_map)`` tuple: ``data`` is the catalog content (metadata plus
+    per-source records with local paths stripped out), and ``paths_map`` maps
+    ``{instance_id}::{filename}`` to each local file path. The two are written to
+    ``catalog.yaml`` and the gitignored ``catalog.paths.yaml`` respectively.
     """
-    # Compute the hash first to check if we need to write
-    new_hash = datasets.hash
-
-    if not force:
-        existing_hash = get_catalog_hash(path)
-        if existing_hash == new_hash:
-            logger.info(f"Catalog unchanged, skipping write: {path}")
-            return False
-
     data: dict[str, Any] = {
-        "_metadata": {"hash": new_hash},
+        "_metadata": {"hash": datasets.hash},
     }
     paths_map: dict[str, str] = {}
 
@@ -485,14 +454,76 @@ def save_datasets_to_yaml(
             "datasets": filtered_records,
         }
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+    return data, paths_map
 
-    with open(path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-    paths_file = _get_paths_file(path)
+def _write_paths_file(paths_file: Path, paths_map: dict[str, str]) -> None:
+    """Write the gitignored local-paths sidecar (``catalog.paths.yaml``)."""
+    paths_file.parent.mkdir(parents=True, exist_ok=True)
     with open(paths_file, "w") as f:
         yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
+
+
+def save_datasets_to_yaml(
+    datasets: ExecutionDatasetCollection,
+    path: Path,
+    *,
+    force: bool = False,
+) -> bool:
+    """
+    Save ExecutionDatasetCollection to a YAML file.
+
+    Paths are saved to a separate `.paths.yaml` file to allow the main
+    catalog to be version-controlled while paths remain user-specific.
+
+    Multi-file datasets (e.g., time-chunked data) are stored as multiple rows,
+    one per file. Paths are keyed by `{instance_id}::{filename}` to support
+    multiple files per dataset.
+
+    By default, the catalog is only written if the content has changed
+    (detected via hash comparison). Use `force=True` to always write.
+
+    The gitignored `.paths.yaml` sidecar is (re)generated whenever it is **missing**, even
+    when the catalog content is unchanged: on a fresh checkout the version-controlled
+    `catalog.yaml` exists but the local paths file does not, and `run`/`mint` need it to
+    resolve inputs. In that case the catalog itself is left untouched (so a plain
+    `ref test-cases fetch` is enough — no `--force` required) and only the paths file is written.
+
+    Parameters
+    ----------
+    datasets
+        The datasets to save
+    path
+        Path to write the YAML file
+    force
+        If True, always write the catalog even if unchanged
+
+    Returns
+    -------
+    :
+        True if the catalog was (re)written, False if the catalog was left unchanged
+        (the paths sidecar may still have been regenerated).
+    """
+    new_hash = datasets.hash
+    paths_file = _get_paths_file(path)
+
+    if not force and get_catalog_hash(path) == new_hash:
+        # Catalog content is unchanged. Still regenerate the gitignored paths sidecar if it
+        # is missing (e.g. a fresh checkout) so run/mint can resolve inputs, but leave the
+        # version-controlled catalog untouched to avoid spurious diffs.
+        if paths_file.exists():
+            logger.info(f"Catalog unchanged, skipping write: {path}")
+        else:
+            _, paths_map = _serialise_datasets(datasets)
+            _write_paths_file(paths_file, paths_map)
+            logger.info(f"Catalog unchanged; regenerated missing paths file: {paths_file}")
+        return False
+
+    data, paths_map = _serialise_datasets(datasets)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+    _write_paths_file(paths_file, paths_map)
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
     return True
 

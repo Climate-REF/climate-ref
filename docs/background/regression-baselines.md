@@ -89,8 +89,8 @@ because an empty native set is legitimate, a missing native baseline downgrades 
 ### Actions
 
 - **`skip`** — nothing relevant to this case changed, or the case is not under regression management.
-- **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist).
-- **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline.
+- **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
+- **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline *and* no native baseline exists to replay against.
 - **`fail`** — an unauthorised or unverifiable change (committed bundle edited without a version bump, version moved backwards, bundle drifted from its manifest, or catalog changed without regenerating the baseline).
 
 ### Decision flow
@@ -116,7 +116,9 @@ flowchart TD
 
     seeding -->|no| versionCmp{version vs base}
     versionCmp -->|decreased| failVersion[["FAIL<br/>version not monotonic"]]
-    versionCmp -->|bumped| execute[["EXECUTE<br/>authorised new baseline"]]
+    versionCmp -->|bumped| bumpNative{native<br/>present?}
+    bumpNative -->|yes| replayBump[["REPLAY<br/>verify new baseline<br/>reproduces from native"]]
+    bumpNative -->|no| execute[["EXECUTE<br/>full re-run<br/>(no native to replay)"]]
     versionCmp -->|unchanged| committedChanged{committed<br/>changed?}
 
     committedChanged -->|yes| failUnauthorised[["FAIL<br/>baseline changed without<br/>version bump"]]
@@ -174,8 +176,8 @@ branch and acts on each decision:
 
 - **`fail`** aborts the job with the offending cases and their reasons.
 - **`replay`** is verified in place against the public native baseline.
-- **`execute`** is surfaced as a warning: a `test_case_version` bump authorises a new
-  baseline that only the credentialed mint tier can publish, so the PR tier flags it rather than failing.
+- **`execute`** is surfaced as a warning: a `test_case_version` bump with no native baseline to replay against cannot be verified
+   (it would need a full diagnostic run), so the committed bundle is gated by review here and and requires `minting`.
 
 The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on fork pull requests.
 The decision-to-replay fan-out lives in `scripts/ci/regression-pr-gate.sh`.

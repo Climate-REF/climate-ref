@@ -6,11 +6,13 @@ based on what changed relative to the base branch:
 
 - **EXECUTE** — re-run the diagnostic end-to-end and compare the regenerated committed
     bundle to the in-repo copy (tolerant compare).
-    Required when the author has bumped ``test_case_version`` to authorise a new baseline.
+    Required when the author has bumped ``test_case_version`` to authorise a new baseline
+    but no native baseline exists to replay against.
 - **REPLAY** — materialise the cached native baseline and re-run only
     ``build_execution_result`` against it, comparing to the committed bundle.
     Cheap and anonymous; used when extraction code changed but the committed bundle did
-    not, and to seed a newly added manifest — but only when native blobs exist to replay.
+    not, to seed a newly added manifest, and to verify a ``test_case_version`` bump that ships native blobs
+    — but only when native blobs exist to replay.
 - **FAIL** — the committed bundle (or its input catalog) changed without a
     ``test_case_version`` bump (an unauthorised baseline change), or the version moved backwards.
 - **SKIP** — nothing relevant to this test case changed, or the case is not yet under
@@ -180,10 +182,19 @@ def decide_coupling(  # noqa: PLR0911, PLR0912
     native_changed = manifest.native != base_manifest.native
 
     if version_bumped:
+        version_change = f"{base_manifest.test_case_version} -> {manifest.test_case_version}"
+        if manifest.native:
+            # A native baseline ships with the bump, so the replay can prove the new committed bundle
+            # actually reproduces from those blobs.
+            return GateDecision(
+                Action.REPLAY,
+                f"test_case_version bumped ({version_change}) with a native baseline present; "
+                "replaying to confirm the native baseline reproduces the new committed bundle",
+            )
         return GateDecision(
             Action.EXECUTE,
-            f"test_case_version bumped ({base_manifest.test_case_version} -> "
-            f"{manifest.test_case_version}); executing full run with tolerant compare",
+            f"test_case_version bumped ({version_change}) with no native baseline to replay; "
+            "full end-to-end re-run required to verify the new committed bundle",
         )
 
     if committed_changed:

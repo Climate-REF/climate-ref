@@ -3,9 +3,6 @@
 #
 # Runs the coupling gate (`ref test-cases ci-gate`) against the pull request's base branch and,
 # for every case it routes to `replay`, re-checks the cached native baseline.
-# `execute` cases are surfaced as warnings
-# (a `test_case_version` bump authorises a new baseline that only the credentialed mint tier can publish, so the PR tier cannot verify it);
-# `fail` cases abort the job.
 #
 # All baseline data can be fetched with public read access so this does not require credentials.
 #
@@ -35,11 +32,10 @@ if [ "${gate_rc}" -ne 0 ]; then
   exit 1
 fi
 
-# A version bump authorises a new baseline that only the trusted mint tier can
-# publish, so flag it here rather than trying (and failing) to verify it.
+
 while IFS= read -r execute_case; do
   [ -n "${execute_case}" ] || continue
-  echo "::warning::${execute_case} bumped test_case_version -- re-mint on the trusted tier after merge."
+  echo "::warning::${execute_case} bumped test_case_version with no native baseline -- review the committed bundle, then mint on the trusted tier to enable replay verification."
 done < <(echo "${decisions}" | jq -r '.[] | select(.action == "execute") | .case')
 
 replay_cases="$(echo "${decisions}" | jq -r '.[] | select(.action == "replay") | .case')"

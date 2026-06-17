@@ -1,10 +1,28 @@
 {
+  "catalog_hash": "8371cadebf4fd40b162e6458fffab6ef3ab3d505",
   "committed": {
     "diagnostic.json": "5bb5817e3c59a02859dd3cd2d94f3b00e026a25a70e0f22b1e7fc5234ce636f7",
     "output.json": "f9a2e86a5906875d01f9ee62d3044eefd3d21d9bfcc71be62d4ddcd2fa75fe9d",
     "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
-  "native": {},
+  "native": {
+    "annual_mean_global_mean_timeseries.nc": {
+      "sha256": "68f789157617604344470133d5749a94805934abb8624caa96d80866e28196b9",
+      "size": 31184
+    },
+    "diagnostic.json": {
+      "sha256": "5bb5817e3c59a02859dd3cd2d94f3b00e026a25a70e0f22b1e7fc5234ce636f7",
+      "size": 968
+    },
+    "output.json": {
+      "sha256": "f9a2e86a5906875d01f9ee62d3044eefd3d21d9bfcc71be62d4ddcd2fa75fe9d",
+      "size": 504
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
   "schema": 1,
   "test_case_version": 1
 }

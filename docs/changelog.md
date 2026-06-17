@@ -21,6 +21,15 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.6 (2026-06-17)
+
+### Bug Fixes
+
+- Fixed loading the default configuration in environments where the user cache directory cannot be written (for example, read-only or restricted HPC systems).
+  Previously, running a `ref` command without an existing configuration file could fail with `Error loading configuration` because the default ignore-datasets file could not be cached.
+  The REF now degrades gracefully and continues without the cached ignore-datasets file. ([#734](https://github.com/Climate-REF/climate-ref/pull/734))
+
+
 ## climate-ref 0.14.5 (2026-06-17)
 
 ### Bug Fixes

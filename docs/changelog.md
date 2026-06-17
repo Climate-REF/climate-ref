@@ -21,6 +21,19 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.5 (2026-06-17)
+
+### Bug Fixes
+
+- Made ESMValTool regression baselines deterministic by giving each captured run a stable execution directory instead of a timestamped one, so re-running a test case no longer churns the committed output. ([#714](https://github.com/Climate-REF/climate-ref/pull/714))
+- Fixed fetching datasets from ESGF failing with `Must have equal len keys and value when setting with an iterable` under pandas 3.0,
+  by running the intake-esgf catalogue build with the legacy object-string dtype. ([#726](https://github.com/Climate-REF/climate-ref/pull/726))
+
+### Trivial/Internal Changes
+
+- [#719](https://github.com/Climate-REF/climate-ref/pull/719), [#720](https://github.com/Climate-REF/climate-ref/pull/720), [#723](https://github.com/Climate-REF/climate-ref/pull/723), [#725](https://github.com/Climate-REF/climate-ref/pull/725)
+
+
 ## climate-ref 0.14.4 (2026-06-04)
 
 ### Improvements

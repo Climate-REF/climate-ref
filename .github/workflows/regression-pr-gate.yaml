@@ -1,0 +1,50 @@
+# PR-tier regression baseline gate.
+#
+# Decides how each test case's regression baseline should be verified against the
+# pull request's base branch, then replays the cached native baseline for every case
+# routed to `replay`. Runs on the public `ubuntu-latest` runner with no credentials,
+# so it is safe on untrusted fork pull-request code (everything here is anonymous
+# public read). See docs/background/regression-baselines.md.
+name: Regression baselines (PR gate)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+# Cancel superseded in-progress runs for the same PR to free up runner slots.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  coupling-gate:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    env:
+      # Rich must emit uncoloured output so `ci-gate --json` is machine-parseable.
+      NO_COLOR: "1"
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+        with:
+          # Full history so the gate can diff base...HEAD and read the base manifest.
+          fetch-depth: 0
+      - name: Make the base branch available for the diff
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: |
+          git fetch --no-tags origin \
+            "+refs/heads/${GITHUB_BASE_REF}:refs/remotes/origin/${GITHUB_BASE_REF}"
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Decide and verify baselines
+        # The gate fetches sample data only when a case actually needs replaying, so a
+        # PR that touches no baselines completes without any downloads.
+        env:
+          GITHUB_BASE_REF: ${{ github.base_ref }}
+        run: bash scripts/ci/regression-pr-gate.sh

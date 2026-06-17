@@ -407,11 +407,24 @@ packages/climate-ref-{provider}/tests/test-data/
     └── {test_case}/
         ├── catalog.yaml       # Dataset metadata
         ├── catalog.paths.yaml # Local file paths (gitignored)
-        └── regression/        # Regression outputs
-            ├── diagnostic.json    # Execution result
-            ├── output.json        # CMEC output bundle
-            └── ...                # Other output files
+        ├── manifest.json      # Binds the two baseline layers (see below)
+        └── regression/        # Committed bundle (text-only CMEC JSON)
+            ├── series.json       # Scalar/series metric values
+            ├── diagnostic.json   # Execution result
+            └── output.json       # CMEC output bundle
 ```
+
+A baseline has **two layers** (see
+[Regression baselines](../background/regression-baselines.md) for the full model):
+
+- the small, git-tracked **committed bundle** under `regression/`, which is what review
+  and CI actually gate on; and
+- the heavy **native bundle** (`.nc`, `.png`, ...) that lives in a shared object store,
+  content-addressed by digest, and is fetched anonymously.
+
+`manifest.json` binds them, recording a monotonic `test_case_version` that *authorises* a
+new baseline, the digests of the committed files, the digests of the native files, and the
+hash of the input `catalog.yaml`.
 
 For example, the ILAMB provider's `gpp-fluxcom` diagnostic with the `default` test case:
 
@@ -454,6 +467,71 @@ def test_regression(run_test_case, execution_regression):
     # Compare metric bundle against baseline
     execution_regression.check(result, "my-provider/my-diagnostic/default")
 ```
+
+## Baselines and the pull request workflow
+
+When you open a pull request, CI decides *how* to verify each test case's baseline
+purely from what your branch changed relative to the base. You do not run the diagnostic
+again on every PR — that would be too slow — so it helps to know what the gate will do and
+what each outcome asks of you.
+
+```mermaid
+flowchart TD
+    start([You changed a diagnostic]) --> q1{Did the committed<br/>bundle change?}
+    q1 -->|"no — refactor,<br/>same results"| openA[Open pull request]
+    q1 -->|"yes — intended<br/>new results"| regen["Regenerate locally:<br/>ref test-cases run --force-regen"]
+    regen --> bump["Bump test_case_version<br/>in manifest.json"]
+    bump --> openB[Open pull request]
+
+    openA --> gate{{"PR gate runs<br/>ref test-cases ci-gate"}}
+    openB --> gate
+
+    gate -->|skip| done1([Nothing to verify — merge])
+    gate -->|replay| rep[CI replays the cached<br/>native baseline]
+    rep --> repok{Reproduces within<br/>tolerance?}
+    repok -->|yes| done2([Gate passes — merge])
+    repok -->|no| fixcode[["Your change moved the results:<br/>regenerate + bump, or fix the code"]]
+    gate -->|fail| failed[["Baseline changed without a<br/>version bump — bump or revert"]]
+    gate -->|execute| flagged[Version bump detected —<br/>new baseline authorised]
+    flagged --> mint["Publish the native baseline:<br/>dispatch the mint workflow"]
+    mint --> done3([Reviewed via the committed diff — merge])
+```
+
+### What each gate outcome means for you
+
+| Outcome | What happened | What to do |
+| --- | --- | --- |
+| **skip** | Nothing relevant to this case changed. | Nothing — merge as usual. |
+| **replay** | Your change *could* affect the result (you touched extraction code, or re-minted native files). CI re-checks the cached native baseline against the committed bundle. | Nothing if it passes. If replay reports drift, your change moved the results: regenerate the baseline and bump `test_case_version`, or fix the code. |
+| **execute** | You bumped `test_case_version`, authorising a new baseline. The credential-free PR tier cannot publish native files, so it flags the case instead of verifying it. | Publish the new native baseline through the gated mint workflow (below). Review of the new committed bundle happens in the PR diff. |
+| **fail** | The committed bundle (or its input catalog) changed without a `test_case_version` bump, or the version moved backwards. | Bump `test_case_version` to authorise the change, or revert the unintended edit. |
+
+!!! tip "When to bump `test_case_version`"
+    Bump it whenever you *intend* to change a baseline's results. The bump is what tells
+    reviewers and CI "yes, this new output is correct" — without it, a changed baseline is
+    treated as an accidental regression and the gate fails.
+
+### Publishing a new native baseline
+
+Native files (the `.nc`/`.png` outputs referenced by the committed bundle) are written to
+the shared object store only by the **`mint`** verb, which needs write credentials. So that
+no contributor needs those credentials, minting runs as a gated CI workflow:
+
+1. Regenerate and commit your new committed bundle locally
+   (`ref test-cases run --force-regen`), and bump `test_case_version` in `manifest.json`.
+2. Push your branch and run the **"Regression baselines (mint)"** workflow from the GitHub
+   Actions tab, dispatched **on your branch**. It is gated behind a reviewed environment.
+3. The workflow uploads your native files to the store and commits the regenerated
+   `manifest.json` (now carrying the native digests) back to your branch.
+4. The PR gate then `replay`s the published baseline, and review sees the committed-bundle
+   diff as usual.
+
+Use the **`--dry-run`** input first to preflight credentials and preview what would be
+minted without uploading anything. If you do hold credentials locally, `ref test-cases mint`
+does the same thing from your machine.
+
+See [Regression baselines](../background/regression-baselines.md) for the full two-layer
+model, the tolerant comparison, and the credential trust boundary.
 
 ## Complete Example
 

@@ -154,3 +154,56 @@ the `--json` output drives CI's dispatch of the `replay` and `execute` jobs.
     `replay`, `sync`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
     Only `mint` holds object-store write credentials,
     and it runs exclusively on the trusted-tier runner — never on fork pull-request code.
+
+## Continuous integration
+
+The lifecycle commands are wired into three workflows, split along the trust boundary
+so that credentials are confined to a single, manually gated step.
+
+| Workflow | Trigger | Credentials | What it does |
+| --- | --- | --- | --- |
+| `regression-pr-gate.yaml` | every pull request | none | Runs the coupling gate, then `replay`s every case it routes to `replay`. |
+| `regression-mint.yaml` | manual dispatch | R2 write | `mint`s native baselines and commits the regenerated manifest back to the branch. |
+| `regression-drift.yaml` | nightly + manual | none | `sync`s and `replay`s every baseline to catch silent drift. |
+
+### PR gate (`regression-pr-gate.yaml`)
+
+On every pull request, the gate runs `ref test-cases ci-gate --json` against the base
+branch and acts on each decision:
+
+- **`fail`** aborts the job with the offending cases and their reasons.
+- **`replay`** is verified in place against the public native baseline.
+- **`execute`** is surfaced as a warning: a `test_case_version` bump authorises a new
+  baseline that only the credentialed mint tier can publish, so the PR tier flags it
+  rather than failing.
+
+The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on
+fork pull requests — every command is anonymous public read. The decision-to-replay
+fan-out lives in `scripts/ci/regression-pr-gate.sh`.
+
+### Gated mint (`regression-mint.yaml`)
+
+Minting is the only step that writes to the object store, so it is **manually
+dispatched** and gated behind the `native-baselines` GitHub Environment. Dispatch it on
+the feature branch that should receive the new baseline: the job preflights the store
+credentials, runs `mint`, and commits the regenerated `manifest.json` (and committed
+bundle) back to that branch, so the change is reviewed through its pull request and no
+developer ever needs write credentials. A `dry_run` input previews without uploading or
+committing, and the job refuses to run on the default branch.
+
+!!! note "Required repository configuration"
+    Create a `native-baselines` Environment (Settings → Environments) with **required
+    reviewers**, and add two secrets to it holding an object-scoped R2 token:
+
+    - `R2_ACCESS_KEY_ID` → `REF_NATIVE_STORE_ACCESS_KEY_ID`
+    - `R2_SECRET_ACCESS_KEY` → `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
+
+    The endpoint and bucket default to the production R2 account
+    (`REF_NATIVE_STORE_S3_ENDPOINT_URL` / `REF_NATIVE_STORE_BUCKET` override them).
+
+### Nightly drift (`regression-drift.yaml`)
+
+A scheduled (and manually dispatchable) job `sync`s every referenced native blob and
+`replay`s it against the committed bundle. Because replay is tolerant, this catches a
+baseline that no longer reproduces within tolerance — for example after a dependency
+upgrade — independently of any pull request. It is read-only and credential-free.

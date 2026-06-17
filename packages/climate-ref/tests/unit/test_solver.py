@@ -83,6 +83,22 @@ class TestMetricSolver:
         assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
         assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
 
+    def test_build_from_db_refreshes_grey_list(self, db_seeded, config, mocker):
+        refresh = mocker.patch("climate_ref.solver.refresh_grey_list_file")
+        config.grey_list_url = "https://example.invalid/grey_list.yaml"
+
+        ExecutionSolver.build_from_db(config, db_seeded)
+
+        refresh.assert_called_once_with(config.grey_list_file, config.grey_list_url)
+
+    def test_build_from_db_skips_refresh_when_url_empty(self, db_seeded, config, mocker):
+        refresh = mocker.patch("climate_ref.solver.refresh_grey_list_file")
+        config.grey_list_url = ""
+
+        ExecutionSolver.build_from_db(config, db_seeded)
+
+        refresh.assert_not_called()
+
 
 class TestExtractCoveredDatasetsWithDataCatalog:
     """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""

@@ -598,10 +598,10 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     This may trigger a number of additional calculations depending on what data has been ingested
     since the last solve.
 
-    When ``wait`` is True (the default) this blocks until all executions complete, copying their
-    outputs to the results directory and ingesting them. ``timeout`` bounds that wait; a
-    non-positive ``timeout`` (``<= 0``) waits with no time limit. ``wait=False`` queues the
-    executions and returns immediately without collecting their results.
+    When ``wait`` is True (the default) this blocks until all executions complete,
+    copying their outputs to the results directory and ingesting them.
+    ``timeout`` bounds that wait; a non-positive ``timeout`` (``<= 0``) waits with no time limit.
+    ``wait=False`` queues the executions and returns immediately without collecting their results.
 
     Raises
     ------
@@ -623,13 +623,11 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
     executor = config.executor.build(config, db)
 
-    # Some executors (e.g. the local process pool and HPC) only copy outputs to the
-    # results directory and ingest them during ``join``. Skipping that step with
-    # ``--no-wait`` would silently orphan completed work in the scratch directory.
     if not wait and getattr(executor, "collects_results_on_join", False):
         logger.warning(
             f"--no-wait was requested with the {getattr(executor, 'name', 'configured')!r} executor, "
-            f"which only persists results while waiting (during join). Queued executions will run, "
+            f"which only persists results while waiting (during join). "
+            f"Queued executions will run, "
             f"but their outputs will be left in the scratch directory and never copied to the results "
             f"directory or ingested into the database. Re-run without --no-wait, or recover existing "
             f"scratch outputs with `ref executions reingest --include-failed`."
@@ -786,8 +784,5 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         logger.info(f"  {prov}: {count} new executions")
 
     if wait:
-        # ``timeout <= 0`` means "wait with no time limit"; the executors treat a
-        # non-positive timeout as unbounded. ``--no-wait`` (wait=False) is the
-        # explicit "queue and exit" path that skips result collection.
         executor.join(timeout=timeout)
         logger.info("All executions complete")

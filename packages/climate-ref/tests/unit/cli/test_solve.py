@@ -27,8 +27,6 @@ class TestSolve:
         assert kwargs["timeout"] == 10
 
     def test_solve_with_zero_timeout_still_waits(self, sample_data_dir, db, invoke_cli, mocker):
-        # Regression: --timeout 0 must mean "wait with no time limit", not "queue and exit".
-        # It is no longer collapsed onto the --no-wait sentinel.
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve", "--timeout", "0"])
 

@@ -35,9 +35,10 @@ class CeleryExecutor(Executor):
 
     name = "celery"
 
-    # Results are persisted by the worker via the ``handle_result`` task link, so
-    # ``join`` only waits for completion. Skipping it (queue-and-exit) does not lose
-    # work: the workers keep processing and ingesting results in the background.
+    # Results are persisted by the worker via the ``handle_result`` task link,
+    # so ``join`` only waits for completion.
+    # Skipping it (queue-and-exit) does not lose work.
+    # The workers keep processing and ingesting results in the background.
     collects_results_on_join = False
 
     def __init__(self, *, config: Config, **kwargs: Any) -> None:

@@ -657,11 +657,7 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, mock_execut
 
 
 def test_solve_waits_when_timeout_zero(mocker, mock_metric_execution, mock_executor, db_seeded):
-    """Regression: --timeout 0 (wait=True) must still join so results are collected.
-
-    Previously the solver only joined when ``timeout > 0``, so ``--timeout 0`` queued
-    work to the executor and exited without ever copying outputs to results.
-    """
+    """--timeout 0 (wait=True) must still join so results are collected"""
     mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
     solver = mock.MagicMock(spec=ExecutionSolver)
     solver.solve.return_value = [mock_metric_execution]

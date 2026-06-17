@@ -197,13 +197,6 @@ class TestLocalExecutorFailureModes:
     def test_timeout_zero_waits_for_completion(
         self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
     ):
-        """Regression: ``join(timeout=0)`` waits indefinitely instead of failing immediately.
-
-        ``--timeout 0`` reaches the executor as ``timeout=0``. The future below is
-        still pending when ``join`` starts, so the old behaviour (treating any
-        elapsed time past ``0`` as a timeout) would have abandoned it on the first
-        iteration. The fix must instead wait until the result lands.
-        """
         # task_timeout=0 disables the per-task deadline so only the overall
         # (timeout=0) branch is under test.
         executor = _build_executor(db_with_provider, config, thread_pool, task_timeout=0)

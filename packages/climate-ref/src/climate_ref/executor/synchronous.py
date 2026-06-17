@@ -18,8 +18,7 @@ class SynchronousExecutor:
 
     name = "synchronous"
 
-    # Results are processed inline in ``run``; ``join`` is a no-op, so skipping it
-    # (queue-and-exit) does not lose any work.
+    # ``join`` is a no-op, so skipping it (queue-and-exit) does not lose any work.
     collects_results_on_join = False
 
     def __init__(

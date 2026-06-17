@@ -107,10 +107,11 @@ class Executor(Protocol):
     Whether execution results are only collected and persisted during ``join``.
 
     When ``True`` (e.g. the local process pool and HPC executors), skipping ``join``
-    -- as ``--no-wait`` does -- leaves completed outputs in the scratch directory
-    without copying them to the results directory or ingesting them. When ``False``
-    (e.g. the synchronous and Celery executors), results are persisted elsewhere
-    (inline in ``run`` or by a worker callback), so ``join`` only waits for completion.
+    (via ``--no-wait``) leaves completed outputs in the scratch directory
+    without copying them to the results directory or ingesting them.
+    When ``False`` (e.g. the synchronous and Celery executors),
+    results are persisted elsewhere (inline in ``run`` or by a worker callback),
+    so ``join`` only waits for completion.
     """
 
     def __init__(self, **kwargs: Any) -> None: ...

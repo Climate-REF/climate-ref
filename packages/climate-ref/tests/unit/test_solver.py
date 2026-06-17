@@ -656,6 +656,32 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, mock_execut
     assert run_kwargs["execution"].id == execution_result.id
 
 
+def test_solve_waits_when_timeout_zero(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """--timeout 0 (wait=True) must still join so results are collected"""
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    solve_required_executions(db_seeded, wait=True, timeout=0)
+
+    mock_executor.return_value.join.assert_called_once()
+    assert mock_executor.return_value.join.call_args.kwargs["timeout"] == 0
+
+
+def test_solve_skips_join_when_no_wait(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """``wait=False`` queues executions and returns without joining (collecting results)."""
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    solve_required_executions(db_seeded, wait=False, timeout=0)
+
+    mock_executor.return_value.run.assert_called_once()
+    mock_executor.return_value.join.assert_not_called()
+
+
 def test_two_executions_same_group_distinct_output_fragments(
     mocker, mock_metric_execution, mock_executor, db_seeded
 ):

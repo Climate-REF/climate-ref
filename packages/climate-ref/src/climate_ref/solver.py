@@ -585,6 +585,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     solver: ExecutionSolver | None = None,
     config: Config | None = None,
     timeout: int = 60,
+    wait: bool = True,
     one_per_provider: bool = False,
     one_per_diagnostic: bool = False,
     filters: SolveFilterOptions | None = None,
@@ -597,10 +598,15 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     This may trigger a number of additional calculations depending on what data has been ingested
     since the last solve.
 
+    When ``wait`` is True (the default) this blocks until all executions complete,
+    copying their outputs to the results directory and ingesting them.
+    ``timeout`` bounds that wait; a non-positive ``timeout`` (``<= 0``) waits with no time limit.
+    ``wait=False`` queues the executions and returns immediately without collecting their results.
+
     Raises
     ------
     TimeoutError
-        If the execution isn't completed within the specified timeout
+        If the executions aren't completed within a positive ``timeout``
     """
     if config is None:
         config = Config.default()
@@ -616,6 +622,16 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     fail_stale_in_progress_executions(db)
 
     executor = config.executor.build(config, db)
+
+    if not wait and getattr(executor, "collects_results_on_join", False):
+        logger.warning(
+            f"--no-wait was requested with the {getattr(executor, 'name', 'configured')!r} executor, "
+            f"which only persists results while waiting (during join). "
+            f"Queued executions will run, "
+            f"but their outputs will be left in the scratch directory and never copied to the results "
+            f"directory or ingested into the database. Re-run without --no-wait, or recover existing "
+            f"scratch outputs with `ref executions reingest --include-failed`."
+        )
 
     diagnostic_count: dict[str, int] = {}
     provider_count: dict[str, int] = {}
@@ -767,6 +783,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     for prov, count in provider_count.items():
         logger.info(f"  {prov}: {count} new executions")
 
-    if timeout > 0:
+    if wait:
         executor.join(timeout=timeout)
         logger.info("All executions complete")

@@ -13,6 +13,7 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
 
         assert kwargs["timeout"] == 6 * 60 * 60
+        assert kwargs["wait"] is True
         assert not kwargs["dry_run"]
         assert kwargs["execute"]
         assert kwargs["filters"].diagnostic is None
@@ -24,6 +25,14 @@ class TestSolve:
 
         _args, kwargs = mock_solve.call_args
         assert kwargs["timeout"] == 10
+
+    def test_solve_with_zero_timeout_still_waits(self, sample_data_dir, db, invoke_cli, mocker):
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        invoke_cli(["solve", "--timeout", "0"])
+
+        _args, kwargs = mock_solve.call_args
+        assert kwargs["timeout"] == 0
+        assert kwargs["wait"] is True
 
     def test_solve_with_dryrun(self, sample_data_dir, db, invoke_cli, mocker):
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
@@ -122,5 +131,8 @@ class TestSolve:
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve", "--no-wait", "--timeout", "30"])
 
+        # --no-wait is now passed through explicitly rather than being collapsed
+        # onto timeout=0, so --timeout keeps its literal value.
         _args, kwargs = mock_solve.call_args
-        assert kwargs["timeout"] == 0
+        assert kwargs["wait"] is False
+        assert kwargs["timeout"] == 30

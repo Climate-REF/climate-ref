@@ -20,7 +20,8 @@ def solve(  # noqa: PLR0913
     ] = True,
     timeout: int = typer.Option(
         6 * 60 * 60,
-        help="Timeout in seconds for waiting on executions to complete. Defaults to 6 hours.",
+        help="Timeout in seconds for waiting on executions to complete. Defaults to 6 hours. "
+        "Set to 0 (or a negative value) to wait with no time limit. Ignored when --no-wait is used.",
     ),
     wait: Annotated[
         bool,
@@ -106,7 +107,8 @@ def solve(  # noqa: PLR0913
         db=db,
         dry_run=dry_run,
         execute=execute,
-        timeout=timeout if wait else 0,
+        wait=wait,
+        timeout=timeout,
         one_per_provider=one_per_provider,
         one_per_diagnostic=one_per_diagnostic,
         filters=filters,

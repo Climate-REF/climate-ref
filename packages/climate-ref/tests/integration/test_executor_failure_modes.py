@@ -10,6 +10,7 @@ state for each failure mode.
 from __future__ import annotations
 
 import datetime
+import threading
 import time
 from concurrent.futures import Future, ThreadPoolExecutor
 from pathlib import Path
@@ -192,6 +193,41 @@ class TestLocalExecutorFailureModes:
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
         assert execution_group.dirty is True
+
+    def test_timeout_zero_waits_for_completion(
+        self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
+    ):
+        # task_timeout=0 disables the per-task deadline so only the overall
+        # (timeout=0) branch is under test.
+        executor = _build_executor(db_with_provider, config, thread_pool, task_timeout=0)
+        definition = definition_factory(diagnostic=mock_diagnostic)
+        execution_id, eg_id, _ = _seed_execution(
+            db_with_provider, provider, "mock", config, key="timeout-zero-waits"
+        )
+
+        # A future that only resolves after join has started polling.
+        future: Future = Future()
+        timer = threading.Timer(
+            0.3,
+            future.set_result,
+            args=[ExecutionResult.build_from_failure(definition, retryable=False)],
+        )
+        _attach_future(executor, definition, execution_id, future)
+
+        timer.start()
+        try:
+            # Must NOT raise TimeoutError despite timeout=0 and a slow result.
+            executor.join(timeout=0)
+        finally:
+            timer.cancel()
+
+        assert executor._results == []
+        with db_with_provider.session.begin():
+            execution = db_with_provider.session.get(Execution, execution_id)
+            execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
+        # The result was collected and processed (not abandoned).
+        assert execution.successful is False
+        assert execution_group.dirty is False
 
     def test_overall_join_timeout_fails_outstanding(
         self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool

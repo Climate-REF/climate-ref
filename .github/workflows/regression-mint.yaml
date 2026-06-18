@@ -116,9 +116,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage only the committed bundle and manifest; native blobs live in the
-          # object store, not the tree, and nothing else should change during a mint.
+          # Stage the committed bundle, its manifest, and the input catalog.
+          # The catalog.yaml is included because the mint regenerates it:
+          #  datasets.hash (its _metadata.hash, recorded as the manifest's catalog_hash) is not reproducible across pandas versions,
+          #  so the runner's value can differ from the developer-authored one.
           git add ':(glob)packages/**/test-data/**/manifest.json' \
+                  ':(glob)packages/**/test-data/**/catalog.yaml' \
                   ':(glob)packages/**/test-data/**/regression/**'
           if git diff --cached --quiet; then
             echo "No baseline changes to commit; the native blobs were already current."
@@ -129,10 +132,8 @@ jobs:
           # commit: the PR gate does not auto-replay the freshly minted baseline. Push a
           # follow-up commit (or re-run the PR gate) to verify it. See docs/background/regression-baselines.md.
           #
-          # workflow_dispatch pins the checkout to the dispatch-time SHA, so the branch may
-          # have advanced (e.g. an earlier mint of another diagnostic landed). Rebase onto
-          # the latest remote tip before pushing and retry to absorb that race. Different
-          # diagnostics touch disjoint test-data paths, so the rebase does not conflict.
+          # The branch may have advanced (e.g. mint of another diagnostic).
+          # Different diagnostics touch disjoint test-data paths, so the rebase does not conflict.
           for attempt in 1 2 3 4 5; do
             if git push origin "HEAD:${GITHUB_REF_NAME}"; then
               exit 0

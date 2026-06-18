@@ -66,6 +66,14 @@ jobs:
           python-version: "3.13"
       - name: Fetch sample data
         run: uv run ref datasets fetch-sample-data
+      - name: Set up provider (environment + reference data)
+        env:
+          PROVIDER: ${{ inputs.provider }}
+        # Provisions the provider's conda environment (where applicable) and its
+        # reference-data registries. ILAMB/PMP/ESMValTool diagnostics read observational
+        # reference data that is not part of the ESGF model fetch above; without this the
+        # diagnostic fails to open its reference files during the mint run.
+        run: uv run ref providers setup --provider "${PROVIDER}"
       - name: Restore test-case catalog paths
         env:
           PROVIDER: ${{ inputs.provider }}

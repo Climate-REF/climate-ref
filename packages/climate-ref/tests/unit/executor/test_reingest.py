@@ -10,7 +10,6 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.executor.reingest import (
     _extract_dataset_attributes,
-    _rewrite_copied_paths,
     _validate_path_containment,
     get_executions_for_reingest,
     reconstruct_execution_definition,
@@ -199,50 +198,6 @@ class TestValidatePathContainment:
         escaping_path = base / ".." / "outside"
         with pytest.raises(ValueError, match="escapes"):
             _validate_path_containment(escaping_path, base, "test")
-
-
-class TestRewriteCopiedPaths:
-    def test_rewrites_old_prefix_in_text_files(self, tmp_path):
-        """Embedded absolute paths under the old prefix are re-pointed at the new prefix."""
-        old = "/scratch/frag/160"
-        new = "/scratch/frag/2217"
-        provenance = tmp_path / "executions" / "recipe" / "diagnostic_provenance.yml"
-        provenance.parent.mkdir(parents=True)
-        provenance.write_text(
-            yaml.safe_dump({f"{old}/plots/jointplot.png": {"caption": "c"}}), encoding="utf-8"
-        )
-
-        _rewrite_copied_paths(tmp_path, old, new)
-
-        content = provenance.read_text(encoding="utf-8")
-        assert old not in content
-        assert f"{new}/plots/jointplot.png" in content
-
-    def test_noop_when_prefixes_equal(self, tmp_path):
-        """No file is touched when the old and new prefixes are identical."""
-        original = '{"path": "/scratch/frag/160"}'
-        target = tmp_path / "output.json"
-        target.write_text(original, encoding="utf-8")
-
-        _rewrite_copied_paths(tmp_path, "/scratch/frag/160", "/scratch/frag/160")
-
-        assert target.read_text(encoding="utf-8") == original
-
-    def test_skips_binary_and_non_matching_files(self, tmp_path):
-        """Binary files matching a glob are skipped, and unrelated content is left intact."""
-        binary = tmp_path / "blob.json"
-        binary.write_bytes(b"\xff\xfe\x00\x01")
-        untouched = tmp_path / "notes.txt"
-        untouched.write_text("nothing to rewrite here", encoding="utf-8")
-        image = tmp_path / "jointplot.png"
-        image.write_bytes(b"\x89PNG/scratch/frag/160")
-
-        _rewrite_copied_paths(tmp_path, "/scratch/frag/160", "/scratch/frag/2217")
-
-        assert binary.read_bytes() == b"\xff\xfe\x00\x01"
-        assert untouched.read_text(encoding="utf-8") == "nothing to rewrite here"
-        # .png is not a rewritable pattern, so even a matching prefix is left alone.
-        assert image.read_bytes() == b"\x89PNG/scratch/frag/160"
 
 
 class TestExtractDatasetAttributes:

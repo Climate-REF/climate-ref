@@ -34,6 +34,7 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
+from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -155,48 +156,6 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
         if val is not None:
             attrs[col_name] = val
     return attrs
-
-
-# Text artifacts that may embed absolute output paths which ``shutil.copytree``
-# duplicates verbatim. ESMValTool records absolute output paths inside its
-# ``diagnostic_provenance.yml`` files (and within ``index.html`` and logs).
-_REWRITABLE_PATTERNS = ("*.json", "*.yml", "*.yaml", "*.txt", "*.html", "*.xml")
-
-
-def _rewrite_copied_paths(root: "Path", old_prefix: str, new_prefix: str) -> None:
-    """
-    Rewrite absolute paths embedded in copied text artifacts.
-
-    ``reingest`` duplicates an execution's scratch tree with ``shutil.copytree``,
-    which copies file *contents* verbatim. Providers that record absolute output
-    paths inside their artifacts -- notably ESMValTool's ``diagnostic_provenance.yml``
-    -- therefore still reference the original execution's directory after the copy.
-    ``build_execution_result`` then tries to express those paths relative to the new
-    output directory and raises ``ValueError`` because they are not in its subpath.
-
-    Rewriting ``old_prefix`` -> ``new_prefix`` across the copied text files re-points
-    the embedded paths at the new output directory so the result can be rebuilt.
-
-    Parameters
-    ----------
-    root
-        Directory tree to rewrite in place (the new scratch directory).
-    old_prefix
-        The original scratch directory path embedded in the copied artifacts.
-    new_prefix
-        The new scratch directory path to substitute.
-    """
-    if old_prefix == new_prefix:
-        return
-    for pattern in _REWRITABLE_PATTERNS:
-        for file in root.rglob(pattern):
-            try:
-                content = file.read_text(encoding="utf-8")
-            except (UnicodeDecodeError, OSError):
-                # Skip binary or unreadable files that happen to match the glob.
-                continue
-            if old_prefix in content:
-                file.write_text(content.replace(old_prefix, new_prefix), encoding="utf-8")
 
 
 def _validate_path_containment(path: "Path", base: "Path", label: str) -> None:
@@ -328,7 +287,11 @@ def reingest_execution(
                 # (e.g. ESMValTool's diagnostic_provenance.yml) from the original
                 # scratch directory to the new one so build_execution_result can
                 # resolve them within the new output directory.
-                _rewrite_copied_paths(new_scratch_dir, str(scratch_dir), str(new_scratch_dir))
+                rewrite_tree(
+                    new_scratch_dir,
+                    {str(scratch_dir): str(new_scratch_dir)},
+                    SANITISED_FILE_GLOBS,
+                )
 
                 definition = reconstruct_execution_definition(
                     config, execution, diagnostic, output_fragment=new_fragment

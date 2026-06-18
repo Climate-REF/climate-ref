@@ -479,6 +479,26 @@ def _load_csv_and_merge(output_directory: Path) -> pd.DataFrame:
     return df
 
 
+def _register_data_outputs(output_bundle: dict[str, Any], definition: ExecutionDefinition) -> None:
+    """
+    Register ILAMB's scalar CSV and netCDF outputs in the data section of a CMEC output bundle.
+
+    These files are re-read by ``build_execution_result`` (via ``_load_csv_and_merge`` and the
+    netCDF series loop) to reconstruct the metrics and series, so they must be persisted with the
+    execution outputs and captured in the regression baseline rather than left in the scratch
+    directory.
+    """
+    for datafile in sorted(
+        [*definition.output_directory.glob("*.csv"), *definition.output_directory.glob("*.nc")]
+    ):
+        relative_path = str(definition.as_relative_path(datafile))
+        output_bundle[OutputCV.DATA.value][relative_path] = {
+            OutputCV.FILENAME.value: relative_path,
+            OutputCV.LONG_NAME.value: datafile.name,
+            OutputCV.DESCRIPTION.value: "Scalar and time-series data produced by ILAMB.",
+        }
+
+
 class ILAMBStandard(Diagnostic):
     """
     Apply the standard ILAMB analysis with respect to a given reference dataset.
@@ -751,6 +771,11 @@ class ILAMBStandard(Diagnostic):
                 OutputCV.DESCRIPTION.value: "",
                 OutputCV.DIMENSIONS.value: figure_dimensions,
             }
+
+        # Register the scalar CSV files and the netCDF time-trace files in the data section so
+        # they are persisted with the execution outputs and captured in the regression baseline;
+        # build_execution_result re-reads them to reconstruct the metrics and series.
+        _register_data_outputs(output_bundle, definition)
 
         # Add the html page to the output
         index_html = definition.to_output_path("index.html")

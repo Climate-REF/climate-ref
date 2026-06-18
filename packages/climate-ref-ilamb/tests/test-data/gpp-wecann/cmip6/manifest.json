@@ -1,0 +1,11 @@
+{
+  "catalog_hash": "63308f56f55a8a6b7d3af0dc14f13161d5d5b84e",
+  "committed": {
+    "diagnostic.json": "bbc37b1547186955b2e4d2c20514b555dc4c89375ea7339aa77382b118ddc7ae",
+    "output.json": "24703a925a96c6f76240594e8ef0737f2eef52247488b2cc915b5058299d4d6f",
+    "series.json": "e42b7546e82b5149c139566772313b6578a42025561c89d55501e08bfde9888a"
+  },
+  "native": {},
+  "schema": 1,
+  "test_case_version": 1
+}

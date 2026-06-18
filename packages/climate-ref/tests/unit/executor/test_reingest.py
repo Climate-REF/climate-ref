@@ -4,11 +4,13 @@ import json
 import pathlib
 
 import pytest
+import yaml
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.executor.reingest import (
     _extract_dataset_attributes,
+    _rewrite_copied_paths,
     _validate_path_containment,
     get_executions_for_reingest,
     reconstruct_execution_definition,
@@ -197,6 +199,50 @@ class TestValidatePathContainment:
         escaping_path = base / ".." / "outside"
         with pytest.raises(ValueError, match="escapes"):
             _validate_path_containment(escaping_path, base, "test")
+
+
+class TestRewriteCopiedPaths:
+    def test_rewrites_old_prefix_in_text_files(self, tmp_path):
+        """Embedded absolute paths under the old prefix are re-pointed at the new prefix."""
+        old = "/scratch/frag/160"
+        new = "/scratch/frag/2217"
+        provenance = tmp_path / "executions" / "recipe" / "diagnostic_provenance.yml"
+        provenance.parent.mkdir(parents=True)
+        provenance.write_text(
+            yaml.safe_dump({f"{old}/plots/jointplot.png": {"caption": "c"}}), encoding="utf-8"
+        )
+
+        _rewrite_copied_paths(tmp_path, old, new)
+
+        content = provenance.read_text(encoding="utf-8")
+        assert old not in content
+        assert f"{new}/plots/jointplot.png" in content
+
+    def test_noop_when_prefixes_equal(self, tmp_path):
+        """No file is touched when the old and new prefixes are identical."""
+        original = '{"path": "/scratch/frag/160"}'
+        target = tmp_path / "output.json"
+        target.write_text(original, encoding="utf-8")
+
+        _rewrite_copied_paths(tmp_path, "/scratch/frag/160", "/scratch/frag/160")
+
+        assert target.read_text(encoding="utf-8") == original
+
+    def test_skips_binary_and_non_matching_files(self, tmp_path):
+        """Binary files matching a glob are skipped, and unrelated content is left intact."""
+        binary = tmp_path / "blob.json"
+        binary.write_bytes(b"\xff\xfe\x00\x01")
+        untouched = tmp_path / "notes.txt"
+        untouched.write_text("nothing to rewrite here", encoding="utf-8")
+        image = tmp_path / "jointplot.png"
+        image.write_bytes(b"\x89PNG/scratch/frag/160")
+
+        _rewrite_copied_paths(tmp_path, "/scratch/frag/160", "/scratch/frag/2217")
+
+        assert binary.read_bytes() == b"\xff\xfe\x00\x01"
+        assert untouched.read_text(encoding="utf-8") == "nothing to rewrite here"
+        # .png is not a rewritable pattern, so even a matching prefix is left alone.
+        assert image.read_bytes() == b"\x89PNG/scratch/frag/160"
 
 
 class TestExtractDatasetAttributes:
@@ -429,6 +475,72 @@ class TestReingestExecution:
             definition.output_directory
         ).startswith(str(config.paths.scratch))
         assert definition.output_directory.exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_rewrites_embedded_absolute_paths(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Absolute paths embedded in copied artifacts are re-pointed at the new scratch dir.
+
+        Regression test for the reingest crash: ESMValTool records absolute output
+        paths in ``diagnostic_provenance.yml``. ``shutil.copytree`` copies these
+        verbatim, so before the fix they still referenced the original execution's
+        directory and ``build_execution_result`` raised
+        ``ValueError: ... is not in the subpath of ...``.
+        """
+        original_scratch = scratch_dir_with_results
+        provenance = (
+            original_scratch
+            / "executions"
+            / "recipe_20260617_122233"
+            / "run"
+            / "diag"
+            / "script1"
+            / "diagnostic_provenance.yml"
+        )
+        provenance.parent.mkdir(parents=True)
+        embedded_plot = original_scratch / "executions" / "recipe_20260617_122233" / "plots" / "jointplot.png"
+        provenance.write_text(yaml.safe_dump({str(embedded_plot): {"caption": "c"}}), encoding="utf-8")
+
+        mock_result = mock_result_factory(original_scratch)
+        spy = mocker.patch.object(
+            mock_provider_registry.get_metric("mock_provider", "mock"),
+            "build_execution_result",
+            return_value=mock_result,
+        )
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_scratch = spy.call_args[0][0].output_directory
+        assert new_scratch != original_scratch
+        copied_provenance = (
+            new_scratch
+            / "executions"
+            / "recipe_20260617_122233"
+            / "run"
+            / "diag"
+            / "script1"
+            / "diagnostic_provenance.yml"
+        )
+        content = copied_provenance.read_text(encoding="utf-8")
+        # The original fragment's absolute path must be gone, replaced by the new one.
+        assert str(original_scratch) not in content
+        expected = new_scratch / "executions" / "recipe_20260617_122233" / "plots" / "jointplot.png"
+        assert str(expected) in content
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_creates_new_execution(

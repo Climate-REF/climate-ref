@@ -47,11 +47,17 @@ concurrency:
 jobs:
   mint:
     if: github.repository == 'Climate-REF/climate-ref'
-    runs-on: ubuntu-latest
+    # Run on the self-hosted ARC runners.
+    # They mount the persistent dataset, software, and intake-esgf caches.
+    # This requires approval by a maintainer to be run.
+    runs-on: "arc-climate-ref"
     environment: native-baselines
     defaults:
       run:
         shell: bash
+    env:
+      # Keep the cache-warming download steps from flooding the log with progress bars.
+      TQDM_DISABLE: "1"
     steps:
       - name: Refuse to mint on the default branch
         if: github.ref_name == github.event.repository.default_branch
@@ -66,10 +72,27 @@ jobs:
           python-version: "3.13"
       - name: Fetch sample data
         run: uv run ref datasets fetch-sample-data
+      - name: Set up provider (environment + reference data)
+        env:
+          PROVIDER: ${{ inputs.provider }}
+        # Provisions the provider's conda environment (where applicable) and its
+        # reference-data registries. ILAMB/PMP/ESMValTool diagnostics read observational
+        # reference data that is not part of the ESGF model fetch above; without this the
+        # diagnostic fails to open its reference files during the mint run.
+        run: uv run ref providers setup --provider "${PROVIDER}"
       - name: Restore test-case catalog paths
         env:
           PROVIDER: ${{ inputs.provider }}
-        run: uv run ref test-cases fetch --provider "${PROVIDER}" || echo "::warning::test-case fetch incomplete"
+          DIAGNOSTIC: ${{ inputs.diagnostic }}
+          TEST_CASE: ${{ inputs.test_case }}
+        run: |
+          # Scope the fetch to the dispatched diagnostic/test case so a single-case
+          # mint does not re-fetch every case for the provider (cmip7 cases in
+          # particular can stall on ESGF). Mirrors the mint step's argument handling.
+          args=(--provider "${PROVIDER}")
+          if [ -n "${DIAGNOSTIC}" ]; then args+=(--diagnostic "${DIAGNOSTIC}"); fi
+          if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
+          uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete"
       - name: Verify store credentials
         env:
           REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
@@ -99,9 +122,12 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Stage only the committed bundle and manifest; native blobs live in the
-          # object store, not the tree, and nothing else should change during a mint.
+          # Stage the committed bundle, its manifest, and the input catalog.
+          # The catalog.yaml is included because the mint regenerates it:
+          #  datasets.hash (its _metadata.hash, recorded as the manifest's catalog_hash) is not reproducible across pandas versions,
+          #  so the runner's value can differ from the developer-authored one.
           git add ':(glob)packages/**/test-data/**/manifest.json' \
+                  ':(glob)packages/**/test-data/**/catalog.yaml' \
                   ':(glob)packages/**/test-data/**/regression/**'
           if git diff --cached --quiet; then
             echo "No baseline changes to commit; the native blobs were already current."
@@ -111,4 +137,19 @@ jobs:
           # Pushed with GITHUB_TOKEN, so GitHub will NOT start new workflow runs for this
           # commit: the PR gate does not auto-replay the freshly minted baseline. Push a
           # follow-up commit (or re-run the PR gate) to verify it. See docs/background/regression-baselines.md.
-          git push origin "HEAD:${GITHUB_REF_NAME}"
+          #
+          # The branch may have advanced (e.g. mint of another diagnostic).
+          # Different diagnostics touch disjoint test-data paths, so the rebase does not conflict.
+          for attempt in 1 2 3 4 5; do
+            if git push origin "HEAD:${GITHUB_REF_NAME}"; then
+              exit 0
+            fi
+            echo "push rejected (attempt ${attempt}); rebasing onto origin/${GITHUB_REF_NAME}"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git rebase "origin/${GITHUB_REF_NAME}" || {
+              echo "::error::rebase conflict while committing regenerated baselines"
+              exit 1
+            }
+          done
+          echo "::error::failed to push regenerated baselines after retries"
+          exit 1

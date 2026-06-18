@@ -1,3 +1,4 @@
+import json
 import re
 from pathlib import Path
 
@@ -90,6 +91,37 @@ class TestSeriesMetricValue:
         loaded_series = SeriesMetricValue.load_from_json(path)
 
         assert loaded_series == series
+
+    def test_dump_orders_series_deterministically(self, tmp_path: Path):
+        # series.json must serialise in a stable, dimension-sorted order so the output
+        # does not depend on the (platform/run-dependent) order a diagnostic emitted its
+        # series in. The regression baseline comparator compares series positionally, so
+        # an unstable order would produce spurious cross-platform mismatches.
+        def make(model: str, region: str) -> SeriesMetricValue:
+            return SeriesMetricValue(
+                dimensions={"region": region, "source_id": model},
+                values=[1.0, 2.0],
+                index=[0, 1],
+                index_name="time",
+            )
+
+        series = [make("CanESM5", "tropical"), make("Reference", "global"), make("CanESM5", "global")]
+        shuffled = [series[1], series[2], series[0]]
+
+        path1 = tmp_path / "order1.json"
+        path2 = tmp_path / "order2.json"
+        SeriesMetricValue.dump_to_json(path1, series)
+        SeriesMetricValue.dump_to_json(path2, shuffled)
+
+        # Byte-identical output regardless of the input ordering.
+        assert path1.read_text() == path2.read_text()
+
+        # All series preserved and emitted in the canonical dimension-sorted order.
+        loaded = SeriesMetricValue.load_from_json(path1)
+        assert len(loaded) == len(series)
+        assert loaded == sorted(
+            loaded, key=lambda s: (json.dumps(s.dimensions, sort_keys=True), s.index_name)
+        )
 
     def test_load_from_json_not_a_list(self, tmp_path: Path):
         path = tmp_path / "test.json"

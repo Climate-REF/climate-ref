@@ -34,6 +34,7 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
+from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
 
 if TYPE_CHECKING:
     from pathlib import Path
@@ -282,6 +283,15 @@ def reingest_execution(
                 new_scratch_dir = config.paths.scratch / new_fragment
                 new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(scratch_dir, new_scratch_dir)
+                # Re-point any absolute paths embedded in the copied artifacts
+                # (e.g. ESMValTool's diagnostic_provenance.yml) from the original
+                # scratch directory to the new one so build_execution_result can
+                # resolve them within the new output directory.
+                rewrite_tree(
+                    new_scratch_dir,
+                    {str(scratch_dir): str(new_scratch_dir)},
+                    SANITISED_FILE_GLOBS,
+                )
 
                 definition = reconstruct_execution_definition(
                     config, execution, diagnostic, output_fragment=new_fragment

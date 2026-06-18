@@ -4,6 +4,7 @@ import json
 import pathlib
 
 import pytest
+import yaml
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 
@@ -429,6 +430,72 @@ class TestReingestExecution:
             definition.output_directory
         ).startswith(str(config.paths.scratch))
         assert definition.output_directory.exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_rewrites_embedded_absolute_paths(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Absolute paths embedded in copied artifacts are re-pointed at the new scratch dir.
+
+        Regression test for the reingest crash: ESMValTool records absolute output
+        paths in ``diagnostic_provenance.yml``. ``shutil.copytree`` copies these
+        verbatim, so before the fix they still referenced the original execution's
+        directory and ``build_execution_result`` raised
+        ``ValueError: ... is not in the subpath of ...``.
+        """
+        original_scratch = scratch_dir_with_results
+        provenance = (
+            original_scratch
+            / "executions"
+            / "recipe_20260617_122233"
+            / "run"
+            / "diag"
+            / "script1"
+            / "diagnostic_provenance.yml"
+        )
+        provenance.parent.mkdir(parents=True)
+        embedded_plot = original_scratch / "executions" / "recipe_20260617_122233" / "plots" / "jointplot.png"
+        provenance.write_text(yaml.safe_dump({str(embedded_plot): {"caption": "c"}}), encoding="utf-8")
+
+        mock_result = mock_result_factory(original_scratch)
+        spy = mocker.patch.object(
+            mock_provider_registry.get_metric("mock_provider", "mock"),
+            "build_execution_result",
+            return_value=mock_result,
+        )
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_scratch = spy.call_args[0][0].output_directory
+        assert new_scratch != original_scratch
+        copied_provenance = (
+            new_scratch
+            / "executions"
+            / "recipe_20260617_122233"
+            / "run"
+            / "diag"
+            / "script1"
+            / "diagnostic_provenance.yml"
+        )
+        content = copied_provenance.read_text(encoding="utf-8")
+        # The original fragment's absolute path must be gone, replaced by the new one.
+        assert str(original_scratch) not in content
+        expected = new_scratch / "executions" / "recipe_20260617_122233" / "plots" / "jointplot.png"
+        assert str(expected) in content
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_creates_new_execution(

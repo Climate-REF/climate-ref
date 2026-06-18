@@ -1,0 +1,244 @@
+{
+  "index": "index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "cmec_output.log"
+  },
+  "data": {},
+  "plots": {
+    "CanESM5_tropical_rmse.png": {
+      "filename": "CanESM5_tropical_rmse.png",
+      "long_name": "The RMSE for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "RMSE"
+      }
+    },
+    "CanESM5_tropical_bias.png": {
+      "filename": "CanESM5_tropical_bias.png",
+      "long_name": "The bias for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "Bias"
+      }
+    },
+    "CanESM5_global_biasscore.png": {
+      "filename": "CanESM5_global_biasscore.png",
+      "long_name": "The bias score for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "Bias score"
+      }
+    },
+    "CanESM5_global_bias.png": {
+      "filename": "CanESM5_global_bias.png",
+      "long_name": "The bias for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "Bias"
+      }
+    },
+    "CanESM5_global_rmsescore.png": {
+      "filename": "CanESM5_global_rmsescore.png",
+      "long_name": "The RMSE score for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "RMSE score"
+      }
+    },
+    "CanESM5_global_rmse.png": {
+      "filename": "CanESM5_global_rmse.png",
+      "long_name": "The RMSE for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "RMSE"
+      }
+    },
+    "CanESM5_tropical_rmsescore.png": {
+      "filename": "CanESM5_tropical_rmsescore.png",
+      "long_name": "The RMSE score for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "RMSE score"
+      }
+    },
+    "Reference_global_mean.png": {
+      "filename": "Reference_global_mean.png",
+      "long_name": "The period mean for the reference data over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "region": "global",
+        "statistic": "Period Mean",
+        "source_id": "Reference"
+      }
+    },
+    "None_tropical_taylor.png": {
+      "filename": "None_tropical_taylor.png",
+      "long_name": "The Taylor diagram over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "Taylor diagram"
+      }
+    },
+    "CanESM5_global_trace.png": {
+      "filename": "CanESM5_global_trace.png",
+      "long_name": "The regional mean for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "Regional mean"
+      }
+    },
+    "CanESM5_tropical_mean.png": {
+      "filename": "CanESM5_tropical_mean.png",
+      "long_name": "The period mean for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "Period Mean"
+      }
+    },
+    "CanESM5_tropical_trace.png": {
+      "filename": "CanESM5_tropical_trace.png",
+      "long_name": "The regional mean for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "Regional mean"
+      }
+    },
+    "CanESM5_tropical_biasscore.png": {
+      "filename": "CanESM5_tropical_biasscore.png",
+      "long_name": "The bias score for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "tropical",
+        "statistic": "Bias score"
+      }
+    },
+    "CanESM5_global_mean.png": {
+      "filename": "CanESM5_global_mean.png",
+      "long_name": "The period mean for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "Period Mean"
+      }
+    },
+    "Reference_tropical_mean.png": {
+      "filename": "Reference_tropical_mean.png",
+      "long_name": "The period mean for the reference data over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "region": "tropical",
+        "statistic": "Period Mean",
+        "source_id": "Reference"
+      }
+    },
+    "None_global_taylor.png": {
+      "filename": "None_global_taylor.png",
+      "long_name": "The Taylor diagram over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015",
+        "region": "global",
+        "statistic": "Taylor diagram"
+      }
+    }
+  },
+  "html": {
+    "index.html": {
+      "filename": "index.html",
+      "long_name": "Results page",
+      "description": "Page displaying scalars and plots from the ILAMB execution.",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "FLUXNET2015"
+      }
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

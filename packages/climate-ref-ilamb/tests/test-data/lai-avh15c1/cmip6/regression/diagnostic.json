@@ -83,34 +83,34 @@
           "gn": {
             "global": {
               "Bias": {
-                "Bias": 0.2886437160003181,
-                "Bias Score": 0.3374226765079225,
-                "Period Mean": 1.343203140755381
+                "Bias": 0.2886437160003182,
+                "Bias Score": 0.3374226765079227,
+                "Period Mean": 1.3432031407553808
               },
               "RMSE": {
-                "RMSE": 1.0280766449652632,
-                "RMSE Score": 0.290534015442103
+                "RMSE": 1.028076644965264,
+                "RMSE Score": 0.2905340154421034
               },
               "Spatial Distribution": {
-                "Correlation": 0.7042132184804051,
+                "Correlation": 0.7042132184804044,
                 "Normalized Standard Deviation": 1.2282874550466167,
-                "Spatial Distribution Score": 0.8170712612679047
+                "Spatial Distribution Score": 0.8170712612679044
               }
             },
             "tropical": {
               "Bias": {
-                "Bias": 0.3346693793257478,
+                "Bias": 0.3346693793257476,
                 "Bias Score": 0.2361134475145273,
-                "Period Mean": 3.2998312067441113
+                "Period Mean": 3.299831206744112
               },
               "RMSE": {
-                "RMSE": 1.8683574396274296,
+                "RMSE": 1.8683574396274292,
                 "RMSE Score": 0.2370497514815967
               },
               "Spatial Distribution": {
-                "Correlation": 0.3889535972620688,
+                "Correlation": 0.388953597262069,
                 "Normalized Standard Deviation": 1.0611338445426226,
-                "Spatial Distribution Score": 0.6920372753384583
+                "Spatial Distribution Score": 0.6920372753384584
               }
             }
           }

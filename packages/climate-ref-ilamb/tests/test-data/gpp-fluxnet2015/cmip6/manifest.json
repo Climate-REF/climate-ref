@@ -1,11 +1,92 @@
 {
   "catalog_hash": "91e6801291efa5bde29cbe451e1246a2281992fe",
   "committed": {
-    "diagnostic.json": "9735917d6f3b31e68bdbc13593c7f65e5785e4c8ae630832d6535cb9fe6bcdca",
-    "output.json": "344756f34217b9b63e020d2572b9aeeaef5757521302e9d006711b852fe073e3",
-    "series.json": "abe56bafec59d24d8897ae75c8d5ddd069bb6c4490df54da1fe25ddde46133be"
+    "diagnostic.json": "ecfa5a538e3e9c4d3c5b8e24a3b700dd409e0f316ce18e5aad829cd7aabc01a2",
+    "output.json": "bcb6ba132bf4d6e005f3c34065292c7214d521e5050852fc6cc258fe7845f97c",
+    "series.json": "04b331fae87a1b2f5da0ff2b74dced91c704552b3c76d3b57b459e68f216b9b6"
   },
-  "native": {},
+  "native": {
+    "CanESM5_global_bias.png": {
+      "sha256": "d55364f7dcca9af8e8c6924b4b20d4570059496c9271707f9f99507e484d7729",
+      "size": 30396
+    },
+    "CanESM5_global_biasscore.png": {
+      "sha256": "f3741627567339a51307a9b4a638450344063d93420f45835c486279958cb190",
+      "size": 32124
+    },
+    "CanESM5_global_mean.png": {
+      "sha256": "ede5782276840cfb69fb1ae7bd5553f00f312ccbe4a15b5279ee9f576661559c",
+      "size": 29566
+    },
+    "CanESM5_global_rmse.png": {
+      "sha256": "f97631e47b2e8af74e8e4023a2d5c43564ba9fc2e1abe9ca8fdb2072b8d5a19d",
+      "size": 29348
+    },
+    "CanESM5_global_rmsescore.png": {
+      "sha256": "598b11e54c0b738dc90d7812ef3dc6b09a0d0e05ce5d9fb43338d4be8ac97314",
+      "size": 32289
+    },
+    "CanESM5_global_trace.png": {
+      "sha256": "ca1635988f7ffa021cfce873eb8d5ae0e5119911c651aee836715902b85fe4f9",
+      "size": 79977
+    },
+    "CanESM5_tropical_bias.png": {
+      "sha256": "0a2476e35c6bf1724cfd64c8aae6d8044ccb2ceb42c08705e69d525db5eb43e1",
+      "size": 11497
+    },
+    "CanESM5_tropical_biasscore.png": {
+      "sha256": "030001580e0ea89dcc48997d75656ef1d151f9bf9f7c7af95bb24a6f2de16363",
+      "size": 13686
+    },
+    "CanESM5_tropical_mean.png": {
+      "sha256": "b05c26214b8c19c09dfe9da0d9171171c161206630c6472641aea141f5b59a10",
+      "size": 12656
+    },
+    "CanESM5_tropical_rmse.png": {
+      "sha256": "b1f4c0d0b2fde38bb64d418b166a894849b6bb35dea50c2250ee75c03cb91524",
+      "size": 11641
+    },
+    "CanESM5_tropical_rmsescore.png": {
+      "sha256": "fbe1f2c485dcc13c191e4ffe332bf52b8a09f71559cc353543607c7006d22fbb",
+      "size": 13818
+    },
+    "CanESM5_tropical_trace.png": {
+      "sha256": "d34ad9c8ed1c1e190b1818283ead16dbe15aa70744fe8499f2a3d5bf08e21c27",
+      "size": 61139
+    },
+    "None_global_taylor.png": {
+      "sha256": "852ff291d8ec3ba462b0566053fc48fd7da0f4a33eefaa8a55c36fb703a04a04",
+      "size": 101290
+    },
+    "None_tropical_taylor.png": {
+      "sha256": "3ff92367f51c17d83e45be6841ba6fc17d68bfa98e10cc8546fe4da6a5b3954d",
+      "size": 101111
+    },
+    "Reference_global_mean.png": {
+      "sha256": "1c01068ab146d44c5a7a78d3e6e9c39e9808f9bd54b44ee3e9b81f285af387d0",
+      "size": 29959
+    },
+    "Reference_tropical_mean.png": {
+      "sha256": "779c0b5c35ac02696a0bde579ab15f306f015372460da7ceb5b681e0fb15e795",
+      "size": 12457
+    },
+    "diagnostic.json": {
+      "sha256": "ecfa5a538e3e9c4d3c5b8e24a3b700dd409e0f316ce18e5aad829cd7aabc01a2",
+      "size": 2872
+    },
+    "index.html": {
+      "sha256": "26f7acdbc20ca711b17749dd3ddaf92df01e9a4e769cbf9b3f14de9f8a65d381",
+      "size": 17192
+    },
+    "output.json": {
+      "sha256": "bcb6ba132bf4d6e005f3c34065292c7214d521e5050852fc6cc258fe7845f97c",
+      "size": 7800
+    },
+    "series.json": {
+      "sha256": "04b331fae87a1b2f5da0ff2b74dced91c704552b3c76d3b57b459e68f216b9b6",
+      "size": 61892
+    }
+  },
   "schema": 1,
   "test_case_version": 1
 }

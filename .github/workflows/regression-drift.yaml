@@ -1,0 +1,60 @@
+# Nightly native-baseline drift check.
+#
+# Fetches every native blob referenced by a committed manifest and replays it against the committed bundle,
+# catching baselines that no longer reproduce within tolerance (e.g. after a dependency upgrade)
+# even when no pull request touched them.
+#
+# Run on the public runners with no credentials (read-only access to the public repository and public read access to the native blobs),
+# so it is safe on untrusted fork pull-request code.
+# A failure here means a stored baseline has drifted and needs investigation (and possibly a re-mint).
+# See docs/background/regression-baselines.md.
+name: Regression baselines (nightly drift)
+
+on:
+  # 04:17 UTC daily, offset from the other scheduled CI to avoid contention.
+  schedule:
+    - cron: "17 4 * * *"
+  # Allow on-demand drift checks.
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  drift:
+    # Don't run the scheduled check on forks.
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: ubuntu-latest
+    strategy:
+      # A drift in one provider must not cancel the others' checks.
+      fail-fast: false
+      matrix:
+        # Providers migrated to the native-baseline layout. Add to this list as more
+        # providers migrate; the fetch and replay steps both use ${{ matrix.provider }}.
+        provider: [example]
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Fetch sample data
+        run: uv run ref datasets fetch-sample-data
+      - name: Restore test-case catalog paths
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: uv run ref test-cases fetch --provider "${PROVIDER}" || echo "::warning::test-case fetch incomplete"
+      - name: Sync native baselines
+        # Fetch every native blob referenced by a committed manifest into the cache.
+        run: uv run ref test-cases sync
+      - name: Replay native baselines
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: uv run ref test-cases replay --provider "${PROVIDER}"

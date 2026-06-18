@@ -89,8 +89,8 @@ because an empty native set is legitimate, a missing native baseline downgrades 
 ### Actions
 
 - **`skip`** — nothing relevant to this case changed, or the case is not under regression management.
-- **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist).
-- **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline.
+- **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
+- **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline *and* no native baseline exists to replay against.
 - **`fail`** — an unauthorised or unverifiable change (committed bundle edited without a version bump, version moved backwards, bundle drifted from its manifest, or catalog changed without regenerating the baseline).
 
 ### Decision flow
@@ -116,7 +116,9 @@ flowchart TD
 
     seeding -->|no| versionCmp{version vs base}
     versionCmp -->|decreased| failVersion[["FAIL<br/>version not monotonic"]]
-    versionCmp -->|bumped| execute[["EXECUTE<br/>authorised new baseline"]]
+    versionCmp -->|bumped| bumpNative{native<br/>present?}
+    bumpNative -->|yes| replayBump[["REPLAY<br/>verify new baseline<br/>reproduces from native"]]
+    bumpNative -->|no| execute[["EXECUTE<br/>full re-run<br/>(no native to replay)"]]
     versionCmp -->|unchanged| committedChanged{committed<br/>changed?}
 
     committedChanged -->|yes| failUnauthorised[["FAIL<br/>baseline changed without<br/>version bump"]]
@@ -154,3 +156,57 @@ the `--json` output drives CI's dispatch of the `replay` and `execute` jobs.
     `replay`, `sync`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
     Only `mint` holds object-store write credentials,
     and it runs exclusively on the trusted-tier runner — never on fork pull-request code.
+
+## Continuous integration
+
+The lifecycle commands are wired into three GitHub Action workflows.
+The minting process requires credentials to upload data.
+Since this is a public project we have to be careful about when this is run to not leak these credentials.
+
+| Workflow | Trigger | Credentials | What it does |
+| --- | --- | --- | --- |
+| `regression-pr-gate.yaml` | every pull request | none | Runs the coupling gate, then `replay`s every case it routes to `replay`. |
+| `regression-mint.yaml` | manual dispatch | R2 write | `mint`s native baselines and commits the regenerated manifest back to the branch. |
+| `regression-drift.yaml` | nightly + manual | none | `sync`s and `replay`s every baseline to catch silent drift. |
+
+### PR gate (`regression-pr-gate.yaml`)
+
+On every pull request, the gate runs `ref test-cases ci-gate --json` against the base
+branch and acts on each decision:
+
+- **`fail`** aborts the job with the offending cases and their reasons.
+- **`replay`** is verified in place against the public native baseline.
+- **`execute`** is surfaced as a warning: a `test_case_version` bump with no native baseline to replay against cannot be verified
+   (it would need a full diagnostic run), so the committed bundle is gated by review here and and requires `minting`.
+
+The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on fork pull requests.
+The decision-to-replay fan-out lives in `scripts/ci/regression-pr-gate.sh`.
+
+### Gated mint (`regression-mint.yaml`)
+
+Minting is the only step that writes to the object store,
+so it is **manually dispatched** and gated behind the `native-baselines` GitHub Environment.
+Dispatch it on the feature branch that should receive the new baseline:
+the job runs `mint`, and commits the regenerated `manifest.json` (and committed bundle) back to that branch,
+so the change is reviewed through its pull request and no developer ever needs write credentials.
+A `dry_run` input previews without uploading or committing, and the job refuses to run on the default branch.
+
+!!! warning "The mint commit does not re-trigger the PR gate"
+    The mint job pushes with the default `GITHUB_TOKEN`, and GitHub deliberately does not start new workflow runs for such pushes.
+    So the freshly minted manifest is *not* automatically `replay`-verified by `regression-pr-gate.yaml`.
+    After minting, push a follow-up commit (or re-run the PR gate from the Actions tab) to verify the new native baseline reproduces the committed bundle.
+
+!!! note "Required repository configuration"
+    Create a `native-baselines` Environment (Settings -> Environments) with **required reviewers**,
+    and add two secrets to it holding an object-scoped R2 token:
+
+    - `R2_ACCESS_KEY_ID` -> `REF_NATIVE_STORE_ACCESS_KEY_ID`
+    - `R2_SECRET_ACCESS_KEY` -> `REF_NATIVE_STORE_SECRET_ACCESS_KEY`
+
+    The endpoint and bucket default to the production R2 account
+    (`REF_NATIVE_STORE_S3_ENDPOINT_URL` / `REF_NATIVE_STORE_BUCKET` override them).
+
+### Nightly drift (`regression-drift.yaml`)
+
+A scheduled (and manually dispatchable) job `sync`s every referenced native blob and `replay`s it against the committed bundle.
+This catches a baseline that no longer reproduce the committed results within tolerance — for example after a dependency upgrade. It is read-only and credential-free.

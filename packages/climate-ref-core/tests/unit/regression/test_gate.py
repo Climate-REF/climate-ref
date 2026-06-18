@@ -95,19 +95,30 @@ class TestDecideCoupling:
         assert "WARNING" in decision.reason
         assert "de-mint" in decision.reason
 
-    def test_version_bump_executes(self) -> None:
+    def test_version_bump_without_native_executes(self) -> None:
+        # No native baseline to replay against, so the bump needs a full re-run.
         base = make_manifest(1)
         current = make_manifest(2)
         decision = decide_coupling(current, base)
         assert decision.action is Action.EXECUTE
         assert "1 -> 2" in decision.reason
+        assert "no native baseline" in decision.reason
 
-    def test_version_bump_executes_even_with_committed_change(self) -> None:
+    def test_version_bump_without_native_executes_even_with_committed_change(self) -> None:
         # A bump authorises a new baseline, so a committed change is expected.
         base = make_manifest(1, {"output.json": "a" * 64})
         current = make_manifest(2, {"output.json": "b" * 64})
         decision = decide_coupling(current, base)
         assert decision.action is Action.EXECUTE
+
+    def test_version_bump_with_native_replays(self) -> None:
+        native = {"data.nc": NativeEntry("a" * 64, 10)}
+        base = make_manifest(1, {"output.json": "a" * 64})
+        current = make_manifest(2, {"output.json": "b" * 64}, native)
+        decision = decide_coupling(current, base)
+        assert decision.action is Action.REPLAY
+        assert "1 -> 2" in decision.reason
+        assert "native baseline present" in decision.reason
 
     def test_committed_change_without_bump_fails(self) -> None:
         base = make_manifest(1, {"output.json": "a" * 64})

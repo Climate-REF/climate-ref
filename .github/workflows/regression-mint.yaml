@@ -1,0 +1,114 @@
+# Mint the native regression baselines.
+#
+# Minting executes a test case, uploads its curated native outputs to the Cloudflare R2 object store,
+# and rewrites the committed `manifest.json` to record their digests.
+# It requires credentials to access the object store.
+# It is therefore manually dispatched and gated behind the `native-baselines` GitHub Environment, and never runs on fork pull-request code.
+#
+# Dispatch this workflow on the *feature branch* that should receive the regenerated manifest.
+# The action commits the result back to that branch so the change is reviewed through its pull request,
+# and so individual developers never need write credentials.
+#
+name: Regression baselines (mint)
+
+on:
+  workflow_dispatch:
+    inputs:
+      provider:
+        description: "Provider slug to mint"
+        required: true
+        default: "example"
+      diagnostic:
+        description: "Diagnostic slug (optional; all diagnostics if blank)"
+        required: false
+        default: ""
+      test_case:
+        description: "Test case name (optional; all cases if blank)"
+        required: false
+        default: ""
+      bump_version:
+        description: "Increment test_case_version when authoring the manifest"
+        type: boolean
+        default: false
+      dry_run:
+        description: "Preflight and preview only -- upload nothing, commit nothing"
+        type: boolean
+        default: false
+
+# Needed to commit the regenerated manifest/bundle back to the dispatched branch.
+permissions:
+  contents: write
+
+# Never cancel an in-flight mint: it performs object-store writes and a push.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  mint:
+    if: github.repository == 'Climate-REF/climate-ref'
+    runs-on: ubuntu-latest
+    environment: native-baselines
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Refuse to mint on the default branch
+        if: github.ref_name == github.event.repository.default_branch
+        run: |
+          echo "::error::Dispatch mint on a feature branch, not ${{ github.event.repository.default_branch }}."
+          echo "Mint commits the regenerated manifest back to the branch; review it through a pull request."
+          exit 1
+      - name: Check out repository
+        uses: actions/checkout@v6
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Fetch sample data
+        run: uv run ref datasets fetch-sample-data
+      - name: Restore test-case catalog paths
+        env:
+          PROVIDER: ${{ inputs.provider }}
+        run: uv run ref test-cases fetch --provider "${PROVIDER}" || echo "::warning::test-case fetch incomplete"
+      - name: Verify store credentials
+        env:
+          REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          REF_NATIVE_STORE_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+        run: uv run ref test-cases check-store
+      - name: Mint native baselines
+        env:
+          REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          REF_NATIVE_STORE_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          PROVIDER: ${{ inputs.provider }}
+          DIAGNOSTIC: ${{ inputs.diagnostic }}
+          TEST_CASE: ${{ inputs.test_case }}
+          BUMP_VERSION: ${{ inputs.bump_version }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          args=(--provider "${PROVIDER}")
+          if [ -n "${DIAGNOSTIC}" ]; then args+=(--diagnostic "${DIAGNOSTIC}"); fi
+          if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
+          if [ "${BUMP_VERSION}" = "true" ]; then args+=(--bump-version); fi
+          if [ "${DRY_RUN}" = "true" ]; then args+=(--dry-run); fi
+          uv run ref test-cases mint "${args[@]}"
+      - name: Commit regenerated baselines
+        if: ${{ !inputs.dry_run }}
+        env:
+          PROVIDER: ${{ inputs.provider }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Stage only the committed bundle and manifest; native blobs live in the
+          # object store, not the tree, and nothing else should change during a mint.
+          git add ':(glob)packages/**/test-data/**/manifest.json' \
+                  ':(glob)packages/**/test-data/**/regression/**'
+          if git diff --cached --quiet; then
+            echo "No baseline changes to commit; the native blobs were already current."
+            exit 0
+          fi
+          git commit -m "chore(regression): mint native baselines for ${PROVIDER}"
+          # Pushed with GITHUB_TOKEN, so GitHub will NOT start new workflow runs for this
+          # commit: the PR gate does not auto-replay the freshly minted baseline. Push a
+          # follow-up commit (or re-run the PR gate) to verify it. See docs/background/regression-baselines.md.
+          git push origin "HEAD:${GITHUB_REF_NAME}"

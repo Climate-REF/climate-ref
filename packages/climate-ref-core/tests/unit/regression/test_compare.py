@@ -26,7 +26,7 @@ class TestTolerance:
     def test_defaults(self) -> None:
         t = Tolerance()
         assert t.rtol == 1e-6
-        assert t.atol == 0.0
+        assert t.atol == 1e-8
 
     def test_custom_values(self) -> None:
         t = Tolerance(rtol=0.01, atol=1e-9)
@@ -97,6 +97,21 @@ class TestCompareJsonScalars:
     def test_int_float_numeric_comparison(self) -> None:
         """int vs float should be treated as numeric, not type-mismatch."""
         assert compare_json_content(1, 1.0, tol=TOL) == []
+
+    def test_bool_vs_int_is_type_mismatch(self) -> None:
+        result = compare_json_content(True, 1, tol=TOL)
+        assert len(result) == 1
+        assert "type mismatch" in result[0]
+
+    def test_int_vs_bool_is_type_mismatch(self) -> None:
+        result = compare_json_content(0, False, tol=TOL)
+        assert len(result) == 1
+        assert "type mismatch" in result[0]
+
+    def test_bool_vs_float_is_type_mismatch(self) -> None:
+        result = compare_json_content(True, 1.0, tol=TOL)
+        assert len(result) == 1
+        assert "type mismatch" in result[0]
         result = compare_json_content(1, 2.0, tol=TOL)
         assert len(result) == 1
         assert "float mismatch" in result[0]

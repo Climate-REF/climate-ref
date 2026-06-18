@@ -33,12 +33,12 @@ class TestSingleSegment:
     def test_accepts_single_segments(self, relpath):
         assert safe_path(relpath, single_segment=True) == Path(relpath)
 
-    @pytest.mark.parametrize("relpath", ["sub/dir", "a/b/c.json", "foo\\bar", "."])
-    def test_rejects_separators_and_dot(self, relpath):
+    @pytest.mark.parametrize("relpath", ["sub/dir", "a/b/c.json", "foo\\bar"])
+    def test_rejects_separators(self, relpath):
         with pytest.raises(ValueError, match="single path segment"):
             safe_path(relpath, single_segment=True)
 
-    @pytest.mark.parametrize("relpath", ["", "/abs", "../escape"])
+    @pytest.mark.parametrize("relpath", ["", "/abs", "../escape", "."])
     def test_lexical_layer_still_applies(self, relpath):
         with pytest.raises(ValueError, match="contained relative path"):
             safe_path(relpath, single_segment=True)

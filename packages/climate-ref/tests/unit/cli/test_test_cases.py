@@ -173,8 +173,14 @@ class TestFetchAndBuildCatalog:
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=None,
+            ),
         ):
             result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -192,8 +198,14 @@ class TestFetchAndBuildCatalog:
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=mock_paths,
+            ),
             patch("climate_ref_core.testing.save_datasets_to_yaml", return_value=True) as mock_save,
         ):
             _, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
@@ -227,8 +239,14 @@ class TestFetchAndBuildCatalog:
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=None,
+            ),
         ):
             result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -539,12 +557,23 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref.cli.test_cases._fetch_and_build_catalog", return_value=(MagicMock(), True))
+        mocker.patch(
+            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            return_value=(MagicMock(), True),
+        )
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None)
 
         result = invoke_cli(
-            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--fetch"],
+            [
+                "test-cases",
+                "run",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+                "--fetch",
+            ],
         )
         assert result.exit_code == 0
 
@@ -571,7 +600,15 @@ class TestRunTestCaseCommand:
         )
 
         invoke_cli(
-            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--fetch"],
+            [
+                "test-cases",
+                "run",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+                "--fetch",
+            ],
             expected_exit_code=1,
         )
 
@@ -612,7 +649,10 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
@@ -648,7 +688,9 @@ class TestRunTestCaseCommand:
         mock_paths.regression = regression_dir  # Use real dir that exists
 
         mock_result = MagicMock(
-            successful=True, metric_bundle_filename="metrics.json", output_bundle_filename="output.json"
+            successful=True,
+            metric_bundle_filename="metrics.json",
+            output_bundle_filename="output.json",
         )
         mock_result.to_output_path.side_effect = lambda x: tmp_path / x
         mock_runner = MagicMock()
@@ -658,7 +700,10 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
@@ -695,7 +740,10 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
@@ -760,13 +808,24 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=real_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=real_paths,
+        )
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
         mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value="abc123")
 
         result = invoke_cli(
-            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"],
+            [
+                "test-cases",
+                "run",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+                "--force-regen",
+            ],
         )
         assert result.exit_code == 0
 
@@ -782,7 +841,11 @@ class TestRunTestCaseCommand:
         manifest = Manifest.load(real_paths.manifest)
         assert manifest.test_case_version == 1
         assert manifest.native == {}
-        assert set(manifest.committed) == {"diagnostic.json", "output.json", "series.json"}
+        assert set(manifest.committed) == {
+            "diagnostic.json",
+            "output.json",
+            "series.json",
+        }
 
     def test_run_with_existing_baseline(self, invoke_cli, mocker, tmp_path):
         """Test run command logs when baseline exists."""
@@ -814,7 +877,9 @@ class TestRunTestCaseCommand:
         mock_paths.regression = regression_dir
 
         mock_result = MagicMock(
-            successful=True, metric_bundle_filename="metrics.json", output_bundle_filename=None
+            successful=True,
+            metric_bundle_filename="metrics.json",
+            output_bundle_filename=None,
         )
         mock_result.to_output_path.return_value = tmp_path / "metrics.json"
         mock_runner = MagicMock()
@@ -824,7 +889,10 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
         mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
         mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
@@ -859,7 +927,10 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
 
         # With --only-missing, test case should be skipped and exit 0
         result = invoke_cli(
@@ -887,9 +958,15 @@ class TestRunTestCaseCommand:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
         # Catalog not changed since regression
-        mocker.patch("climate_ref_core.testing.catalog_changed_since_regression", return_value=False)
+        mocker.patch(
+            "climate_ref_core.testing.catalog_changed_since_regression",
+            return_value=False,
+        )
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--if-changed"],
@@ -926,8 +1003,14 @@ class TestFetchAndBuildCatalogSourceTypes:
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP7DatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=None,
+            ),
         ):
             result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -958,9 +1041,18 @@ class TestFetchAndBuildCatalogSourceTypes:
 
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
-            patch("climate_ref.datasets.PMPClimatologyDatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+            patch(
+                "climate_ref.datasets.PMPClimatologyDatasetAdapter",
+                return_value=mock_adapter,
+            ),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=None,
+            ),
         ):
             result, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -994,8 +1086,14 @@ class TestFetchAndBuildCatalogSourceTypes:
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=mock_paths,
+            ),
             patch("climate_ref_core.testing.save_datasets_to_yaml", return_value=True) as mock_save,
         ):
             _fetch_and_build_catalog(mock_diagnostic, mock_test_case, force=True)
@@ -1035,10 +1133,22 @@ class TestFetchAndBuildCatalogSourceTypes:
 
         with (
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
-            patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_cmip6_adapter),
-            patch("climate_ref.datasets.Obs4MIPsDatasetAdapter", return_value=mock_obs_adapter),
-            patch("climate_ref.cli.test_cases._solve_test_case", return_value=mock_datasets),
-            patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None),
+            patch(
+                "climate_ref.datasets.CMIP6DatasetAdapter",
+                return_value=mock_cmip6_adapter,
+            ),
+            patch(
+                "climate_ref.datasets.Obs4MIPsDatasetAdapter",
+                return_value=mock_obs_adapter,
+            ),
+            patch(
+                "climate_ref.cli.test_cases._solve_test_case",
+                return_value=mock_datasets,
+            ),
+            patch(
+                "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+                return_value=None,
+            ),
         ):
             result, _written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
@@ -1156,7 +1266,10 @@ class TestListCasesCommandEdgeCases:
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=mock_registry,
         )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=mock_paths)
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            return_value=mock_paths,
+        )
 
         result = invoke_cli(["test-cases", "list"])
         assert result.exit_code == 0
@@ -1315,7 +1428,14 @@ class TestReplayCommand:
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         result = invoke_cli(
-            ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
+            [
+                "test-cases",
+                "replay",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+            ],
             expected_exit_code=1,
         )
         assert "not yet minted" in result.stderr.lower() or "mint" in result.stderr.lower()
@@ -1351,7 +1471,14 @@ class TestReplayCommand:
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         result = invoke_cli(
-            ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
+            [
+                "test-cases",
+                "replay",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+            ],
             expected_exit_code=1,
         )
         # The mismatch warned rather than gated, and execution fell through to the native guard.
@@ -1402,7 +1529,16 @@ class TestReplayCommand:
         mocker.patch("climate_ref_core.diagnostics.ExecutionDefinition")
         mocker.patch("climate_ref_core.regression.assert_bundle_regression")
 
-        result = invoke_cli(["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"])
+        result = invoke_cli(
+            [
+                "test-cases",
+                "replay",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+            ]
+        )
         assert "Replay reconciled committed bundle" in result.stderr
         assert "equivalent within tolerance" in result.stderr
         assert "3 bundle file(s)" in result.stderr
@@ -1490,3 +1626,276 @@ class TestMintCommand:
         # Each native blob was PUT into the store.
         for entry in manifest.native.values():
             assert store.has(entry.sha256)
+
+
+class TestCIGateCommand:
+    """Tests for the ``ref test-cases ci-gate`` command."""
+
+    def _setup(
+        self,
+        mocker,
+        tmp_path,
+        *,
+        current_version=None,
+        committed_content=None,
+        native=None,
+    ):
+        """
+        Wire a single example test case for the gate.
+
+        Writes the *current* manifest (when ``current_version`` is set) alongside real
+        committed files in ``regression/``, so the gate's on-disk integrity check sees a
+        manifest that faithfully describes the bundle.
+        The base-branch manifest is left absent by default (``git show`` raises);
+        a test sets ``repo.git.show`` to supply one,
+        using the returned committed digests so they line up with the current bundle.
+
+        Parameters
+        ----------
+        current_version
+            ``test_case_version`` of the current manifest,
+            or ``None`` to leave the manifest absent (never managed / deleted on this branch).
+        committed_content
+            ``{filename: text}`` written to ``regression/`` for the current manifest.
+            Defaults to a single ``output.json``.
+        native
+            Native entries for the current manifest.
+
+        Returns
+        -------
+        :
+            ``(repo, paths, committed_digests)`` — the mock repo, the test case paths,
+            and the digests computed from the on-disk committed bundle.
+        """
+        from git import GitCommandError
+
+        from climate_ref_core.regression.manifest import (
+            SCHEMA_VERSION,
+            Manifest,
+            compute_committed_digests,
+        )
+        from climate_ref_core.testing import TestCasePaths
+
+        mock_tc = MagicMock()
+        mock_tc.name = "default"
+        mock_spec = MagicMock(test_cases=[mock_tc])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        case_dir = tmp_path / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        paths = TestCasePaths(root=case_dir)
+
+        committed_digests: dict[str, str] = {}
+        if current_version is not None:
+            content = committed_content if committed_content is not None else {"output.json": '{"x": 1}\n'}
+            paths.regression.mkdir(parents=True, exist_ok=True)
+            for name, text in content.items():
+                (paths.regression / name).write_text(text, encoding="utf-8")
+            committed_digests = compute_committed_digests(paths.regression)
+            Manifest(
+                schema=SCHEMA_VERSION,
+                test_case_version=current_version,
+                committed=committed_digests,
+                native=native or {},
+            ).dump(paths.manifest)
+
+        repo = MagicMock()
+        repo.working_dir = str(tmp_path)
+        repo.git.diff.return_value = ""
+        # Base manifest absent by default; tests that need one override repo.git.show.
+        repo.git.show.side_effect = GitCommandError("show", 128)
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref.cli.test_cases.get_repo_for_path", return_value=repo)
+        return repo, paths, committed_digests
+
+    @staticmethod
+    def _set_base(repo, version, committed, native=None):
+        """Configure ``repo.git.show`` to return a base manifest with these fields."""
+        import json as _json
+
+        from attrs import asdict
+
+        from climate_ref_core.regression.manifest import SCHEMA_VERSION
+
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": version,
+            "committed": committed,
+            "native": {relpath: asdict(entry) for relpath, entry in (native or {}).items()},
+        }
+        repo.git.show.side_effect = None
+        repo.git.show.return_value = _json.dumps(payload, indent=2, sort_keys=True)
+
+    def test_seeding_replays(self, invoke_cli, mocker, tmp_path):
+        # Current manifest present with a native baseline, no base manifest -> seeding -> REPLAY.
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        self._setup(mocker, tmp_path, current_version=1, native={"data.nc": NativeEntry("a" * 64, 10)})
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "replay" in result.output
+
+    def test_seeding_without_native_skips(self, invoke_cli, mocker, tmp_path):
+        # Current manifest present with an empty native set, no base manifest -> seeding -> SKIP.
+        self._setup(mocker, tmp_path, current_version=1)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "skip" in result.output
+
+    def test_version_bump_executes(self, invoke_cli, mocker, tmp_path):
+        repo, _, digests = self._setup(mocker, tmp_path, current_version=2)
+        self._set_base(repo, 1, digests)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "execute" in result.output
+
+    def test_committed_change_without_bump_fails(self, invoke_cli, mocker, tmp_path):
+        repo, _, _ = self._setup(mocker, tmp_path, current_version=1)
+        # Base committed differs from the on-disk bundle, with no version bump.
+        self._set_base(repo, 1, {"output.json": "f" * 64})
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output
+
+    def test_no_change_skips(self, invoke_cli, mocker, tmp_path):
+        repo, _, digests = self._setup(mocker, tmp_path, current_version=1)
+        self._set_base(repo, 1, digests)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "skip" in result.output
+
+    def test_core_change_replays(self, invoke_cli, mocker, tmp_path):
+        repo, _, digests = self._setup(mocker, tmp_path, current_version=1)
+        self._set_base(repo, 1, digests)
+        repo.git.diff.return_value = "packages/climate-ref-core/src/climate_ref_core/regression/compare.py"
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "replay" in result.output
+
+    def test_native_change_replays(self, invoke_cli, mocker, tmp_path):
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        repo, _, digests = self._setup(
+            mocker,
+            tmp_path,
+            current_version=1,
+            native={"data.nc": NativeEntry("a" * 64, 10)},
+        )
+        # Committed + version unchanged, but native blob re-minted -> REPLAY.
+        self._set_base(repo, 1, digests, native={"data.nc": NativeEntry("b" * 64, 12)})
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "replay" in result.output
+
+    def test_committed_integrity_drift_fails(self, invoke_cli, mocker, tmp_path):
+        repo, paths, digests = self._setup(mocker, tmp_path, current_version=1)
+        self._set_base(repo, 1, digests)
+        # Edit the on-disk committed bundle without regenerating the manifest.
+        (paths.regression / "output.json").write_text('{"x": 999}\n', encoding="utf-8")
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output
+
+    def test_json_output(self, invoke_cli, mocker, tmp_path):
+        repo, _, digests = self._setup(mocker, tmp_path, current_version=2)
+        self._set_base(repo, 1, digests)
+
+        result = invoke_cli(["test-cases", "ci-gate", "--json"])
+        assert result.exit_code == 0
+        # The test runner mixes loguru's stderr lines into the captured output; in real
+        # use stdout (the JSON) is captured separately. Slice from the JSON array start.
+        payload = json.loads(result.output[result.output.index("[") :])
+        assert payload[0]["action"] == "execute"
+        assert payload[0]["case"] == "example/test-diag/default"
+
+    def test_manifest_deletion_fails(self, invoke_cli, mocker, tmp_path):
+        # Manifest absent on this branch but present on the base -> deletion -> FAIL.
+        repo, _, _ = self._setup(mocker, tmp_path, current_version=None)
+        self._set_base(repo, 1, {"output.json": "a" * 64})
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output
+
+    def test_never_managed_skips(self, invoke_cli, mocker, tmp_path):
+        # No current manifest and none on the base -> never managed -> SKIP.
+        self._setup(mocker, tmp_path, current_version=None)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "skip" in result.output
+
+    def test_not_in_repo_fails(self, invoke_cli, mocker, tmp_path):
+        self._setup(mocker, tmp_path, current_version=1)
+        mocker.patch("climate_ref.cli.test_cases.get_repo_for_path", return_value=None)
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+
+    def test_paths_none_skips(self, invoke_cli, mocker, tmp_path):
+        # A non-dev checkout: from_diagnostic cannot locate the test case directory.
+        self._setup(mocker, tmp_path, current_version=1)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "skip" in result.output
+
+    def test_corrupt_current_manifest_fails(self, invoke_cli, mocker, tmp_path):
+        # A valid manifest is written, then overwritten with garbage.
+        _, paths, _ = self._setup(mocker, tmp_path, current_version=1)
+        paths.manifest.write_text("not json{", encoding="utf-8")
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output
+
+    def test_corrupt_base_manifest_treated_as_seeding(self, invoke_cli, mocker, tmp_path):
+        # git show returns non-JSON for the base manifest: must not crash; seed (replay).
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        repo, _, _ = self._setup(
+            mocker, tmp_path, current_version=1, native={"data.nc": NativeEntry("a" * 64, 10)}
+        )
+        repo.git.show.side_effect = None
+        repo.git.show.return_value = "}}not json"
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "replay" in result.output
+
+    def test_catalog_drift_fails(self, invoke_cli, mocker, tmp_path):
+        # The manifest records a catalog_hash that the on-disk catalog no longer matches.
+        from climate_ref_core.regression.manifest import Manifest
+
+        _, paths, _ = self._setup(mocker, tmp_path, current_version=1)
+        manifest = Manifest.load(paths.manifest)
+        Manifest(
+            schema=manifest.schema,
+            test_case_version=manifest.test_case_version,
+            committed=manifest.committed,
+            native=manifest.native,
+            catalog_hash="expected_hash",
+        ).dump(paths.manifest)
+        paths.catalog.write_text("_metadata:\n  hash: different_hash\ncmip6:\n  datasets: []\n")
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output

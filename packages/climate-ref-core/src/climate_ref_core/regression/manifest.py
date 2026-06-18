@@ -60,7 +60,11 @@ def _validate_digest(digest: str) -> str:
     return digest
 
 
-COMMITTED_BUNDLE_FILES: tuple[str, ...] = ("series.json", "diagnostic.json", "output.json")
+COMMITTED_BUNDLE_FILES: tuple[str, ...] = (
+    "series.json",
+    "diagnostic.json",
+    "output.json",
+)
 """The committed CMEC artefacts tracked in git.
 
 Their digests are tracked in :attr:`Manifest.committed`.
@@ -135,6 +139,12 @@ class Manifest:
     native: dict[str, NativeEntry]
     """Digests of curated native output files: ``{relpath: NativeEntry}``."""
 
+    catalog_hash: str | None = None
+    """Hash of the test case input ``catalog.yaml`` (its ``_metadata.hash``) that produced this baseline.
+    This couples the baseline to its inputs.
+    The CI gate fails a case whose live catalog hash no longer matches this value.
+    """
+
     @classmethod
     def load(cls, path: Path) -> Manifest:
         """
@@ -156,11 +166,39 @@ class Manifest:
             If the manifest is missing required keys or has malformed native entries
             (e.g. hand-edited or written by an incompatible version).
         """
-        data = json.loads(path.read_text(encoding="utf-8"))
+        return cls.loads(path.read_text(encoding="utf-8"), source=str(path))
+
+    @classmethod
+    def loads(cls, text: str, *, source: str = "<string>") -> Manifest:
+        """
+        Parse a manifest from its JSON text.
+
+        Used when the manifest does not live on disk at parse time,
+        e.g. when reading the base-branch copy via ``git show`` for the CI coupling gate.
+
+        Parameters
+        ----------
+        text
+            The manifest JSON.
+        source
+            A label for the text's origin, used in error messages.
+
+        Returns
+        -------
+        :
+            The parsed manifest.
+
+        Raises
+        ------
+        ValueError
+            If the manifest is missing required keys or has malformed native entries
+            (e.g. hand-edited or written by an incompatible version).
+        """
+        data = json.loads(text)
         missing = [key for key in ("schema", "test_case_version", "committed", "native") if key not in data]
         if missing:
             raise ValueError(
-                f"Invalid manifest {path}: missing required keys {missing}. "
+                f"Invalid manifest {source}: missing required keys {missing}. "
                 "The manifest may be corrupted or written by an incompatible version; "
                 "regenerate it with `ref test-cases run --force-regen`."
             )
@@ -171,7 +209,7 @@ class Manifest:
             }
         except (KeyError, TypeError, AttributeError) as exc:
             raise ValueError(
-                f"Invalid manifest {path}: malformed 'native' entry ({exc!r}). "
+                f"Invalid manifest {source}: malformed 'native' entry ({exc!r}). "
                 "Each entry must be a mapping with 'sha256' and 'size' keys."
             ) from exc
         # Reject hand-edited or hostile manifests that could escape the
@@ -180,13 +218,15 @@ class Manifest:
             try:
                 safe_path(relpath, label="native path")
             except ValueError as exc:
-                raise ValueError(f"Invalid manifest {path}: {exc}") from exc
+                raise ValueError(f"Invalid manifest {source}: {exc}") from exc
             _validate_digest(entry.sha256)
         return cls(
             schema=data["schema"],
             test_case_version=data["test_case_version"],
             committed=dict(data["committed"]),
             native=native,
+            # TODO: remove optonality when all manifests have this field.
+            catalog_hash=data.get("catalog_hash"),
         )
 
     def dump(self, path: Path) -> None:
@@ -204,6 +244,7 @@ class Manifest:
         payload = {
             "schema": self.schema,
             "test_case_version": self.test_case_version,
+            "catalog_hash": self.catalog_hash,
             "committed": self.committed,
             "native": {relpath: asdict(entry) for relpath, entry in self.native.items()},
         }
@@ -211,7 +252,7 @@ class Manifest:
         path.write_text(text, encoding="utf-8")
 
     @classmethod
-    def seed_v1(cls, committed_digests: dict[str, str]) -> Manifest:
+    def seed_v1(cls, committed_digests: dict[str, str], catalog_hash: str | None = None) -> Manifest:
         """
         Create an initial manifest at ``test_case_version == 1`` with no native outputs.
 
@@ -219,6 +260,8 @@ class Manifest:
         ----------
         committed_digests
             Digests of the committed regression JSON artefacts.
+        catalog_hash
+            Hash of the input ``catalog.yaml`` that produced the baseline, if known.
 
         Returns
         -------
@@ -229,6 +272,7 @@ class Manifest:
             schema=SCHEMA_VERSION,
             test_case_version=1,
             committed=dict(committed_digests),
+            catalog_hash=catalog_hash,
             native={},
         )
 

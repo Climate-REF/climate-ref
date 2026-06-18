@@ -392,7 +392,14 @@ def handle_execution_result(
                 output_base_path=config.paths.scratch / execution.output_fragment,
             )
     except Exception:
+        # The diagnostic ran, but persisting its results failed
+        # (malformed bundle, CV/schema mismatch, DB error).
+        # The savepoint already rolled back the partial inserts.
+        # Record this as a failed execution and leave the group dirty
+        # so the next solve retries it — never report success with no metric values.
         logger.exception("Something went wrong when ingesting execution result")
+        execution.mark_failed()
+        return
 
     # TODO: This should check if the result is the most recent for the execution,
     # if so then update the dirty fields

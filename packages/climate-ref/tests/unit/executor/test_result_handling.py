@@ -246,6 +246,35 @@ def test_handle_execution_result_system_failure(config, db, mock_execution_resul
     assert mock_execution_result.execution_group.dirty
 
 
+def test_handle_execution_result_ingestion_failure_leaves_dirty(
+    config, db, mock_execution_result, mocker, mock_definition
+):
+    """A successful diagnostic whose results fail to ingest must be marked failed and retried.
+
+    The ingestion savepoint rolls back the partial inserts,
+    so reporting success here would record an execution with zero metric values
+    and clear dirty, silently dropping the result.
+    Instead the execution is marked failed and the group left dirty for retry.
+    """
+    mock_execution_result.execution_group.dirty = True
+    result = ExecutionResult(
+        definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("bundle.json")
+    )
+
+    mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+    mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+    mocker.patch(
+        "climate_ref.executor.result_handling.ingest_execution_result",
+        side_effect=RuntimeError("boom"),
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_successful.assert_not_called()
+    assert mock_execution_result.execution_group.dirty
+
+
 def test_handle_execution_result_missing_log_file_leaves_dirty(
     config, db, mock_execution_result, mocker, definition_factory
 ):

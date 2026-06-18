@@ -270,6 +270,34 @@ class TestYamlSerialization:
         assert yaml_path.exists()
         assert yaml_path.parent.exists()
 
+    def test_regenerates_missing_paths_when_catalog_unchanged(self, tmp_path):
+        """A fresh checkout has the committed catalog.yaml but not the gitignored paths file.
+
+        Re-saving the same (unchanged) datasets must regenerate the missing paths file without
+        rewriting the version-controlled catalog — so a plain ``fetch`` (no ``--force``) is enough.
+        """
+        df = pd.DataFrame({"instance_id": ["CMIP6.test.ds"], "path": ["/path/to/file.nc"]})
+        collection = DatasetCollection(datasets=df, slug_column="instance_id", selector=())
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        yaml_path = tmp_path / "catalog.yaml"
+        paths_file = yaml_path.with_suffix(".paths.yaml")
+        assert save_datasets_to_yaml(datasets, yaml_path) is True
+        assert paths_file.exists()
+
+        # Simulate a fresh checkout: committed catalog present, gitignored paths file absent.
+        catalog_bytes_before = yaml_path.read_bytes()
+        paths_file.unlink()
+
+        # Unchanged catalog → returns False (catalog not rewritten) but the paths file is restored.
+        assert save_datasets_to_yaml(datasets, yaml_path) is False
+        assert paths_file.exists()
+        # The version-controlled catalog must be byte-identical (no spurious diff).
+        assert yaml_path.read_bytes() == catalog_bytes_before
+        # And the regenerated paths must round-trip.
+        loaded = load_datasets_from_yaml(yaml_path)
+        assert loaded[SourceDatasetType.CMIP6].datasets["path"].tolist() == ["/path/to/file.nc"]
+
     def test_load_with_selector(self, tmp_path):
         """Test loading YAML with selector information."""
         yaml_content = """

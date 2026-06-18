@@ -1569,6 +1569,55 @@ class TestMintCommand:
         )
         assert "Cannot mint" in result.stderr
 
+    def test_mint_fails_fast_on_preflight_error(self, invoke_cli, mocker):
+        """A store auth/connectivity failure must abort before any diagnostic runs."""
+        from climate_ref_core.regression.store import NativeStoreUnavailableError
+
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store = MagicMock()
+        store.preflight.side_effect = NativeStoreUnavailableError(
+            "Native store authentication failed (HTTP 401) for bucket 'ref-baselines-public'"
+        )
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=store,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "example"],
+            expected_exit_code=1,
+        )
+        assert "Cannot mint" in result.stderr
+        assert "401" in result.stderr
+        store.preflight.assert_called_once()
+        # Fail-fast: the diagnostic runner must never have been reached.
+        store.put.assert_not_called()
+
+    def test_mint_dry_run_lists_without_running(self, invoke_cli, mocker):
+        """--dry-run preflights + lists the cases, but runs no diagnostics and uploads nothing."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store = MagicMock()  # preflight passes (no side effect)
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=store,
+        )
+        runner_cls = mocker.patch("climate_ref.testing.TestCaseRunner")
+
+        result = invoke_cli(["test-cases", "mint", "--provider", "example", "--dry-run"])
+        assert "Dry run" in result.stdout
+        assert "example/test-diag/default" in result.stdout
+        store.preflight.assert_called_once()
+        store.put.assert_not_called()
+        runner_cls.assert_not_called()
+
     def test_mint_writes_blobs_and_manifest(self, invoke_cli, mocker, tmp_path):
         from climate_ref_core.regression.manifest import Manifest
         from climate_ref_core.regression.store import LocalFilesystemStore
@@ -1626,6 +1675,46 @@ class TestMintCommand:
         # Each native blob was PUT into the store.
         for entry in manifest.native.values():
             assert store.has(entry.sha256)
+
+
+class TestCheckStoreCommand:
+    """Tests for the ``ref test-cases check-store`` command."""
+
+    def test_check_store_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "check-store", "--help"])
+        assert "writable native baseline store" in result.stdout
+
+    def test_check_store_ok(self, invoke_cli, mocker):
+        store = MagicMock()  # preflight passes (no side effect)
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=store,
+        )
+        result = invoke_cli(["test-cases", "check-store"])
+        assert "Native store OK" in result.stdout
+        store.preflight.assert_called_once()
+
+    def test_check_store_reports_auth_failure(self, invoke_cli, mocker):
+        from climate_ref_core.regression.store import NativeStoreUnavailableError
+
+        store = MagicMock()
+        store.preflight.side_effect = NativeStoreUnavailableError(
+            "Native store authentication failed (HTTP 401) for bucket 'ref-baselines-public'"
+        )
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=store,
+        )
+        result = invoke_cli(["test-cases", "check-store"], expected_exit_code=1)
+        assert "401" in result.stderr
+
+    def test_check_store_reports_unconfigured(self, invoke_cli, mocker):
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            side_effect=NotImplementedError("R2 backend deferred"),
+        )
+        result = invoke_cli(["test-cases", "check-store"], expected_exit_code=1)
+        assert "not configured" in result.stderr
 
 
 class TestCIGateCommand:

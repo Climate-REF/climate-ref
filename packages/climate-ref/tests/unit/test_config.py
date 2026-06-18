@@ -200,7 +200,8 @@ filename = "sqlite://climate_ref.db"
             "executor": {"executor": "climate_ref.executor.LocalExecutor", "config": {}},
             "native_store": {
                 "url": "https://baselines.climate-ref.org",
-                "credentials": "",
+                "s3_endpoint_url": "https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
+                "bucket": "ref-baselines-public",
                 "cache_dir": str(resolve_cache_dir("native-baselines")),
             },
             "paths": {

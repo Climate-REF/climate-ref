@@ -41,6 +41,7 @@ from climate_ref_core.regression.manifest import (
 from climate_ref_core.regression.store import (
     LocalFilesystemStore,
     NativeStore,
+    NativeStoreUnavailableError,
     PoochReadStore,
     R2WriteStore,
     build_native_store,
@@ -55,6 +56,7 @@ __all__ = [
     "Manifest",
     "NativeEntry",
     "NativeStore",
+    "NativeStoreUnavailableError",
     "PoochReadStore",
     "R2WriteStore",
     "Tolerance",

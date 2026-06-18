@@ -466,6 +466,33 @@ class TestFilterLatestVersions:
         assert set(result["version"]) == {"v20210601"}
         assert set(result["variable_id"]) == {"tas", "pr"}
 
+    def test_keeps_numerically_latest_vn_version(self):
+        """vN versions are compared numerically, so v10 beats v2 (not lexicographically)."""
+        adapter = CMIP6DatasetAdapter()
+        catalog = pd.DataFrame(
+            {
+                "activity_id": ["CMIP"] * 3,
+                "institution_id": ["NCAR"] * 3,
+                "source_id": ["CESM2"] * 3,
+                "experiment_id": ["historical"] * 3,
+                "member_id": ["r1i1p1f1"] * 3,
+                "table_id": ["Amon"] * 3,
+                "variable_id": ["tas"] * 3,
+                "grid_label": ["gn"] * 3,
+                "version": ["v1", "v2", "v10"],
+                "instance_id": [
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v1",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v2",
+                    "CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.tas.gn.v10",
+                ],
+            }
+        )
+
+        result = adapter.filter_latest_versions(catalog)
+
+        assert len(result) == 1
+        assert set(result["version"]) == {"v10"}
+
     def test_keeps_all_when_no_duplicates(self):
         adapter = CMIP6DatasetAdapter()
         catalog = pd.DataFrame(

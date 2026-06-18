@@ -3,7 +3,8 @@ Dataset management and filtering
 """
 
 import hashlib
-from collections.abc import Collection, Iterable, Iterator, Mapping
+import re
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
 import pandas as pd
@@ -13,6 +14,45 @@ from attrs import field, frozen
 from climate_ref_core.source_types import Selector, SourceDatasetType
 
 __all__ = ["Selector", "SourceDatasetType"]
+
+
+_VERSION_NUMERIC_RE = re.compile(r"^v(\d+)$")
+
+
+def version_sort_key(version: object) -> int:
+    """
+    Return a numeric ordering key for a dataset version string.
+
+    Handles the ``vYYYYMMDD`` and ``vN`` forms by comparing the integer value after the leading ``v``
+    (so ``v10`` > ``v2``, unlike lexicographic ordering).
+    Non-conforming or missing values sort lowest (``-1``).
+    """
+    match = _VERSION_NUMERIC_RE.match(str(version))
+    return int(match.group(1)) if match else -1
+
+
+def select_latest_version(
+    datasets: pd.DataFrame,
+    *,
+    version_column: str = "version",
+    group_by: Sequence[str] | None = None,
+) -> pd.DataFrame:
+    """
+    Return only the rows belonging to the numerically-latest dataset version.
+
+    Versions are compared with :func:`version_sort_key`,
+    so ``v10`` is preferred over ``v2`` and ``vYYYYMMDD`` forms order chronologically.
+    When ``group_by`` columns are given the latest version is chosen independently within each group.
+    """
+    version_key = datasets[version_column].map(version_sort_key)
+    if group_by is None:
+        is_latest = version_key == version_key.max()
+    else:
+        max_version_key = version_key.groupby(
+            [datasets[column] for column in group_by], sort=False
+        ).transform("max")
+        is_latest = version_key == max_version_key
+    return datasets[is_latest]
 
 
 def _clean_facets(raw_values: Mapping[str, str | Collection[str]]) -> dict[str, tuple[str, ...]]:

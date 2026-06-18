@@ -40,8 +40,6 @@ jobs:
         with:
           python-version: "3.13"
       - name: Decide and verify baselines
-        # The gate fetches sample data only when a case actually needs replaying,
-        # so a PR that touches no baselines completes without any downloads.
         env:
           GITHUB_BASE_REF: ${{ github.base_ref }}
         run: bash scripts/ci/regression-pr-gate.sh

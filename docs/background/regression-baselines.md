@@ -182,6 +182,25 @@ branch and acts on each decision:
 The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on fork pull requests.
 The decision-to-replay fan-out lives in `scripts/ci/regression-pr-gate.sh`.
 
+Neither stage downloads input datasets:
+`ci-gate` reads only manifests and the git diff,
+and `replay` rebuilds the committed bundle from the public native blobs plus the committed `catalog.yaml`/`manifest.json`
+(`build_execution_result` reads only its output directory).
+The gate therefore fetches no sample data or ESGF inputs — only the small native blobs for the cases it actually replays.
+
+#### Running the gate locally
+
+The same script is the local entry point, so you can reproduce a pull request's verdict before pushing:
+
+```bash
+make regression-gate                          # gate + replay against origin/main
+bash scripts/ci/regression-pr-gate.sh main    # or pass any base ref
+```
+
+The base ref defaults to `origin/${GITHUB_BASE_REF:-main}`.
+Under GitHub Actions the script emits log groups and `::error::`/`::warning::` annotations;
+run locally it prints plain output instead.
+
 ### Gated mint (`regression-mint.yaml`)
 
 Minting is the only step that writes to the object store,

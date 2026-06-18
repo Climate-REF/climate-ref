@@ -7,144 +7,144 @@
   },
   "native": {
     "CanESM5.csv": {
-      "sha256": "e328d7177d43ebd0cc53314577f3408fb5a71974de4b78b4ed97c9f77d105702",
-      "size": 1814
+      "sha256": "5a1752f4e0b3ad5b14fd9ea98929a07269bebb053d2e467a88af4ab0d711d3d3",
+      "size": 1811
     },
     "CanESM5.nc": {
-      "sha256": "7efc1c6e1202cc3d5256579ce504359bb579c85ab6e4e470655e36b27e0d993f",
+      "sha256": "e1c1d9dfc3506eca7f2700abf28b281ca13bfc2de446f50199d80c59f17a0f92",
       "size": 4951952
     },
     "CanESM5_global_bias.png": {
-      "sha256": "4e4bdc3842f1ccc6566ff656a56455178a2f8e31258cd963833bd6037d2ed8c6",
-      "size": 33896
+      "sha256": "b2a00f71630cb94184b117c05ccd78a9a45e2294ab7de00bfd070b2c7fa171e4",
+      "size": 30207
     },
     "CanESM5_global_biasscore.png": {
-      "sha256": "44ee3c86dd493fe092b85bd9250fe16270549ee5084e97f2d7530807e97d3ecc",
-      "size": 48455
+      "sha256": "abe50f4a3fa0521a79520701baa9baa175d97c011158d24f87b554601221230e",
+      "size": 41824
     },
     "CanESM5_global_distribution-pr.png": {
-      "sha256": "3525c5e11e6db8dbe38468684fcba63dd9c409e088d4d507637e7d95f1803366",
-      "size": 21664
+      "sha256": "6268ab6cd2cd722e35ce3e36689fc8b0aa231bdf174fd2f90cbcbadd89f283c1",
+      "size": 19587
     },
     "CanESM5_global_distribution-tas.png": {
-      "sha256": "f5105a33b5bb1f17462ad698669f144f160774df52b7789f93738db0747cdb7b",
-      "size": 21359
+      "sha256": "2af80bec4c74ee52983bbeb2d2ca849085e79936742c78b8245eebd5f2b0128a",
+      "size": 19233
     },
     "CanESM5_global_mean.png": {
-      "sha256": "80d8fd8d645d35639080149e1b85b8ae7dd4c3d26705b6f103d275e47af76120",
-      "size": 23911
+      "sha256": "0971769891392e237b9fa20f30a874c1287f6f592902886bebe4bcd5b7e2a8ca",
+      "size": 21215
     },
     "CanESM5_global_response-pr.png": {
-      "sha256": "2f13afebbde33d72057f915f4de6e4ca693cf5328305acd09b8d8040a1eeb01e",
-      "size": 44257
+      "sha256": "d12be090c9a44541bf607f2150554420b35ef5b8533ec16fecc8960ac3a63bb5",
+      "size": 39902
     },
     "CanESM5_global_response-tas.png": {
-      "sha256": "bc640097a6faa87f1fff90cb7a474db1e5b574aaa650c0a676b9c0c7de9db6b9",
-      "size": 46162
+      "sha256": "1eb939cf9c206843bb970d6e2d1247c5c65a0ede66b18dd0cb10428039cb59b1",
+      "size": 41488
     },
     "CanESM5_global_rmse.png": {
-      "sha256": "d448914947fca135b925bc89eb074ef5f29aa294973e145b95771f70d57a8a74",
-      "size": 39402
+      "sha256": "540b10592fac9ba1f374d5ecf89af80827f3479988681819ead0797f674fcd20",
+      "size": 34801
     },
     "CanESM5_global_rmsescore.png": {
-      "sha256": "a8bfaf8b28ded343622d10dc7f12522dc891460cb0492a84fce5b0d19268d8df",
-      "size": 38494
+      "sha256": "c278d5bc8399e4ce3af459bc860b03b14e8075cffc3162683f4cc9010898003a",
+      "size": 33521
     },
     "CanESM5_global_trace.png": {
-      "sha256": "2b2506fba46e1ea3093796d72b62fd297b425e64be3ccce5abad2a86990a6cde",
-      "size": 61159
+      "sha256": "4c285a6e7aac36f913222771b3718412d9c5b78a7cb2e1ceea3efd73748cf9c0",
+      "size": 52704
     },
     "CanESM5_tropical_bias.png": {
-      "sha256": "a7ea9fed33048fc1f70eea13007f459ad1e215ec5f08c9f57ad911f361b75ca7",
-      "size": 16782
+      "sha256": "ab7bb7be522aef351f3494dab788b655a939e554c7d7ff2fab9eecaf11368723",
+      "size": 14864
     },
     "CanESM5_tropical_biasscore.png": {
-      "sha256": "c874f774d8dd21cf97551448cb2241b643c48167aa1f5ae84b4ff46ba34b18bb",
-      "size": 21328
+      "sha256": "a54a78dfa6a30ad6694b2a75d3950057db5e6e3a2dcc0e832bfebc0363660cb6",
+      "size": 18482
     },
     "CanESM5_tropical_distribution-pr.png": {
-      "sha256": "733a6aa4e6cf23d0739bc20d007755e3e4f878063acd64ee774426a1c05061ec",
-      "size": 20015
+      "sha256": "cc5d378e3b9a050d259718d4abc33c9abaeae1c4d48c79e8d71bd9b05aa3377d",
+      "size": 17928
     },
     "CanESM5_tropical_distribution-tas.png": {
-      "sha256": "b80af73a9f5f0fd3a6eb65955d5d35c9277255d11cac366c35a5b1c2aa885f66",
-      "size": 20496
+      "sha256": "7e814e0e7105ec746d05d1bb83e04355030d2887c70bbd00c5b10523b12cd477",
+      "size": 18254
     },
     "CanESM5_tropical_mean.png": {
-      "sha256": "c249f4a2ef39559fefbba92e6dbad7491cf60fbaf8b3861429a4aa56ea4fcd8d",
-      "size": 12930
+      "sha256": "7969945e37ab47d163220d8b2ae2e4aaa1724792c853303fd7b3d950c352bd46",
+      "size": 11237
     },
     "CanESM5_tropical_response-pr.png": {
-      "sha256": "7bbd6e9d134156b2aa73b90d5f7730247565beb870204829251762aaf4e99037",
-      "size": 50334
+      "sha256": "e5d6812ff1bade93d56aa0ba3bd4fc4baf6b03abb386ee0b4a4a94ee64473c22",
+      "size": 44172
     },
     "CanESM5_tropical_response-tas.png": {
-      "sha256": "bec34cb6ee6782c18d0edb394d31b68e58f4b249ea1ddc305df4aefeacc0a7a3",
-      "size": 45209
+      "sha256": "ede76e0b1af455940819887e3e469532b19672db714a245078b1af7a7a95ef44",
+      "size": 39854
     },
     "CanESM5_tropical_rmse.png": {
-      "sha256": "c633c2cc8f32ec1367878c2ffd14d4e68ba0f731996e915eaabaf0fc0633178a",
-      "size": 18379
+      "sha256": "4fef55f1dd056dd85182d77c68817847366bf19f0098f118695822ee2de31afd",
+      "size": 16155
     },
     "CanESM5_tropical_rmsescore.png": {
-      "sha256": "fd9aa2cb2b1cf997c9f69df29fe974eced97d3fee0314910e7158ecdfd23e065",
-      "size": 18213
+      "sha256": "c3e60f6f68759ba7f813b2b4ab9dc403b30396b39b0b2627752c516854bf1a2e",
+      "size": 15863
     },
     "CanESM5_tropical_trace.png": {
-      "sha256": "d0050e5f7f4e72ebca5187e956712fffd8de208d6e5b7f5422f66854821c1e01",
-      "size": 52332
+      "sha256": "ea3bb31a945e5f0be02b25892cbb8e21c00c911ebc5d26d00fe11c9cc361f714",
+      "size": 44117
     },
     "None_global_taylor.png": {
-      "sha256": "b8d85f74695c0e207cebec040715325b26a641422f305ed86e7f593817c16da9",
-      "size": 101340
+      "sha256": "d2b0ec5155e5f28a3ebf1e1122d66ec4233c2bac31b112ebb18bc0c451e8e549",
+      "size": 73815
     },
     "None_tropical_taylor.png": {
-      "sha256": "2de4bad0e0b83daf26745e4d500a225ee095321f0a4a3bd5f4d8b3145ba0a349",
-      "size": 101295
+      "sha256": "078fcbc4ea3e6551f0352c9ae20eed7150c3b9b5cf922f59367340fb6fcd35c1",
+      "size": 73726
     },
     "Reference.nc": {
-      "sha256": "8ad09f77fe397db79364110a048f4cff48160dc059d0336f1c42a08ea0457060",
+      "sha256": "ed5b8b4ca58842aff0011a672e101270550d687ab888f96f0237d297f9687bee",
       "size": 579661
     },
     "Reference_global_distribution-pr.png": {
-      "sha256": "03d51694e45cb1e558ab5adf356681295dd96775547f593881e5fe2c942398ed",
-      "size": 22648
+      "sha256": "901012be7b39aa6508716630187bca291474259091ffb04bb533f439b0acfb1f",
+      "size": 20462
     },
     "Reference_global_distribution-tas.png": {
-      "sha256": "896e1339a2539316b63adc1e8a316192ee15f2d65cf46f6ab12e50a713d0b684",
-      "size": 22653
+      "sha256": "7b6e93d2e9bd484dece285626b4cd1169955fdcb734326ad21f564d066960eab",
+      "size": 20394
     },
     "Reference_global_mean.png": {
-      "sha256": "69d456b0f1bb334b8ce74223c6e9cf1193062b35be2df5f560bf04a97ecf1450",
-      "size": 33374
+      "sha256": "9a57dec61dad27298f41a210071f3df0d1e1de60ccc804f3ea1aac8faf2fd9ed",
+      "size": 29010
     },
     "Reference_tropical_distribution-pr.png": {
-      "sha256": "29cd5d18be5f86b2e9ef80fb19af360ba42fa7dc8a6401701a6cf3cd53b7b7e8",
-      "size": 21414
+      "sha256": "28307acf63257ed43e71c2e3667594adccac0710b62e42939ba7a3ae591a1ad9",
+      "size": 19247
     },
     "Reference_tropical_distribution-tas.png": {
-      "sha256": "ba2c3c47e0c9e26378f22f0b2ba5a7f45fe7bedcd40781b1b954568cb0c22a43",
-      "size": 21811
+      "sha256": "3d96b2acf2a5d2c1d188ed40e21f451de0084c65298cdf4622bf59c3b7c3e249",
+      "size": 19492
     },
     "Reference_tropical_mean.png": {
-      "sha256": "35c882a9f0be7b38f274fa843e940a7df0b2340e2386e2cc542f229bcc539eaa",
-      "size": 16036
+      "sha256": "ca8a85d59f769674a785b26c3b8209ea66ef03029e8e2de08fc78eb6418f44d3",
+      "size": 14162
     },
     "diagnostic.json": {
-      "sha256": "65f48cfe69913d5062cf2915ad1c20b7f179211c51252568b272ef2637ce2523",
-      "size": 3557
+      "sha256": "bbc37b1547186955b2e4d2c20514b555dc4c89375ea7339aa77382b118ddc7ae",
+      "size": 3559
     },
     "index.html": {
-      "sha256": "b8ec226736532dcf884e7f02aa5e84043b73d8a5990b1c17eb7d8dbf0cac644a",
-      "size": 20002
+      "sha256": "364060f59119cf45eff27f67c76914cbe56ea13c1d9104ed7fc591bc65b08826",
+      "size": 19999
     },
     "output.json": {
-      "sha256": "caca25ade6a1d97cabf7043d60cdac565a723005e0a31032f4cbfc2e9b3e2b10",
+      "sha256": "557db81cbf8d4bdc3a58345c983282d88a24a26e6fd1cdbdefc605d274690383",
       "size": 13704
     },
     "series.json": {
-      "sha256": "90fccd7bf8b768ff18405f29d012bfe4bebff3c940ff50f195fad03b1637b051",
-      "size": 22695
+      "sha256": "feb5c66a954730372ebfe6d281745a019320deb1849c6403a10333fae1ee1fe2",
+      "size": 22777
     }
   },
   "schema": 1,

@@ -14,7 +14,7 @@ from climate_ref_core.regression.capture import (
     materialise_native,
     write_committed_bundle,
 )
-from climate_ref_core.regression.manifest import sha256_file
+from climate_ref_core.regression.manifest import NativeEntry, sha256_file
 from climate_ref_core.regression.store import LocalFilesystemStore
 
 
@@ -168,3 +168,14 @@ def test_materialise_native_round_trip(tmp_path):
 
     assert (dest / "a.nc").read_bytes() == b"alpha"
     assert (dest / "b.png").read_bytes() == b"beta"
+
+
+@pytest.mark.parametrize(
+    "relpath",
+    ["../escape.nc", "../../etc/passwd", "/abs/path.nc", "sub/../../escape.nc"],
+)
+def test_materialise_native_rejects_path_traversal(tmp_path, relpath):
+    store = LocalFilesystemStore(root=tmp_path / "store")
+    native = {relpath: NativeEntry(sha256="0" * 64, size=1)}
+    with pytest.raises(ValueError, match=r"Unsafe native path"):
+        materialise_native(native, store, tmp_path / "dest")

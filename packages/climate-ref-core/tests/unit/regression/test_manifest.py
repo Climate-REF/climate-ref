@@ -159,6 +159,38 @@ class TestDumpLoad:
         with pytest.raises(ValueError, match="malformed 'native' entry"):
             Manifest.load(p)
 
+    @pytest.mark.parametrize(
+        "bad_relpath",
+        ["../escape.nc", "../../etc/passwd", "/abs/path.nc", "sub/../../escape.nc"],
+    )
+    def test_load_rejects_unsafe_native_path(self, tmp_path: Path, bad_relpath: str) -> None:
+        p = tmp_path / "manifest.json"
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": 1,
+            "committed": {},
+            "native": {bad_relpath: {"sha256": "aa" * 32, "size": 1}},
+        }
+        p.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="Unsafe native path"):
+            Manifest.load(p)
+
+    @pytest.mark.parametrize(
+        "bad_digest",
+        ["not-hex", "ABCDEF" + "0" * 58, "0" * 63, "0" * 65],
+    )
+    def test_load_rejects_bad_native_digest(self, tmp_path: Path, bad_digest: str) -> None:
+        p = tmp_path / "manifest.json"
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": 1,
+            "committed": {},
+            "native": {"file.nc": {"sha256": bad_digest, "size": 1}},
+        }
+        p.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="Invalid sha256 digest"):
+            Manifest.load(p)
+
 
 class TestComputeCommittedDigests:
     def test_all_three_present(self, regression_dir: Path) -> None:

@@ -10,7 +10,6 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.executor.reingest import (
     _extract_dataset_attributes,
-    _validate_path_containment,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
@@ -181,23 +180,6 @@ def _patch_build_result(mocker, registry, mock_result):
     diagnostic = registry.get_metric("mock_provider", "mock")
     mocker.patch.object(diagnostic, "build_execution_result", return_value=mock_result)
     return diagnostic
-
-
-class TestValidatePathContainment:
-    def test_valid_path_within_base(self, tmp_path):
-        """Should not raise for a path within the base directory."""
-        base = tmp_path / "base"
-        base.mkdir()
-        path = base / "subdir" / "file.txt"
-        _validate_path_containment(path, base, "test")
-
-    def test_path_escaping_base_raises(self, tmp_path):
-        """Should raise ValueError when path escapes the base directory."""
-        base = tmp_path / "base"
-        base.mkdir()
-        escaping_path = base / ".." / "outside"
-        with pytest.raises(ValueError, match="escapes"):
-            _validate_path_containment(escaping_path, base, "test")
 
 
 class TestExtractDatasetAttributes:

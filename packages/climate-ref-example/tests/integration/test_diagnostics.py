@@ -54,6 +54,10 @@ def test_validate_test_case_regression(
     if not validator.has_regression_data():
         pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
 
+    # TODO: remove this once we have migrated test cases to use the committed bundles.
+    if not any(paths.regression.glob("*.nc")):
+        pytest.skip(f"No committed NetCDF baseline for {diagnostic.slug}/{test_case_name}")
+
     definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
     validator.validate(definition)
 

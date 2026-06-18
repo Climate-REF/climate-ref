@@ -1,10 +1,8 @@
 import hashlib
-import http.server
-import os
-import threading
 from pathlib import Path
 
 import pytest
+from pytest_mock import MockerFixture
 
 from climate_ref_core.regression.store import (
     LocalFilesystemStore,
@@ -13,6 +11,43 @@ from climate_ref_core.regression.store import (
     R2WriteStore,
     build_native_store,
 )
+
+
+def _patch_pooch_create(
+    mocker: MockerFixture,
+    served: dict[str, bytes],
+) -> None:
+    """
+    Replace ``pooch.create`` so ``PoochReadStore.fetch`` runs without any network.
+
+    The returned registry double writes the bytes registered in ``served`` to the
+    pooch cache directory and returns the cached path, leaving the store's own
+    ``_verify_hash_matches`` to do the real hash check.
+
+    Parameters
+    ----------
+    mocker
+        The pytest-mock fixture.
+    served
+        Mapping of blob name (the sha256 digest) to the bytes the fake server returns.
+    """
+
+    def _create(*, path: Path, base_url: str, retry_if_failed: int = 0) -> object:
+        registry: dict[str, str] = {}
+
+        def _fetch(name: str) -> str:
+            cache_dir = Path(path)
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            cached = cache_dir / name
+            cached.write_bytes(served[name])
+            return str(cached)
+
+        fake = mocker.MagicMock()
+        fake.registry = registry
+        fake.fetch.side_effect = _fetch
+        return fake
+
+    mocker.patch("climate_ref_core.regression.store.pooch.create", side_effect=_create)
 
 
 @pytest.fixture()
@@ -87,6 +122,22 @@ class TestLocalFilesystemStore:
         with pytest.raises(FileNotFoundError):
             local_store.fetch(blob_digest, tmp_path / "out.nc")
 
+    @pytest.mark.parametrize(
+        "bad_digest",
+        [
+            "../../etc/passwd",
+            "not-hex",
+            "ABCDEF" + "0" * 58,  # uppercase rejected
+            "0" * 63,  # too short
+            "0" * 65,  # too long
+        ],
+    )
+    def test_blob_path_rejects_bad_digest(
+        self, local_store: LocalFilesystemStore, bad_digest: str
+    ) -> None:
+        with pytest.raises(ValueError, match="Invalid sha256 digest"):
+            local_store.has(bad_digest)
+
     def test_fetch_digest_mismatch_raises_value_error(
         self,
         local_store: LocalFilesystemStore,
@@ -135,6 +186,7 @@ class TestPoochReadStore:
 
     def test_fetch_byte_identical(
         self,
+        mocker: MockerFixture,
         blob_content: bytes,
         blob_digest: str,
         tmp_path: Path,
@@ -142,77 +194,32 @@ class TestPoochReadStore:
         """
         PoochReadStore.fetch must download a blob and produce byte-identical content.
 
-        Served via a tiny local HTTP server since pooch does not support ``file://``.
+        The pooch download is mocked so the test needs no network or local server.
         """
-        # Serve blobs from a flat directory: base_url/<digest>
-        flat_root = tmp_path / "serve"
-        flat_root.mkdir()
-        (flat_root / blob_digest).write_bytes(blob_content)
+        _patch_pooch_create(mocker, {blob_digest: blob_content})
 
-        class _Handler(http.server.SimpleHTTPRequestHandler):
-            def log_message(self, *args: object) -> None:
-                pass
-
-        orig_cwd = os.getcwd()
-        os.chdir(flat_root)
-        try:
-            with http.server.HTTPServer(("127.0.0.1", 0), _Handler) as httpd:
-                port = httpd.server_address[1]
-                # Each request consumes one handle_request call.
-                thread = threading.Thread(target=httpd.handle_request, daemon=True)
-                thread.start()
-
-                store = PoochReadStore(
-                    base_url=f"http://127.0.0.1:{port}",
-                    cache_dir=tmp_path / "cache",
-                )
-                dest = tmp_path / "fetched.nc"
-                store.fetch(blob_digest, dest)
-                thread.join(timeout=5)
-        finally:
-            os.chdir(orig_cwd)
+        store = PoochReadStore(base_url="https://example.com", cache_dir=tmp_path / "cache")
+        dest = tmp_path / "fetched.nc"
+        store.fetch(blob_digest, dest)
 
         assert dest.read_bytes() == blob_content
 
     def test_fetch_hash_verified(
         self,
+        mocker: MockerFixture,
         blob_digest: str,
         tmp_path: Path,
-        monkeypatch: pytest.MonkeyPatch,
     ) -> None:
         """
-        A downloaded blob whose content does not hash to the requested digest must be
-        rejected by ``_verify_hash_matches`` with a ``ValueError``.
-
-        The pooch download is mocked so the store's own hash verification is exercised
-        deterministically, without standing up an HTTP server (a real server combined
-        with pooch's ``retry_if_failed`` makes connect timeouts raise unrelated network
-        errors and can hang the test for minutes).
+        A blob served with corrupt content under the correct digest name
+        must be detected by ``_verify_hash_matches`` and raise.
         """
-        cache_dir = tmp_path / "cache"
+        # The fake server returns corrupt bytes under the correct digest name.
+        _patch_pooch_create(mocker, {blob_digest: b"corrupt bytes -- digest will not match"})
 
-        class _FakeRegistry:
-            """Stand-in for the pooch registry that "downloads" corrupt content."""
-
-            def __init__(self) -> None:
-                self.registry: dict[str, str] = {}
-
-            def fetch(self, fname: str) -> str:
-                # Yield content that does not hash to ``fname``, bypassing pooch's own
-                # hash check so the store-level verification is the failure point.
-                cache_dir.mkdir(parents=True, exist_ok=True)
-                cached = cache_dir / fname
-                cached.write_bytes(b"corrupt bytes -- digest will not match")
-                return str(cached)
-
-        monkeypatch.setattr(
-            "climate_ref_core.regression.store.pooch.create",
-            lambda *args, **kwargs: _FakeRegistry(),
-        )
-
-        store = PoochReadStore(base_url="http://example.invalid", cache_dir=cache_dir)
+        store = PoochReadStore(base_url="https://example.com", cache_dir=tmp_path / "cache")
         dest = tmp_path / "out.nc"
-        with pytest.raises(ValueError):
+        with pytest.raises(ValueError, match="does not match"):
             store.fetch(blob_digest, dest)
 
 

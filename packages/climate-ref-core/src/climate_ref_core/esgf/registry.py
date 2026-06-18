@@ -15,6 +15,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
+from climate_ref_core.datasets import select_latest_version
 
 # Number of path parts in PMP climatology registry keys
 _PMP_CLIMATOLOGY_PATH_PARTS = 5
@@ -292,15 +293,15 @@ class RegistryRequest:
 
         result = pd.DataFrame(matching_rows)
 
-        # Filter to only the latest version for each unique dataset
-        # Datasets are identified by source_id, variable_id, and grid_label
+        # Filter to only the latest version for each unique dataset.
+        # Datasets are identified by source_id, variable_id, and grid_label.
+        # Versions are compared numerically (so v10 > v2) via select_latest_version.
         if "version" in result.columns:
-            group_by_cols = ["source_id", "variable_id", "grid_label"]
-            # Only group by columns that exist in the DataFrame
-            group_by_cols = [col for col in group_by_cols if col in result.columns]
+            group_by_cols = [
+                col for col in ("source_id", "variable_id", "grid_label") if col in result.columns
+            ]
             if group_by_cols:
-                max_version = result.groupby(group_by_cols, sort=False)["version"].transform("max")
-                result = result[result["version"] == max_version]
+                result = select_latest_version(result, group_by=group_by_cols)
 
         logger.info(f"Found {len(result)} datasets matching request: {self.slug}")
 

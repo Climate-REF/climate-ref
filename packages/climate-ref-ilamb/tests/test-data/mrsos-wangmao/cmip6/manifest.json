@@ -1,11 +1,19 @@
 {
-  "catalog_hash": "7888051b7f9e6a15c0b8e562c1d97d8ab1cd1b73",
+  "catalog_hash": "1844ea19317c10111398b17b36e5a146d8f8e84f",
   "committed": {
     "diagnostic.json": "39fa24067750a57d1e0b8839b39834cc44b270f3b99f593b0ff6edf4777e0d06",
-    "output.json": "44164117d217aeaceb70ff5304f30b7f4aa64328fa4ec06ca26cde516966fd5b",
+    "output.json": "c8ce172892ad687b787f08909deabb1a258845219ccb4fbf3ba31b7375f8b466",
     "series.json": "11b858547a550f8a013a08b5e93b563af36618bab0e9d967b4e689a2c12c743b"
   },
   "native": {
+    "CanESM5.csv": {
+      "sha256": "96e1a7e1fd0007a4cb67f1a0cef77d93cb9376bcd30900f206038aa8ea55bfb5",
+      "size": 1355
+    },
+    "CanESM5.nc": {
+      "sha256": "f20da360186fbc007095ab4a567b5d0c84a1340a857ab2769271f49cfd0b8888",
+      "size": 13347043
+    },
     "CanESM5_global_bias.png": {
       "sha256": "be9ef2968c55ec1325acc2cca71f1b1d0ab884703fd55a83dda9f78c3e401116",
       "size": 29249
@@ -62,6 +70,10 @@
       "sha256": "b8ab2dd32ad5f46b7079d46fc373e1bfcfebe36784311627ea4a32378c537fa6",
       "size": 101212
     },
+    "Reference.nc": {
+      "sha256": "6b9de471d6e9763adbc9cd97d4b35189155fc5c472d80da50b68a935a926dea7",
+      "size": 2105283
+    },
     "Reference_global_mean.png": {
       "sha256": "d76418a91f5cc98de3a52b304fdf91109828af8f1716906500de18e260bf6acf",
       "size": 22814
@@ -79,8 +91,8 @@
       "size": 17258
     },
     "output.json": {
-      "sha256": "44164117d217aeaceb70ff5304f30b7f4aa64328fa4ec06ca26cde516966fd5b",
-      "size": 7740
+      "sha256": "c8ce172892ad687b787f08909deabb1a258845219ccb4fbf3ba31b7375f8b466",
+      "size": 8315
     },
     "series.json": {
       "sha256": "11b858547a550f8a013a08b5e93b563af36618bab0e9d967b4e689a2c12c743b",

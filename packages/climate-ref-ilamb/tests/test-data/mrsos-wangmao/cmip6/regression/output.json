@@ -6,7 +6,26 @@
     "obsdata": {},
     "log": "cmec_output.log"
   },
-  "data": {},
+  "data": {
+    "CanESM5.csv": {
+      "filename": "CanESM5.csv",
+      "long_name": "CanESM5.csv",
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null
+    },
+    "CanESM5.nc": {
+      "filename": "CanESM5.nc",
+      "long_name": "CanESM5.nc",
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null
+    },
+    "Reference.nc": {
+      "filename": "Reference.nc",
+      "long_name": "Reference.nc",
+      "description": "Scalar and time-series data produced by ILAMB.",
+      "dimensions": null
+    }
+  },
   "plots": {
     "None_global_taylor.png": {
       "filename": "None_global_taylor.png",

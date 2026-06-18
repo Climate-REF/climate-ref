@@ -93,7 +93,7 @@
           "gn": {
             "global": {
               "Bias": {
-                "Bias": 0.7111356916211374,
+                "Bias": 0.7111356916211377,
                 "Bias Score": 0.4763392713337563,
                 "Period Mean": 3.0346447224515662
               },
@@ -102,35 +102,35 @@
                 "RMSE Score": 0.3551712984549456
               },
               "Relationship pr": {
-                "Relationship Score pr": 0.4758795641964789
+                "Relationship Score pr": 0.4758795641964788
               },
               "Relationship tas": {
                 "Relationship Score tas": 0.5501582221494062
               },
               "Spatial Distribution": {
-                "Correlation": 0.8709317891709268,
+                "Correlation": 0.8709317891709258,
                 "Normalized Standard Deviation": 1.4735988673363951,
-                "Spatial Distribution Score": 0.8078278533662464
+                "Spatial Distribution Score": 0.807827853366246
               }
             },
             "tropical": {
               "Bias": {
                 "Bias": 1.539485587605515,
                 "Bias Score": 0.3472815566533462,
-                "Period Mean": 6.7071584701427875
+                "Period Mean": 6.707158470142788
               },
               "RMSE": {
                 "RMSE": 3.0207356978019804,
                 "RMSE Score": 0.2914812293962558
               },
               "Relationship pr": {
-                "Relationship Score pr": 0.5546037599052827
+                "Relationship Score pr": 0.5546037599052825
               },
               "Relationship tas": {
                 "Relationship Score tas": 0.5200937813795461
               },
               "Spatial Distribution": {
-                "Correlation": 0.3174619887792373,
+                "Correlation": 0.3174619887792372,
                 "Normalized Standard Deviation": 1.5455180331005305,
                 "Spatial Distribution Score": 0.548111567951591
               }

@@ -147,10 +147,8 @@ class DatasetCollection:
         """
         Reproducible SHA1 digest of the collection's dataset identifiers.
 
-        Hashes the sorted ``slug_column`` values directly so the result is stable across
-        pandas versions and platforms and independent of row order. ``pd.util.hash_pandas_object``
-        was used here previously, but its output is not reproducible across pandas releases,
-        which let a regression baseline minted in one environment fail the coupling gate in another.
+        Hashes the sorted ``slug_column`` values directly
+        so the result is stable across platforms and independent of row order.
         """
         values = sorted(str(value) for value in self.datasets[self.slug_column])
         return hashlib.sha1("\n".join(values).encode("utf-8")).hexdigest()  # noqa: S324

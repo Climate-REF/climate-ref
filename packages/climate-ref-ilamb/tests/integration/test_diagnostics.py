@@ -89,6 +89,14 @@ def test_validate_test_case_regression(
         test_data_dir=provider_test_data_dir,
     )
 
+    # TODO: remove this once we have migrated test cases to use the committed bundles.
+    # Under Framework B the native baselines live in the object store, not the repo, so
+    # build_execution_result cannot be replayed from the committed bundle alone. The
+    # online equivalent (`ref test-cases replay`) materialises native blobs from the
+    # store; this offline test skips until that path is shared here.
+    if not any(paths.regression.glob("*.nc")):
+        pytest.skip(f"No committed native baseline for {diagnostic.slug}/{test_case_name}")
+
     definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
     validator.validate(definition)
 

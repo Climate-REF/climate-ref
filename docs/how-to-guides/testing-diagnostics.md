@@ -460,6 +460,9 @@ flowchart TD
 
 Bump `test_case_version` whenever you *intend* to change a baseline — it tells reviewers and CI the new output is correct.
 
+!!! tip "Check the gate locally before pushing"
+    Run the same gate your pull request will hit with `make regression-gate` (it compares against `origin/main`).
+
 #### Publishing a native baseline
 
 Native files are written to the object store only by `ref test-case mint`, which needs write credentials.

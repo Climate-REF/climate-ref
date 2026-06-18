@@ -145,6 +145,10 @@ test-diagnostics: test-diagnostic-example test-diagnostic-esmvaltool test-diagno
 .PHONY: test-executors
 test-executors: test-celery
 
+.PHONY: regression-gate
+regression-gate:  ## run the regression baseline coupling gate + replay (compares against origin/main)
+	bash scripts/ci/regression-pr-gate.sh
+
 .PHONY: test
 test: clean test-core test-ref test-executors test-diagnostics test-integration ## run the tests
 	uv run coverage report

@@ -4,8 +4,8 @@
 # catching baselines that no longer reproduce within tolerance (e.g. after a dependency upgrade)
 # even when no pull request touched them.
 #
-# Run on the public runners with no credentials (read-only access to the public repository and public read access to the native blobs),
-# so it is safe on untrusted fork pull-request code.
+# Runs on the self-hosted ARC runners to reuse the persistent dataset and intake-esgf caches
+# (REF_DATASET_CACHE_DIR=/data/cache/datasets, ~/.esgf and the read-only /data/cmip6 archive).
 # A failure here means a stored baseline has drifted and needs investigation (and possibly a re-mint).
 # See docs/background/regression-baselines.md.
 name: Regression baselines (nightly drift)
@@ -28,7 +28,10 @@ jobs:
   drift:
     # Don't run the scheduled check on forks.
     if: github.repository == 'Climate-REF/climate-ref'
-    runs-on: ubuntu-latest
+    runs-on: "arc-climate-ref"
+    env:
+      # Avoid the huge amounts of TQDM output from the download
+      TQDM_DISABLE: "1"
     strategy:
       # A drift in one provider must not cancel the others' checks.
       fail-fast: false

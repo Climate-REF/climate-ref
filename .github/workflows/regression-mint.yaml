@@ -47,11 +47,17 @@ concurrency:
 jobs:
   mint:
     if: github.repository == 'Climate-REF/climate-ref'
-    runs-on: ubuntu-latest
+    # Run on the self-hosted ARC runners.
+    # They mount the persistent dataset, software, and intake-esgf caches.
+    # This requires approval by a maintainer to be run.
+    runs-on: "arc-climate-ref"
     environment: native-baselines
     defaults:
       run:
         shell: bash
+    env:
+      # Keep the cache-warming download steps from flooding the log with progress bars.
+      TQDM_DISABLE: "1"
     steps:
       - name: Refuse to mint on the default branch
         if: github.ref_name == github.event.repository.default_branch

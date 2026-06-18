@@ -1,9 +1,9 @@
 {
   "catalog_hash": "335fbe7c1dd5312b91d96e20499c8e4461ff664f",
   "committed": {
-    "diagnostic.json": "ecfa5a538e3e9c4d3c5b8e24a3b700dd409e0f316ce18e5aad829cd7aabc01a2",
-    "output.json": "9ece087f05764db9efde417d5e04c5c4d8cebdb8fe6c3a61367e94f0385f86cc",
-    "series.json": "04b331fae87a1b2f5da0ff2b74dced91c704552b3c76d3b57b459e68f216b9b6"
+    "diagnostic.json": "9735917d6f3b31e68bdbc13593c7f65e5785e4c8ae630832d6535cb9fe6bcdca",
+    "output.json": "b104e5cc5836bcb053adb84d751fb26bfb3553f8b9cb400794b36a06b4d3520d",
+    "series.json": "b82eb7a34e7d53776efa5336e147f7968bdd293a8b11296e579fab2ac599b729"
   },
   "native": {
     "CanESM5.csv": {
@@ -100,5 +100,5 @@
     }
   },
   "schema": 1,
-  "test_case_version": 1
+  "test_case_version": 2
 }

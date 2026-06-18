@@ -913,6 +913,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "GFED",
       "region": "global",
       "source_id": "Reference"
     },
@@ -1364,6 +1365,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "GFED",
       "region": "tropical",
       "source_id": "Reference"
     },

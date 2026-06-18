@@ -27,9 +27,9 @@
     }
   },
   "plots": {
-    "CanESM5_tropical_bias.png": {
-      "filename": "CanESM5_tropical_bias.png",
-      "long_name": "The bias for CanESM5 over the Tropical climates region.",
+    "CanESM5_global_bias.png": {
+      "filename": "CanESM5_global_bias.png",
+      "long_name": "The bias for CanESM5 over the Global - Land region.",
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
@@ -37,7 +37,7 @@
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
         "reference_source_id": "HWSD2",
-        "region": "tropical",
+        "region": "global",
         "statistic": "Bias"
       }
     },
@@ -55,9 +55,9 @@
         "statistic": "Bias score"
       }
     },
-    "CanESM5_global_bias.png": {
-      "filename": "CanESM5_global_bias.png",
-      "long_name": "The bias for CanESM5 over the Global - Land region.",
+    "CanESM5_global_mean.png": {
+      "filename": "CanESM5_global_mean.png",
+      "long_name": "The period mean for CanESM5 over the Global - Land region.",
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
@@ -66,45 +66,21 @@
         "source_id": "CanESM5",
         "reference_source_id": "HWSD2",
         "region": "global",
-        "statistic": "Bias"
-      }
-    },
-    "Reference_global_mean.png": {
-      "filename": "Reference_global_mean.png",
-      "long_name": "The period mean for the reference data over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "region": "global",
-        "statistic": "Period Mean",
-        "source_id": "Reference"
-      }
-    },
-    "None_tropical_taylor.png": {
-      "filename": "None_tropical_taylor.png",
-      "long_name": "The Taylor diagram over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "HWSD2",
-        "region": "tropical",
-        "statistic": "Taylor diagram"
-      }
-    },
-    "CanESM5_tropical_mean.png": {
-      "filename": "CanESM5_tropical_mean.png",
-      "long_name": "The period mean for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "HWSD2",
-        "region": "tropical",
         "statistic": "Period Mean"
+      }
+    },
+    "CanESM5_tropical_bias.png": {
+      "filename": "CanESM5_tropical_bias.png",
+      "long_name": "The bias for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "HWSD2",
+        "region": "tropical",
+        "statistic": "Bias"
       }
     },
     "CanESM5_tropical_biasscore.png": {
@@ -121,9 +97,9 @@
         "statistic": "Bias score"
       }
     },
-    "CanESM5_global_mean.png": {
-      "filename": "CanESM5_global_mean.png",
-      "long_name": "The period mean for CanESM5 over the Global - Land region.",
+    "CanESM5_tropical_mean.png": {
+      "filename": "CanESM5_tropical_mean.png",
+      "long_name": "The period mean for CanESM5 over the Tropical climates region.",
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
@@ -131,18 +107,8 @@
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
         "reference_source_id": "HWSD2",
-        "region": "global",
-        "statistic": "Period Mean"
-      }
-    },
-    "Reference_tropical_mean.png": {
-      "filename": "Reference_tropical_mean.png",
-      "long_name": "The period mean for the reference data over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
         "region": "tropical",
-        "statistic": "Period Mean",
-        "source_id": "Reference"
+        "statistic": "Period Mean"
       }
     },
     "None_global_taylor.png": {
@@ -157,6 +123,40 @@
         "reference_source_id": "HWSD2",
         "region": "global",
         "statistic": "Taylor diagram"
+      }
+    },
+    "None_tropical_taylor.png": {
+      "filename": "None_tropical_taylor.png",
+      "long_name": "The Taylor diagram over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "HWSD2",
+        "region": "tropical",
+        "statistic": "Taylor diagram"
+      }
+    },
+    "Reference_global_mean.png": {
+      "filename": "Reference_global_mean.png",
+      "long_name": "The period mean for the reference data over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "region": "global",
+        "statistic": "Period Mean",
+        "source_id": "Reference"
+      }
+    },
+    "Reference_tropical_mean.png": {
+      "filename": "Reference_tropical_mean.png",
+      "long_name": "The period mean for the reference data over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "region": "tropical",
+        "statistic": "Period Mean",
+        "source_id": "Reference"
       }
     }
   },

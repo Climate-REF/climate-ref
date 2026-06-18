@@ -2,8 +2,8 @@
   "catalog_hash": "e147acfae21866fb18c82724161dd3b30c3e8797",
   "committed": {
     "diagnostic.json": "ba680fae638dd888c77154c40ac862b47cc0d05f7266fca77bdc180ab4b860fb",
-    "output.json": "f55efa83d76e0eb5ffbeb8d79757bda8aaf4b4f0ce95698f94d41019271ea685",
-    "series.json": "9a17511f060dd26071de87ef41249ebfbcd8fceb0fbb48abbc76fd16abdaa4b2"
+    "output.json": "d8da1405ed69e80bacc72e5c6d5321b6a127d3fbc07a0f1d018358ab7f4af751",
+    "series.json": "87dc060af17150527b07f6694ad31b9ea8101c1886bd56adf9c5eb9e90c22444"
   },
   "native": {},
   "schema": 1,

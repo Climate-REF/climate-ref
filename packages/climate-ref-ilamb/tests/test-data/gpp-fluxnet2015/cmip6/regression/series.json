@@ -1201,6 +1201,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "FLUXNET2015",
       "region": "global",
       "source_id": "Reference"
     },
@@ -1794,6 +1795,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "FLUXNET2015",
       "region": "tropical",
       "source_id": "Reference"
     },

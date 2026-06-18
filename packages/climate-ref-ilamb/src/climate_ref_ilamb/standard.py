@@ -504,6 +504,12 @@ class ILAMBStandard(Diagnostic):
     Apply the standard ILAMB analysis with respect to a given reference dataset.
     """
 
+    # Bumped to 2 because the CMEC output bundle changed shape: the plot/data blocks
+    # are now written in a stable sorted order and reference series carry
+    # ``reference_source_id``. The bump forces a fresh execution group rather than
+    # reusing v1 results.
+    version = 2
+
     def __init__(
         self,
         registry_file: str,
@@ -759,9 +765,9 @@ class ILAMBStandard(Diagnostic):
             df[key] = value
         metric_bundle = CMECMetric.model_validate(_build_cmec_bundle(df))
 
-        # Add each png file plot to the output
+        # Add each png file plot to the output.
         output_bundle = CMECOutput.create_template()
-        for plotfile in definition.output_directory.glob("*.png"):
+        for plotfile in sorted(definition.output_directory.glob("*.png")):
             relative_path = str(definition.as_relative_path(plotfile))
             caption, figure_dimensions = _caption_from_filename(plotfile, common_dimensions)
 
@@ -792,10 +798,10 @@ class ILAMBStandard(Diagnostic):
         # Add series to the output based on the time traces we find in the
         # output files
         series = []
-        for ncfile in definition.output_directory.glob("*.nc"):
+        for ncfile in sorted(definition.output_directory.glob("*.nc")):
             time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
             ds = xr.open_dataset(ncfile, decode_times=time_coder)
-            for name, da in ds.items():
+            for name, da in sorted(ds.items()):
                 # Only create series for 1d DataArray's with these dimensions
                 if not (da.ndim == 1 and set(da.dims).intersection(["time", "month"])):
                     continue
@@ -817,6 +823,7 @@ class ILAMBStandard(Diagnostic):
                 if ncfile.stem == "Reference":
                     dimensions = {
                         "source_id": "Reference",
+                        "reference_source_id": dataset_source,
                         "metric": str_name,
                     }
                 else:

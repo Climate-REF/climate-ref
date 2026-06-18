@@ -27,54 +27,6 @@
     }
   },
   "plots": {
-    "CanESM5_global_mean.png": {
-      "filename": "CanESM5_global_mean.png",
-      "long_name": "The period mean for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "global",
-        "statistic": "Period Mean"
-      }
-    },
-    "CanESM5_tropical_mean.png": {
-      "filename": "CanESM5_tropical_mean.png",
-      "long_name": "The period mean for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "tropical",
-        "statistic": "Period Mean"
-      }
-    },
-    "Reference_global_mean.png": {
-      "filename": "Reference_global_mean.png",
-      "long_name": "The period mean for the reference data over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "region": "global",
-        "statistic": "Period Mean",
-        "source_id": "Reference"
-      }
-    },
-    "Reference_tropical_mean.png": {
-      "filename": "Reference_tropical_mean.png",
-      "long_name": "The period mean for the reference data over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "region": "tropical",
-        "statistic": "Period Mean",
-        "source_id": "Reference"
-      }
-    },
     "CanESM5_global_bias.png": {
       "filename": "CanESM5_global_bias.png",
       "long_name": "The bias for CanESM5 over the Global - Land region.",
@@ -86,20 +38,6 @@
         "source_id": "CanESM5",
         "reference_source_id": "WECANN",
         "region": "global",
-        "statistic": "Bias"
-      }
-    },
-    "CanESM5_tropical_bias.png": {
-      "filename": "CanESM5_tropical_bias.png",
-      "long_name": "The bias for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "tropical",
         "statistic": "Bias"
       }
     },
@@ -117,9 +55,9 @@
         "statistic": "Bias score"
       }
     },
-    "CanESM5_tropical_biasscore.png": {
-      "filename": "CanESM5_tropical_biasscore.png",
-      "long_name": "The bias score for CanESM5 over the Tropical climates region.",
+    "CanESM5_global_distribution-pr.png": {
+      "filename": "CanESM5_global_distribution-pr.png",
+      "long_name": "The distribution of pr for CanESM5 over the Global - Land region.",
       "description": "",
       "dimensions": {
         "experiment_id": "historical",
@@ -127,8 +65,64 @@
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
         "reference_source_id": "WECANN",
-        "region": "tropical",
-        "statistic": "Bias score"
+        "region": "global",
+        "statistic": "Distribution|pr"
+      }
+    },
+    "CanESM5_global_distribution-tas.png": {
+      "filename": "CanESM5_global_distribution-tas.png",
+      "long_name": "The distribution of tas for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "statistic": "Distribution|tas"
+      }
+    },
+    "CanESM5_global_mean.png": {
+      "filename": "CanESM5_global_mean.png",
+      "long_name": "The period mean for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "statistic": "Period Mean"
+      }
+    },
+    "CanESM5_global_response-pr.png": {
+      "filename": "CanESM5_global_response-pr.png",
+      "long_name": "The response of pr for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "statistic": "Response|pr"
+      }
+    },
+    "CanESM5_global_response-tas.png": {
+      "filename": "CanESM5_global_response-tas.png",
+      "long_name": "The response of tas for CanESM5 over the Global - Land region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "global",
+        "statistic": "Response|tas"
       }
     },
     "CanESM5_global_rmse.png": {
@@ -142,20 +136,6 @@
         "source_id": "CanESM5",
         "reference_source_id": "WECANN",
         "region": "global",
-        "statistic": "RMSE"
-      }
-    },
-    "CanESM5_tropical_rmse.png": {
-      "filename": "CanESM5_tropical_rmse.png",
-      "long_name": "The RMSE for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "tropical",
         "statistic": "RMSE"
       }
     },
@@ -173,20 +153,6 @@
         "statistic": "RMSE score"
       }
     },
-    "CanESM5_tropical_rmsescore.png": {
-      "filename": "CanESM5_tropical_rmsescore.png",
-      "long_name": "The RMSE score for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "tropical",
-        "statistic": "RMSE score"
-      }
-    },
     "CanESM5_global_trace.png": {
       "filename": "CanESM5_global_trace.png",
       "long_name": "The regional mean for CanESM5 over the Global - Land region.",
@@ -199,6 +165,132 @@
         "reference_source_id": "WECANN",
         "region": "global",
         "statistic": "Regional mean"
+      }
+    },
+    "CanESM5_tropical_bias.png": {
+      "filename": "CanESM5_tropical_bias.png",
+      "long_name": "The bias for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Bias"
+      }
+    },
+    "CanESM5_tropical_biasscore.png": {
+      "filename": "CanESM5_tropical_biasscore.png",
+      "long_name": "The bias score for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Bias score"
+      }
+    },
+    "CanESM5_tropical_distribution-pr.png": {
+      "filename": "CanESM5_tropical_distribution-pr.png",
+      "long_name": "The distribution of pr for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Distribution|pr"
+      }
+    },
+    "CanESM5_tropical_distribution-tas.png": {
+      "filename": "CanESM5_tropical_distribution-tas.png",
+      "long_name": "The distribution of tas for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Distribution|tas"
+      }
+    },
+    "CanESM5_tropical_mean.png": {
+      "filename": "CanESM5_tropical_mean.png",
+      "long_name": "The period mean for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Period Mean"
+      }
+    },
+    "CanESM5_tropical_response-pr.png": {
+      "filename": "CanESM5_tropical_response-pr.png",
+      "long_name": "The response of pr for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Response|pr"
+      }
+    },
+    "CanESM5_tropical_response-tas.png": {
+      "filename": "CanESM5_tropical_response-tas.png",
+      "long_name": "The response of tas for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "Response|tas"
+      }
+    },
+    "CanESM5_tropical_rmse.png": {
+      "filename": "CanESM5_tropical_rmse.png",
+      "long_name": "The RMSE for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "RMSE"
+      }
+    },
+    "CanESM5_tropical_rmsescore.png": {
+      "filename": "CanESM5_tropical_rmsescore.png",
+      "long_name": "The RMSE score for CanESM5 over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "source_id": "CanESM5",
+        "reference_source_id": "WECANN",
+        "region": "tropical",
+        "statistic": "RMSE score"
       }
     },
     "CanESM5_tropical_trace.png": {
@@ -243,20 +335,6 @@
         "statistic": "Taylor diagram"
       }
     },
-    "CanESM5_global_distribution-pr.png": {
-      "filename": "CanESM5_global_distribution-pr.png",
-      "long_name": "The distribution of pr for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "global",
-        "statistic": "Distribution|pr"
-      }
-    },
     "Reference_global_distribution-pr.png": {
       "filename": "Reference_global_distribution-pr.png",
       "long_name": "The distribution of pr for the reference data over the Global - Land region.",
@@ -265,72 +343,6 @@
         "region": "global",
         "statistic": "Distribution|pr",
         "source_id": "Reference"
-      }
-    },
-    "CanESM5_tropical_distribution-pr.png": {
-      "filename": "CanESM5_tropical_distribution-pr.png",
-      "long_name": "The distribution of pr for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "tropical",
-        "statistic": "Distribution|pr"
-      }
-    },
-    "Reference_tropical_distribution-pr.png": {
-      "filename": "Reference_tropical_distribution-pr.png",
-      "long_name": "The distribution of pr for the reference data over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "region": "tropical",
-        "statistic": "Distribution|pr",
-        "source_id": "Reference"
-      }
-    },
-    "CanESM5_global_response-pr.png": {
-      "filename": "CanESM5_global_response-pr.png",
-      "long_name": "The response of pr for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "global",
-        "statistic": "Response|pr"
-      }
-    },
-    "CanESM5_tropical_response-pr.png": {
-      "filename": "CanESM5_tropical_response-pr.png",
-      "long_name": "The response of pr for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "tropical",
-        "statistic": "Response|pr"
-      }
-    },
-    "CanESM5_global_distribution-tas.png": {
-      "filename": "CanESM5_global_distribution-tas.png",
-      "long_name": "The distribution of tas for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "global",
-        "statistic": "Distribution|tas"
       }
     },
     "Reference_global_distribution-tas.png": {
@@ -343,18 +355,24 @@
         "source_id": "Reference"
       }
     },
-    "CanESM5_tropical_distribution-tas.png": {
-      "filename": "CanESM5_tropical_distribution-tas.png",
-      "long_name": "The distribution of tas for CanESM5 over the Tropical climates region.",
+    "Reference_global_mean.png": {
+      "filename": "Reference_global_mean.png",
+      "long_name": "The period mean for the reference data over the Global - Land region.",
       "description": "",
       "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
+        "region": "global",
+        "statistic": "Period Mean",
+        "source_id": "Reference"
+      }
+    },
+    "Reference_tropical_distribution-pr.png": {
+      "filename": "Reference_tropical_distribution-pr.png",
+      "long_name": "The distribution of pr for the reference data over the Tropical climates region.",
+      "description": "",
+      "dimensions": {
         "region": "tropical",
-        "statistic": "Distribution|tas"
+        "statistic": "Distribution|pr",
+        "source_id": "Reference"
       }
     },
     "Reference_tropical_distribution-tas.png": {
@@ -367,32 +385,14 @@
         "source_id": "Reference"
       }
     },
-    "CanESM5_global_response-tas.png": {
-      "filename": "CanESM5_global_response-tas.png",
-      "long_name": "The response of tas for CanESM5 over the Global - Land region.",
+    "Reference_tropical_mean.png": {
+      "filename": "Reference_tropical_mean.png",
+      "long_name": "The period mean for the reference data over the Tropical climates region.",
       "description": "",
       "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
-        "region": "global",
-        "statistic": "Response|tas"
-      }
-    },
-    "CanESM5_tropical_response-tas.png": {
-      "filename": "CanESM5_tropical_response-tas.png",
-      "long_name": "The response of tas for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "member_id": "r1i1p1f1",
-        "source_id": "CanESM5",
-        "reference_source_id": "WECANN",
         "region": "tropical",
-        "statistic": "Response|tas"
+        "statistic": "Period Mean",
+        "source_id": "Reference"
       }
     }
   },

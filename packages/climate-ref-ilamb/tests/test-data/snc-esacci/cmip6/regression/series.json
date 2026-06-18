@@ -1633,6 +1633,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "ESACCI",
       "region": "global",
       "source_id": "Reference"
     },
@@ -2444,6 +2445,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "ESACCI",
       "region": "tropical",
       "source_id": "Reference"
     },

@@ -1637,6 +1637,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "LORA",
       "region": "global",
       "source_id": "Reference"
     },
@@ -2446,6 +2447,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "LORA",
       "region": "tropical",
       "source_id": "Reference"
     },

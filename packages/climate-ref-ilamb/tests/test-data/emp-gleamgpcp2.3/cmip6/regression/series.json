@@ -769,6 +769,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "GLEAMGPCP2.3",
       "region": "global",
       "source_id": "Reference"
     },
@@ -1148,6 +1149,7 @@
     },
     "dimensions": {
       "metric": "trace",
+      "reference_source_id": "GLEAMGPCP2.3",
       "region": "tropical",
       "source_id": "Reference"
     },

@@ -108,4 +108,7 @@ jobs:
             exit 0
           fi
           git commit -m "chore(regression): mint native baselines for ${PROVIDER}"
+          # Pushed with GITHUB_TOKEN, so GitHub will NOT start new workflow runs for this
+          # commit: the PR gate does not auto-replay the freshly minted baseline. Push a
+          # follow-up commit (or re-run the PR gate) to verify it. See docs/background/regression-baselines.md.
           git push origin "HEAD:${GITHUB_REF_NAME}"

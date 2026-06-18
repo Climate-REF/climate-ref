@@ -29,6 +29,13 @@ jobs:
     # Don't run the scheduled check on forks.
     if: github.repository == 'Climate-REF/climate-ref'
     runs-on: ubuntu-latest
+    strategy:
+      # A drift in one provider must not cancel the others' checks.
+      fail-fast: false
+      matrix:
+        # Providers migrated to the native-baseline layout. Add to this list as more
+        # providers migrate; the fetch and replay steps both use ${{ matrix.provider }}.
+        provider: [example]
     defaults:
       run:
         shell: bash
@@ -41,11 +48,13 @@ jobs:
       - name: Fetch sample data
         run: uv run ref datasets fetch-sample-data
       - name: Restore test-case catalog paths
-        # Only the example provider is migrated to the native-baseline layout today
-        # extend this (and the replay step below) as providers migrate.
-        run: uv run ref test-cases fetch --provider example || echo "::warning::test-case fetch incomplete"
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: uv run ref test-cases fetch --provider "${PROVIDER}" || echo "::warning::test-case fetch incomplete"
       - name: Sync native baselines
         # Fetch every native blob referenced by a committed manifest into the cache.
         run: uv run ref test-cases sync
       - name: Replay native baselines
-        run: uv run ref test-cases replay --provider example
+        env:
+          PROVIDER: ${{ matrix.provider }}
+        run: uv run ref test-cases replay --provider "${PROVIDER}"

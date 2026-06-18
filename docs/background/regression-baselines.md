@@ -191,6 +191,11 @@ the job runs `mint`, and commits the regenerated `manifest.json` (and committed 
 so the change is reviewed through its pull request and no developer ever needs write credentials.
 A `dry_run` input previews without uploading or committing, and the job refuses to run on the default branch.
 
+!!! warning "The mint commit does not re-trigger the PR gate"
+    The mint job pushes with the default `GITHUB_TOKEN`, and GitHub deliberately does not start new workflow runs for such pushes.
+    So the freshly minted manifest is *not* automatically `replay`-verified by `regression-pr-gate.yaml`.
+    After minting, push a follow-up commit (or re-run the PR gate from the Actions tab) to verify the new native baseline reproduces the committed bundle.
+
 !!! note "Required repository configuration"
     Create a `native-baselines` Environment (Settings -> Environments) with **required reviewers**,
     and add two secrets to it holding an object-scoped R2 token:

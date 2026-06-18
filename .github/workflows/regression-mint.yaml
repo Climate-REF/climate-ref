@@ -69,7 +69,16 @@ jobs:
       - name: Restore test-case catalog paths
         env:
           PROVIDER: ${{ inputs.provider }}
-        run: uv run ref test-cases fetch --provider "${PROVIDER}" || echo "::warning::test-case fetch incomplete"
+          DIAGNOSTIC: ${{ inputs.diagnostic }}
+          TEST_CASE: ${{ inputs.test_case }}
+        run: |
+          # Scope the fetch to the dispatched diagnostic/test case so a single-case
+          # mint does not re-fetch every case for the provider (cmip7 cases in
+          # particular can stall on ESGF). Mirrors the mint step's argument handling.
+          args=(--provider "${PROVIDER}")
+          if [ -n "${DIAGNOSTIC}" ]; then args+=(--diagnostic "${DIAGNOSTIC}"); fi
+          if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
+          uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete"
       - name: Verify store credentials
         env:
           REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}

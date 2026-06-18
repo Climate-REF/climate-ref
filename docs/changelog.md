@@ -21,6 +21,22 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.14.7 (2026-06-18)
+
+### Bug Fixes
+
+- Fixed `ref solve --timeout 0` discarding completed work instead of waiting for it.
+  A timeout of `0` (or any non-positive value) now means "wait with no time limit",
+  so executions are collected, copied to the results directory, and ingested as expected;
+  previously they ran but their outputs were left in the scratch directory.
+  Use `--no-wait` to queue executions and exit immediately,
+  and recover any orphaned scratch outputs from an earlier run with `ref executions reingest --include-failed`. ([#735](https://github.com/Climate-REF/climate-ref/pull/735))
+- Fixed `ref executions reingest` failing for ESMValTool diagnostics.
+  Reingest copies an execution's outputs to a new directory, but the absolute paths recorded in ESMValTool's provenance files still pointed at the original location,
+  which caused an error that silently rolled back the reingest.
+  These embedded paths are now re-pointed at the new output directory so the results are reingested as expected. ([#736](https://github.com/Climate-REF/climate-ref/pull/736))
+
+
 ## climate-ref 0.14.6 (2026-06-17)
 
 ### Bug Fixes

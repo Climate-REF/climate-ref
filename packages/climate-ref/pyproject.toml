@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref"
-version = "0.14.6"
+version = "0.14.7"
 description = "Application which runs the CMIP Rapid Evaluation Framework"
 readme = "README.md"
 authors = [

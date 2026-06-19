@@ -46,7 +46,7 @@ jobs:
           - climate-ref-pmp
           - climate-ref-ilamb
         # On PRs this is an informational check, so test only the lowest supported Python
-        python-version: ${{ github.event_name == 'pull_request' && fromJSON('["3.11"]') || fromJSON('["3.11", "3.12"]') }}
+        python-version: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.12", "3.13"]') }}
     name: ${{ matrix.provider }} (py${{ matrix.python-version }})
     steps:
       - uses: actions/checkout@v6

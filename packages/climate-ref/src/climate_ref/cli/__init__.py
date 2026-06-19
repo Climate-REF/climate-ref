@@ -2,7 +2,7 @@
 
 import importlib
 import sys
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -65,7 +65,7 @@ def _is_read_only_command() -> bool:
     return False
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """
     Log levels for the CLI
     """

@@ -3,7 +3,7 @@ Manage the REF providers.
 """
 
 import warnings
-from enum import Enum
+from enum import StrEnum
 from typing import TYPE_CHECKING, Annotated
 
 import typer
@@ -66,7 +66,7 @@ def list_(ctx: typer.Context) -> None:
     pretty_print_df(results_df, console=console)
 
 
-class ShowFormat(str, Enum):
+class ShowFormat(StrEnum):
     """Output format for the show command."""
 
     table = "table"

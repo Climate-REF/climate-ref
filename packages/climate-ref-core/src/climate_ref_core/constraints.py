@@ -2,16 +2,10 @@
 Dataset selection constraints
 """
 
-import sys
 from collections import defaultdict
 from collections.abc import Mapping
 from functools import total_ordering
-from typing import Literal, Protocol, runtime_checkable
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
+from typing import Literal, Protocol, Self, runtime_checkable
 
 import numpy as np
 import pandas as pd

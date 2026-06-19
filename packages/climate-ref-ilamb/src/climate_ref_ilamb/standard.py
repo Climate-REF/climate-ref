@@ -504,10 +504,6 @@ class ILAMBStandard(Diagnostic):
     Apply the standard ILAMB analysis with respect to a given reference dataset.
     """
 
-    # Bumped to 2 because the CMEC output bundle changed shape: the plot/data blocks
-    # are now written in a stable sorted order and reference series carry
-    # ``reference_source_id``. The bump forces a fresh execution group rather than
-    # reusing v1 results.
     version = 2
 
     def __init__(

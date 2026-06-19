@@ -21,6 +21,12 @@ from collections.abc import Sequence
 
 import sqlalchemy as sa
 from alembic import op
+from sqlalchemy.sql import quoted_name
+
+# ``index`` is not in SQLAlchemy's dialect reserved-word tables, so identifiers are
+# emitted unquoted by default. PostgreSQL then rejects ``... COLUMN index``; forcing the
+# quote keeps the DDL valid on both PostgreSQL and SQLite.
+_INDEX_COL = quoted_name("index", quote=True)
 
 revision: str = "d4e5f6a7b8c9"
 down_revision: str | None = "b1c2d3e4f5a6"
@@ -102,14 +108,14 @@ def upgrade() -> None:
     _backfill()
 
     with op.batch_alter_table("metric_value", schema=None) as batch_op:
-        batch_op.drop_column("index")
+        batch_op.drop_column(_INDEX_COL)
         batch_op.drop_column("index_name")
 
 
 def downgrade() -> None:
     # Best-effort: recreate the inline columns and copy the axis content back.
     with op.batch_alter_table("metric_value", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("index", sa.JSON(), nullable=True))
+        batch_op.add_column(sa.Column(_INDEX_COL, sa.JSON(), nullable=True))
         batch_op.add_column(sa.Column("index_name", sa.String(), nullable=True))
 
     op.get_bind().execute(

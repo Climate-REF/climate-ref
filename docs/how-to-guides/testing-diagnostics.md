@@ -176,8 +176,7 @@ A `TestCase` resolves its datasets via one of two mechanisms:
   Use this when you have pre-built catalog data at a known location
   or when you need precise, machine-independent control over which files are used.
 - **Solve from catalog**: If `datasets_file` is not set, the test runner uses `requests`
-  to filter and solve datasets from the local catalog
-  (populated by `ref test-cases fetch`).
+  to filter and solve datasets from the local catalog (populated by `ref test-cases fetch`).
 
 Only datasets resolved by the active mechanism are visible during the test run,
 ensuring reproducible execution regardless of what other data is present locally.

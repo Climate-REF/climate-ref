@@ -71,14 +71,11 @@ flowchart LR
 
 CMIP7 data is not yet available on ESGF,
 so `CMIP7Request` (importable from `climate_ref_core.esgf`) bridges the gap:
-it internally maps CMIP7 facets to their CMIP6 equivalents
-(e.g. `variant_label` -> `member_id`),
-fetches the corresponding CMIP6 files,
-and converts them to CMIP7 format on the fly.
+it internally maps CMIP7 facets to their CMIP6 equivalents (e.g. `variant_label` -> `member_id`),
+fetches the corresponding CMIP6 files, and converts them to CMIP7 format on the fly.
 
 Converted files are cached under the user cache directory at `climate_ref/cmip7-converted/`
-(resolved by `platformdirs.user_cache_dir`),
-so repeated fetches for the same request are cheap.
+(resolved by `platformdirs.user_cache_dir`), so repeated fetches for the same request are cheap.
 The cache is not version-controlled; clear it manually if a conversion produces stale output.
 
 Use `CMIP7Request` in `test_data_spec` exactly like `CMIP6Request`:
@@ -102,8 +99,7 @@ CMIP7Request(
 
 Floats written into the committed bundle (`series.json`, `diagnostic.json`, `output.json`)
 are rounded to **7 significant figures** at write time.
-This keeps the committed bytes stable and human-reviewable across machines
-(local developer run vs. CI mint),
+This keeps the committed bytes stable and human-reviewable across machines (local developer run vs. CI mint),
 where tiny floating-point differences would otherwise produce noisy diffs on every baseline update.
 
 Seven significant figures is deliberately one digit finer than the `rtol=1e-6`

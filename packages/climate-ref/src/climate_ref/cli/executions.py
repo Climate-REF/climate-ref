@@ -576,7 +576,7 @@ def fail_running(
 
     # Apply age threshold
     if older_than is not None:
-        cutoff = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=older_than)
+        cutoff = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(hours=older_than)
         query = query.filter(Execution.created_at < cutoff)
 
     # Apply diagnostic/provider filters via execution group -> diagnostic join

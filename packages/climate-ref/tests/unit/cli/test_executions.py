@@ -925,7 +925,7 @@ class TestFailRunning:
             )
 
             # Old running execution (48 hours ago)
-            old_time = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=48)
+            old_time = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(hours=48)
             db_seeded.session.add(
                 Execution(
                     execution_group_id=eg2.id,

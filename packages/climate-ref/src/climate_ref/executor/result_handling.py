@@ -18,7 +18,7 @@ from loguru import logger
 from sqlalchemy import insert
 
 from climate_ref.database import Database
-from climate_ref.models import ScalarMetricValue, SeriesMetricValue
+from climate_ref.models import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutputType
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
@@ -177,15 +177,25 @@ def ingest_series_values(
             "Diagnostic series values do not conform with the controlled vocabulary", exc_info=True
         )
 
+    # Resolve (deduplicate) the shared index axes for this batch first,
+    # so each distinct index is stored once in ``index_axis`` and referenced by id rather
+    # than duplicated on every series row.
+    axis_id_by_hash: dict[str, int] = {}
+    for series_result in series_values:
+        digest = SeriesIndex.compute_hash(series_result.index_name, series_result.index)
+        if digest not in axis_id_by_hash:
+            axis = SeriesIndex.get_or_create(database.session, series_result.index_name, series_result.index)
+            axis_id_by_hash[digest] = axis.id
+
     new_values = []
     for series_result in series_values:
+        digest = SeriesIndex.compute_hash(series_result.index_name, series_result.index)
         new_values.append(
             {
                 "execution_id": execution.id,
                 "values": series_result.values,
                 "attributes": series_result.attributes,
-                "index": series_result.index,
-                "index_name": series_result.index_name,
+                "index_id": axis_id_by_hash[digest],
                 **series_result.dimensions,
             }
         )

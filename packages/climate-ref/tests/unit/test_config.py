@@ -125,13 +125,9 @@ filename = "sqlite://climate_ref.db"
         assert "extra fields found (filename) @ $.db" in caplog.records[0].message
         assert caplog.records[0].levelname == "WARNING"
 
-        if sys.version_info >= (3, 12):
-            expected_msg = (
-                "argument should be a str or an os.PathLike object where __fspath__ returns a str, "
-                "not 'Integer'"
-            )
-        else:
-            expected_msg = "expected str, bytes or os.PathLike object, not Integer"
+        expected_msg = (
+            "argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'Integer'"
+        )
         assert f"invalid type ({expected_msg}) @ $.paths.scratch" in caplog.records[1].message
         assert caplog.records[1].levelname == "ERROR"
 

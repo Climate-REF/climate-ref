@@ -556,7 +556,7 @@ def fail_stale_in_progress_executions(
     :
         The number of executions that were marked failed.
     """
-    cutoff = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) - datetime.timedelta(
+    cutoff = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(
         seconds=stale_after_seconds
     )
 

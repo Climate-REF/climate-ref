@@ -18,7 +18,7 @@ HPC users are recommended to install the REF inside a conda environment to ensur
 This can be achieved using the following commands:
 
 ```bash
-conda create -n climate-ref python=3.11
+conda create -n climate-ref python=3.12
 conda activate climate-ref
 pip install "climate-ref[aft-providers]"
 ```

@@ -4,7 +4,7 @@ version = "0.14.7"
 description = "Climate Rapid Evaluation Framework (REF) root package"
 readme = "README.md"
 authors = [{ name = "Jared Lewis", email = "jared.lewis@climate-resource.com" }]
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 dependencies = [
     "climate-ref[postgres]",
     "climate-ref-core",

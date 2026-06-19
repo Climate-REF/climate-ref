@@ -35,7 +35,7 @@ class TestAllocateOutputFragment:
 
     def test_raises_if_directory_already_exists(self, tmp_path):
         """Should raise FileExistsError when the target directory already exists."""
-        fixed_time = datetime.datetime(2026, 1, 1, 12, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        fixed_time = datetime.datetime(2026, 1, 1, 12, 0, 0, 0, tzinfo=datetime.UTC)
         with patch("climate_ref.executor.fragment.datetime") as mock_dt:
             mock_dt.datetime.now.return_value = fixed_time
             mock_dt.timezone = datetime.timezone

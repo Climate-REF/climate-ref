@@ -58,7 +58,7 @@ def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
     FileExistsError
         If the computed output directory already exists under *results_dir*
     """
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = datetime.datetime.now(tz=datetime.UTC)
     fragment = f"{base_fragment}_{now.strftime('%Y%m%dT%H%M%S%f')}"
 
     target = results_dir / fragment

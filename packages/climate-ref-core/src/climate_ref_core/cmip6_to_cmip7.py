@@ -20,7 +20,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from importlib import resources
 from typing import TYPE_CHECKING, Any
 
@@ -471,7 +471,7 @@ def convert_cmip6_to_cmip7_attrs(
     attrs["tracking_id"] = f"hdl:21.14107/{uuid.uuid4()}"
 
     # Add creation_date in ISO format
-    attrs["creation_date"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    attrs["creation_date"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
     # Update Conventions (CF version only, per CMIP7 spec)
     attrs["Conventions"] = "CF-1.12"

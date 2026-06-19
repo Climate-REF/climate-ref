@@ -72,7 +72,7 @@ flowchart LR
 CMIP7 data is not yet available on ESGF,
 so `CMIP7Request` (importable from `climate_ref_core.esgf`) bridges the gap:
 it internally maps CMIP7 facets to their CMIP6 equivalents
-(e.g. `variant_label` → `member_id`),
+(e.g. `variant_label` -> `member_id`),
 fetches the corresponding CMIP6 files,
 and converts them to CMIP7 format on the fly.
 

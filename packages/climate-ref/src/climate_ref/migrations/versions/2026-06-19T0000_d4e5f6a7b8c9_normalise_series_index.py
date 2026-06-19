@@ -57,10 +57,14 @@ def _backfill() -> None:
 
     # Single streaming pass over the series rows: dedupe axes and record each
     # row's hash. Only the (few) distinct axes are held in memory, not every row.
-    result = bind.execution_options(stream_results=True).execute(
-        sa.text('SELECT id, index_name, "index" FROM metric_value WHERE type = :t AND "index" IS NOT NULL'),
-        {"t": "SERIES"},
-    )
+    # ``stream_results`` is scoped to *this statement* rather than set on the shared
+    # migration connection: a connection-level option is sticky and would make
+    # PostgreSQL wrap the later DDL in a server-side cursor (DECLARE ... CURSOR FOR
+    # ALTER TABLE ...), which is a syntax error.
+    select_series = sa.text(
+        'SELECT id, index_name, "index" FROM metric_value WHERE type = :t AND "index" IS NOT NULL'
+    ).execution_options(stream_results=True)
+    result = bind.execute(select_series, {"t": "SERIES"})
     axis_payload: dict[str, dict] = {}  # hash -> row to insert
     row_hashes: list[tuple[int, str]] = []  # (metric_value.id, hash)
     for mv_id, name, idx in result:

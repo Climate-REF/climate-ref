@@ -41,7 +41,7 @@
     "statistic": {
       "Bias": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "Bias Score": {
         "type": "score",
@@ -57,11 +57,11 @@
       },
       "Period Mean": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "RMSE": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "RMSE Score": {
         "type": "score",
@@ -83,34 +83,34 @@
           "gn": {
             "global": {
               "Bias": {
-                "Bias": -0.0246799832540877,
-                "Bias Score": 0.6188009541135374,
-                "Period Mean": 3.335969720542716
+                "Bias": 2.813496471229112e-05,
+                "Bias Score": 0.2389045018665123,
+                "Period Mean": 2.0086356508856298e-05
               },
               "RMSE": {
-                "RMSE": 2.7257975918056516,
-                "RMSE Score": 0.4159952868346845
+                "RMSE": 3.569691749331563e-05,
+                "RMSE Score": 0.2995512562337344
               },
               "Spatial Distribution": {
-                "Correlation": 0.4422228978667822,
-                "Normalized Standard Deviation": 0.8336480059200787,
-                "Spatial Distribution Score": 0.697757149933702
+                "Correlation": -0.3916385146981485,
+                "Normalized Standard Deviation": 1.398517383513642,
+                "Spatial Distribution Score": 0.2723719665942777
               }
             },
             "tropical": {
               "Bias": {
-                "Bias": 0.2776717264020737,
-                "Bias Score": 0.3853341673113034,
-                "Period Mean": 5.731451698387421
+                "Bias": 5.992412619738794e-05,
+                "Bias Score": 0.1988034877626124,
+                "Period Mean": 3.876185024524342e-05
               },
               "RMSE": {
-                "RMSE": 3.9694757615992056,
-                "RMSE Score": 0.3252844572939875
+                "RMSE": 7.43933384881528e-05,
+                "RMSE Score": 0.3061411421908277
               },
               "Spatial Distribution": {
-                "Correlation": -0.1425876850523473,
-                "Normalized Standard Deviation": 0.8926098000815114,
-                "Spatial Distribution Score": 0.4232204228447837
+                "Correlation": -0.0885586184460367,
+                "Normalized Standard Deviation": 0.5857113910965742,
+                "Spatial Distribution Score": 0.346686276488772
               }
             }
           }

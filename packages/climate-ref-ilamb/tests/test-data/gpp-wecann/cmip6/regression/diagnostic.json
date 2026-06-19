@@ -21,6 +21,8 @@
     "metric": {
       "Bias": {},
       "RMSE": {},
+      "Relationship pr": {},
+      "Relationship tas": {},
       "Spatial Distribution": {}
     },
     "region": {
@@ -67,6 +69,14 @@
         "type": "score",
         "units": "1"
       },
+      "Relationship Score pr": {
+        "type": "score",
+        "units": "1"
+      },
+      "Relationship Score tas": {
+        "type": "score",
+        "units": "1"
+      },
       "Spatial Distribution Score": {
         "type": "score",
         "units": "1"
@@ -83,34 +93,46 @@
           "gn": {
             "global": {
               "Bias": {
-                "Bias": -0.0246799832540877,
-                "Bias Score": 0.6188009541135374,
-                "Period Mean": 3.335969720542716
+                "Bias": 0.7111356916211374,
+                "Bias Score": 0.4763392713337563,
+                "Period Mean": 3.0346447224515662
               },
               "RMSE": {
-                "RMSE": 2.7257975918056516,
-                "RMSE Score": 0.4159952868346845
+                "RMSE": 1.9151286126593603,
+                "RMSE Score": 0.3551712984549456
+              },
+              "Relationship pr": {
+                "Relationship Score pr": 0.4758795641964789
+              },
+              "Relationship tas": {
+                "Relationship Score tas": 0.5501582221494062
               },
               "Spatial Distribution": {
-                "Correlation": 0.4422228978667822,
-                "Normalized Standard Deviation": 0.8336480059200787,
-                "Spatial Distribution Score": 0.697757149933702
+                "Correlation": 0.8709317891709268,
+                "Normalized Standard Deviation": 1.4735988673363951,
+                "Spatial Distribution Score": 0.8078278533662464
               }
             },
             "tropical": {
               "Bias": {
-                "Bias": 0.2776717264020737,
-                "Bias Score": 0.3853341673113034,
-                "Period Mean": 5.731451698387421
+                "Bias": 1.539485587605515,
+                "Bias Score": 0.3472815566533462,
+                "Period Mean": 6.7071584701427875
               },
               "RMSE": {
-                "RMSE": 3.9694757615992056,
-                "RMSE Score": 0.3252844572939875
+                "RMSE": 3.0207356978019804,
+                "RMSE Score": 0.2914812293962558
+              },
+              "Relationship pr": {
+                "Relationship Score pr": 0.5546037599052827
+              },
+              "Relationship tas": {
+                "Relationship Score tas": 0.5200937813795461
               },
               "Spatial Distribution": {
-                "Correlation": -0.1425876850523473,
-                "Normalized Standard Deviation": 0.8926098000815114,
-                "Spatial Distribution Score": 0.4232204228447837
+                "Correlation": 0.3174619887792373,
+                "Normalized Standard Deviation": 1.5455180331005305,
+                "Spatial Distribution Score": 0.548111567951591
               }
             }
           }

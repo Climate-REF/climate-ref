@@ -36,7 +36,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "Bias"
       }
@@ -50,7 +50,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "Bias score"
       }
@@ -64,7 +64,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "Period Mean"
       }
@@ -78,7 +78,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "RMSE"
       }
@@ -92,7 +92,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "RMSE score"
       }
@@ -106,7 +106,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "Regional mean"
       }
@@ -120,7 +120,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "Bias"
       }
@@ -134,7 +134,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "Bias score"
       }
@@ -148,7 +148,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "Period Mean"
       }
@@ -162,7 +162,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "RMSE"
       }
@@ -176,7 +176,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "RMSE score"
       }
@@ -190,7 +190,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "Regional mean"
       }
@@ -204,7 +204,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "global",
         "statistic": "Taylor diagram"
       }
@@ -218,7 +218,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1",
+        "reference_source_id": "LORA",
         "region": "tropical",
         "statistic": "Taylor diagram"
       }
@@ -242,6 +242,22 @@
         "statistic": "Period Mean",
         "source_id": "Reference"
       }
+    },
+    "nan_global_uncert.png": {
+      "filename": "nan_global_uncert.png",
+      "long_name": "",
+      "description": "",
+      "dimensions": {
+        "region": "global"
+      }
+    },
+    "nan_tropical_uncert.png": {
+      "filename": "nan_tropical_uncert.png",
+      "long_name": "",
+      "description": "",
+      "dimensions": {
+        "region": "tropical"
+      }
     }
   },
   "html": {
@@ -254,7 +270,7 @@
         "grid_label": "gn",
         "member_id": "r1i1p1f1",
         "source_id": "CanESM5",
-        "reference_source_id": "AVH15C1"
+        "reference_source_id": "LORA"
       }
     }
   },

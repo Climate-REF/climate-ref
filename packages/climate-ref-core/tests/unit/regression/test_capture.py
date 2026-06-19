@@ -59,6 +59,53 @@ def test_write_committed_bundle_sanitises_and_digests(tmp_path):
     assert digests["diagnostic.json"] == sha256_file(regression_dir / "diagnostic.json")
 
 
+def _sig_figs(value: float) -> int:
+    """Count the significant figures in ``value``'s shortest round-trip repr."""
+    # ``repr`` gives Python's shortest decimal that round-trips to the same float,
+    # so it reflects the value's true precision rather than padding it out.
+    text = repr(value)
+    mantissa = text.lstrip("-").split("e")[0]
+    digits = mantissa.replace(".", "").lstrip("0").rstrip("0")
+    return len(digits) if digits else 1
+
+
+def _assert_floats_rounded(obj, max_sig_figs=7):
+    """Recursively assert every float in ``obj`` has at most ``max_sig_figs`` figures."""
+    if isinstance(obj, bool):
+        return
+    if isinstance(obj, float):
+        assert _sig_figs(obj) <= max_sig_figs, f"{obj!r} exceeds {max_sig_figs} sig figs"
+    elif isinstance(obj, dict):
+        for value in obj.values():
+            _assert_floats_rounded(value, max_sig_figs)
+    elif isinstance(obj, list):
+        for item in obj:
+            _assert_floats_rounded(item, max_sig_figs)
+
+
+def test_write_committed_bundle_rounds_floats(tmp_path):
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    source = tmp_path / "scratch" / "frag"
+    source.mkdir(parents=True)
+    # Full-precision floats that round to fewer sig figs at write time.
+    source_diag = {"PROVENANCE": {"score": 1.843240715970751, "rmse": 2.813496471229112}}
+    (source / "diagnostic.json").write_text(json.dumps(source_diag))
+    source_series = [{"dimensions": {"region": "global"}, "values": [1.761333624017425, 9.87654321]}]
+    (source / "series.json").write_text(json.dumps(source_series))
+    regression_dir = tmp_path / "regression"
+
+    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+
+    diag = json.loads((regression_dir / "diagnostic.json").read_text())
+    series = json.loads((regression_dir / "series.json").read_text())
+    _assert_floats_rounded(diag)
+    _assert_floats_rounded(series)
+    # The actual rounded values, not merely "<= 7 figures".
+    assert diag["PROVENANCE"]["score"] == 1.843241
+    assert series[0]["values"] == [1.761334, 9.876543]
+
+
 def test_build_native_snapshot_digests_relpaths(tmp_path):
     base = tmp_path / "results" / "frag"
     base.mkdir(parents=True)

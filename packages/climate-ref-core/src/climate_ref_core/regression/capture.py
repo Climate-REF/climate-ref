@@ -20,6 +20,7 @@ It produces two things:
 
 from __future__ import annotations
 
+import json
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -27,6 +28,7 @@ from typing import TYPE_CHECKING
 from climate_ref_core.output_files import copy_execution_outputs, to_placeholders
 from climate_ref_core.paths import safe_path
 
+from ._quantise import round_floats
 from .manifest import (
     COMMITTED_BUNDLE_FILES,
     NativeEntry,
@@ -37,6 +39,48 @@ from .manifest import (
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import ExecutionResult
     from climate_ref_core.regression.store import NativeStore
+
+
+# Per-file serialisation parameters for the committed bundle,
+# mirroring exactly how each artefact is written natively.
+_COMMITTED_FLOAT_JSON_KWARGS: dict[str, dict[str, object]] = {
+    "series.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
+    "diagnostic.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
+}
+
+
+def _round_committed_floats(regression_dir: Path) -> None:
+    """
+    Round floats in the committed JSON bundle to seven significant figures in place.
+
+    Full-precision floats in ``series.json`` / ``diagnostic.json`` churn byte-for-byte
+    between CI and local runs even when numerically identical,
+    producing noisy diffs in the committed (git-tracked) bundle.
+    Rounding stabilises those bytes;
+    seven figures stays an order of magnitude under the regression compare tolerance (``rtol=1e-6``),
+    so a gate verdict is never flipped (see :mod:`climate_ref_core.regression._quantise`).
+
+    Each file is re-serialised with the same JSON parameters used to write it natively,
+    so the only byte difference versus the copied file is reduced float precision.
+    A file is rewritten only when rounding actually changes its parsed content,
+    keeping float-free artefacts byte-identical to the copy.
+    The native blobs and their content-addressed digests are never touched;
+    this operates solely on the copied committed JSON.
+
+    Parameters
+    ----------
+    regression_dir
+        The test case ``regression/`` directory holding the committed bundle.
+    """
+    for filename, dump_kwargs in _COMMITTED_FLOAT_JSON_KWARGS.items():
+        path = regression_dir / filename
+        if not path.exists():
+            continue
+        original = json.loads(path.read_text(encoding="utf-8"))
+        rounded = round_floats(original)
+        if rounded == original:
+            continue
+        path.write_text(json.dumps(rounded, **dump_kwargs), encoding="utf-8")  # type: ignore[arg-type]
 
 
 def write_committed_bundle(
@@ -85,6 +129,10 @@ def write_committed_bundle(
             dest.unlink(missing_ok=True)
 
     to_placeholders(regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    # Round floats in place before digesting,
+    # so the committed bytes (and their recorded digests) are the stable, rounded ones.
+    # Placeholder substitution only rewrites path strings, so order relative to it does not matter for floats.
+    _round_committed_floats(regression_dir)
     return compute_committed_digests(regression_dir)
 
 

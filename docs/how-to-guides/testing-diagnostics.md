@@ -102,13 +102,12 @@ class MyDiagnostic(Diagnostic):
 
 ### TestCase Attributes
 
-| Attribute       | Type                         | Description                                                    |
-| --------------- | ---------------------------- | -------------------------------------------------------------- |
-| `name`          | `str`                        | Unique identifier (e.g., `"default"`, `"edge-case"`)           |
-| `description`   | `str`                        | Human-readable description of the test scenario                |
-| `requests`      | `tuple[ESGFRequest, ...]`    | ESGF requests to fetch the required datasets for the test case |
-| `datasets`      | `ExecutionDatasetCollection` | Explicit datasets (highest priority)                           |
-| `datasets_file` | `str`                        | Path to YAML file with datasets (relative to package)          |
+| Attribute       | Type                      | Description                                                    |
+| --------------- | ------------------------- | -------------------------------------------------------------- |
+| `name`          | `str`                     | Unique identifier (e.g., `"default"`, `"edge-case"`)           |
+| `description`   | `str`                     | Human-readable description of the test scenario                |
+| `requests`      | `tuple[ESGFRequest, ...]` | ESGF requests to fetch the required datasets for the test case |
+| `datasets_file` | `str \| None`             | Path to a pre-built catalog YAML file (relative to package)    |
 
 ### ESGF Requests
 
@@ -169,13 +168,18 @@ Obs4MIPsRequest(
 | `institution_id` | Institution     | `"CSIRO"`                  |
 | `activity_drs`   | Activity        | `"CMIP"`, `"ScenarioMIP"`  |
 
-### Dataset Resolution Priority
+### Dataset Resolution
 
-When running a test case, datasets are resolved in this order:
+A `TestCase` resolves its datasets via one of two mechanisms:
 
-1. **Explicit `datasets`**: If provided, used directly
-2. **`datasets_file`**: Load from YAML file
-3. **Solve from catalog**: Use `requests` to filter available data from the requests and solved
+- **`datasets_file`**: If set, datasets are loaded directly from the specified YAML file.
+  Use this when you have pre-built catalog data at a known location
+  or when you need precise, machine-independent control over which files are used.
+- **Solve from catalog**: If `datasets_file` is not set, the test runner uses `requests`
+  to filter and solve datasets from the local catalog (populated by `ref test-cases fetch`).
+
+Only datasets resolved by the active mechanism are visible during the test run,
+ensuring reproducible execution regardless of what other data is present locally.
 
 ### Using a Datasets File
 
@@ -405,12 +409,21 @@ Regenerate the committed bundle when you add a diagnostic or intend to change it
 ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
 ```
 
-We keep committed files small — a pre-commit hook flags anything over a few MB.
+We keep committed files small.
+After `ref test-cases run`, `_print_regression_summary` reports any file in the
+`regression/` directory that exceeds the `--size-threshold` (default 1.0 MB).
 Large outputs belong in the native bundle, published with `mint` (see below).
 
-### Comparing against the baseline
+/// note
+The pre-commit `check-added-large-files` hook does **not** flag regression baselines —
+`.*/regression/.*` is explicitly excluded in `.pre-commit-config.yaml`.
+Size enforcement for regression files comes solely from `ref test-cases run`.
+///
 
-The `execution_regression` fixture compares results automatically:
+### Updating the baseline in pytest
+
+The `execution_regression` fixture is a **factory** — call it with your diagnostic to
+get an `ExecutionRegression` instance, then call `.check(key, output_directory)` on that:
 
 ```python
 def test_regression(run_test_case, execution_regression):
@@ -419,9 +432,15 @@ def test_regression(run_test_case, execution_regression):
     diagnostic = MyDiagnostic()
     result = run_test_case.run(diagnostic, "default")
 
-    # Compare metric bundle against baseline
-    execution_regression.check(result, "my-provider/my-diagnostic/default")
+    regression = execution_regression(diagnostic)
+    regression.check("default", result.output_directory)
 ```
+
+`ExecutionRegression.check` only **regenerates** the committed bundle when pytest is
+invoked with `--force-regen`.
+It does not compare the result against the stored baseline itself —
+that comparison is handled by the CLI (`ref test-cases run`) and the CI gate.
+Use `--force-regen` only when you intend to record a new baseline.
 
 ### The pull request workflow
 

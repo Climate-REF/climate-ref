@@ -27,6 +27,9 @@ A baseline is split into two layers with very different trust and portability pr
 
 The two layers are bound by a **`manifest.json`** alongside the bundle, which records:
 
+- `schema` — integer schema version for the manifest format itself (currently `1`).
+  The loader rejects manifests whose `schema` does not match the current `SCHEMA_VERSION`,
+  so format migrations are detected immediately rather than silently misread.
 - `test_case_version` — a monotonic, author-bumped integer that *authorises* a new baseline.
 - `committed` — sha256 digests of the committed JSON artefacts, over the exact placeholder-substituted bytes on disk.
 - `native` — sha256 + size of each curated native file (empty `{}` until minted).
@@ -62,6 +65,47 @@ flowchart LR
 | `mint` | write | Upload the curated native files to the object store and populate `manifest.native`. Generally run by CI. |
 | `sync` | public read | Fetch the native blobs referenced by the manifest into the local tree. |
 | `replay` | public read | Materialise the native baseline, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
+| `check-store` | write | Preflight the writable native store (credentials + bucket) without uploading anything. Run this before a slow `mint` to confirm credentials are correct. |
+
+## CMIP7 test data
+
+CMIP7 data is not yet available on ESGF,
+so `CMIP7Request` (importable from `climate_ref_core.esgf`) bridges the gap:
+it internally maps CMIP7 facets to their CMIP6 equivalents (e.g. `variant_label` -> `member_id`),
+fetches the corresponding CMIP6 files, and converts them to CMIP7 format on the fly.
+
+Converted files are cached under the user cache directory at `climate_ref/cmip7-converted/`
+(resolved by `platformdirs.user_cache_dir`), so repeated fetches for the same request are cheap.
+The cache is not version-controlled; clear it manually if a conversion produces stale output.
+
+Use `CMIP7Request` in `test_data_spec` exactly like `CMIP6Request`:
+
+```python
+from climate_ref_core.esgf import CMIP7Request
+
+CMIP7Request(
+    slug="cmip7-tas",
+    facets={
+        "source_id": "ACCESS-ESM1-5",
+        "experiment_id": "historical",
+        "variable_id": "tas",
+        "variant_label": "r1i1p1f1",   # CMIP7 name; maps to member_id internally
+        "table_id": "Amon",
+    },
+)
+```
+
+## Committed-bundle float precision
+
+Floats written into the committed bundle (`series.json`, `diagnostic.json`, `output.json`)
+are rounded to **7 significant figures** at write time.
+This keeps the committed bytes stable and human-reviewable across machines (local developer run vs. CI mint),
+where tiny floating-point differences would otherwise produce noisy diffs on every baseline update.
+
+Seven significant figures is deliberately one digit finer than the `rtol=1e-6`
+tolerance used by the coupling gate's tolerant comparison,
+so rounding at write time can never flip a gate verdict:
+a value that rounds identically on all machines will always compare within tolerance.
 
 ## Tolerant comparison
 

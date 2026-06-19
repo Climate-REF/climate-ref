@@ -4,11 +4,17 @@ ci:
   autoupdate_schedule: quarterly
   autoupdate_branch: pre-commit-autoupdate
 
-# Ignore regression files as they should be kept as is
+# Ignore committed regression *baseline data* — captured bundles kept byte-for-byte
+# as produced, so they must not be reformatted or linted.
+# This deliberately matches only data under a ``test-data/`` location; it must NOT
+# match the regression *source* package (``climate_ref_core/regression/``) or its
+# unit tests (``tests/unit/regression/``), which are linted like any other code.
 # See https://pre-commit.com/#regular-expressions
 exclude: |
     (?x)^(
-        .*/regression/.*
+        .*/test-data/.*/regression/.*
+        | tests/test-data/regression/.*
+        | tests/regression/.*
     )$
 
 # See https://pre-commit.com/hooks.html for more hooks

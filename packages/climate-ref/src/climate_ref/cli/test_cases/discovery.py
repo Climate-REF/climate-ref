@@ -14,6 +14,7 @@ from rich.table import Table
 
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
+from climate_ref.cli.test_cases._common import _validate_provider_in_registry
 from climate_ref_core.exceptions import DatasetResolutionError
 
 if TYPE_CHECKING:
@@ -71,15 +72,7 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
     registry = ProviderRegistry.build_from_config(config, db)
 
     # Check if the requested provider exists in the registry
-    available_providers = [p.slug for p in registry.providers]
-    if provider and provider not in available_providers:
-        logger.error(f"Provider '{provider}' is not configured")
-        if available_providers:
-            logger.error(f"Available providers: {', '.join(sorted(available_providers))}")
-        else:
-            logger.error("No providers are configured. Check your configuration file.")
-        logger.error("To add a provider, update your config file or set REF_DIAGNOSTIC_PROVIDERS")
-        raise typer.Exit(code=1)
+    _validate_provider_in_registry(registry, provider)
 
     # Collect diagnostics to process
     diagnostics_to_process: list[Diagnostic] = []
@@ -171,14 +164,7 @@ def list_cases(
     registry = ProviderRegistry.build_from_config(config, db)
 
     # Check if the requested provider exists in the registry
-    available_providers = [p.slug for p in registry.providers]
-    if provider and provider not in available_providers:
-        logger.error(f"Provider '{provider}' is not configured")
-        if available_providers:
-            logger.error(f"Available providers: {', '.join(sorted(available_providers))}")
-        else:
-            logger.error("No providers are configured. Check your configuration file.")
-        raise typer.Exit(code=1)
+    _validate_provider_in_registry(registry, provider)
 
     table = Table(title="Test Data Specifications")
     table.add_column("Provider", style="cyan")

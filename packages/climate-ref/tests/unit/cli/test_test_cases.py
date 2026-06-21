@@ -142,16 +142,14 @@ class TestBuildCatalog:
         assert len(result) == 0
         assert "No matching files found" in caplog.text
 
-    def test_adapter_exception_logged(self, caplog):
-        """Failures in every parent_dir are logged and yield an empty DataFrame."""
+    def test_adapter_exception_raises(self):
+        """A parse failure in any parent_dir aborts with DatasetResolutionError (fail-fast)."""
         mock_adapter = MagicMock()
         mock_adapter.find_local_datasets.side_effect = Exception("Parse error")
 
         file_paths = [Path("/path/to/file.nc")]
-        result = _build_catalog(mock_adapter, file_paths)
-
-        assert result.empty
-        assert "Failed to parse" in caplog.text
+        with pytest.raises(DatasetResolutionError, match="Failed to parse fetched datasets"):
+            _build_catalog(mock_adapter, file_paths)
 
 
 class TestFetchAndBuildCatalog:
@@ -1439,6 +1437,19 @@ class TestStageCompare:
         assert failures == []
         assert compared == ["diagnostic.json"]
         assert_mock.assert_called_once()
+
+    def test_unparseable_baseline_is_hard_failure(self, tmp_path):
+        """A committed baseline that no longer parses as JSON fails cleanly rather than crashing."""
+        from climate_ref.cli.test_cases._stages import stage_compare
+
+        paths, slot = self._paths_and_slot(tmp_path)
+        # A corrupted committed baseline: valid JSON with trailing garbage appended.
+        (paths.regression / "diagnostic.json").write_text("{}\n// drift\n")
+        (slot / "regression" / "diagnostic.json").write_text("{}")
+
+        failures, compared = stage_compare(slot=slot, paths=paths, slug="x", expected=["diagnostic.json"])
+        assert compared == []
+        assert any("not valid JSON" in f for f in failures)
 
 
 class TestReplayCommand:

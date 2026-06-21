@@ -228,10 +228,14 @@ def stage_upload(
     skipped = 0
     for relpath, entry in native.items():
         prev = previous.get(relpath)
-        if prev is not None and prev.sha256 == entry.sha256 and store.has(entry.sha256):
-            skipped += 1
+        try:
+            if prev is not None and prev.sha256 == entry.sha256 and store.has(entry.sha256):
+                skipped += 1
+                continue
+            digest = store.put(slot / relpath)
+        except Exception as exc:
+            errors.append(f"upload failed for {relpath}: {exc}")
             continue
-        digest = store.put(slot / relpath)
         if digest != entry.sha256:
             errors.append(f"digest mismatch for {relpath} (store={digest}, captured={entry.sha256})")
         else:
@@ -282,6 +286,10 @@ def stage_compare(
             )
         except AssertionError as exc:
             failures.append(str(exc))
+        except json.JSONDecodeError as exc:
+            # A committed baseline (or regenerated file) that no longer parses is drift, not a
+            # crash -- report it so replay fails cleanly instead of letting the error escape.
+            failures.append(f"{filename}: committed bundle is not valid JSON ({exc})")
         else:
             compared.append(filename)
     return failures, compared

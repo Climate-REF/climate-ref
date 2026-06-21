@@ -11,6 +11,9 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import typer
+from loguru import logger
+
 if TYPE_CHECKING:
     from collections.abc import Iterator
 
@@ -18,6 +21,26 @@ if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic
     from climate_ref_core.regression.manifest import Manifest, NativeEntry
     from climate_ref_core.testing import TestCase, TestCasePaths
+
+
+def _validate_provider_in_registry(registry: ProviderRegistry, provider: str | None) -> None:
+    """
+    Validate that ``provider`` (if given) is configured in the registry.
+
+    Logs a helpful error listing the available providers and exits with code 1
+    when the requested provider is not present. A falsy ``provider`` is a no-op.
+    """
+    if not provider:
+        return
+    available_providers = [p.slug for p in registry.providers]
+    if provider not in available_providers:
+        logger.error(f"Provider '{provider}' is not configured")
+        if available_providers:
+            logger.error(f"Available providers: {', '.join(sorted(available_providers))}")
+        else:
+            logger.error("No providers are configured. Check your configuration file.")
+        logger.error("To add a provider, update your config file or set REF_DIAGNOSTIC_PROVIDERS")
+        raise typer.Exit(code=1)
 
 
 def _write_test_case_manifest(

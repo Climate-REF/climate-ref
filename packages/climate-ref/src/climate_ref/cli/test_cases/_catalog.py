@@ -43,8 +43,10 @@ def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> p
     """
     import pandas as pd
 
-    # Collect unique parent directories since the adapter scans directories
-    parent_dirs = list({fp.parent for fp in file_paths})
+    # Collect unique parent directories since the adapter scans directories.
+    # Sort for deterministic traversal/catalog order so baseline selection
+    # (``_solve_test_case`` takes ``executions[0]``) is reproducible.
+    parent_dirs = sorted({fp.parent for fp in file_paths}, key=lambda p: p.as_posix())
 
     catalog_dfs = []
     for parent_dir in parent_dirs:
@@ -58,7 +60,7 @@ def _build_catalog(dataset_adapter: DatasetAdapter, file_paths: list[Path]) -> p
                 logger.warning(f"No matching files found in catalog for {parent_dir}")
             catalog_dfs.append(df)
         except Exception as e:
-            logger.warning(f"Failed to parse {parent_dir}: {e}")
+            raise DatasetResolutionError(f"Failed to parse fetched datasets in {parent_dir}") from e
 
     if not catalog_dfs:
         return pd.DataFrame()

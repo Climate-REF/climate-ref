@@ -61,7 +61,7 @@ flowchart LR
 
 | Verb | Credentials | What it does |
 | --- | --- | --- |
-| `run` | none | Execute the diagnostic, curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and — when seeding or `--force-regen` — promote it to `regression/` and seed `manifest.json` (`native = {}`). |
+| `run` | none | Execute the diagnostic, curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and — when seeding or `--force-regen` — promote it to `regression/` and update `manifest.json` (first seed uses `native = {}`; existing manifests keep their native block). |
 | `build` | none | Rebuild the committed bundle from an existing output slot (no execution), under the same promotion gate as `run`. Handy for regenerating the bundle after an extraction-code change, from already-materialised native. |
 | `mint` | write | Execute (or, with `--from-replay`, replay the stored native), upload the curated native to the object store, and populate `manifest.native`. Generally run by CI. |
 | `sync` | public read | Fetch the native blobs referenced by the manifest into the local store cache. |

@@ -174,7 +174,7 @@ class TestFetchAndBuildCatalog:
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -199,7 +199,7 @@ class TestFetchAndBuildCatalog:
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -240,7 +240,7 @@ class TestFetchAndBuildCatalog:
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.Obs4MIPsDatasetAdapter", return_value=mock_adapter),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -377,7 +377,7 @@ class TestFetchTestDataCommand:
         )
 
         fetch_mock = mocker.patch(
-            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
             side_effect=[exception, (MagicMock(), True)],
         )
 
@@ -573,7 +573,7 @@ class TestRunTestCaseCommand:
             return_value=mock_registry,
         )
         mocker.patch(
-            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            "climate_ref.cli.test_cases.run._fetch_and_build_catalog",
             side_effect=DatasetResolutionError("No datasets found"),
         )
 
@@ -903,7 +903,7 @@ class TestFetchAndBuildCatalogSourceTypes:
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP7DatasetAdapter", return_value=mock_adapter),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -945,7 +945,7 @@ class TestFetchAndBuildCatalogSourceTypes:
                 return_value=mock_adapter,
             ),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -986,7 +986,7 @@ class TestFetchAndBuildCatalogSourceTypes:
             patch("climate_ref_core.esgf.ESGFFetcher", return_value=mock_fetcher),
             patch("climate_ref.datasets.CMIP6DatasetAdapter", return_value=mock_adapter),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -1041,7 +1041,7 @@ class TestFetchAndBuildCatalogSourceTypes:
                 return_value=mock_obs_adapter,
             ),
             patch(
-                "climate_ref.cli.test_cases._solve_test_case",
+                "climate_ref.cli.test_cases._catalog._solve_test_case",
                 return_value=mock_datasets,
             ),
             patch(
@@ -1301,7 +1301,7 @@ def _setup_real_run(mocker, tmp_path, *, runner_result="success", regression_fil
     mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value="abc123")
     if fetch:
         mocker.patch(
-            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            "climate_ref.cli.test_cases.run._fetch_and_build_catalog",
             return_value=(MagicMock(), True),
         )
 
@@ -1505,10 +1505,10 @@ class TestReplayCommand:
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
         # Stub the slot stages so we deterministically reach the success branch: materialise +
         # rebuild, committed-bundle build, and the tolerant comparison (no drift, 3 files compared).
-        mocker.patch("climate_ref.cli.test_cases.stage_materialise")
-        mocker.patch("climate_ref.cli.test_cases.stage_build")
+        mocker.patch("climate_ref.cli.test_cases.baselines.stage_materialise")
+        mocker.patch("climate_ref.cli.test_cases.baselines.stage_build")
         mocker.patch(
-            "climate_ref.cli.test_cases.stage_compare",
+            "climate_ref.cli.test_cases.baselines.stage_compare",
             return_value=([], ["series.json", "diagnostic.json", "output.json"]),
         )
 
@@ -1904,7 +1904,7 @@ class TestCIGateCommand:
             return_value=mock_registry,
         )
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
-        mocker.patch("climate_ref.cli.test_cases.get_repo_for_path", return_value=repo)
+        mocker.patch("climate_ref.cli.test_cases.ci_gate.get_repo_for_path", return_value=repo)
         return repo, paths, committed_digests
 
     @staticmethod
@@ -2034,7 +2034,7 @@ class TestCIGateCommand:
 
     def test_not_in_repo_fails(self, invoke_cli, mocker, tmp_path):
         self._setup(mocker, tmp_path, current_version=1)
-        mocker.patch("climate_ref.cli.test_cases.get_repo_for_path", return_value=None)
+        mocker.patch("climate_ref.cli.test_cases.ci_gate.get_repo_for_path", return_value=None)
 
         result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
         assert result.exit_code == 1

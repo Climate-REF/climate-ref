@@ -10,11 +10,11 @@ set of stages:
 - **upload** -- push changed-digest native blobs to the store
 - **compare** -- diff a slot's rebuilt bundle against the tracked committed baseline
 
-Native produced by a source stage (execute or materialise) lands in a gitignored *output
-slot* (``<case>/output/<label>/``), flat at manifest-relative paths, with a ``regression/``
-subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
-``latest`` (the default label) is overwritten on every run; named slots persist so two runs
-can be diffed (``--label before`` vs ``--label after``).
+Native produced by a source stage (execute or materialise) lands in a gitignored *output slot*
+(``<case>/output/<label>/``), flat at manifest-relative paths,
+with a ``regression/`` subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
+``latest`` (the default label) is overwritten on every run.
+A custom named slot persists so two runs can be diffed (``--label before`` vs ``--label after``).
 See ``docs/background/regression-baselines.md``.
 """
 

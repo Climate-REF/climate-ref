@@ -536,33 +536,9 @@ class TestRunTestCaseCommand:
             expected_exit_code=1,
         )
 
-    def test_run_with_fetch_flag(self, invoke_cli, mocker):
-        """Test run command with --fetch flag fetches data first."""
-        mock_tc = MagicMock()
-        mock_tc.name = "default"
-        mock_tc.description = "test"
-        mock_spec = MagicMock()
-        mock_spec.test_cases = [mock_tc]
-        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
-        mock_diag.provider = MagicMock(slug="example")
-        mock_provider = MagicMock(slug="example")
-        mock_provider.diagnostics.return_value = [mock_diag]
-        mock_registry = MagicMock(providers=[mock_provider])
-
-        mock_result = MagicMock(successful=True, metric_bundle_filename=None, output_bundle_filename=None)
-        mock_runner = MagicMock()
-        mock_runner.run.return_value = mock_result
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=mock_registry,
-        )
-        mocker.patch(
-            "climate_ref.cli.test_cases._fetch_and_build_catalog",
-            return_value=(MagicMock(), True),
-        )
-        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None)
+    def test_run_with_fetch_flag(self, invoke_cli, mocker, tmp_path):
+        """`run --fetch` fetches data, executes, and materialises the output slot (exit 0)."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path, fetch=True)
 
         result = invoke_cli(
             [
@@ -576,6 +552,8 @@ class TestRunTestCaseCommand:
             ],
         )
         assert result.exit_code == 0
+        # The slot was populated with the executed native set.
+        assert (paths.output_slot("latest") / "diagnostic.json").exists()
 
     def test_run_with_fetch_flag_raises_error(self, invoke_cli, mocker):
         """Test run command with --fetch flag handles DatasetResolutionError."""
@@ -622,39 +600,8 @@ class TestRunTestCaseCommand:
         ],
     )
     def test_run_handles_exceptions(self, invoke_cli, mocker, tmp_path, exception_cls, exception_msg):
-        """Test run command handles various exceptions from runner."""
-        mock_tc = MagicMock()
-        mock_tc.name = "default"
-        mock_tc.description = "test"
-        mock_spec = MagicMock()
-        mock_spec.test_cases = [mock_tc]
-        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
-        mock_diag.provider = MagicMock(slug="example")
-        mock_provider = MagicMock(slug="example")
-        mock_provider.diagnostics.return_value = [mock_diag]
-        mock_registry = MagicMock(providers=[mock_provider])
-
-        test_case_dir = tmp_path / "test-diag" / "default"
-        test_case_dir.mkdir(parents=True)
-        catalog_path = test_case_dir / "catalog.yaml"
-        catalog_path.touch()
-
-        mock_paths = MagicMock()
-        mock_paths.catalog = catalog_path
-
-        mock_runner = MagicMock()
-        mock_runner.run.side_effect = exception_cls(exception_msg)
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=mock_registry,
-        )
-        mocker.patch(
-            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
-            return_value=mock_paths,
-        )
-        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        """A diagnostic execution exception is caught and fails the test case (exit 1)."""
+        _setup_real_run(mocker, tmp_path, runner_result=exception_cls(exception_msg))
 
         invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
@@ -662,90 +609,19 @@ class TestRunTestCaseCommand:
         )
 
     def test_run_successful_execution(self, invoke_cli, mocker, tmp_path):
-        """Test run command with successful execution."""
-        mock_tc = MagicMock()
-        mock_tc.name = "default"
-        mock_tc.description = "test"
-        mock_spec = MagicMock()
-        mock_spec.test_cases = [mock_tc]
-        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
-        mock_diag.provider = MagicMock(slug="example")
-        mock_provider = MagicMock(slug="example")
-        mock_provider.diagnostics.return_value = [mock_diag]
-        mock_registry = MagicMock(providers=[mock_provider])
-
-        test_case_dir = tmp_path / "test-diag" / "default"
-        test_case_dir.mkdir(parents=True)
-        catalog_path = test_case_dir / "catalog.yaml"
-        catalog_path.touch()
-
-        # Create existing regression dir to avoid copy being triggered
-        regression_dir = test_case_dir / "regression"
-        regression_dir.mkdir()
-
-        mock_paths = MagicMock()
-        mock_paths.catalog = catalog_path
-        mock_paths.regression = regression_dir  # Use real dir that exists
-
-        mock_result = MagicMock(
-            successful=True,
-            metric_bundle_filename="metrics.json",
-            output_bundle_filename="output.json",
-        )
-        mock_result.to_output_path.side_effect = lambda x: tmp_path / x
-        mock_runner = MagicMock()
-        mock_runner.run.return_value = mock_result
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=mock_registry,
-        )
-        mocker.patch(
-            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
-            return_value=mock_paths,
-        )
-        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        """A successful execution writes the slot and exits 0 (baseline already present)."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path, regression_files={})
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
         )
         assert result.exit_code == 0
+        # The slot holds the rebuilt committed bundle even when the baseline is untouched.
+        assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
 
     def test_run_unsuccessful_execution(self, invoke_cli, mocker, tmp_path):
-        """Test run command with unsuccessful execution result."""
-        mock_tc = MagicMock()
-        mock_tc.name = "default"
-        mock_tc.description = "test"
-        mock_spec = MagicMock()
-        mock_spec.test_cases = [mock_tc]
-        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
-        mock_diag.provider = MagicMock(slug="example")
-        mock_provider = MagicMock(slug="example")
-        mock_provider.diagnostics.return_value = [mock_diag]
-        mock_registry = MagicMock(providers=[mock_provider])
-
-        test_case_dir = tmp_path / "test-diag" / "default"
-        test_case_dir.mkdir(parents=True)
-        catalog_path = test_case_dir / "catalog.yaml"
-        catalog_path.touch()
-
-        mock_paths = MagicMock()
-        mock_paths.catalog = catalog_path
-
-        mock_runner = MagicMock()
-        mock_runner.run.return_value = MagicMock(successful=False)
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=mock_registry,
-        )
-        mocker.patch(
-            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
-            return_value=mock_paths,
-        )
-        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
+        """An unsuccessful execution result fails the test case (exit 1)."""
+        _setup_real_run(mocker, tmp_path, runner_result="unsuccessful")
 
         invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
@@ -848,59 +724,17 @@ class TestRunTestCaseCommand:
         }
 
     def test_run_with_existing_baseline(self, invoke_cli, mocker, tmp_path):
-        """Test run command logs when baseline exists."""
-        mock_tc = MagicMock()
-        mock_tc.name = "default"
-        mock_tc.description = "test"
-        mock_spec = MagicMock()
-        mock_spec.test_cases = [mock_tc]
-        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
-        mock_diag.provider = MagicMock(slug="example")
-        mock_provider = MagicMock(slug="example")
-        mock_provider.diagnostics.return_value = [mock_diag]
-        mock_registry = MagicMock(providers=[mock_provider])
-
-        # Set up test case directory structure with existing regression data
-        test_case_dir = tmp_path / "test-diag" / "default"
-        test_case_dir.mkdir(parents=True)
-        catalog_path = test_case_dir / "catalog.yaml"
-        catalog_path.touch()
-
-        # Create existing regression directory with baseline file
-        regression_dir = test_case_dir / "regression"
-        regression_dir.mkdir(parents=True)
+        """Without --force-regen, an existing baseline is left untouched (promotion gate)."""
+        _paths, _scratch, regression_dir, _runner = _setup_real_run(
+            mocker, tmp_path, regression_files={"metrics.json": '{"existing": "baseline"}'}
+        )
         baseline_file = regression_dir / "metrics.json"
-        baseline_file.write_text('{"existing": "baseline"}')
-
-        mock_paths = MagicMock()
-        mock_paths.catalog = catalog_path
-        mock_paths.regression = regression_dir
-
-        mock_result = MagicMock(
-            successful=True,
-            metric_bundle_filename="metrics.json",
-            output_bundle_filename=None,
-        )
-        mock_result.to_output_path.return_value = tmp_path / "metrics.json"
-        mock_runner = MagicMock()
-        mock_runner.run.return_value = mock_result
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=mock_registry,
-        )
-        mocker.patch(
-            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
-            return_value=mock_paths,
-        )
-        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=MagicMock())
-        mocker.patch("climate_ref.testing.TestCaseRunner", return_value=mock_runner)
 
         result = invoke_cli(
             ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
         )
         assert result.exit_code == 0
-        # Without --force-regen, baseline should be unchanged
+        # Without --force-regen, the committed baseline is not promoted.
         assert baseline_file.read_text() == '{"existing": "baseline"}'
 
     def test_run_with_only_missing_skips_existing(self, invoke_cli, mocker, tmp_path):
@@ -973,6 +807,71 @@ class TestRunTestCaseCommand:
             expected_exit_code=0,
         )
         assert "No test cases found" in result.stderr
+
+    def test_run_label_slots_coexist(self, invoke_cli, mocker, tmp_path):
+        """Two runs under different --label slots persist side by side."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path)
+
+        for label in ("before", "after"):
+            assert (
+                invoke_cli(
+                    [
+                        "test-cases",
+                        "run",
+                        "--provider",
+                        "example",
+                        "--diagnostic",
+                        "test-diag",
+                        "--label",
+                        label,
+                        "--force-regen",
+                    ]
+                ).exit_code
+                == 0
+            )
+
+        assert (paths.output_slot("before") / "diagnostic.json").exists()
+        assert (paths.output_slot("after") / "diagnostic.json").exists()
+        # The default slot was never written.
+        assert not paths.output_slot("latest").exists()
+
+    def test_run_force_regen_promotes_over_existing_baseline(self, invoke_cli, mocker, tmp_path):
+        """--force-regen replaces an existing committed baseline with the freshly built bundle."""
+        _paths, _scratch, regression_dir, _runner = _setup_real_run(
+            mocker, tmp_path, regression_files={"diagnostic.json": '{"old": "baseline"}'}
+        )
+
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
+        # The stale baseline was promoted over by the rebuilt bundle.
+        assert (regression_dir / "diagnostic.json").read_text() != '{"old": "baseline"}'
+
+    def test_run_warns_when_native_stale(self, invoke_cli, mocker, tmp_path):
+        """force-regen warns (does not block) when the rebuilt native differs from the minted baseline."""
+        from climate_ref_core.regression.manifest import SCHEMA_VERSION, Manifest, NativeEntry
+
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path, regression_files={})
+        # A previously minted manifest whose native digests will not match the freshly built slot.
+        Manifest(
+            schema=SCHEMA_VERSION,
+            test_case_version=3,
+            committed={},
+            native={"diagnostic.json": NativeEntry(sha256="00" * 32, size=1)},
+        ).dump(paths.manifest)
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+        )
+        assert result.exit_code == 0
+        assert "native baseline differs" in result.stderr
+        # run preserves the mint-owned native block and version (it never authors native).
+        manifest = Manifest.load(paths.manifest)
+        assert manifest.test_case_version == 3
+        assert set(manifest.native) == {"diagnostic.json"}
 
 
 class TestFetchAndBuildCatalogSourceTypes:
@@ -1325,6 +1224,90 @@ def _make_case_mocks():
     return registry, diag, tc
 
 
+def _setup_real_run(mocker, tmp_path, *, runner_result="success", regression_files=None, fetch=False):
+    """
+    Wire a ``run``/``build`` test against a real ``TestCasePaths`` and scratch execution dir.
+
+    The slot-based ``run`` materialises ``output/<label>/`` on every invocation, so it needs
+    real on-disk paths (a ``MagicMock`` slot cannot be wiped or recreated). This builds a real
+    test case directory plus a scratch output dir holding a curated CMEC bundle, and a mock
+    runner whose result points at that scratch dir.
+
+    Parameters
+    ----------
+    runner_result
+        ``"success"`` (default) for a successful result, ``"unsuccessful"`` for
+        ``successful=False``, or an ``Exception`` instance for the runner to raise.
+    regression_files
+        ``{filename: text}`` pre-written into ``regression/`` (creating it), or ``None`` to
+        leave the baseline absent.
+    fetch
+        When True, patch ``_fetch_and_build_catalog`` (for ``run --fetch``) instead of
+        ``load_datasets_from_yaml``.
+
+    Returns
+    -------
+    :
+        ``(paths, scratch_output_dir, regression_dir, runner)``.
+    """
+    from climate_ref_core.pycmec.output import CMECOutput
+    from climate_ref_core.testing import TestCasePaths
+
+    registry, _diag, _tc = _make_case_mocks()
+
+    test_case_dir = tmp_path / "td" / "test-diag" / "default"
+    test_case_dir.mkdir(parents=True)
+    # A minimal but valid catalog so the real load_datasets_from_yaml returns an empty
+    # ExecutionDatasetCollection. The slot stages load the catalog directly (via the stages
+    # module's own binding), so patching only climate_ref_core.testing would not reach them.
+    (test_case_dir / "catalog.yaml").write_text("_metadata:\n  hash: abc123\n")
+    paths = TestCasePaths(root=test_case_dir)
+
+    if regression_files is not None:
+        paths.regression.mkdir(parents=True)
+        for name, text in regression_files.items():
+            (paths.regression / name).write_text(text)
+
+    scratch_output_dir = tmp_path / "scratch" / "frag"
+    scratch_output_dir.mkdir(parents=True)
+    (scratch_output_dir / "diagnostic.json").write_text('{"test": "data"}')
+    (scratch_output_dir / "output.json").write_text(json.dumps(CMECOutput.create_template()))
+    (scratch_output_dir / "series.json").write_text("[]")
+
+    defn = MagicMock()
+    defn.output_directory = scratch_output_dir
+    defn.output_fragment.return_value = Path("frag")
+    result = MagicMock(
+        successful=(runner_result == "success"),
+        metric_bundle_filename=Path("diagnostic.json"),
+        output_bundle_filename=Path("output.json"),
+        series_filename=Path("series.json"),
+    )
+    result.to_output_path.side_effect = lambda f: scratch_output_dir / f
+    result.definition = defn
+
+    runner = MagicMock()
+    if isinstance(runner_result, BaseException):
+        runner.run.side_effect = runner_result
+    else:
+        runner.run.return_value = result
+
+    mocker.patch(
+        "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+        return_value=registry,
+    )
+    mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+    mocker.patch("climate_ref.testing.TestCaseRunner", return_value=runner)
+    mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value="abc123")
+    if fetch:
+        mocker.patch(
+            "climate_ref.cli.test_cases._fetch_and_build_catalog",
+            return_value=(MagicMock(), True),
+        )
+
+    return paths, scratch_output_dir, paths.regression, runner
+
+
 class TestSyncCommand:
     """Tests for the `test-cases sync` CLI verb."""
 
@@ -1488,7 +1471,7 @@ class TestReplayCommand:
     def test_replay_reconciles_integrity_mismatch_within_tolerance(self, invoke_cli, mocker, tmp_path):
         """A byte-level baseline difference forgiven by the tolerant comparison is reported as reconciled.
 
-        This proves the follow-up comparison actually ran after the integrity warning: the success line
+        This proves the comparison stage actually ran after the integrity warning: the success line
         names the bundle files compared and states they are equivalent within tolerance, rather than
         silently claiming a match.
         """
@@ -1520,14 +1503,14 @@ class TestReplayCommand:
         )
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
-        # Stub the heavy replay internals so we deterministically reach the success branch:
-        # native materialisation, placeholder expansion, dataset load, definition, and the tolerant
-        # comparison itself (a no-op assert == "equivalent within tolerance").
-        mocker.patch("climate_ref_core.regression.materialise_native")
-        mocker.patch("climate_ref_core.output_files.from_placeholders")
-        mocker.patch("climate_ref_core.testing.load_datasets_from_yaml", return_value=[])
-        mocker.patch("climate_ref_core.diagnostics.ExecutionDefinition")
-        mocker.patch("climate_ref_core.regression.assert_bundle_regression")
+        # Stub the slot stages so we deterministically reach the success branch: materialise +
+        # rebuild, committed-bundle build, and the tolerant comparison (no drift, 3 files compared).
+        mocker.patch("climate_ref.cli.test_cases.stage_materialise")
+        mocker.patch("climate_ref.cli.test_cases.stage_build")
+        mocker.patch(
+            "climate_ref.cli.test_cases.stage_compare",
+            return_value=([], ["series.json", "diagnostic.json", "output.json"]),
+        )
 
         result = invoke_cli(
             [
@@ -1675,6 +1658,124 @@ class TestMintCommand:
         # Each native blob was PUT into the store.
         for entry in manifest.native.values():
             assert store.has(entry.sha256)
+
+    def test_mint_skips_unchanged_native_on_remint(self, invoke_cli, mocker, tmp_path):
+        """Re-executing a mint with byte-identical native uploads nothing (changed-digest skip)."""
+        from climate_ref_core.regression.store import LocalFilesystemStore
+
+        _setup_real_run(mocker, tmp_path)
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        first = invoke_cli(["test-cases", "mint", "--provider", "example"])
+        assert first.exit_code == 0
+        assert "Uploaded 3 native blob(s), skipped 0" in first.stderr  # first mint uploads everything
+
+        # A second mint with identical outputs re-executes but uploads nothing new.
+        second = invoke_cli(["test-cases", "mint", "--provider", "example"])
+        assert second.exit_code == 0
+        assert "Uploaded 0 native blob(s), skipped 3" in second.stderr
+
+    def test_mint_from_replay_reauthors_without_reexecuting(self, invoke_cli, mocker, tmp_path):
+        """`mint --from-replay` rebuilds from stored native, uploading nothing and not re-executing."""
+        from climate_ref_core.regression.manifest import Manifest
+        from climate_ref_core.regression.store import LocalFilesystemStore
+
+        paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        # First mint executes the diagnostic and uploads the native set.
+        first = invoke_cli(["test-cases", "mint", "--provider", "example"])
+        assert first.exit_code == 0
+        minted = Manifest.load(paths.manifest)
+        assert set(minted.native) == {"diagnostic.json", "output.json", "series.json"}
+        assert runner.run.call_count == 1
+        assert "Uploaded 3 native blob(s), skipped 0" in first.stderr
+
+        # Re-mint from the stored native: no execution, no new uploads, identical native block.
+        result = invoke_cli(["test-cases", "mint", "--provider", "example", "--from-replay"])
+        assert result.exit_code == 0
+        assert runner.run.call_count == 1  # unchanged: the diagnostic was not re-run
+        assert "Uploaded 0 native blob(s), skipped 3" in result.stderr
+        replayed = Manifest.load(paths.manifest)
+        assert {k: v.sha256 for k, v in replayed.native.items()} == {
+            k: v.sha256 for k, v in minted.native.items()
+        }
+        # The slot records the from-replay source.
+        stamp = json.loads((paths.output_slot("latest") / ".source.json").read_text())
+        assert stamp["verb"] == "mint"
+        assert stamp["source"] == "materialise"
+
+    def test_mint_from_replay_requires_minted_manifest(self, invoke_cli, mocker, tmp_path):
+        """`mint --from-replay` fails when there is no existing minted native to replay from."""
+        from climate_ref_core.regression.store import LocalFilesystemStore
+
+        _setup_real_run(mocker, tmp_path)
+        store = LocalFilesystemStore(root=tmp_path / "store")
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "example", "--from-replay"],
+            expected_exit_code=1,
+        )
+        assert "--from-replay needs an existing minted manifest" in result.stderr
+
+
+class TestBuildCommand:
+    """Tests for the `test-cases build` CLI verb."""
+
+    def test_build_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "build", "--help"])
+        assert "Rebuild the committed bundle" in result.stdout
+
+    def test_build_fails_without_slot(self, invoke_cli, mocker, tmp_path):
+        """build refuses when the named output slot has no native to rebuild from."""
+        _setup_real_run(mocker, tmp_path)  # catalog present, but no output slot materialised
+        result = invoke_cli(
+            ["test-cases", "build", "--provider", "example", "--diagnostic", "test-diag"],
+            expected_exit_code=1,
+        )
+        assert "no native in output slot" in result.stderr.lower()
+
+    def test_build_rebuilds_from_slot_without_executing(self, invoke_cli, mocker, tmp_path):
+        """build regenerates the committed bundle from an existing slot, never re-running."""
+        paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
+
+        # Seed a slot (and baseline) with one run.
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
+        assert runner.run.call_count == 1
+
+        # Rebuild the committed bundle from that slot, without executing the diagnostic.
+        result = invoke_cli(["test-cases", "build", "--provider", "example", "--diagnostic", "test-diag"])
+        assert result.exit_code == 0
+        assert runner.run.call_count == 1  # build did not re-run the diagnostic
+        assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
+        stamp = json.loads((paths.output_slot("latest") / ".source.json").read_text())
+        assert stamp["verb"] == "build"
+        assert stamp["source"] == "rebuild"
+
+
+def test_output_slot_pattern_is_gitignored(tmp_path):
+    """The repo .gitignore shadows materialised output slots under any test-data tree."""
+    from git import Repo
+
+    repo_gitignore = Path(__file__).resolve().parents[5] / ".gitignore"
+    repo = Repo.init(tmp_path)
+    (tmp_path / ".gitignore").write_text(repo_gitignore.read_text())
+
+    slot = tmp_path / "packages" / "pkg" / "tests" / "test-data" / "diag" / "default" / "output" / "latest"
+    slot.mkdir(parents=True)
+    (slot / "native.nc").write_bytes(b"x")
+
+    rel = "packages/pkg/tests/test-data/diag/default/output/latest/native.nc"
+    # git check-ignore echoes the path when it is ignored (and exits non-zero otherwise).
+    assert repo.git.check_ignore(rel) == rel
 
 
 class TestCheckStoreCommand:

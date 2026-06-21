@@ -61,11 +61,48 @@ flowchart LR
 
 | Verb | Credentials | What it does |
 | --- | --- | --- |
-| `run` | none | Execute the diagnostic, curate outputs, write the committed bundle and seed `manifest.json` (`native = {}`). |
-| `mint` | write | Upload the curated native files to the object store and populate `manifest.native`. Generally run by CI. |
-| `sync` | public read | Fetch the native blobs referenced by the manifest into the local tree. |
-| `replay` | public read | Materialise the native baseline, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
+| `run` | none | Execute the diagnostic, curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and — when seeding or `--force-regen` — promote it to `regression/` and seed `manifest.json` (`native = {}`). |
+| `build` | none | Rebuild the committed bundle from an existing output slot (no execution), under the same promotion gate as `run`. Handy for regenerating the bundle after an extraction-code change, from already-materialised native. |
+| `mint` | write | Execute (or, with `--from-replay`, replay the stored native), upload the curated native to the object store, and populate `manifest.native`. Generally run by CI. |
+| `sync` | public read | Fetch the native blobs referenced by the manifest into the local store cache. |
+| `replay` | public read | Materialise the native baseline into a slot, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
 | `check-store` | write | Preflight the writable native store (credentials + bucket) without uploading anything. Run this before a slow `mint` to confirm credentials are correct. |
+
+### Output slots
+
+Every `run`, `build`, `replay`, and `mint` materialises what it produced into a gitignored
+*output slot*, so a developer can actually see and diff what a run or replay generated:
+
+```text
+<test case>/output/<label>/
+├── diagnostic.json     # the curated native set, flat at manifest-relative paths
+├── output.json
+├── series.json
+├── ...                 # plus any referenced plots/data/html and native .nc files
+├── regression/         # the committed bundle rebuilt from this slot
+│   ├── diagnostic.json
+│   ├── output.json
+│   └── series.json
+└── .source.json        # {label, verb, source, test_case_version, created}
+```
+
+Slots are never committed — the whole `**/test-data/**/output/` tree is gitignored —
+they exist purely for local inspection.
+
+The `--label` option names a slot (default `latest`, overwritten on every run).
+Named slots persist, so two runs can be compared side by side:
+for example `run --label fresh` then `replay --label fromstore`,
+or `run --label before`, edit the diagnostic, then `run --label after`.
+
+`run` and `build` write the slot on every invocation
+but only *promote* the rebuilt bundle to the tracked `regression/` baseline
+when `--force-regen` is given or no baseline exists yet,
+so a labelled run never silently clobbers a committed baseline;
+`mint` always promotes and uploads.
+When a promoted bundle's underlying native digests differ from the minted baseline,
+`run` and `build` warn (they never block) that a re-mint is needed.
+`mint --from-replay` re-authors the manifest from the stored native instead of re-executing,
+and uploads only blobs whose digest actually changed.
 
 ## CMIP7 test data
 

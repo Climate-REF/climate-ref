@@ -7,7 +7,6 @@ a source checkout of the project with test data directories available.
 
 from __future__ import annotations
 
-import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING, Annotated
 
@@ -17,6 +16,21 @@ from rich.console import Console
 from rich.table import Table
 
 from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_for_path
+from climate_ref.cli._test_case_stages import (
+    StageError,
+    native_is_stale,
+    prepare_slot,
+    promote_to_baseline,
+    slot_native_relpaths,
+    snapshot_native,
+    stage_build,
+    stage_compare,
+    stage_execute,
+    stage_materialise,
+    stage_rebuild_from_slot,
+    stage_upload,
+    write_source_stamp,
+)
 from climate_ref.cli._utils import format_size
 from climate_ref.config import Config
 from climate_ref_core.exceptions import (
@@ -503,62 +517,67 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
     console: Console,
     diag: Diagnostic,
     tc: TestCase,
-    output_directory: Path | None,
+    *,
+    execution_dir: Path | None,
     force_regen: bool,
     fetch: bool,
     size_threshold: float,
     clean: bool,
+    label: str,
 ) -> bool:
     """
-    Run a single test case for a diagnostic.
+    Run a single test case for a diagnostic, writing its native into an output slot.
+
+    Always (re)populates ``output/<label>/`` with the executed native set and its rebuilt
+    committed bundle. The tracked ``regression/`` baseline is only updated ("promoted") when
+    ``--force-regen`` is given or no baseline exists yet, so a labelled run never silently
+    clobbers a committed baseline.
 
     Returns True if successful, False otherwise.
     """
-    import tempfile
-
-    from climate_ref.testing import TestCaseRunner
-    from climate_ref_core.regression.capture import capture_execution
     from climate_ref_core.regression.manifest import Manifest
-    from climate_ref_core.testing import (
-        TestCasePaths,
-        load_datasets_from_yaml,
-    )
+    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
     provider_slug = diag.provider.slug
     diagnostic_slug = diag.slug
     test_case_name = tc.name
+    case_id = f"{provider_slug}/{diagnostic_slug}/{test_case_name}"
 
-    # Resolve datasets: either fetch from ESGF or load from pre-built catalog
+    # Resolve datasets: either fetch from ESGF or load from the pre-built catalog.
     if fetch:
-        logger.info(f"Fetching test data for {provider_slug}/{diagnostic_slug}/{test_case_name}")
+        logger.info(f"Fetching test data for {case_id}")
         try:
             datasets, _ = _fetch_and_build_catalog(diag, tc)
         except (DatasetResolutionError, InvalidDiagnosticException) as e:
-            logger.exception(
-                f"Failed to fetch data for {provider_slug}/{diagnostic_slug}/{test_case_name}: {e}"
-            )
-            return False
-    else:
-        paths = TestCasePaths.from_diagnostic(diag, test_case_name)
-        if paths is None:
-            logger.error(f"Could not determine test data directory for {provider_slug}/{diagnostic_slug}")
+            logger.exception(f"Failed to fetch data for {case_id}: {e}")
             return False
 
+    paths = TestCasePaths.from_diagnostic(diag, test_case_name)
+    if paths is None:
+        logger.error(f"Could not determine test data directory for {provider_slug}/{diagnostic_slug}")
+        return False
+
+    if not fetch:
         if not paths.catalog.exists():
-            logger.error(f"No catalog file found for {provider_slug}/{diagnostic_slug}/{test_case_name}")
+            logger.error(f"No catalog file found for {case_id}")
             logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
             return False
-
         logger.info(f"Loading catalog from {paths.catalog}")
         datasets = load_datasets_from_yaml(paths.catalog)
 
-    # Create runner and execute
-    runner = TestCaseRunner(config=config, datasets=datasets)
-
+    paths.create()
+    slot = prepare_slot(paths, label)
     logger.info(f"Running test case {test_case_name!r} for {provider_slug}/{diagnostic_slug}")
-
     try:
-        result = runner.run(diag, test_case_name, output_directory, clean=clean)
+        source = stage_execute(
+            config=config,
+            diag=diag,
+            tc=tc,
+            datasets=datasets,
+            slot=slot,
+            execution_dir=execution_dir,
+            clean=clean,
+        )
     except NoTestDataSpecError:
         logger.error(f"Diagnostic {provider_slug}/{diagnostic_slug} has no test_data_spec")
         return False
@@ -571,80 +590,53 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0915
         logger.error(str(e))
         logger.error("Have you run 'ref test-cases fetch' first?")
         return False
+    except StageError:
+        logger.error(f"Execution failed: {case_id}")
+        return False
     except Exception as e:
-        case_id = f"{provider_slug}/{diagnostic_slug}/{test_case_name}"
         logger.error(f"Diagnostic execution failed for {case_id}: {e!s}")
         return False
 
-    if not result.successful:
-        logger.error(f"Execution failed: {provider_slug}/{diagnostic_slug}/{test_case_name}")
-        return False
-
-    logger.info(f"Execution completed: {provider_slug}/{diagnostic_slug}/{test_case_name}")
+    result = source.result
+    logger.info(f"Execution completed: {case_id}")
     if result.metric_bundle_filename:
         logger.info(f"Metric bundle: {result.to_output_path(result.metric_bundle_filename)}")
     if result.output_bundle_filename:
         logger.info(f"Output bundle: {result.to_output_path(result.output_bundle_filename)}")
 
-    # Handle regression baseline comparison/regeneration
-    paths = TestCasePaths.from_diagnostic(diag, test_case_name)
-
-    if paths is None:
-        logger.warning("Could not determine test case directory for provider package")
-        return True
-
-    if force_regen:
-        paths.create()
+    # Rebuild the slot's committed bundle, then decide whether to promote it to the
+    # tracked baseline. The native block is mint-owned, so a run preserves the previous
+    # one (or seeds an empty set) and never authors native here.
+    committed = stage_build(slot=slot, source=source, paths=paths)
+    previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
+    version = previous.test_case_version if previous else 1
 
     if force_regen or not paths.regression.exists():
-        if paths.regression.exists():
-            shutil.rmtree(paths.regression)
-        paths.regression.mkdir(parents=True, exist_ok=True)
-
-        defn = result.definition
-        output_dir = defn.output_directory
-        fragment = defn.output_fragment()
-        scratch_root = output_dir.parent
-
-        # results_base must differ from the scratch root for copy_execution_outputs.
-        # Keep it alive only until capture completes (run() does not mint to a store).
-        with tempfile.TemporaryDirectory() as results_base:
-            committed_digests, native = capture_execution(
-                scratch_root,
-                Path(results_base),
-                fragment,
-                result,
-                regression_dir=paths.regression,
-                output_dir=output_dir,
-                test_data_dir=paths.test_data_dir,
-            )
-
-        # Refresh the manifest's committed block (and catalog hash) only; the native
-        # block is mint-owned, so preserve the previous one when the manifest exists.
-        if paths.manifest.exists():
-            previous = Manifest.load(paths.manifest)
+        promote_to_baseline(slot, paths)
+        native = snapshot_native(slot)
+        if previous is not None:
             _write_test_case_manifest(
                 paths,
                 test_case_version=previous.test_case_version,
-                committed=committed_digests,
+                committed=committed,
                 native=previous.native,
                 schema=previous.schema,
             )
+            if native_is_stale(native, previous.native):
+                logger.warning(
+                    f"{case_id}: committed bundle regenerated but the native baseline differs; "
+                    "re-mint with `ref test-cases mint` (or `mint --from-replay`)"
+                )
         else:
-            _write_test_case_manifest(
-                paths,
-                test_case_version=1,
-                committed=committed_digests,
-                native={},
-            )
-
-        logger.info(f"Captured {len(native)} native output file(s) (not minted)")
-        logger.info(f"Updated regression data: {paths.regression}")
+            _write_test_case_manifest(paths, test_case_version=1, committed=committed, native={})
+        logger.info(f"Updated regression baseline: {paths.regression}")
         _print_regression_summary(console, paths.regression, size_threshold)
-    elif paths.regression.exists():
-        logger.info(f"Regression data exists at: {paths.regression}")
-        logger.info("Use --force-regen to update the baseline")
+    else:
+        logger.info(
+            f"Wrote output slot {slot} (committed baseline unchanged; use --force-regen to update it)"
+        )
 
+    write_source_stamp(slot, label=label, verb="run", source="execute", test_case_version=version)
     return True
 
 
@@ -695,6 +687,10 @@ def run_test_case(  # noqa: PLR0912, PLR0915
         bool,
         typer.Option(help="Delete existing output directory before running"),
     ] = False,
+    label: Annotated[
+        str,
+        typer.Option(help="Output slot name under output/ (default: latest)"),
+    ] = "latest",
 ) -> None:
     """
     Run test cases for diagnostics.
@@ -807,11 +803,12 @@ def run_test_case(  # noqa: PLR0912, PLR0915
             console=console,
             diag=diag,
             tc=tc,
-            output_directory=output_directory,
+            execution_dir=output_directory,
             force_regen=force_regen,
             fetch=fetch,
             size_threshold=size_threshold,
             clean=clean,
+            label=label,
         )
         if success:
             successes += 1
@@ -965,6 +962,10 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
         str | None,
         typer.Option(help="Specific test case name to replay"),
     ] = None,
+    label: Annotated[
+        str,
+        typer.Option(help="Output slot name under output/ (default: latest)"),
+    ] = "latest",
 ) -> None:
     """
     Replay committed baselines from native blobs and compare to the committed bundle.
@@ -980,25 +981,10 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
         ref test-cases replay --provider example
         ref test-cases replay --provider example --diagnostic global-mean-timeseries
     """
-    import tempfile
-
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.diagnostics import ExecutionDefinition
-    from climate_ref_core.output_files import (
-        PLACEHOLDER_OUTPUT_DIR,
-        PLACEHOLDER_TEST_DATA_DIR,
-        from_placeholders,
-    )
-    from climate_ref_core.regression import (
-        COMMITTED_BUNDLE_FILES,
-        Manifest,
-        Tolerance,
-        assert_bundle_regression,
-        materialise_native,
-        verify_committed_integrity,
-    )
+    from climate_ref_core.regression import Manifest, verify_committed_integrity
     from climate_ref_core.regression.store import build_native_store
-    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
+    from climate_ref_core.testing import TestCasePaths
 
     config: Config = ctx.obj.config
     db = ctx.obj.database
@@ -1057,56 +1043,29 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
             failures.append(case_id)
             continue
 
-        with tempfile.TemporaryDirectory() as tmp:
-            tmp_dir = Path(tmp)
-            output_dir = tmp_dir / "output"
-            output_dir.mkdir(parents=True, exist_ok=True)
-
-            try:
-                materialise_native(manifest.native, store, output_dir)
-            except Exception as exc:
-                logger.error(f"{case_id}: failed to materialise native blobs: {exc}")
-                failures.append(case_id)
-                continue
-
-            # Expand placeholders so the re-run reads concrete paths (mirrors the validator).
-            from_placeholders(output_dir, output_dir=output_dir, test_data_dir=paths.test_data_dir)
-
-            datasets = load_datasets_from_yaml(paths.catalog)
-            definition = ExecutionDefinition(
-                diagnostic=diag,
-                key=f"test-{tc.name}",
-                datasets=datasets,
-                output_directory=output_dir,
-                root_directory=tmp_dir,
+        slot = prepare_slot(paths, label)
+        try:
+            source = stage_materialise(
+                diag=diag, tc=tc, paths=paths, manifest=manifest, store=store, slot=slot
             )
+        except Exception as exc:
+            logger.error(f"{case_id}: failed to materialise/rebuild native: {exc}")
+            failures.append(case_id)
+            continue
 
-            try:
-                result = diag.build_execution_result(definition)
-            except Exception as exc:
-                logger.error(f"{case_id}: build_execution_result failed during replay: {exc}")
-                failures.append(case_id)
-                continue
-
-            replacements = {
-                str(output_dir): PLACEHOLDER_OUTPUT_DIR,
-                str(paths.test_data_dir): PLACEHOLDER_TEST_DATA_DIR,
-            }
-            # The comparator silently skips a bundle file with no committed copy,
-            compared = [f for f in COMMITTED_BUNDLE_FILES if (paths.regression / f).exists()]
-            try:
-                for filename in compared:
-                    assert_bundle_regression(
-                        paths.regression / filename,
-                        result.to_output_path(filename),
-                        slug=diag.slug,
-                        tol=Tolerance(),
-                        replacements=replacements,
-                    )
-            except AssertionError as exc:
-                logger.error(f"{case_id}: replay drift detected:\n{exc}")
-                failures.append(case_id)
-                continue
+        stage_build(slot=slot, source=source, paths=paths)
+        cmp_failures, compared = stage_compare(slot=slot, paths=paths, slug=diag.slug)
+        write_source_stamp(
+            slot,
+            label=label,
+            verb="replay",
+            source="materialise",
+            test_case_version=manifest.test_case_version,
+        )
+        if cmp_failures:
+            logger.error(f"{case_id}: replay drift detected:\n" + "\n".join(cmp_failures))
+            failures.append(case_id)
+            continue
 
         successes += 1
         if mismatches:
@@ -1148,6 +1107,17 @@ def mint_native(  # noqa: PLR0912, PLR0915
         str | None,
         typer.Option(help="Specific test case name to mint"),
     ] = None,
+    label: Annotated[
+        str,
+        typer.Option(help="Output slot name under output/ (default: latest)"),
+    ] = "latest",
+    from_replay: Annotated[
+        bool,
+        typer.Option(
+            "--from-replay",
+            help="Author from a replay of the stored native instead of re-running the diagnostic",
+        ),
+    ] = False,
     bump_version: Annotated[
         bool,
         typer.Option(help="Increment test_case_version when authoring the manifest"),
@@ -1171,11 +1141,7 @@ def mint_native(  # noqa: PLR0912, PLR0915
         ref test-cases mint --provider example --bump-version
         ref test-cases mint --provider example --dry-run
     """
-    import tempfile
-
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref.testing import TestCaseRunner
-    from climate_ref_core.regression.capture import capture_execution
     from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
     from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
@@ -1233,72 +1199,72 @@ def mint_native(  # noqa: PLR0912, PLR0915
             failures.append(case_id)
             continue
 
-        datasets = load_datasets_from_yaml(paths.catalog)
-        runner = TestCaseRunner(config=config, datasets=datasets)
-        try:
-            result = runner.run(diag, tc.name, None, clean=True)
-        except Exception as exc:
-            logger.error(f"{case_id}: execution failed during mint: {exc}")
-            failures.append(case_id)
-            continue
-        if not result.successful:
-            logger.error(f"{case_id}: execution was not successful")
-            failures.append(case_id)
-            continue
-
-        defn = result.definition
-        output_dir = defn.output_directory
-        fragment = defn.output_fragment()
-        scratch_root = output_dir.parent
-
-        # Any existing results are wiped to make sure we have a clean slate
         paths.create()
-        if paths.regression.exists():
-            shutil.rmtree(paths.regression)
-        paths.regression.mkdir(parents=True, exist_ok=True)
+        previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
+        # Validate the --from-replay precondition before wiping the slot, so a never-minted
+        # case does not destroy a pre-existing output/<label>/ on its way to failing.
+        if from_replay and (previous is None or not previous.native):
+            logger.error(f"{case_id}: --from-replay needs an existing minted manifest")
+            failures.append(case_id)
+            continue
 
-        with tempfile.TemporaryDirectory() as results_base:
-            results_dir = Path(results_base)
-            committed_digests, native = capture_execution(
-                scratch_root,
-                results_dir,
-                fragment,
-                result,
-                regression_dir=paths.regression,
-                output_dir=output_dir,
-                test_data_dir=paths.test_data_dir,
-            )
+        slot = prepare_slot(paths, label)
 
-            base_dir = results_dir / fragment
-            mismatch = False
-            for relpath, entry in native.items():
-                digest = store.put(base_dir / relpath)
-                if digest != entry.sha256:
-                    logger.error(
-                        f"{case_id}: digest mismatch for {relpath} (store={digest}, captured={entry.sha256})"
-                    )
-                    mismatch = True
-            if mismatch:
-                failures.append(case_id)
-                continue
+        # Populate the slot's native set: either re-execute the diagnostic, or (with
+        # --from-replay) materialise the previously minted native from the store. The
+        # writable store's fetch/has back the materialise, so no separate read store is needed.
+        try:
+            if from_replay and previous is not None:  # previous is non-None by the guard above
+                source = stage_materialise(
+                    diag=diag, tc=tc, paths=paths, manifest=previous, store=store, slot=slot
+                )
+                source_kind = "materialise"
+            else:
+                datasets = load_datasets_from_yaml(paths.catalog)
+                source = stage_execute(
+                    config=config,
+                    diag=diag,
+                    tc=tc,
+                    datasets=datasets,
+                    slot=slot,
+                    execution_dir=None,
+                    clean=True,
+                )
+                source_kind = "execute"
+        except StageError as exc:
+            logger.error(f"{case_id}: {exc}")
+            failures.append(case_id)
+            continue
+        except Exception as exc:
+            logger.error(f"{case_id}: source stage failed during mint: {exc}")
+            failures.append(case_id)
+            continue
 
-        # Author the committed manifest: native block written ONLY here.
-        if paths.manifest.exists():
-            previous = Manifest.load(paths.manifest)
+        committed = stage_build(slot=slot, source=source, paths=paths)
+        native = snapshot_native(slot)
+        errors = stage_upload(
+            slot=slot, native=native, store=store, previous=(previous.native if previous else {})
+        )
+        if errors:
+            for error in errors:
+                logger.error(f"{case_id}: {error}")
+            failures.append(case_id)
+            continue
+
+        # Promote the rebuilt bundle and author the committed manifest: the native block
+        # is written ONLY here.
+        promote_to_baseline(slot, paths)
+        if previous is not None:
             version = previous.test_case_version + 1 if bump_version else previous.test_case_version
         else:
             version = 1
-        _write_test_case_manifest(
-            paths,
-            test_case_version=version,
-            committed=committed_digests,
-            native=native,
-        )
+        _write_test_case_manifest(paths, test_case_version=version, committed=committed, native=native)
+        write_source_stamp(slot, label=label, verb="mint", source=source_kind, test_case_version=version)
 
         minted += 1
         logger.info(
             f"Minted native baseline: {case_id} "
-            f"({len(native)} native file(s), {len(committed_digests)} committed file(s), "
+            f"({len(native)} native file(s), {len(committed)} committed file(s), "
             f"test_case_version={version})"
         )
 
@@ -1310,6 +1276,125 @@ def mint_native(  # noqa: PLR0912, PLR0915
             console.print(f"  - {case}")
         raise typer.Exit(code=1)
     console.print(f"[green]Minted {minted} native baseline(s)[/green]")
+
+
+@app.command(name="build")
+def build_test_case(  # noqa: PLR0912, PLR0915
+    ctx: typer.Context,
+    provider: Annotated[
+        str,
+        typer.Option(help="Provider slug (required, e.g., 'example', 'ilamb')"),
+    ],
+    diagnostic: Annotated[
+        str | None,
+        typer.Option(help="Specific diagnostic slug to build"),
+    ] = None,
+    test_case: Annotated[
+        str | None,
+        typer.Option(help="Specific test case name to build"),
+    ] = None,
+    label: Annotated[
+        str,
+        typer.Option(help="Output slot to rebuild from (default: latest)"),
+    ] = "latest",
+    force_regen: Annotated[
+        bool,
+        typer.Option(help="Promote the rebuilt bundle to the tracked regression baseline"),
+    ] = False,
+) -> None:
+    """
+    Rebuild the committed bundle from an existing output slot, without re-executing.
+
+    Reuses the native already materialised in ``output/<label>/`` (by a previous
+    ``run`` / ``replay`` / ``mint``) to regenerate the slot's committed bundle. The tracked
+    ``regression/`` baseline is only promoted when ``--force-regen`` is given or no baseline
+    exists yet, so a rebuild never silently clobbers a committed baseline.
+
+    Examples
+    --------
+        ref test-cases build --provider example
+        ref test-cases build --provider example --label before --force-regen
+    """
+    from climate_ref.provider_registry import ProviderRegistry
+    from climate_ref_core.regression.manifest import Manifest
+    from climate_ref_core.testing import TestCasePaths
+
+    config: Config = ctx.obj.config
+    db = ctx.obj.database
+    console: Console = ctx.obj.console
+
+    registry = ProviderRegistry.build_from_config(config, db)
+    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
+    if not cases:
+        logger.warning(f"No test cases found for provider {provider!r}")
+        raise typer.Exit(code=0)
+
+    built = 0
+    failures: list[str] = []
+
+    for diag, tc in cases:
+        case_id = f"{provider}/{diag.slug}/{tc.name}"
+        paths = TestCasePaths.from_diagnostic(diag, tc.name)
+        if paths is None:
+            logger.warning(f"Could not determine test case directory for {case_id}")
+            continue
+        slot = paths.output_slot(label)
+        if not slot.exists() or not slot_native_relpaths(slot):
+            logger.error(f"{case_id}: no native in output slot {label!r}; run/replay/mint it first")
+            failures.append(case_id)
+            continue
+        if not paths.catalog.exists():
+            logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
+            failures.append(case_id)
+            continue
+
+        try:
+            source = stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot)
+        except Exception as exc:
+            logger.error(f"{case_id}: failed to rebuild bundle from slot: {exc}")
+            failures.append(case_id)
+            continue
+
+        committed = stage_build(slot=slot, source=source, paths=paths)
+        previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
+        version = previous.test_case_version if previous else 1
+
+        if force_regen or not paths.regression.exists():
+            promote_to_baseline(slot, paths)
+            native = snapshot_native(slot)
+            if previous is not None:
+                _write_test_case_manifest(
+                    paths,
+                    test_case_version=previous.test_case_version,
+                    committed=committed,
+                    native=previous.native,
+                    schema=previous.schema,
+                )
+                if native_is_stale(native, previous.native):
+                    logger.warning(
+                        f"{case_id}: committed bundle rebuilt but the native baseline differs; "
+                        "re-mint with `ref test-cases mint`"
+                    )
+            else:
+                _write_test_case_manifest(paths, test_case_version=1, committed=committed, native={})
+            logger.info(f"Promoted rebuilt bundle to regression baseline: {paths.regression}")
+        else:
+            logger.info(
+                f"Wrote output slot {slot}/regression "
+                "(committed baseline unchanged; use --force-regen to promote it)"
+            )
+
+        write_source_stamp(slot, label=label, verb="build", source="rebuild", test_case_version=version)
+        built += 1
+
+    console.print()
+    if failures:
+        console.print(f"[yellow]Build: {built} built, {len(failures)} failed[/yellow]")
+        console.print("[red]Failed builds:[/red]")
+        for case in failures:
+            console.print(f"  - {case}")
+        raise typer.Exit(code=1)
+    console.print(f"[green]Built {built} committed bundle(s) from output slots[/green]")
 
 
 @app.command(name="check-store")

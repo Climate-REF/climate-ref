@@ -146,7 +146,9 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
             continue
 
         stage_build(slot=slot, source=source, paths=paths)
-        cmp_failures, compared = stage_compare(slot=slot, paths=paths, slug=diag.slug)
+        cmp_failures, compared = stage_compare(
+            slot=slot, paths=paths, slug=diag.slug, expected=manifest.committed
+        )
         write_source_stamp(
             slot,
             label=label,
@@ -333,7 +335,15 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             continue
 
         committed = stage_build(slot=slot, source=source, paths=paths)
-        native = snapshot_native(slot)
+        if from_replay and previous is not None:
+            # --from-replay reuses the already-minted native verbatim: stage_materialise hydrated
+            # the slot's copy in place (placeholders -> concrete paths) while rebuilding, so a fresh
+            # snapshot would re-author manifest.native with non-portable, slot-specific blobs even
+            # though the canonical native baseline is unchanged. Preserve it -- only the committed
+            # bundle is re-derived here -- which also makes the upload below a verified no-op.
+            native = previous.native
+        else:
+            native = snapshot_native(slot)
         errors = stage_upload(
             slot=slot, native=native, store=store, previous=(previous.native if previous else {})
         )

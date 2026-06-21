@@ -40,6 +40,8 @@ from climate_ref_core.regression.capture import build_native_snapshot, write_com
 from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
 if TYPE_CHECKING:
+    from collections.abc import Iterable
+
     from climate_ref.config import Config
     from climate_ref_core.datasets import ExecutionDatasetCollection
     from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
@@ -238,27 +240,50 @@ def stage_upload(
     return errors
 
 
-def stage_compare(*, slot: Path, paths: TestCasePaths, slug: str) -> tuple[list[str], list[str]]:
+def stage_compare(
+    *, slot: Path, paths: TestCasePaths, slug: str, expected: Iterable[str]
+) -> tuple[list[str], list[str]]:
     """
     Compare a slot's rebuilt bundle against the tracked committed baseline.
 
+    ``expected`` is the committed bundle's source of truth -- the filenames the manifest
+    records under ``committed``. Every expected file must be present both in the tracked
+    ``regression/`` baseline and in the slot's regenerated bundle, and must match within
+    tolerance; a file missing on either side, or an empty expected set, is a hard failure.
+    Driving the comparison from the manifest (rather than from whatever happens to exist on
+    disk) stops a replay reporting success when the committed baseline is absent or incomplete.
+
     Both sides are already placeholder-sanitised, so no replacements are needed.
-    Returns ``(failures, compared)`` -- the drift messages and the filenames compared.
+    Returns ``(failures, compared)`` -- the drift/missing messages and the filenames compared.
     """
     slot_regression = slot / SLOT_REGRESSION_DIRNAME
-    compared = [f for f in COMMITTED_BUNDLE_FILES if (paths.regression / f).exists()]
+    expected_files = list(expected)
+    if not expected_files:
+        return ["manifest records no committed bundle to compare against"], []
+
     failures: list[str] = []
-    for filename in compared:
+    compared: list[str] = []
+    for filename in expected_files:
+        baseline = paths.regression / filename
+        regenerated = slot_regression / filename
+        if not baseline.exists():
+            failures.append(f"committed baseline file missing from regression/: {filename}")
+            continue
+        if not regenerated.exists():
+            failures.append(f"rebuilt bundle did not regenerate committed file: {filename}")
+            continue
         try:
             assert_bundle_regression(
-                paths.regression / filename,
-                slot_regression / filename,
+                baseline,
+                regenerated,
                 slug=slug,
                 tol=Tolerance(),
                 replacements={},
             )
         except AssertionError as exc:
             failures.append(str(exc))
+        else:
+            compared.append(filename)
     return failures, compared
 
 

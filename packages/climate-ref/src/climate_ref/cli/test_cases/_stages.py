@@ -37,7 +37,6 @@ from climate_ref_core.regression import (
     materialise_native,
 )
 from climate_ref_core.regression.capture import build_native_snapshot, write_committed_bundle
-from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
 if TYPE_CHECKING:
     from collections.abc import Iterable
@@ -47,7 +46,7 @@ if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
     from climate_ref_core.regression.manifest import Manifest, NativeEntry
     from climate_ref_core.regression.store import NativeStore
-    from climate_ref_core.testing import TestCase
+    from climate_ref_core.testing import TestCase, TestCasePaths
 
 SLOT_REGRESSION_DIRNAME = "regression"
 SLOT_SOURCE_STAMP = ".source.json"
@@ -157,6 +156,8 @@ def stage_rebuild_from_slot(
     so the rebuilt bundle is written into the slot (referencing the slot). No execution and
     no store access -- this is the shared core of ``replay`` (after a fetch) and ``build``.
     """
+    from climate_ref_core.testing import load_datasets_from_yaml
+
     from_placeholders(slot, output_dir=slot, test_data_dir=paths.test_data_dir)
     datasets = load_datasets_from_yaml(paths.catalog)
     definition = ExecutionDefinition(

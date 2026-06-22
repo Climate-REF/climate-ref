@@ -3,36 +3,10 @@ Integration tests for the RFC-0005 native-baseline round-trip.
 
 These tests prove the native-baseline lifecycle ``run -> mint -> sync -> replay``
 end-to-end against a *local* content-addressed store
-(:class:`~climate_ref_core.regression.LocalFilesystemStore`) created inside
-``tmp_path``.
-Everything runs fully offline: no R2, no ESGF, no network, and no credentials.
+(:class:`~climate_ref_core.regression.LocalFilesystemStore`) created inside ``tmp_path``.
 
-Tests
------
-1. **Synthetic nested-output round-trip** (the main gate) — a small synthetic
-   diagnostic writes *nested* native outputs under a stable ``executions/recipe/``
-   sub-directory and emits a CMEC ``output.json`` whose ``html`` / ``provenance.log``
-   dict *keys* are absolute paths.
-   It exercises both the curated nested-native capture path and the M2
-   absolute-path key-sanitisation path in
-   :func:`~climate_ref_core.regression.assert_bundle_regression`.
-   Its :meth:`build_execution_result` genuinely *reads back* a nested native file,
-   so the round-trip fails if that file is missing after materialisation.
+This runs offline, without any credentials.
 
-2. **Example smoke round-trip** — the real ``example`` provider's
-   ``GlobalMeanTimeseries`` through ``TestCaseRunner`` on offline sample data,
-   minted to a ``tmp_path`` store, synced, replayed, and tolerantly compared.
-   Skipped (with a clear reason) when the sample-data fixtures are unavailable.
-
-3. **Negative — float drift** — perturbing a committed float beyond ``Tolerance()``
-   raises a path-precise ``AssertionError``; a within-tolerance perturbation passes.
-
-4. **Negative — missing blob** — deleting a referenced blob from the store makes
-   the sync/replay path fail loudly, naming the digest and relpath.
-
-5. **CLI-level tests** — driving ``ref test-cases mint`` / ``sync`` / ``replay``
-   through the project's CLI harness against a ``tmp_path`` store, asserting a
-   zero exit on success and a non-zero exit on forced failure.
 
 Notes on the shipped capture mechanics (verified against the source)
 --------------------------------------------------------------------
@@ -93,11 +67,6 @@ _RECIPE_SUBDIR = "executions/recipe"
 # The nested native data file the synthetic diagnostic writes and reads back.
 # Relative to the execution output directory.
 _NATIVE_DATA_RELPATH = f"{_RECIPE_SUBDIR}/data/synth_data.bin"
-
-
-# ---------------------------------------------------------------------------
-# Synthetic nested-output diagnostic
-# ---------------------------------------------------------------------------
 
 
 class _SyntheticNestedDiagnostic(Diagnostic):
@@ -241,11 +210,6 @@ class _SyntheticNestedDiagnostic(Diagnostic):
         )
 
 
-# ---------------------------------------------------------------------------
-# Provider + synthetic catalog helpers
-# ---------------------------------------------------------------------------
-
-
 def _build_synthetic_provider() -> DiagnosticProvider:
     """Return a :class:`DiagnosticProvider` carrying the synthetic diagnostic."""
     provider = DiagnosticProvider("SyntheticTest", "0.0.1", slug="synthetic-test")
@@ -347,17 +311,12 @@ def _capture_synthetic(
     )
 
 
-# ---------------------------------------------------------------------------
-# 1. Synthetic nested-output round-trip (the main gate)
-# ---------------------------------------------------------------------------
-
-
 class TestSyntheticNestedRoundTrip:
     """
     Full ``run -> mint -> sync -> replay`` on the synthetic nested-output diagnostic.
 
-    This is the main gate: every layer of the native-baseline system is exercised
-    on nested native outputs with absolute-path dict keys.
+    This exercises every layer of the native-baseline system on nested native outputs
+    with absolute-path dict keys.
     """
 
     def test_run_mint_sync_replay(self, tmp_path: Path) -> None:
@@ -530,11 +489,6 @@ class TestSyntheticNestedRoundTrip:
             definition.diagnostic.build_execution_result(replay_definition)
 
 
-# ---------------------------------------------------------------------------
-# 2. Example smoke round-trip
-# ---------------------------------------------------------------------------
-
-
 @pytest.mark.slow
 class TestExampleSmokeRoundTrip:
     """
@@ -667,11 +621,6 @@ class TestExampleSmokeRoundTrip:
         )
 
 
-# ---------------------------------------------------------------------------
-# 3. Negative — float drift beyond tolerance
-# ---------------------------------------------------------------------------
-
-
 class TestNegativeFloatDrift:
     """Perturbing a committed float beyond tolerance produces a path-precise failure."""
 
@@ -750,11 +699,6 @@ class TestNegativeFloatDrift:
         )
 
 
-# ---------------------------------------------------------------------------
-# 4. Negative — missing blob
-# ---------------------------------------------------------------------------
-
-
 class TestNegativeMissingBlob:
     """Deleting a referenced blob causes a loud, actionable failure."""
 
@@ -826,11 +770,6 @@ class TestNegativeMissingBlob:
         assert some_entry.sha256 in str(exc_info.value), (
             f"FileNotFoundError must name the missing digest {some_entry.sha256!r}"
         )
-
-
-# ---------------------------------------------------------------------------
-# 5. CLI-level tests
-# ---------------------------------------------------------------------------
 
 
 def _synthetic_cli_case(tmp_path: Path) -> tuple[MagicMock, Diagnostic, MagicMock]:
@@ -947,7 +886,8 @@ class TestCliMintSyncReplay:
         """
         Corrupting the committed bundle after minting makes ``replay`` exit non-zero.
 
-        The committed integrity check fails before native materialisation.
+        The tolerant comparison cannot reconcile the corrupted committed baseline against the
+        regenerated bundle (here it no longer parses as JSON), so replay reports drift.
         """
         registry, diag, _tc = _synthetic_cli_case(tmp_path)
         config = _local_store_config(tmp_path)

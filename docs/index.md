@@ -6,7 +6,7 @@ The Rapid Evaluation Framework(REF) is a set of Python packages that provide the
 The aim is to be able to evaluate climate data against a set of reference data in near-real time as datasets are published,
 and to update any produced data and figures as new datasets become available.
 This is somewhat analogous to a CI/CD pipeline for climate data.
-To get a better idea of what REF is and does, see this [overview](nutshell.md).
+To get a better idea of what REF is and does, see this [overview](concepts.md).
 
 The REF is designed to be run in a variety of environments, including local execution, cloud-based execution, and execution on HPC systems.
 The REF can be run as a standalone application, as a set of services, or as a set of docker containers.
@@ -84,7 +84,7 @@ Some other potential points of interest:
 
 * [Installation][installation]
 * [Modelling centre onboarding](getting-started/modelling-centres.md)
-* [Basic Concepts][basic-concepts]
+* [Concepts](concepts.md)
 * [Architecture overview][architecture]
 * [How to Guides][how-to-guides]
 

@@ -9,7 +9,7 @@ repo_url: https://github.com/Climate-REF/climate-ref
 nav:
   - Rapid Evaluation Framework: index.md
   - Installation: installation.md
-  - In a Nutshell: nutshell.md
+  - Concepts: concepts.md
   - Getting Started:
       - Modelling Centres: getting-started/modelling-centres.md
       - Configure: getting-started/01-configure.md
@@ -37,9 +37,7 @@ nav:
       - how-to-guides/testing-diagnostics.md
       - how-to-guides/docker_deployment.md
   - Further background:
-      - Basic Concepts: background/basic-concepts.md
       - Architecture: background/architecture.md
-      - Explanation: background/explanation.md
       - Datasets: background/datasets.md
       - Regression Baselines: background/regression-baselines.md
       - API Surface: api-surface.md

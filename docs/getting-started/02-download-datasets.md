@@ -1,6 +1,6 @@
 # Download Required Datasets
 
-This tutorial covers how to fetch all reference datasets needed to run Climate-REF diagnostics. You may see references to *fetch*, *download*, and *retrieve* all of which refer to the process of copying data from one computer system to another. [Ingesting](../nutshell.md) these datasets is covered in the next tutorial.
+This tutorial covers how to fetch all reference datasets needed to run Climate-REF diagnostics. You may see references to *fetch*, *download*, and *retrieve* all of which refer to the process of copying data from one computer system to another. [Ingesting](../concepts.md) these datasets is covered in the next tutorial.
 
 These commands should be rerun after new releases of Climate-REF to ensure you have the latest datasets.
 

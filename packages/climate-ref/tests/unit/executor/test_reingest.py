@@ -833,9 +833,8 @@ class TestReingestExecution:
         assert new_count == original_count
 
         # Fragments are 4 levels deep: provider/diag/group_short/execution_id.
-        # _remove_dir removes the leaf (execution_id) dir; intermediate dirs may remain
-        # as empty parents — those are benign. Assert that no non-empty leaf dirs
-        # (at depth 4) exist in the results root beyond known execution fragments.
+        # _remove_dir removes the leaf (execution_id) dir, but may orphan empty parent dirs.
+        # Check that no non-empty leaf dirs exist in the results root beyond known execution fragments.
         existing_fragments = {ex.output_fragment for ex in reingest_db.session.query(Execution).all()}
         leaked_leaves = []
         if results_root.exists():
@@ -866,13 +865,8 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """Regression: a soft-fail in handle_execution_result must not leave a committed
+        """A soft-fail in handle_execution_result must not leave a committed
         Execution row with successful=False (orphan) while reporting success to the caller.
-
-        Before the fix, handle_execution_result would mark the execution failed and return
-        normally; reingest_execution then fell through to the success log and returned True,
-        committing the failed row.  After the fix, the soft-fail aborts the savepoint and
-        returns False, leaving the DB count unchanged and the original execution intact.
         """
         original_execution_id = reingest_execution_obj.id
         original_count = reingest_db.session.query(Execution).count()

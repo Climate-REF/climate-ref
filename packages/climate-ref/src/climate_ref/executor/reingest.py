@@ -312,10 +312,8 @@ def reingest_execution(
                         )
                     )
 
-                # Ingest within the SAME savepoint so that a failure rolls the
-                # new Execution row (and its dataset links) back together with
-                # the partial ingest, instead of leaving an orphan row that the
-                # caller's outer transaction would commit.
+                # Ingest within the SAME savepoint so that a failure rolls the new Execution row
+                # (and its dataset links) back together with the partial ingest.
                 handle_execution_result(
                     config,
                     database,
@@ -324,10 +322,8 @@ def reingest_execution(
                     update_dirty=False,
                 )
 
-                # handle_execution_result catches ingestion errors internally,
-                # marks the execution failed, and returns without raising. Treat
-                # a non-successful outcome as a failed reingest: abort the
-                # savepoint so the new row is rolled back.
+                # handle_execution_result catches ingestion errors internally
+                # Treat a non-successful outcome as a failed reingest.
                 if new_execution.successful is not True:
                     logger.warning(
                         f"Reingest of execution {execution.id} failed during result ingestion; "

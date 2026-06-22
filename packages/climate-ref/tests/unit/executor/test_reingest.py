@@ -797,7 +797,7 @@ class TestReingestExecution:
         assert len(new_execution.datasets) == 0
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_ingestion_failure_still_creates_execution_and_results_dir(
+    def test_ingestion_failure_returns_false_and_rolls_back(
         self,
         config,
         reingest_db,
@@ -807,15 +807,16 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """handle_execution_result swallows ingestion errors; reingest still creates new execution."""
+        """A soft-fail in handle_execution_result must return False and not commit a new Execution row."""
         original_count = reingest_db.session.query(Execution).count()
+        results_root = config.paths.results
 
         mock_result = mock_result_factory(
             scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
-        # Corrupt the metric bundle
+        # Corrupt the metric bundle so handle_execution_result soft-fails
         (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
 
         ok = reingest_execution(
@@ -825,16 +826,78 @@ class TestReingestExecution:
             provider_registry=mock_provider_registry,
         )
         reingest_db.session.commit()
-        assert ok is True
+        assert ok is False
 
+        # No new Execution row should have been committed
         new_count = reingest_db.session.query(Execution).count()
-        assert new_count == original_count + 1
+        assert new_count == original_count
 
-        new_execution = (
-            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        # Fragments are 4 levels deep: provider/diag/group_short/execution_id.
+        # _remove_dir removes the leaf (execution_id) dir, but may orphan empty parent dirs.
+        # Check that no non-empty leaf dirs exist in the results root beyond known execution fragments.
+        existing_fragments = {ex.output_fragment for ex in reingest_db.session.query(Execution).all()}
+        leaked_leaves = []
+        if results_root.exists():
+            for p1 in results_root.iterdir():
+                if not p1.is_dir():
+                    continue
+                for p2 in p1.iterdir():
+                    if not p2.is_dir():
+                        continue
+                    for p3 in p2.iterdir():
+                        if not p3.is_dir():
+                            continue
+                        for p4 in p3.iterdir():
+                            if p4.is_dir():
+                                fragment = f"{p1.name}/{p2.name}/{p3.name}/{p4.name}"
+                                if fragment not in existing_fragments:
+                                    leaked_leaves.append(p4)
+        assert not leaked_leaves, f"Orphaned results fragment directories leaked: {leaked_leaves}"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_soft_fail_does_not_leave_orphan_execution(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """A soft-fail in handle_execution_result must not leave a committed
+        Execution row with successful=False (orphan) while reporting success to the caller.
+        """
+        original_execution_id = reingest_execution_obj.id
+        original_count = reingest_db.session.query(Execution).count()
+
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
-        results_dir = config.paths.results / new_execution.output_fragment
-        assert results_dir.exists(), "Results directory should exist even when ingestion had errors"
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        # Corrupt the metric bundle so handle_execution_result soft-fails
+        (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+
+        assert ok is False, "reingest_execution must return False when ingestion soft-fails"
+
+        # The Execution count must be unchanged — no orphan row was committed
+        assert reingest_db.session.query(Execution).count() == original_count, (
+            "No new Execution row should be committed when ingestion soft-fails"
+        )
+
+        # The original execution must remain intact and successful
+        original = reingest_db.session.get(Execution, original_execution_id)
+        assert original is not None
+        assert original.successful is True, "Original execution must remain successful after failed reingest"
 
     def test_scratch_directory_preserved_after_success(
         self,

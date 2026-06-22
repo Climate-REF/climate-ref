@@ -54,6 +54,12 @@ class _ReingestSavepointAbort(Exception):
     """Internal sentinel used to roll back the savepoint on a soft-fail path."""
 
 
+def _remove_dir(path: "Path | None") -> None:
+    """Remove a directory if it exists, ignoring missing paths."""
+    if path is not None and path.exists():
+        shutil.rmtree(path)
+
+
 def reconstruct_execution_definition(
     config: "Config",
     execution: Execution,
@@ -247,6 +253,7 @@ def reingest_execution(
 
     new_fragment: str | None = None
     new_scratch_dir: Path | None = None
+    new_results_dir: Path | None = None
     new_execution: Execution | None = None
 
     try:
@@ -270,6 +277,7 @@ def reingest_execution(
                 )
 
                 new_scratch_dir = config.paths.scratch / new_fragment
+                new_results_dir = config.paths.results / new_fragment
                 new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(scratch_dir, new_scratch_dir)
                 # Re-point any absolute paths embedded in the copied artifacts
@@ -303,26 +311,35 @@ def reingest_execution(
                             dataset_id=dataset.id,
                         )
                     )
+
+                # Ingest within the SAME savepoint so that a failure rolls the new Execution row
+                # (and its dataset links) back together with the partial ingest.
+                handle_execution_result(
+                    config,
+                    database,
+                    new_execution,
+                    result,
+                    update_dirty=False,
+                )
+
+                # handle_execution_result catches ingestion errors internally
+                # Treat a non-successful outcome as a failed reingest.
+                if new_execution.successful is not True:
+                    logger.warning(
+                        f"Reingest of execution {execution.id} failed during result ingestion; "
+                        f"rolling back the new execution."
+                    )
+                    raise _ReingestSavepointAbort
+
         except _ReingestSavepointAbort:
-            if new_scratch_dir is not None and new_scratch_dir.exists():
-                shutil.rmtree(new_scratch_dir)
+            _remove_dir(new_scratch_dir)
+            _remove_dir(new_results_dir)
             return False
 
-        handle_execution_result(
-            config,
-            database,
-            new_execution,
-            result,
-            update_dirty=False,
-        )
     except Exception:
         logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
-        if new_scratch_dir is not None and new_scratch_dir.exists():
-            shutil.rmtree(new_scratch_dir)
-        if new_fragment is not None:
-            new_results_dir = config.paths.results / new_fragment
-            if new_results_dir.exists():
-                shutil.rmtree(new_results_dir)
+        _remove_dir(new_scratch_dir)
+        _remove_dir(new_results_dir)
         return False
 
     logger.info(f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}")

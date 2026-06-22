@@ -18,6 +18,7 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy.orm import object_session, selectinload, with_polymorphic
 
 from climate_ref.datasets import get_slug_column
 from climate_ref.executor.fragment import (
@@ -25,6 +26,7 @@ from climate_ref.executor.fragment import (
     assign_execution_fragment,
 )
 from climate_ref.executor.result_handling import handle_execution_result
+from climate_ref.models.dataset import Dataset
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
@@ -45,7 +47,6 @@ if TYPE_CHECKING:
 
     from climate_ref.config import Config
     from climate_ref.database import Database
-    from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.diagnostics import Diagnostic
 
@@ -93,9 +94,27 @@ def reconstruct_execution_definition(
     """
     execution_group = execution.execution_group
 
+    session = object_session(execution)
+    if session is None:  # pragma: no cover - executions are always session-bound here
+        raise RuntimeError("reconstruct_execution_definition requires a session-bound execution")
+
+    # Load the execution's linked datasets, eager-loading both their polymorphic
+    # subclass columns (``with_polymorphic`` -> no per-row subclass SELECT in
+    # ``_extract_dataset_attributes``) and their files (``selectinload`` -> no
+    # per-dataset SELECT in the ``for file in dataset.files`` loop below). This
+    # keeps the query count constant rather than scaling with the dataset count.
+    dataset_poly = with_polymorphic(Dataset, "*")
+    datasets = (
+        session.query(dataset_poly)
+        .join(execution_datasets, execution_datasets.c.dataset_id == dataset_poly.id)
+        .where(execution_datasets.c.execution_id == execution.id)
+        .options(selectinload(dataset_poly.files))
+        .all()
+    )
+
     # Build DatasetCollection per source type from the execution's linked datasets
     datasets_by_type: dict[SourceDatasetType, list[Any]] = defaultdict(list)
-    for dataset in execution.datasets:
+    for dataset in datasets:
         datasets_by_type[dataset.dataset_type].append(dataset)
 
     collection: dict[SourceDatasetType | str, DatasetCollection] = {}
@@ -304,13 +323,12 @@ def reingest_execution(
                     raise _ReingestSavepointAbort
 
                 # Copy dataset links from the original execution
-                for dataset in execution.datasets:
-                    database.session.execute(
-                        execution_datasets.insert().values(
-                            execution_id=new_execution.id,
-                            dataset_id=dataset.id,
-                        )
-                    )
+                link_rows = [
+                    {"execution_id": new_execution.id, "dataset_id": dataset.id}
+                    for dataset in execution.datasets
+                ]
+                if link_rows:
+                    database.session.execute(execution_datasets.insert(), link_rows)
 
                 # Ingest within the SAME savepoint so that a failure rolls the new Execution row
                 # (and its dataset links) back together with the partial ingest.
@@ -330,7 +348,6 @@ def reingest_execution(
                         f"rolling back the new execution."
                     )
                     raise _ReingestSavepointAbort
-
         except _ReingestSavepointAbort:
             _remove_dir(new_scratch_dir)
             _remove_dir(new_results_dir)
@@ -392,6 +409,14 @@ def get_executions_for_reingest(
     if execution_group_ids:
         id_set = set(execution_group_ids)
         results = [(eg, ex) for eg, ex in results if eg.id in id_set]
+
+    group_ids = [eg.id for eg, _ in results]
+    if group_ids:
+        # Warm the session identity map so eg.executions[0] below does not
+        # issue one SELECT per group.
+        database.session.query(ExecutionGroup).filter(ExecutionGroup.id.in_(group_ids)).options(
+            selectinload(ExecutionGroup.executions)
+        ).all()
 
     # Filter out entries with no execution, then select the oldest per group.
     # ExecutionGroup.executions is ordered by created_at ascending,

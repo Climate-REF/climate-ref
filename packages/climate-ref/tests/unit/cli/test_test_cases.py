@@ -1373,6 +1373,20 @@ class TestSyncCommand:
 
         invoke_cli(["test-cases", "sync", "--provider", "example"], expected_exit_code=1)
 
+    def test_sync_nonexistent_provider(self, invoke_cli, mocker):
+        """sync with an unknown provider exits 1 rather than silently syncing nothing."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "sync", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+        assert "not configured" in result.stderr
+
 
 class TestStageCompare:
     """`stage_compare` drives replay verification from the manifest's committed set."""
@@ -1498,6 +1512,20 @@ class TestReplayCommand:
             expected_exit_code=1,
         )
         assert "not yet minted" in result.stderr.lower() or "mint" in result.stderr.lower()
+
+    def test_replay_nonexistent_provider(self, invoke_cli, mocker):
+        """replay with an unknown provider exits 1 rather than reporting 'no test cases'."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "replay", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+        assert "not configured" in result.stderr
 
     def test_replay_integrity_mismatch_warns_and_continues(self, invoke_cli, mocker, tmp_path):
         """An integrity mismatch is advisory, not a gate."""
@@ -1655,6 +1683,25 @@ class TestMintCommand:
         store.preflight.assert_called_once()
         # Fail-fast: the diagnostic runner must never have been reached.
         store.put.assert_not_called()
+
+    def test_mint_nonexistent_provider(self, invoke_cli, mocker):
+        """mint with an unknown provider exits 1 (after a passing store preflight)."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store = MagicMock()  # preflight passes (no side effect)
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=store,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+        assert "not configured" in result.stderr
 
     def test_mint_dry_run_lists_without_running(self, invoke_cli, mocker):
         """--dry-run preflights + lists the cases, but runs no diagnostics and uploads nothing."""
@@ -1873,6 +1920,20 @@ class TestBuildCommand:
         )
         assert "no native in output slot" in result.stderr.lower()
 
+    def test_build_nonexistent_provider(self, invoke_cli, mocker):
+        """build with an unknown provider exits 1 rather than reporting 'no test cases'."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "build", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+        assert "not configured" in result.stderr
+
     def test_build_rebuilds_from_slot_without_executing(self, invoke_cli, mocker, tmp_path):
         """build regenerates the committed bundle from an existing slot, never re-running."""
         paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
@@ -2069,6 +2130,18 @@ class TestCIGateCommand:
         result = invoke_cli(["test-cases", "ci-gate"])
         assert result.exit_code == 0
         assert "replay" in result.output
+
+    def test_ci_gate_nonexistent_provider(self, invoke_cli, mocker, tmp_path):
+        # An unknown provider must fail closed (exit 1), not gate nothing and silently exit 0.
+        # The registry mock only knows the 'example' provider.
+        self._setup(mocker, tmp_path, current_version=1)
+
+        result = invoke_cli(
+            ["test-cases", "ci-gate", "--provider", "nonexistent"],
+            expected_exit_code=1,
+        )
+        assert result.exit_code == 1
+        assert "not configured" in result.stderr
 
     def test_seeding_without_native_skips(self, invoke_cli, mocker, tmp_path):
         # Current manifest present with an empty native set, no base manifest -> seeding -> SKIP.

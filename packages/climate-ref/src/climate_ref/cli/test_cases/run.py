@@ -19,7 +19,7 @@ from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_fo
 from climate_ref.cli._utils import format_size
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
-from climate_ref.cli.test_cases._common import _write_test_case_manifest
+from climate_ref.cli.test_cases._common import _validate_provider_in_registry, _write_test_case_manifest
 from climate_ref.cli.test_cases._stages import (
     StageError,
     native_is_stale,
@@ -321,17 +321,8 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     registry = ProviderRegistry.build_from_config(config, db)
 
     # Find the provider
-    provider_instance = None
-    for p in registry.providers:
-        if p.slug == provider:
-            provider_instance = p
-            break
-
-    if provider_instance is None:
-        logger.error(f"Provider '{provider}' not found")
-        available = [p.slug for p in registry.providers]
-        logger.error(f"Available providers: {available}")
-        raise typer.Exit(code=1)
+    _validate_provider_in_registry(registry, provider)
+    provider_instance = next(p for p in registry.providers if p.slug == provider)
 
     # Collect test cases to run
     test_cases_to_run: list[tuple[Diagnostic, TestCase]] = []

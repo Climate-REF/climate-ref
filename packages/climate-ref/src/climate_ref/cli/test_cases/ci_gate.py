@@ -17,7 +17,7 @@ from rich.table import Table
 
 from climate_ref.cli._git_utils import get_repo_for_path
 from climate_ref.cli.test_cases._app import app
-from climate_ref.cli.test_cases._common import _iter_test_cases
+from climate_ref.cli.test_cases._common import _iter_test_cases, _validate_provider_in_registry
 from climate_ref.config import Config
 
 if TYPE_CHECKING:
@@ -194,6 +194,7 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
     source_root_cache: dict[str, str | None] = {}
 
     registry = ProviderRegistry.build_from_config(config, db)
+    _validate_provider_in_registry(registry, provider)
 
     decisions: list[dict[str, str]] = []
     has_failure = False

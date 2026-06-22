@@ -17,7 +17,11 @@ import typer
 from loguru import logger
 
 from climate_ref.cli.test_cases._app import app
-from climate_ref.cli.test_cases._common import _iter_test_cases, _write_test_case_manifest
+from climate_ref.cli.test_cases._common import (
+    _iter_test_cases,
+    _validate_provider_in_registry,
+    _write_test_case_manifest,
+)
 from climate_ref.cli.test_cases._stages import (
     StageError,
     native_is_stale,
@@ -83,6 +87,7 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
     console: Console = ctx.obj.console
 
     registry = ProviderRegistry.build_from_config(config, db)
+    _validate_provider_in_registry(registry, provider)
     store = build_native_store(config.native_store, writable=False)
 
     cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
@@ -265,6 +270,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         raise typer.Exit(code=1) from exc
 
     registry = ProviderRegistry.build_from_config(config, db)
+    _validate_provider_in_registry(registry, provider)
     cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
     if not cases:
         logger.warning(f"No test cases found for provider {provider!r}")
@@ -426,6 +432,7 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     console: Console = ctx.obj.console
 
     registry = ProviderRegistry.build_from_config(config, db)
+    _validate_provider_in_registry(registry, provider)
     cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
     if not cases:
         logger.warning(f"No test cases found for provider {provider!r}")

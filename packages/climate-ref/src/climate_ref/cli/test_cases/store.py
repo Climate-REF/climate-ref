@@ -15,7 +15,7 @@ import typer
 from loguru import logger
 
 from climate_ref.cli.test_cases._app import app
-from climate_ref.cli.test_cases._common import _iter_test_cases
+from climate_ref.cli.test_cases._common import _iter_test_cases, _validate_provider_in_registry
 from climate_ref.config import Config
 
 if TYPE_CHECKING:
@@ -63,6 +63,7 @@ def sync_native(
     console: Console = ctx.obj.console
 
     registry = ProviderRegistry.build_from_config(config, db)
+    _validate_provider_in_registry(registry, provider)
     store = build_native_store(config.native_store, writable=False)
 
     # When a specific case is named, a missing manifest is a hard failure.

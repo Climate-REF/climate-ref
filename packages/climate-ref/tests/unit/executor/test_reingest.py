@@ -7,6 +7,7 @@ import pytest
 import yaml
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
+from sqlalchemy import event
 
 from climate_ref.executor.reingest import (
     _extract_dataset_attributes,
@@ -16,7 +17,7 @@ from climate_ref.executor.reingest import (
 )
 from climate_ref.executor.result_handling import ingest_execution_result
 from climate_ref.models import ScalarMetricValue, SeriesMetricValue
-from climate_ref.models.dataset import CMIP6Dataset
+from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
 from climate_ref.models.execution import (
     Execution,
@@ -182,6 +183,88 @@ def _patch_build_result(mocker, registry, mock_result):
     return diagnostic
 
 
+def _count_selects(bind):
+    """Attach a SELECT counter to ``bind``; returns (counter, listener) for teardown."""
+    counter = {"n": 0}
+
+    def _listener(conn, cursor, statement, *args):
+        if statement.lstrip().upper().startswith("SELECT"):
+            counter["n"] += 1
+
+    event.listen(bind, "before_cursor_execute", _listener)
+    return counter, _listener
+
+
+def _seed_execution_with_datasets(db, n_datasets, n_files_per_dataset, *, suffix=""):
+    """Create an execution linked to ``n_datasets`` CMIP6 datasets, each with files.
+
+    ``suffix`` keeps the unique ``slug``/``instance_id`` values distinct so the
+    helper can be called more than once against the same database.
+    """
+    with db.session.begin():
+        provider_model = ProviderModel(
+            name=f"qc_provider{suffix}", slug=f"qc_provider{suffix}", version="v0.1.0"
+        )
+        db.session.add(provider_model)
+        db.session.flush()
+
+        diag_model = DiagnosticModel(name="qc", slug=f"qc{suffix}", provider_id=provider_model.id)
+        db.session.add(diag_model)
+        db.session.flush()
+
+        eg = ExecutionGroup(
+            key=f"qc-key{suffix}",
+            diagnostic_id=diag_model.id,
+            selectors={"cmip6": [["source_id", "ACCESS-ESM1-5"]]},
+            dirty=False,
+        )
+        db.session.add(eg)
+        db.session.flush()
+
+        execution = Execution(
+            execution_group_id=eg.id,
+            successful=True,
+            output_fragment=f"qc_provider{suffix}/qc/abc123",
+            dataset_hash="hash-qc",
+        )
+        db.session.add(execution)
+        db.session.flush()
+
+        for i in range(n_datasets):
+            dataset = CMIP6Dataset(
+                slug=f"qc-dataset{suffix}-{i}.tas.gn",
+                instance_id=f"CMIP6.qc{suffix}.tas.{i}",
+                variable_id="tas",
+                source_id="ACCESS-ESM1-5",
+                experiment_id="historical",
+                table_id="Amon",
+                grid_label="gn",
+                member_id="r1i1p1f1",
+                variant_label="r1i1p1f1",
+                version="v20200101",
+                activity_id="CMIP",
+                institution_id="CSIRO",
+            )
+            db.session.add(dataset)
+            db.session.flush()
+
+            for j in range(n_files_per_dataset):
+                db.session.add(
+                    DatasetFile(
+                        dataset_id=dataset.id,
+                        path=f"/data/qc{suffix}-{i}-{j}.nc",
+                        start_time="2000-01-01",
+                        end_time="2000-12-31",
+                    )
+                )
+
+            db.session.execute(
+                execution_datasets.insert().values(execution_id=execution.id, dataset_id=dataset.id)
+            )
+
+    return db.session.get(Execution, execution.id)
+
+
 class TestExtractDatasetAttributes:
     def test_extracts_cmip6_attributes(self, db_seeded):
         dataset = db_seeded.session.query(CMIP6Dataset).first()
@@ -281,6 +364,41 @@ class TestReconstructExecutionDefinition:
         assert definition.key == "recon-test"
         if dataset:
             assert SourceDatasetType.CMIP6 in definition.datasets
+
+    def test_query_count_is_constant_in_dataset_count(self, db, config, provider):
+        """Reconstruction must not issue one query per dataset/file (no N+1).
+
+        With files eager-loaded via a single ``selectinload`` query, the SELECT
+        count for reconstruction is a small constant independent of how many
+        datasets (and files) the execution links. Before the eager load, the
+        inner ``for file in dataset.files`` loop issued one SELECT per dataset,
+        so the count grew with the dataset count and this assertion would fail.
+        """
+        diagnostic = provider.get("mock")
+
+        def _count_for(n_datasets, suffix):
+            execution = _seed_execution_with_datasets(db, n_datasets, n_files_per_dataset=3, suffix=suffix)
+            db.session.expire_all()  # force reconstruction to actually hit the DB
+            bind = db.session.get_bind()
+            counter, listener = _count_selects(bind)
+            try:
+                reconstruct_execution_definition(config, execution, diagnostic)
+            finally:
+                event.remove(bind, "before_cursor_execute", listener)
+            # Close the read-only transaction autobegun by the measured query so a
+            # subsequent ``session.begin()`` (for the next seed) does not collide.
+            db.session.rollback()
+            return counter["n"]
+
+        few = _count_for(1, suffix="-few")
+        many = _count_for(8, suffix="-many")
+
+        assert many == few, (
+            f"reconstruct_execution_definition scales queries with dataset count: "
+            f"1 dataset -> {few} SELECTs, 8 datasets -> {many} SELECTs"
+        )
+        # Sanity: the SELECT count is a small constant, not zero (it really queried).
+        assert 0 < few <= 6, f"expected a small constant SELECT count, got {few}"
 
 
 class TestReingestExecution:

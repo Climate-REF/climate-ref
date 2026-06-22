@@ -191,6 +191,28 @@ class TestDumpLoad:
         with pytest.raises(ValueError, match="Invalid sha256 digest"):
             Manifest.load(p)
 
+    @pytest.mark.parametrize("bad_schema", [2, 0, "1"])
+    def test_load_rejects_unknown_schema(self, bad_schema: object) -> None:
+        payload = {
+            "schema": bad_schema,
+            "test_case_version": 1,
+            "committed": {},
+            "native": {},
+        }
+        with pytest.raises(ValueError, match="unsupported schema"):
+            Manifest.loads(json.dumps(payload))
+
+    @pytest.mark.parametrize("bad_size", [-1, 3.0, "10", True])
+    def test_load_rejects_invalid_native_size(self, bad_size: object) -> None:
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": 1,
+            "committed": {},
+            "native": {"file.nc": {"sha256": "aa" * 32, "size": bad_size}},
+        }
+        with pytest.raises(ValueError, match="invalid size"):
+            Manifest.loads(json.dumps(payload))
+
 
 class TestComputeCommittedDigests:
     def test_all_three_present(self, regression_dir: Path) -> None:

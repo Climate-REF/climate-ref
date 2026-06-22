@@ -191,7 +191,7 @@ class TestDumpLoad:
         with pytest.raises(ValueError, match="Invalid sha256 digest"):
             Manifest.load(p)
 
-    @pytest.mark.parametrize("bad_schema", [2, 0, "1"])
+    @pytest.mark.parametrize("bad_schema", [2, 0, "1", True, 1.0])
     def test_load_rejects_unknown_schema(self, bad_schema: object) -> None:
         payload = {
             "schema": bad_schema,

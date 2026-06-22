@@ -202,9 +202,10 @@ class Manifest:
                 "The manifest may be corrupted or written by an incompatible version; "
                 "regenerate it with `ref test-cases run --force-regen`."
             )
-        if data["schema"] != SCHEMA_VERSION:
+        schema = data["schema"]
+        if isinstance(schema, bool) or not isinstance(schema, int) or schema != SCHEMA_VERSION:
             raise ValueError(
-                f"Invalid manifest {source}: unsupported schema {data['schema']!r}, "
+                f"Invalid manifest {source}: unsupported schema {schema!r}, "
                 f"expected {SCHEMA_VERSION}. The manifest was written by an incompatible "
                 "version; regenerate it with `ref test-cases run --force-regen`."
             )

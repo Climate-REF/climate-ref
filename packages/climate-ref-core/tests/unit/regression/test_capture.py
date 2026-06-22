@@ -9,12 +9,15 @@ from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.output_files import PLACEHOLDER_OUTPUT_DIR, PLACEHOLDER_TEST_DATA_DIR
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
+    _COMMITTED_FLOAT_JSON_KWARGS,
+    _UNROUNDED_COMMITTED_FILES,
+    _contains_float,
     build_native_snapshot,
     capture_execution,
     materialise_native,
     write_committed_bundle,
 )
-from climate_ref_core.regression.manifest import NativeEntry, sha256_file
+from climate_ref_core.regression.manifest import COMMITTED_BUNDLE_FILES, NativeEntry, sha256_file
 from climate_ref_core.regression.store import LocalFilesystemStore
 
 
@@ -104,6 +107,66 @@ def test_write_committed_bundle_rounds_floats(tmp_path):
     # The actual rounded values, not merely "<= 7 figures".
     assert diag["PROVENANCE"]["score"] == 1.843241
     assert series[0]["values"] == [1.761334, 9.876543]
+
+
+def test_committed_float_classification_is_exhaustive():
+    assert set(_COMMITTED_FLOAT_JSON_KWARGS) | _UNROUNDED_COMMITTED_FILES == set(COMMITTED_BUNDLE_FILES)
+    assert set(_COMMITTED_FLOAT_JSON_KWARGS).isdisjoint(_UNROUNDED_COMMITTED_FILES)
+
+
+def test_output_json_is_float_free_by_construction(tmp_path):
+    # Codifies the invariant the output.json exclusion relies on: a representative output bundle,
+    # serialised the way REF writes it natively, carries no float leaves.
+    output = CMECOutput.model_validate(CMECOutput.create_template())
+    output.update(
+        "data",
+        short_name="example",
+        dict_content={
+            "filename": "data/example.nc",
+            "long_name": "Example output",
+            "description": "An example data file",
+        },
+    )
+    output.update(
+        "html",
+        short_name="index",
+        dict_content={
+            "filename": "index.html",
+            "long_name": "Index page",
+            "description": "The landing page",
+        },
+    )
+    json_path = tmp_path / "output.json"
+    output.dump_to_json(json_path)
+    loaded = json.loads(json_path.read_text(encoding="utf-8"))
+
+    assert _contains_float(loaded) is False
+
+
+def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
+    # output.json must pass through write_committed_bundle byte-for-byte (no key reorder / rewrite),
+    # while the float-bearing artefacts are rounded.
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    source = tmp_path / "scratch" / "frag"
+    source.mkdir(parents=True)
+    # output.json written the native (Pydantic) way: indent=2, keys NOT sorted, no floats.
+    CMECOutput.model_validate(CMECOutput.create_template()).dump_to_json(source / "output.json")
+    source_output_bytes = (source / "output.json").read_bytes()
+    # Float-bearing artefacts that rounding must rewrite.
+    (source / "diagnostic.json").write_text(json.dumps({"PROVENANCE": {"score": 1.843240715970751}}))
+    (source / "series.json").write_text(
+        json.dumps([{"dimensions": {"region": "global"}, "values": [1.761333624017425]}])
+    )
+    regression_dir = tmp_path / "regression"
+
+    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+
+    # output.json is byte-identical to the copied source: not re-dumped, keys not reordered.
+    assert (regression_dir / "output.json").read_bytes() == source_output_bytes
+    # The float-bearing artefacts were rounded (proving the bundle was processed, not skipped).
+    assert json.loads((regression_dir / "diagnostic.json").read_text())["PROVENANCE"]["score"] == 1.843241
+    assert json.loads((regression_dir / "series.json").read_text())[0]["values"] == [1.761334]
 
 
 def test_build_native_snapshot_digests_relpaths(tmp_path):

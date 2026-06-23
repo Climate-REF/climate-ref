@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       # Verifies that Ruff and mypy checks are passing
       - name: pre-commit
@@ -34,7 +34,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
@@ -79,7 +79,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
@@ -123,7 +123,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
@@ -167,7 +167,7 @@ jobs:
     runs-on: "${{ matrix.os }}"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}
@@ -184,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Check build
         run: |
@@ -205,7 +205,7 @@ jobs:
     if: github.event.pull_request && github.actor != 'dependabot[bot]'
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Get all changelog files
         id: changed-changelog-files
@@ -230,7 +230,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Set up Docker Compose

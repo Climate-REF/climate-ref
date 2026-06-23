@@ -22,7 +22,7 @@ jobs:
       REF_DIR: /tmp/ref-offline-test
     steps:
       - name: Checkout (for cache key)
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           sparse-checkout: |
             packages/climate-ref-esmvaltool/src/climate_ref_esmvaltool/requirements

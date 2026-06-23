@@ -15,7 +15,11 @@ import typer
 from loguru import logger
 
 from climate_ref.cli.test_cases._app import app
-from climate_ref.cli.test_cases._common import _iter_test_cases, _validate_provider_in_registry
+from climate_ref.cli.test_cases._common import (
+    _iter_test_cases,
+    _validate_provider_in_registry,
+    _validate_requested_filters,
+)
 from climate_ref.config import Config
 
 if TYPE_CHECKING:
@@ -64,16 +68,22 @@ def sync_native(
 
     registry = ProviderRegistry.build_from_config(config, db)
     _validate_provider_in_registry(registry, provider)
+    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
     store = build_native_store(config.native_store, writable=False)
 
     # When a specific case is named, a missing manifest is a hard failure.
     named = bool(diagnostic or test_case)
+    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
+
+    if not cases:
+        logger.warning("No test cases found for the selected filters")
+        raise typer.Exit(code=0)
 
     fetched = 0
     skipped = 0
     failures: list[str] = []
 
-    for diag, tc in _iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case):
+    for diag, tc in cases:
         case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
         paths = TestCasePaths.from_diagnostic(diag, tc.name)
         if paths is None or not paths.manifest.exists():

@@ -17,7 +17,11 @@ from rich.table import Table
 
 from climate_ref.cli._git_utils import get_repo_for_path
 from climate_ref.cli.test_cases._app import app
-from climate_ref.cli.test_cases._common import _iter_test_cases, _validate_provider_in_registry
+from climate_ref.cli.test_cases._common import (
+    _iter_test_cases,
+    _validate_provider_in_registry,
+    _validate_requested_filters,
+)
 from climate_ref.config import Config
 
 if TYPE_CHECKING:
@@ -195,6 +199,8 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
 
     registry = ProviderRegistry.build_from_config(config, db)
     _validate_provider_in_registry(registry, provider)
+    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
 
     decisions: list[dict[str, str]] = []
     has_failure = False
@@ -205,7 +211,7 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
             has_failure = True
         decisions.append({"case": case, "action": action.value, "reason": reason})
 
-    for diag, tc in _iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case):
+    for diag, tc in cases:
         case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
         paths = TestCasePaths.from_diagnostic(diag, tc.name)
 

@@ -19,7 +19,11 @@ from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_fo
 from climate_ref.cli._utils import format_size
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
-from climate_ref.cli.test_cases._common import _validate_provider_in_registry, _write_test_case_manifest
+from climate_ref.cli.test_cases._common import (
+    _validate_provider_in_registry,
+    _validate_requested_filters,
+    _write_test_case_manifest,
+)
 from climate_ref.cli.test_cases._stages import (
     StageError,
     native_is_stale,
@@ -255,7 +259,12 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     ] = None,
     output_directory: Annotated[
         Path | None,
-        typer.Option(help="Output directory for execution results"),
+        typer.Option(
+            help=(
+                "Scratch directory for the diagnostic execution results. "
+                "The regression workflow also writes the gitignored output/<label> slot."
+            )
+        ),
     ] = None,
     force_regen: Annotated[
         bool,
@@ -322,6 +331,7 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
 
     # Find the provider
     _validate_provider_in_registry(registry, provider)
+    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
     provider_instance = next(p for p in registry.providers if p.slug == provider)
 
     # Collect test cases to run
@@ -351,18 +361,29 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
             test_cases_to_run.append((diag, tc))
 
     if not test_cases_to_run:
-        logger.warning(f"No test cases found for provider '{provider}'")
-        if diagnostic:
-            logger.warning(f"  with diagnostic filter: {diagnostic}")
-        if test_case:
-            logger.warning(f"  with test case filter: {test_case}")
         if only_missing and skipped_cases:
-            logger.info(f"  ({len(skipped_cases)} test case(s) skipped due to --only-missing)")
+            logger.info(
+                f"All {len(skipped_cases)} matching test case(s) skipped because "
+                "regression baselines already exist"
+            )
+        elif if_changed and skipped_cases:
+            logger.info(
+                f"All {len(skipped_cases)} matching test case(s) skipped because catalogs are unchanged"
+            )
+        else:
+            logger.warning(f"No test cases found for provider '{provider}'")
+            if diagnostic:
+                logger.warning(f"  with diagnostic filter: {diagnostic}")
+            if test_case:
+                logger.warning(f"  with test case filter: {test_case}")
         raise typer.Exit(code=0)
 
     logger.info(f"Found {len(test_cases_to_run)} test case(s) to run")
     if skipped_cases:
-        logger.info(f"Skipping {len(skipped_cases)} test case(s) with existing regression data")
+        if only_missing:
+            logger.info(f"Skipping {len(skipped_cases)} test case(s) with existing regression data")
+        elif if_changed:
+            logger.info(f"Skipping {len(skipped_cases)} test case(s) with unchanged catalogs")
 
     if dry_run:  # pragma: no cover
         table = Table(title="Test Cases to Run")
@@ -385,6 +406,12 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     successes = 0
     failures = 0
     failed_cases: list[str] = []
+
+    if output_directory is not None:
+        logger.info(
+            f"Using {output_directory} as the execution scratch directory; rebuilt native/bundle files "
+            f"will also be written to each test case's gitignored output/{label} slot"
+        )
 
     for diag, tc in test_cases_to_run:
         success = _run_single_test_case(

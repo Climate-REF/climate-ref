@@ -317,15 +317,41 @@ class TestFetchTestDataCommand:
         result = invoke_cli(["test-cases", "fetch", "--provider", "example", "--dry-run"])
         assert result.exit_code == 0
 
-    def test_fetch_with_diagnostic_filter(self, invoke_cli):
-        """Test fetch command with diagnostic filter."""
-        result = invoke_cli(["test-cases", "fetch", "--diagnostic", "nonexistent", "--dry-run"])
-        assert result.exit_code == 0
+    def test_fetch_with_unknown_diagnostic_filter_fails(self, invoke_cli):
+        """Test fetch command with a diagnostic typo fails instead of silently selecting nothing."""
+        result = invoke_cli(
+            ["test-cases", "fetch", "--diagnostic", "nonexistent", "--dry-run"],
+            expected_exit_code=1,
+        )
+        assert "Diagnostic 'nonexistent' was not found" in result.stderr
+
+    def test_fetch_with_unknown_test_case_filter_fails(self, invoke_cli, mocker):
+        """Test fetch command with a test-case typo fails instead of silently selecting nothing."""
+        mock_tc = MagicMock(description="test", requests=[])
+        mock_tc.name = "default"
+        mock_spec = MagicMock(test_cases=[mock_tc])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "fetch", "--provider", "example", "--test-case", "missing", "--dry-run"],
+            expected_exit_code=1,
+        )
+        assert "Test case 'missing' was not found" in result.stderr
 
     def test_fetch_with_test_case_filter(self, invoke_cli, mocker):
         """Test fetch command with test case filter in dry run."""
         mock_request = MagicMock(slug="test-request", source_type="CMIP6")
-        mock_test_case = MagicMock(name="specific-case", description="test", requests=[mock_request])
+        mock_test_case = MagicMock(description="test", requests=[mock_request])
+        mock_test_case.name = "specific-case"
         mock_spec = MagicMock(test_cases=[mock_test_case])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
         mock_diag.provider = MagicMock(slug="test-provider")
@@ -384,6 +410,70 @@ class TestFetchTestDataCommand:
         assert result.exit_code == 0
         assert fetch_mock.call_count == 2
 
+    def test_fetch_existing_catalog_explains_refresh(self, invoke_cli, mocker, tmp_path):
+        """Existing catalogs are refreshed by default, with a pointer to --only-missing."""
+        mock_tc = MagicMock(description="test", requests=[MagicMock()])
+        mock_tc.name = "default"
+        mock_spec = MagicMock(test_cases=[mock_tc])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        case_dir = tmp_path / "case"
+        case_dir.mkdir()
+        catalog = case_dir / "catalog.yaml"
+        catalog.touch()
+        paths = MagicMock(catalog=catalog)
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        fetch_mock = mocker.patch(
+            "climate_ref.cli.test_cases.discovery._fetch_and_build_catalog",
+            return_value=(MagicMock(), False),
+        )
+
+        result = invoke_cli(["test-cases", "fetch", "--provider", "example"])
+
+        assert result.exit_code == 0
+        assert "Refreshing existing catalog for default" in result.stderr
+        assert "use --only-missing to skip existing catalogs" in result.stderr
+        fetch_mock.assert_called_once()
+
+    def test_fetch_only_missing_skips_existing_catalog(self, invoke_cli, mocker, tmp_path):
+        """--only-missing avoids ESGF work when a catalog already exists."""
+        mock_tc = MagicMock(description="test", requests=[MagicMock()])
+        mock_tc.name = "default"
+        mock_spec = MagicMock(test_cases=[mock_tc])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.provider = MagicMock(slug="example")
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        case_dir = tmp_path / "case"
+        case_dir.mkdir()
+        catalog = case_dir / "catalog.yaml"
+        catalog.touch()
+        paths = MagicMock(catalog=catalog)
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        fetch_mock = mocker.patch("climate_ref.cli.test_cases.discovery._fetch_and_build_catalog")
+
+        result = invoke_cli(["test-cases", "fetch", "--provider", "example", "--only-missing"])
+
+        assert result.exit_code == 0
+        assert "Skipping test case: default (catalog exists)" in result.stderr
+        fetch_mock.assert_not_called()
+
 
 class TestListCasesCommand:
     """Tests for list test cases CLI command."""
@@ -404,6 +494,76 @@ class TestListCasesCommand:
         result = invoke_cli(["test-cases", "list", "--provider", "example"])
         assert result.exit_code == 0
 
+    def test_list_does_not_configure_providers(self, invoke_cli, mocker):
+        """Listing metadata avoids provider configure hooks with setup side effects."""
+        mock_registry = MagicMock(providers=[])
+        build_registry = mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+
+        result = invoke_cli(["test-cases", "list"])
+
+        assert result.exit_code == 0
+        assert build_registry.call_args.kwargs["configure"] is False
+
+    def test_list_compact_default_hides_descriptions(self, invoke_cli, mocker):
+        """The default list view stays scannable by omitting descriptions."""
+        mock_tc = MagicMock(description="long description", requests=[])
+        mock_tc.name = "default"
+        mock_spec = MagicMock(test_cases=[mock_tc])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=None)
+
+        result = invoke_cli(["test-cases", "list"])
+
+        assert result.exit_code == 0
+        assert "long description" not in result.stdout
+        assert "test-diag" in result.stdout
+
+    def test_list_summary_counts_missing_artifacts(self, invoke_cli, mocker, tmp_path):
+        """The list summary reports missing catalog and regression counts."""
+        from climate_ref_core.testing import TestCasePaths
+
+        tc_catalog_only = MagicMock(description="catalog", requests=[])
+        tc_catalog_only.name = "catalog-only"
+        tc_regression_only = MagicMock(description="regression", requests=[])
+        tc_regression_only.name = "regression-only"
+        mock_spec = MagicMock(test_cases=[tc_catalog_only, tc_regression_only])
+        mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_provider = MagicMock(slug="example")
+        mock_provider.diagnostics.return_value = [mock_diag]
+        mock_registry = MagicMock(providers=[mock_provider])
+
+        catalog_only = TestCasePaths(root=tmp_path / "catalog-only")
+        catalog_only.root.mkdir()
+        catalog_only.catalog.touch()
+        regression_only = TestCasePaths(root=tmp_path / "regression-only")
+        regression_only.root.mkdir()
+        regression_only.regression.mkdir()
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=mock_registry,
+        )
+        mocker.patch(
+            "climate_ref_core.testing.TestCasePaths.from_diagnostic",
+            side_effect=[catalog_only, regression_only],
+        )
+
+        result = invoke_cli(["test-cases", "list"])
+
+        assert result.exit_code == 0
+        assert "2 test case(s); 1 missing catalog(s); 1 missing regression baseline(s)" in result.stdout
+
     def test_list_shows_no_test_data_spec(self, invoke_cli, mocker):
         """Test that list shows diagnostics without test_data_spec."""
         mock_diag = MagicMock(slug="no-spec-diag", test_data_spec=None)
@@ -416,7 +576,7 @@ class TestListCasesCommand:
             return_value=mock_registry,
         )
 
-        result = invoke_cli(["test-cases", "list"])
+        result = invoke_cli(["test-cases", "list", "--verbose"])
         assert result.exit_code == 0
         assert "no test_data_spec" in result.stdout
 
@@ -451,6 +611,8 @@ class TestRunTestCaseCommand:
         """Test run command help."""
         result = invoke_cli(["test-cases", "run", "--help"])
         assert "Run test cases for diagnostics" in result.stdout
+        assert "Scratch directory" in result.stdout
+        assert "output/<label>" in result.stdout
 
     def test_run_nonexistent_diagnostic(self, invoke_cli):
         """Test running non-existent diagnostic."""
@@ -479,7 +641,7 @@ class TestRunTestCaseCommand:
         assert "No test cases found" in result.stderr
 
     def test_run_nonexistent_test_case(self, invoke_cli, mocker):
-        """Test running non-existent test case shows warning and exits 0."""
+        """Test running a non-existent test case fails instead of silently selecting nothing."""
         mock_tc = MagicMock(name="default", description="test")
         mock_spec = MagicMock()
         mock_spec.test_cases = [mock_tc]
@@ -493,7 +655,6 @@ class TestRunTestCaseCommand:
             return_value=mock_registry,
         )
 
-        # Filtering for nonexistent test case finds nothing, exit 0
         result = invoke_cli(
             [
                 "test-cases",
@@ -505,9 +666,9 @@ class TestRunTestCaseCommand:
                 "--test-case",
                 "nonexistent",
             ],
-            expected_exit_code=0,
+            expected_exit_code=1,
         )
-        assert "No test cases found" in result.stderr
+        assert "Test case 'nonexistent' was not found" in result.stderr
 
     def test_run_no_test_case_dir(self, invoke_cli, mocker):
         """Test run command when test case directory can't be resolved fails the test case."""
@@ -615,6 +776,29 @@ class TestRunTestCaseCommand:
         )
         assert result.exit_code == 0
         # The slot holds the rebuilt committed bundle even when the baseline is untouched.
+        assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
+
+    def test_run_output_directory_logs_scratch_and_slot_semantics(self, invoke_cli, mocker, tmp_path):
+        """--output-directory is explained as scratch output, not the only written location."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path, regression_files={})
+        scratch = tmp_path / "scratch-output"
+
+        result = invoke_cli(
+            [
+                "test-cases",
+                "run",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+                "--output-directory",
+                str(scratch),
+            ],
+        )
+
+        assert result.exit_code == 0
+        assert f"Using {scratch} as the execution scratch directory" in result.stderr
+        assert "gitignored output/latest slot" in result.stderr
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
 
     def test_run_unsuccessful_execution(self, invoke_cli, mocker, tmp_path):
@@ -769,7 +953,8 @@ class TestRunTestCaseCommand:
             ["test-cases", "run", "--provider", "example", "--only-missing"],
             expected_exit_code=0,
         )
-        assert "No test cases found" in result.stderr or "skipped" in result.stderr.lower()
+        assert "All 1 matching test case(s) skipped" in result.stderr
+        assert "No test cases found" not in result.stderr
 
     def test_run_with_if_changed_skips_unchanged(self, invoke_cli, mocker, tmp_path):
         """Test run command with --if-changed skips test cases with unchanged catalogs."""
@@ -804,7 +989,7 @@ class TestRunTestCaseCommand:
             ["test-cases", "run", "--provider", "example", "--if-changed"],
             expected_exit_code=0,
         )
-        assert "No test cases found" in result.stderr
+        assert "All 1 matching test case(s) skipped because catalogs are unchanged" in result.stderr
 
     def test_run_label_slots_coexist(self, invoke_cli, mocker, tmp_path):
         """Two runs under different --label slots persist side by side."""
@@ -1387,6 +1572,34 @@ class TestSyncCommand:
         )
         assert "not configured" in result.stderr
 
+    def test_sync_nonexistent_diagnostic(self, invoke_cli, mocker):
+        """sync with a bad diagnostic filter fails instead of reporting a zero sync."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "sync", "--provider", "example", "--diagnostic", "missing"],
+            expected_exit_code=1,
+        )
+        assert "Diagnostic 'missing' was not found" in result.stderr
+
+    def test_sync_nonexistent_test_case(self, invoke_cli, mocker):
+        """sync with a bad test-case filter fails instead of reporting a zero sync."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "sync", "--provider", "example", "--test-case", "missing"],
+            expected_exit_code=1,
+        )
+        assert "Test case 'missing' was not found" in result.stderr
+
 
 class TestStageCompare:
     """`stage_compare` drives replay verification from the manifest's committed set."""
@@ -1526,6 +1739,38 @@ class TestReplayCommand:
             expected_exit_code=1,
         )
         assert "not configured" in result.stderr
+
+    def test_replay_nonexistent_diagnostic(self, invoke_cli, mocker):
+        """replay with a bad diagnostic filter fails before opening the native store."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store_builder = mocker.patch("climate_ref_core.regression.store.build_native_store")
+
+        result = invoke_cli(
+            ["test-cases", "replay", "--provider", "example", "--diagnostic", "missing"],
+            expected_exit_code=1,
+        )
+        assert "Diagnostic 'missing' was not found" in result.stderr
+        store_builder.assert_not_called()
+
+    def test_replay_nonexistent_test_case(self, invoke_cli, mocker):
+        """replay with a bad test-case filter fails before opening the native store."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store_builder = mocker.patch("climate_ref_core.regression.store.build_native_store")
+
+        result = invoke_cli(
+            ["test-cases", "replay", "--provider", "example", "--test-case", "missing"],
+            expected_exit_code=1,
+        )
+        assert "Test case 'missing' was not found" in result.stderr
+        store_builder.assert_not_called()
 
     def test_replay_integrity_mismatch_warns_and_continues(self, invoke_cli, mocker, tmp_path):
         """An integrity mismatch is advisory, not a gate."""
@@ -1685,23 +1930,52 @@ class TestMintCommand:
         store.put.assert_not_called()
 
     def test_mint_nonexistent_provider(self, invoke_cli, mocker):
-        """mint with an unknown provider exits 1 (after a passing store preflight)."""
+        """mint with an unknown provider exits 1 before opening the writable store."""
         registry, _diag, _tc = _make_case_mocks()
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
         )
-        store = MagicMock()  # preflight passes (no side effect)
-        mocker.patch(
-            "climate_ref_core.regression.store.build_native_store",
-            return_value=store,
-        )
+        store_builder = mocker.patch("climate_ref_core.regression.store.build_native_store")
 
         result = invoke_cli(
             ["test-cases", "mint", "--provider", "nonexistent"],
             expected_exit_code=1,
         )
         assert "not configured" in result.stderr
+        store_builder.assert_not_called()
+
+    def test_mint_nonexistent_diagnostic(self, invoke_cli, mocker):
+        """mint with a bad diagnostic filter fails before opening the writable store."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store_builder = mocker.patch("climate_ref_core.regression.store.build_native_store")
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "example", "--diagnostic", "missing", "--dry-run"],
+            expected_exit_code=1,
+        )
+        assert "Diagnostic 'missing' was not found" in result.stderr
+        store_builder.assert_not_called()
+
+    def test_mint_nonexistent_test_case(self, invoke_cli, mocker):
+        """mint with a bad test-case filter fails before opening the writable store."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        store_builder = mocker.patch("climate_ref_core.regression.store.build_native_store")
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "example", "--test-case", "missing", "--dry-run"],
+            expected_exit_code=1,
+        )
+        assert "Test case 'missing' was not found" in result.stderr
+        store_builder.assert_not_called()
 
     def test_mint_dry_run_lists_without_running(self, invoke_cli, mocker):
         """--dry-run preflights + lists the cases, but runs no diagnostics and uploads nothing."""
@@ -1934,6 +2208,34 @@ class TestBuildCommand:
         )
         assert "not configured" in result.stderr
 
+    def test_build_nonexistent_diagnostic(self, invoke_cli, mocker):
+        """build with a bad diagnostic filter fails instead of silently selecting nothing."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "build", "--provider", "example", "--diagnostic", "missing"],
+            expected_exit_code=1,
+        )
+        assert "Diagnostic 'missing' was not found" in result.stderr
+
+    def test_build_nonexistent_test_case(self, invoke_cli, mocker):
+        """build with a bad test-case filter fails instead of silently selecting nothing."""
+        registry, _diag, _tc = _make_case_mocks()
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+        result = invoke_cli(
+            ["test-cases", "build", "--provider", "example", "--test-case", "missing"],
+            expected_exit_code=1,
+        )
+        assert "Test case 'missing' was not found" in result.stderr
+
     def test_build_rebuilds_from_slot_without_executing(self, invoke_cli, mocker, tmp_path):
         """build regenerates the committed bundle from an existing slot, never re-running."""
         paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
@@ -2142,6 +2444,28 @@ class TestCIGateCommand:
         )
         assert result.exit_code == 1
         assert "not configured" in result.stderr
+
+    def test_ci_gate_nonexistent_diagnostic(self, invoke_cli, mocker, tmp_path):
+        # A bad diagnostic selector must fail closed instead of emitting an empty decision list.
+        self._setup(mocker, tmp_path, current_version=1)
+
+        result = invoke_cli(
+            ["test-cases", "ci-gate", "--provider", "example", "--diagnostic", "missing"],
+            expected_exit_code=1,
+        )
+        assert result.exit_code == 1
+        assert "Diagnostic 'missing' was not found" in result.stderr
+
+    def test_ci_gate_nonexistent_test_case(self, invoke_cli, mocker, tmp_path):
+        # A bad test-case selector must fail closed instead of emitting an empty decision list.
+        self._setup(mocker, tmp_path, current_version=1)
+
+        result = invoke_cli(
+            ["test-cases", "ci-gate", "--provider", "example", "--test-case", "missing"],
+            expected_exit_code=1,
+        )
+        assert result.exit_code == 1
+        assert "Test case 'missing' was not found" in result.stderr
 
     def test_seeding_without_native_skips(self, invoke_cli, mocker, tmp_path):
         # Current manifest present with an empty native set, no base manifest -> seeding -> SKIP.

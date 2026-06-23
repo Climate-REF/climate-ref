@@ -14,7 +14,7 @@ from rich.table import Table
 
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
-from climate_ref.cli.test_cases._common import _validate_provider_in_registry
+from climate_ref.cli.test_cases._common import _validate_provider_in_registry, _validate_requested_filters
 from climate_ref_core.exceptions import DatasetResolutionError
 
 if TYPE_CHECKING:
@@ -71,8 +71,9 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
     # Build provider registry to access diagnostics
     registry = ProviderRegistry.build_from_config(config, db)
 
-    # Check if the requested provider exists in the registry
+    # Check if the requested provider exists in the registry and selectors are valid
     _validate_provider_in_registry(registry, provider)
+    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
 
     # Collect diagnostics to process
     diagnostics_to_process: list[Diagnostic] = []
@@ -123,13 +124,17 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
             for tc in diag.test_data_spec.test_cases:
                 if test_case and tc.name != test_case:
                     continue
+                paths = TestCasePaths.from_diagnostic(diag, tc.name)
                 # Skip if catalog exists when using --only-missing
-                if only_missing:
-                    paths = TestCasePaths.from_diagnostic(diag, tc.name)
-                    if paths and paths.catalog.exists():
-                        logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
-                        continue
+                if only_missing and paths and paths.catalog.exists():
+                    logger.info(f"  Skipping test case: {tc.name} (catalog exists)")
+                    continue
                 if tc.requests:
+                    if paths and paths.catalog.exists() and not force:
+                        logger.info(
+                            f"  Refreshing existing catalog for {tc.name} "
+                            "(use --only-missing to skip existing catalogs)"
+                        )
                     logger.info(f"  Processing test case: {tc.name}")
                     try:
                         _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
@@ -146,6 +151,10 @@ def list_cases(
         str | None,
         typer.Option(help="Filter by provider"),
     ] = None,
+    verbose: Annotated[
+        bool,
+        typer.Option("--verbose", "-v", help="Show test case descriptions"),
+    ] = False,
 ) -> None:
     """
     List test cases for all diagnostics.
@@ -160,20 +169,26 @@ def list_cases(
     db = ctx.obj.database
     console = ctx.obj.console
 
-    # Build provider registry to access diagnostics
-    registry = ProviderRegistry.build_from_config(config, db)
+    # Build provider registry to access diagnostics.
+    # Listing is metadata-only, so skip provider configuration to avoid setup side effects.
+    registry = ProviderRegistry.build_from_config(config, db, configure=False)
 
     # Check if the requested provider exists in the registry
     _validate_provider_in_registry(registry, provider)
 
     table = Table(title="Test Data Specifications")
-    table.add_column("Provider", style="cyan")
-    table.add_column("Diagnostic", style="green")
-    table.add_column("Test Case", style="yellow")
-    table.add_column("Description")
-    table.add_column("Requests", justify="right")
-    table.add_column("Catalog", justify="center")
-    table.add_column("Regression", justify="center")
+    table.add_column("Provider", style="cyan", no_wrap=True)
+    table.add_column("Diagnostic", style="green", no_wrap=True)
+    table.add_column("Test Case", style="yellow", no_wrap=True)
+    if verbose:
+        table.add_column("Description", overflow="fold")
+    table.add_column("Requests", justify="right", no_wrap=True)
+    table.add_column("Catalog", justify="center", no_wrap=True)
+    table.add_column("Regression", justify="center", no_wrap=True)
+
+    total_cases = 0
+    missing_catalogs = 0
+    missing_regressions = 0
 
     for provider_instance in registry.providers:
         if provider and provider_instance.slug != provider:
@@ -181,15 +196,15 @@ def list_cases(
 
         for diag in provider_instance.diagnostics():
             if diag.test_data_spec is None:
-                table.add_row(
+                row = [
                     provider_instance.slug,
                     diag.slug,
                     "-",
-                    "(no test_data_spec)",
-                    "0",
-                    "-",
-                    "-",
-                )
+                ]
+                if verbose:
+                    row.append("(no test_data_spec)")
+                row.extend(["0", "-", "-"])
+                table.add_row(*row)
                 continue
 
             for tc in diag.test_data_spec.test_cases:
@@ -198,20 +213,30 @@ def list_cases(
                 # Check if catalog and regression data exist
                 paths = TestCasePaths.from_diagnostic(diag, tc.name)
                 if paths:
-                    catalog_status = "[green]yes[/green]" if paths.catalog.exists() else "[red]no[/red]"
-                    regression_status = "[green]yes[/green]" if paths.regression.exists() else "[red]no[/red]"
+                    catalog_exists = paths.catalog.exists()
+                    regression_exists = paths.regression.exists()
+                    catalog_status = "[green]yes[/green]" if catalog_exists else "[red]no[/red]"
+                    regression_status = "[green]yes[/green]" if regression_exists else "[red]no[/red]"
+                    missing_catalogs += not catalog_exists
+                    missing_regressions += not regression_exists
                 else:
                     catalog_status = "[dim]-[/dim]"
                     regression_status = "[dim]-[/dim]"
 
-                table.add_row(
+                total_cases += 1
+                row = [
                     provider_instance.slug,
                     diag.slug,
                     tc.name,
-                    tc.description,
-                    str(num_requests),
-                    catalog_status,
-                    regression_status,
-                )
+                ]
+                if verbose:
+                    row.append(tc.description)
+                row.extend([str(num_requests), catalog_status, regression_status])
+                table.add_row(*row)
 
     console.print(table)
+    console.print(
+        f"[dim]{total_cases} test case(s); "
+        f"{missing_catalogs} missing catalog(s); "
+        f"{missing_regressions} missing regression baseline(s)[/dim]"
+    )

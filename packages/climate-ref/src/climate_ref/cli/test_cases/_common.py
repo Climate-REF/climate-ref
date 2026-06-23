@@ -43,6 +43,63 @@ def _validate_provider_in_registry(registry: ProviderRegistry, provider: str | N
         raise typer.Exit(code=1)
 
 
+def _validate_requested_filters(
+    registry: ProviderRegistry,
+    *,
+    provider: str | None = None,
+    diagnostic: str | None = None,
+    test_case: str | None = None,
+) -> None:
+    """
+    Fail fast when an explicit diagnostic or test-case selector matches nothing.
+
+    Empty selections caused by skip flags (for example ``--only-missing``) are not handled here.
+    Callers should decide whether those are successful no-ops.
+    This helper only guards likely typos in user-supplied selectors.
+    """
+    if not diagnostic and not test_case:
+        return
+
+    provider_instances = [p for p in registry.providers if provider is None or p.slug == provider]
+    diagnostics = [
+        diag for provider_instance in provider_instances for diag in provider_instance.diagnostics()
+    ]
+
+    if diagnostic:
+        matching_diagnostics = [diag for diag in diagnostics if diag.slug == diagnostic]
+        if not matching_diagnostics:
+            scope = f" for provider '{provider}'" if provider else ""
+            logger.error(f"Diagnostic '{diagnostic}' was not found{scope}")
+            available = sorted({diag.slug for diag in diagnostics})
+            if available:
+                logger.error(f"Available diagnostics: {', '.join(available)}")
+            raise typer.Exit(code=1)
+        diagnostics = matching_diagnostics
+
+    if test_case:
+        available_cases = sorted(
+            {
+                tc.name
+                for diag in diagnostics
+                if diag.test_data_spec is not None
+                for tc in diag.test_data_spec.test_cases
+            }
+        )
+        if test_case not in available_cases:
+            scope_parts = []
+            if provider:
+                scope_parts.append(f"provider '{provider}'")
+            if diagnostic:
+                scope_parts.append(f"diagnostic '{diagnostic}'")
+            scope = f" for {' and '.join(scope_parts)}" if scope_parts else ""
+            logger.error(f"Test case '{test_case}' was not found{scope}")
+            if available_cases:
+                logger.error(f"Available test cases: {', '.join(available_cases)}")
+            else:
+                logger.error("No test cases are defined for the selected diagnostics")
+            raise typer.Exit(code=1)
+
+
 def _write_test_case_manifest(
     paths: TestCasePaths,
     *,

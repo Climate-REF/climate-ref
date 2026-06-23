@@ -166,6 +166,7 @@ def test_cli_context_skip_backup(config, mocker):
         (["test-cases", "sync"], True),
         (["test-cases", "replay", "--provider", "example"], True),
         (["test-cases", "mint", "--provider", "example"], True),
+        (["test-cases", "build", "--provider", "example"], True),
         # Data-modifying commands must still take a pre-migration backup.
         (["datasets", "ingest"], False),
         (["providers", "create-env"], False),

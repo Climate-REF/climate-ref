@@ -167,6 +167,9 @@ packages/*/NOTICE
 # User-specific catalog paths (test data)
 *.paths.yaml
 
+# Materialised test-case output slots (local inspection only; never committed)
+**/test-data/**/output/
+
 # Debug log files
 **/main_log_debug.txt
 

@@ -118,26 +118,35 @@ class ProviderRegistry:
         return self.get(provider_slug).get(diagnostic_slug)
 
     @staticmethod
-    def build_from_config(config: Config, db: Database) -> "ProviderRegistry":
+    def build_from_config(
+        config: Config,
+        db: Database,
+        *,
+        configure: bool = True,
+    ) -> "ProviderRegistry":
         """
-        Create a ProviderRegistry instance using information from the database
+        Create a ProviderRegistry instance using information from the database.
 
         Parameters
         ----------
         config
-            Configuration object
+            Configuration object.
         db
-            Database instance
+            Database instance.
+        configure
+            Whether to call each provider's ``configure`` hook.
+            Metadata-only commands can disable this to avoid setup side effects such as conda bootstrap.
 
         Returns
         -------
         :
-            A new ProviderRegistry instance
+            A new ProviderRegistry instance.
         """
         providers = []
         for provider_info in config.diagnostic_providers:
             provider = import_provider(provider_info.provider)
-            provider.configure(config)
+            if configure:
+                provider.configure(config)
             providers.append(provider)
 
         with db.session.begin():

@@ -70,6 +70,23 @@ class _InterceptHandler(logging.Handler):
         logger.opt(depth=depth, exception=record.exc_info).log(level, record.getMessage())
 
 
+def _retention_count_ignore_missing(logs: list[str]) -> None:  # pragma: no cover
+    """Remove old log files, tolerating concurrent cleanup by another process."""
+    keep = 10
+    existing_logs = []
+    for log in logs:
+        path = Path(log)
+        try:
+            mtime = path.stat().st_mtime
+        except FileNotFoundError:
+            continue
+        existing_logs.append((mtime, path))
+
+    for _, path in sorted(existing_logs, key=lambda item: (-item[0], item[1].as_posix()))[keep:]:
+        with contextlib.suppress(FileNotFoundError):
+            path.unlink()
+
+
 def initialise_logging(level: int | str, format: str, log_directory: str | Path) -> None:  # noqa: A002 # pragma: no cover
     """
     Initialise the logging for the REF
@@ -88,7 +105,7 @@ def initialise_logging(level: int | str, format: str, log_directory: str | Path)
     filename = f"climate-ref_{{time:YYYY-MM-DD_HH-mm}}_{process_name}.log"
     logger.add(
         sink=log_directory / filename,
-        retention=10,
+        retention=_retention_count_ignore_missing,
         level="DEBUG",
         format=VERBOSE_LOG_FORMAT,
         colorize=False,

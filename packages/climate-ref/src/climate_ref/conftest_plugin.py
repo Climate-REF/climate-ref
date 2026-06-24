@@ -294,7 +294,10 @@ def invoke_cli(config: Config, monkeypatch: pytest.MonkeyPatch) -> Callable[...,
     runner.mix_stderr = False  # type: ignore[attr-defined]
 
     def _invoke_cli(args: list[str], expected_exit_code: int = 0, always_log: bool = False) -> Result:
+        # Render help/output deterministically for substring assertions.
+        # TERM=dumb makes Rich emit no escape codes at all. COLUMNS keeps help from wrapping mid-token.
         monkeypatch.setenv("NO_COLOR", "1")
+        monkeypatch.setenv("TERM", "dumb")
         monkeypatch.setenv("COLUMNS", "200")
 
         result = runner.invoke(app=cli.app, args=args)

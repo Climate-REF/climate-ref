@@ -1,11 +1,16 @@
 """
 Float quantisation for committed regression bundles.
 
-Committed regression JSON (``series.json`` / ``diagnostic.json`` / ``output.json``)
+The rounded committed JSON (``series.json`` / ``diagnostic.json``)
 records full-precision floats whose least-significant digits are platform-dependent
 (CPU, BLAS, library versions).
 Those last digits churn byte-for-byte between CI and local runs even when the result is numerically identical,
 producing noisy, unreviewable diffs in the committed bundle.
+
+``output.json`` is excluded from rounding: it is the CMEC *output* bundle (metadata only, no
+float leaves by construction) and is serialised by Pydantic's ``model_dump_json(indent=2)`` which
+does not sort keys, so re-dumping it with ``json.dumps(sort_keys=True)`` would reorder its keys and
+churn the committed bytes (see :data:`climate_ref_core.regression.capture._UNROUNDED_COMMITTED_FILES`).
 
 Rounding every float to a fixed number of significant figures at write time gives
 stable, reviewable committed bytes.

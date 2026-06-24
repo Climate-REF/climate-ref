@@ -31,6 +31,7 @@ from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.output_files import from_placeholders, ordered_replacements
+from climate_ref_core.paths import safe_path
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.manifest import Manifest
@@ -200,6 +201,28 @@ class TestCasePaths:
     def manifest(self) -> Path:
         """Path to manifest.json (the regression bundle manifest, tracked in git)."""
         return self.root / "manifest.json"
+
+    @property
+    def output(self) -> Path:
+        """Path to the output/ directory (gitignored; holds materialised native slots)."""
+        return self.root / "output"
+
+    def output_slot(self, label: str = "latest") -> Path:
+        """
+        Path to a named output slot under ``output/`` (gitignored).
+
+        A slot is a self-contained, inspectable snapshot of one execute/materialise:
+        the curated native set (flat, at manifest-relative paths) plus a ``regression/``
+        subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
+        ``latest`` (the default) is overwritten on every run; named slots persist so two
+        runs can be diffed (e.g. ``--label before`` vs ``--label after``).
+
+        Parameters
+        ----------
+        label
+            Slot name. Must be a single path segment (no separators or ``..``).
+        """
+        return safe_path(label, self.output, label="output slot label", single_segment=True)
 
     @property
     def test_data_dir(self) -> Path:

@@ -25,6 +25,8 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from loguru import logger
+
 from climate_ref_core.output_files import copy_execution_outputs, to_placeholders
 from climate_ref_core.paths import safe_path
 
@@ -41,26 +43,43 @@ if TYPE_CHECKING:
     from climate_ref_core.regression.store import NativeStore
 
 
-# Per-file serialisation parameters for the committed bundle,
-# mirroring exactly how each artefact is written natively.
+# Serialisation parameters for committed-bundle files that contain floats.
 _COMMITTED_FLOAT_JSON_KWARGS: dict[str, dict[str, object]] = {
     "series.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
     "diagnostic.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
 }
+
+# Committed files deliberately NOT float-rounded
+# output.json is the CMEC *output* bundle, which by construction carries no float values.
+_UNROUNDED_COMMITTED_FILES: frozenset[str] = frozenset({"output.json"})
+
+
+def _contains_float(obj: object) -> bool:
+    """Return True if ``obj`` (a parsed-JSON structure) has any float leaf (bool excluded)."""
+    if isinstance(obj, bool):
+        return False
+    if isinstance(obj, float):
+        return True
+    if isinstance(obj, dict):
+        return any(_contains_float(v) for v in obj.values())
+    if isinstance(obj, list):
+        return any(_contains_float(v) for v in obj)
+    return False
 
 
 def _round_committed_floats(regression_dir: Path) -> None:
     """
     Round floats in the committed JSON bundle to seven significant figures in place.
 
-    Full-precision floats in ``series.json`` / ``diagnostic.json`` churn byte-for-byte
+    Only ``series.json`` / ``diagnostic.json`` are rounded.
+    Full-precision floats in those files churn byte-for-byte
     between CI and local runs even when numerically identical,
     producing noisy diffs in the committed (git-tracked) bundle.
     Rounding stabilises those bytes;
     seven figures stays an order of magnitude under the regression compare tolerance (``rtol=1e-6``),
     so a gate verdict is never flipped (see :mod:`climate_ref_core.regression._quantise`).
 
-    Each file is re-serialised with the same JSON parameters used to write it natively,
+    Each rounded file is re-serialised with the same JSON parameters used to write it natively,
     so the only byte difference versus the copied file is reduced float precision.
     A file is rewritten only when rounding actually changes its parsed content,
     keeping float-free artefacts byte-identical to the copy.
@@ -81,6 +100,12 @@ def _round_committed_floats(regression_dir: Path) -> None:
         if rounded == original:
             continue
         path.write_text(json.dumps(rounded, **dump_kwargs), encoding="utf-8")  # type: ignore[arg-type]
+
+    # Check that the unrounded files don't contain floats
+    for filename in _UNROUNDED_COMMITTED_FILES:
+        path = regression_dir / filename
+        if path.exists() and _contains_float(json.loads(path.read_text(encoding="utf-8"))):
+            logger.warning(f"{filename} contains float values but is not float-rounded.")
 
 
 def write_committed_bundle(

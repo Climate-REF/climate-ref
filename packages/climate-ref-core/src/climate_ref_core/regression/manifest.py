@@ -202,6 +202,13 @@ class Manifest:
                 "The manifest may be corrupted or written by an incompatible version; "
                 "regenerate it with `ref test-cases run --force-regen`."
             )
+        schema = data["schema"]
+        if isinstance(schema, bool) or not isinstance(schema, int) or schema != SCHEMA_VERSION:
+            raise ValueError(
+                f"Invalid manifest {source}: unsupported schema {schema!r}, "
+                f"expected {SCHEMA_VERSION}. The manifest was written by an incompatible "
+                "version; regenerate it with `ref test-cases run --force-regen`."
+            )
         try:
             native = {
                 relpath: NativeEntry(sha256=entry["sha256"], size=entry["size"])
@@ -220,6 +227,11 @@ class Manifest:
             except ValueError as exc:
                 raise ValueError(f"Invalid manifest {source}: {exc}") from exc
             _validate_digest(entry.sha256)
+            if isinstance(entry.size, bool) or not isinstance(entry.size, int) or entry.size < 0:
+                raise ValueError(
+                    f"Invalid manifest {source}: native entry {relpath!r} has invalid size "
+                    f"{entry.size!r}; expected a non-negative integer."
+                )
         return cls(
             schema=data["schema"],
             test_case_version=data["test_case_version"],

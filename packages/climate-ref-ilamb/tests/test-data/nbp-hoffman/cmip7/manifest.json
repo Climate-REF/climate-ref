@@ -1,0 +1,48 @@
+{
+  "catalog_hash": "b72e1fcfff42d6afae6f677720f7202d621502aa",
+  "committed": {
+    "diagnostic.json": "4c4af91ebb51d3346e60345d76c21223d6981c7efd3e7345402d012924b250a2",
+    "output.json": "c9b572c25ee1b1df3d992cf9b54fa4886522c73b321da58eafc69486e134e0af",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "CanESM5.csv": {
+      "sha256": "091ae717f48776c03ec8a6d6c630b3fd85906366cee75f49cf65d5bfb2315173",
+      "size": 349
+    },
+    "CanESM5.nc": {
+      "sha256": "6dd8141e81fc718800d7a48d88e39c5124eff17d98be13938586c5193050d021",
+      "size": 10591812
+    },
+    "CanESM5_None_nbp.png": {
+      "sha256": "3e8f3adcd95fd53e142f809d68f788d4e3652a438d008474eba18e25ab0548b2",
+      "size": 34876
+    },
+    "Reference.nc": {
+      "sha256": "bc37ffa3a12ea5a47439c8337bff006902498d776d9dc831b4f8f628b082123e",
+      "size": 34467
+    },
+    "diagnostic.json": {
+      "sha256": "b4342d8116d3feb9cfd0f7ef748bf5d5f617d37c0a6487a338a45405329c4749",
+      "size": 1379
+    },
+    "index.html": {
+      "sha256": "f6a4627d65edaff2a28fbf3c86f899c3eabacc77a405ca481188c720741ebf86",
+      "size": 13169
+    },
+    "nan_None_accumulation.png": {
+      "sha256": "b4afddaeaaa13eff826fc7a958d93217d52bfd0b3e1242d95b9e72c81ed19515",
+      "size": 44122
+    },
+    "output.json": {
+      "sha256": "c9b572c25ee1b1df3d992cf9b54fa4886522c73b321da58eafc69486e134e0af",
+      "size": 1559
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

@@ -41,7 +41,7 @@
     "statistic": {
       "Bias": {
         "type": "scalar",
-        "units": "1"
+        "units": "%"
       },
       "Bias Score": {
         "type": "score",
@@ -57,11 +57,11 @@
       },
       "Period Mean": {
         "type": "scalar",
-        "units": "1"
+        "units": "%"
       },
       "RMSE": {
         "type": "scalar",
-        "units": "1"
+        "units": "%"
       },
       "RMSE Score": {
         "type": "score",
@@ -83,34 +83,34 @@
           "gn": {
             "global": {
               "Bias": {
-                "Bias": -0.03636305,
-                "Bias Score": 0.267423,
-                "Period Mean": 0.2821593
+                "Bias": 2.472938,
+                "Bias Score": 0.6180137,
+                "Period Mean": 23.01632
               },
               "RMSE": {
-                "RMSE": 0.09525549,
-                "RMSE Score": 0.2016186
+                "RMSE": 10.48644,
+                "RMSE Score": 0.3830422
               },
               "Spatial Distribution": {
-                "Correlation": 0.6982621,
-                "Normalized Standard Deviation": 3.699989,
-                "Spatial Distribution Score": 0.215475
+                "Correlation": 0.8515232,
+                "Normalized Standard Deviation": 1.690681,
+                "Spatial Distribution Score": 0.7109964
               }
             },
             "tropical": {
               "Bias": {
-                "Bias": -0.07551932,
-                "Bias Score": 0.2778397,
-                "Period Mean": 0.2215415
+                "Bias": -0.006514622,
+                "Bias Score": 0.7134869,
+                "Period Mean": 0.0
               },
               "RMSE": {
-                "RMSE": 0.1141855,
-                "RMSE Score": 0.2338816
+                "RMSE": 0.01072686,
+                "RMSE Score": 0.3510699
               },
               "Spatial Distribution": {
-                "Correlation": 0.4936098,
-                "Normalized Standard Deviation": 1.467327,
-                "Spatial Distribution Score": 0.6469336
+                "Correlation": -0.002002925,
+                "Normalized Standard Deviation": 0.02758125,
+                "Spatial Distribution Score": 0.001516095
               }
             }
           }

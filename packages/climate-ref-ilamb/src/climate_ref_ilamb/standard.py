@@ -240,6 +240,11 @@ def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
     for dimension in dimensions:
         model_df[dimension] = model_df[dimension].where(model_df[dimension].notna(), "None")
 
+    # ILAMB writes dimensionless units as the number 1 in its scalar CSVs, so the units attribute
+    # otherwise drifts between int (1) and str ("1"/"kg m-2") across diagnostics. Coerce it to a
+    # string so the metric bundle always carries string units and schema/replay comparison stays stable.
+    model_df["units"] = model_df["units"].astype(str)
+
     bundle = format_cmec_output_bundle(
         model_df,
         dimensions=dimensions,

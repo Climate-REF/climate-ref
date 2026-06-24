@@ -41,35 +41,35 @@
     "statistic": {
       "Bias": {
         "type": "scalar",
-        "units": 1
+        "units": "1"
       },
       "Bias Score": {
         "type": "score",
-        "units": 1
+        "units": "1"
       },
       "Correlation": {
         "type": "scalar",
-        "units": 1
+        "units": "1"
       },
       "Normalized Standard Deviation": {
         "type": "scalar",
-        "units": 1
+        "units": "1"
       },
       "Period Mean": {
         "type": "scalar",
-        "units": 1
+        "units": "1"
       },
       "RMSE": {
         "type": "scalar",
-        "units": 1
+        "units": "1"
       },
       "RMSE Score": {
         "type": "score",
-        "units": 1
+        "units": "1"
       },
       "Spatial Distribution Score": {
         "type": "score",
-        "units": 1
+        "units": "1"
       }
     }
   },

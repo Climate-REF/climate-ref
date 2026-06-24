@@ -1,0 +1,121 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "source_id",
+      "member_id",
+      "grid_label",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "Bias": {},
+      "RMSE": {},
+      "Spatial Distribution": {}
+    },
+    "region": {
+      "global": {
+        "Description": "Global - Land",
+        "Generator": "GlobalLand.nc",
+        "LongName": "Global - Land"
+      },
+      "tropical": {
+        "Description": "Tropical climates",
+        "Generator": "Koppen_coarse.nc",
+        "LongName": "Tropical climates"
+      }
+    },
+    "source_id": {
+      "CESM2": {}
+    },
+    "statistic": {
+      "Bias": {
+        "type": "scalar",
+        "units": "%"
+      },
+      "Bias Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Correlation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Normalized Standard Deviation": {
+        "type": "scalar",
+        "units": "1"
+      },
+      "Period Mean": {
+        "type": "scalar",
+        "units": "%"
+      },
+      "RMSE": {
+        "type": "scalar",
+        "units": "%"
+      },
+      "RMSE Score": {
+        "type": "score",
+        "units": "1"
+      },
+      "Spatial Distribution Score": {
+        "type": "score",
+        "units": "1"
+      }
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "historical": {
+      "CESM2": {
+        "r1i1p1f1": {
+          "gn": {
+            "global": {
+              "Bias": {
+                "Bias": -0.01023764,
+                "Bias Score": 0.5853679,
+                "Period Mean": 0.2841744
+              },
+              "RMSE": {
+                "RMSE": 1.202991,
+                "RMSE Score": 0.227415
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.5236028,
+                "Normalized Standard Deviation": 0.7309008,
+                "Spatial Distribution Score": 0.6915851
+              }
+            },
+            "tropical": {
+              "Bias": {
+                "Bias": -0.2166273,
+                "Bias Score": 0.5737502,
+                "Period Mean": 0.6258388
+              },
+              "RMSE": {
+                "RMSE": 2.364947,
+                "RMSE Score": 0.2249285
+              },
+              "Spatial Distribution": {
+                "Correlation": 0.4581601,
+                "Normalized Standard Deviation": 0.6864285,
+                "Spatial Distribution Score": 0.6348802
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,750 @@
+_metadata:
+  hash: 0aebe00291d920fefa3945cada2221f9ae52122c
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: areacello_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: null
+    filename: areacello_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Grid-Cell Area for Ocean Variables
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: cell_area
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/53bf326c-d643-45e4-9078-d6cc4a502d05
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: sftof_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: areacello
+    filename: sftof_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Area Percentage
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_area_fraction
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/8ec21762-f4ad-47ba-bf1b-468fabeb350a
+    units: '%'
+    variable_id: sftof
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1860-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-186012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-1860-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/ab66bc59-b18f-4c31-b238-79398f1213f6
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1870-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_186101-187012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1861-01-16 12:00:00'
+    time_range: 1861-01-16 12:00:00-1870-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/928502c3-e196-4e66-95cd-ee4bca17a2dd
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1880-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_187101-188012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1871-01-16 12:00:00'
+    time_range: 1871-01-16 12:00:00-1880-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/16bc7bee-3dcb-421c-8e6c-bc87c79ecb6f
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1890-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_188101-189012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1881-01-16 12:00:00'
+    time_range: 1881-01-16 12:00:00-1890-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/61768073-04b9-4ca6-9526-4f9536cb8d0e
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1900-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_189101-190012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1891-01-16 12:00:00'
+    time_range: 1891-01-16 12:00:00-1900-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/23dd6ae2-ccbc-4a6f-adb0-c006d7332d28
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1910-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_190101-191012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1901-01-16 12:00:00'
+    time_range: 1901-01-16 12:00:00-1910-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/a00d800a-1c21-4664-9531-3ffb34242856
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1920-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_191101-192012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1911-01-16 12:00:00'
+    time_range: 1911-01-16 12:00:00-1920-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/80d9377c-135f-46aa-9658-cdeb4a0d333f
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1930-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_192101-193012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1921-01-16 12:00:00'
+    time_range: 1921-01-16 12:00:00-1930-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/51da1330-f0b1-49a8-8017-a5e95a44b0d5
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1940-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_193101-194012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1931-01-16 12:00:00'
+    time_range: 1931-01-16 12:00:00-1940-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/33fd716e-41f0-4d93-8214-75126943c453
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1950-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_194101-195012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1941-01-16 12:00:00'
+    time_range: 1941-01-16 12:00:00-1950-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/99fa0319-7314-4987-ada0-d8be2366cec5
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1960-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_195101-196012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1951-01-16 12:00:00'
+    time_range: 1951-01-16 12:00:00-1960-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/e83c47fa-b9ca-4235-bf01-cb7f9556d1b4
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1970-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_196101-197012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1961-01-16 12:00:00'
+    time_range: 1961-01-16 12:00:00-1970-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/dc693abf-c5c8-4654-b8b2-b861fbe59c57
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1980-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_197101-198012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1971-01-16 12:00:00'
+    time_range: 1971-01-16 12:00:00-1980-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/2f0e2e3a-c604-4572-9c84-dae3264719ba
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1990-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_198101-199012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1981-01-16 12:00:00'
+    time_range: 1981-01-16 12:00:00-1990-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/74967fe5-c261-432f-85e8-99e779779e7d
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '2000-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_199101-200012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '1991-01-16 12:00:00'
+    time_range: 1991-01-16 12:00:00-2000-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/b0a10f21-656e-4369-91af-84e47cb644b3
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '2010-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_200101-201012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2010-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/521d60aa-8beb-424b-821d-ccf577158058
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: so_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: so_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_201101-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.so.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_salinity
+    start_time: '2011-01-16 12:00:00'
+    time_range: 2011-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/3f2f2493-5967-4609-b427-4928dd012b2d
+    units: '0.001'
+    variable_id: so
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: sos_tavg-u-hxy-sea
+    branding_suffix: tavg-u-hxy-sea
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello
+    filename: sos_tavg-u-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.sos.tavg-u-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Surface Salinity
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_surface_salinity
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/35f3c596-e247-47d4-88bd-b20ea4b9c9e1
+    units: '0.001'
+    variable_id: sos
+    variant_label: r1i1p1f1
+    version: v0

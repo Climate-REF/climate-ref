@@ -61,7 +61,7 @@ from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollect
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
-from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
+from climate_ref_core.output_files import SANITISED_FILE_GLOBS, PlaceholderMap, rewrite_tree
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.testing import validate_series_regression
 
@@ -434,7 +434,7 @@ class ExecutionRegression:
     diagnostic: Diagnostic
     regression_data_dir: Path
     request: pytest.FixtureRequest
-    replacements: dict[str, str]
+    placeholders: PlaceholderMap
 
     def path(self, key: str) -> Path:
         """Return the regression data path for the given key."""
@@ -450,7 +450,7 @@ class ExecutionRegression:
 
     def output_replacements(self, output_directory: Path) -> dict[str, str]:
         """Map real paths to regression placeholders for a given output directory."""
-        return {str(output_directory): "<OUTPUT_DIR>", **self.replacements}
+        return self.placeholders.with_output(output_directory).as_replacements()
 
     def check(self, key: str, output_directory: Path) -> None:
         """Check and optionally regenerate regression data."""
@@ -476,7 +476,7 @@ def execution_regression(
             diagnostic=diagnostic,
             regression_data_dir=regression_data_dir,
             request=request,
-            replacements={str(test_data_dir): "<TEST_DATA_DIR>"},
+            placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir),
         )
 
     return _regression
@@ -513,12 +513,8 @@ class DiagnosticValidator:
         regression_output_dir = self.execution_regression.path(definition.key)
         definition.output_directory.mkdir(parents=True, exist_ok=True)
         shutil.copytree(regression_output_dir, definition.output_directory, dirs_exist_ok=True)
-        self.execution_regression.replace_references(
-            definition.output_directory,
-            {
-                "<OUTPUT_DIR>": str(definition.output_directory),
-                **{value: key for key, value in self.execution_regression.replacements.items()},
-            },
+        self.execution_regression.placeholders.with_output(definition.output_directory).hydrate(
+            definition.output_directory
         )
         return definition
 

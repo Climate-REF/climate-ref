@@ -27,7 +27,7 @@ from typing import TYPE_CHECKING
 
 from loguru import logger
 
-from climate_ref_core.output_files import copy_execution_outputs, to_placeholders
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.paths import safe_path
 
 from ._quantise import round_floats
@@ -198,16 +198,14 @@ def write_committed_bundle(
     source_dir: Path,
     regression_dir: Path,
     *,
-    output_dir: Path,
-    test_data_dir: Path,
-    software_root_dir: Path | None = None,
+    placeholders: PlaceholderMap,
 ) -> dict[str, str]:
     """
     Write the sanitised committed CMEC bundle into ``regression_dir``.
 
     Copies each committed artefact present in ``source_dir`` into ``regression_dir``,
     then rewrites absolute paths to portable placeholders in place
-    (:func:`~climate_ref_core.output_files.to_placeholders`),
+    (:meth:`~climate_ref_core.output_files.PlaceholderMap.sanitise`),
     rounds floats (:func:`_round_committed_floats`),
     and redacts host/user-specific CMEC provenance fields (:func:`_redact_committed_provenance`).
     When a committed artefact is absent from ``source_dir``,
@@ -220,13 +218,10 @@ def write_committed_bundle(
         results directory).
     regression_dir
         The destination ``regression/`` directory (created if needed).
-    output_dir
-        The absolute execution output directory, for path substitution.
-    test_data_dir
-        The absolute provider test-data directory, for path substitution.
-    software_root_dir
-        The absolute shared-software root directory, for path substitution in provenance
-        command lines. When ``None``, no software-root substitution is applied.
+    placeholders
+        The placeholder map for this execution, already bound to the output directory via
+        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`. Its absolute paths are
+        rewritten to portable ``<TOKEN>`` placeholders in the copied bundle.
 
     Returns
     -------
@@ -245,12 +240,7 @@ def write_committed_bundle(
             # Drop a stale copy from a previous capture so it is not re-digested.
             dest.unlink(missing_ok=True)
 
-    to_placeholders(
-        regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-        software_root_dir=software_root_dir,
-    )
+    placeholders.sanitise(regression_dir)
     # Round floats in place before digesting,
     # so the committed bytes (and their recorded digests) are the stable, rounded ones.
     # Placeholder substitution only rewrites path strings, so order relative to it does not matter for floats.
@@ -292,9 +282,7 @@ def capture_execution(  # noqa: PLR0913
     result: ExecutionResult,
     *,
     regression_dir: Path,
-    output_dir: Path,
-    test_data_dir: Path,
-    software_root_dir: Path | None = None,
+    placeholders: PlaceholderMap,
     # TODO: Unify the log handling
     include_log: bool = False,
 ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
@@ -318,13 +306,9 @@ def capture_execution(  # noqa: PLR0913
         The successful execution result (must carry a metric bundle filename).
     regression_dir
         The test case ``regression/`` directory for the committed bundle.
-    output_dir
-        The absolute execution output directory, for path substitution.
-    test_data_dir
-        The absolute provider test-data directory, for path substitution.
-    software_root_dir
-        The absolute shared-software root directory, for path substitution in provenance
-        command lines. When ``None``, no software-root substitution is applied.
+    placeholders
+        The placeholder map for this execution, already bound to the output directory via
+        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
     include_log
         If True, the execution log is included in the persisted/native set.
 
@@ -344,13 +328,7 @@ def capture_execution(  # noqa: PLR0913
         include_log=include_log,
     )
     base_dir = results_directory / fragment
-    committed = write_committed_bundle(
-        base_dir,
-        regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-        software_root_dir=software_root_dir,
-    )
+    committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
     native = build_native_snapshot(base_dir, relpaths)
     return committed, native
 

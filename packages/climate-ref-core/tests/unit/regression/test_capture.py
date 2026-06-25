@@ -10,6 +10,7 @@ from climate_ref_core.output_files import (
     PLACEHOLDER_OUTPUT_DIR,
     PLACEHOLDER_SOFTWARE_ROOT_DIR,
     PLACEHOLDER_TEST_DATA_DIR,
+    PlaceholderMap,
 )
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
@@ -54,7 +55,9 @@ def test_write_committed_bundle_sanitises_and_digests(tmp_path):
     regression_dir = tmp_path / "regression"
 
     digests = write_committed_bundle(
-        source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
     assert set(digests) == {"series.json", "diagnostic.json", "output.json"}
@@ -102,7 +105,11 @@ def test_write_committed_bundle_rounds_floats(tmp_path):
     (source / "series.json").write_text(json.dumps(source_series))
     regression_dir = tmp_path / "regression"
 
-    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    write_committed_bundle(
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+    )
 
     diag = json.loads((regression_dir / "diagnostic.json").read_text())
     series = json.loads((regression_dir / "series.json").read_text())
@@ -164,7 +171,11 @@ def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
     )
     regression_dir = tmp_path / "regression"
 
-    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    write_committed_bundle(
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+    )
 
     # output.json is byte-identical to the copied source: not re-dumped, keys not reordered.
     assert (regression_dir / "output.json").read_bytes() == source_output_bytes
@@ -209,9 +220,9 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
     digests = write_committed_bundle(
         source,
         regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-        software_root_dir=software_root,
+        placeholders=PlaceholderMap.for_baseline(
+            test_data_dir=test_data_dir, software_root_dir=software_root
+        ).with_output(output_dir),
     )
 
     for filename in ("diagnostic.json", "output.json"):
@@ -257,7 +268,11 @@ def test_redaction_is_noop_without_provenance_fields(tmp_path):
     (source / "series.json").write_text(json.dumps([]))
     regression_dir = tmp_path / "regression"
 
-    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    write_committed_bundle(
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+    )
 
     assert (regression_dir / "output.json").read_bytes() == source_output_bytes
 
@@ -297,8 +312,7 @@ def test_capture_execution_end_to_end(tmp_path):
         fragment,
         result,
         regression_dir=regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
     # Committed bundle is the three CMEC artefacts.
@@ -331,8 +345,7 @@ def test_capture_execution_include_log(tmp_path):
         fragment,
         result,
         regression_dir=tmp_path / "regression",
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
         include_log=True,
     )
 
@@ -348,8 +361,9 @@ def test_capture_execution_requires_metric_bundle(tmp_path):
             "frag",
             result,
             regression_dir=tmp_path / "regression",
-            output_dir=tmp_path / "out",
-            test_data_dir=tmp_path / "td",
+            placeholders=PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td").with_output(
+                tmp_path / "out"
+            ),
         )
 
 

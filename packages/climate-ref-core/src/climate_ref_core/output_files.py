@@ -15,7 +15,7 @@ a curated subset of outputs are copied from the scratch directory to the results
 Only files in the results directory are accessed by the API/public.
 
 For some tests we must sanitise paths to files as well as the contents of text files
-(:func:`to_placeholders` / :func:`from_placeholders`).
+(:class:`PlaceholderMap`).
 This ensures that the regression data is machine independent.
 """
 
@@ -24,6 +24,8 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from attrs import frozen
 
 from climate_ref_core.diagnostics import ensure_relative_path
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
@@ -109,85 +111,75 @@ def rewrite_tree(
                 file.write_text(rewritten, encoding="utf-8")
 
 
-def _placeholder_pairs(
-    output_dir: Path, test_data_dir: Path, software_root_dir: Path | None
-) -> list[tuple[str, Path]]:
-    """Return the ``(placeholder, absolute directory)`` pairs sanitised in committed artefacts.
-
-    Shared by :func:`to_placeholders` and :func:`from_placeholders` so the placeholder set is
-    declared once and each picks a substitution direction.
+@frozen
+class PlaceholderMap:
     """
-    pairs = [(PLACEHOLDER_OUTPUT_DIR, output_dir), (PLACEHOLDER_TEST_DATA_DIR, test_data_dir)]
-    if software_root_dir is not None:
-        pairs.append((PLACEHOLDER_SOFTWARE_ROOT_DIR, software_root_dir))
-    return pairs
+    Bidirectional map between absolute runtime directories and portable ``<TOKEN>`` placeholders.
 
+    A committed regression bundle is made machine-independent by replacing host-specific absolute
+    paths with stable tokens -- ``<OUTPUT_DIR>``, ``<TEST_DATA_DIR>`` and (optionally)
+    ``<SOFTWARE_ROOT_DIR>``. The *same* map drives every direction:
 
-def to_placeholders(
-    directory: Path,
-    *,
-    output_dir: Path,
-    test_data_dir: Path,
-    software_root_dir: Path | None = None,
-    globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
-) -> None:
+    - :meth:`sanitise` rewrites absolute paths to tokens (capture / mint).
+    - :meth:`hydrate` rewrites tokens back to absolute paths (replay / rebuild).
+    - :meth:`as_replacements` yields the ``{absolute: token}`` mapping the bundle and series
+      comparators apply to a freshly regenerated artefact before diffing.
+
+    The token set is declared in one place (:meth:`for_baseline` then :meth:`with_output`), so the
+    capture side and the verification side cannot declare different sets and drift apart. Adding a
+    placeholder is a one-line change here, not a new parameter threaded through every caller.
+
+    The two configuration-stable tokens (``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>``) are fixed for
+    a whole run; the per-execution ``<OUTPUT_DIR>`` is late-bound with :meth:`with_output`.
     """
-    Rewrite absolute paths in committed artefacts to portable placeholders ("to").
 
-    Replaces the absolute ``output_dir`` with ``<OUTPUT_DIR>``, the absolute
-    ``test_data_dir`` with ``<TEST_DATA_DIR>``, and (when given) the absolute
-    ``software_root_dir`` with ``<SOFTWARE_ROOT_DIR>`` in every text artefact under ``directory``.
-    Binary files are never touched.
+    pairs: tuple[tuple[str, Path], ...]
+    """Ordered ``(token, absolute_directory)`` pairs.
 
-    Parameters
-    ----------
-    directory
-        The tree of committed artefacts to sanitise in place.
-    output_dir
-        The absolute execution output directory.
-    test_data_dir
-        The absolute provider test-data directory.
-    software_root_dir
-        The absolute shared-software root directory, if any. Substituted in provenance
-        command lines so the committed bundle stays machine-independent.
-    globs
-        File globs whose contents are rewritten.
+    Application order is not significant: all rewriting goes through :func:`rewrite_tree`, which
+    re-sorts longest-match-first so an overlapping shorter path cannot shadow a longer one.
     """
-    pairs = _placeholder_pairs(output_dir, test_data_dir, software_root_dir)
-    rewrite_tree(directory, {str(abs_dir): placeholder for placeholder, abs_dir in pairs}, globs)
 
+    @classmethod
+    def for_baseline(cls, *, test_data_dir: Path, software_root_dir: Path | None = None) -> PlaceholderMap:
+        """
+        Build the configuration-stable placeholder set for a committed baseline.
 
-def from_placeholders(
-    directory: Path,
-    *,
-    output_dir: Path,
-    test_data_dir: Path,
-    software_root_dir: Path | None = None,
-    globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
-) -> None:
-    """
-    Rewrite portable placeholders back to absolute paths ("from").
+        Holds every token except the per-execution output directory, which is added with
+        :meth:`with_output`. ``software_root_dir`` is optional: when ``None`` no
+        ``<SOFTWARE_ROOT_DIR>`` substitution is applied -- a verification context that does not know
+        the shared-software root relies on this, and the omission is explicit and declared once.
+        """
+        pairs: list[tuple[str, Path]] = [(PLACEHOLDER_TEST_DATA_DIR, test_data_dir)]
+        if software_root_dir is not None:
+            pairs.append((PLACEHOLDER_SOFTWARE_ROOT_DIR, software_root_dir))
+        return cls(pairs=tuple(pairs))
 
-    Inverse of :func:`to_placeholders`: replaces ``<OUTPUT_DIR>`` with the absolute ``output_dir``,
-    ``<TEST_DATA_DIR>`` with the absolute ``test_data_dir``, and (when given) ``<SOFTWARE_ROOT_DIR>``
-    with the absolute ``software_root_dir`` in every text artefact under ``directory``.
-    Binary files are never touched.
+    def with_output(self, output_dir: Path) -> PlaceholderMap:
+        """Return a new map that also binds ``<OUTPUT_DIR>`` to the per-execution ``output_dir``."""
+        return PlaceholderMap(pairs=((PLACEHOLDER_OUTPUT_DIR, output_dir), *self.pairs))
 
-    Parameters
-    ----------
-    directory
-        The tree of artefacts to hydrate in place.
-    output_dir
-        The absolute execution output directory to substitute in.
-    test_data_dir
-        The absolute provider test-data directory to substitute in.
-    software_root_dir
-        The absolute shared-software root directory to substitute in, if any.
-    globs
-        File globs whose contents are rewritten.
-    """
-    pairs = _placeholder_pairs(output_dir, test_data_dir, software_root_dir)
-    rewrite_tree(directory, {placeholder: str(abs_dir) for placeholder, abs_dir in pairs}, globs)
+    def as_replacements(self) -> dict[str, str]:
+        """Return the ``{absolute_directory: token}`` mapping (real path -> placeholder).
+
+        This is what the bundle and series comparators apply to a regenerated artefact before
+        diffing it against the committed (already-placeholdered) baseline.
+        """
+        return {str(abs_dir): token for token, abs_dir in self.pairs}
+
+    def sanitise(self, directory: Path, globs: tuple[str, ...] = SANITISED_FILE_GLOBS) -> None:
+        """Rewrite absolute paths to ``<TOKEN>`` placeholders in every text artefact under ``directory``.
+
+        Binary files are never touched. In-place.
+        """
+        rewrite_tree(directory, self.as_replacements(), globs)
+
+    def hydrate(self, directory: Path, globs: tuple[str, ...] = SANITISED_FILE_GLOBS) -> None:
+        """Inverse of :meth:`sanitise`: rewrite ``<TOKEN>`` placeholders back to absolute paths.
+
+        Binary files are never touched. In-place.
+        """
+        rewrite_tree(directory, {token: str(abs_dir) for token, abs_dir in self.pairs}, globs)
 
 
 def copy_output_file(

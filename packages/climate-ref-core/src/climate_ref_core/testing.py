@@ -30,7 +30,7 @@ from climate_ref_core.datasets import (
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
-from climate_ref_core.output_files import from_placeholders, ordered_replacements
+from climate_ref_core.output_files import PlaceholderMap, ordered_replacements
 from climate_ref_core.paths import safe_path
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
@@ -567,8 +567,10 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     # structurally validated here, so a diagnostic can change the metric/output
     # values without any regression test failing (see issue #703 for the series
     # equivalent). A content comparison must sanitise the regenerated bundle first
-    # via `ExecutionRegression.output_replacements`, since the committed bundles
-    # store `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` placeholders.
+    # via `PlaceholderMap.for_baseline(...).with_output(...).as_replacements()`, since the
+    # committed bundles store `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` / `<SOFTWARE_ROOT_DIR>`
+    # placeholders. diagnostic.json provenance carries the software root, so building the
+    # replacements from the map (rather than a hand-rolled dict) keeps this in step with capture.
     assert result.successful, f"Execution failed: {result}"
 
     # Validate metric bundle
@@ -701,7 +703,11 @@ class RegressionValidator:
         output_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
 
-        from_placeholders(output_dir, output_dir=output_dir, test_data_dir=self.test_data_dir)
+        # This verification context does not know the shared-software root, so the map omits
+        # <SOFTWARE_ROOT_DIR>; the omission is declared once on the map rather than open-coded here.
+        PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir).with_output(output_dir).hydrate(
+            output_dir
+        )
 
         datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
 
@@ -722,10 +728,9 @@ class RegressionValidator:
             expected_path=self.paths.regression / "series.json",
             actual_path=definition.output_directory / "series.json",
             slug=self.diagnostic.slug,
-            replacements={
-                str(definition.output_directory): "<OUTPUT_DIR>",
-                str(self.test_data_dir): "<TEST_DATA_DIR>",
-            },
+            replacements=PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir)
+            .with_output(definition.output_directory)
+            .as_replacements(),
         )
 
 

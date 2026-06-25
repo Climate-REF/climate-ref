@@ -41,7 +41,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.output_files import from_placeholders
+from climate_ref_core.output_files import PlaceholderMap
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -306,8 +306,7 @@ def _capture_synthetic(
         fragment,
         result,
         regression_dir=regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
 
@@ -392,7 +391,7 @@ class TestSyntheticNestedRoundTrip:
         replay_dir = tmp_path / "replay_output"
         replay_dir.mkdir()
         materialise_native(reloaded.native, store, replay_dir)
-        from_placeholders(replay_dir, output_dir=replay_dir, test_data_dir=test_data_dir)
+        PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(replay_dir).hydrate(replay_dir)
 
         replay_definition = ExecutionDefinition(
             diagnostic=definition.diagnostic,
@@ -592,7 +591,7 @@ class TestExampleSmokeRoundTrip:
         replay_dir = tmp_path / "example_replay"
         replay_dir.mkdir()
         materialise_native(manifest.native, store, replay_dir)
-        from_placeholders(replay_dir, output_dir=replay_dir, test_data_dir=test_data_dir)
+        PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(replay_dir).hydrate(replay_dir)
 
         replay_definition = ExecutionDefinition(
             diagnostic=diag,

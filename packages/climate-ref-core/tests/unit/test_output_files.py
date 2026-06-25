@@ -7,10 +7,9 @@ from climate_ref_core.output_files import (
     PLACEHOLDER_OUTPUT_DIR,
     PLACEHOLDER_SOFTWARE_ROOT_DIR,
     PLACEHOLDER_TEST_DATA_DIR,
+    PlaceholderMap,
     copy_execution_outputs,
     copy_output_file,
-    from_placeholders,
-    to_placeholders,
 )
 from climate_ref_core.pycmec.output import CMECOutput
 
@@ -21,17 +20,18 @@ def test_sanitise_and_expand_round_trip(tmp_path):
     directory = tmp_path / "regression"
     directory.mkdir()
 
+    placeholders = PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir)
     original = f"path={output_dir}\ndata={test_data_dir}\n"
     (directory / "diagnostic.json").write_text(original)
 
-    to_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    placeholders.sanitise(directory)
     sanitised = (directory / "diagnostic.json").read_text()
     assert str(output_dir) not in sanitised
     assert str(test_data_dir) not in sanitised
     assert PLACEHOLDER_OUTPUT_DIR in sanitised
     assert PLACEHOLDER_TEST_DATA_DIR in sanitised
 
-    from_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    placeholders.hydrate(directory)
     assert (directory / "diagnostic.json").read_text() == original
 
 
@@ -42,27 +42,20 @@ def test_sanitise_software_root_round_trip(tmp_path):
     directory = tmp_path / "regression"
     directory.mkdir()
 
+    placeholders = PlaceholderMap.for_baseline(
+        test_data_dir=test_data_dir, software_root_dir=software_root_dir
+    ).with_output(output_dir)
     # A provenance command line referencing the software root and the output dir.
     original = f"cmd={software_root_dir}/conda/bin/driver.py --out {output_dir}\n"
     (directory / "diagnostic.json").write_text(original)
 
-    to_placeholders(
-        directory,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-        software_root_dir=software_root_dir,
-    )
+    placeholders.sanitise(directory)
     sanitised = (directory / "diagnostic.json").read_text()
     assert str(software_root_dir) not in sanitised
     assert PLACEHOLDER_SOFTWARE_ROOT_DIR in sanitised
     assert PLACEHOLDER_OUTPUT_DIR in sanitised
 
-    from_placeholders(
-        directory,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-        software_root_dir=software_root_dir,
-    )
+    placeholders.hydrate(directory)
     assert (directory / "diagnostic.json").read_text() == original
 
 
@@ -74,7 +67,9 @@ def test_software_root_substitution_is_opt_in(tmp_path):
     original = f"cmd={software_root_dir}/conda/bin/driver.py\n"
     (directory / "diagnostic.json").write_text(original)
 
-    to_placeholders(directory, output_dir=tmp_path / "out", test_data_dir=tmp_path / "td")
+    PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td").with_output(tmp_path / "out").sanitise(
+        directory
+    )
 
     assert (directory / "diagnostic.json").read_text() == original
 
@@ -89,7 +84,7 @@ def test_sanitise_only_touches_text_globs(tmp_path):
     (directory / "data.nc").write_bytes(binary)
     (directory / "meta.json").write_text(str(output_dir))
 
-    to_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir).sanitise(directory)
 
     # Binary file is untouched; JSON is rewritten.
     assert (directory / "data.nc").read_bytes() == binary
@@ -104,7 +99,7 @@ def test_sanitise_longest_match_first(tmp_path):
     directory.mkdir()
     (directory / "a.json").write_text(str(output_dir))
 
-    to_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir).sanitise(directory)
 
     assert (directory / "a.json").read_text() == PLACEHOLDER_OUTPUT_DIR
 
@@ -117,7 +112,7 @@ def test_sanitise_covers_all_text_globs(suffix, tmp_path):
     directory.mkdir()
     (directory / f"artefact.{suffix}").write_text(str(output_dir))
 
-    to_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir).sanitise(directory)
 
     assert (directory / f"artefact.{suffix}").read_text() == PLACEHOLDER_OUTPUT_DIR
 
@@ -130,11 +125,8 @@ def test_sanitise_respects_custom_globs(tmp_path):
     (directory / "config.cfg").write_text(str(output_dir))
     (directory / "skip.json").write_text(str(output_dir))
 
-    to_placeholders(
-        directory,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-        globs=("*.cfg",),
+    PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir).sanitise(
+        directory, globs=("*.cfg",)
     )
 
     # Only the custom glob is rewritten; the default JSON glob is left untouched.
@@ -154,10 +146,44 @@ def test_sanitise_leaves_unmatched_content_untouched(tmp_path):
     target.write_text(original)
     before = target.stat().st_mtime_ns
 
-    to_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir).sanitise(directory)
 
     assert target.read_text() == original
     assert target.stat().st_mtime_ns == before
+
+
+def test_placeholder_map_as_replacements_maps_real_to_token(tmp_path):
+    output_dir = tmp_path / "out"
+    test_data_dir = tmp_path / "td"
+    software_root_dir = tmp_path / "sw"
+
+    placeholders = PlaceholderMap.for_baseline(
+        test_data_dir=test_data_dir, software_root_dir=software_root_dir
+    ).with_output(output_dir)
+
+    assert placeholders.as_replacements() == {
+        str(output_dir): PLACEHOLDER_OUTPUT_DIR,
+        str(test_data_dir): PLACEHOLDER_TEST_DATA_DIR,
+        str(software_root_dir): PLACEHOLDER_SOFTWARE_ROOT_DIR,
+    }
+
+
+def test_placeholder_map_for_baseline_omits_software_root_when_absent(tmp_path):
+    # The optional software root is declared once on the map; an absent root is an explicit omission.
+    tokens = {token for token, _ in PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td").pairs}
+
+    assert PLACEHOLDER_TEST_DATA_DIR in tokens
+    assert PLACEHOLDER_SOFTWARE_ROOT_DIR not in tokens
+    assert PLACEHOLDER_OUTPUT_DIR not in tokens  # only added by with_output
+
+
+def test_placeholder_map_with_output_returns_a_new_map(tmp_path):
+    # Frozen value object: with_output does not mutate the base map.
+    base = PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td")
+    bound = base.with_output(tmp_path / "out")
+
+    assert PLACEHOLDER_OUTPUT_DIR not in {token for token, _ in base.pairs}
+    assert PLACEHOLDER_OUTPUT_DIR in {token for token, _ in bound.pairs}
 
 
 @pytest.mark.parametrize("filename", ("bundle.zip", "nested/bundle.zip"))

@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.output_files import copy_execution_outputs, from_placeholders
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.regression import (
     COMMITTED_BUNDLE_FILES,
     Tolerance,
@@ -136,13 +136,11 @@ def stage_materialise(  # noqa: PLR0913
     manifest: Manifest,
     store: NativeStore,
     slot: Path,
-    software_root_dir: Path | None = None,
+    placeholders: PlaceholderMap,
 ) -> SourceOutputs:
     """Fetch the manifest's native blobs into ``slot`` and rebuild the result from them."""
     materialise_native(manifest.native, store, slot)
-    return stage_rebuild_from_slot(
-        diag=diag, tc=tc, paths=paths, slot=slot, software_root_dir=software_root_dir
-    )
+    return stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders)
 
 
 def stage_rebuild_from_slot(
@@ -151,7 +149,7 @@ def stage_rebuild_from_slot(
     tc: TestCase,
     paths: TestCasePaths,
     slot: Path,
-    software_root_dir: Path | None = None,
+    placeholders: PlaceholderMap,
 ) -> SourceOutputs:
     """
     Rebuild the execution result from native already present in ``slot``.
@@ -159,12 +157,13 @@ def stage_rebuild_from_slot(
     Hydrates portable placeholders to concrete paths, then re-runs ``build_execution_result``
     so the rebuilt bundle is written into the slot (referencing the slot). No execution and
     no store access -- this is the shared core of ``replay`` (after a fetch) and ``build``.
+
+    The slot is its own output directory, so the placeholder map is bound to it
+    (``placeholders.with_output(slot)``) before hydrating.
     """
     from climate_ref_core.testing import load_datasets_from_yaml
 
-    from_placeholders(
-        slot, output_dir=slot, test_data_dir=paths.test_data_dir, software_root_dir=software_root_dir
-    )
+    placeholders.with_output(slot).hydrate(slot)
     datasets = load_datasets_from_yaml(paths.catalog)
     definition = ExecutionDefinition(
         diagnostic=diag,
@@ -181,8 +180,7 @@ def stage_build(
     *,
     slot: Path,
     source: SourceOutputs,
-    paths: TestCasePaths,
-    software_root_dir: Path | None = None,
+    placeholders: PlaceholderMap,
 ) -> dict[str, str]:
     """
     Assemble the committed bundle into the slot's ``regression/`` directory.
@@ -190,13 +188,14 @@ def stage_build(
     Returns the committed digests ``{filename: sha256}`` of the sanitised, float-quantised
     bytes just written -- suitable for ``Manifest.committed`` and identical to what would be
     promoted to the tracked baseline.
+
+    The rebuilt bundle's text still references ``source.bundle_output_dir``, so the placeholder
+    map is bound to it before sanitising.
     """
     return write_committed_bundle(
         slot,
         slot / SLOT_REGRESSION_DIRNAME,
-        output_dir=source.bundle_output_dir,
-        test_data_dir=paths.test_data_dir,
-        software_root_dir=software_root_dir,
+        placeholders=placeholders.with_output(source.bundle_output_dir),
     )
 
 

@@ -1,0 +1,412 @@
+_metadata:
+  hash: 5c385e1d58b72eca3d1def8eae70ad8142593c54
+obs4mips:
+  slug_column: instance_id
+  selector:
+    activity_id: obs4MIPs
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2017-07-16 12:00:00'
+    filename: hfls_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfls.250km.gn.v20250415
+    institution_id: ESSO
+    long_name: Surface Upward Latent Heat Flux
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: TropFlux-1-0
+    source_type: satellite_blended
+    source_version_number: '1.0'
+    start_time: '1979-01-16 12:00:00'
+    time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
+    units: W m-2
+    variable_id: hfls
+    variant_label: PCMDI
+    version: v20250415
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2017-07-16 12:00:00'
+    filename: hfss_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.hfss.250km.gn.v20250415
+    institution_id: ESSO
+    long_name: Surface Upward Sensible Heat Flux
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: TropFlux-1-0
+    source_type: satellite_blended
+    source_version_number: '1.0'
+    start_time: '1979-01-16 12:00:00'
+    time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
+    units: W m-2
+    variable_id: hfss
+    variant_label: PCMDI
+    version: v20250415
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2017-07-16 12:00:00'
+    filename: tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.tauu.250km.gn.v20250415
+    institution_id: ESSO
+    long_name: Surface Downward Eastward Wind Stress
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: TropFlux-1-0
+    source_type: satellite_blended
+    source_version_number: '1.0'
+    start_time: '1979-01-16 12:00:00'
+    time_range: 1979-01-16 12:00:00-2017-07-16 12:00:00
+    units: Pa
+    variable_id: tauu
+    variant_label: PCMDI
+    version: v20250415
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2017-07-15 12:00:00'
+    filename: ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc
+    finalised: true
+    frequency: mon
+    grid: 1.0x1.0 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ESSO.TropFlux-1-0.mon.ts.250km.gn.v20210727
+    institution_id: ESSO
+    long_name: Surface Temperature
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: TropFlux-1-0
+    source_type: satellite_blended
+    source_version_number: '1.0'
+    start_time: '1979-01-15 00:00:00'
+    time_range: 1979-01-15 00:00:00-2017-07-15 12:00:00
+    units: K
+    variable_id: ts
+    variant_label: PCMDI
+    version: v20210727
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2025-01-16 12:00:00'
+    filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    institution_id: MOHC
+    long_name: Surface Temperature
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: HadISST-1-1
+    source_type: satellite_blended
+    source_version_number: 1-1
+    start_time: '1870-01-16 12:00:00'
+    time_range: 1870-01-16 12:00:00-2025-01-16 12:00:00
+    units: K
+    variable_id: ts
+    variant_label: PCMDI
+    version: v20250415
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2023-09-16 00:00:00'
+    filename: rlds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlds.100km.gn.v20230209
+    institution_id: NASA-LaRC
+    long_name: Surface Downwelling Longwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2
+    source_type: satellite_blended
+    source_version_number: '4.2'
+    start_time: '2000-03-16 12:00:00'
+    time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
+    units: W m-2
+    variable_id: rlds
+    variant_label: RSS
+    version: v20230209
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2023-09-16 00:00:00'
+    filename: rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rlus.100km.gn.v20230209
+    institution_id: NASA-LaRC
+    long_name: Surface Upwelling Longwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2
+    source_type: satellite_blended
+    source_version_number: '4.2'
+    start_time: '2000-03-16 12:00:00'
+    time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
+    units: W m-2
+    variable_id: rlus
+    variant_label: RSS
+    version: v20230209
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2023-09-16 00:00:00'
+    filename: rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsds.100km.gn.v20230209
+    institution_id: NASA-LaRC
+    long_name: Surface Downwelling Shortwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2
+    source_type: satellite_blended
+    source_version_number: '4.2'
+    start_time: '2000-03-16 12:00:00'
+    time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
+    units: W m-2
+    variable_id: rsds
+    variant_label: RSS
+    version: v20230209
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2023-09-16 00:00:00'
+    filename: rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2.mon.rsus.100km.gn.v20230209
+    institution_id: NASA-LaRC
+    long_name: Surface Upwelling Shortwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2
+    source_type: satellite_blended
+    source_version_number: '4.2'
+    start_time: '2000-03-16 12:00:00'
+    time_range: 2000-03-16 12:00:00-2023-09-16 00:00:00
+    units: W m-2
+    variable_id: rsus
+    variant_label: RSS
+    version: v20230209
+    vertical_levels: 1
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    source_id: ACCESS-ESM1-5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branded_variable: areacella_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    end_time: null
+    experiment_id: historical
+    filename: areacella_ti-u-hxy-u_fx_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc
+    finalised: false
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: null
+    time_range: null
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: sftlf_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    end_time: null
+    experiment_id: historical
+    filename: sftlf_ti-u-hxy-u_fx_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc
+    finalised: false
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: null
+    time_range: null
+    variable_id: sftlf
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: hfls_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: hfls_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.hfls.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: hfls
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: hfss_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: hfss_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.hfss.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: hfss
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: rlds_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: rlds_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.rlds.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: rlds
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: rlus_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: rlus_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.rlus.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: rlus
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: rsds_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: rsds_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.rsds.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: rsds
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: rsus_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: rsus_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.rsus.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: rsus
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tauu_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: tauu_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.tauu.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: tauu
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: ts_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: ts_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.ts.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    mip_era: CMIP7
+    region: glb
+    source_id: ACCESS-ESM1-5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: ts
+    variant_label: r1i1p1f1
+    version: v0

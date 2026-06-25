@@ -405,7 +405,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         },
                     ),
                 ),
-                group_by=("source_id", "member_id", "grid_label"),
+                group_by=("source_id", "member_id", "grid_label", "variable_id"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -435,7 +435,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         },
                     ),
                 ),
-                group_by=("source_id", "variant_label", "grid_label"),
+                group_by=("source_id", "variant_label", "grid_label", "variable_id"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -461,7 +461,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         },
                     ),
                 ),
-                group_by=("source_id",),
+                group_by=("source_id", "variable_id"),
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
@@ -493,7 +493,7 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                             "experiment_id": ["historical"],
                             "frequency": ["fx", "mon"],
                             "source_id": "CanESM5",
-                            "variable_id": ["areacella", *variables],
+                            "variable_id": ["areacella", "tas"],
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2014"),

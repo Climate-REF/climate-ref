@@ -116,28 +116,32 @@ class PlaceholderMap:
     """
     Bidirectional map between absolute runtime directories and portable ``<TOKEN>`` placeholders.
 
-    A committed regression bundle is made machine-independent by replacing host-specific absolute
-    paths with stable tokens -- ``<OUTPUT_DIR>``, ``<TEST_DATA_DIR>`` and (optionally)
-    ``<SOFTWARE_ROOT_DIR>``. The *same* map drives every direction:
+    A committed regression bundle is made machine-independent
+    by replacing host-specific absolute paths with stable tokens --
+    ``<OUTPUT_DIR>``, ``<TEST_DATA_DIR>`` and (optionally) ``<SOFTWARE_ROOT_DIR>``.
+    The *same* map drives every direction:
 
     - :meth:`sanitise` rewrites absolute paths to tokens (capture / mint).
     - :meth:`hydrate` rewrites tokens back to absolute paths (replay / rebuild).
-    - :meth:`as_replacements` yields the ``{absolute: token}`` mapping the bundle and series
-      comparators apply to a freshly regenerated artefact before diffing.
+    - :meth:`as_replacements` yields the ``{absolute: token}`` mapping
+      the bundle and series comparators apply to a freshly regenerated artefact before diffing.
 
-    The token set is declared in one place (:meth:`for_baseline` then :meth:`with_output`), so the
-    capture side and the verification side cannot declare different sets and drift apart. Adding a
-    placeholder is a one-line change here, not a new parameter threaded through every caller.
+    The token set is declared in one place (:meth:`for_baseline` then :meth:`with_output`),
+    so the capture side and the verification side cannot declare different sets and drift apart.
+    Adding a placeholder is a one-line change here,
+    not a new parameter threaded through every caller.
 
-    The two configuration-stable tokens (``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>``) are fixed for
-    a whole run; the per-execution ``<OUTPUT_DIR>`` is late-bound with :meth:`with_output`.
+    The two configuration-stable tokens (``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>``)
+    are fixed for a whole run;
+    the per-execution ``<OUTPUT_DIR>`` is late-bound with :meth:`with_output`.
     """
 
     pairs: tuple[tuple[str, Path], ...]
     """Ordered ``(token, absolute_directory)`` pairs.
 
-    Application order is not significant: all rewriting goes through :func:`rewrite_tree`, which
-    re-sorts longest-match-first so an overlapping shorter path cannot shadow a longer one.
+    Application order is not significant:
+    all rewriting goes through :func:`rewrite_tree`,
+    which re-sorts longest-match-first so an overlapping shorter path cannot shadow a longer one.
     """
 
     @classmethod
@@ -145,10 +149,12 @@ class PlaceholderMap:
         """
         Build the configuration-stable placeholder set for a committed baseline.
 
-        Holds every token except the per-execution output directory, which is added with
-        :meth:`with_output`. ``software_root_dir`` is optional: when ``None`` no
-        ``<SOFTWARE_ROOT_DIR>`` substitution is applied -- a verification context that does not know
-        the shared-software root relies on this, and the omission is explicit and declared once.
+        Holds every token except the per-execution output directory,
+        which is added with :meth:`with_output`.
+        ``software_root_dir`` is optional:
+        when ``None`` no ``<SOFTWARE_ROOT_DIR>`` substitution is applied --
+        a verification context that does not know the shared-software root relies on this,
+        and the omission is explicit and declared once.
         """
         pairs: list[tuple[str, Path]] = [(PLACEHOLDER_TEST_DATA_DIR, test_data_dir)]
         if software_root_dir is not None:
@@ -162,22 +168,24 @@ class PlaceholderMap:
     def as_replacements(self) -> dict[str, str]:
         """Return the ``{absolute_directory: token}`` mapping (real path -> placeholder).
 
-        This is what the bundle and series comparators apply to a regenerated artefact before
-        diffing it against the committed (already-placeholdered) baseline.
+        This is what the bundle and series comparators apply to a regenerated artefact
+        before diffing it against the committed (already-placeholdered) baseline.
         """
         return {str(abs_dir): token for token, abs_dir in self.pairs}
 
     def sanitise(self, directory: Path, globs: tuple[str, ...] = SANITISED_FILE_GLOBS) -> None:
         """Rewrite absolute paths to ``<TOKEN>`` placeholders in every text artefact under ``directory``.
 
-        Binary files are never touched. In-place.
+        Binary files are never touched.
+        In-place.
         """
         rewrite_tree(directory, self.as_replacements(), globs)
 
     def hydrate(self, directory: Path, globs: tuple[str, ...] = SANITISED_FILE_GLOBS) -> None:
         """Inverse of :meth:`sanitise`: rewrite ``<TOKEN>`` placeholders back to absolute paths.
 
-        Binary files are never touched. In-place.
+        Binary files are never touched.
+        In-place.
         """
         rewrite_tree(directory, {token: str(abs_dir) for token, abs_dir in self.pairs}, globs)
 

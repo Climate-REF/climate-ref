@@ -13,7 +13,7 @@ ci:
 exclude: |
     (?x)^(
         .*/test-data/.*/regression/.*
-        | tests/test-data/regression/.*
+        | packages/climate-ref-pmp/tests/unit/test-data/.*
         | tests/regression/.*
     )$
 

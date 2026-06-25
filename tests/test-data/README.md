@@ -29,14 +29,3 @@ These sample data are also used to generate the documentation.
 ## CMEC Output
 
 Reference output from the CMEC model is stored in the `cmec-output` directory.
-
-
-## Regression output
-
-A set of output from execution the suite of available diagnostics.
-These data can be used to test any post-processing of the outputs that is required to ingest these data into
-the REF system.
-
-The `execution_regression` fixture is responsible for collecting the output and copying it to the regression directory.
-This fixture will replace any exisiting output for an execution if the `--force-regen` flag is set.
-This flag is borrowed from the `pytest-regressions` package which is used elsewhere in the test suite.

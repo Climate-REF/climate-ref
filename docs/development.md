@@ -179,7 +179,9 @@ pytest --slow -k gpp-fluxnet2015
 Some diagnostics may require additional filtering to limit the pytest's scope to a directory or test name.
 Adding `--collect-only` to this will describe which tests will be executed which is useful as some of these test may take 30s to minutes to run.
 
-When adding a new diagnostic to a provider, you should run the above command with `--force-regen` attribute to capture the output from the execution.
+When adding a new diagnostic to a provider, record its regression baseline with
+`ref test-cases run --provider <provider> --diagnostic <diagnostic> --force-regen`
+(see [Regression baselines](how-to-guides/testing-diagnostics.md#regression-baselines)).
 
 ### Sample data
 

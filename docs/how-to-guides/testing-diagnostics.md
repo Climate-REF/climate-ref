@@ -420,28 +420,6 @@ The pre-commit `check-added-large-files` hook does **not** flag regression basel
 Size enforcement for regression files comes solely from `ref test-cases run`.
 ///
 
-### Updating the baseline in pytest
-
-The `execution_regression` fixture is a **factory** — call it with your diagnostic to
-get an `ExecutionRegression` instance, then call `.check(key, output_directory)` on that:
-
-```python
-def test_regression(run_test_case, execution_regression):
-    from my_provider import MyDiagnostic
-
-    diagnostic = MyDiagnostic()
-    result = run_test_case.run(diagnostic, "default")
-
-    regression = execution_regression(diagnostic)
-    regression.check("default", result.output_directory)
-```
-
-`ExecutionRegression.check` only **regenerates** the committed bundle when pytest is
-invoked with `--force-regen`.
-It does not compare the result against the stored baseline itself —
-that comparison is handled by the CLI (`ref test-cases run`) and the CI gate.
-Use `--force-regen` only when you intend to record a new baseline.
-
 ### The pull request workflow
 
 When you open a pull request, CI decides *how* to verify each test case from what your

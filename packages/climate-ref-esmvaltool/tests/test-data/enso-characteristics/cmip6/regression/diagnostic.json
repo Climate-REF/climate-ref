@@ -1,0 +1,52 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "member_id",
+      "source_id",
+      "region",
+      "metric"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "09pattern": {},
+      "10lifecycle": {},
+      "11amplitude": {},
+      "12seasonality": {},
+      "13asymmetry": {},
+      "14duration": {},
+      "15diversity": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "CanESM5": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "gn": {
+      "r1i1p1f1": {
+        "CanESM5": {
+          "global": {
+            "09pattern": 0.2592587,
+            "10lifecycle": 0.2404587,
+            "11amplitude": 4.705859,
+            "12seasonality": 45.60695,
+            "13asymmetry": 23.26868,
+            "14duration": 76.92308,
+            "15diversity": 11.72414
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,44 @@
+{
+  "catalog_hash": "fad5e2c4374674b2aac83a47be7061c2b9d17723",
+  "committed": {
+    "diagnostic.json": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+    "output.json": "2e4a87a330ad8514d0c2878646d65809a0c7e9092ade03ec703ef36ce740fefd",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "86e4231677b9cac1b822c75d7c6091c84faa32aba2985f9475deecd8099427ca",
+      "size": 14276
+    },
+    "executions/recipe/plots/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical.png": {
+      "sha256": "e218f4b6c52eb8a0b612b73cfa34605d4f2055d5953d7beddf096738bcfb17a2",
+      "size": 79743
+    },
+    "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_bottom.nc": {
+      "sha256": "e705299236a6588e079d9119bd7a4cc8bcb7f4e582d0004dfee2d783a6b04654",
+      "size": 30522
+    },
+    "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_top_left.nc": {
+      "sha256": "a8f56550f4579189e614cbd8c8a023b4b2423f4b6e2b11a7aefb5b48c171f370",
+      "size": 29830
+    },
+    "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_top_right.nc": {
+      "sha256": "09007e779f4179e9318991b6a32171f21aed0557fb67e68aaf19feafee406fd3",
+      "size": 25094
+    },
+    "output.json": {
+      "sha256": "a2641bd82cee6851eb77c8397f3d0fd5bbd75044d11cd9a730164d57cbd4af92",
+      "size": 2346
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

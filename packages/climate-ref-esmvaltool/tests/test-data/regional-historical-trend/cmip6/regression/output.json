@@ -1,0 +1,113 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe/work/hus200_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe/work/hus200_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "hus200",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/work/pr_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe/work/pr_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/work/psl_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe/work/psl_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "psl",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/work/tas_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe/work/tas_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "tas",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/work/ua200_trends/plot/seaborn_barplot.nc": {
+      "filename": "executions/recipe/work/ua200_trends/plot/seaborn_barplot.nc",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "ua200",
+        "statistic": "trend"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe/plots/hus200_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe/plots/hus200_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "hus200",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/plots/pr_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe/plots/pr_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/plots/psl_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe/plots/psl_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "psl",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/plots/tas_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe/plots/tas_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "tas",
+        "statistic": "trend"
+      }
+    },
+    "executions/recipe/plots/ua200_trends/plot/seaborn_barplot.png": {
+      "filename": "executions/recipe/plots/ua200_trends/plot/seaborn_barplot.png",
+      "long_name": "Seaborn barplot for one or more dataset(s)",
+      "description": "",
+      "dimensions": {
+        "variable_id": "ua200",
+        "statistic": "trend"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

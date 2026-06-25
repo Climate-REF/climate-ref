@@ -1,0 +1,40 @@
+{
+  "catalog_hash": "cd93402ba8b5214767d56b7ee813774bebb933db",
+  "committed": {
+    "diagnostic.json": "703049803b9c299792987f49dda6fd202be31d0a54ace1b22ab82a4481b2c11b",
+    "output.json": "33d558a163b402a15f0754c527454b9f75948d64fc78bcebffe82974eaae5686",
+    "series.json": "63fabd07b555d5685df2517e0783990d4236a9cadf3bdf899dddbb98f2db5030"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "7be2123937a4bda58e7ed538ecea9da9cf442636c3b1fa92c9d5e4e6296f5dd8",
+      "size": 590
+    },
+    "executions/recipe/index.html": {
+      "sha256": "a9ac3a00f54eabd491f3ecde6373e0d22bc0a8a3877f886a5336f48883d3c99d",
+      "size": 13944
+    },
+    "executions/recipe/plots/tcr/calculate/CanESM5.png": {
+      "sha256": "fc00486bdbc30ed94f191ddcf851faa5d4ca28aafb9893eefa82564f0404d510",
+      "size": 122530
+    },
+    "executions/recipe/work/tcr/calculate/CanESM5.nc": {
+      "sha256": "e3e0e3bd1cf106b96aa6469ba8c1cdb15c667929dad1a0ff0e22735c3f2ba36f",
+      "size": 31193
+    },
+    "executions/recipe/work/tcr/calculate/tcr.nc": {
+      "sha256": "833074cccdd12b705620a981030bea082580c49a6ec83c4fb1027756be121df7",
+      "size": 9019
+    },
+    "output.json": {
+      "sha256": "0c3a823b37b8bde98186e539e9e54d46d0949d1fd3446f3f37a62ea38404be57",
+      "size": 2670
+    },
+    "series.json": {
+      "sha256": "6d231d09ed457c3d0bcb93717a478f31b86ac69fca4beb67647c6af9c04ca87a",
+      "size": 8670
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

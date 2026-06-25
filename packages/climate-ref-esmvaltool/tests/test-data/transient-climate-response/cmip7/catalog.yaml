@@ -1,0 +1,161 @@
+_metadata:
+  hash: ddbc88ef573156460e3546a4e30b1e668e4eb0a7
+cmip7:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branded_variable: areacella_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    end_time: null
+    experiment_id: 1pctCO2
+    filename: areacella_ti-u-hxy-u_fx_glb_gn_CanESM5_1pctCO2_r1i1p1f1.nc
+    finalised: false
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: null
+    time_range: null
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '2000-12-30 00:00:00'
+    experiment_id: 1pctCO2
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_1pctCO2_r1i1p1f1_185001-200012.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-200012
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: areacella_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    end_time: null
+    experiment_id: piControl
+    filename: areacella_ti-u-hxy-u_fx_glb_gn_CanESM5_piControl_r1i1p1f1.nc
+    finalised: false
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: null
+    time_range: null
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '5400-12-30 00:00:00'
+    experiment_id: piControl
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_piControl_r1i1p1f1_520101-540012.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '5201-01-01 00:00:00'
+    time_range: 520101-540012
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '5600-12-30 00:00:00'
+    experiment_id: piControl
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_piControl_r1i1p1f1_540101-560012.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '5401-01-01 00:00:00'
+    time_range: 540101-560012
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '5800-12-30 00:00:00'
+    experiment_id: piControl
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_piControl_r1i1p1f1_560101-580012.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '5601-01-01 00:00:00'
+    time_range: 560101-580012
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '6000-12-30 00:00:00'
+    experiment_id: piControl
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_piControl_r1i1p1f1_580101-600012.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '5801-01-01 00:00:00'
+    time_range: 580101-600012
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '6200-12-30 00:00:00'
+    experiment_id: piControl
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_piControl_r1i1p1f1_600101-620012.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '6001-01-01 00:00:00'
+    time_range: 600101-620012
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0

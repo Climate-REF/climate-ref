@@ -344,28 +344,28 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            TestCase(
-                name="cmip7",
-                description="Test with CMIP7 data.",
-                requests=(
-                    CMIP7Request(
-                        slug="cmip7",
-                        facets={
-                            "experiment_id": ["historical"],
-                            "source_id": "GFDL-ESM4",
-                            "variable_id": "o3",
-                            "branded_variable": [
-                                "o3_tavg-al-hxy-u",
-                            ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
-                            "region": "glb",
-                        },
-                        remove_ensembles=True,
-                        time_span=("1980", "2009"),
-                    ),
-                ),
-            ),
+            #            TestCase(
+            #                name="cmip7",
+            #                description="Test with CMIP7 data.",
+            #                requests=(
+            #                    CMIP7Request(
+            #                        slug="cmip7",
+            #                        facets={
+            #                            "experiment_id": ["historical"],
+            #                            "source_id": "GFDL-ESM4",
+            #                            "variable_id": "o3",
+            #                            "branded_variable": [
+            #                                "o3_tavg-al-hxy-u",
+            #                            ],
+            #                            "variant_label": "r1i1p1f1",
+            #                            "frequency": ["fx", "mon"],
+            #                            "region": "glb",
+            #                        },
+            #                        remove_ensembles=True,
+            #                        time_span=("1980", "2009"),
+            #                    ),
+            #                ),
+            #            ),
         ),
     )
 

@@ -1,0 +1,96 @@
+{
+  "catalog_hash": "2ffcfd7440ae1420a63803f0b5b8162fd3bf4d0f",
+  "committed": {
+    "diagnostic.json": "20a2c7e604440a3e14b33de2306b0deee39187a7bebf626af2dab1cebdc6ab92",
+    "output.json": "c9b4acd2ed0929f33ee51b6389962370399f38d89db2c21e7e74d8e7be9960f6",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "20a2c7e604440a3e14b33de2306b0deee39187a7bebf626af2dab1cebdc6ab92",
+      "size": 653
+    },
+    "executions/recipe/index.html": {
+      "sha256": "45e329f818dc9faba7652b60c33186523afc1d9de42b69616011bea3efbbf508",
+      "size": 25317
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.png": {
+      "sha256": "514c54bb99a877ed4d9dfa2db4a59ccf127fd532f13c106ed47c6c00109ad36f",
+      "size": 112849
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.png": {
+      "sha256": "095befca924063fb7444ed5e13d2f12f2406721be9ae88cd92b80b8773418db2",
+      "size": 113219
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.png": {
+      "sha256": "769c2538035c11d7b35e1ccf31ae76ca02597b688555bdfead2c0519afa74636",
+      "size": 114891
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.png": {
+      "sha256": "55e960c68040130d27abd3709a25ea5c0c0b32ae7d33a480639b21f01d61b47a",
+      "size": 115388
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.png": {
+      "sha256": "dd3c4d02b71bcd66d88f21a54332b60dab79802dddb113d583da6b3d35387ed2",
+      "size": 110196
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.png": {
+      "sha256": "46a930eced7ee15007182d43c6f3dd987d4d088e5ce949bca228c8d9dc1bbe06",
+      "size": 110629
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.png": {
+      "sha256": "236de3281137410a4348bc91a6d1d034e72a983e335b8bec073f36bcae88682d",
+      "size": 113968
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.png": {
+      "sha256": "8196ef45daf9cdb2df0e14318bc575a69e2eeca044b8fa8e3655e32e56d5370b",
+      "size": 113477
+    },
+    "executions/recipe/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv": {
+      "sha256": "9a471bef33a0955e4992c74dbcfa0e219e2a7ce8d5847162f85a8b96ca84fa50",
+      "size": 242
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
+      "sha256": "27daa24800fa81f33628d830a4deeafaf4c6e011d2ca748055f681e7f283b923",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
+      "sha256": "971561dee95505875b98a312301ae8c7c93f4f48d9e283aa32cc30f62cc8d3cb",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.nc": {
+      "sha256": "d1cd9b8620951875c2fcdeb645255bad2e52ebca01c1499065acc590335c110e",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.nc": {
+      "sha256": "ea349186a4b78b8250b1cd58552b4c72618f979dad85a7eb47e5c7162067da77",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
+      "sha256": "958a4ff4b2a2171dd6eb3518e54d63258692341e0051c15402d76059b32ff730",
+      "size": 288610
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
+      "sha256": "6c15b772a26c858944811e0eb486bca5796384bf2aedfc50c81ddfb4c970fd55",
+      "size": 288610
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.nc": {
+      "sha256": "31ef41b4ba7643d4e09f0983e491f39d9dc4bcc1f19dd827df610965f0cf1341",
+      "size": 288610
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.nc": {
+      "sha256": "0342088fd7d9a3396367174be76115829d4ddf57c45c965a3601b1c2070daf04",
+      "size": 288610
+    },
+    "output.json": {
+      "sha256": "20e297c6f15fde273f8f90e16a01efefd9cf9c198aeb3dd02c214e9a7ec403e0",
+      "size": 7368
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

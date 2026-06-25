@@ -1,0 +1,68 @@
+{
+  "catalog_hash": "b4e2e696f9c6a161cd5f2bf6fa9ff2c213f7bf4d",
+  "committed": {
+    "diagnostic.json": "f2a998e76a2d7618598c8d78dd654b5824051febab2b9a15ee24040a8704dfca",
+    "output.json": "39112f71eba2c137e363a1fdc08428b040135daa2426958392db4670e7d3b086",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "16da698a382486c5e22437b79581eb7effbb8308f0539b077b077348c0eb9491",
+      "size": 19850
+    },
+    "executions/recipe/index.html": {
+      "sha256": "aa2fb7af653d02b987701a01a2c9fa534701649616fe441e714ea9d8424768f7",
+      "size": 19704
+    },
+    "executions/recipe/plots/hus200_trends/plot/seaborn_barplot.png": {
+      "sha256": "99eaae3100077e6551ea674014849f9d5042ef8790556630d635a0d31e428d0f",
+      "size": 142421
+    },
+    "executions/recipe/plots/pr_trends/plot/seaborn_barplot.png": {
+      "sha256": "e34ae732d7d4c79ae87ae16acd40eca6c622eb3f6301e90df6b2a30fadb7c177",
+      "size": 145704
+    },
+    "executions/recipe/plots/psl_trends/plot/seaborn_barplot.png": {
+      "sha256": "48768511837d71f78042473309d6ffc6554d494f809fb165e83f2bd2a05086ca",
+      "size": 140430
+    },
+    "executions/recipe/plots/tas_trends/plot/seaborn_barplot.png": {
+      "sha256": "c4fb8c55496c11ed2a125a0bb18460d4fb7d4ca459fd4686bcf3423e28aa66c9",
+      "size": 151797
+    },
+    "executions/recipe/plots/ua200_trends/plot/seaborn_barplot.png": {
+      "sha256": "52d068c1105caa096b9e8f2b1d8fc49d43756c2dcb420f146c939e7c9a6c45d9",
+      "size": 161863
+    },
+    "executions/recipe/work/hus200_trends/plot/seaborn_barplot.nc": {
+      "sha256": "bf908082179cbfcf4e450e477945afe9027b989f8214774acfd3a27f00fc8edb",
+      "size": 10150
+    },
+    "executions/recipe/work/pr_trends/plot/seaborn_barplot.nc": {
+      "sha256": "16949d5257c92f5e7cf021a3e20348f4bc4f0dcf77bcf52be044714d66e5088c",
+      "size": 10146
+    },
+    "executions/recipe/work/psl_trends/plot/seaborn_barplot.nc": {
+      "sha256": "1ad444693d6028d3820c2cf558e482ff626df795b3ecd05c7f348d40e8874208",
+      "size": 10150
+    },
+    "executions/recipe/work/tas_trends/plot/seaborn_barplot.nc": {
+      "sha256": "6455f3a75eb8d5afb14b691c45c7493c0f309ee08da1b326cdc19dd991d3aaab",
+      "size": 10150
+    },
+    "executions/recipe/work/ua200_trends/plot/seaborn_barplot.nc": {
+      "sha256": "9da533f590039d78521c9861635a8c4b04db6b9d9a50db9098f96fdfdd045abc",
+      "size": 10146
+    },
+    "output.json": {
+      "sha256": "12d767bb300050610420932b5530f6fc13aff7762c3f42f1fe01ffca6017dd7d",
+      "size": 4268
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

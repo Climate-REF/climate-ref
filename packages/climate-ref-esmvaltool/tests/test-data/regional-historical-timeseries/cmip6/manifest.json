@@ -1,0 +1,956 @@
+{
+  "catalog_hash": "4a4bb41808b6038a7a101e7201f4f2b40cc33750",
+  "committed": {
+    "diagnostic.json": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+    "output.json": "a9ef12a7eccb054c4dc014d95e9ee2da1c4e482b252483a01fceff5e749170eb",
+    "series.json": "f3ba13518b224d9ed2bd81317850e457653b59cd5e0ec6731bbb76c4f3525afb"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "4f79575c49bebea573e48f390a9d9db0c40971155a31aa57e6b462439aa21bbf",
+      "size": 263749
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.png": {
+      "sha256": "daf706d5c5de262a1b8a607a34d2ca2338f14a59e375192aae3502c42263403a",
+      "size": 235715
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.png": {
+      "sha256": "7bb9fd66f02acbec0910ac14b643f2469221a9be8a8d2e27a320942f6d1e8649",
+      "size": 219676
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
+      "sha256": "3ada155f87b77d24c39ca236720f02b6d19dd8849707adc490a5955bb6b37eaa",
+      "size": 246483
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.png": {
+      "sha256": "c4ee0e93b59f383d5cb46a71403947ee99c4b5c77be61c32de737ade7d70a8f0",
+      "size": 215717
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.png": {
+      "sha256": "702470fec9bc464932cbaa6efbeee9f09766d936623273891bee6f7ac466cd5e",
+      "size": 221649
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png": {
+      "sha256": "4e638f1b89b0f129f467de562659089dad09b2a6b2f52977b0b8b81e8ff6ead8",
+      "size": 251890
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.png": {
+      "sha256": "1e9c44c7bd1c9df67532751af2fd0fa5703ab9979044c3f377cb59a75de12081",
+      "size": 210842
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.png": {
+      "sha256": "a00b1ccff25dbf8ecc4fa0181c1343f4620ea50ac436a609f94af1619ce7643e",
+      "size": 216438
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.png": {
+      "sha256": "735dc9888a21d55b7adec86db6e9d641b995b25d2b9f6c63584b0c64c8d6d678",
+      "size": 235590
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.png": {
+      "sha256": "29dd025297aebe1dc6287df14b362fbaca3cdd115f5987ae57abab156717bd1d",
+      "size": 231339
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.png": {
+      "sha256": "e241524577504950214b2bdadffedb1c318d92c8cedb93fe417ba0a69954f656",
+      "size": 237400
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.png": {
+      "sha256": "1f62a0913faaa44f5815848b6aca0b4339aa1a0232ab8304145de01ac5dd8e68",
+      "size": 227716
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.png": {
+      "sha256": "1f3b860fafaa23fb6cf12eea2ffe8d4ea040a50341e3eabf1778842827852241",
+      "size": 243318
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.png": {
+      "sha256": "f2858797e6c8dd9bc79a6e62f62ded24b5024daf2840a34dbb4a14f5d1281e66",
+      "size": 237139
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.png": {
+      "sha256": "7677b2b7d0f96c3d376fc93754ef9da7268a04271324b715216aaa261bc9d70e",
+      "size": 224141
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.png": {
+      "sha256": "7a1d5973a480babe5418c83c52ecfa4f5da0d516c186a51af20829ee3c302ee2",
+      "size": 232053
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "3ab495b2b7a67ce26597090000a4617b3734033f8f710ad077959c20f12a817e",
+      "size": 225150
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.png": {
+      "sha256": "3a5dc36d870e41f6b4ce33f7358f58630a4aff85a90a2a4870ca410dd6949b91",
+      "size": 226597
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.png": {
+      "sha256": "95609427e3b5db090b8088abb1fd0cf093e85b2006e6b1d25d1385fdb4c55c4d",
+      "size": 201524
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.png": {
+      "sha256": "eab88a73d1f417e3c20ece526ce376d88e54c8f903f2d4bcc8bd2f8a211cad72",
+      "size": 245621
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.png": {
+      "sha256": "214afa4d9f93ba8a10f9c009fbb6c19e051ae75ca5771275bbdefdb8295b8055",
+      "size": 241369
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
+      "sha256": "4a3b5da5097ff28a5680502e620a6ba282dbc05ed6897b8e00b5745aa06b4e91",
+      "size": 233981
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.png": {
+      "sha256": "a37dce5c20c27a79367c4d86acbd1bfb3d6eb83fee536b2ae59d12434e5ff8b2",
+      "size": 238951
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.png": {
+      "sha256": "e5584aeb250a98492adb8760c93f2f6893daa5fffcd68f38baed20cac5590efe",
+      "size": 215078
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.png": {
+      "sha256": "ae7d45ba9df93defc4340e968d943e26cfeaa2f482f0afbf643bc9ef82b9122d",
+      "size": 253426
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.png": {
+      "sha256": "b5fd2c95af12efdd31f932e10beae6cc94f67f4b2193f3fff2f3b1cafbf2e901",
+      "size": 229364
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.png": {
+      "sha256": "76f39cad8e03be72bc5b0fbf3374595d3b0e6749b058a1576b679c569a5dfaae",
+      "size": 209535
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.png": {
+      "sha256": "e4baa563145e984b3ec27a7f4fd4c2ee738222f4537c6f417502b6062a911f28",
+      "size": 225873
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.png": {
+      "sha256": "a0a6906cea9cd917995845ab33cbca3a9800af9b53e78bb28e6d429e22bb74f9",
+      "size": 235673
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.png": {
+      "sha256": "993ee6bd76ec07bbc1fda11ec76916e37be2393cd143f6681289bffe3e26ff72",
+      "size": 235922
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.png": {
+      "sha256": "2e8415485238f13db2d041f19609e5d56afab6ad538f243ad00fe182b3ce63ab",
+      "size": 194019
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.png": {
+      "sha256": "45f3a5206ba0361731e25bdbb86ee35993ec8b8cfc9bb561bad91d11491ad54d",
+      "size": 248275
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.png": {
+      "sha256": "15e0636c6e43fe2b79536744a764c4bd8a724446dff124539a3d83ec74abe187",
+      "size": 197902
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.png": {
+      "sha256": "79813deefa94ca6348a5f846623470c73ec6e79e2e47bdb3f86c473eb607b354",
+      "size": 245450
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.png": {
+      "sha256": "a1e0cf385127f780da0d9377ab329afe2d1863972a9b9ceeede03f476dc0fc59",
+      "size": 232538
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.png": {
+      "sha256": "e7f83f84e1e8c0e894534768c9db14752ca7fc30b98c708024bfd0cd750cd79a",
+      "size": 239404
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.png": {
+      "sha256": "c48b1a1a12e869c54193ce2f2f776163396814115a7bfff7515e1a100eb4fc81",
+      "size": 238538
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.png": {
+      "sha256": "fcba9630655d19b6c58619b7e18025b1974251df4f776a3681b673cc11642e7a",
+      "size": 245683
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.png": {
+      "sha256": "e250a4dba6596d14fd08d07188701778e1a23e565ecfe0c93cdd849c4a02bc28",
+      "size": 232321
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.png": {
+      "sha256": "f531ab1806abd14b7bb3dfd68f09985b61471b180993e358f77c0857d9560c2a",
+      "size": 207209
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.png": {
+      "sha256": "2a13d712d6e97dae338dc7f7bc4e29bd541a8efd7dd60e7a75d9645fbfc55204",
+      "size": 209591
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.png": {
+      "sha256": "d600e6e2134296618befdf1e2dfa3ce564e1c19f755060de877b4aa5be108ef2",
+      "size": 245463
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.png": {
+      "sha256": "a16dfe8ac14cd742634fdd4130ce1c2d47f38effd95ef79a383958d8d16371d3",
+      "size": 215623
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.png": {
+      "sha256": "cb58f13022fe5de13ab0fae0b702c87f72098c0c78b92380121a8cb1f1baa65c",
+      "size": 237346
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.png": {
+      "sha256": "94744bf33a1d276e4195a65f9d26249ad753121e66db862085ce4c11b550dd75",
+      "size": 235277
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.png": {
+      "sha256": "6c9c4dc48382138aa495daa669fe54c8dc9dd7de47d0668e30ec222dced99fd2",
+      "size": 229459
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.png": {
+      "sha256": "db75844d1086fbe1f07e37c4fe92115f7322276ce30eb42bd67a1e0ee3752854",
+      "size": 234996
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.png": {
+      "sha256": "2fae61a90e0bdf23d4daab24f5d7bc7d2a3fb80180689eda4d7b7863a0c21615",
+      "size": 229566
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.png": {
+      "sha256": "9a0ff597e2f118d7fe7169f8ce6b3e548a4f8af3240841d350bcb0132a34616f",
+      "size": 230354
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.png": {
+      "sha256": "706836792fdfd968917353bf3c9beab998d5f470d56c2bc26d4ae50f8b777d9e",
+      "size": 243465
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.png": {
+      "sha256": "b9bd3a6e28d4680ec0393c20e67f5eaf7c120cd4b781f88a8838ca862fa5ab56",
+      "size": 235456
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.png": {
+      "sha256": "8fdc606cefb9e9a06a1af27045dfe15ccf282af073ff0793df2def47b47149e3",
+      "size": 233662
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.png": {
+      "sha256": "48b4266afe6fc69b9671d2c7a87151975c19f9403d556bd545e8d914ef75a63c",
+      "size": 239066
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.png": {
+      "sha256": "be66b463c7901f62fd2c2e64ae1ea505c3ecd67882a1614afe27507c1d7636a4",
+      "size": 242848
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.png": {
+      "sha256": "4d53673f78076889a978bf65749b6eb3c998dcd8388c51019ea4e5aab0b20b54",
+      "size": 222641
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.png": {
+      "sha256": "075eab002ce3ec1f5dd3053dd910972f3760f8579c5befc0fcea6caa370a65b4",
+      "size": 231315
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.png": {
+      "sha256": "3a5c4d4f9bfb6da7b65108ef8ef8c260031fd45ef8c6d215a8acb7605a2e63d1",
+      "size": 238601
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.png": {
+      "sha256": "6cbcae8e0cdbde50b095ead0a0c708aedc7ac61b0b5aa4fa37da1ff7a6337f22",
+      "size": 213132
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.png": {
+      "sha256": "67cd49ca9a2bbf98fa6c3605ec4632256aec1160eaf87168aba3990609f016cc",
+      "size": 166852
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.png": {
+      "sha256": "2cb555a038baba4478f070ea97959051bc990b7e1332c74ae32f00b07039436f",
+      "size": 166723
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
+      "sha256": "573ecd20d21b18b3a0f148844bd383da08f89d4d8d215da55c285ac190920f34",
+      "size": 167926
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.png": {
+      "sha256": "cd308d50102c9fb4b9b931338ecff094ee097696216fd7966a594d342aa8cbfc",
+      "size": 169991
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.png": {
+      "sha256": "3188e7b762788393c3074af804c4b98adc7c48492c13deba28d2375dd3511859",
+      "size": 184602
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png": {
+      "sha256": "97e86404e95bb65862141d6bf6be2d3553535f9bddc03eb86a0149bc71658fe1",
+      "size": 186150
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.png": {
+      "sha256": "09010fb16a5b146db7516c0cce680b3b11aa0bcbf26aa8eefda65f470aa4cfee",
+      "size": 149320
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.png": {
+      "sha256": "14b44f82265a230c104b6d71d0f406f79b55f452d939690cb33a3d6956c8d04f",
+      "size": 160689
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.png": {
+      "sha256": "eae5203bb3e1ac3a480863f11ee24ede935a038ba994b36eb3144b533bf05cdc",
+      "size": 174656
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.png": {
+      "sha256": "8a822d00aad069f8b6962a2cd608b2028b3cdc21c3dbc7777675da52fa9ab282",
+      "size": 167728
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.png": {
+      "sha256": "466d967cd937f153fdb540b540ae3c40e9ad83f836f30033b692372c6fab67a8",
+      "size": 187690
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.png": {
+      "sha256": "204bfb2fc0dd65852088c9ef3580f80c616771cea3d65803adb3d73ccd4ec75d",
+      "size": 169845
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.png": {
+      "sha256": "35f64a7cc599e5b6ce9124cbcab59271905a6a62279894ce3b2284e93a2ec5fc",
+      "size": 173744
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.png": {
+      "sha256": "8af691ff3a24583a9d9e094084ae5deb92042b0e7e89c86456b2ee107104ae87",
+      "size": 172470
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.png": {
+      "sha256": "f11fb7b969966e6a22a2411b6382aa6c1dc41291a38ac4cbdeb22f04f4951794",
+      "size": 158734
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.png": {
+      "sha256": "f5134e9624f5492de02e32f3dd5a1c22aa42d9a83605c248087822f6e998dcb7",
+      "size": 157296
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.png": {
+      "sha256": "190f934b39996791a4c4b7023b2475888d02f6bb1a82c105ea8c44b807f8e687",
+      "size": 173456
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.png": {
+      "sha256": "0a4776ef0c7375303a63bb2c564291b5a1c9e121b3040be11b735ec601fcda4d",
+      "size": 165036
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.png": {
+      "sha256": "6a8437848615beb7843abb7c2bc805c90b15077c7296582195b57a34a0caa3eb",
+      "size": 151271
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.png": {
+      "sha256": "a7c76b7f136208e1d43df27a2df9d8d01a2ba8b71dc8409968949a44b979618c",
+      "size": 167040
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.png": {
+      "sha256": "76e4744424c8c4542fe3bf8d1b6b319c8704037b971f9d66102a3f4d869bc16f",
+      "size": 162525
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
+      "sha256": "3366b3ac65173ca141bbd158832112ee6c3c0891b493108bf7c2b7b59aeaabf6",
+      "size": 165076
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.png": {
+      "sha256": "6513ecd6c18890f949337766924998e2fa32f8527ff3585c02fd19120a9e4fd9",
+      "size": 149137
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.png": {
+      "sha256": "aab1dc57ee532b2d656c79cb3c8962d4614eddb8cf22e26123c188083b6feafb",
+      "size": 186196
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.png": {
+      "sha256": "3034d5b0fc36efd20e08f9be04391042cc746a3d7b2d1107a2e20604c002787c",
+      "size": 167704
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.png": {
+      "sha256": "48cdac16ce3a0625c9cdf17f2d3f7fd5c2f78a207e5f6e9f74342d79a4aad271",
+      "size": 170188
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.png": {
+      "sha256": "88446daddeef57fecc3883e849226c7889127b56aed9fa2eaee36bbacc4d13bc",
+      "size": 164412
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.png": {
+      "sha256": "ad2a2eccdbd01f5309dd21f79c0a03077660ee65da90dc3973cef5bc47013938",
+      "size": 162822
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.png": {
+      "sha256": "23f5967306c9d0f2e4a04873208936a8c1eed6750ba12fcea7be5716cb7df759",
+      "size": 168351
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.png": {
+      "sha256": "407bc1c6d763dd2311132ace2909a3ffad34d75cdbb76c085a7fea9bfbed5844",
+      "size": 151675
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.png": {
+      "sha256": "f6ca21a911322bc45a99936e28e2f355af114b4ea411ff1ef49971ea0fa8e505",
+      "size": 149613
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.png": {
+      "sha256": "268ff64c30acce376e40fd046091e6cdaedf268261cb03e5c55ffbce8fbe7cb6",
+      "size": 165238
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.png": {
+      "sha256": "979619b567b2434932cc7eaba70f168340f7b6908c67b008f3f5eb31085d929e",
+      "size": 146170
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.png": {
+      "sha256": "aca6c35c9c8fc23c0da38bd1d93b58b758ed1fb645db3701a716aea57f75a7f3",
+      "size": 176578
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.png": {
+      "sha256": "c7a53fe5317b3742143782b15921b63b616c273765ec1cab26080bd544ea4da6",
+      "size": 177740
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.png": {
+      "sha256": "4beee5de0239bf7db7bfd0303e715af541cfdb4097053f4f9248df7e9d5e694f",
+      "size": 161823
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.png": {
+      "sha256": "22d78ae0d15f367dd7d505676d65314058aa3725eb8b97e42d2714c29a2fc6d8",
+      "size": 169560
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.png": {
+      "sha256": "7c02aa35bb4d6d362eaf0abb7b34c42f07e028054bbad213ba8e72df28ac63a4",
+      "size": 168197
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.png": {
+      "sha256": "00185cd0d0269603e749800b0242e0bcdad70ab2c9185d884e9e984c0d3c667c",
+      "size": 180372
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.png": {
+      "sha256": "6c9d8b8c62005a0a2afcd79dd0c8217b4c10287fcc3a80b1b7d16856072229ae",
+      "size": 163111
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.png": {
+      "sha256": "fc16ca4254bf2b916483c3e64206bc0ceee9a9b0b2740758c93f396e3da911a0",
+      "size": 166440
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.png": {
+      "sha256": "0199d60903988dc539e6bb7c94aae6c8db51db5fc9b068ca620ae0262a0a5750",
+      "size": 172979
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.png": {
+      "sha256": "c39045ae3e02c3a65714609d7d5beff2bc481d832a186d8977d9bc343e97ac78",
+      "size": 156743
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.png": {
+      "sha256": "29a7d6622c2455db23f918c56140db6c92d53f56da20b997b1291e4286b68902",
+      "size": 163979
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.png": {
+      "sha256": "4ff2406d0fa60e57eaf4fdb15ff399d9489144802a2f268d7f5425931d99e7a8",
+      "size": 151933
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.png": {
+      "sha256": "e4618ea0c393a144504aece2f13b57adb2791d03e67a9d8c2f45c4700c320372",
+      "size": 175539
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.png": {
+      "sha256": "c6966711f2fa9c2230d7924070a3cc23f6723262df225aa9d9e9a0aa3ada7425",
+      "size": 169236
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.png": {
+      "sha256": "4add47de0cfb04e43d442c3c0e83795fd7055eb087df4ea08d90aa18d08b9198",
+      "size": 164272
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.png": {
+      "sha256": "d709b86221e874a7fd6176a028e85cafcdd2eb49669c936bdb58ec3e1a8525d5",
+      "size": 159770
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.png": {
+      "sha256": "f574fd02e4f6166a32a64ac7ee6748e8438a8e3844a320f804f633faea2e3f25",
+      "size": 170989
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.png": {
+      "sha256": "ee5488937697e7bb13ebdac156f11a175b9800c3c992b5f279308323f74ddb09",
+      "size": 167113
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.png": {
+      "sha256": "c4df9f6fb82ae5e158cd25659b736e137a32597936dabd30773d9f625202ed29",
+      "size": 171254
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.png": {
+      "sha256": "6eec12513e1953de52d848b2048fdb18b1368841ca317d92351c84d99f4e7dbf",
+      "size": 170290
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.png": {
+      "sha256": "e327f1cfdd79a0b98aeec1c5a49472b5e1526786c39591d05c242f172cf2da0b",
+      "size": 180647
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.png": {
+      "sha256": "c41dbfcd7f42c9950469bede9220e3108f187335574d0cc055497ea96f70d4a1",
+      "size": 166205
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.png": {
+      "sha256": "179726b853f7b8b7de197fd293fcf252e49e76c1fb5151a2496e88fdf0263a02",
+      "size": 172610
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.png": {
+      "sha256": "60d10fa8d50ba96df0c773608e0f5434592ed517def8a4f6669ecdbd1bc2654e",
+      "size": 171512
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.png": {
+      "sha256": "c98f16ced90a19df03c059b396c74df39197031665d4dd9fe12b5e560af8a8d7",
+      "size": 155595
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.nc": {
+      "sha256": "e564cc3dde623330f3bce9ea17a197e1e4ab6172f0799427f81e76f679ab168b",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.nc": {
+      "sha256": "ef0c5f9411f3bd5798b4a22a0f9ba9dcd66856cf41a84cc7094b36a89480ffad",
+      "size": 24643
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
+      "sha256": "1c265b81726e317bbd116b1bc0c1cb15191c4f4a7628bd93bc7e6f6e7d901595",
+      "size": 24644
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.nc": {
+      "sha256": "cb659f2d2cd4f88ce80931865679c89fb4900494b0d1f13be45ac9aa7810d673",
+      "size": 24645
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.nc": {
+      "sha256": "d3030cf9618ce9796f6d3e45219577da1c3d80bee7167e13606e76edd5cd6e6d",
+      "size": 24643
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
+      "sha256": "f451ea7437e482245ca6d2b0f9a6429c907f844c8495154749c5a110aa9a4123",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.nc": {
+      "sha256": "702a7ec66fa21f62ed69b2736c48ced951c8bc19c0483dc334f71c1030d092be",
+      "size": 24641
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.nc": {
+      "sha256": "6d3798eab944b9726655ab6bee893391c84a2c863df23bb480948c8e8ef3b46f",
+      "size": 24646
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.nc": {
+      "sha256": "69c405690a661a321dc0299cfe14d0330d91edaed0bb12ca4dcd669208d5deb8",
+      "size": 24644
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.nc": {
+      "sha256": "eb7b9852f8a181cb41cfe0107925642cbd24ccca5c9054c9e6ea0469845745ad",
+      "size": 24638
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.nc": {
+      "sha256": "035e2942414cc40bc367a3c2068965409ec0168ffe0d641fc840b5dc60b525bf",
+      "size": 24643
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.nc": {
+      "sha256": "b9dd93eaf6b7d0c2aa5ea7731b7b8952c77cbec8edf9998b63a55858b46529c2",
+      "size": 24640
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.nc": {
+      "sha256": "e57443711502a1d21253233aa7d0d1474c488b3a4a91e7ef4c31f4db2bcfc6fb",
+      "size": 24640
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.nc": {
+      "sha256": "08e0bf928c4195f90996af793e57d0c43a9c7d7e8788b6acf9a510a60fa07e61",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.nc": {
+      "sha256": "4d842275bc389498a7bc411382b01ae3e87f9a1aef9847b7b82f0dee68e23015",
+      "size": 24641
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.nc": {
+      "sha256": "741369334c32b5818cb8fb06ac5e0c1c32a3ea1a5e9df429a94d60dc14a6eb89",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "4d8f4193392a36340f4571fb5d949ffbb0c9a4b382b8ca5f43446658da81f0f3",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.nc": {
+      "sha256": "2a4e0213d80eba78920fddabce9376258a63f2b002baf4c80e098d836692687e",
+      "size": 24654
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "f3d13da0648987ff2f6ae07dc7ef3e9ce8f6d426b381570d77902a3aa776ae62",
+      "size": 24656
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.nc": {
+      "sha256": "fa8f50e7ee24729be1ad5518d19949175cb9eb71745d05a36dacf87b69452be9",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.nc": {
+      "sha256": "d9e7f0598f7fe27e972212a498957c361e1ea4c5365d9b4c078106d5e774ba0a",
+      "size": 24642
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
+      "sha256": "c065a0cd901d2e4ebfd1336cea2c0569cb2923ee4407b97fb86bdddd4c41f4d3",
+      "size": 24645
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.nc": {
+      "sha256": "4ecbc70c9a57d22bac66eb7f781559f85dbdec6740ac1ae022e9daf7ddab8209",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.nc": {
+      "sha256": "7c6186b8983460c41cb451e83a77895713f383ee809cff411f102df03cc13cfd",
+      "size": 24643
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.nc": {
+      "sha256": "1db28f798bfc8acf23e42acc934d81a30e4cbf2254da654c3dcd7434d31f76d9",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.nc": {
+      "sha256": "89522eee5d54435ac97e8e81b5c3a40f4363a52c08d451c6c6e800f36fdcc017",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.nc": {
+      "sha256": "75fb5dc56b762c57c5a18320cdbc1602e41e787ed294430ccfd039332ff1f51a",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.nc": {
+      "sha256": "394f3ef0d3e6d35e3777aa6df1a5e05a229746ec27c2e6e2fccd30bb885ffdd6",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.nc": {
+      "sha256": "c126097bb5bf90ba931fdf2f6f78d85e98dc81b494fcaf11413ac231bc5ac431",
+      "size": 24640
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.nc": {
+      "sha256": "3f7b28843cd219c73fc8f6f318803791e5c12a9720396e9390e672a3bff90592",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.nc": {
+      "sha256": "545d100fa2b1364fd71de1b71012f96951f4966e96f218ec19eb62424e80f4a3",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.nc": {
+      "sha256": "c434a7bfd3db75b6514ff0c2910bfed1e74b5b22ce8fbc2f83b240da95563371",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.nc": {
+      "sha256": "80822a000e9148ae87ca61f8fd2112d22dc85d6619e7ae6396b518c86466cc64",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.nc": {
+      "sha256": "3cbe964f7c0399d062ab69c2567ef0d223773b9d4020a7c8041fbd430b2667a5",
+      "size": 24643
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.nc": {
+      "sha256": "2b75c464fa51c2abfe32cd098c8562f31bf3e96b67ef597c2f85c28ccc7d874a",
+      "size": 24646
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.nc": {
+      "sha256": "e6b981abd13f929c8347ff17ca5000f27ed948d2d816d394c172435426a1dfba",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.nc": {
+      "sha256": "aca8c44771e310deeae8249c726c270003268a37ff3557339f470e4967c21ca4",
+      "size": 24638
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.nc": {
+      "sha256": "2315f38c4517ff2e2759266bd26bc08dc723588b73615376018a182e54c20513",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.nc": {
+      "sha256": "8bd3b0f8d3e8d7208be550619bd53e89e64d2bb3c3aabe6dc03911ed6dffc892",
+      "size": 24643
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.nc": {
+      "sha256": "970bd2da8f259dbbbbc3ce06ea9188d0b4705afce23db150d87b55bc11bc1080",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.nc": {
+      "sha256": "50dd67f243686ab8e221da6d586e9e4bb20f35be0803bfd70f1f923d2fd79609",
+      "size": 24640
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.nc": {
+      "sha256": "afeae071b8f25330ed0ebd340eaf9b33c72210c05a8afec11cd469e280d103fa",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.nc": {
+      "sha256": "e4b366c56e70fac375707efb33c3fc118f407f014b3669ef6a474360b5cb090b",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.nc": {
+      "sha256": "f78b3b2445af6fa10525fea50aefc3ff9804c9810e2881f80a440242eb5c91ed",
+      "size": 24645
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.nc": {
+      "sha256": "f5db082394ff2b8a65416f386d5a0a4df7955c567fe6055f5b79a1d2acb22440",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.nc": {
+      "sha256": "277966098efca1312cecbc59963df099af96e9f0f44f1bf6e6d97f6e55cba78f",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.nc": {
+      "sha256": "ad035be21bc6aad27c655f32a8ef06a50ddcb9290554f69e3da45f13593a1e44",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.nc": {
+      "sha256": "8bc8536a0ae4dce9b46f747eee34c2887e9b569b1ece753d5e0f53dbc0b7ac21",
+      "size": 24638
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.nc": {
+      "sha256": "5ad3aa0be9fc95a3d4aced374e3371678b05ba9fbeade35b52a586d44360d55e",
+      "size": 24654
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.nc": {
+      "sha256": "b89850867e93064c2cbfe8a6be188302405112ec76cb3cb3edb88cdb86176693",
+      "size": 24646
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.nc": {
+      "sha256": "790797b013774276e6f1c9eed1f388924892439f650ce4fe8879dbcf50445a13",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.nc": {
+      "sha256": "d5ad0d88ae6320a8b106396dba50ab1afe0a0f5028dd15d65e93e87dce0564b8",
+      "size": 24644
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.nc": {
+      "sha256": "2330f02bba69b07ad5d8f84118ae0642c70cbcde85e0abcab0f8e009049ba168",
+      "size": 24640
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.nc": {
+      "sha256": "6f8ab15c7913f3932ad870144f9c0629fa288df3c0a99de27d3de6ba4a1e7f8d",
+      "size": 24647
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.nc": {
+      "sha256": "18c89260612ae48afcc9b48f4724d55e7656e630208f2086f0c89e9358a6d9e0",
+      "size": 24641
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.nc": {
+      "sha256": "41ddbeb19008a713d64bb3fea35c024ae8a51494f2400d28054e9ff672e9a49a",
+      "size": 24649
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.nc": {
+      "sha256": "4fea10c8970ee4b64d39c2a4bad259f00f3529813b89faef1e1fff62d6d09cf2",
+      "size": 24651
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.nc": {
+      "sha256": "c4140e43dc68d4246bf4b06d81d771b449f7e9820d518f4a109dfd945ea73920",
+      "size": 24646
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.nc": {
+      "sha256": "f814905eb76e939e9aa11eddf3b469ead68b0530c917f65a12f0f9e182543c34",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.nc": {
+      "sha256": "96c8b68493abb9ec58e0be70a5644dac25f861367e4d64433434e911a4bbb3d9",
+      "size": 24653
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
+      "sha256": "8c9d2113e868f936c239dd5519cf550f4301bd05b7b58cffd82f73b7c432769b",
+      "size": 24654
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.nc": {
+      "sha256": "7c2e0ab50b30021c14f5473d8f84ac0b3b3193569368d9a8c98163037a448701",
+      "size": 24655
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.nc": {
+      "sha256": "92c359f15c2ee75d3df35676d9831eb174e6dcf6312dbf545cdcead7bc96c8e0",
+      "size": 24653
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
+      "sha256": "015b13e5925a2613d202c9af8322535e378ceb2ba1146b9bcbf05cab003bba49",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.nc": {
+      "sha256": "f6a302a52db85b02b9befe4420efa1617cd61fbb06af627b8106658bb8ff6996",
+      "size": 24651
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.nc": {
+      "sha256": "5326a834a3e71b644460ad6c8a85905b8c0d81fcae07a6f33a46eef8ecd38649",
+      "size": 24656
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.nc": {
+      "sha256": "636c457f0f90e63be7a7c7ec586594494b53a5533eb8820a6d3985b6101c08f9",
+      "size": 24654
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.nc": {
+      "sha256": "d7cf4a0390e0105ccf66d7b9a10691c1fc581cb650015990724b3522e13bad32",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.nc": {
+      "sha256": "0c2dcabf34835380f6854d5034543d15894c9705fafe39e699eb90cfa48b9661",
+      "size": 24653
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.nc": {
+      "sha256": "daf92e3cd1403784aa96d49c37cc4f9a02f4a9f7365b81bc59c23ce1034c3c6a",
+      "size": 24650
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.nc": {
+      "sha256": "7b181988b3f9b48ca1b0026d1489d29570b202f2be92ff051c79f6672b4bdac1",
+      "size": 24650
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.nc": {
+      "sha256": "152604e26f2fb282f37113899c596ae2fdaeb7f3ddaec7b3ca996f0711abf7e0",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.nc": {
+      "sha256": "848c4e0fe5e28948c0c6ab08064b934d32ff24af32e75b65ca11f5858e1d5065",
+      "size": 24651
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.nc": {
+      "sha256": "7f9f8efc6cc8a10fb24d68cca2fe908ad3ec1fd1d4bcc1d76237c6ecddb3b0f9",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.nc": {
+      "sha256": "e565a8a76dc211a55e0da7a672c9cfe3ac7f5d2a5c8130411e5c30a8b7805f29",
+      "size": 24667
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.nc": {
+      "sha256": "8dc359e78b54c5d09b46cd41ee42c3c6f08d6fb8a3952e740e48631bdf0540c3",
+      "size": 24664
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.nc": {
+      "sha256": "bbb78617bfe71792d0884b19ef9f36d717f9e771a8aebe0825814bdda956e748",
+      "size": 24666
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.nc": {
+      "sha256": "0e1e4918757a3422ca0adbb6c9582fbcc37c06e642b7fc3d0fd88e881ac641e7",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.nc": {
+      "sha256": "619061c7e79ad11520631fa786598faee08800f204caebcfc23e41cc505554d9",
+      "size": 24652
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
+      "sha256": "cd430d606572a403c903656e765640cc2a8479f4a14e47c2a55a62cdc3659b75",
+      "size": 24655
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.nc": {
+      "sha256": "cb2b551a788007e4561bba3a57a31a7f4dcb2f9dbaa4ea21522a09865a7178c2",
+      "size": 24658
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.nc": {
+      "sha256": "23b86c060d101afc6689aa8ebeca10ce8fcaf7fa3fa03d2898ad2e97ddd79b8f",
+      "size": 24653
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.nc": {
+      "sha256": "68365ac95418a25c94ff54c7cb897db7129e4a3452c2aeebd1e5e6b66a234cc6",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.nc": {
+      "sha256": "90cd340707701b258cc46be48ca9718ae2d7121cd1c9db980b4136c094e35df6",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.nc": {
+      "sha256": "a1da589db9c39fd695bf0d28f451caa506bde21e22e9302516e04c3cead6a78e",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.nc": {
+      "sha256": "fab893fd36eadc034c48299075140a37435b4d1ecbfec79b603f06a16af6cb07",
+      "size": 24658
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.nc": {
+      "sha256": "b80db47e9c072629049ea08e8de9eb73d5836c887870e212b22fbaeee24c1c87",
+      "size": 24650
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.nc": {
+      "sha256": "3b02c77c1287c759a98f23eb819e45eb612cd5ec241b3a34892853b068695f07",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.nc": {
+      "sha256": "c0066a1e855854a6ebbdeb41dc58e0f068a7dc4002ddee86d1b3802ea399cc42",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.nc": {
+      "sha256": "9c2e8ad98b3c47f0094195fdc778019a3e3e9bef8896a455cfc32cc07a967026",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.nc": {
+      "sha256": "e3bfc5a8d7535a61f8e94773e559761881a1ba84e17d7e8ad0619c35fe552f3b",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.nc": {
+      "sha256": "d27ce19fa742533be69bb148d90b7e259374c32ba90cc9d5bbcc95984987981b",
+      "size": 24653
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.nc": {
+      "sha256": "5d8043c86582a62c211422a7944072a9f9c35e4b0018ca9651d1efab4d34ee07",
+      "size": 24656
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.nc": {
+      "sha256": "6b16d410f4987bceabcf22d16c26c80715cd0a634f23d2b2b51da35b46d4dd3b",
+      "size": 24658
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.nc": {
+      "sha256": "b1f7c3b0c069977fa7c5a2da8270572a8c163d1cf1a37e59baa3cfbc1506d10f",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.nc": {
+      "sha256": "31e1e458c393bce844d32d258b6d17a72c15bea5a3e4882a9800b0467fa83e03",
+      "size": 24658
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.nc": {
+      "sha256": "ace57f01db295e890ee5c9d1797ca3641bd74cfc219d90dd58b5fb64d84217fb",
+      "size": 24653
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.nc": {
+      "sha256": "c149086d6e9ed831d7dc7bc1093d433542affbb1429a9e65523f09787bc689f4",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.nc": {
+      "sha256": "983e395cf1f4dc31c1dd7b6502e501ef1fa1c2d7dbef1c30b091155ba4de5e17",
+      "size": 24650
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.nc": {
+      "sha256": "9d3d02659259e228a78557f69366cc4357f6340fe29ce6a205cf161a6101bc99",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.nc": {
+      "sha256": "706356f9b024762e73f36a506b831586de40a45b9238e108c2d7ac5b0f53bade",
+      "size": 24658
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.nc": {
+      "sha256": "780248ca6f56c49e188e950302f2dba21c129574fa49be616ae859d702802caa",
+      "size": 24655
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.nc": {
+      "sha256": "53270a2cb9a06998d8aaf8c3479d106d630f55f22de4637966b8315aff3e2f9d",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.nc": {
+      "sha256": "b83e11cc4b4539656d3a60e5638e40a973b5889d36e12fb89400c3c50814a03b",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.nc": {
+      "sha256": "be12e48cbb93dd1f4ccf6b48961fbd064de67a7d65f7149cae299e9bc69edf56",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.nc": {
+      "sha256": "4544e487c312c43cd6a56ecd13e5b539a347868cb46776369e473293a5c90068",
+      "size": 24648
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.nc": {
+      "sha256": "f5848b0c35a92943f771f5376b57248fa1cea275ff008a3f950b165236d549a9",
+      "size": 24664
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.nc": {
+      "sha256": "92eba7c9a43190fcda23a177acb250e91bdc74ebea1d5fb05fb17563bdab3bce",
+      "size": 24656
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.nc": {
+      "sha256": "3381bfeb761679095a7381c55bfe24358cd02e8b6e95cbaa7abc86b445708b95",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.nc": {
+      "sha256": "de9b65b200a85e4ae8be8ff7f49ecb7320ff7281a4cb4114dce95c7f607f2b2f",
+      "size": 24654
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.nc": {
+      "sha256": "792560e1138ee6211c683baeab4062a82163eb3df63191162a7f34e123d5a222",
+      "size": 24650
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.nc": {
+      "sha256": "968c5bb2eabc03a75f8ab08396e872c90d27f85d229c34d94ed9783ee088592f",
+      "size": 24657
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.nc": {
+      "sha256": "8bc0aad652a4e7fd84831d901a950a93ec78b35e245f25c40849153dcbcc34ce",
+      "size": 24651
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.nc": {
+      "sha256": "531cbdedbc2c83c96a2fa08a1f976cbe22d0bcd860f9660386c70b3e0a3c3f04",
+      "size": 24659
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.nc": {
+      "sha256": "019a2ecdb7880dfbec048ef28bc05dd2e3d84888354f4a1189817fc822a8dd65",
+      "size": 24661
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.nc": {
+      "sha256": "5ae7d83b0115ed80c6b6620232514c138bf328f101b9f40e7ebdfc53ad82bef7",
+      "size": 24656
+    },
+    "output.json": {
+      "sha256": "b66771c717c836389413a8d8624f764b9be02cb1eb1bea50e2ece531cd96a766",
+      "size": 120588
+    },
+    "series.json": {
+      "sha256": "3d6c2e0dbf6d5d92a181c11da7bcff004703a889380e666d0ce27fcaf38eb7bd",
+      "size": 2693650
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

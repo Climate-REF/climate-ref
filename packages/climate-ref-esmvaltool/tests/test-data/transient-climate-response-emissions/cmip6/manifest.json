@@ -1,0 +1,36 @@
+{
+  "catalog_hash": "b613fa1005fc988c79aa0fbf950bc77cdabfa48c",
+  "committed": {
+    "diagnostic.json": "7329a38400974afe12ebba8cce49f5547c0d6a8f4feb902aa46665c7057d6018",
+    "output.json": "28f6049b2890b0e7826f54f21c1dc3df7ca6611e0f62235fee89feeb89cf6fe6",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "0afbce145a1ba1dfe5fba69d3c49102d63d9b859722644a449accd7ea4f57fb6",
+      "size": 604
+    },
+    "executions/recipe/index.html": {
+      "sha256": "7e07bcb94c7b63c199def3235aa68d52387b190c62c9473a7a88f1bc42e0c343",
+      "size": 13707
+    },
+    "executions/recipe/plots/tcre/calculate_tcre/tcre.png": {
+      "sha256": "d50c684a93bc6b05eaa2dfe174010cb5d0a0fa1338ac4f08b604197772a9236e",
+      "size": 118352
+    },
+    "executions/recipe/work/tcre/calculate_tcre/tcre.nc": {
+      "sha256": "d5ae73805b0be00f7d85f3e236b4399cfaa63e7ca398bb9d127567c561bf2602",
+      "size": 9232
+    },
+    "output.json": {
+      "sha256": "83d7eb405e60227a956f6499d8c7e59347daa56f48ffb2963fca7331be0a6b92",
+      "size": 1919
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

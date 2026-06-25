@@ -1,0 +1,55 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clt_histogram.nc": {
+      "filename": "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clt_histogram.nc",
+      "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CanESM5 r1i1p1f1 gn 1996/2014)",
+      "description": "",
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
+    },
+    "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc": {
+      "filename": "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc",
+      "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CanESM5 r1i1p1f1 gn 1996/2014)",
+      "description": "",
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
+    },
+    "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_swcre_histogram.nc": {
+      "filename": "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_swcre_histogram.nc",
+      "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CanESM5 r1i1p1f1 gn 1996/2014)",
+      "description": "",
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014.png": {
+      "filename": "executions/recipe/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014.png",
+      "long_name": "Scatterplot of Total Cloud Cover Percentage (clt) vs TOA Shortwave Cloud Radiative Effect (swcre) (CMIP6 CanESM5 r1i1p1f1 gn 1996/2014)",
+      "description": "",
+      "dimensions": {
+        "statistic": "joint histogram of clt vs swcre"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

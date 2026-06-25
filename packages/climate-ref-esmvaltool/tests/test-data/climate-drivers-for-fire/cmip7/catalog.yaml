@@ -1,0 +1,161 @@
+_metadata:
+  hash: 0a33e7dc76794bea1cae3db045b63d108dd41457
+cmip7:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branded_variable: sftlf_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    end_time: null
+    experiment_id: historical
+    filename: sftlf_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: false
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: null
+    time_range: null
+    variable_id: sftlf
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: cVeg_tavg-u-hxy-lnd
+    branding_suffix: tavg-u-hxy-lnd
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: cVeg_tavg-u-hxy-lnd_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.cVeg.tavg-u-hxy-lnd.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: cVeg
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: hurs_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: hurs_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.hurs.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: hurs
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: pr_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: pr_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: tas_tmaxavg-h2m-hxy-u
+    branding_suffix: tmaxavg-h2m-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: tas_tmaxavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tmaxavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: treeFrac_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: treeFrac_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.treeFrac.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: treeFrac
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: vegFrac_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: vegFrac_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.vegFrac.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: vegFrac
+    variant_label: r1i1p1f1
+    version: v0

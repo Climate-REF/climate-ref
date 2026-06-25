@@ -1,0 +1,43 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe/work/timeseries/script1/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_18500116T120000-20141216T120000.nc": {
+      "filename": "executions/recipe/work/timeseries/script1/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_18500116T120000-20141216T120000.nc",
+      "long_name": "Annual global mean Near-Surface Air Temperature according to CanESM5.",
+      "description": "",
+      "dimensions": {
+        "statistic": "annual mean",
+        "variable_id": "tas",
+        "region": "global"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe/plots/timeseries/script1/png/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_18500116T120000-20141216T120000.png": {
+      "filename": "executions/recipe/plots/timeseries/script1/png/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_18500116T120000-20141216T120000.png",
+      "long_name": "Annual global mean Near-Surface Air Temperature according to CanESM5.",
+      "description": "",
+      "dimensions": {
+        "statistic": "annual mean",
+        "variable_id": "tas",
+        "region": "global"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

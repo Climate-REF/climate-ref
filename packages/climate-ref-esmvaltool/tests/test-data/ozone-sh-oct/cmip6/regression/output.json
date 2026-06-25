@@ -1,0 +1,41 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
+      "filename": "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc",
+      "long_name": "Time series of ambiguous_long_name for various datasets.",
+      "description": "",
+      "dimensions": {
+        "variable_id": "toz",
+        "statistic": "Southern Hemisphere October polar mean"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe/plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png": {
+      "filename": "executions/recipe/plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png",
+      "long_name": "Time series of ambiguous_long_name for various datasets.",
+      "description": "",
+      "dimensions": {
+        "variable_id": "toz",
+        "statistic": "Southern Hemisphere October polar mean"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

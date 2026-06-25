@@ -1,0 +1,50 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
+      "filename": "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc",
+      "long_name": "Hovmoeller plot of Total Column Ozone of dataset CMIP6 - GTO-ECV.",
+      "description": "",
+      "dimensions": {}
+    },
+    "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
+      "filename": "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc",
+      "long_name": "Hovmoeller plot of Total Column Ozone of dataset CMIP6.",
+      "description": "",
+      "dimensions": {}
+    },
+    "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
+      "filename": "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc",
+      "long_name": "Hovmoeller plot of Total Ozone Column of dataset GTO-ECV.",
+      "description": "",
+      "dimensions": {}
+    }
+  },
+  "plots": {
+    "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png": {
+      "filename": "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png",
+      "long_name": "Hovmoeller plot of Total Column Ozone of dataset CMIP6.",
+      "description": "",
+      "dimensions": {
+        "variable_id": "toz",
+        "statistic": "zonal mean vs time"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

@@ -1,0 +1,44 @@
+{
+  "catalog_hash": "3d3a006b4eb9496fea3a1a602db2f86d4cd552bd",
+  "committed": {
+    "diagnostic.json": "cef1585fe8b59f5578941204a76ef33ec92d86638229fb61a653270974577193",
+    "output.json": "8feae949d638e8ef215f675db893fc7ead8b5adffbf157d189bc2538f1b622ea",
+    "series.json": "6bed909ea24b5ad0c623433f86a468cdf3aca3356f2e1b33f73bc74e33ca07bf"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "b695021bb6d656c1e8c9051d3a50369cbbbc492787a04b5b0f94fca72fd39df3",
+      "size": 597
+    },
+    "executions/recipe/index.html": {
+      "sha256": "84f963d63e040d868033bddad733b25e1049c965c446daae0d0b415e0b3951bb",
+      "size": 14130
+    },
+    "executions/recipe/plots/zec/zec/zec_50_barplot.png": {
+      "sha256": "53c191c1e05c896c14d33a5dc06707396ac99982b160b13bb28dea046021afb4",
+      "size": 14420
+    },
+    "executions/recipe/plots/zec/zec/zec_timeseries_all_models.png": {
+      "sha256": "d5b9154fe343e26dd09009d441156a58fc5e380327bcf64f36de4837c6d53e22",
+      "size": 43021
+    },
+    "executions/recipe/work/zec/zec/zec.nc": {
+      "sha256": "86a53ef8129047d16cef76caec8bf432194b72f33d74493557b14cb7b07a60ce",
+      "size": 9978
+    },
+    "executions/recipe/work/zec/zec/zec_50.nc": {
+      "sha256": "354cd5f3cc7878237fcada562b398c62c04dd8eeea7e1778197930c954b346ac",
+      "size": 8923
+    },
+    "output.json": {
+      "sha256": "1d51ced8571433768d2dc9060f26bf5581a5176720aba9831bf026a653bc014f",
+      "size": 1956
+    },
+    "series.json": {
+      "sha256": "2483fe2d05f310a8c2fa583af1925666f4ffae3cdd12a5da56a483096b22ab81",
+      "size": 3970
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

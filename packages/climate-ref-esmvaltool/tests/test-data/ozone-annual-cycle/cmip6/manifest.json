@@ -1,0 +1,44 @@
+{
+  "catalog_hash": "b4bb77dae5865642def4836b939c5cd39bbebc95",
+  "committed": {
+    "diagnostic.json": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+    "output.json": "1a25bbce94af301cc8243d77eeae19bfa1813e136f4cf58c179254f0a047a88a",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "6ea79dbba4b828d3a6262d62d290613b3b755e8b0baf230b12adc5330163e544",
+      "size": 14653
+    },
+    "executions/recipe/plots/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map.png": {
+      "sha256": "8fa2cdb0b57672ac9317c83501fbae86ce3b3cc73ed8d45f22ab7783bbb5667f",
+      "size": 78375
+    },
+    "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
+      "sha256": "1dfe7474528c7c456e3befdd9885c737588a6aa36419e26acb54995a8e153825",
+      "size": 27463
+    },
+    "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
+      "sha256": "5db11634ed6b50878d3309c8aedaee95ecff5cd9f1fed1dc11838a0bbdbbc31e",
+      "size": 27512
+    },
+    "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
+      "sha256": "671639d9d60780782cbaa4a4691fe40c1e7f9dfe8d40dde3b7b7150060e3fb42",
+      "size": 24162
+    },
+    "output.json": {
+      "sha256": "8b345997f4ccec2affb82f121e3ad59de46b42635bf0e8c0403e54d4c86672a5",
+      "size": 2456
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

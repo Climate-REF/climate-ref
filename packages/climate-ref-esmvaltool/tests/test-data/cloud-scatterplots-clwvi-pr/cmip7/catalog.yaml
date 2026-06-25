@@ -1,0 +1,68 @@
+_metadata:
+  hash: 7bc0768f1683daa96ad45cb293e94f969b4caebc
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    frequency: mon
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branded_variable: areacella_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    end_time: null
+    experiment_id: historical
+    filename: areacella_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: false
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: null
+    time_range: null
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: clwvi_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: clwvi_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.clwvi.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: clwvi
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branded_variable: pr_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    filename: pr_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    mip_era: CMIP7
+    region: glb
+    source_id: CanESM5
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v0

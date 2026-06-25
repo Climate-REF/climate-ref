@@ -1,0 +1,36 @@
+{
+  "catalog_hash": "b4bb77dae5865642def4836b939c5cd39bbebc95",
+  "committed": {
+    "diagnostic.json": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+    "output.json": "20c4d99738604059dacdadc537600c2b0fbbcb5be3574734f855ab022cac4c86",
+    "series.json": "94acc41c913d0777a48281c3ff9cace1090b8c24454c272cca77dbb3cdbde2eb"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "723ea96324aeb9dc22926e6c47229e9276bf1aca86c30fef25b9b8efc45e1be5",
+      "size": 13052
+    },
+    "executions/recipe/plots/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.png": {
+      "sha256": "43a97ab0e1279bfb54fefee0a972bc5e2d0df238189324cb43be6194270ce0a1",
+      "size": 88504
+    },
+    "executions/recipe/work/polar_cap_time_series_NH/plot/timeseries_toz_NH_MAR.nc": {
+      "sha256": "b62a51540b1783f410412f1753efcbd3ca3f5c5d2bfab1079d0699c95eff4e06",
+      "size": 10298
+    },
+    "output.json": {
+      "sha256": "9a2a8171fd1f4a017f86aaf71cfa546022cec0497cd292d15fa68eb9a72e455b",
+      "size": 1690
+    },
+    "series.json": {
+      "sha256": "26cd433d9f7937d5afecf383e662f25200fdb388dba6afafd39eb61035a8238c",
+      "size": 4422
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

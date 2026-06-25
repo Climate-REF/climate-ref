@@ -1,0 +1,2343 @@
+{
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "provenance": {
+    "environment": {},
+    "modeldata": [],
+    "obsdata": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt"
+  },
+  "data": {
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Peninsula",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Sea",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Bay-of-Bengal",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Caribbean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Central-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Europe",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Greenland/Iceland",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Madagascar",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Europe",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "New-Zealand",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Arctic",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Far-East",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Sahara",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "South-American-Monsoon",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Southern-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Tibetan-Plateau",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "West&Central-Europe",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Western-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Peninsula",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Sea",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Bay-of-Bengal",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Caribbean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Central-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Europe",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Greenland/Iceland",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Madagascar",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Europe",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "New-Zealand",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Arctic",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Far-East",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Sahara",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "South-American-Monsoon",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Southern-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Tibetan-Plateau",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "West&Central-Europe",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.nc": {
+      "filename": "executions/recipe/work/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.nc",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Western-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    }
+  },
+  "plots": {
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Peninsula",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Sea",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Bay-of-Bengal",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Caribbean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Central-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Europe",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Greenland/Iceland",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Madagascar",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Europe",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "New-Zealand",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Arctic",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Far-East",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Australia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Sahara",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "South-American-Monsoon",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Southern-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Tibetan-Plateau",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "West&Central-Europe",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Western-Africa",
+        "variable_id": "tas",
+        "statistic": "mean"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Peninsula.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Peninsula",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arabian-Sea.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arabian-Sea",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Arctic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Arctic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Bay-of-Bengal.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Bay-of-Bengal",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_C-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "C.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Caribbean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Caribbean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Central-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Central-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Antarctica.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-C-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Europe.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Europe",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Siberia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_E-Southern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "E.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Atlantic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Indic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Equatorial-Pacific-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Equatorial.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Greenland-Iceland.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Greenland/Iceland",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Madagascar.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Madagascar",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Mediterranean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Mediterranean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Atlantic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Central-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-E-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Eastern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Europe.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Europe",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-Pacific-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_N-W-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "N.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_New-Zealand.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "New-Zealand",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Arctic.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Arctic",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Russian-Far-East.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Russian-Far-East",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Atlantic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Atlantic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Australia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Australia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Central-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Central-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-E-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.E.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Eastern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Eastern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Indic-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Indic-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-Pacific-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.Pacific-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_S-W-South-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "S.W.South-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Sahara.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Sahara",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_South-American-Monsoon.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "South-American-Monsoon",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Southern-Ocean.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Southern-Ocean",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Tibetan-Plateau.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Tibetan-Plateau",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Antarctica.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Antarctica",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-C-Asia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.C.Asia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-North-America.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.North-America",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Siberia.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Siberia",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_W-Southern-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "W.Southern-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_West-Central-Europe.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "West&Central-Europe",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    },
+    "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.png": {
+      "filename": "executions/recipe/plots/near-surface_air_temperature_anomalies/figures/timeseries_tas_CanESM5_r1i1p1f1_gn_Western-Africa.png",
+      "long_name": "Time series of Near-Surface Air Temperature for various datasets.",
+      "description": "",
+      "dimensions": {
+        "region": "Western-Africa",
+        "variable_id": "tas",
+        "statistic": "mean anomaly"
+      }
+    }
+  },
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page",
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null
+    }
+  },
+  "metrics": null,
+  "diagnostics": {}
+}

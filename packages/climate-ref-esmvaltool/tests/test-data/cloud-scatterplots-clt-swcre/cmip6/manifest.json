@@ -1,0 +1,44 @@
+{
+  "catalog_hash": "46f9b988f31b5ae0c2e2ba5380bb81ce024d428c",
+  "committed": {
+    "diagnostic.json": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+    "output.json": "f7082237ae5787cb3b7d35bd0bdba6093fe8b4e5f6fd43a8eb62339f96249f6a",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "28f64ad914309df14af7bc8288dfc1a28ac5fc6d621f0ea418e228d2648801cd",
+      "size": 14548
+    },
+    "executions/recipe/plots/plot_joint_clt_swcre_model/plot/png/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014.png": {
+      "sha256": "2975ac602c87895d24f351886c4129dfd8391d44e2069cad49f86ef0babe26a7",
+      "size": 102198
+    },
+    "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clt_histogram.nc": {
+      "sha256": "2708b119f6891876ea3782960504df794ffd15b78f274b3f22ba74e838f115f1",
+      "size": 8880
+    },
+    "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clt_swcre_histogram.nc": {
+      "sha256": "fccbf28cefe8f162524c9be73eef4f4083d11ab5b141c31d4eec7b1e4c595026",
+      "size": 13328
+    },
+    "executions/recipe/work/plot_joint_clt_swcre_model/plot/jointplot_clt_swcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_swcre_histogram.nc": {
+      "sha256": "ec272fe6860ff8b62c73e9bc9456f5a13a68779949bc287f5193b674004753ef",
+      "size": 8880
+    },
+    "output.json": {
+      "sha256": "f96ec30f961fe1dad7cc08d1027cf141e2f65df94c9b8f7dd5ff69c2b89a1c69",
+      "size": 3160
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

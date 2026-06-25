@@ -162,8 +162,22 @@ class PlaceholderMap:
         return cls(pairs=tuple(pairs))
 
     def with_output(self, output_dir: Path) -> PlaceholderMap:
-        """Return a new map that also binds ``<OUTPUT_DIR>`` to the per-execution ``output_dir``."""
-        return PlaceholderMap(pairs=((PLACEHOLDER_OUTPUT_DIR, output_dir), *self.pairs))
+        """Return a new map that also binds ``<OUTPUT_DIR>`` to the per-execution ``output_dir``.
+
+        Rebinding replaces any existing ``<OUTPUT_DIR>`` entry,
+        so a second call hydrates to the latest directory rather than the first.
+        """
+        rest = tuple((token, path) for token, path in self.pairs if token != PLACEHOLDER_OUTPUT_DIR)
+        return PlaceholderMap(pairs=((PLACEHOLDER_OUTPUT_DIR, output_dir), *rest))
+
+    @property
+    def is_output_bound(self) -> bool:
+        """Whether ``<OUTPUT_DIR>`` has been bound via :meth:`with_output`.
+
+        The committed-bundle writer requires this:
+        an unbound map would leave execution-specific output paths in the committed bundle.
+        """
+        return any(token == PLACEHOLDER_OUTPUT_DIR for token, _ in self.pairs)
 
     def as_replacements(self) -> dict[str, str]:
         """Return the ``{absolute_directory: token}`` mapping (real path -> placeholder).

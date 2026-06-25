@@ -186,6 +186,29 @@ def test_placeholder_map_with_output_returns_a_new_map(tmp_path):
     assert PLACEHOLDER_OUTPUT_DIR in {token for token, _ in bound.pairs}
 
 
+def test_placeholder_map_with_output_rebinding_replaces(tmp_path):
+    # A second with_output replaces the first: one <OUTPUT_DIR> entry, hydrating to the latest dir.
+    first = tmp_path / "first"
+    second = tmp_path / "second"
+    base = PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td")
+    rebound = base.with_output(first).with_output(second)
+
+    output_dirs = [path for token, path in rebound.pairs if token == PLACEHOLDER_OUTPUT_DIR]
+    assert output_dirs == [second]
+
+    directory = tmp_path / "regression"
+    directory.mkdir()
+    (directory / "a.json").write_text(PLACEHOLDER_OUTPUT_DIR)
+    rebound.hydrate(directory)
+    assert (directory / "a.json").read_text() == str(second)
+
+
+def test_placeholder_map_is_output_bound(tmp_path):
+    base = PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td")
+    assert not base.is_output_bound
+    assert base.with_output(tmp_path / "out").is_output_bound
+
+
 @pytest.mark.parametrize("filename", ("bundle.zip", "nested/bundle.zip"))
 def test_copy_output_file_returns_relpath(filename, tmp_path):
     scratch = (tmp_path / "scratch").resolve()

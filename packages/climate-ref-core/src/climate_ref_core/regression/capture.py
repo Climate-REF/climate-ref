@@ -228,7 +228,20 @@ def write_committed_bundle(
     :
         The committed digests ``{filename: sha256}`` of the bytes just written,
         suitable for :attr:`Manifest.committed`.
+
+    Raises
+    ------
+    ValueError
+        If ``placeholders`` is not bound to an output directory.
+        An unbound map would leave execution-specific output paths in the committed bundle
+        and digest those machine-specific bytes.
     """
+    if not placeholders.is_output_bound:
+        raise ValueError(
+            "placeholders must be bound to an output directory via with_output() "
+            "before writing a committed bundle"
+        )
+
     regression_dir.mkdir(parents=True, exist_ok=True)
 
     for filename in COMMITTED_BUNDLE_FILES:

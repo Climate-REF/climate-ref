@@ -69,6 +69,18 @@ def test_write_committed_bundle_sanitises_and_digests(tmp_path):
     assert digests["diagnostic.json"] == sha256_file(regression_dir / "diagnostic.json")
 
 
+def test_write_committed_bundle_rejects_unbound_placeholders(tmp_path):
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    source = _seed_execution(tmp_path / "scratch", "frag", output_dir=output_dir, test_data_dir=test_data_dir)
+    regression_dir = tmp_path / "regression"
+
+    with pytest.raises(ValueError, match="with_output"):
+        write_committed_bundle(
+            source, regression_dir, placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir)
+        )
+
+
 def _sig_figs(value: float) -> int:
     """Count the significant figures in ``value``'s shortest round-trip repr."""
     # ``repr`` gives Python's shortest decimal that round-trips to the same float,

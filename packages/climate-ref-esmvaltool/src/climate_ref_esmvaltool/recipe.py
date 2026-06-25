@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import datetime
 from collections.abc import Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -279,6 +280,11 @@ def get_child_and_parent_dataset(
         calendar=child_attrs["calendar"],
     )
     child_start = child_df["start_time"].dropna().min()
+    if isinstance(child_start, str):
+        # Catalogs loaded from YAML (e.g. test fixtures) carry start_time as a string rather
+        # than a datetime; parse it back so the timedelta arithmetic below works. The branch
+        # offset is a plain timedelta, so a stdlib datetime is sufficient (only the year is used).
+        child_start = datetime.datetime.fromisoformat(child_start)
     parent_start = child_start + (branch_time_in_parent - branch_time_in_child)
 
     # Create the datasets for use in the recipe.

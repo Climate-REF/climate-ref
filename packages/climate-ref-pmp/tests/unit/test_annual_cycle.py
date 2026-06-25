@@ -4,6 +4,7 @@ import pandas as pd
 import pytest
 from climate_ref_pmp import AnnualCycle
 from climate_ref_pmp import provider as pmp_provider
+from climate_ref_pmp.diagnostics import annual_cycle as annual_cycle_module
 from climate_ref_pmp.diagnostics.annual_cycle import _transform_results
 from climate_ref_pmp.pmp_driver import _get_resource
 
@@ -180,6 +181,63 @@ def test_annual_cycle_diagnostic(
         str(output_dir),
         "--cmec",
     ]
+
+
+def test_build_execution_result_uses_relative_output_paths(tmp_path, mocker, definition_factory, provider):
+    """Output-bundle file paths must be recorded relative to the output directory.
+
+    Annual-cycle previously stored absolute paths (unlike the ENSO and variability-modes
+    diagnostics), which leaked the minting host into the committed/native baselines and broke
+    replay round-tripping. This guards that the diagnostic relativises its output paths.
+    """
+    diagnostic = AnnualCycle()
+    diagnostic.provider = provider
+    definition = definition_factory(
+        diagnostic=diagnostic,
+        cmip6=DatasetCollection(
+            pd.Series(
+                {
+                    "instance_id": "test",
+                    "source_id": "ACCESS-ESM1-5",
+                    "variable_id": "ts",
+                    "experiment_id": "historical",
+                    "member_id": "r1i1p1f1",
+                    "path": "/data/model.nc",
+                }
+            )
+            .to_frame()
+            .T,
+            "instance_id",
+        ),
+        pmp_climatology=DatasetCollection(
+            pd.Series(
+                {"instance_id": "ref", "source_id": "ERA-5", "variable_id": "ts", "path": "/data/ref.nc"}
+            )
+            .to_frame()
+            .T,
+            "instance_id",
+        ),
+    )
+
+    out = definition.output_directory
+    (out / "ts").mkdir(parents=True)
+    (out / "ts" / "ts_AC_basicTest.png").touch()
+    (out / "ts" / "ts_field.nc").touch()
+
+    # Bypass the PMP CMEC parse and stop right after the diagnostic hands over the file paths,
+    # so we can assert exactly what it passed without needing real PMP output.
+    mocker.patch.object(
+        annual_cycle_module, "transform_results_files", return_value=[out / "x_cmec_transformed.json"]
+    )
+    spy = mocker.patch.object(annual_cycle_module, "process_json_result", side_effect=RuntimeError("stop"))
+
+    with pytest.raises(RuntimeError, match="stop"):
+        diagnostic.build_execution_result(definition)
+
+    _json_filename, png_files, data_files = spy.call_args.args
+    assert [str(p) for p in png_files] == ["ts/ts_AC_basicTest.png"]
+    assert [str(p) for p in data_files] == ["ts/ts_field.nc"]
+    assert all(not p.is_absolute() for p in (*png_files, *data_files))
 
 
 def test_diagnostic_execute(mocker, provider):

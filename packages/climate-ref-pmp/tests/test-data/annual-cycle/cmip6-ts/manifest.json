@@ -1,8 +1,8 @@
 {
   "catalog_hash": "8fe7eddb18ede3fe8ed9689e02e4b11cf40da1ab",
   "committed": {
-    "diagnostic.json": "cde5211f7f32b1ea37712e1772bd1871c9c86cbb49b58d94cd9fe9b36f34d324",
-    "output.json": "9b11d9dbba59e4731f21932f7375eec428dfb1ebf339bf6870c1d1be14528afd",
+    "diagnostic.json": "219ed6bebb8a768432b237ee51052ca96b1c7ae9c83aca3c8763cfdda2eef9d6",
+    "output.json": "369bfe5bb6b1f0a0475b18dcf7ace65cef1da187eb86fa10e8809edc8d3b47f3",
     "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
   "native": {

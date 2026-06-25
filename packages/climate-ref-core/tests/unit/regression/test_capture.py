@@ -6,7 +6,11 @@ from pathlib import Path
 import pytest
 
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
-from climate_ref_core.output_files import PLACEHOLDER_OUTPUT_DIR, PLACEHOLDER_TEST_DATA_DIR
+from climate_ref_core.output_files import (
+    PLACEHOLDER_OUTPUT_DIR,
+    PLACEHOLDER_SOFTWARE_ROOT_DIR,
+    PLACEHOLDER_TEST_DATA_DIR,
+)
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
     _COMMITTED_FLOAT_JSON_KWARGS,
@@ -167,6 +171,95 @@ def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
     # The float-bearing artefacts were rounded (proving the bundle was processed, not skipped).
     assert json.loads((regression_dir / "diagnostic.json").read_text())["PROVENANCE"]["score"] == 1.843241
     assert json.loads((regression_dir / "series.json").read_text())[0]["values"] == [1.761334]
+
+
+def _leaky_provenance(software_root: Path, output_dir: Path) -> dict:
+    """A CMEC provenance block: host/user fields to redact + absolute paths to placeholder."""
+    return {
+        "commandLine": (
+            f"{software_root}/conda/pmp/bin/mean_climate_driver.py "
+            f"-p {software_root}/params/pmp_param.py "
+            f"--test_data_path {output_dir} --cmec"
+        ),
+        "date": "2026-06-24 12:30:54",
+        "userId": "jared",
+        "platform": {"Name": "gus", "OS": "Linux"},
+    }
+
+
+def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    software_root = (tmp_path / "software").resolve()
+    source = tmp_path / "scratch" / "frag"
+    source.mkdir(parents=True)
+    # Metric bundle: leaky uppercase PROVENANCE + a float so rounding also runs.
+    (source / "diagnostic.json").write_text(
+        json.dumps(
+            {"PROVENANCE": _leaky_provenance(software_root, output_dir), "RESULTS": {"score": 1.2345678901}}
+        )
+    )
+    # Output bundle: leaky lowercase provenance, float-free, native indent=2 layout.
+    output_obj = CMECOutput.create_template()
+    output_obj["provenance"].update(_leaky_provenance(software_root, output_dir))
+    (source / "output.json").write_text(json.dumps(output_obj, indent=2))
+    (source / "series.json").write_text(json.dumps([]))
+    regression_dir = tmp_path / "regression"
+
+    digests = write_committed_bundle(
+        source,
+        regression_dir,
+        output_dir=output_dir,
+        test_data_dir=test_data_dir,
+        software_root_dir=software_root,
+    )
+
+    for filename in ("diagnostic.json", "output.json"):
+        text = (regression_dir / filename).read_text()
+        # date and userId are redacted as structured fields...
+        assert '"userId": "<USER>"' in text
+        assert '"date": "<DATE>"' in text
+        # ...the command line is kept but made portable via path placeholders (not nuked)...
+        assert "<COMMAND_LINE>" not in text
+        assert "mean_climate_driver.py" in text
+        assert PLACEHOLDER_SOFTWARE_ROOT_DIR in text
+        assert PLACEHOLDER_OUTPUT_DIR in text
+        # ...and no personal / absolute-path / timestamp data survives.
+        assert "jared" not in text
+        assert str(software_root) not in text
+        assert str(output_dir) not in text
+        assert "2026-06-24 12:30:54" not in text
+        # Digest is taken over the sanitised bytes exactly as they sit on disk.
+        assert digests[filename] == sha256_file(regression_dir / filename)
+
+    # Structured redaction survives float-rounding in the metric bundle.
+    diag = json.loads((regression_dir / "diagnostic.json").read_text())
+    assert diag["PROVENANCE"]["userId"] == "<USER>"
+    assert diag["PROVENANCE"]["date"] == "<DATE>"
+    assert diag["RESULTS"]["score"] == 1.234568
+
+    # output.json is re-dumped byte-faithfully: provenance key order is preserved.
+    out = json.loads((regression_dir / "output.json").read_text())
+    assert list(out["provenance"].keys()) == list(output_obj["provenance"].keys())
+
+
+def test_redaction_is_noop_without_provenance_fields(tmp_path):
+    # A bundle with no host/user provenance fields must pass through untouched,
+    # so the committed digest stays byte-stable for already-portable artefacts.
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    source = tmp_path / "scratch" / "frag"
+    source.mkdir(parents=True)
+    template = CMECOutput.create_template()
+    (source / "output.json").write_text(json.dumps(template, indent=2))
+    source_output_bytes = (source / "output.json").read_bytes()
+    (source / "diagnostic.json").write_text(json.dumps({"RESULTS": {"score": 1.0}}))
+    (source / "series.json").write_text(json.dumps([]))
+    regression_dir = tmp_path / "regression"
+
+    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+
+    assert (regression_dir / "output.json").read_bytes() == source_output_bytes
 
 
 def test_build_native_snapshot_digests_relpaths(tmp_path):

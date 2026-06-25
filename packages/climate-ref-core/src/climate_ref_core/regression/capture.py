@@ -108,19 +108,108 @@ def _round_committed_floats(regression_dir: Path) -> None:
             logger.warning(f"{filename} contains float values but is not float-rounded.")
 
 
+# CMEC provenance lives in the metric bundle's uppercase ``PROVENANCE`` block and the
+# output bundle's lowercase ``provenance`` block; series.json never carries one.
+_PROVENANCE_BEARING_FILES: tuple[str, ...] = ("diagnostic.json", "output.json")
+_PROVENANCE_BLOCK_KEYS: frozenset[str] = frozenset({"PROVENANCE", "provenance"})
+
+# Provenance fields redacted to stable placeholders so the committed bundle stays portable
+# (machine-independent) and reproducible: ``userId`` is the minting user and ``date`` is a
+# non-reproducible wall-clock timestamp. Absolute paths in ``commandLine`` are made portable
+# by path placeholdering (``<OUTPUT_DIR>`` / ``<SOFTWARE_ROOT_DIR>``), not by redaction.
+_REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
+    "userId": "<USER>",
+    "date": "<DATE>",
+}
+
+# JSON dump parameters matching each committed file's canonical on-disk form, so a structured
+# edit re-serialises byte-for-byte apart from the changed fields. diagnostic.json is single-sourced
+# from _COMMITTED_FLOAT_JSON_KWARGS so its serialisation parameters cannot drift between the
+# float-rounding and provenance-redaction re-dumps; output.json is the CMEC output bundle
+# (json.dumps(indent=2), no key-sorting -- see _quantise).
+_COMMITTED_DUMP_KWARGS: dict[str, dict[str, object]] = {
+    "diagnostic.json": _COMMITTED_FLOAT_JSON_KWARGS["diagnostic.json"],
+    "output.json": {"indent": 2},
+}
+
+
+def _redact_provenance_fields(obj: object) -> bool:
+    """
+    Redact the declared provenance fields in every CMEC provenance block of ``obj`` in place.
+
+    Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block, overwrites the
+    fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders. Scoping to the
+    provenance block means a same-named key elsewhere in the bundle is never touched.
+
+    Returns
+    -------
+    :
+        ``True`` if any field was changed.
+    """
+    changed = False
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in _PROVENANCE_BLOCK_KEYS and isinstance(value, dict):
+                for field, placeholder in _REDACTED_PROVENANCE_FIELDS.items():
+                    if field in value and value[field] != placeholder:
+                        value[field] = placeholder
+                        changed = True
+            elif _redact_provenance_fields(value):
+                changed = True
+    elif isinstance(obj, list):
+        for item in obj:
+            if _redact_provenance_fields(item):
+                changed = True
+    return changed
+
+
+def _redact_committed_provenance(regression_dir: Path) -> None:
+    """
+    Redact host/user-specific provenance fields from the committed CMEC bundle in place.
+
+    CMEC providers (e.g. PMP) stamp each bundle with a provenance block recording the minting
+    ``userId`` and a wall-clock ``date``.
+    Those leak personal metadata into git-tracked fixtures and never reproduce,
+    so they are replaced with stable placeholders.
+    The edit is structured -- the declared fields are set on the parsed object -- and the file is
+    re-serialised with its canonical parameters,
+    so the only byte difference is the redacted field values.
+
+    Runs after :func:`_round_committed_floats` so it operates on the final, NaN-free bytes,
+    and inside :func:`write_committed_bundle` so it is applied identically at mint and replay --
+    keeping the committed digests reproducible across machines.
+
+    Parameters
+    ----------
+    regression_dir
+        The test case ``regression/`` directory holding the committed bundle.
+    """
+    for filename in _PROVENANCE_BEARING_FILES:
+        path = regression_dir / filename
+        if not path.exists():
+            continue
+        data = json.loads(path.read_text(encoding="utf-8"))
+        if _redact_provenance_fields(data):
+            kwargs = _COMMITTED_DUMP_KWARGS[filename]
+            path.write_text(json.dumps(data, **kwargs), encoding="utf-8")  # type: ignore[arg-type]
+
+
 def write_committed_bundle(
     source_dir: Path,
     regression_dir: Path,
     *,
     output_dir: Path,
     test_data_dir: Path,
+    software_root_dir: Path | None = None,
 ) -> dict[str, str]:
     """
     Write the sanitised committed CMEC bundle into ``regression_dir``.
 
     Copies each committed artefact present in ``source_dir`` into ``regression_dir``,
     then rewrites absolute paths to portable placeholders in place
-    (:func:`~climate_ref_core.output_files.to_placeholders`).
+    (:func:`~climate_ref_core.output_files.to_placeholders`),
+    rounds floats (:func:`_round_committed_floats`),
+    and redacts host/user-specific CMEC provenance fields (:func:`_redact_committed_provenance`).
     When a committed artefact is absent from ``source_dir``,
     any stale copy left in ``regression_dir`` from a previous capture is removed so it is not re-digested.
 
@@ -135,6 +224,9 @@ def write_committed_bundle(
         The absolute execution output directory, for path substitution.
     test_data_dir
         The absolute provider test-data directory, for path substitution.
+    software_root_dir
+        The absolute shared-software root directory, for path substitution in provenance
+        command lines. When ``None``, no software-root substitution is applied.
 
     Returns
     -------
@@ -153,11 +245,19 @@ def write_committed_bundle(
             # Drop a stale copy from a previous capture so it is not re-digested.
             dest.unlink(missing_ok=True)
 
-    to_placeholders(regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    to_placeholders(
+        regression_dir,
+        output_dir=output_dir,
+        test_data_dir=test_data_dir,
+        software_root_dir=software_root_dir,
+    )
     # Round floats in place before digesting,
     # so the committed bytes (and their recorded digests) are the stable, rounded ones.
     # Placeholder substitution only rewrites path strings, so order relative to it does not matter for floats.
     _round_committed_floats(regression_dir)
+    # Redact host/user-specific provenance fields (userId, date) last, so it operates on the
+    # final NaN-free bytes and the only change is the redacted field values.
+    _redact_committed_provenance(regression_dir)
     return compute_committed_digests(regression_dir)
 
 
@@ -194,6 +294,7 @@ def capture_execution(  # noqa: PLR0913
     regression_dir: Path,
     output_dir: Path,
     test_data_dir: Path,
+    software_root_dir: Path | None = None,
     # TODO: Unify the log handling
     include_log: bool = False,
 ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
@@ -221,6 +322,9 @@ def capture_execution(  # noqa: PLR0913
         The absolute execution output directory, for path substitution.
     test_data_dir
         The absolute provider test-data directory, for path substitution.
+    software_root_dir
+        The absolute shared-software root directory, for path substitution in provenance
+        command lines. When ``None``, no software-root substitution is applied.
     include_log
         If True, the execution log is included in the persisted/native set.
 
@@ -245,6 +349,7 @@ def capture_execution(  # noqa: PLR0913
         regression_dir,
         output_dir=output_dir,
         test_data_dir=test_data_dir,
+        software_root_dir=software_root_dir,
     )
     native = build_native_snapshot(base_dir, relpaths)
     return committed, native

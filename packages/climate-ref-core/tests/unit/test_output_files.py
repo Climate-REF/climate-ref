@@ -5,6 +5,7 @@ import pytest
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.output_files import (
     PLACEHOLDER_OUTPUT_DIR,
+    PLACEHOLDER_SOFTWARE_ROOT_DIR,
     PLACEHOLDER_TEST_DATA_DIR,
     copy_execution_outputs,
     copy_output_file,
@@ -31,6 +32,50 @@ def test_sanitise_and_expand_round_trip(tmp_path):
     assert PLACEHOLDER_TEST_DATA_DIR in sanitised
 
     from_placeholders(directory, output_dir=output_dir, test_data_dir=test_data_dir)
+    assert (directory / "diagnostic.json").read_text() == original
+
+
+def test_sanitise_software_root_round_trip(tmp_path):
+    output_dir = tmp_path / "scratch" / "output"
+    test_data_dir = tmp_path / "test-data"
+    software_root_dir = tmp_path / "software"
+    directory = tmp_path / "regression"
+    directory.mkdir()
+
+    # A provenance command line referencing the software root and the output dir.
+    original = f"cmd={software_root_dir}/conda/bin/driver.py --out {output_dir}\n"
+    (directory / "diagnostic.json").write_text(original)
+
+    to_placeholders(
+        directory,
+        output_dir=output_dir,
+        test_data_dir=test_data_dir,
+        software_root_dir=software_root_dir,
+    )
+    sanitised = (directory / "diagnostic.json").read_text()
+    assert str(software_root_dir) not in sanitised
+    assert PLACEHOLDER_SOFTWARE_ROOT_DIR in sanitised
+    assert PLACEHOLDER_OUTPUT_DIR in sanitised
+
+    from_placeholders(
+        directory,
+        output_dir=output_dir,
+        test_data_dir=test_data_dir,
+        software_root_dir=software_root_dir,
+    )
+    assert (directory / "diagnostic.json").read_text() == original
+
+
+def test_software_root_substitution_is_opt_in(tmp_path):
+    # Without software_root_dir, no <SOFTWARE_ROOT_DIR> substitution occurs (back-compatible default).
+    software_root_dir = tmp_path / "software"
+    directory = tmp_path / "regression"
+    directory.mkdir()
+    original = f"cmd={software_root_dir}/conda/bin/driver.py\n"
+    (directory / "diagnostic.json").write_text(original)
+
+    to_placeholders(directory, output_dir=tmp_path / "out", test_data_dir=tmp_path / "td")
+
     assert (directory / "diagnostic.json").read_text() == original
 
 

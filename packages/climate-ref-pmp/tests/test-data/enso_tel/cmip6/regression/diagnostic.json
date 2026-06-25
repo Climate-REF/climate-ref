@@ -49,7 +49,7 @@
     "conda": {
       "Platform": "linux-64"
     },
-    "date": "2026-06-24 12:35:08",
+    "date": "<DATE>",
     "openGL": {
       "GLX": {
         "client": {},
@@ -76,7 +76,7 @@
       "OS": "Linux",
       "Version": "6.12.88+deb13-amd64"
     },
-    "userId": "jared"
+    "userId": "<USER>"
   },
   "RESULTS": {
     "cmip6": {

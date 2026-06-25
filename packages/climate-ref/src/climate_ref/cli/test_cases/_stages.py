@@ -136,10 +136,13 @@ def stage_materialise(  # noqa: PLR0913
     manifest: Manifest,
     store: NativeStore,
     slot: Path,
+    software_root_dir: Path | None = None,
 ) -> SourceOutputs:
     """Fetch the manifest's native blobs into ``slot`` and rebuild the result from them."""
     materialise_native(manifest.native, store, slot)
-    return stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot)
+    return stage_rebuild_from_slot(
+        diag=diag, tc=tc, paths=paths, slot=slot, software_root_dir=software_root_dir
+    )
 
 
 def stage_rebuild_from_slot(
@@ -148,6 +151,7 @@ def stage_rebuild_from_slot(
     tc: TestCase,
     paths: TestCasePaths,
     slot: Path,
+    software_root_dir: Path | None = None,
 ) -> SourceOutputs:
     """
     Rebuild the execution result from native already present in ``slot``.
@@ -158,7 +162,9 @@ def stage_rebuild_from_slot(
     """
     from climate_ref_core.testing import load_datasets_from_yaml
 
-    from_placeholders(slot, output_dir=slot, test_data_dir=paths.test_data_dir)
+    from_placeholders(
+        slot, output_dir=slot, test_data_dir=paths.test_data_dir, software_root_dir=software_root_dir
+    )
     datasets = load_datasets_from_yaml(paths.catalog)
     definition = ExecutionDefinition(
         diagnostic=diag,
@@ -171,7 +177,13 @@ def stage_rebuild_from_slot(
     return SourceOutputs(result=result, bundle_output_dir=slot)
 
 
-def stage_build(*, slot: Path, source: SourceOutputs, paths: TestCasePaths) -> dict[str, str]:
+def stage_build(
+    *,
+    slot: Path,
+    source: SourceOutputs,
+    paths: TestCasePaths,
+    software_root_dir: Path | None = None,
+) -> dict[str, str]:
     """
     Assemble the committed bundle into the slot's ``regression/`` directory.
 
@@ -184,6 +196,7 @@ def stage_build(*, slot: Path, source: SourceOutputs, paths: TestCasePaths) -> d
         slot / SLOT_REGRESSION_DIRNAME,
         output_dir=source.bundle_output_dir,
         test_data_dir=paths.test_data_dir,
+        software_root_dir=software_root_dir,
     )
 
 

@@ -38,6 +38,13 @@ PLACEHOLDER_OUTPUT_DIR = "<OUTPUT_DIR>"
 PLACEHOLDER_TEST_DATA_DIR = "<TEST_DATA_DIR>"
 """Placeholder substituted for the absolute provider test-data directory."""
 
+PLACEHOLDER_SOFTWARE_ROOT_DIR = "<SOFTWARE_ROOT_DIR>"
+"""Placeholder substituted for the absolute shared-software root directory.
+
+Provider command lines stamped into CMEC provenance reference the installed
+software environment (e.g. a conda prefix) under this root.
+"""
+
 SANITISED_FILE_GLOBS: tuple[str, ...] = (
     "*.json",
     "*.txt",
@@ -102,18 +109,34 @@ def rewrite_tree(
                 file.write_text(rewritten, encoding="utf-8")
 
 
+def _placeholder_pairs(
+    output_dir: Path, test_data_dir: Path, software_root_dir: Path | None
+) -> list[tuple[str, Path]]:
+    """Return the ``(placeholder, absolute directory)`` pairs sanitised in committed artefacts.
+
+    Shared by :func:`to_placeholders` and :func:`from_placeholders` so the placeholder set is
+    declared once and each picks a substitution direction.
+    """
+    pairs = [(PLACEHOLDER_OUTPUT_DIR, output_dir), (PLACEHOLDER_TEST_DATA_DIR, test_data_dir)]
+    if software_root_dir is not None:
+        pairs.append((PLACEHOLDER_SOFTWARE_ROOT_DIR, software_root_dir))
+    return pairs
+
+
 def to_placeholders(
     directory: Path,
     *,
     output_dir: Path,
     test_data_dir: Path,
+    software_root_dir: Path | None = None,
     globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
 ) -> None:
     """
     Rewrite absolute paths in committed artefacts to portable placeholders ("to").
 
-    Replaces the absolute ``output_dir`` with ``<OUTPUT_DIR>`` and the absolute
-    ``test_data_dir`` with ``<TEST_DATA_DIR>`` in every text artefact under ``directory``.
+    Replaces the absolute ``output_dir`` with ``<OUTPUT_DIR>``, the absolute
+    ``test_data_dir`` with ``<TEST_DATA_DIR>``, and (when given) the absolute
+    ``software_root_dir`` with ``<SOFTWARE_ROOT_DIR>`` in every text artefact under ``directory``.
     Binary files are never touched.
 
     Parameters
@@ -124,14 +147,14 @@ def to_placeholders(
         The absolute execution output directory.
     test_data_dir
         The absolute provider test-data directory.
+    software_root_dir
+        The absolute shared-software root directory, if any. Substituted in provenance
+        command lines so the committed bundle stays machine-independent.
     globs
         File globs whose contents are rewritten.
     """
-    rewrite_tree(
-        directory,
-        {str(output_dir): PLACEHOLDER_OUTPUT_DIR, str(test_data_dir): PLACEHOLDER_TEST_DATA_DIR},
-        globs,
-    )
+    pairs = _placeholder_pairs(output_dir, test_data_dir, software_root_dir)
+    rewrite_tree(directory, {str(abs_dir): placeholder for placeholder, abs_dir in pairs}, globs)
 
 
 def from_placeholders(
@@ -139,13 +162,15 @@ def from_placeholders(
     *,
     output_dir: Path,
     test_data_dir: Path,
+    software_root_dir: Path | None = None,
     globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
 ) -> None:
     """
     Rewrite portable placeholders back to absolute paths ("from").
 
-    Inverse of :func:`to_placeholders`: replaces ``<OUTPUT_DIR>`` with the absolute ``output_dir``
-    and ``<TEST_DATA_DIR>`` with the absolute ``test_data_dir`` in every text artefact under ``directory``.
+    Inverse of :func:`to_placeholders`: replaces ``<OUTPUT_DIR>`` with the absolute ``output_dir``,
+    ``<TEST_DATA_DIR>`` with the absolute ``test_data_dir``, and (when given) ``<SOFTWARE_ROOT_DIR>``
+    with the absolute ``software_root_dir`` in every text artefact under ``directory``.
     Binary files are never touched.
 
     Parameters
@@ -156,14 +181,13 @@ def from_placeholders(
         The absolute execution output directory to substitute in.
     test_data_dir
         The absolute provider test-data directory to substitute in.
+    software_root_dir
+        The absolute shared-software root directory to substitute in, if any.
     globs
         File globs whose contents are rewritten.
     """
-    rewrite_tree(
-        directory,
-        {PLACEHOLDER_OUTPUT_DIR: str(output_dir), PLACEHOLDER_TEST_DATA_DIR: str(test_data_dir)},
-        globs,
-    )
+    pairs = _placeholder_pairs(output_dir, test_data_dir, software_root_dir)
+    rewrite_tree(directory, {placeholder: str(abs_dir) for placeholder, abs_dir in pairs}, globs)
 
 
 def copy_output_file(

@@ -566,6 +566,20 @@ class Diagnostic(AbstractDiagnostic):
     files: Sequence[FileDefinition] = tuple()
     test_data_spec: TestDataSpecification | None = None
 
+    reconstruction_inputs: tuple[str, ...] = ()
+    """
+    Extra output globs to persist into the results/regression set, beyond the files the
+    CMEC output bundle references.
+
+    :meth:`build_execution_result` for some providers re-derives the bundle by re-scanning raw
+    execution artefacts (e.g. ESMValTool ``diagnostic_provenance.yml`` or the PMP driver's
+    ``*_cmec.json``) that the curated output set would otherwise exclude. Declaring those globs
+    here makes them part of the persisted baseline, so a ``replay`` can rebuild the bundle from
+    the stored native set alone. Patterns are relative to the execution output directory (``**``
+    and ``/`` behave as for :meth:`pathlib.Path.glob`); the copied files are sanitised for
+    portability like every other text artefact. Default: none.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self._provider: DiagnosticProvider | None = None

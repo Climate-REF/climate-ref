@@ -39,6 +39,7 @@ from climate_ref.cli.test_cases._stages import (
     write_source_stamp,
 )
 from climate_ref.config import Config
+from climate_ref_core.output_files import PlaceholderMap
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -143,16 +144,25 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
             continue
 
         slot = prepare_slot(paths, label)
+        placeholders = PlaceholderMap.for_baseline(
+            test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
+        )
         try:
             source = stage_materialise(
-                diag=diag, tc=tc, paths=paths, manifest=manifest, store=store, slot=slot
+                diag=diag,
+                tc=tc,
+                paths=paths,
+                manifest=manifest,
+                store=store,
+                slot=slot,
+                placeholders=placeholders,
             )
         except Exception as exc:
             logger.error(f"{case_id}: failed to materialise/rebuild native: {exc}")
             failures.append(case_id)
             continue
 
-        stage_build(slot=slot, source=source, paths=paths)
+        stage_build(slot=slot, source=source, placeholders=placeholders)
         cmp_failures, compared = stage_compare(
             slot=slot, paths=paths, slug=diag.slug, expected=manifest.committed
         )
@@ -312,6 +322,9 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             continue
 
         slot = prepare_slot(paths, label)
+        placeholders = PlaceholderMap.for_baseline(
+            test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
+        )
 
         # Populate the slot's native set: either re-execute the diagnostic, or (with
         # --from-replay) materialise the previously minted native from the store. The
@@ -319,7 +332,13 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         try:
             if from_replay and previous is not None:  # previous is non-None by the guard above
                 source = stage_materialise(
-                    diag=diag, tc=tc, paths=paths, manifest=previous, store=store, slot=slot
+                    diag=diag,
+                    tc=tc,
+                    paths=paths,
+                    manifest=previous,
+                    store=store,
+                    slot=slot,
+                    placeholders=placeholders,
                 )
                 source_kind = "materialise"
             else:
@@ -343,7 +362,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             failures.append(case_id)
             continue
 
-        committed = stage_build(slot=slot, source=source, paths=paths)
+        committed = stage_build(slot=slot, source=source, placeholders=placeholders)
         if from_replay and previous is not None:
             # --from-replay reuses the already-minted native verbatim: stage_materialise hydrated
             # the slot's copy in place (placeholders -> concrete paths) while rebuilding, so a fresh
@@ -352,7 +371,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             # bundle is re-derived here -- which also makes the upload below a verified no-op.
             native = previous.native
         else:
-            native = snapshot_native(slot)
+            native = snapshot_native(slot, placeholders=placeholders.with_output(source.bundle_output_dir))
         errors = stage_upload(
             slot=slot, native=native, store=store, previous=(previous.native if previous else {})
         )
@@ -461,20 +480,25 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
             failures.append(case_id)
             continue
 
+        placeholders = PlaceholderMap.for_baseline(
+            test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
+        )
         try:
-            source = stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot)
+            source = stage_rebuild_from_slot(
+                diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders
+            )
         except Exception as exc:
             logger.error(f"{case_id}: failed to rebuild bundle from slot: {exc}")
             failures.append(case_id)
             continue
 
-        committed = stage_build(slot=slot, source=source, paths=paths)
+        committed = stage_build(slot=slot, source=source, placeholders=placeholders)
         previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
         version = previous.test_case_version if previous else 1
 
         if force_regen or not paths.regression.exists():
             promote_to_baseline(slot, paths)
-            native = snapshot_native(slot)
+            native = snapshot_native(slot, placeholders=placeholders.with_output(source.bundle_output_dir))
             if previous is not None:
                 _write_test_case_manifest(
                     paths,

@@ -29,7 +29,7 @@ from typing import TYPE_CHECKING, NamedTuple
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.output_files import copy_execution_outputs, from_placeholders
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.regression import (
     COMMITTED_BUNDLE_FILES,
     Tolerance,
@@ -124,7 +124,9 @@ def stage_execute(  # noqa: PLR0913
     real_output_dir = result.definition.output_directory
     # Copy the curated subset from the real execution dir into the slot, flat (fragment=".").
     # The copied bundle text still references real_output_dir, so build substitutes that.
-    copy_execution_outputs(real_output_dir, slot, ".", result)
+    # The diagnostic's reconstruction_inputs (raw artefacts build_execution_result re-scans) are
+    # captured alongside, so a replay can rebuild the bundle from the persisted set alone.
+    copy_execution_outputs(real_output_dir, slot, ".", result, extra_globs=diag.reconstruction_inputs)
     return SourceOutputs(result=result, bundle_output_dir=real_output_dir)
 
 
@@ -136,10 +138,11 @@ def stage_materialise(  # noqa: PLR0913
     manifest: Manifest,
     store: NativeStore,
     slot: Path,
+    placeholders: PlaceholderMap,
 ) -> SourceOutputs:
     """Fetch the manifest's native blobs into ``slot`` and rebuild the result from them."""
     materialise_native(manifest.native, store, slot)
-    return stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot)
+    return stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders)
 
 
 def stage_rebuild_from_slot(
@@ -148,6 +151,7 @@ def stage_rebuild_from_slot(
     tc: TestCase,
     paths: TestCasePaths,
     slot: Path,
+    placeholders: PlaceholderMap,
 ) -> SourceOutputs:
     """
     Rebuild the execution result from native already present in ``slot``.
@@ -155,10 +159,13 @@ def stage_rebuild_from_slot(
     Hydrates portable placeholders to concrete paths, then re-runs ``build_execution_result``
     so the rebuilt bundle is written into the slot (referencing the slot). No execution and
     no store access -- this is the shared core of ``replay`` (after a fetch) and ``build``.
+
+    The slot is its own output directory, so the placeholder map is bound to it
+    (``placeholders.with_output(slot)``) before hydrating.
     """
     from climate_ref_core.testing import load_datasets_from_yaml
 
-    from_placeholders(slot, output_dir=slot, test_data_dir=paths.test_data_dir)
+    placeholders.with_output(slot).hydrate(slot)
     datasets = load_datasets_from_yaml(paths.catalog)
     definition = ExecutionDefinition(
         diagnostic=diag,
@@ -171,24 +178,49 @@ def stage_rebuild_from_slot(
     return SourceOutputs(result=result, bundle_output_dir=slot)
 
 
-def stage_build(*, slot: Path, source: SourceOutputs, paths: TestCasePaths) -> dict[str, str]:
+def stage_build(
+    *,
+    slot: Path,
+    source: SourceOutputs,
+    placeholders: PlaceholderMap,
+) -> dict[str, str]:
     """
     Assemble the committed bundle into the slot's ``regression/`` directory.
 
     Returns the committed digests ``{filename: sha256}`` of the sanitised, float-quantised
     bytes just written -- suitable for ``Manifest.committed`` and identical to what would be
     promoted to the tracked baseline.
+
+    The rebuilt bundle's text still references ``source.bundle_output_dir``, so the placeholder
+    map is bound to it before sanitising.
     """
     return write_committed_bundle(
         slot,
         slot / SLOT_REGRESSION_DIRNAME,
-        output_dir=source.bundle_output_dir,
-        test_data_dir=paths.test_data_dir,
+        placeholders=placeholders.with_output(source.bundle_output_dir),
     )
 
 
-def snapshot_native(slot: Path) -> dict[str, NativeEntry]:
-    """Record a sha256 + size snapshot of the slot's native set (for the manifest / upload)."""
+def snapshot_native(slot: Path, *, placeholders: PlaceholderMap) -> dict[str, NativeEntry]:
+    """
+    Sanitise the slot's native set to portable placeholders, then snapshot it (manifest / upload).
+
+    The curated native (and any captured reconstruction inputs) still embed absolute paths -- the
+    output directory ``placeholders`` is bound to, plus the shared ``<TEST_DATA_DIR>`` /
+    ``<SOFTWARE_ROOT_DIR>`` roots. Rewriting those to ``<TOKEN>`` placeholders *before* digesting
+    makes the stored blobs, and therefore their recorded digests, machine independent: a re-mint on
+    another host produces identical digests (so ``upload`` is a no-op -- no churn), and ``replay``
+    can hydrate the blobs into any slot. Binary artefacts (``.nc`` / ``.png``) are never rewritten.
+
+    Parameters
+    ----------
+    slot
+        The output slot whose native set is sanitised and snapshotted.
+    placeholders
+        The placeholder map, already bound to the slot's output directory via
+        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
+    """
+    placeholders.sanitise(slot)
     return build_native_snapshot(slot, slot_native_relpaths(slot))
 
 

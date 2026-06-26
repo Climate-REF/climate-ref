@@ -15,7 +15,7 @@ a curated subset of outputs are copied from the scratch directory to the results
 Only files in the results directory are accessed by the API/public.
 
 For some tests we must sanitise paths to files as well as the contents of text files
-(:func:`to_placeholders` / :func:`from_placeholders`).
+(:class:`PlaceholderMap`).
 This ensures that the regression data is machine independent.
 """
 
@@ -24,6 +24,8 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
+
+from attrs import frozen
 
 from climate_ref_core.diagnostics import ensure_relative_path
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
@@ -37,6 +39,13 @@ PLACEHOLDER_OUTPUT_DIR = "<OUTPUT_DIR>"
 
 PLACEHOLDER_TEST_DATA_DIR = "<TEST_DATA_DIR>"
 """Placeholder substituted for the absolute provider test-data directory."""
+
+PLACEHOLDER_SOFTWARE_ROOT_DIR = "<SOFTWARE_ROOT_DIR>"
+"""Placeholder substituted for the absolute shared-software root directory.
+
+Provider command lines stamped into CMEC provenance reference the installed
+software environment (e.g. a conda prefix) under this root.
+"""
 
 SANITISED_FILE_GLOBS: tuple[str, ...] = (
     "*.json",
@@ -102,68 +111,97 @@ def rewrite_tree(
                 file.write_text(rewritten, encoding="utf-8")
 
 
-def to_placeholders(
-    directory: Path,
-    *,
-    output_dir: Path,
-    test_data_dir: Path,
-    globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
-) -> None:
+@frozen
+class PlaceholderMap:
     """
-    Rewrite absolute paths in committed artefacts to portable placeholders ("to").
+    Bidirectional map between absolute runtime directories and portable ``<TOKEN>`` placeholders.
 
-    Replaces the absolute ``output_dir`` with ``<OUTPUT_DIR>`` and the absolute
-    ``test_data_dir`` with ``<TEST_DATA_DIR>`` in every text artefact under ``directory``.
-    Binary files are never touched.
+    A committed regression bundle is made machine-independent
+    by replacing host-specific absolute paths with stable tokens --
+    ``<OUTPUT_DIR>``, ``<TEST_DATA_DIR>`` and (optionally) ``<SOFTWARE_ROOT_DIR>``.
+    The *same* map drives every direction:
 
-    Parameters
-    ----------
-    directory
-        The tree of committed artefacts to sanitise in place.
-    output_dir
-        The absolute execution output directory.
-    test_data_dir
-        The absolute provider test-data directory.
-    globs
-        File globs whose contents are rewritten.
+    - :meth:`sanitise` rewrites absolute paths to tokens (capture / mint).
+    - :meth:`hydrate` rewrites tokens back to absolute paths (replay / rebuild).
+    - :meth:`as_replacements` yields the ``{absolute: token}`` mapping
+      the bundle and series comparators apply to a freshly regenerated artefact before diffing.
+
+    The token set is declared in one place (:meth:`for_baseline` then :meth:`with_output`),
+    so the capture side and the verification side cannot declare different sets and drift apart.
+    Adding a placeholder is a one-line change here,
+    not a new parameter threaded through every caller.
+
+    The two configuration-stable tokens (``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>``)
+    are fixed for a whole run;
+    the per-execution ``<OUTPUT_DIR>`` is late-bound with :meth:`with_output`.
     """
-    rewrite_tree(
-        directory,
-        {str(output_dir): PLACEHOLDER_OUTPUT_DIR, str(test_data_dir): PLACEHOLDER_TEST_DATA_DIR},
-        globs,
-    )
 
+    pairs: tuple[tuple[str, Path], ...]
+    """Ordered ``(token, absolute_directory)`` pairs.
 
-def from_placeholders(
-    directory: Path,
-    *,
-    output_dir: Path,
-    test_data_dir: Path,
-    globs: tuple[str, ...] = SANITISED_FILE_GLOBS,
-) -> None:
+    Application order is not significant:
+    all rewriting goes through :func:`rewrite_tree`,
+    which re-sorts longest-match-first so an overlapping shorter path cannot shadow a longer one.
     """
-    Rewrite portable placeholders back to absolute paths ("from").
 
-    Inverse of :func:`to_placeholders`: replaces ``<OUTPUT_DIR>`` with the absolute ``output_dir``
-    and ``<TEST_DATA_DIR>`` with the absolute ``test_data_dir`` in every text artefact under ``directory``.
-    Binary files are never touched.
+    @classmethod
+    def for_baseline(cls, *, test_data_dir: Path, software_root_dir: Path | None = None) -> PlaceholderMap:
+        """
+        Build the configuration-stable placeholder set for a committed baseline.
 
-    Parameters
-    ----------
-    directory
-        The tree of artefacts to hydrate in place.
-    output_dir
-        The absolute execution output directory to substitute in.
-    test_data_dir
-        The absolute provider test-data directory to substitute in.
-    globs
-        File globs whose contents are rewritten.
-    """
-    rewrite_tree(
-        directory,
-        {PLACEHOLDER_OUTPUT_DIR: str(output_dir), PLACEHOLDER_TEST_DATA_DIR: str(test_data_dir)},
-        globs,
-    )
+        Holds every token except the per-execution output directory,
+        which is added with :meth:`with_output`.
+        ``software_root_dir`` is optional:
+        when ``None`` no ``<SOFTWARE_ROOT_DIR>`` substitution is applied --
+        a verification context that does not know the shared-software root relies on this,
+        and the omission is explicit and declared once.
+        """
+        pairs: list[tuple[str, Path]] = [(PLACEHOLDER_TEST_DATA_DIR, test_data_dir)]
+        if software_root_dir is not None:
+            pairs.append((PLACEHOLDER_SOFTWARE_ROOT_DIR, software_root_dir))
+        return cls(pairs=tuple(pairs))
+
+    def with_output(self, output_dir: Path) -> PlaceholderMap:
+        """Return a new map that also binds ``<OUTPUT_DIR>`` to the per-execution ``output_dir``.
+
+        Rebinding replaces any existing ``<OUTPUT_DIR>`` entry,
+        so a second call hydrates to the latest directory rather than the first.
+        """
+        rest = tuple((token, path) for token, path in self.pairs if token != PLACEHOLDER_OUTPUT_DIR)
+        return PlaceholderMap(pairs=((PLACEHOLDER_OUTPUT_DIR, output_dir), *rest))
+
+    @property
+    def is_output_bound(self) -> bool:
+        """Whether ``<OUTPUT_DIR>`` has been bound via :meth:`with_output`.
+
+        The committed-bundle writer requires this:
+        an unbound map would leave execution-specific output paths in the committed bundle.
+        """
+        return any(token == PLACEHOLDER_OUTPUT_DIR for token, _ in self.pairs)
+
+    def as_replacements(self) -> dict[str, str]:
+        """Return the ``{absolute_directory: token}`` mapping (real path -> placeholder).
+
+        This is what the bundle and series comparators apply to a regenerated artefact
+        before diffing it against the committed (already-placeholdered) baseline.
+        """
+        return {str(abs_dir): token for token, abs_dir in self.pairs}
+
+    def sanitise(self, directory: Path, globs: tuple[str, ...] = SANITISED_FILE_GLOBS) -> None:
+        """Rewrite absolute paths to ``<TOKEN>`` placeholders in every text artefact under ``directory``.
+
+        Binary files are never touched.
+        In-place.
+        """
+        rewrite_tree(directory, self.as_replacements(), globs)
+
+    def hydrate(self, directory: Path, globs: tuple[str, ...] = SANITISED_FILE_GLOBS) -> None:
+        """Inverse of :meth:`sanitise`: rewrite ``<TOKEN>`` placeholders back to absolute paths.
+
+        Binary files are never touched.
+        In-place.
+        """
+        rewrite_tree(directory, {token: str(abs_dir) for token, abs_dir in self.pairs}, globs)
 
 
 def copy_output_file(
@@ -228,13 +266,48 @@ def _copy_output_bundle_files(
     return copied
 
 
-def copy_execution_outputs(
+def _copy_extra_globs(
+    scratch_directory: Path,
+    results_directory: Path,
+    fragment: Path | str,
+    extra_globs: tuple[str, ...],
+) -> list[Path]:
+    """
+    Copy every file matching ``extra_globs`` under the execution fragment into results.
+
+    These are *extra* raw artefacts a diagnostic declares
+    (:attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`)
+    beyond the files its CMEC output bundle references,
+    so that :meth:`~climate_ref_core.diagnostics.Diagnostic.build_execution_result`
+    can re-derive its bundle on replay from the persisted set alone.
+    Each glob is resolved against ``scratch_directory / fragment``
+    (so ``**`` and ``/`` in the pattern behave as for :meth:`pathlib.Path.glob`);
+    directories are skipped and a file matched by several globs is copied once.
+    """
+    input_directory = scratch_directory / fragment
+
+    copied: list[Path] = []
+    seen: set[Path] = set()
+    for glob in extra_globs:
+        for match in sorted(input_directory.glob(glob)):
+            if not match.is_file():
+                continue
+            relative = match.relative_to(input_directory)
+            if relative in seen:
+                continue
+            seen.add(relative)
+            copied.append(copy_output_file(scratch_directory, results_directory, fragment, relative))
+    return copied
+
+
+def copy_execution_outputs(  # noqa: PLR0913
     scratch_directory: Path,
     results_directory: Path,
     fragment: Path | str,
     result: ExecutionResult,
     *,
     include_log: bool = False,
+    extra_globs: tuple[str, ...] = (),
 ) -> list[Path]:
     """
     Copy the curated set of persisted outputs from scratch to results.
@@ -246,6 +319,7 @@ def copy_execution_outputs(
     - every file it references (plots/data/html)
     - the series bundle
     - the execution log (if ``include_log=True``)
+    - any files matching ``extra_globs`` (a diagnostic's declared reconstruction inputs)
 
     Parameters
     ----------
@@ -259,6 +333,11 @@ def copy_execution_outputs(
         The successful execution result (must carry a metric bundle filename).
     include_log
         If True, copy the execution log.
+    extra_globs
+        Additional output globs (relative to the execution directory) to persist beyond the
+        bundle-referenced files, e.g. a diagnostic's
+        :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`. A file already
+        copied as part of the curated set is not duplicated in the returned key set.
 
     Returns
     -------
@@ -291,5 +370,12 @@ def copy_execution_outputs(
         copied.append(
             copy_output_file(scratch_directory, results_directory, fragment, result.series_filename)
         )
+
+    if extra_globs:
+        already = set(copied)
+        for relpath in _copy_extra_globs(scratch_directory, results_directory, fragment, extra_globs):
+            if relpath not in already:
+                copied.append(relpath)
+                already.add(relpath)
 
     return copied

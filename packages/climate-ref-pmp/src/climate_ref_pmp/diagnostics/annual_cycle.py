@@ -571,9 +571,9 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
-        # Find the other outputs: PNG and NetCDF files
-        png_files = list(png_directory.glob("*.png"))
-        data_files = list(data_directory.glob("*.nc"))
+        # Find the other outputs: PNG and NetCDF files using relative paths
+        png_files = [definition.as_relative_path(f) for f in png_directory.glob("*.png")]
+        data_files = [definition.as_relative_path(f) for f in data_directory.glob("*.nc")]
 
         # Prepare the output bundles
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)

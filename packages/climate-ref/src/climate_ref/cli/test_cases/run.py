@@ -41,6 +41,7 @@ from climate_ref_core.exceptions import (
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
+from climate_ref_core.output_files import PlaceholderMap
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -209,13 +210,16 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     # Rebuild the slot's committed bundle, then decide whether to promote it to the
     # tracked baseline. The native block is mint-owned, so a run preserves the previous
     # one (or seeds an empty set) and never authors native here.
-    committed = stage_build(slot=slot, source=source, paths=paths)
+    placeholders = PlaceholderMap.for_baseline(
+        test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
+    )
+    committed = stage_build(slot=slot, source=source, placeholders=placeholders)
     previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
     version = previous.test_case_version if previous else 1
 
     if force_regen or not paths.regression.exists():
         promote_to_baseline(slot, paths)
-        native = snapshot_native(slot)
+        native = snapshot_native(slot, placeholders=placeholders.with_output(source.bundle_output_dir))
         if previous is not None:
             _write_test_case_manifest(
                 paths,

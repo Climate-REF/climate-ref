@@ -15,14 +15,13 @@ Provided fixtures
 -----------------
 - ``config`` -- per-test ``Config`` with isolated directories
 - ``caplog`` -- loguru-compatible log capture
-- ``test_data_dir`` / ``sample_data_dir`` / ``regression_data_dir`` -- data paths
+- ``test_data_dir`` / ``sample_data_dir`` -- data paths
 - ``sample_data`` -- session-scoped sample data fetch
 - ``cmip6_data_catalog`` / ``obs4mips_data_catalog`` / ``data_catalog`` -- data catalogs
 - ``run_test_case`` -- ``TestCaseRunner`` wrapper that converts errors to ``pytest.skip``
 - ``definition_factory`` -- create ``ExecutionDefinition`` instances
 - ``provider`` / ``mock_diagnostic`` -- mock diagnostic provider
-- ``execution_regression`` -- regression output management
-- ``diagnostic_validation`` -- legacy validation helper
+- ``solved_definition_factory`` -- build an ``ExecutionDefinition`` from the sample-data catalog
 - ``invoke_cli`` -- CLI test runner
 """
 
@@ -30,7 +29,6 @@ from __future__ import annotations
 
 import os
 import re
-import shutil
 import tempfile
 from collections.abc import Callable, Iterator
 from pathlib import Path
@@ -39,7 +37,6 @@ from typing import Any, cast
 import pandas as pd
 import pytest
 from _pytest.logging import LogCaptureFixture
-from attrs import define
 from click.testing import Result
 from loguru import logger
 from typer.testing import CliRunner
@@ -55,15 +52,12 @@ from climate_ref.testing import (
     TEST_DATA_DIR,
     TestCaseRunner,
     fetch_sample_data,
-    validate_result,
 )
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
-from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
 from climate_ref_core.providers import DiagnosticProvider
-from climate_ref_core.testing import validate_series_regression
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -133,12 +127,6 @@ def test_data_dir() -> Path:
 def sample_data_dir(test_data_dir: Path) -> Path:
     """Path to the sample data directory."""
     return test_data_dir / "sample-data"
-
-
-@pytest.fixture(scope="session")
-def regression_data_dir(test_data_dir: Path) -> Path:
-    """Path to the regression data directory."""
-    return test_data_dir / "regression"
 
 
 @pytest.fixture(scope="session")
@@ -427,140 +415,31 @@ def metric_definition(
     return definition_factory(diagnostic=mock_diagnostic, execution_dataset_collection=collection)
 
 
-@define
-class ExecutionRegression:
-    """Copy execution output to the test-data directory for regression testing."""
-
-    diagnostic: Diagnostic
-    regression_data_dir: Path
-    request: pytest.FixtureRequest
-    replacements: dict[str, str]
-
-    def path(self, key: str) -> Path:
-        """Return the regression data path for the given key."""
-        return self.regression_data_dir / self.diagnostic.provider.slug / self.diagnostic.slug / key
-
-    def replace_references(self, output_dir: Path, replacements: dict[str, str]) -> None:
-        """Replace any references to local directories with a placeholder."""
-        rewrite_tree(output_dir, replacements, SANITISED_FILE_GLOBS)
-
-    def hydrate_output_directory(self, output_dir: Path, replacements: dict[str, str]) -> None:
-        """Replace any references to the placeholder with the actual output directory."""
-        rewrite_tree(output_dir, replacements, SANITISED_FILE_GLOBS)
-
-    def output_replacements(self, output_directory: Path) -> dict[str, str]:
-        """Map real paths to regression placeholders for a given output directory."""
-        return {str(output_directory): "<OUTPUT_DIR>", **self.replacements}
-
-    def check(self, key: str, output_directory: Path) -> None:
-        """Check and optionally regenerate regression data."""
-        if not self.request.config.getoption("force_regen"):
-            logger.info("Not regenerating regression results")
-            return
-        self.replace_references(output_directory, self.output_replacements(output_directory))
-        logger.info(f"Regenerating regression output for {self.diagnostic.full_slug()}")
-        output_dir = self.path(key)
-        if output_dir.exists():
-            shutil.rmtree(output_dir)
-        shutil.copytree(output_directory, output_dir)
-
-
 @pytest.fixture
-def execution_regression(
-    request: pytest.FixtureRequest, regression_data_dir: Path, test_data_dir: Path
-) -> Callable[[Diagnostic], ExecutionRegression]:
-    """Create ExecutionRegression instances for a diagnostic."""
-
-    def _regression(diagnostic: Diagnostic) -> ExecutionRegression:
-        return ExecutionRegression(
-            diagnostic=diagnostic,
-            regression_data_dir=regression_data_dir,
-            request=request,
-            replacements={str(test_data_dir): "<TEST_DATA_DIR>"},
-        )
-
-    return _regression
-
-
-@define
-class DiagnosticValidator:
-    """
-    Validator for running diagnostics with sample data.
-
-    .. deprecated::
-        Use ``RegressionValidator`` from ``climate_ref_core.testing`` instead.
-    """
-
-    config: Config
-    diagnostic: Diagnostic
-    data_catalog: dict[SourceDatasetType, pd.DataFrame]
-    execution_regression: ExecutionRegression
-
-    def get_definition(self) -> ExecutionDefinition:
-        """Build an execution definition from the data catalog."""
-        execution = next(
-            solve_executions(
-                data_catalog=self.data_catalog,
-                diagnostic=self.diagnostic,
-                provider=self.diagnostic.provider,
-            )
-        )
-        return execution.build_execution_definition(output_root=self.config.paths.scratch)
-
-    def get_regression_definition(self) -> ExecutionDefinition:
-        """Load regression data and build an execution definition."""
-        definition = self.get_definition()
-        regression_output_dir = self.execution_regression.path(definition.key)
-        definition.output_directory.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(regression_output_dir, definition.output_directory, dirs_exist_ok=True)
-        self.execution_regression.replace_references(
-            definition.output_directory,
-            {
-                "<OUTPUT_DIR>": str(definition.output_directory),
-                **{value: key for key, value in self.execution_regression.replacements.items()},
-            },
-        )
-        return definition
-
-    def execute(self, definition: ExecutionDefinition) -> None:
-        """Run the diagnostic and optionally save regression data."""
-        definition.output_directory.mkdir(parents=True, exist_ok=True)
-        try:
-            self.diagnostic.run(definition)
-        finally:
-            self.execution_regression.check(key=definition.key, output_directory=definition.output_directory)
-
-    def validate(self, definition: ExecutionDefinition) -> None:
-        """Validate CMEC bundles and series, and store the execution result."""
-        result = self.diagnostic.build_execution_result(definition)
-        result.to_output_path("out.log").touch()
-        validate_result(self.diagnostic, self.config, result)
-        validate_series_regression(
-            expected_path=self.execution_regression.path(definition.key) / "series.json",
-            actual_path=definition.output_directory / "series.json",
-            slug=self.diagnostic.slug,
-            replacements=self.execution_regression.output_replacements(definition.output_directory),
-        )
-
-
-@pytest.fixture
-def diagnostic_validation(
+def solved_definition_factory(
     config: Config,
     mocker: Any,
-    provider: DiagnosticProvider,
     data_catalog: dict[SourceDatasetType, pd.DataFrame],
-    execution_regression: Callable[[Diagnostic], ExecutionRegression],
-) -> Callable[[Diagnostic], DiagnosticValidator]:
-    """Create DiagnosticValidator instances for testing."""
+) -> Callable[[Diagnostic], ExecutionDefinition]:
+    """
+    Build an ``ExecutionDefinition`` by solving a diagnostic against the sample-data catalog.
+
+    Returns a factory that solves the first execution for the given diagnostic and builds
+    its definition under the test ``scratch`` directory. Useful for unit tests that need a
+    realistic definition without running the diagnostic (e.g. to inspect the commands it
+    would build).
+    """
     mocker.patch.object(Execution, "execution_group")
 
-    def _create_validator(diagnostic: Diagnostic) -> DiagnosticValidator:
+    def _build(diagnostic: Diagnostic) -> ExecutionDefinition:
         diagnostic.provider.configure(config)
-        return DiagnosticValidator(
-            config=config,
-            diagnostic=diagnostic,
-            data_catalog=data_catalog,
-            execution_regression=execution_regression(diagnostic),
+        execution = next(
+            solve_executions(
+                data_catalog=data_catalog,
+                diagnostic=diagnostic,
+                provider=diagnostic.provider,
+            )
         )
+        return execution.build_execution_definition(output_root=config.paths.scratch)
 
-    return _create_validator
+    return _build

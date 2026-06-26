@@ -86,7 +86,6 @@ def test_annual_cycle_diagnostic(
     cmip6_data_catalog,
     obs4mips_data_catalog,
     definition_factory,
-    pdo_example_dir,
     provider,
 ):
     diagnostic = AnnualCycle()
@@ -207,12 +206,11 @@ def test_diagnostic_execute(mocker, provider):
     mocked_provider_run.assert_any_call(["mocked_command2"])
 
 
-def test_build_cmds(diagnostic_validation):
+def test_build_cmds(solved_definition_factory):
     diagnostic = AnnualCycle()
     diagnostic.provider = pmp_provider
-    validator = diagnostic_validation(diagnostic)
 
-    definition = validator.get_definition()
+    definition = solved_definition_factory(diagnostic)
     definition.output_directory.mkdir(parents=True, exist_ok=True)
 
     cmds = diagnostic.build_cmds(definition)

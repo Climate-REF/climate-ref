@@ -567,8 +567,8 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     # structurally validated here, so a diagnostic can change the metric/output
     # values without any regression test failing (see issue #703 for the series
     # equivalent). A content comparison must sanitise the regenerated bundle first
-    # via `ExecutionRegression.output_replacements`, since the committed bundles
-    # store `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` placeholders.
+    # (mapping real paths to the `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` placeholders that
+    # the committed bundles store), as `capture_committed_bundle` does.
     assert result.successful, f"Execution failed: {result}"
 
     # Validate metric bundle

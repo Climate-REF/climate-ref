@@ -15,7 +15,12 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import _get_resource, get_model_source_type, process_json_result
+from climate_ref_pmp.pmp_driver import (
+    PMP_RECONSTRUCTION_INPUTS,
+    _get_resource,
+    get_model_source_type,
+    process_json_result,
+)
 
 # CMIP7 branded variable names (from CMIP7 Data Request)
 _BRANDED_VARIABLE_NAMES: dict[str, str] = {
@@ -35,6 +40,8 @@ class ENSO(CommandLineDiagnostic):
     """
     Calculate the ENSO performance metrics for a dataset
     """
+
+    reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
     facets = (
         "mip_id",

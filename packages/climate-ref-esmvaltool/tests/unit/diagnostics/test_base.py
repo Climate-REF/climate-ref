@@ -11,9 +11,10 @@ from climate_ref_esmvaltool.diagnostics.regional_historical_changes import _regi
 from climate_ref_esmvaltool.types import Recipe
 
 from climate_ref_core.datasets import SourceDatasetType
-from climate_ref_core.diagnostics import CommandLineDiagnostic
+from climate_ref_core.diagnostics import CommandLineDiagnostic, ExecutionDefinition
 from climate_ref_core.metric_values import SeriesMetricValue as SeriesMetricValueType
 from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.output import OutputCV
 
@@ -345,3 +346,56 @@ def test_build_execution_result_prefers_stable_dir(metric_definition, mock_diagn
     assert captured
     assert all(path.startswith("executions/recipe/") for path in captured)
     assert not any("recipe_20990101_000000" in path for path in captured)
+
+
+def test_reconstruction_inputs_capture_provenance_for_replay(metric_definition, mock_diagnostic, tmp_path):
+    """The declared ``reconstruction_inputs`` glob persists the provenance a replay needs to rebuild."""
+    output_dir = metric_definition.output_directory
+    stable_dir = output_dir / "executions" / "recipe"
+
+    # A stabilised run: one data file, one plot, an index page, and the provenance that registers them.
+    metadata = {}
+    for dirname in ("work", "plots"):
+        suffix = ".nc" if dirname == "work" else ".png"
+        filepath = stable_dir / dirname / "timeseries" / "script1" / f"file0{suffix}"
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        filepath.touch()
+        metadata[str(filepath)] = {"caption": "stable file"}
+    (stable_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    provenance = stable_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml"
+    provenance.parent.mkdir(parents=True)
+    provenance.write_text(yaml.safe_dump(metadata), encoding="utf-8")
+
+    result = mock_diagnostic.build_execution_result(definition=metric_definition)
+
+    results_dir = tmp_path / "results"
+    copied = copy_execution_outputs(
+        output_dir, results_dir, ".", result, extra_globs=mock_diagnostic.reconstruction_inputs
+    )
+
+    prov_relpath = provenance.relative_to(output_dir)
+    # The provenance is NOT referenced by the bundle, so only the reconstruction-inputs glob keeps it.
+    assert prov_relpath in copied, f"reconstruction input not captured; got {sorted(map(str, copied))}"
+    assert (results_dir / prov_relpath).exists()
+
+    # Mirror the mint -> replay path: sanitise the captured set to portable placeholders (as
+    # snapshot_native does), then hydrate to the replay directory (as stage_rebuild_from_slot does),
+    # so the provenance's absolute paths resolve under the new output directory.
+    placeholders = PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td")
+    placeholders.with_output(output_dir).sanitise(results_dir)
+    placeholders.with_output(results_dir).hydrate(results_dir)
+
+    # The curated set plus the captured provenance is sufficient to rebuild the bundle.
+    rebuilt = mock_diagnostic.build_execution_result(
+        definition=ExecutionDefinition(
+            diagnostic=mock_diagnostic,
+            key=metric_definition.key,
+            datasets=metric_definition.datasets,
+            output_directory=results_dir,
+            root_directory=results_dir.parent,
+        )
+    )
+    original_bundle = json.loads(result.to_output_path(result.output_bundle_filename).read_text())
+    rebuilt_bundle = json.loads(rebuilt.to_output_path(rebuilt.output_bundle_filename).read_text())
+    assert set(rebuilt_bundle[OutputCV.DATA.value]) == set(original_bundle[OutputCV.DATA.value])
+    assert set(rebuilt_bundle[OutputCV.PLOTS.value]) == set(original_bundle[OutputCV.PLOTS.value])

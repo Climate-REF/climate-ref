@@ -15,7 +15,12 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import build_pmp_command, get_model_source_type, process_json_result
+from climate_ref_pmp.pmp_driver import (
+    PMP_RECONSTRUCTION_INPUTS,
+    build_pmp_command,
+    get_model_source_type,
+    process_json_result,
+)
 
 # CMIP7 branded variable names (from CMIP7 Data Request)
 _BRANDED_VARIABLE_NAMES: dict[str, str] = {
@@ -28,6 +33,8 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     """
     Calculate the extratropical modes of variability for a given area
     """
+
+    reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")

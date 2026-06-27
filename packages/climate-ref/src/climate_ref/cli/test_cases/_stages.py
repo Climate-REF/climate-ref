@@ -201,26 +201,36 @@ def stage_build(
     )
 
 
-def snapshot_native(slot: Path, *, placeholders: PlaceholderMap) -> dict[str, NativeEntry]:
+def snapshot_native(
+    slot: Path,
+    *,
+    source: SourceOutputs,
+    placeholders: PlaceholderMap,
+) -> dict[str, NativeEntry]:
     """
     Sanitise the slot's native set to portable placeholders, then snapshot it (manifest / upload).
 
     The curated native (and any captured reconstruction inputs) still embed absolute paths -- the
-    output directory ``placeholders`` is bound to, plus the shared ``<TEST_DATA_DIR>`` /
-    ``<SOFTWARE_ROOT_DIR>`` roots. Rewriting those to ``<TOKEN>`` placeholders *before* digesting
-    makes the stored blobs, and therefore their recorded digests, machine independent: a re-mint on
-    another host produces identical digests (so ``upload`` is a no-op -- no churn), and ``replay``
-    can hydrate the blobs into any slot. Binary artefacts (``.nc`` / ``.png``) are never rewritten.
+    output directory the slot's text references (``source.bundle_output_dir``), plus the shared
+    ``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>`` roots. Rewriting those to ``<TOKEN>`` placeholders
+    *before* digesting makes the stored blobs, and therefore their recorded digests, machine
+    independent: a re-mint on another host produces identical digests (so ``upload`` is a no-op --
+    no churn), and ``replay`` can hydrate the blobs into any slot. Binary artefacts (``.nc`` /
+    ``.png``) are never rewritten.
+
+    Like :func:`stage_build`, the placeholder map is bound to ``source.bundle_output_dir`` here
+    rather than by the caller, so the two stages cannot drift on which output directory they sanitise.
 
     Parameters
     ----------
     slot
         The output slot whose native set is sanitised and snapshotted.
+    source
+        The source stage's outputs, carrying the absolute output directory the native text references.
     placeholders
-        The placeholder map, already bound to the slot's output directory via
-        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
+        The (unbound) placeholder map for this run.
     """
-    placeholders.sanitise(slot)
+    placeholders.with_output(source.bundle_output_dir).sanitise(slot)
     return build_native_snapshot(slot, slot_native_relpaths(slot))
 
 

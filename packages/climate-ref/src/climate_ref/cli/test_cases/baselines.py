@@ -371,7 +371,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             # bundle is re-derived here -- which also makes the upload below a verified no-op.
             native = previous.native
         else:
-            native = snapshot_native(slot, placeholders=placeholders.with_output(source.bundle_output_dir))
+            native = snapshot_native(slot, source=source, placeholders=placeholders)
         errors = stage_upload(
             slot=slot, native=native, store=store, previous=(previous.native if previous else {})
         )
@@ -498,7 +498,7 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
 
         if force_regen or not paths.regression.exists():
             promote_to_baseline(slot, paths)
-            native = snapshot_native(slot, placeholders=placeholders.with_output(source.bundle_output_dir))
+            native = snapshot_native(slot, source=source, placeholders=placeholders)
             if previous is not None:
                 _write_test_case_manifest(
                     paths,

@@ -219,7 +219,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
 
     if force_regen or not paths.regression.exists():
         promote_to_baseline(slot, paths)
-        native = snapshot_native(slot, placeholders=placeholders.with_output(source.bundle_output_dir))
+        native = snapshot_native(slot, source=source, placeholders=placeholders)
         if previous is not None:
             _write_test_case_manifest(
                 paths,

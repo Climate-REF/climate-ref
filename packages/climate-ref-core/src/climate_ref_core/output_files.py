@@ -271,6 +271,7 @@ def _copy_extra_globs(
     results_directory: Path,
     fragment: Path | str,
     extra_globs: tuple[str, ...],
+    exclude: set[Path],
 ) -> list[Path]:
     """
     Copy every file matching ``extra_globs`` under the execution fragment into results.
@@ -282,12 +283,13 @@ def _copy_extra_globs(
     can re-derive its bundle on replay from the persisted set alone.
     Each glob is resolved against ``scratch_directory / fragment``
     (so ``**`` and ``/`` in the pattern behave as for :meth:`pathlib.Path.glob`);
-    directories are skipped and a file matched by several globs is copied once.
+    directories are skipped, and a file is copied once even if it matches several globs or is
+    already in ``exclude`` (the relpaths the curated set already copied).
     """
     input_directory = scratch_directory / fragment
 
     copied: list[Path] = []
-    seen: set[Path] = set()
+    seen: set[Path] = set(exclude)
     for glob in extra_globs:
         for match in sorted(input_directory.glob(glob)):
             if not match.is_file():
@@ -372,10 +374,10 @@ def copy_execution_outputs(  # noqa: PLR0913
         )
 
     if extra_globs:
-        already = set(copied)
-        for relpath in _copy_extra_globs(scratch_directory, results_directory, fragment, extra_globs):
-            if relpath not in already:
-                copied.append(relpath)
-                already.add(relpath)
+        copied.extend(
+            _copy_extra_globs(
+                scratch_directory, results_directory, fragment, extra_globs, exclude=set(copied)
+            )
+        )
 
     return copied

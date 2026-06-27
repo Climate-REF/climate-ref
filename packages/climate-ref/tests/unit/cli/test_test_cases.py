@@ -1683,12 +1683,17 @@ class TestSnapshotNative:
     """`snapshot_native` sanitises the slot to portable placeholders before digesting (no churn)."""
 
     @staticmethod
-    def _placeholders(test_data_dir: Path, software_root: Path, output_dir: Path):
+    def _placeholders(test_data_dir: Path, software_root: Path):
         from climate_ref_core.output_files import PlaceholderMap
 
-        return PlaceholderMap.for_baseline(
-            test_data_dir=test_data_dir, software_root_dir=software_root
-        ).with_output(output_dir)
+        return PlaceholderMap.for_baseline(test_data_dir=test_data_dir, software_root_dir=software_root)
+
+    @staticmethod
+    def _source(output_dir: Path):
+        # snapshot_native only reads source.bundle_output_dir; the result is irrelevant here.
+        from climate_ref.cli.test_cases._stages import SourceOutputs
+
+        return SourceOutputs(result=None, bundle_output_dir=output_dir)
 
     @staticmethod
     def _populate_slot(slot: Path, output_dir: Path, test_data_dir: Path, software_root: Path) -> None:
@@ -1715,7 +1720,9 @@ class TestSnapshotNative:
         self._populate_slot(slot, output_dir, test_data_dir, software_root)
 
         native = snapshot_native(
-            slot, placeholders=self._placeholders(test_data_dir, software_root, output_dir)
+            slot,
+            source=self._source(output_dir),
+            placeholders=self._placeholders(test_data_dir, software_root),
         )
 
         text = (slot / "output.json").read_text()
@@ -1735,7 +1742,9 @@ class TestSnapshotNative:
             slot = tmp_path / host / "slot"
             self._populate_slot(slot, output_dir, test_data_dir, software_root)
             return snapshot_native(
-                slot, placeholders=self._placeholders(test_data_dir, software_root, output_dir)
+                slot,
+                source=self._source(output_dir),
+                placeholders=self._placeholders(test_data_dir, software_root),
             )
 
         native_a = _snapshot_for(

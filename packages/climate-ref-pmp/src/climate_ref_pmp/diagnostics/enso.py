@@ -378,9 +378,11 @@ class ENSO(CommandLineDiagnostic):
             logger.warning(f"A single cmec output file not found: {results_files}")
             return ExecutionResult.build_from_failure(definition)
 
-        # Find the other outputs
-        png_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.png")]
-        data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
+        # Find the other outputs. Sort the glob results so the output bundle's plot/data keys (and
+        # therefore the committed output.json bytes and its digest) are filesystem-order independent.
+        output_dir = definition.output_directory
+        png_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.png"))]
+        data_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.nc"))]
 
         cmec_output, cmec_metric = process_json_result(results_files[0], png_files, data_files)
 

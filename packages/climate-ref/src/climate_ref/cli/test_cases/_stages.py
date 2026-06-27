@@ -70,6 +70,27 @@ class SourceOutputs(NamedTuple):
     bundle_output_dir: Path
 
 
+def baseline_placeholders(paths: TestCasePaths, config: Config) -> PlaceholderMap:
+    """
+    Build the run-level baseline placeholder map shared by every ``ref test-cases`` verb.
+
+    Declares the configuration-stable token set once (``<TEST_DATA_DIR>`` from the test case and
+    ``<SOFTWARE_ROOT_DIR>`` from the configured software root) so ``run`` / ``mint`` / ``replay`` /
+    ``build`` cannot sanitise against drifting token sets. The per-execution ``<OUTPUT_DIR>`` is
+    bound later by the caller via :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
+
+    Parameters
+    ----------
+    paths
+        Resolved paths for the test case (provides the test-data root).
+    config
+        The active configuration (provides the software root).
+    """
+    return PlaceholderMap.for_baseline(
+        test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
+    )
+
+
 def prepare_slot(paths: TestCasePaths, label: str) -> Path:
     """
     Wipe and recreate ``output/<label>/`` and return the slot base directory.

@@ -324,9 +324,11 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         clean_up_json(results_files[0])
 
-        # Find the other outputs
-        png_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.png")]
-        data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
+        # Find the other outputs. Sort the glob results so the output bundle's plot/data keys (and
+        # therefore the committed output.json bytes and its digest) are filesystem-order independent.
+        output_dir = definition.output_directory
+        png_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.png"))]
+        data_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.nc"))]
 
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_files[0], png_files, data_files)
         input_datasets = definition.datasets[model_source_type]

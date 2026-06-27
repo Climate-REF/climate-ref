@@ -676,6 +676,18 @@ class RegressionValidator:
         """Get paths for this test case."""
         return TestCasePaths.from_test_data_dir(self.test_data_dir, self.diagnostic.slug, self.test_case_name)
 
+    @property
+    def _baseline_placeholders(self) -> PlaceholderMap:
+        """
+        Base placeholder map for this verification context.
+
+        Declared once and reused by both :meth:`load_regression_definition` (hydrate) and
+        :meth:`validate` (series replacements) so the two sides cannot drift to different token sets.
+        This context does not know the shared-software root, so the map omits ``<SOFTWARE_ROOT_DIR>``;
+        each caller binds the per-execution ``<OUTPUT_DIR>`` via :meth:`PlaceholderMap.with_output`.
+        """
+        return PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir)
+
     def has_regression_data(self) -> bool:
         """Check if regression data exists for this test case."""
         regression_path = self.paths.regression
@@ -703,11 +715,7 @@ class RegressionValidator:
         output_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
 
-        # This verification context does not know the shared-software root, so the map omits
-        # <SOFTWARE_ROOT_DIR>; the omission is declared once on the map rather than open-coded here.
-        PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir).with_output(output_dir).hydrate(
-            output_dir
-        )
+        self._baseline_placeholders.with_output(output_dir).hydrate(output_dir)
 
         datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
 
@@ -728,9 +736,9 @@ class RegressionValidator:
             expected_path=self.paths.regression / "series.json",
             actual_path=definition.output_directory / "series.json",
             slug=self.diagnostic.slug,
-            replacements=PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir)
-            .with_output(definition.output_directory)
-            .as_replacements(),
+            replacements=self._baseline_placeholders.with_output(
+                definition.output_directory
+            ).as_replacements(),
         )
 
 

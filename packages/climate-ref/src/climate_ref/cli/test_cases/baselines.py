@@ -25,6 +25,7 @@ from climate_ref.cli.test_cases._common import (
 )
 from climate_ref.cli.test_cases._stages import (
     StageError,
+    baseline_placeholders,
     native_is_stale,
     prepare_slot,
     promote_to_baseline,
@@ -39,7 +40,6 @@ from climate_ref.cli.test_cases._stages import (
     write_source_stamp,
 )
 from climate_ref.config import Config
-from climate_ref_core.output_files import PlaceholderMap
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -144,9 +144,7 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
             continue
 
         slot = prepare_slot(paths, label)
-        placeholders = PlaceholderMap.for_baseline(
-            test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
-        )
+        placeholders = baseline_placeholders(paths, config)
         try:
             source = stage_materialise(
                 diag=diag,
@@ -322,9 +320,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             continue
 
         slot = prepare_slot(paths, label)
-        placeholders = PlaceholderMap.for_baseline(
-            test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
-        )
+        placeholders = baseline_placeholders(paths, config)
 
         # Populate the slot's native set: either re-execute the diagnostic, or (with
         # --from-replay) materialise the previously minted native from the store. The
@@ -480,9 +476,7 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
             failures.append(case_id)
             continue
 
-        placeholders = PlaceholderMap.for_baseline(
-            test_data_dir=paths.test_data_dir, software_root_dir=config.paths.software
-        )
+        placeholders = baseline_placeholders(paths, config)
         try:
             source = stage_rebuild_from_slot(
                 diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders

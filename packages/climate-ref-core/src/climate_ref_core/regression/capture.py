@@ -39,6 +39,8 @@ from .manifest import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from climate_ref_core.diagnostics import ExecutionResult
     from climate_ref_core.regression.store import NativeStore
 
@@ -67,6 +69,44 @@ def _contains_float(obj: object) -> bool:
     return False
 
 
+def _rewrite_committed_json(
+    path: Path,
+    dump_kwargs: dict[str, object],
+    transform: Callable[[object], tuple[object, bool]],
+) -> None:
+    """
+    Load a committed JSON file, apply ``transform``, and rewrite it only if the content changed.
+
+    ``transform`` receives the parsed structure and returns ``(obj_to_write, changed)``. The file is
+    re-serialised with ``dump_kwargs`` (its canonical on-disk parameters) only when ``changed`` is
+    True, so a no-op transform leaves the bytes byte-for-byte untouched. A missing file is skipped.
+
+    This single load/transform/conditional-redump path is shared by :func:`_round_committed_floats`
+    and :func:`_redact_committed_provenance` so the canonical-reserialisation contract is defined once.
+
+    Parameters
+    ----------
+    path
+        The committed JSON file to rewrite in place.
+    dump_kwargs
+        The :func:`json.dumps` parameters matching the file's canonical on-disk form.
+    transform
+        Callable mapping the parsed structure to ``(obj_to_write, changed)``.
+    """
+    if not path.exists():
+        return
+    original = json.loads(path.read_text(encoding="utf-8"))
+    obj, changed = transform(original)
+    if changed:
+        path.write_text(json.dumps(obj, **dump_kwargs), encoding="utf-8")  # type: ignore[arg-type]
+
+
+def _round_transform(obj: object) -> tuple[object, bool]:
+    """Round floats in ``obj`` (a parsed bundle), returning ``(rounded, changed)``."""
+    rounded = round_floats(obj)
+    return rounded, rounded != obj
+
+
 def _round_committed_floats(regression_dir: Path) -> None:
     """
     Round floats in the committed JSON bundle to seven significant figures in place.
@@ -92,14 +132,7 @@ def _round_committed_floats(regression_dir: Path) -> None:
         The test case ``regression/`` directory holding the committed bundle.
     """
     for filename, dump_kwargs in _COMMITTED_FLOAT_JSON_KWARGS.items():
-        path = regression_dir / filename
-        if not path.exists():
-            continue
-        original = json.loads(path.read_text(encoding="utf-8"))
-        rounded = round_floats(original)
-        if rounded == original:
-            continue
-        path.write_text(json.dumps(rounded, **dump_kwargs), encoding="utf-8")  # type: ignore[arg-type]
+        _rewrite_committed_json(regression_dir / filename, dump_kwargs, _round_transform)
 
     # Check that the unrounded files don't contain floats
     for filename in _UNROUNDED_COMMITTED_FILES:
@@ -125,11 +158,14 @@ _REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
 # JSON dump parameters matching each committed file's canonical on-disk form, so a structured
 # edit re-serialises byte-for-byte apart from the changed fields. diagnostic.json is single-sourced
 # from _COMMITTED_FLOAT_JSON_KWARGS so its serialisation parameters cannot drift between the
-# float-rounding and provenance-redaction re-dumps; output.json is the CMEC output bundle
-# (json.dumps(indent=2), no key-sorting -- see _quantise).
+# float-rounding and provenance-redaction re-dumps; output.json is the CMEC output bundle written
+# natively by pydantic's model_dump_json (indent=2, no key-sorting, raw UTF-8 -- see _quantise), so
+# ensure_ascii=False keeps a redaction re-dump byte-identical to the native bytes apart from the
+# redacted fields (json.dumps defaults to ensure_ascii=True, which would escape any non-ASCII
+# provenance value and rewrite the whole file).
 _COMMITTED_DUMP_KWARGS: dict[str, dict[str, object]] = {
     "diagnostic.json": _COMMITTED_FLOAT_JSON_KWARGS["diagnostic.json"],
-    "output.json": {"indent": 2},
+    "output.json": {"indent": 2, "ensure_ascii": False},
 }
 
 
@@ -163,6 +199,11 @@ def _redact_provenance_fields(obj: object) -> bool:
     return changed
 
 
+def _redact_transform(obj: object) -> tuple[object, bool]:
+    """Redact provenance fields in ``obj`` in place, returning ``(obj, changed)``."""
+    return obj, _redact_provenance_fields(obj)
+
+
 def _redact_committed_provenance(regression_dir: Path) -> None:
     """
     Redact host/user-specific provenance fields from the committed CMEC bundle in place.
@@ -185,13 +226,9 @@ def _redact_committed_provenance(regression_dir: Path) -> None:
         The test case ``regression/`` directory holding the committed bundle.
     """
     for filename in _PROVENANCE_BEARING_FILES:
-        path = regression_dir / filename
-        if not path.exists():
-            continue
-        data = json.loads(path.read_text(encoding="utf-8"))
-        if _redact_provenance_fields(data):
-            kwargs = _COMMITTED_DUMP_KWARGS[filename]
-            path.write_text(json.dumps(data, **kwargs), encoding="utf-8")  # type: ignore[arg-type]
+        _rewrite_committed_json(
+            regression_dir / filename, _COMMITTED_DUMP_KWARGS[filename], _redact_transform
+        )
 
 
 def write_committed_bundle(

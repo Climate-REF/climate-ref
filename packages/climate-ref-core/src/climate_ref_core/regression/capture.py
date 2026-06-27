@@ -155,23 +155,19 @@ _REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
     "date": "<DATE>",
 }
 
-# Host fields inside the CMEC provenance ``platform`` sub-block: ``Name`` is the minting hostname and
-# ``Version`` the kernel version. Both leak host identity into the git-tracked bundle and churn its
-# committed digest across machines, so they are redacted too. ``OS`` (e.g. "Linux") is coarse and
-# carries no host identity, so it is kept as portable context.
+# Host fields in the provenance ``platform`` sub-block: ``Name`` (hostname) and ``Version`` (kernel)
+# leak host identity and churn the committed digest across machines, so they are redacted; the coarse
+# ``OS`` carries no host identity and is kept.
 _REDACTED_PROVENANCE_PLATFORM_FIELDS: dict[str, str] = {
     "Name": "<HOSTNAME>",
     "Version": "<HOST_VERSION>",
 }
 
-# JSON dump parameters matching each committed file's canonical on-disk form, so a structured
-# edit re-serialises byte-for-byte apart from the changed fields. diagnostic.json is single-sourced
-# from _COMMITTED_FLOAT_JSON_KWARGS so its serialisation parameters cannot drift between the
-# float-rounding and provenance-redaction re-dumps; output.json is the CMEC output bundle written
-# natively by pydantic's model_dump_json (indent=2, no key-sorting, raw UTF-8 -- see _quantise), so
-# ensure_ascii=False keeps a redaction re-dump byte-identical to the native bytes apart from the
-# redacted fields (json.dumps defaults to ensure_ascii=True, which would escape any non-ASCII
-# provenance value and rewrite the whole file).
+# JSON dump parameters matching each committed file's canonical on-disk form, so a structured edit
+# re-serialises byte-for-byte apart from the changed fields. diagnostic.json reuses
+# _COMMITTED_FLOAT_JSON_KWARGS so the rounding and redaction re-dumps can't drift. output.json is
+# pydantic model_dump_json output (raw UTF-8), so ensure_ascii=False avoids \u-escaping non-ASCII
+# provenance and rewriting the whole file.
 _COMMITTED_DUMP_KWARGS: dict[str, dict[str, object]] = {
     "diagnostic.json": _COMMITTED_FLOAT_JSON_KWARGS["diagnostic.json"],
     "output.json": {"indent": 2, "ensure_ascii": False},

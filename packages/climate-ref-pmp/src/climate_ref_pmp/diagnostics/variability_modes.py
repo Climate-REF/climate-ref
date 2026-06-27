@@ -324,8 +324,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         clean_up_json(results_files[0])
 
-        # Find the other outputs. Sort the glob results so the output bundle's plot/data keys (and
-        # therefore the committed output.json bytes and its digest) are filesystem-order independent.
+        # Sort so the committed output.json plot/data key order is deterministic across hosts.
         output_dir = definition.output_directory
         png_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.png"))]
         data_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.nc"))]

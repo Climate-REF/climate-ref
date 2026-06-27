@@ -261,7 +261,7 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
     diag = json.loads((regression_dir / "diagnostic.json").read_text())
     assert diag["PROVENANCE"]["userId"] == "<USER>"
     assert diag["PROVENANCE"]["date"] == "<DATE>"
-    # Host fields in the nested platform block are redacted; coarse OS is kept as portable context.
+    # Host fields redacted; coarse OS kept as portable context.
     assert diag["PROVENANCE"]["platform"]["Name"] == "<HOSTNAME>"
     assert diag["PROVENANCE"]["platform"]["Version"] == "<HOST_VERSION>"
     assert diag["PROVENANCE"]["platform"]["OS"] == "Linux"

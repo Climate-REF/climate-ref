@@ -188,12 +188,9 @@ def format_cmec_output_bundle(
             dim_dict[str(val)] = {}
 
             if dim == dimensions[-1]:
-                # If this is the last dimension, add the value column to the metadata.
-                # CMEC metadata values are strings, so coerce here rather than at each call site:
-                # ILAMB writes dimensionless units as the number 1 in its scalar CSVs, which would
-                # otherwise drift between int (1) and str ("1"/"kg m-2") across diagnostics and churn
-                # the committed bundle bytes and digest. Coercing centrally keeps units stable for
-                # every caller without a per-call bandaid.
+                # Last dimension carries the value column's metadata. Coerce values to str (CMEC
+                # metadata are strings): ILAMB writes dimensionless units as int 1, which would
+                # otherwise drift int/str across diagnostics and churn the committed digest.
                 metadata = dataset[dataset[dim] == val].iloc[0][metadata_columns].to_dict()
                 dim_dict[str(val)] = {column: str(value) for column, value in metadata.items()}
 

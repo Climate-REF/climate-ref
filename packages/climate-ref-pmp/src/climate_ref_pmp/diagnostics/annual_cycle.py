@@ -574,9 +574,7 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
-        # Find the other outputs: PNG and NetCDF files using relative paths.
-        # Sort the glob results so the output bundle's plot/data keys (and therefore the committed
-        # output.json bytes and its digest) are filesystem-order independent and reproducible.
+        # Sort so the committed output.json plot/data key order is deterministic across hosts.
         png_files = [definition.as_relative_path(f) for f in sorted(png_directory.glob("*.png"))]
         data_files = [definition.as_relative_path(f) for f in sorted(data_directory.glob("*.nc"))]
 

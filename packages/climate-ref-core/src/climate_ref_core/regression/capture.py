@@ -155,6 +155,15 @@ _REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
     "date": "<DATE>",
 }
 
+# Host fields inside the CMEC provenance ``platform`` sub-block: ``Name`` is the minting hostname and
+# ``Version`` the kernel version. Both leak host identity into the git-tracked bundle and churn its
+# committed digest across machines, so they are redacted too. ``OS`` (e.g. "Linux") is coarse and
+# carries no host identity, so it is kept as portable context.
+_REDACTED_PROVENANCE_PLATFORM_FIELDS: dict[str, str] = {
+    "Name": "<HOSTNAME>",
+    "Version": "<HOST_VERSION>",
+}
+
 # JSON dump parameters matching each committed file's canonical on-disk form, so a structured
 # edit re-serialises byte-for-byte apart from the changed fields. diagnostic.json is single-sourced
 # from _COMMITTED_FLOAT_JSON_KWARGS so its serialisation parameters cannot drift between the
@@ -169,13 +178,24 @@ _COMMITTED_DUMP_KWARGS: dict[str, dict[str, object]] = {
 }
 
 
+def _redact_fields(block: dict[str, object], fields: dict[str, str]) -> bool:
+    """Overwrite each present ``fields`` key in ``block`` with its placeholder; return if changed."""
+    changed = False
+    for field, placeholder in fields.items():
+        if field in block and block[field] != placeholder:
+            block[field] = placeholder
+            changed = True
+    return changed
+
+
 def _redact_provenance_fields(obj: object) -> bool:
     """
     Redact the declared provenance fields in every CMEC provenance block of ``obj`` in place.
 
     Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block, overwrites the
-    fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders. Scoping to the
-    provenance block means a same-named key elsewhere in the bundle is never touched.
+    fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders, and the host fields in
+    :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform`` sub-block. Scoping to
+    the provenance block means a same-named key elsewhere in the bundle is never touched.
 
     Returns
     -------
@@ -186,10 +206,10 @@ def _redact_provenance_fields(obj: object) -> bool:
     if isinstance(obj, dict):
         for key, value in obj.items():
             if key in _PROVENANCE_BLOCK_KEYS and isinstance(value, dict):
-                for field, placeholder in _REDACTED_PROVENANCE_FIELDS.items():
-                    if field in value and value[field] != placeholder:
-                        value[field] = placeholder
-                        changed = True
+                changed |= _redact_fields(value, _REDACTED_PROVENANCE_FIELDS)
+                platform = value.get("platform")
+                if isinstance(platform, dict):
+                    changed |= _redact_fields(platform, _REDACTED_PROVENANCE_PLATFORM_FIELDS)
             elif _redact_provenance_fields(value):
                 changed = True
     elif isinstance(obj, list):

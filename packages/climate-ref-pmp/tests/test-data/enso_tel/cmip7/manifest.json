@@ -1,0 +1,192 @@
+{
+  "catalog_hash": "503795d9f7c37f880ec82390dd660463ec7a5cc0",
+  "committed": {
+    "diagnostic.json": "e27552f3dddacbba79869db52175c0c121428c4b6e87d00ccd611d0a0293e04b",
+    "output.json": "4270d64d664fdd02f6099b8f8ee5f14757292af03ae4a204bc038eda205fad71",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc": {
+      "sha256": "cc2458e45806d117169a1b96f523daf5a1a8d56489eefacdf118379d855db5f7",
+      "size": 107772
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown01.png": {
+      "sha256": "e27a94438889df6757bde18c01673ff5b9d7b9182f28d38e719cc72212249f26",
+      "size": 29668
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown02.png": {
+      "sha256": "223e05651b5eaaee0602bfdd19e60e733b75056b0f9cf6e7a8346bcb458beb3c",
+      "size": 38746
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl_diagnostic_divedown03.png": {
+      "sha256": "7509b6a5ef519e7fc19a92e645ab0386664da89c81d36fa83001906bb3ded66b",
+      "size": 50314
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf.nc": {
+      "sha256": "50b807370f3f791aa40534c02a97669291638656af86c7f19d99281e38caf881",
+      "size": 1399064
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown01.png": {
+      "sha256": "71d67340694bbb5bf6e9251920c7e09208a3e90a1ecb01f9e7dcc33ae5f0f82d",
+      "size": 123946
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown02.png": {
+      "sha256": "fa1082b77b17ed8ee73d5ad6944b9d43005dec1bd2ca39f0e5b0d54eec2056f8",
+      "size": 215932
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown03.png": {
+      "sha256": "028c59276f0a1411ebb6efc4e416f59185a0ba34dae446cfbe72c1719c5b23f0",
+      "size": 69397
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown04.png": {
+      "sha256": "f693e4b0a205f2f2da8d08599866425f105a4348025cd7ab58949aa30a10b75c",
+      "size": 83669
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown05.png": {
+      "sha256": "4dad91279ea92ea75b80058e566e7c174b4dd44828bcee7adb39be4ddde1bf8e",
+      "size": 79826
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown06.png": {
+      "sha256": "d38494140e6da2a679320f4d73b11ea68dd81414b9aca750a93042758c9f0333",
+      "size": 85495
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown07.png": {
+      "sha256": "6a92e9e97b8c2d3da7e61c721cd5be5c3c3bf29e82d0eb938c179a9e3ed59287",
+      "size": 80573
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown08.png": {
+      "sha256": "8721479fccf473f88e0e8e2980cf71a88234ebf6608f798689db5fc6ccf8aaf9",
+      "size": 105917
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown09.png": {
+      "sha256": "bda9e250652f1adf3ac1af1cd51205d9f70ac829a53f57043e0077fc91baa2cd",
+      "size": 141388
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown10.png": {
+      "sha256": "d8a0a507e68df3f81382c0c87d9c6ce93dfe8616914b343c1d049fce4363411a",
+      "size": 116407
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown11.png": {
+      "sha256": "3ef86aba04462bc767de68ed0c7e29624d38c9377fcc3f4178fc71ecbeba98a9",
+      "size": 147303
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapDjf_diagnostic_divedown12.png": {
+      "sha256": "615854a335c96ac0f2b0c7cdd85d9622fe9f1967876053f48e61f9748199b1e4",
+      "size": 136728
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja.nc": {
+      "sha256": "8d26b070606cd98f7dc9f2767316cdc8c85b427972e9b284d1558c0be167f19d",
+      "size": 1397977
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown01.png": {
+      "sha256": "63f28a17787d949c54d81565c50977af038a8adccb5c43bd25befb65aafb9f21",
+      "size": 134055
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown02.png": {
+      "sha256": "169b4c407a14fa1450ea1601ebdd117af63378e93049a6dc80bef5e754d08039",
+      "size": 253613
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown03.png": {
+      "sha256": "fb4d3d74f9ce5cb31e41188a2ba459beb34a5537ef36a01b7956da427cf405bc",
+      "size": 68939
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown04.png": {
+      "sha256": "fef88aa8f4eb35c5bd0f998a25780c4825b1e178a18105cd500aa8885f9d64d1",
+      "size": 88436
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown05.png": {
+      "sha256": "39947e912bab8c5f62fa7accb707e55af351da6b3ccebe255bce849840c498a9",
+      "size": 78133
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown06.png": {
+      "sha256": "4bc5ddffc0b2d62f2ed7af402e3ed076ed0edb44e701fd83303c463e181faac8",
+      "size": 91312
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown07.png": {
+      "sha256": "bbf6a2161766e794e51af962f1af56d440685d0c7219ac84e2239c24b3d64283",
+      "size": 77977
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown08.png": {
+      "sha256": "51fbd3f57063b6bca3578a478b609ef3f0038f3585015461460afd3adc8e3965",
+      "size": 112494
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown09.png": {
+      "sha256": "941974e48114f52d139a9a3ec9e0ea020561a1aeea066ed83da73261f3ed30eb",
+      "size": 155892
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown10.png": {
+      "sha256": "f3f38169266aa853295184133c3cd89227860b4097be525c4a6ffdeecc99e087",
+      "size": 119805
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown11.png": {
+      "sha256": "0379c47958d9b725cbc924b7e15424bceeac66bc9daed4c8babd04ea383bb6fc",
+      "size": 163127
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoPrMapJja_diagnostic_divedown12.png": {
+      "sha256": "791269e78c3ea45aa1e27383384b76f519d500362fc4f6547764c75f87154cb4",
+      "size": 134912
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality.nc": {
+      "sha256": "3b818b05dd93feb6600b7adfafa5c257d086db4e218120640f1a203bd4083ec4",
+      "size": 221713
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown01.png": {
+      "sha256": "43af1568794a3b6900ec3f53d4622a467e911d9f90ce750743c43327ed8452f7",
+      "size": 32397
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown02.png": {
+      "sha256": "a43fac4b4b3dfc34569c1fdc61420ec51d1e15f3d4e64303448179780252789f",
+      "size": 42032
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown03.png": {
+      "sha256": "3640565e194dd882de619fb52cc327eb95874811e9a355fbf814d70a0c33834f",
+      "size": 40131
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown04.png": {
+      "sha256": "8f38dc0bf6d98e90329b803df88101ac4c0976946c7758cc5f98865403b39016",
+      "size": 43008
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSeasonality_diagnostic_divedown05.png": {
+      "sha256": "11d163f69d6934003656f60de8f5e6b13bf64fe702d1e6d72addf6edd0920c7c",
+      "size": 84486
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse.nc": {
+      "sha256": "3c624cd84d9e40d551d4a8c5a3e69a152fcce7452fb8d4efc6e5bc1cb4232d4e",
+      "size": 248985
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown01.png": {
+      "sha256": "67b582c3b47b7d876e5992f7b4a2f83a0f07c6a4ee005f9713007911aa6ff0e2",
+      "size": 36654
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown02.png": {
+      "sha256": "d8df12f997d8872dbe053739b1afcf586234b6cca24884a00f1ff51628af1eed",
+      "size": 51263
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown03.png": {
+      "sha256": "6341f7604417bde669f62de88fe034c39486b0922792f00c9ad8031cf880b2a2",
+      "size": 41988
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoSstLonRmse_diagnostic_divedown04.png": {
+      "sha256": "9518e448bd2078e63f880dd7288686515ca977f267daae7ee127cc72cf0fd111",
+      "size": 80935
+    },
+    "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
+      "sha256": "8b20c0b78db686ad9a9dae654929d88dc6717a36a07dff54d439fd1a2baed1da",
+      "size": 5611
+    },
+    "diagnostic.json": {
+      "sha256": "1e6ea55932fde719c8298375abb58dfca714fb0c85a8654b68398c1626aeac35",
+      "size": 3641
+    },
+    "output.json": {
+      "sha256": "ffe3a11cfec48afadb62de6e7c35a4dcfe2165be3ab7f0f844019d6e6a027f61",
+      "size": 13750
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

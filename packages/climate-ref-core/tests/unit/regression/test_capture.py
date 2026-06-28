@@ -14,9 +14,6 @@ from climate_ref_core.output_files import (
 )
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
-    _COMMITTED_FLOAT_JSON_KWARGS,
-    _UNROUNDED_COMMITTED_FILES,
-    _contains_float,
     build_native_snapshot,
     capture_execution,
     materialise_native,
@@ -132,50 +129,16 @@ def test_write_committed_bundle_rounds_floats(tmp_path):
     assert series[0]["values"] == [1.761334, 9.876543]
 
 
-def test_committed_float_classification_is_exhaustive():
-    assert set(_COMMITTED_FLOAT_JSON_KWARGS) | _UNROUNDED_COMMITTED_FILES == set(COMMITTED_BUNDLE_FILES)
-    assert set(_COMMITTED_FLOAT_JSON_KWARGS).isdisjoint(_UNROUNDED_COMMITTED_FILES)
-
-
-def test_output_json_is_float_free_by_construction(tmp_path):
-    # Codifies the invariant the output.json exclusion relies on: a representative output bundle,
-    # serialised the way REF writes it natively, carries no float leaves.
-    output = CMECOutput.model_validate(CMECOutput.create_template())
-    output.update(
-        "data",
-        short_name="example",
-        dict_content={
-            "filename": "data/example.nc",
-            "long_name": "Example output",
-            "description": "An example data file",
-        },
-    )
-    output.update(
-        "html",
-        short_name="index",
-        dict_content={
-            "filename": "index.html",
-            "long_name": "Index page",
-            "description": "The landing page",
-        },
-    )
-    json_path = tmp_path / "output.json"
-    output.dump_to_json(json_path)
-    loaded = json.loads(json_path.read_text(encoding="utf-8"))
-
-    assert _contains_float(loaded) is False
-
-
-def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
-    # output.json must pass through write_committed_bundle byte-for-byte (no key reorder / rewrite),
-    # while the float-bearing artefacts are rounded.
+def test_write_committed_bundle_canonicalises_every_file(tmp_path):
+    # Every committed file is re-dumped into one canonical form (sorted keys, rounded floats), so the
+    # committed bytes are deterministic regardless of how the diagnostic originally serialised them,
+    # and a re-mint is byte-identical (stable digests across machines).
     output_dir = (tmp_path / "scratch" / "frag").resolve()
     test_data_dir = (tmp_path / "test-data").resolve()
     source = tmp_path / "scratch" / "frag"
     source.mkdir(parents=True)
     # output.json written the native (Pydantic) way: indent=2, keys NOT sorted, no floats.
     CMECOutput.model_validate(CMECOutput.create_template()).dump_to_json(source / "output.json")
-    source_output_bytes = (source / "output.json").read_bytes()
     # Float-bearing artefacts that rounding must rewrite.
     (source / "diagnostic.json").write_text(json.dumps({"PROVENANCE": {"score": 1.843240715970751}}))
     (source / "series.json").write_text(
@@ -183,17 +146,24 @@ def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
     )
     regression_dir = tmp_path / "regression"
 
-    write_committed_bundle(
-        source,
-        regression_dir,
-        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
-    )
+    def _mint() -> dict[str, bytes]:
+        write_committed_bundle(
+            source,
+            regression_dir,
+            placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+        )
+        return {name: (regression_dir / name).read_bytes() for name in COMMITTED_BUNDLE_FILES}
 
-    # output.json is byte-identical to the copied source: not re-dumped, keys not reordered.
-    assert (regression_dir / "output.json").read_bytes() == source_output_bytes
-    # The float-bearing artefacts were rounded (proving the bundle was processed, not skipped).
-    assert json.loads((regression_dir / "diagnostic.json").read_text())["PROVENANCE"]["score"] == 1.843241
-    assert json.loads((regression_dir / "series.json").read_text())[0]["values"] == [1.761334]
+    first = _mint()
+
+    # output.json keys are sorted canonically (not left in native Pydantic order)...
+    out = json.loads(first["output.json"])
+    assert list(out.keys()) == sorted(out.keys())
+    # ...the float-bearing artefacts are rounded...
+    assert json.loads(first["diagnostic.json"])["PROVENANCE"]["score"] == 1.843241
+    assert json.loads(first["series.json"])[0]["values"] == [1.761334]
+    # ...and a re-mint produces byte-identical committed bytes.
+    assert _mint() == first
 
 
 def _leaky_provenance(software_root: Path, output_dir: Path) -> dict:
@@ -267,21 +237,19 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
     assert diag["PROVENANCE"]["platform"]["OS"] == "Linux"
     assert diag["RESULTS"]["score"] == 1.234568
 
-    # output.json is re-dumped byte-faithfully: provenance key order is preserved.
+    # output.json is re-dumped canonically (sorted keys); every provenance key is still present.
     out = json.loads((regression_dir / "output.json").read_text())
-    assert list(out["provenance"].keys()) == list(output_obj["provenance"].keys())
+    assert list(out["provenance"].keys()) == sorted(output_obj["provenance"].keys())
 
 
-def test_redaction_is_noop_without_provenance_fields(tmp_path):
-    # A bundle with no host/user provenance fields must pass through untouched,
-    # so the committed digest stays byte-stable for already-portable artefacts.
+def test_redaction_leaves_clean_provenance_untouched(tmp_path):
+    # A bundle whose provenance carries no host/user fields gains no redaction placeholders;
+    # canonicalisation still applies and produces valid sorted-key JSON.
     output_dir = (tmp_path / "scratch" / "frag").resolve()
     test_data_dir = (tmp_path / "test-data").resolve()
     source = tmp_path / "scratch" / "frag"
     source.mkdir(parents=True)
-    template = CMECOutput.create_template()
-    (source / "output.json").write_text(json.dumps(template, indent=2))
-    source_output_bytes = (source / "output.json").read_bytes()
+    (source / "output.json").write_text(json.dumps(CMECOutput.create_template(), indent=2))
     (source / "diagnostic.json").write_text(json.dumps({"RESULTS": {"score": 1.0}}))
     (source / "series.json").write_text(json.dumps([]))
     regression_dir = tmp_path / "regression"
@@ -292,7 +260,13 @@ def test_redaction_is_noop_without_provenance_fields(tmp_path):
         placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
-    assert (regression_dir / "output.json").read_bytes() == source_output_bytes
+    text = (regression_dir / "output.json").read_text()
+    # No redaction placeholders introduced for an already-clean bundle.
+    assert "<USER>" not in text
+    assert "<HOSTNAME>" not in text
+    # The committed file is valid canonical JSON with sorted keys.
+    out = json.loads(text)
+    assert list(out.keys()) == sorted(out.keys())
 
 
 def test_build_native_snapshot_digests_relpaths(tmp_path):

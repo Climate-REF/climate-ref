@@ -25,8 +25,6 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
 from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.paths import safe_path
 
@@ -39,111 +37,23 @@ from .manifest import (
 )
 
 if TYPE_CHECKING:
-    from collections.abc import Callable
-
     from climate_ref_core.diagnostics import ExecutionResult
     from climate_ref_core.regression.store import NativeStore
 
 
-# Serialisation parameters for committed-bundle files that contain floats.
-_COMMITTED_FLOAT_JSON_KWARGS: dict[str, dict[str, object]] = {
-    "series.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
-    "diagnostic.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
+# Canonical JSON serialisation applied to every committed-bundle file. One format for all of them
+# (rather than per-file rules) keeps the committed bytes deterministic across machines: sorted keys
+# remove dict-order churn, allow_nan=False rejects non-finite leaves, and ensure_ascii=False keeps
+# non-ASCII text (e.g. accented provenance) as raw UTF-8 rather than escaping it.
+_COMMITTED_JSON_DUMP_KWARGS: dict[str, object] = {
+    "indent": 2,
+    "sort_keys": True,
+    "allow_nan": False,
+    "ensure_ascii": False,
 }
-
-# Committed files deliberately NOT float-rounded
-# output.json is the CMEC *output* bundle, which by construction carries no float values.
-_UNROUNDED_COMMITTED_FILES: frozenset[str] = frozenset({"output.json"})
-
-
-def _contains_float(obj: object) -> bool:
-    """Return True if ``obj`` (a parsed-JSON structure) has any float leaf (bool excluded)."""
-    if isinstance(obj, bool):
-        return False
-    if isinstance(obj, float):
-        return True
-    if isinstance(obj, dict):
-        return any(_contains_float(v) for v in obj.values())
-    if isinstance(obj, list):
-        return any(_contains_float(v) for v in obj)
-    return False
-
-
-def _rewrite_committed_json(
-    path: Path,
-    dump_kwargs: dict[str, object],
-    transform: Callable[[object], tuple[object, bool]],
-) -> None:
-    """
-    Load a committed JSON file, apply ``transform``, and rewrite it only if the content changed.
-
-    ``transform`` receives the parsed structure and returns ``(obj_to_write, changed)``. The file is
-    re-serialised with ``dump_kwargs`` (its canonical on-disk parameters) only when ``changed`` is
-    True, so a no-op transform leaves the bytes byte-for-byte untouched. A missing file is skipped.
-
-    This single load/transform/conditional-redump path is shared by :func:`_round_committed_floats`
-    and :func:`_redact_committed_provenance` so the canonical-reserialisation contract is defined once.
-
-    Parameters
-    ----------
-    path
-        The committed JSON file to rewrite in place.
-    dump_kwargs
-        The :func:`json.dumps` parameters matching the file's canonical on-disk form.
-    transform
-        Callable mapping the parsed structure to ``(obj_to_write, changed)``.
-    """
-    if not path.exists():
-        return
-    original = json.loads(path.read_text(encoding="utf-8"))
-    obj, changed = transform(original)
-    if changed:
-        path.write_text(json.dumps(obj, **dump_kwargs), encoding="utf-8")  # type: ignore[arg-type]
-
-
-def _round_transform(obj: object) -> tuple[object, bool]:
-    """Round floats in ``obj`` (a parsed bundle), returning ``(rounded, changed)``."""
-    rounded = round_floats(obj)
-    return rounded, rounded != obj
-
-
-def _round_committed_floats(regression_dir: Path) -> None:
-    """
-    Round floats in the committed JSON bundle to seven significant figures in place.
-
-    Only ``series.json`` / ``diagnostic.json`` are rounded.
-    Full-precision floats in those files churn byte-for-byte
-    between CI and local runs even when numerically identical,
-    producing noisy diffs in the committed (git-tracked) bundle.
-    Rounding stabilises those bytes;
-    seven figures stays an order of magnitude under the regression compare tolerance (``rtol=1e-6``),
-    so a gate verdict is never flipped (see :mod:`climate_ref_core.regression._quantise`).
-
-    Each rounded file is re-serialised with the same JSON parameters used to write it natively,
-    so the only byte difference versus the copied file is reduced float precision.
-    A file is rewritten only when rounding actually changes its parsed content,
-    keeping float-free artefacts byte-identical to the copy.
-    The native blobs and their content-addressed digests are never touched;
-    this operates solely on the copied committed JSON.
-
-    Parameters
-    ----------
-    regression_dir
-        The test case ``regression/`` directory holding the committed bundle.
-    """
-    for filename, dump_kwargs in _COMMITTED_FLOAT_JSON_KWARGS.items():
-        _rewrite_committed_json(regression_dir / filename, dump_kwargs, _round_transform)
-
-    # Check that the unrounded files don't contain floats
-    for filename in _UNROUNDED_COMMITTED_FILES:
-        path = regression_dir / filename
-        if path.exists() and _contains_float(json.loads(path.read_text(encoding="utf-8"))):
-            logger.warning(f"{filename} contains float values but is not float-rounded.")
-
 
 # CMEC provenance lives in the metric bundle's uppercase ``PROVENANCE`` block and the
 # output bundle's lowercase ``provenance`` block; series.json never carries one.
-_PROVENANCE_BEARING_FILES: tuple[str, ...] = ("diagnostic.json", "output.json")
 _PROVENANCE_BLOCK_KEYS: frozenset[str] = frozenset({"PROVENANCE", "provenance"})
 
 # Provenance fields redacted to stable placeholders so the committed bundle stays portable
@@ -161,16 +71,6 @@ _REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
 _REDACTED_PROVENANCE_PLATFORM_FIELDS: dict[str, str] = {
     "Name": "<HOSTNAME>",
     "Version": "<HOST_VERSION>",
-}
-
-# JSON dump parameters matching each committed file's canonical on-disk form, so a structured edit
-# re-serialises byte-for-byte apart from the changed fields. diagnostic.json reuses
-# _COMMITTED_FLOAT_JSON_KWARGS so the rounding and redaction re-dumps can't drift. output.json is
-# pydantic model_dump_json output (raw UTF-8), so ensure_ascii=False avoids \u-escaping non-ASCII
-# provenance and rewriting the whole file.
-_COMMITTED_DUMP_KWARGS: dict[str, dict[str, object]] = {
-    "diagnostic.json": _COMMITTED_FLOAT_JSON_KWARGS["diagnostic.json"],
-    "output.json": {"indent": 2, "ensure_ascii": False},
 }
 
 
@@ -215,35 +115,35 @@ def _redact_provenance_fields(obj: object) -> bool:
     return changed
 
 
-def _redact_transform(obj: object) -> tuple[object, bool]:
-    """Redact provenance fields in ``obj`` in place, returning ``(obj, changed)``."""
-    return obj, _redact_provenance_fields(obj)
-
-
-def _redact_committed_provenance(regression_dir: Path) -> None:
+def _canonicalise_committed_bundle(regression_dir: Path) -> None:
     """
-    Redact host/user-specific provenance fields from the committed CMEC bundle in place.
+    Rewrite every committed JSON file into its portable, reproducible canonical form, in place.
 
-    CMEC providers (e.g. PMP) stamp each bundle with a provenance block recording the minting
-    ``userId`` and a wall-clock ``date``.
-    Those leak personal metadata into git-tracked fixtures and never reproduce,
-    so they are replaced with stable placeholders.
-    The edit is structured -- the declared fields are set on the parsed object -- and the file is
-    re-serialised with its canonical parameters,
-    so the only byte difference is the redacted field values.
+    For each file in :data:`COMMITTED_BUNDLE_FILES` that is present: round floats to a stable
+    precision (:func:`~climate_ref_core.regression._quantise.round_floats`), redact host/user CMEC
+    provenance (:func:`_redact_provenance_fields`), then re-serialise with
+    :data:`_COMMITTED_JSON_DUMP_KWARGS`. The same transform runs on every file -- one with no floats
+    or no provenance simply passes those steps through -- so the committed bytes are deterministic
+    regardless of how the diagnostic originally serialised them, and a mint and a replay on different
+    machines produce identical bytes.
 
-    Runs after :func:`_round_committed_floats` so it operates on the final, NaN-free bytes,
-    and inside :func:`write_committed_bundle` so it is applied identically at mint and replay --
-    keeping the committed digests reproducible across machines.
+    Float precision is bounded (see :mod:`._quantise`), so a re-dump on another host cannot churn the
+    committed bytes; the native blobs and their content-addressed digests are never touched.
 
     Parameters
     ----------
     regression_dir
         The test case ``regression/`` directory holding the committed bundle.
     """
-    for filename in _PROVENANCE_BEARING_FILES:
-        _rewrite_committed_json(
-            regression_dir / filename, _COMMITTED_DUMP_KWARGS[filename], _redact_transform
+    for filename in COMMITTED_BUNDLE_FILES:
+        path = regression_dir / filename
+        if not path.exists():
+            continue
+        data = round_floats(json.loads(path.read_text(encoding="utf-8")))
+        _redact_provenance_fields(data)
+        path.write_text(
+            json.dumps(data, **_COMMITTED_JSON_DUMP_KWARGS),  # type: ignore[arg-type]
+            encoding="utf-8",
         )
 
 
@@ -257,10 +157,10 @@ def write_committed_bundle(
     Write the sanitised committed CMEC bundle into ``regression_dir``.
 
     Copies each committed artefact present in ``source_dir`` into ``regression_dir``,
-    then rewrites absolute paths to portable placeholders in place
+    rewrites absolute paths to portable placeholders in place
     (:meth:`~climate_ref_core.output_files.PlaceholderMap.sanitise`),
-    rounds floats (:func:`_round_committed_floats`),
-    and redacts host/user-specific CMEC provenance fields (:func:`_redact_committed_provenance`).
+    then canonicalises every committed JSON file -- rounding floats and redacting host/user CMEC
+    provenance into a deterministic on-disk form (:func:`_canonicalise_committed_bundle`).
     When a committed artefact is absent from ``source_dir``,
     any stale copy left in ``regression_dir`` from a previous capture is removed so it is not re-digested.
 
@@ -307,13 +207,10 @@ def write_committed_bundle(
             dest.unlink(missing_ok=True)
 
     placeholders.sanitise(regression_dir)
-    # Round floats in place before digesting,
-    # so the committed bytes (and their recorded digests) are the stable, rounded ones.
-    # Placeholder substitution only rewrites path strings, so order relative to it does not matter for floats.
-    _round_committed_floats(regression_dir)
-    # Redact host/user-specific provenance fields (userId, date) last, so it operates on the
-    # final NaN-free bytes and the only change is the redacted field values.
-    _redact_committed_provenance(regression_dir)
+    # Canonicalise every committed file (round floats, redact provenance, re-dump deterministically)
+    # before digesting, so the recorded digests are over the stable, portable bytes. Placeholder
+    # substitution only rewrites path strings, so its order relative to canonicalisation is immaterial.
+    _canonicalise_committed_bundle(regression_dir)
     return compute_committed_digests(regression_dir)
 
 

@@ -1,0 +1,88 @@
+{
+  "catalog_hash": "f08a7aebd0f75f6aee658e536ee9de9f28317bba",
+  "committed": {
+    "diagnostic.json": "63cf685346abe690a4a1c2dc37de942fe3f72f3736f55f3a6e833bd4d7d9df9a",
+    "output.json": "722b98424dd70bf253032d3ac12875a94f81efb68e2021d0d68a67d7a5194eab",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "EG_Spec_North_test_NPGO_monthly_HadISST-1-1_1900-2005.png": {
+      "sha256": "f7e720e3115fd6cd39e57144a4aaf3cc427944c761436b87e96f752a351c9ddc",
+      "size": 31403
+    },
+    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "sha256": "c113cce2da068fa0836251cd6f122d7e488f8cae64a252f415935619e0b9086b",
+      "size": 710422
+    },
+    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "sha256": "9604e22edb5c353dbacde2c58cfb51cbf08f0dabc6208af9f1247c77b0f857e5",
+      "size": 87447
+    },
+    "NPGO_ts_EOF1_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "sha256": "98dbd0f3152ad7c80b83b8e72c88c384cdef9e8f2056184db1160c498de08173",
+      "size": 124502
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "sha256": "91c0ee9c1abdbbe619384856fa9831c2572a5cf1d2a5705f7f4c7af6251ead67",
+      "size": 710422
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "sha256": "4ebe8c242e7e1f908642d050dd0f007549893f5b87583fb3af91d4aabc0f3754",
+      "size": 87285
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
+      "sha256": "0dc4758d72418c3832da1812c573e470883d63e046d6677d83e4f9dac914ad29",
+      "size": 710123
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
+      "sha256": "588ddf8840f455ab5836a529d69c4616ab6a5a8bbf0bef7c51b9df0c86c9b238",
+      "size": 87536
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
+      "sha256": "3cffb06aa8c8f385410e5c5a5d65195a1c6e68465b6715b3ef86edc628f5d183",
+      "size": 222111
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
+      "sha256": "07b32f1617485d63a0bf92f2b15444e9c73519919e3072f701bcbbc063354d34",
+      "size": 123728
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
+      "sha256": "a6a67daac73c21804731d8311d3ea87063ed03537b96815aed72b5e789b391dd",
+      "size": 223874
+    },
+    "NPGO_ts_EOF2_monthly_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "sha256": "afc01874f2bfe1721deb60a01f8512c53f0d2ca3d6be5ddc3c13920ea50b4301",
+      "size": 124828
+    },
+    "NPGO_ts_EOF2_monthly_obs_1900-2005.nc": {
+      "sha256": "225b10f3b1927d4e76001bb443bbdb7ae77ad4c0b7d895c81ac0ec50232a5090",
+      "size": 1598768
+    },
+    "NPGO_ts_EOF2_monthly_obs_1900-2005.png": {
+      "sha256": "40f54e2d88e94583484351317895472dcd14181546c2b90c9ad830373b5e85ee",
+      "size": 81186
+    },
+    "NPGO_ts_EOF2_monthly_obs_1900-2005_teleconnection.png": {
+      "sha256": "65faab05793fd218d77193e88011ee81d873a414892b0ccdc49422555c0622df",
+      "size": 118271
+    },
+    "diagnostic.json": {
+      "sha256": "6b08043c3fd9ebcca69c2e9d12380d1dfe35376dd9be0dce33e5e2a5e2298f10",
+      "size": 3874
+    },
+    "output.json": {
+      "sha256": "7de120f14ae2e9f96a89ca159090f101049b60b10b78021c113d0689e225a731",
+      "size": 4788
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    },
+    "var_mode_NPGO_EOF2_stat_cmip7_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
+      "sha256": "966af12a5b3d9ab02c525c3f06cb122a5ccbcbe7117d80f5e35b899bd2dfd76b",
+      "size": 5456
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

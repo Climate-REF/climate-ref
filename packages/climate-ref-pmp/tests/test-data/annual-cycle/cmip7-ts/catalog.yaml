@@ -1,0 +1,77 @@
+_metadata:
+  hash: 7c0f423b556b302e110a519c997d8a3d0b9e3f59
+pmp-climatology:
+  slug_column: instance_id
+  selector:
+    source_id: ERA-5
+    variable_id: ts
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '0001-12-01 00:00:00'
+    filename: ts_mon_ERA-5_PCMDI_gr_198101-200412_AC_v20250224_2.5x2.5.nc
+    finalised: true
+    frequency: mon
+    grid: 1.5x1.5 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.ECMWF.ERA-5.mon.ts.100km.gn.v20250224
+    institution_id: ECMWF
+    long_name: Surface Temperature
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: ERA-5
+    source_type: reanalysis
+    source_version_number: '1.0'
+    start_time: '0001-01-01 00:00:00'
+    time_range: 0001-01-01 00:00:00-0001-12-01 00:00:00
+    units: K
+    variable_id: ts
+    variant_label: PCMDI
+    version: v20250224
+    vertical_levels: 1
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    source_id: ACCESS-ESM1-5
+    variable_id: ts
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: null
+    branch_time_in_parent: null
+    branded_variable: ts_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: null
+    end_time: '2014-12-30 00:00:00'
+    experiment_id: historical
+    external_variables: null
+    filename: ts_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: false
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.ts.tavg-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    license_id: null
+    long_name: null
+    mip_era: CMIP7
+    nominal_resolution: null
+    parent_activity_id: null
+    parent_experiment_id: null
+    parent_mip_era: null
+    parent_source_id: null
+    parent_time_units: null
+    parent_variant_label: null
+    realm: null
+    region: glb
+    source_id: ACCESS-ESM1-5
+    standard_name: null
+    start_time: '1850-01-01 00:00:00'
+    time_range: 185001-201412
+    time_units: null
+    tracking_id: null
+    units: null
+    variable_id: ts
+    variant_label: r1i1p1f1
+    version: v0

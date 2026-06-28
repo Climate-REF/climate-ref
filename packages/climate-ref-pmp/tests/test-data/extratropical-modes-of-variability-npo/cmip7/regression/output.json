@@ -1,0 +1,376 @@
+{
+  "data": {
+    "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_DJF_obs_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_obs_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_JJA_obs_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_obs_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_MAM_obs_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_obs_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc",
+      "long_name": "Output data"
+    },
+    "NPO_psl_EOF2_SON_obs_1900-2005.nc": {
+      "description": "Data produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_obs_1900-2005.nc",
+      "long_name": "Output data"
+    }
+  },
+  "diagnostics": {},
+  "html": {},
+  "index": "index.html",
+  "metrics": null,
+  "plots": {
+    "EG_Spec_North_test_NPO_DJF_20CR_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "EG_Spec_North_test_NPO_DJF_20CR_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "EG_Spec_North_test_NPO_JJA_20CR_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "EG_Spec_North_test_NPO_JJA_20CR_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "EG_Spec_North_test_NPO_MAM_20CR_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "EG_Spec_North_test_NPO_MAM_20CR_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF1_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_obs_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_obs_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_DJF_obs_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_DJF_obs_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_obs_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_obs_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_JJA_obs_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_JJA_obs_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_obs_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_obs_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_MAM_obs_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_MAM_obs_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_obs_1900-2005.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_obs_1900-2005.png",
+      "long_name": "Plot"
+    },
+    "NPO_psl_EOF2_SON_obs_1900-2005_teleconnection.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "NPO_psl_EOF2_SON_obs_1900-2005_teleconnection.png",
+      "long_name": "Plot"
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

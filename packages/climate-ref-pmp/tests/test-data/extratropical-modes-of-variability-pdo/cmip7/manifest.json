@@ -1,9 +1,9 @@
 {
   "catalog_hash": "f08a7aebd0f75f6aee658e536ee9de9f28317bba",
   "committed": {
-    "diagnostic.json": "fcb453f2f8d54f3b107198bdf467c61713f5071fd3af8c201d5e9b2c187e747e",
-    "output.json": "f78fead7f3f7c2941b92a0cb16a74eb8705af4280057d2c050250c29ea468623",
-    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    "diagnostic.json": "2ad8da046facbf0021ab0ba90a8f869eaa7b2213eb4f8c61ab30b66b87b01e04",
+    "output.json": "37f0eed421f73813e27df652aeab97a28a142adda89d3f5e26862b345c92168c",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "native": {
     "EG_Spec_North_test_PDO_monthly_HadISST-1-1_1900-2005.png": {

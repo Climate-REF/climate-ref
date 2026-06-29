@@ -1,9 +1,9 @@
 {
   "catalog_hash": "ca7dd5b245c639e149d52467e6f2ec79899f665a",
   "committed": {
-    "diagnostic.json": "fee2f93785cfd899c1b5d80eb490a29feda7b817b6756b07219320248a92b8fe",
-    "output.json": "4270d64d664fdd02f6099b8f8ee5f14757292af03ae4a204bc038eda205fad71",
-    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    "diagnostic.json": "bd11b46f58b1724eac03f59fc0f3087d428dd1516cefd81efd5c9367f466564f",
+    "output.json": "c62a83a4a1fd9a05e038666a26220d0f8dbaa25bd24d31445073fd21e01706d8",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "native": {
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc": {

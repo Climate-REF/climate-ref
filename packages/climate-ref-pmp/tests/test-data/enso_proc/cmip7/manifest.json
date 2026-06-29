@@ -1,9 +1,9 @@
 {
   "catalog_hash": "5c385e1d58b72eca3d1def8eae70ad8142593c54",
   "committed": {
-    "diagnostic.json": "955564656108d58cc60762422444be1f58418033a09815ea0e9582173081d4f8",
-    "output.json": "bd4e708192be016aac55b6c509bf5a77213cb33e3053cf63f045edec073e946c",
-    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    "diagnostic.json": "5a1418ddfbfd1aae1530898b61d1851b9251c66cbf0aef537b41b99f5cadf33d",
+    "output.json": "e5f199fbf35da8f9f4e2608474e8c711e93a8b2b429abfafc9e3c5b04a221efd",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "native": {
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse.nc": {

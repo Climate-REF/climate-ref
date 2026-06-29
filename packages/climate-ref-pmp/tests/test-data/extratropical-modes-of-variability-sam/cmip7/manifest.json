@@ -1,9 +1,9 @@
 {
   "catalog_hash": "d8fe04e12ce8e9b2a628bc79d539f17e62478ab1",
   "committed": {
-    "diagnostic.json": "23c66595aa34f5cc717a4b28551c48d7fbe863ca68daf941f7f3bcda94ab3cc0",
-    "output.json": "2cf838e3bae9bc5519a0086af94477341867cdd2ced72aa0fc00e8f93975c4ae",
-    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    "diagnostic.json": "da4ce9197cb05c76911c69c5db41a297a8fdd82c2c46a3b0ef471e74e6be3ba0",
+    "output.json": "9eeab48e41a1de571f02f399dc4bd66e4f8e6406b498c108e3baaa99041a6486",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "native": {
     "EG_Spec_North_test_SAM_DJF_20CR_1950-2005.png": {

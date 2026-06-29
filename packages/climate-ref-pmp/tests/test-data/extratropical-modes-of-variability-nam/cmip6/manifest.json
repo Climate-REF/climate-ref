@@ -1,9 +1,9 @@
 {
   "catalog_hash": "97fbf6c3eafe72779d017d41744a0f69504f6128",
   "committed": {
-    "diagnostic.json": "c299c36b0c2494c21cb44b341bb6f26355254a18288012d99660eec543daeb18",
-    "output.json": "e57f4591f22e757bd061d1ddcafc4481f9c058fac1b9a5234996c84d1ddfdcd8",
-    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    "diagnostic.json": "45aa7f6d1899f09338c22fa738e6d73cd48738ffa9e45fdd3dfcba68f022f3d5",
+    "output.json": "1904facfa2f658600751747cfab2d2e6fbcc603ecb40de975d5e6af793c44300",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "native": {
     "EG_Spec_North_test_NAM_DJF_20CR_1900-2005.png": {

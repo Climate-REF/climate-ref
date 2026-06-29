@@ -1,0 +1,64 @@
+{
+  "catalog_hash": "fd3b4919d9d19410d908da71d1aaf7093932e7b1",
+  "committed": {
+    "diagnostic.json": "b19d57084928c4530ed1fe8c49756f16fdb09b478329a940a42fa3d52a1246ce",
+    "output.json": "334cac04275b2581ab1129356f1242164d3bb5eaade4fc3de27fb9b89772f1a5",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "63803d2c8776cb1a2d869405aaac5513e512a08d0c36a92d1e7eba4351091024",
+      "size": 1030
+    },
+    "executions/recipe/index.html": {
+      "sha256": "3fa35cf8ab6b51e8ff675392de1705caab696574697271a616f4b85053e763ba",
+      "size": 19265
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_09pattern.png": {
+      "sha256": "0d7c24e3267e89f36b9c0a633177bf1d913d0c0e8e2c1d91948ce532a70ddc8b",
+      "size": 179964
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_10lifecycle.png": {
+      "sha256": "f98bd02a19aa69830a2c82bffb189b8b867ef2c6353c7cfdc9961eb54bf7a06e",
+      "size": 140971
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_11amplitude.png": {
+      "sha256": "5fed159d6a5148bad005792ed552948bde14804306db19129bf50736da705934",
+      "size": 94589
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_12seasonality.png": {
+      "sha256": "ed01ae76982ebe54a217176c11389ec19e7049669475ebcb644e6cec2d7f0ca5",
+      "size": 82322
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_13asymmetry.png": {
+      "sha256": "ee296cc9fbc4206888520104aca94a663a36586b8000b71fe72604517b96668d",
+      "size": 84971
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_14duration.png": {
+      "sha256": "585e20ff343d557cc92ea173a7f6ba62225750833d45e821c77559e76c772cb2",
+      "size": 82138
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_15diversity.png": {
+      "sha256": "f2e32bf13a836c1f46c8a67243b4d46f28267d39356944cb830d1ecb01a657ef",
+      "size": 80304
+    },
+    "executions/recipe/run/diagnostic_metrics/plot_script/diagnostic_provenance.yml": {
+      "sha256": "f84b7ecd7d520dd32a0c05505ded00118c37fdbb253c86f53d891b0daf3ee7e4",
+      "size": 16178
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv": {
+      "sha256": "94f51601581a57591e9941db285a08ecead9a84d8bb597067a9e7bd7f3ac3938",
+      "size": 267
+    },
+    "output.json": {
+      "sha256": "8f738f219115b53d72bfa0fef2a915bff06877b301ee5e8f93b296c43e98b5d8",
+      "size": 4056
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

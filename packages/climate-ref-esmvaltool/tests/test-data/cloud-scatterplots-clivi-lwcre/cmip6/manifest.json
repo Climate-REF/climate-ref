@@ -1,0 +1,48 @@
+{
+  "catalog_hash": "19c41b650dc1b7d42cfc380001d57291dc8c4662",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "312cf9003669edd2a808aa35983c77e987dba3a4f0ceb234b63345539e6a36a3",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "78e3b08395c0eaa33d9f859a96db26595e3e95c14937406a5b109b89556959dc",
+      "size": 14577
+    },
+    "executions/recipe/plots/plot_joint_clivi_lwcre_model/plot/png/jointplot_clivi_lwcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014.png": {
+      "sha256": "4165884f41eff1d60bd410e6020685deac408efe4a633d91b5abe420b98846a8",
+      "size": 90338
+    },
+    "executions/recipe/run/plot_joint_clivi_lwcre_model/plot/diagnostic_provenance.yml": {
+      "sha256": "03177f9babe97eab06cc8aeaa80210a6e22049d881641f672a23b96d758190a2",
+      "size": 2446
+    },
+    "executions/recipe/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clivi_histogram.nc": {
+      "sha256": "5bb059db06d4de70ec83f1f93ba2bdf50feb74291a95e0b75436527446c417e1",
+      "size": 8867
+    },
+    "executions/recipe/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_clivi_lwcre_histogram.nc": {
+      "sha256": "5c924362489265d429d5e467e84b027ffda02325bb86d7720570b54f37a726de",
+      "size": 13315
+    },
+    "executions/recipe/work/plot_joint_clivi_lwcre_model/plot/jointplot_clivi_lwcre_CMIP6_CanESM5_r1i1p1f1_gn_1996-2014_lwcre_histogram.nc": {
+      "sha256": "54a21b4a1dbb74f9eb0b151d3a3e2e28b4d402ebbcd53c6c5c0fc700010c28af",
+      "size": 8867
+    },
+    "output.json": {
+      "sha256": "686a3a451580a3198151d2b175deda23a658fa493b6c75e8eaa07343b314d11c",
+      "size": 2796
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

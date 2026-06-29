@@ -135,8 +135,10 @@ def _canonicalise_committed_bundle(regression_dir: Path) -> None:
             continue
         data = round_floats(json.loads(path.read_text(encoding="utf-8")))
         _redact_provenance_fields(data)
+        # Terminate with a newline so the committed bytes match the manifest serialisation
+        # (Manifest.save) and satisfy POSIX/end-of-file-fixer conventions.
         path.write_text(
-            json.dumps(data, **_COMMITTED_JSON_DUMP_KWARGS),  # type: ignore[arg-type]
+            json.dumps(data, **_COMMITTED_JSON_DUMP_KWARGS) + "\n",  # type: ignore[arg-type]
             encoding="utf-8",
         )
 

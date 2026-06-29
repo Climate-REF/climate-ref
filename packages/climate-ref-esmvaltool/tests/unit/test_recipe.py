@@ -77,10 +77,8 @@ def test_get_child_and_parent_dataset():
 
 
 def test_get_child_and_parent_dataset_string_start_time():
-    # When a catalog is loaded from YAML, start_time round-trips as an ISO-like
-    # string (cftime datetimes are not natively YAML-serialisable) rather than a
-    # cftime datetime. The result must match the cftime-typed case above so that
-    # minting from a committed catalog produces the same timeranges as a fresh run.
+    # When a catalog is loaded from YAML, start_time round-trips as an ISO-like string
+    # Also needs a calendar
     df = pd.DataFrame(
         {
             "instance_id": [

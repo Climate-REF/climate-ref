@@ -109,11 +109,13 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         """
         Optionally shrink the recipe for a regression-fixture run.
 
-        Hook for diagnostics whose full recipe would produce a large committed
-        regression bundle (e.g. many regions over a long timeseries). It is called for
-        every execution, so implementations must gate on the run being a regression
-        fixture -- ``definition.key`` starts with ``"test-"`` -- to ensure production
-        runs are never altered. No-op by default.
+        Hook for diagnostics whose full recipe would produce a large committed regression bundle
+        (e.g. many regions over a long timeseries).
+
+
+        It is called for every execution,
+        so the default should be a no-op
+        and implementations should only apply changes when ``definition.key`` starts with ``"test-"``.
 
         Parameters
         ----------

@@ -281,10 +281,7 @@ def get_child_and_parent_dataset(
     child_start = child_df["start_time"].dropna().min()
     if isinstance(child_start, str):
         # Catalogs serialised to YAML store start_time as an ISO-like string
-        # (cftime datetimes are not natively YAML-serialisable), so loading a
-        # catalog yields a str here while a fresh in-memory dataframe yields a
-        # cftime datetime. Parse it back using the child's calendar so the
-        # arithmetic below stays calendar-aware.
+        # but the database returns CFDatetime objects.
         child_start = cftime.datetime.strptime(
             child_start, "%Y-%m-%d %H:%M:%S", calendar=child_attrs["calendar"]
         )

@@ -69,6 +69,22 @@ class TestSolve:
         assert kwargs["filters"].diagnostic == ["global-mean-timeseries"]
         assert kwargs["filters"].provider == ["esmvaltool", "ilamb"]
 
+    def test_solve_with_mixed_case_provider_filter(self, sample_data_dir, db, invoke_cli, mocker, config):
+        from climate_ref.config import DiagnosticProviderConfig
+
+        # Provider matching is a case-insensitive substring match against the slug,
+        # so a mixed-case partial filter must validate and be passed through verbatim.
+        config.diagnostic_providers = [
+            DiagnosticProviderConfig(provider="climate_ref_esmvaltool"),
+        ]
+        config.save()
+
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        invoke_cli(["solve", "--provider", "ESMval"])
+
+        _args, kwargs = mock_solve.call_args
+        assert kwargs["filters"].provider == ["ESMval"]
+
     def test_solve_provider_filter_no_match_fails(self, sample_data_dir, db, invoke_cli, mocker):
         # A --provider filter that matches no configured provider must fail loudly
         # rather than exiting 0 having done nothing.

@@ -49,6 +49,18 @@ class ListGroupsFilterOptions:
     """Filter by facet key-value pairs (AND across keys, OR within key)"""
 
 
+# Default columns for the ``list-groups`` table.
+_DEFAULT_LIST_GROUPS_COLUMNS = [
+    "id",
+    "key",
+    "provider",
+    "diagnostic",
+    "dirty",
+    "successful",
+    "created_at",
+]
+
+
 @app.command()
 def list_groups(  # noqa: PLR0913
     ctx: typer.Context,
@@ -102,7 +114,10 @@ def list_groups(  # noqa: PLR0913
     List the diagnostic execution groups that have been identified
 
     The data catalog is sorted by the date that the execution group was created (first = newest).
-    If the `--column` option is provided, only the specified columns will be displayed.
+
+    By default the table shows a subset of columns with the verbose ``selectors``
+    and ``updated_at`` fields omitted. Use ``--column`` to choose exactly which columns to display,
+    or ``--format json`` to emit the full record for scripting.
 
     Filters can be combined using AND logic across filter types and OR logic within a filter type.
 
@@ -180,12 +195,15 @@ def list_groups(  # noqa: PLR0913
             ]
         )
 
-    # Apply column filtering
-    if column and not results_df.empty:  # Only apply if df is not empty
-        if not all(col in results_df.columns for col in column):
-            logger.error(f"Column not found in data catalog: {column}")
-            raise typer.Exit(code=1)
-        results_df = results_df[column]
+    # Select columns to display.
+    if column:
+        if not results_df.empty:  # Only validate against actual data
+            if not all(col in results_df.columns for col in column):
+                logger.error(f"Column not found in data catalog: {column}")
+                raise typer.Exit(code=1)
+            results_df = results_df[column]
+    elif output_format == OutputFormat.table:
+        results_df = results_df[_DEFAULT_LIST_GROUPS_COLUMNS]
 
     # Display results
     render_dataframe(results_df, console=console, output_format=output_format)

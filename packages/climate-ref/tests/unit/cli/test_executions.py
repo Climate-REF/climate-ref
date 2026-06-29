@@ -160,6 +160,17 @@ class TestExecutionList:
             ["executions", "list-groups", "--column", "key", "--column", "missing"], expected_exit_code=1
         )
 
+    def test_list_default_columns_omit_verbose(self, sample_data_dir, db_seeded, invoke_cli):
+        self._setup_db(db_seeded)
+
+        result = invoke_cli(["executions", "list-groups"])
+
+        # The default table shows a sane subset; verbose columns are omitted.
+        assert "dirty" in result.stdout
+        assert "created_at" in result.stdout
+        assert "selectors" not in result.stdout
+        assert "updated_at" not in result.stdout
+
     def test_list_json(self, sample_data_dir, db_seeded, invoke_cli):
         import json
 
@@ -287,8 +298,10 @@ class TestListGroupsFiltering:
                 "source_id=ACCESS-ESM1-5",
             ]
         )
-        assert "ACCESS-ESM1-5" in result.stdout
-        assert "GFDL-ESM4" in result.stdout
+        # key1 -> source_id=GFDL-ESM4, key2 -> source_id=ACCESS-ESM1-5.
+        # selectors are omitted from the default table, so assert on the group keys.
+        assert "key1" in result.stdout
+        assert "key2" in result.stdout
 
     def test_filter_successful(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "list-groups", "--successful"])

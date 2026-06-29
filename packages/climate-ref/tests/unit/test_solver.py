@@ -14,7 +14,7 @@ from climate_ref.config import ExecutorConfig
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
-from climate_ref.models import Execution
+from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
     DiagnosticExecution,
@@ -751,9 +751,22 @@ def test_solve_metrics(mocker, db_seeded, solver, data_regression, mock_executor
 
 
 def test_solve_metrics_dry_run(db_seeded, config, solver, mock_executor):
+    def group_count() -> int:
+        with db_seeded.session.begin():
+            return db_seeded.session.query(ExecutionGroup).count()
+
+    assert group_count() == 0
+
     solve_required_executions(config=config, db=db_seeded, dry_run=True, solver=solver)
 
     assert mock_executor.return_value.run.call_count == 0
+    # A dry run is a read-only preview: it must not persist any execution groups.
+    assert group_count() == 0
+
+    # A real solve over the same catalog does create groups, confirming the dry
+    # run had candidates to report and only the persistence was suppressed.
+    solve_required_executions(config=config, db=db_seeded, dry_run=False, execute=False, solver=solver)
+    assert group_count() > 0
 
 
 def test_solve_metric_executions_missing(mock_diagnostic, provider):

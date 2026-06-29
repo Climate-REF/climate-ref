@@ -210,6 +210,13 @@ def build_app() -> typer.Typer:
     return app
 
 
+# Remove loguru's default stderr handler before building the app.
+# build_app() performs optional dependency discovery (e.g. the Celery CLI) at
+# import time, which emits debug logs. The logging level is only configured later
+# in the `main` callback, so without removing the default handler those messages
+# would reach stderr even for `ref --quiet ...` or `ref --help`.
+logger.remove()
+
 app = build_app()
 
 

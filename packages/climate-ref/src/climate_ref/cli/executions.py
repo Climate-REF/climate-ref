@@ -19,7 +19,13 @@ from rich.text import Text
 from rich.tree import Tree
 from sqlalchemy import case, func, or_
 
-from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
+from climate_ref.cli._utils import (
+    OutputFormat,
+    df_to_table,
+    parse_facet_filters,
+    pretty_print_df,
+    render_dataframe,
+)
 from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
@@ -88,6 +94,10 @@ def list_groups(  # noqa: PLR0913
             "These execution groups will be re-computed on the next run.",
         ),
     ] = None,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: 'table' (default) or machine-readable 'json'."),
+    ] = OutputFormat.table,
 ) -> None:
     """
     List the diagnostic execution groups that have been identified
@@ -97,7 +107,7 @@ def list_groups(  # noqa: PLR0913
 
     Filters can be combined using AND logic across filter types and OR logic within a filter type.
 
-    The output will be in a tabular format.
+    The output is a table by default, or machine-readable JSON with ``--format json``.
     """
     import pandas as pd
 
@@ -179,7 +189,7 @@ def list_groups(  # noqa: PLR0913
         results_df = results_df[column]
 
     # Display results
-    pretty_print_df(results_df, console=console)
+    render_dataframe(results_df, console=console, output_format=output_format)
 
     # Show limit warning if applicable
     filtered_count = len(all_filtered_results)

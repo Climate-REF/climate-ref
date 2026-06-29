@@ -24,7 +24,7 @@ PMP has some additional preprocessed climatology datasets that should be ingeste
 can find them.
 
 ```
-ref datasets fetch-data --registry pmp-climatology --output directory data/pmp-climatology
+ref datasets fetch-data --registry pmp-climatology --output-directory data/pmp-climatology
 ref datasets ingest --source-type pmp-climatology data/pmp-climatology
 ```
 

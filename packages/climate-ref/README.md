@@ -28,8 +28,8 @@ pip install "climate-ref[aft-providers]"
 
 ```bash
 # Ingest some observation datasets
-ref datasets fetch-data --registry obs4ref ---output-directory datasets/obs4ref
-ref datasets fetch-data --registry sample-data ---output-directory datasets/sample-data
+ref datasets fetch-data --registry obs4ref --output-directory datasets/obs4ref
+ref datasets fetch-data --registry sample-data --output-directory datasets/sample-data
 
 # Run metrics against your climate data
 ref solve

@@ -70,6 +70,16 @@ repos:
         require_serial: true
         verbose: false
         always_run: false
+      - id: lint-docs
+        name: lint docs (CLI flags + internal links)
+        entry: "uv run python scripts/lint_docs.py"
+        # Validates ``ref`` commands shown in docs against the real CLI and checks
+        # internal GitHub blob/tree links, so it needs the local uv installation.
+        language: system
+        pass_filenames: false
+        require_serial: true
+        # Re-run when any markdown or the linter itself changes.
+        files: '(\.md$|^scripts/lint_docs\.py$)'
   - repo: https://github.com/citation-file-format/cffconvert
     rev: 054bda51dbe278b3e86f27c890e3f3ac877d616c
     hooks:

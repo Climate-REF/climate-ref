@@ -19,7 +19,7 @@ pip install climate-ref-core
 ## Usage
 
 This package is primarily intended to be used as a dependency by other packages implementing diagnostic providers.
-See the [example diganotic provider](https://github.com/Climate-REF/climate-ref/tree/main/packages/ref-metrics-example).
+See the [example diagnostic provider](https://github.com/Climate-REF/climate-ref/tree/main/packages/climate-ref-example).
 
 
 ## Documentation

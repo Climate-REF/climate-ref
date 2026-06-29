@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Annotated
 import typer
 from loguru import logger
 
-from climate_ref.cli._utils import pretty_print_df
+from climate_ref.cli._utils import OutputFormat, pretty_print_df, render_dataframe
 
 if TYPE_CHECKING:
     from rich.console import Console
@@ -20,7 +20,13 @@ app = typer.Typer(help=__doc__)
 
 
 @app.command(name="list")
-def list_(ctx: typer.Context) -> None:
+def list_(
+    ctx: typer.Context,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: 'table' (default) or machine-readable 'json'."),
+    ] = OutputFormat.table,
+) -> None:
     """
     Print the available providers.
     """
@@ -63,7 +69,7 @@ def list_(ctx: typer.Context) -> None:
             for provider in provider_registry.providers
         ]
     )
-    pretty_print_df(results_df, console=console)
+    render_dataframe(results_df, console=console, output_format=output_format)
 
 
 class ShowFormat(StrEnum):

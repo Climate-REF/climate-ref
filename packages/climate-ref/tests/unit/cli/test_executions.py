@@ -160,6 +160,25 @@ class TestExecutionList:
             ["executions", "list-groups", "--column", "key", "--column", "missing"], expected_exit_code=1
         )
 
+    def test_list_json(self, sample_data_dir, db_seeded, invoke_cli):
+        import json
+
+        self._setup_db(db_seeded)
+
+        result = invoke_cli(["executions", "list-groups", "--format", "json"])
+
+        payload = json.loads(result.stdout)
+        keys = {row["key"] for row in payload}
+        assert {"key1", "key2"} <= keys
+
+    def test_list_json_empty(self, sample_data_dir, db_seeded, invoke_cli):
+        import json
+
+        # No execution groups created: JSON output must still be valid (an empty list).
+        result = invoke_cli(["executions", "list-groups", "--format", "json"])
+
+        assert json.loads(result.stdout) == []
+
 
 class TestListGroupsFiltering:
     def test_filter_by_diagnostic(self, db_with_groups, invoke_cli):

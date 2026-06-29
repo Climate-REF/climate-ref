@@ -526,6 +526,15 @@ class ExecutionSolver:
 DEFAULT_STALE_EXECUTION_AGE_SECONDS = 6 * 60 * 60
 
 
+def _stale_execution_cutoff(
+    stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
+) -> datetime.datetime:
+    """Naive UTC timestamp before which an in-progress execution is considered abandoned."""
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(
+        seconds=stale_after_seconds
+    )
+
+
 def fail_stale_in_progress_executions(
     db: Database,
     *,
@@ -556,9 +565,7 @@ def fail_stale_in_progress_executions(
     :
         The number of executions that were marked failed.
     """
-    cutoff = datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(
-        seconds=stale_after_seconds
-    )
+    cutoff = _stale_execution_cutoff(stale_after_seconds)
 
     with db.session.begin():
         stale = (
@@ -616,8 +623,13 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     logger.info("Solving for diagnostics that require recalculation...")
 
     # A dry run is a read-only preview: it must not create execution groups,
-    # reap stale executions, or build/submit to an executor.
-    if not dry_run:
+    # reap stale executions, or build/submit to an executor. Instead of reaping,
+    # it passes the same stale cutoff to ``should_run`` so abandoned executions are
+    # previewed as runnable without mutating the database.
+    stale_cutoff = None
+    if dry_run:
+        stale_cutoff = _stale_execution_cutoff()
+    else:
         # Reap any executions that were left in-progress by a previous run that
         # crashed, hit walltime, or otherwise lost its result-handling callback.
         # Without this sweep, ``ExecutionGroup.should_run`` keeps returning False
@@ -721,7 +733,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
             # A not-yet-created group (dry-run only) would always run; an existing
             # group defers to its should_run logic.
             if execution_group is not None and not execution_group.should_run(
-                definition.datasets.hash, rerun_failed=rerun_failed
+                definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
             ):
                 continue
 

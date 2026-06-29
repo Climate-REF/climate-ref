@@ -1,3 +1,4 @@
+import datetime
 import enum
 import pathlib
 from collections.abc import Sequence
@@ -84,7 +85,12 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
         back_populates="execution_group", order_by="Execution.created_at"
     )
 
-    def should_run(self, dataset_hash: str, rerun_failed: bool = False) -> bool:
+    def should_run(
+        self,
+        dataset_hash: str,
+        rerun_failed: bool = False,
+        stale_cutoff: "datetime.datetime | None" = None,
+    ) -> bool:
         """
         Check if the diagnostic execution group needs to be executed.
 
@@ -105,6 +111,19 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
         * an execution with the same dataset hash is already in progress
         * the last execution failed and the group is not dirty
           (use ``rerun_failed=True`` or ``flag-dirty`` to retry)
+
+        Parameters
+        ----------
+        dataset_hash
+            Hash of the candidate datasets for this run.
+        rerun_failed
+            Re-run the group even if the last execution failed and the group is not dirty.
+        stale_cutoff
+            When provided, an in-progress execution created before this timestamp is
+            treated as already failed. A real solve reaps such abandoned executions
+            (via ``fail_stale_in_progress_executions``) before evaluating this method;
+            a read-only dry-run passes the same cutoff here so its preview matches what
+            the next solve would run, without mutating the database.
         """
         if not self.executions:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} was never executed")
@@ -119,9 +138,17 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
             )
             return True
 
+        # A stale in-progress execution will be reaped (marked failed) by the next real
+        # solve, so treat it as failed when a cutoff is supplied (dry-run preview).
+        treat_as_failed = (
+            last_execution.successful is None
+            and stale_cutoff is not None
+            and last_execution.created_at < stale_cutoff
+        )
+
         # Don't submit duplicate tasks for an execution that is already in progress
         # Stuck tasks can be cleaned up with the `fail-running` command
-        if last_execution.successful is None:
+        if last_execution.successful is None and not treat_as_failed:
             logger.debug(
                 f"Execution group {self.diagnostic.slug}/{self.key} "
                 f"already has an in-progress execution with hash {dataset_hash}"
@@ -134,7 +161,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
             return True
 
         # Re-run all failed executions if explicitly requested
-        if last_execution.successful is False and rerun_failed:
+        if (last_execution.successful is False or treat_as_failed) and rerun_failed:
             logger.debug(
                 f"Execution group {self.diagnostic.slug}/{self.key} "
                 f"last execution failed, rerunning (rerun_failed=True)"

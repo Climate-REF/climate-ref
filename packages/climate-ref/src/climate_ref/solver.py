@@ -181,7 +181,11 @@ def extract_covered_datasets(
         catalog_df = data_catalog
 
     if len(catalog_df) == 0:
-        logger.error(f"No datasets found in the data catalog: {requirement.source_type.value}")
+        # A requirement may target a source type that simply was not ingested
+        # (e.g. a diagnostic supporting CMIP6 *or* CMIP7 when only CMIP6 is present).
+        # This is an expected skip, not an error, so it must not surface as ERROR
+        # on an otherwise successful solve.
+        logger.debug(f"No datasets found in the data catalog: {requirement.source_type.value}")
         return {}
 
     subset = requirement.apply_filters(catalog_df)

@@ -19,6 +19,16 @@ class TestProvidersList:
         assert "provider" in result.stdout
         assert "example" in result.stdout
 
+    def test_list_json(self, config, invoke_cli):
+        import json
+
+        result = invoke_cli(["providers", "list", "--format", "json"])
+        assert result.exit_code == 0
+
+        payload = json.loads(result.stdout)
+        assert isinstance(payload, list)
+        assert any(row["provider"] == "example" for row in payload)
+
     def test_list_with_conda_provider(self, config, invoke_cli, mocker, tmp_path):
         """Test list command shows conda environment info."""
         # Create a mock conda provider with env_path that doesn't exist

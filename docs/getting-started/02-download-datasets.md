@@ -6,7 +6,7 @@ These commands should be rerun after new releases of Climate-REF to ensure you h
 
 ## Input datasets
 
-The Climate-REF requires local input datasets from CMIP6/CMIP6plus to evaluate. Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already, if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly. We have provided a script in [./scripts/fetch-esfgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esfgf.py) for fetching the datasets that can be evaluated by the REF. This involves a moderate volume of data, requireing more than 4TB of storage when assessing a single ensemble member per model.
+The Climate-REF requires local input datasets from CMIP6/CMIP6plus to evaluate. Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already, if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly. We have provided a script in [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py) for fetching the datasets that can be evaluated by the REF. This involves a moderate volume of data, requireing more than 4TB of storage when assessing a single ensemble member per model.
 
 Note that not all of these datasets are required. The Climate-REF will determine which diagnostics can be evaluated according the datasets that are available.
 

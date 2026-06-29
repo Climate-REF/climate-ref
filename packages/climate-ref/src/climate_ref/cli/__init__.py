@@ -202,10 +202,10 @@ def build_app() -> typer.Typer:
 
     try:
         celery_app = importlib.import_module("climate_ref_celery.cli").app
-
-        app.add_typer(celery_app, name="celery")
     except ImportError:
-        logger.debug("Celery CLI not available")
+        pass
+    else:
+        app.add_typer(celery_app, name="celery")
 
     return app
 
@@ -258,6 +258,9 @@ def main(  # noqa: PLR0913
     initialise_logging(level=config.log_level, format=log_format, log_directory=config.paths.log)
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
+
+    if not any(group.name == "celery" for group in app.registered_groups):
+        logger.debug("Celery CLI not available")
 
     # Create context with lazy database initialization
     # The database is only created when first accessed

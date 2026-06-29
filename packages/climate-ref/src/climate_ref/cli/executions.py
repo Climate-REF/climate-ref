@@ -2,7 +2,6 @@
 View execution groups and their results
 """
 
-import json
 import pathlib
 import shutil
 from dataclasses import dataclass
@@ -19,7 +18,13 @@ from rich.text import Text
 from rich.tree import Tree
 from sqlalchemy import case, func, or_
 
-from climate_ref.cli._utils import df_to_table, parse_facet_filters, pretty_print_df
+from climate_ref.cli._utils import (
+    OutputFormat,
+    df_to_table,
+    parse_facet_filters,
+    pretty_print_df,
+    render_dataframe,
+)
 from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
@@ -42,6 +47,18 @@ class ListGroupsFilterOptions:
 
     facets: dict[str, list[str]] | None = None
     """Filter by facet key-value pairs (AND across keys, OR within key)"""
+
+
+# Default columns for the ``list-groups`` table.
+_DEFAULT_LIST_GROUPS_COLUMNS = [
+    "id",
+    "key",
+    "provider",
+    "diagnostic",
+    "dirty",
+    "successful",
+    "created_at",
+]
 
 
 @app.command()
@@ -88,16 +105,23 @@ def list_groups(  # noqa: PLR0913
             "These execution groups will be re-computed on the next run.",
         ),
     ] = None,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: 'table' (default) or machine-readable 'json'."),
+    ] = OutputFormat.table,
 ) -> None:
     """
     List the diagnostic execution groups that have been identified
 
     The data catalog is sorted by the date that the execution group was created (first = newest).
-    If the `--column` option is provided, only the specified columns will be displayed.
+
+    By default the table shows a subset of columns with the verbose ``selectors``
+    and ``updated_at`` fields omitted. Use ``--column`` to choose exactly which columns to display,
+    or ``--format json`` to emit the full record for scripting.
 
     Filters can be combined using AND logic across filter types and OR logic within a filter type.
 
-    The output will be in a tabular format.
+    The output is a table by default, or machine-readable JSON with ``--format json``.
     """
     import pandas as pd
 
@@ -165,21 +189,24 @@ def list_groups(  # noqa: PLR0913
                     "successful": result.successful if result else None,
                     "created_at": eg.created_at,
                     "updated_at": eg.updated_at,
-                    "selectors": json.dumps(eg.selectors),
+                    "selectors": eg.selectors,
                 }
                 for eg, result in execution_groups_results
             ]
         )
 
-    # Apply column filtering
-    if column and not results_df.empty:  # Only apply if df is not empty
-        if not all(col in results_df.columns for col in column):
-            logger.error(f"Column not found in data catalog: {column}")
-            raise typer.Exit(code=1)
-        results_df = results_df[column]
+    # Select columns to display.
+    if column:
+        if not results_df.empty:  # Only validate against actual data
+            if not all(col in results_df.columns for col in column):
+                logger.error(f"Column not found in data catalog: {column}")
+                raise typer.Exit(code=1)
+            results_df = results_df[column]
+    elif output_format == OutputFormat.table:
+        results_df = results_df[_DEFAULT_LIST_GROUPS_COLUMNS]
 
     # Display results
-    pretty_print_df(results_df, console=console)
+    render_dataframe(results_df, console=console, output_format=output_format)
 
     # Show limit warning if applicable
     filtered_count = len(all_filtered_results)
@@ -298,7 +325,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
                 "successful": result.successful if result else None,
                 "created_at": eg.created_at,
                 "updated_at": eg.updated_at,
-                "selectors": json.dumps(eg.selectors),
+                "selectors": eg.selectors,
             }
             for eg, result in all_filtered_results
         ]

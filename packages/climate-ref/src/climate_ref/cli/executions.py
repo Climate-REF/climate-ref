@@ -2,7 +2,6 @@
 View execution groups and their results
 """
 
-import json
 import pathlib
 import shutil
 from dataclasses import dataclass
@@ -175,7 +174,7 @@ def list_groups(  # noqa: PLR0913
                     "successful": result.successful if result else None,
                     "created_at": eg.created_at,
                     "updated_at": eg.updated_at,
-                    "selectors": json.dumps(eg.selectors),
+                    "selectors": eg.selectors,
                 }
                 for eg, result in execution_groups_results
             ]
@@ -308,7 +307,7 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
                 "successful": result.successful if result else None,
                 "created_at": eg.created_at,
                 "updated_at": eg.updated_at,
-                "selectors": json.dumps(eg.selectors),
+                "selectors": eg.selectors,
             }
             for eg, result in all_filtered_results
         ]

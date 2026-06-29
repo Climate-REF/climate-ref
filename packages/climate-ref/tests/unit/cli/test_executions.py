@@ -171,6 +171,10 @@ class TestExecutionList:
         keys = {row["key"] for row in payload}
         assert {"key1", "key2"} <= keys
 
+        # ``selectors`` must be emitted as structured JSON, not a double-encoded
+        # string (i.e. ``{}`` not ``"{}"``), so callers don't have to parse twice.
+        assert all(isinstance(row["selectors"], dict) for row in payload)
+
     def test_list_json_empty(self, sample_data_dir, db_seeded, invoke_cli):
         import json
 

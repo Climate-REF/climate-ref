@@ -100,10 +100,8 @@ def test_import_emits_no_debug_logs_without_celery():
     Importing the CLI must not leak debug logs to stderr, even when an optional
     dependency (the Celery CLI) is unavailable.
 
-    ``build_app()`` runs at import time -- before the ``main`` callback configures
-    the logging level -- so the default loguru handler has to be removed first.
-    Otherwise ``ref --quiet --help`` (and even ``ref --help``) print the
-    "Celery CLI not available" debug line to stderr.
+    ``build_app()`` runs at import time before the ``main`` callback configures
+    the logging level so it must not emit any logs itself.
     """
     import subprocess
     import sys

@@ -202,20 +202,13 @@ def build_app() -> typer.Typer:
 
     try:
         celery_app = importlib.import_module("climate_ref_celery.cli").app
-
-        app.add_typer(celery_app, name="celery")
     except ImportError:
-        logger.debug("Celery CLI not available")
+        pass
+    else:
+        app.add_typer(celery_app, name="celery")
 
     return app
 
-
-# Remove loguru's default stderr handler before building the app.
-# build_app() performs optional dependency discovery (e.g. the Celery CLI) at
-# import time, which emits debug logs. The logging level is only configured later
-# in the `main` callback, so without removing the default handler those messages
-# would reach stderr even for `ref --quiet ...` or `ref --help`.
-logger.remove()
 
 app = build_app()
 
@@ -265,6 +258,9 @@ def main(  # noqa: PLR0913
     initialise_logging(level=config.log_level, format=log_format, log_directory=config.paths.log)
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
+
+    if not any(group.name == "celery" for group in app.registered_groups):
+        logger.debug("Celery CLI not available")
 
     # Create context with lazy database initialization
     # The database is only created when first accessed

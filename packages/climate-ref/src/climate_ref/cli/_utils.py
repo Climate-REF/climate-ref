@@ -156,7 +156,11 @@ def pretty_print_df(df: pd.DataFrame, console: Console | None = None) -> None:
         If not provided, a new Console instance will be created
     """
     # Drop duplicates as they are not informative to CLI users.
-    df = df.drop_duplicates()
+    try:
+        df = df.drop_duplicates()
+    except TypeError:
+        # Some columns may hold unhashable values so fallback to str
+        df = df.loc[~df.astype(str).duplicated()]
 
     if console is None:  # pragma: no branch
         logger.debug("Creating new console for pretty printing")

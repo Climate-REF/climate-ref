@@ -113,11 +113,12 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
     _, _variable_id_dir, _grid_label, _version, filename = parts
 
     # Parse filename: {var}_mon_{source_id}_{inst_id}_{grid}_{time}_AC_{ver}_{res}.nc
-    # Handle source_ids with hyphens (e.g., "ERA-5", "GPCP-Monthly-3-2")
+    # source_id and institution_id may both contain hyphens (e.g. "GPCP-3-3", "NASA-GISS");
+    # the literal "_" separators keep tokenisation unambiguous.
     filename_pattern = re.compile(
         r"^(?P<variable_id>[a-z]+)_mon_"
         r"(?P<source_id>[A-Za-z0-9-]+)_"
-        r"(?P<institution_id>[A-Za-z0-9]+)_"
+        r"(?P<institution_id>[A-Za-z0-9-]+)_"
         r"(?P<grid_label>[a-z]+)_"
         r"(?P<time_range>\d+-\d+)_AC_"
         r"(?P<version>v\d+)_"

@@ -39,6 +39,13 @@ ESMValTool writes each run into a timestamped ``recipe_<YYYYMMDD>_<HHMMSS>`` ses
 We rename it to this fixed name after the run so that the captured regression output is deterministic.
 """
 
+_PROVENANCE_GLOB = "run/*/*/diagnostic_provenance.yml"
+"""Glob (relative to the stabilised session directory) matching ESMValTool's per-run provenance YAML.
+
+Single-sourced so the capture-side :attr:`ESMValToolDiagnostic.reconstruction_inputs` declaration and
+the rebuild-side scan in :meth:`ESMValToolDiagnostic.build_execution_result` cannot drift apart.
+"""
+
 
 def get_cmip_source_type(
     input_files: dict[SourceDatasetType, pandas.DataFrame],
@@ -65,6 +72,16 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
     """ESMValTool Diagnostic base class."""
 
     base_recipe: ClassVar[str]
+
+    reconstruction_inputs = (f"executions/{_STABLE_SESSION_NAME}/{_PROVENANCE_GLOB}",)
+    """Raw provenance YAML that :meth:`build_execution_result` re-scans to discover the run's outputs.
+
+    These files are not referenced by the CMEC output bundle, so ``copy_execution_outputs`` would not
+    curate them; declaring them here persists them into the baseline so a ``replay`` can rebuild the
+    bundle. ``prepare_regression_output`` first stabilises the timestamped session directory to
+    ``recipe`` and every path the provenance contains is then under the execution output directory, so
+    the native sanitiser rewrites them to ``<OUTPUT_DIR>`` and the captured blobs stay portable.
+    """
 
     @staticmethod
     @abstractmethod
@@ -362,7 +379,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         series = []
         plot_suffixes = {".png", ".jpg", ".pdf", ".ps"}
         # Sort metadata files for stable processing
-        metadata_files = sorted(result_dir.glob("run/*/*/diagnostic_provenance.yml"))
+        metadata_files = sorted(result_dir.glob(_PROVENANCE_GLOB))
         for metadata_file in metadata_files:
             metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
             for filename in metadata:

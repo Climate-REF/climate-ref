@@ -6,12 +6,14 @@ from pathlib import Path
 import pytest
 
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
-from climate_ref_core.output_files import PLACEHOLDER_OUTPUT_DIR, PLACEHOLDER_TEST_DATA_DIR
+from climate_ref_core.output_files import (
+    PLACEHOLDER_OUTPUT_DIR,
+    PLACEHOLDER_SOFTWARE_ROOT_DIR,
+    PLACEHOLDER_TEST_DATA_DIR,
+    PlaceholderMap,
+)
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
-    _COMMITTED_FLOAT_JSON_KWARGS,
-    _UNROUNDED_COMMITTED_FILES,
-    _contains_float,
     build_native_snapshot,
     capture_execution,
     materialise_native,
@@ -50,7 +52,9 @@ def test_write_committed_bundle_sanitises_and_digests(tmp_path):
     regression_dir = tmp_path / "regression"
 
     digests = write_committed_bundle(
-        source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
     assert set(digests) == {"series.json", "diagnostic.json", "output.json"}
@@ -60,6 +64,18 @@ def test_write_committed_bundle_sanitises_and_digests(tmp_path):
     assert PLACEHOLDER_TEST_DATA_DIR in written
     # Digest is over the sanitised bytes as they sit on disk.
     assert digests["diagnostic.json"] == sha256_file(regression_dir / "diagnostic.json")
+
+
+def test_write_committed_bundle_rejects_unbound_placeholders(tmp_path):
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    source = _seed_execution(tmp_path / "scratch", "frag", output_dir=output_dir, test_data_dir=test_data_dir)
+    regression_dir = tmp_path / "regression"
+
+    with pytest.raises(ValueError, match="with_output"):
+        write_committed_bundle(
+            source, regression_dir, placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir)
+        )
 
 
 def _sig_figs(value: float) -> int:
@@ -98,7 +114,11 @@ def test_write_committed_bundle_rounds_floats(tmp_path):
     (source / "series.json").write_text(json.dumps(source_series))
     regression_dir = tmp_path / "regression"
 
-    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    write_committed_bundle(
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+    )
 
     diag = json.loads((regression_dir / "diagnostic.json").read_text())
     series = json.loads((regression_dir / "series.json").read_text())
@@ -109,50 +129,16 @@ def test_write_committed_bundle_rounds_floats(tmp_path):
     assert series[0]["values"] == [1.761334, 9.876543]
 
 
-def test_committed_float_classification_is_exhaustive():
-    assert set(_COMMITTED_FLOAT_JSON_KWARGS) | _UNROUNDED_COMMITTED_FILES == set(COMMITTED_BUNDLE_FILES)
-    assert set(_COMMITTED_FLOAT_JSON_KWARGS).isdisjoint(_UNROUNDED_COMMITTED_FILES)
-
-
-def test_output_json_is_float_free_by_construction(tmp_path):
-    # Codifies the invariant the output.json exclusion relies on: a representative output bundle,
-    # serialised the way REF writes it natively, carries no float leaves.
-    output = CMECOutput.model_validate(CMECOutput.create_template())
-    output.update(
-        "data",
-        short_name="example",
-        dict_content={
-            "filename": "data/example.nc",
-            "long_name": "Example output",
-            "description": "An example data file",
-        },
-    )
-    output.update(
-        "html",
-        short_name="index",
-        dict_content={
-            "filename": "index.html",
-            "long_name": "Index page",
-            "description": "The landing page",
-        },
-    )
-    json_path = tmp_path / "output.json"
-    output.dump_to_json(json_path)
-    loaded = json.loads(json_path.read_text(encoding="utf-8"))
-
-    assert _contains_float(loaded) is False
-
-
-def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
-    # output.json must pass through write_committed_bundle byte-for-byte (no key reorder / rewrite),
-    # while the float-bearing artefacts are rounded.
+def test_write_committed_bundle_canonicalises_every_file(tmp_path):
+    # Every committed file is re-dumped into one canonical form (sorted keys, rounded floats), so the
+    # committed bytes are deterministic regardless of how the diagnostic originally serialised them,
+    # and a re-mint is byte-identical (stable digests across machines).
     output_dir = (tmp_path / "scratch" / "frag").resolve()
     test_data_dir = (tmp_path / "test-data").resolve()
     source = tmp_path / "scratch" / "frag"
     source.mkdir(parents=True)
     # output.json written the native (Pydantic) way: indent=2, keys NOT sorted, no floats.
     CMECOutput.model_validate(CMECOutput.create_template()).dump_to_json(source / "output.json")
-    source_output_bytes = (source / "output.json").read_bytes()
     # Float-bearing artefacts that rounding must rewrite.
     (source / "diagnostic.json").write_text(json.dumps({"PROVENANCE": {"score": 1.843240715970751}}))
     (source / "series.json").write_text(
@@ -160,13 +146,127 @@ def test_write_committed_bundle_leaves_output_json_bytes_unchanged(tmp_path):
     )
     regression_dir = tmp_path / "regression"
 
-    write_committed_bundle(source, regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
+    def _mint() -> dict[str, bytes]:
+        write_committed_bundle(
+            source,
+            regression_dir,
+            placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+        )
+        return {name: (regression_dir / name).read_bytes() for name in COMMITTED_BUNDLE_FILES}
 
-    # output.json is byte-identical to the copied source: not re-dumped, keys not reordered.
-    assert (regression_dir / "output.json").read_bytes() == source_output_bytes
-    # The float-bearing artefacts were rounded (proving the bundle was processed, not skipped).
-    assert json.loads((regression_dir / "diagnostic.json").read_text())["PROVENANCE"]["score"] == 1.843241
-    assert json.loads((regression_dir / "series.json").read_text())[0]["values"] == [1.761334]
+    first = _mint()
+
+    # output.json keys are sorted canonically (not left in native Pydantic order)...
+    out = json.loads(first["output.json"])
+    assert list(out.keys()) == sorted(out.keys())
+    # ...the float-bearing artefacts are rounded...
+    assert json.loads(first["diagnostic.json"])["PROVENANCE"]["score"] == 1.843241
+    assert json.loads(first["series.json"])[0]["values"] == [1.761334]
+    # ...and a re-mint produces byte-identical committed bytes.
+    assert _mint() == first
+
+
+def _leaky_provenance(software_root: Path, output_dir: Path) -> dict:
+    """A CMEC provenance block: host/user fields to redact + absolute paths to placeholder."""
+    return {
+        "commandLine": (
+            f"{software_root}/conda/pmp/bin/mean_climate_driver.py "
+            f"-p {software_root}/params/pmp_param.py "
+            f"--test_data_path {output_dir} --cmec"
+        ),
+        "date": "2026-06-24 12:30:54",
+        "userId": "jared",
+        "platform": {"Name": "gus", "OS": "Linux", "Version": "6.12.88+deb13-amd64"},
+    }
+
+
+def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    software_root = (tmp_path / "software").resolve()
+    source = tmp_path / "scratch" / "frag"
+    source.mkdir(parents=True)
+    # Metric bundle: leaky uppercase PROVENANCE + a float so rounding also runs.
+    (source / "diagnostic.json").write_text(
+        json.dumps(
+            {"PROVENANCE": _leaky_provenance(software_root, output_dir), "RESULTS": {"score": 1.2345678901}}
+        )
+    )
+    # Output bundle: leaky lowercase provenance, float-free, native indent=2 layout.
+    output_obj = CMECOutput.create_template()
+    output_obj["provenance"].update(_leaky_provenance(software_root, output_dir))
+    (source / "output.json").write_text(json.dumps(output_obj, indent=2))
+    (source / "series.json").write_text(json.dumps([]))
+    regression_dir = tmp_path / "regression"
+
+    digests = write_committed_bundle(
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(
+            test_data_dir=test_data_dir, software_root_dir=software_root
+        ).with_output(output_dir),
+    )
+
+    for filename in ("diagnostic.json", "output.json"):
+        text = (regression_dir / filename).read_text()
+        # date and userId are redacted as structured fields...
+        assert '"userId": "<USER>"' in text
+        assert '"date": "<DATE>"' in text
+        # ...the command line is kept but made portable via path placeholders (not nuked)...
+        assert "<COMMAND_LINE>" not in text
+        assert "mean_climate_driver.py" in text
+        assert PLACEHOLDER_SOFTWARE_ROOT_DIR in text
+        assert PLACEHOLDER_OUTPUT_DIR in text
+        # ...and no personal / host / absolute-path / timestamp data survives.
+        assert "jared" not in text
+        assert "gus" not in text  # hostname (platform.Name) redacted
+        assert "6.12.88+deb13-amd64" not in text  # kernel version (platform.Version) redacted
+        assert str(software_root) not in text
+        assert str(output_dir) not in text
+        assert "2026-06-24 12:30:54" not in text
+        # Digest is taken over the sanitised bytes exactly as they sit on disk.
+        assert digests[filename] == sha256_file(regression_dir / filename)
+
+    # Structured redaction survives float-rounding in the metric bundle.
+    diag = json.loads((regression_dir / "diagnostic.json").read_text())
+    assert diag["PROVENANCE"]["userId"] == "<USER>"
+    assert diag["PROVENANCE"]["date"] == "<DATE>"
+    # Host fields redacted; coarse OS kept as portable context.
+    assert diag["PROVENANCE"]["platform"]["Name"] == "<HOSTNAME>"
+    assert diag["PROVENANCE"]["platform"]["Version"] == "<HOST_VERSION>"
+    assert diag["PROVENANCE"]["platform"]["OS"] == "Linux"
+    assert diag["RESULTS"]["score"] == 1.234568
+
+    # output.json is re-dumped canonically (sorted keys); every provenance key is still present.
+    out = json.loads((regression_dir / "output.json").read_text())
+    assert list(out["provenance"].keys()) == sorted(output_obj["provenance"].keys())
+
+
+def test_redaction_leaves_clean_provenance_untouched(tmp_path):
+    # A bundle whose provenance carries no host/user fields gains no redaction placeholders;
+    # canonicalisation still applies and produces valid sorted-key JSON.
+    output_dir = (tmp_path / "scratch" / "frag").resolve()
+    test_data_dir = (tmp_path / "test-data").resolve()
+    source = tmp_path / "scratch" / "frag"
+    source.mkdir(parents=True)
+    (source / "output.json").write_text(json.dumps(CMECOutput.create_template(), indent=2))
+    (source / "diagnostic.json").write_text(json.dumps({"RESULTS": {"score": 1.0}}))
+    (source / "series.json").write_text(json.dumps([]))
+    regression_dir = tmp_path / "regression"
+
+    write_committed_bundle(
+        source,
+        regression_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
+    )
+
+    text = (regression_dir / "output.json").read_text()
+    # No redaction placeholders introduced for an already-clean bundle.
+    assert "<USER>" not in text
+    assert "<HOSTNAME>" not in text
+    # The committed file is valid canonical JSON with sorted keys.
+    out = json.loads(text)
+    assert list(out.keys()) == sorted(out.keys())
 
 
 def test_build_native_snapshot_digests_relpaths(tmp_path):
@@ -204,8 +304,7 @@ def test_capture_execution_end_to_end(tmp_path):
         fragment,
         result,
         regression_dir=regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
     # Committed bundle is the three CMEC artefacts.
@@ -238,8 +337,7 @@ def test_capture_execution_include_log(tmp_path):
         fragment,
         result,
         regression_dir=tmp_path / "regression",
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
         include_log=True,
     )
 
@@ -255,8 +353,9 @@ def test_capture_execution_requires_metric_bundle(tmp_path):
             "frag",
             result,
             regression_dir=tmp_path / "regression",
-            output_dir=tmp_path / "out",
-            test_data_dir=tmp_path / "td",
+            placeholders=PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td").with_output(
+                tmp_path / "out"
+            ),
         )
 
 

@@ -1,21 +1,21 @@
 {
-  "index": "index.html",
-  "provenance": {
-    "environment": {},
-    "modeldata": [],
-    "obsdata": {},
-    "log": "cmec_output.log"
-  },
   "data": {
     "annual_mean_timeseries": {
-      "filename": "annual_mean_global_mean_timeseries.nc",
-      "long_name": "Annual Mean Global Mean Timeseries",
       "description": "Area-weighted annual mean global mean timeseries for the input variable.",
-      "dimensions": null
+      "dimensions": null,
+      "filename": "annual_mean_global_mean_timeseries.nc",
+      "long_name": "Annual Mean Global Mean Timeseries"
     }
   },
-  "plots": {},
+  "diagnostics": {},
   "html": {},
+  "index": "index.html",
   "metrics": null,
-  "diagnostics": {}
+  "plots": {},
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
 }

@@ -1,9 +1,9 @@
 {
   "catalog_hash": "5121013be40eab6ded0a1cf24138799b148fa730",
   "committed": {
-    "diagnostic.json": "5bb5817e3c59a02859dd3cd2d94f3b00e026a25a70e0f22b1e7fc5234ce636f7",
-    "output.json": "f9a2e86a5906875d01f9ee62d3044eefd3d21d9bfcc71be62d4ddcd2fa75fe9d",
-    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+    "diagnostic.json": "416ba3296808c380370fb8fd11c4c77d0898ca5ee2c19614b0574457d7a42ff9",
+    "output.json": "e937c8b787585d0c2f4025eb93a4effe8f4065ba4575285655d5be6cffa5db55",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
   "native": {
     "annual_mean_global_mean_timeseries.nc": {
@@ -24,5 +24,5 @@
     }
   },
   "schema": 1,
-  "test_case_version": 1
+  "test_case_version": 2
 }

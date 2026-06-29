@@ -15,7 +15,12 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import _get_resource, get_model_source_type, process_json_result
+from climate_ref_pmp.pmp_driver import (
+    PMP_RECONSTRUCTION_INPUTS,
+    _get_resource,
+    get_model_source_type,
+    process_json_result,
+)
 
 # CMIP7 branded variable names (from CMIP7 Data Request)
 _BRANDED_VARIABLE_NAMES: dict[str, str] = {
@@ -35,6 +40,8 @@ class ENSO(CommandLineDiagnostic):
     """
     Calculate the ENSO performance metrics for a dataset
     """
+
+    reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
     facets = (
         "mip_id",
@@ -371,9 +378,10 @@ class ENSO(CommandLineDiagnostic):
             logger.warning(f"A single cmec output file not found: {results_files}")
             return ExecutionResult.build_from_failure(definition)
 
-        # Find the other outputs
-        png_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.png")]
-        data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
+        # Sort so the committed output.json plot/data key order is deterministic across hosts.
+        output_dir = definition.output_directory
+        png_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.png"))]
+        data_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.nc"))]
 
         cmec_output, cmec_metric = process_json_result(results_files[0], png_files, data_files)
 

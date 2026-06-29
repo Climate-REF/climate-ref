@@ -41,7 +41,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.output_files import from_placeholders
+from climate_ref_core.output_files import PlaceholderMap
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -306,8 +306,7 @@ def _capture_synthetic(
         fragment,
         result,
         regression_dir=regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
+        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
     )
 
 
@@ -392,7 +391,7 @@ class TestSyntheticNestedRoundTrip:
         replay_dir = tmp_path / "replay_output"
         replay_dir.mkdir()
         materialise_native(reloaded.native, store, replay_dir)
-        from_placeholders(replay_dir, output_dir=replay_dir, test_data_dir=test_data_dir)
+        PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(replay_dir).hydrate(replay_dir)
 
         replay_definition = ExecutionDefinition(
             diagnostic=definition.diagnostic,
@@ -592,7 +591,7 @@ class TestExampleSmokeRoundTrip:
         replay_dir = tmp_path / "example_replay"
         replay_dir.mkdir()
         materialise_native(manifest.native, store, replay_dir)
-        from_placeholders(replay_dir, output_dir=replay_dir, test_data_dir=test_data_dir)
+        PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(replay_dir).hydrate(replay_dir)
 
         replay_definition = ExecutionDefinition(
             diagnostic=diag,
@@ -943,3 +942,202 @@ class TestCliMintSyncReplay:
             expected_exit_code=1,
         )
         assert "Cannot mint" in result.stderr
+
+
+_RECON_DATA_RELPATH = "data/result.nc"
+_RECON_PROVENANCE_RELPATH = "run/provenance.txt"
+
+
+class _ReconstructionInputDiagnostic(Diagnostic):
+    """
+    A diagnostic whose ``build_execution_result`` re-derives its bundle from a *raw* provenance
+    file the CMEC output bundle does not reference.
+
+    This mirrors ESMValTool / PMP: the artefact that tells ``build_execution_result`` what to emit
+    (a provenance YAML / driver ``*_cmec.json``) is not part of the curated output set, so it must
+    be declared via :attr:`Diagnostic.reconstruction_inputs` to survive a mint and let a replay
+    rebuild the bundle. Reading it back makes the captured input load-bearing.
+    """
+
+    name = "Reconstruction Input"
+    slug = "reconstruction-input"
+    data_requirements = (
+        DataRequirement(source_type=SourceDatasetType.CMIP6, filters=tuple(), group_by=None),
+    )
+    facets = ("source_id",)
+    reconstruction_inputs = (_RECON_PROVENANCE_RELPATH,)
+
+    test_data_spec = TestDataSpecification(
+        test_cases=(TestCase(name="default", description="Reconstruction-input round-trip", requests=None),),
+    )
+
+    def execute(self, definition: ExecutionDefinition) -> None:
+        data_path = definition.output_directory / _RECON_DATA_RELPATH
+        data_path.parent.mkdir(parents=True, exist_ok=True)
+        data_path.write_bytes(b"RECON-DATA\x00\x01")
+
+        # The provenance names the data file the bundle should register. It is NOT itself
+        # referenced by the bundle, so ``copy_execution_outputs`` would not curate it -- only
+        # ``reconstruction_inputs`` keeps it in the persisted set.
+        prov_path = definition.output_directory / _RECON_PROVENANCE_RELPATH
+        prov_path.parent.mkdir(parents=True, exist_ok=True)
+        prov_path.write_text(f"{_RECON_DATA_RELPATH}\n", encoding="utf-8")
+
+    def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:
+        # Load-bearing read: without the raw provenance file the bundle cannot be rebuilt.
+        prov_path = definition.output_directory / _RECON_PROVENANCE_RELPATH
+        registered = prov_path.read_text(encoding="utf-8").strip()
+
+        output_args = CMECOutput.create_template()
+        output_args[OutputCV.DATA.value]["result"] = {
+            OutputCV.FILENAME.value: registered,
+            OutputCV.LONG_NAME.value: "Reconstructed data",
+            OutputCV.DESCRIPTION.value: "",
+        }
+        cmec_output = CMECOutput.model_validate(output_args)
+
+        metric_args: dict[str, Any] = {
+            "DIMENSIONS": {
+                "json_structure": ["region", "metric", "statistic"],
+                "region": {"global": {}},
+                "metric": {"recon": {}},
+                "statistic": {"score": {}},
+            },
+            "RESULTS": {"global": {"recon": {"score": 1.0}}},
+        }
+        cmec_metric = CMECMetric.model_validate(metric_args)
+        return ExecutionResult.build_from_output_bundle(
+            definition,
+            cmec_output_bundle=cmec_output,
+            cmec_metric_bundle=cmec_metric,
+        )
+
+
+class TestReconstructionInputRoundTrip:
+    """A diagnostic-declared ``reconstruction_inputs`` glob survives mint and powers replay."""
+
+    def _run(self, tmp_path: Path) -> ExecutionResult:
+        config = Config.default()
+        config.paths.results = tmp_path / "results"
+        datasets = _build_synthetic_datasets()
+        runner = TestCaseRunner(config=config, datasets=datasets)
+        provider = DiagnosticProvider("ReconTest", "0.0.1", slug="recon-test")
+        provider.register(_ReconstructionInputDiagnostic())
+        diag = provider.diagnostics()[0]
+        return runner.run(diag, "default", tmp_path / "output", clean=True)
+
+    def _capture(
+        self, result: ExecutionResult, *, results_base: Path, regression_dir: Path, extra_globs: tuple
+    ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
+        defn = result.definition
+        output_dir = defn.output_directory
+        return capture_execution(
+            output_dir.parent,
+            results_base,
+            defn.output_fragment(),
+            result,
+            regression_dir=regression_dir,
+            placeholders=PlaceholderMap.for_baseline(test_data_dir=results_base / "_td").with_output(
+                output_dir
+            ),
+            extra_globs=extra_globs,
+        )
+
+    def _store_native(
+        self, native: dict[str, NativeEntry], *, results_base: Path, fragment: Path, store_root: Path
+    ) -> LocalFilesystemStore:
+        store = LocalFilesystemStore(root=store_root)
+        base_dir = results_base / fragment
+        for relpath in native:
+            store.put(base_dir / relpath)
+        return store
+
+    def test_replay_rebuilds_from_captured_reconstruction_input(self, tmp_path: Path) -> None:
+        """Declaring the raw provenance as a reconstruction input lets replay re-derive the bundle."""
+        regression_dir = tmp_path / "regression"
+        regression_dir.mkdir()
+        results_base = tmp_path / "results-base"
+
+        result = self._run(tmp_path)
+        assert result.successful
+        definition = result.definition
+        diag = definition.diagnostic
+
+        _committed, native = self._capture(
+            result,
+            results_base=results_base,
+            regression_dir=regression_dir,
+            extra_globs=diag.reconstruction_inputs,
+        )
+        # The raw provenance file (not referenced by the bundle) is in the captured native set.
+        assert _RECON_PROVENANCE_RELPATH in native, sorted(native)
+
+        store = self._store_native(
+            native,
+            results_base=results_base,
+            fragment=definition.output_fragment(),
+            store_root=tmp_path / "store",
+        )
+
+        replay_dir = tmp_path / "replay"
+        replay_dir.mkdir()
+        materialise_native(native, store, replay_dir)
+        replay_definition = ExecutionDefinition(
+            diagnostic=diag,
+            key="test-default",
+            datasets=definition.datasets,
+            output_directory=replay_dir,
+            root_directory=tmp_path,
+        )
+        # The reconstruction input was materialised, so the raw build re-derives the bundle.
+        replay_result = diag.build_execution_result(replay_definition)
+
+        replacements = (
+            PlaceholderMap.for_baseline(test_data_dir=results_base / "_td")
+            .with_output(replay_dir)
+            .as_replacements()
+        )
+        for filename in ("series.json", "diagnostic.json", "output.json"):
+            assert_bundle_regression(
+                regression_dir / filename,
+                replay_result.to_output_path(filename),
+                slug=diag.slug,
+                tol=Tolerance(),
+                replacements=replacements,
+            )
+
+    def test_replay_fails_when_reconstruction_input_not_captured(self, tmp_path: Path) -> None:
+        """Without capturing the reconstruction input, the raw rebuild genuinely fails."""
+        regression_dir = tmp_path / "regression"
+        regression_dir.mkdir()
+        results_base = tmp_path / "results-base"
+
+        result = self._run(tmp_path)
+        definition = result.definition
+        diag = definition.diagnostic
+
+        # Capture WITHOUT the reconstruction inputs -- the provenance file is not persisted.
+        _, native = self._capture(
+            result, results_base=results_base, regression_dir=regression_dir, extra_globs=()
+        )
+        assert _RECON_PROVENANCE_RELPATH not in native
+
+        store = self._store_native(
+            native,
+            results_base=results_base,
+            fragment=definition.output_fragment(),
+            store_root=tmp_path / "store",
+        )
+
+        replay_dir = tmp_path / "replay"
+        replay_dir.mkdir()
+        materialise_native(native, store, replay_dir)
+        replay_definition = ExecutionDefinition(
+            diagnostic=diag,
+            key="test-default",
+            datasets=definition.datasets,
+            output_directory=replay_dir,
+            root_directory=tmp_path,
+        )
+        with pytest.raises((FileNotFoundError, OSError)):
+            diag.build_execution_result(replay_definition)

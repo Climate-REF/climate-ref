@@ -380,9 +380,6 @@ def handle_execution_result(
     # (metric bundle, output bundle and the files it references, series)
     # from scratch to results.
     # Only the files in results are served by the API.
-    #
-    # Regression capture currently snapshots the whole output directory rather than this curated subset,
-    # so the committed baseline is a superset of what production persists.
     copy_execution_outputs(
         config.paths.scratch,
         config.paths.results,

@@ -188,9 +188,9 @@ def format_cmec_output_bundle(
             dim_dict[str(val)] = {}
 
             if dim == dimensions[-1]:
-                # If this is the last dimension, add the value column to the metadata
-
-                dim_dict[str(val)] = dataset[dataset[dim] == val].iloc[0][metadata_columns].to_dict()
+                # Last dimension carries the value column's metadata.
+                metadata = dataset[dataset[dim] == val].iloc[0][metadata_columns].to_dict()
+                dim_dict[str(val)] = {column: str(value) for column, value in metadata.items()}
 
         dimensions_dict[dim] = dim_dict
 
@@ -239,11 +239,6 @@ def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
     attributes = ["type", "units"]
     for dimension in dimensions:
         model_df[dimension] = model_df[dimension].where(model_df[dimension].notna(), "None")
-
-    # ILAMB writes dimensionless units as the number 1 in its scalar CSVs, so the units attribute
-    # otherwise drifts between int (1) and str ("1"/"kg m-2") across diagnostics. Coerce it to a
-    # string so the metric bundle always carries string units and schema/replay comparison stays stable.
-    model_df["units"] = model_df["units"].astype(str)
 
     bundle = format_cmec_output_bundle(
         model_df,

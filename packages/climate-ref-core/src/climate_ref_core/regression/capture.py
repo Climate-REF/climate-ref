@@ -25,9 +25,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from loguru import logger
-
-from climate_ref_core.output_files import copy_execution_outputs, to_placeholders
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.paths import safe_path
 
 from ._quantise import round_floats
@@ -43,84 +41,122 @@ if TYPE_CHECKING:
     from climate_ref_core.regression.store import NativeStore
 
 
-# Serialisation parameters for committed-bundle files that contain floats.
-_COMMITTED_FLOAT_JSON_KWARGS: dict[str, dict[str, object]] = {
-    "series.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
-    "diagnostic.json": {"indent": 2, "allow_nan": False, "sort_keys": True},
+# Canonical JSON serialisation applied to every committed-bundle file.
+_COMMITTED_JSON_DUMP_KWARGS: dict[str, object] = {
+    "indent": 2,
+    "sort_keys": True,
+    "allow_nan": False,
+    "ensure_ascii": False,
 }
 
-# Committed files deliberately NOT float-rounded
-# output.json is the CMEC *output* bundle, which by construction carries no float values.
-_UNROUNDED_COMMITTED_FILES: frozenset[str] = frozenset({"output.json"})
+# CMEC provenance lives in the metric bundle's uppercase ``PROVENANCE`` block and the
+# output bundle's lowercase ``provenance`` block; series.json never carries one.
+_PROVENANCE_BLOCK_KEYS: frozenset[str] = frozenset({"PROVENANCE", "provenance"})
+
+# Provenance fields redacted to stable placeholders so the committed bundle stays portable
+# (machine-independent) and reproducible: ``userId`` is the minting user and ``date`` is a
+# non-reproducible wall-clock timestamp. Absolute paths in ``commandLine`` are made portable
+# by path placeholdering (``<OUTPUT_DIR>`` / ``<SOFTWARE_ROOT_DIR>``), not by redaction.
+_REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
+    "userId": "<USER>",
+    "date": "<DATE>",
+}
+
+# Host fields in the provenance ``platform`` sub-block: ``Name`` (hostname) and ``Version`` (kernel)
+# leak host identity and churn the committed digest across machines, so they are redacted; the coarse
+# ``OS`` carries no host identity and is kept.
+_REDACTED_PROVENANCE_PLATFORM_FIELDS: dict[str, str] = {
+    "Name": "<HOSTNAME>",
+    "Version": "<HOST_VERSION>",
+}
 
 
-def _contains_float(obj: object) -> bool:
-    """Return True if ``obj`` (a parsed-JSON structure) has any float leaf (bool excluded)."""
-    if isinstance(obj, bool):
-        return False
-    if isinstance(obj, float):
-        return True
-    if isinstance(obj, dict):
-        return any(_contains_float(v) for v in obj.values())
-    if isinstance(obj, list):
-        return any(_contains_float(v) for v in obj)
-    return False
+def _redact_fields(block: dict[str, object], fields: dict[str, str]) -> bool:
+    """Overwrite each present ``fields`` key in ``block`` with its placeholder; return if changed."""
+    changed = False
+    for field, placeholder in fields.items():
+        if field in block and block[field] != placeholder:
+            block[field] = placeholder
+            changed = True
+    return changed
 
 
-def _round_committed_floats(regression_dir: Path) -> None:
+def _redact_provenance_fields(obj: object) -> bool:
     """
-    Round floats in the committed JSON bundle to seven significant figures in place.
+    Redact the declared provenance fields in every CMEC provenance block of ``obj`` in place.
 
-    Only ``series.json`` / ``diagnostic.json`` are rounded.
-    Full-precision floats in those files churn byte-for-byte
-    between CI and local runs even when numerically identical,
-    producing noisy diffs in the committed (git-tracked) bundle.
-    Rounding stabilises those bytes;
-    seven figures stays an order of magnitude under the regression compare tolerance (``rtol=1e-6``),
-    so a gate verdict is never flipped (see :mod:`climate_ref_core.regression._quantise`).
+    Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block,
+    overwrites the fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders,
+    and the host fields in :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform``.
 
-    Each rounded file is re-serialised with the same JSON parameters used to write it natively,
-    so the only byte difference versus the copied file is reduced float precision.
-    A file is rewritten only when rounding actually changes its parsed content,
-    keeping float-free artefacts byte-identical to the copy.
-    The native blobs and their content-addressed digests are never touched;
-    this operates solely on the copied committed JSON.
+    Returns
+    -------
+    :
+        ``True`` if any field was changed.
+    """
+    changed = False
+    if isinstance(obj, dict):
+        for key, value in obj.items():
+            if key in _PROVENANCE_BLOCK_KEYS and isinstance(value, dict):
+                changed |= _redact_fields(value, _REDACTED_PROVENANCE_FIELDS)
+                platform = value.get("platform")
+                if isinstance(platform, dict):
+                    changed |= _redact_fields(platform, _REDACTED_PROVENANCE_PLATFORM_FIELDS)
+            elif _redact_provenance_fields(value):
+                changed = True
+    elif isinstance(obj, list):
+        for item in obj:
+            if _redact_provenance_fields(item):
+                changed = True
+    return changed
+
+
+def _canonicalise_committed_bundle(regression_dir: Path) -> None:
+    """
+    Rewrite every committed JSON file into its portable, reproducible canonical form, in place.
+
+    For each file in :data:`COMMITTED_BUNDLE_FILES` that is present:
+    round floats to a stable precision (:func:`~climate_ref_core.regression._quantise.round_floats`),
+    redact host/user CMEC provenance (:func:`_redact_provenance_fields`),
+    then re-serialise with :data:`_COMMITTED_JSON_DUMP_KWARGS`.
+
+    The same transform runs on every file so the committed files are deterministic
+    regardless of how the diagnostic originally serialised them,
+    and a mint and a replay on different machines produce identical bytes.
 
     Parameters
     ----------
     regression_dir
         The test case ``regression/`` directory holding the committed bundle.
     """
-    for filename, dump_kwargs in _COMMITTED_FLOAT_JSON_KWARGS.items():
+    for filename in COMMITTED_BUNDLE_FILES:
         path = regression_dir / filename
         if not path.exists():
             continue
-        original = json.loads(path.read_text(encoding="utf-8"))
-        rounded = round_floats(original)
-        if rounded == original:
-            continue
-        path.write_text(json.dumps(rounded, **dump_kwargs), encoding="utf-8")  # type: ignore[arg-type]
-
-    # Check that the unrounded files don't contain floats
-    for filename in _UNROUNDED_COMMITTED_FILES:
-        path = regression_dir / filename
-        if path.exists() and _contains_float(json.loads(path.read_text(encoding="utf-8"))):
-            logger.warning(f"{filename} contains float values but is not float-rounded.")
+        data = round_floats(json.loads(path.read_text(encoding="utf-8")))
+        _redact_provenance_fields(data)
+        # Terminate with a newline so the committed bytes match the manifest serialisation
+        # (Manifest.save) and satisfy POSIX/end-of-file-fixer conventions.
+        path.write_text(
+            json.dumps(data, **_COMMITTED_JSON_DUMP_KWARGS) + "\n",  # type: ignore[arg-type]
+            encoding="utf-8",
+        )
 
 
 def write_committed_bundle(
     source_dir: Path,
     regression_dir: Path,
     *,
-    output_dir: Path,
-    test_data_dir: Path,
+    placeholders: PlaceholderMap,
 ) -> dict[str, str]:
     """
     Write the sanitised committed CMEC bundle into ``regression_dir``.
 
     Copies each committed artefact present in ``source_dir`` into ``regression_dir``,
-    then rewrites absolute paths to portable placeholders in place
-    (:func:`~climate_ref_core.output_files.to_placeholders`).
+    rewrites absolute paths to portable placeholders in place
+    (:meth:`~climate_ref_core.output_files.PlaceholderMap.sanitise`),
+    then canonicalises every committed JSON file -- rounding floats and redacting host/user CMEC
+    provenance into a deterministic on-disk form (:func:`_canonicalise_committed_bundle`).
     When a committed artefact is absent from ``source_dir``,
     any stale copy left in ``regression_dir`` from a previous capture is removed so it is not re-digested.
 
@@ -131,17 +167,30 @@ def write_committed_bundle(
         results directory).
     regression_dir
         The destination ``regression/`` directory (created if needed).
-    output_dir
-        The absolute execution output directory, for path substitution.
-    test_data_dir
-        The absolute provider test-data directory, for path substitution.
+    placeholders
+        The placeholder map for this execution, already bound to the output directory via
+        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`. Its absolute paths are
+        rewritten to portable ``<TOKEN>`` placeholders in the copied bundle.
 
     Returns
     -------
     :
         The committed digests ``{filename: sha256}`` of the bytes just written,
         suitable for :attr:`Manifest.committed`.
+
+    Raises
+    ------
+    ValueError
+        If ``placeholders`` is not bound to an output directory.
+        An unbound map would leave execution-specific output paths in the committed bundle
+        and digest those machine-specific bytes.
     """
+    if not placeholders.is_output_bound:
+        raise ValueError(
+            "placeholders must be bound to an output directory via with_output() "
+            "before writing a committed bundle"
+        )
+
     regression_dir.mkdir(parents=True, exist_ok=True)
 
     for filename in COMMITTED_BUNDLE_FILES:
@@ -153,11 +202,11 @@ def write_committed_bundle(
             # Drop a stale copy from a previous capture so it is not re-digested.
             dest.unlink(missing_ok=True)
 
-    to_placeholders(regression_dir, output_dir=output_dir, test_data_dir=test_data_dir)
-    # Round floats in place before digesting,
-    # so the committed bytes (and their recorded digests) are the stable, rounded ones.
-    # Placeholder substitution only rewrites path strings, so order relative to it does not matter for floats.
-    _round_committed_floats(regression_dir)
+    placeholders.sanitise(regression_dir)
+    # Canonicalise every committed file (round floats, redact provenance, re-dump deterministically)
+    # before digesting, so the recorded digests are over the stable, portable bytes. Placeholder
+    # substitution only rewrites path strings, so its order relative to canonicalisation is immaterial.
+    _canonicalise_committed_bundle(regression_dir)
     return compute_committed_digests(regression_dir)
 
 
@@ -192,10 +241,10 @@ def capture_execution(  # noqa: PLR0913
     result: ExecutionResult,
     *,
     regression_dir: Path,
-    output_dir: Path,
-    test_data_dir: Path,
+    placeholders: PlaceholderMap,
     # TODO: Unify the log handling
     include_log: bool = False,
+    extra_globs: tuple[str, ...] = (),
 ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
     """
     Persist a successful execution and capture its committed bundle + native snapshot.
@@ -217,15 +266,17 @@ def capture_execution(  # noqa: PLR0913
         The successful execution result (must carry a metric bundle filename).
     regression_dir
         The test case ``regression/`` directory for the committed bundle.
-    output_dir
-        The absolute execution output directory, for path substitution.
-    test_data_dir
-        The absolute provider test-data directory, for path substitution.
+    placeholders
+        The placeholder map for this execution, already bound to the output directory via
+        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
     include_log
         If True, the execution log is included in the persisted/native set.
 
         Defaults to False, matching the behaviour of
         :func:`~climate_ref_core.output_files.copy_execution_outputs`.
+    extra_globs
+        Extra output globs to persist beyond the bundle-referenced files
+        (a diagnostic's :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`).
 
     Returns
     -------
@@ -238,14 +289,10 @@ def capture_execution(  # noqa: PLR0913
         fragment,
         result,
         include_log=include_log,
+        extra_globs=extra_globs,
     )
     base_dir = results_directory / fragment
-    committed = write_committed_bundle(
-        base_dir,
-        regression_dir,
-        output_dir=output_dir,
-        test_data_dir=test_data_dir,
-    )
+    committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
     native = build_native_snapshot(base_dir, relpaths)
     return committed, native
 

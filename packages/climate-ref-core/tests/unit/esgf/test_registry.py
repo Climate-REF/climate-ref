@@ -52,6 +52,18 @@ class TestParsePMPClimatologyKey:
         assert result["variable_id"] == "rlds"
         assert result["source_id"] == "CERES-EBAF-4-2"
 
+    def test_parse_hyphenated_institution_id(self):
+        """A hyphenated institution_id (e.g. NASA-GISS) must still parse."""
+        key = (
+            "PMP_obs4MIPsClims/pr/gr/v20260513/"
+            "pr_mon_GPCP-3-3_NASA-GISS_gr_198301-201412_AC_v20260513_2.5x2.5.nc"
+        )
+        result = _parse_pmp_climatology_key(key)
+
+        assert result["variable_id"] == "pr"
+        assert result["source_id"] == "GPCP-3-3"
+        assert result["institution_id"] == "NASA-GISS"
+
     def test_parse_invalid_key_wrong_parts(self):
         """Test parsing a key with wrong number of path parts."""
         key = "invalid/path/structure.nc"

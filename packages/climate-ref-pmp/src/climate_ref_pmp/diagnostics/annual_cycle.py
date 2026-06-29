@@ -16,6 +16,7 @@ from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
+    PMP_RECONSTRUCTION_INPUTS,
     build_glob_pattern,
     build_pmp_command,
     get_model_source_type,
@@ -273,6 +274,8 @@ class AnnualCycle(CommandLineDiagnostic):
     """
     Calculate the annual cycle for a dataset
     """
+
+    reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
     name = "Annual Cycle"
     slug = "annual-cycle"
@@ -571,9 +574,9 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
-        # Find the other outputs: PNG and NetCDF files
-        png_files = list(png_directory.glob("*.png"))
-        data_files = list(data_directory.glob("*.nc"))
+        # Sort so the committed output.json plot/data key order is deterministic across hosts.
+        png_files = [definition.as_relative_path(f) for f in sorted(png_directory.glob("*.png"))]
+        data_files = [definition.as_relative_path(f) for f in sorted(data_directory.glob("*.nc"))]
 
         # Prepare the output bundles
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)

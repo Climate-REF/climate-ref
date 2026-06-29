@@ -30,7 +30,7 @@ from climate_ref_core.datasets import (
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
-from climate_ref_core.output_files import from_placeholders, ordered_replacements
+from climate_ref_core.output_files import PlaceholderMap, ordered_replacements
 from climate_ref_core.paths import safe_path
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
@@ -565,10 +565,8 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     # TODO: Add content regression checks for the CMEC bundles (diagnostic.json /
     # output.json), mirroring `validate_series_regression`. These bundles are only
     # structurally validated here, so a diagnostic can change the metric/output
-    # values without any regression test failing (see issue #703 for the series
-    # equivalent). A content comparison must sanitise the regenerated bundle first
-    # (mapping real paths to the `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` placeholders that
-    # the committed bundles store), as `capture_committed_bundle` does.
+    # values without any regression test failing.
+    # A content comparison must sanitise the regenerated bundle first via `PlaceholderMap.
     assert result.successful, f"Execution failed: {result}"
 
     # Validate metric bundle
@@ -674,6 +672,18 @@ class RegressionValidator:
         """Get paths for this test case."""
         return TestCasePaths.from_test_data_dir(self.test_data_dir, self.diagnostic.slug, self.test_case_name)
 
+    @property
+    def _baseline_placeholders(self) -> PlaceholderMap:
+        """
+        Base placeholder map for this verification context.
+
+        Declared once and reused by both :meth:`load_regression_definition` (hydrate) and
+        :meth:`validate` (series replacements) so the two sides cannot drift to different token sets.
+        This context does not know the shared-software root, so the map omits ``<SOFTWARE_ROOT_DIR>``;
+        each caller binds the per-execution ``<OUTPUT_DIR>`` via :meth:`PlaceholderMap.with_output`.
+        """
+        return PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir)
+
     def has_regression_data(self) -> bool:
         """Check if regression data exists for this test case."""
         regression_path = self.paths.regression
@@ -701,7 +711,7 @@ class RegressionValidator:
         output_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
 
-        from_placeholders(output_dir, output_dir=output_dir, test_data_dir=self.test_data_dir)
+        self._baseline_placeholders.with_output(output_dir).hydrate(output_dir)
 
         datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
 
@@ -722,10 +732,9 @@ class RegressionValidator:
             expected_path=self.paths.regression / "series.json",
             actual_path=definition.output_directory / "series.json",
             slug=self.diagnostic.slug,
-            replacements={
-                str(definition.output_directory): "<OUTPUT_DIR>",
-                str(self.test_data_dir): "<TEST_DATA_DIR>",
-            },
+            replacements=self._baseline_placeholders.with_output(
+                definition.output_directory
+            ).as_replacements(),
         )
 
 

@@ -1679,6 +1679,82 @@ class TestStageCompare:
         assert any("not valid JSON" in f for f in failures)
 
 
+class TestSnapshotNative:
+    """`snapshot_native` sanitises the slot to portable placeholders before digesting (no churn)."""
+
+    @staticmethod
+    def _placeholders(test_data_dir: Path, software_root: Path):
+        from climate_ref_core.output_files import PlaceholderMap
+
+        return PlaceholderMap.for_baseline(test_data_dir=test_data_dir, software_root_dir=software_root)
+
+    @staticmethod
+    def _source(output_dir: Path):
+        # snapshot_native only reads source.bundle_output_dir; the result is irrelevant here.
+        from climate_ref.cli.test_cases._stages import SourceOutputs
+
+        return SourceOutputs(result=None, bundle_output_dir=output_dir)
+
+    @staticmethod
+    def _populate_slot(slot: Path, output_dir: Path, test_data_dir: Path, software_root: Path) -> None:
+        slot.mkdir(parents=True, exist_ok=True)
+        # A text artefact embedding all three absolute roots, plus a binary blob left alone.
+        (slot / "output.json").write_text(
+            json.dumps(
+                {
+                    "out": f"{output_dir}/index.html",
+                    "ref": f"{test_data_dir}/obs.nc",
+                    "sw": f"{software_root}/conda/bin/tool",
+                }
+            )
+        )
+        (slot / "data.nc").write_bytes(b"\x00BINARY\x01")
+
+    def test_native_blobs_are_placeholderised_before_snapshot(self, tmp_path):
+        from climate_ref.cli.test_cases._stages import snapshot_native
+
+        slot = tmp_path / "slot"
+        output_dir = tmp_path / "execution-output"
+        test_data_dir = tmp_path / "provider-data"
+        software_root = tmp_path / "software"
+        self._populate_slot(slot, output_dir, test_data_dir, software_root)
+
+        native = snapshot_native(
+            slot,
+            source=self._source(output_dir),
+            placeholders=self._placeholders(test_data_dir, software_root),
+        )
+
+        text = (slot / "output.json").read_text()
+        assert str(output_dir) not in text
+        assert str(test_data_dir) not in text
+        assert str(software_root) not in text
+        assert "<OUTPUT_DIR>" in text and "<TEST_DATA_DIR>" in text and "<SOFTWARE_ROOT_DIR>" in text
+        # Both native files are snapshotted; the binary blob is byte-for-byte intact.
+        assert set(native) == {"output.json", "data.nc"}
+        assert (slot / "data.nc").read_bytes() == b"\x00BINARY\x01"
+
+    def test_digests_are_machine_independent(self, tmp_path):
+        """Different absolute roots on two hosts produce identical native digests (no churn)."""
+        from climate_ref.cli.test_cases._stages import snapshot_native
+
+        def _snapshot_for(host: str, output_dir: Path, test_data_dir: Path, software_root: Path):
+            slot = tmp_path / host / "slot"
+            self._populate_slot(slot, output_dir, test_data_dir, software_root)
+            return snapshot_native(
+                slot,
+                source=self._source(output_dir),
+                placeholders=self._placeholders(test_data_dir, software_root),
+            )
+
+        native_a = _snapshot_for(
+            "host-a", tmp_path / "a" / "deep" / "exec", tmp_path / "a" / "td", tmp_path / "a" / "sw"
+        )
+        native_b = _snapshot_for("host-b", tmp_path / "b", tmp_path / "b2", tmp_path / "b3")
+
+        assert {k: v.sha256 for k, v in native_a.items()} == {k: v.sha256 for k, v in native_b.items()}
+
+
 class TestReplayCommand:
     """Tests for the `test-cases replay` CLI verb."""
 

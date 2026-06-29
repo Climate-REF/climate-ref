@@ -101,6 +101,28 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
         """
 
+    def reduce_recipe_for_regression_fixture(
+        self,
+        recipe: Recipe,
+        definition: ExecutionDefinition,
+    ) -> None:
+        """
+        Optionally shrink the recipe for a regression-fixture run.
+
+        Hook for diagnostics whose full recipe would produce a large committed
+        regression bundle (e.g. many regions over a long timeseries). It is called for
+        every execution, so implementations must gate on the run being a regression
+        fixture -- ``definition.key`` starts with ``"test-"`` -- to ensure production
+        runs are never altered. No-op by default.
+
+        Parameters
+        ----------
+        recipe:
+            The recipe to update in place.
+        definition:
+            The execution definition; its ``key`` identifies regression-fixture runs.
+        """
+
     @staticmethod
     def format_result(
         result_dir: Path,
@@ -194,6 +216,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         }
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
+        self.reduce_recipe_for_regression_fixture(recipe, definition)
         rewrite_mip_for_cmip7(recipe)
         fix_annual_statistics_keep_year(recipe)
         recipe_txt = yaml.safe_dump(recipe, sort_keys=False)

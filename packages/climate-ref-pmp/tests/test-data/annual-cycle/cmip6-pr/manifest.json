@@ -1,0 +1,68 @@
+{
+  "catalog_hash": "326fc588c4f244b1efdeade4f781bc72b0c73ba6",
+  "committed": {
+    "diagnostic.json": "d0180207e56d246e8ab54a8365b758ca1eabacf531585b1a8ac54d3cc5e4bd7a",
+    "output.json": "62f8d92c40e3a93b6f4feb4b4de84784a5feff3faf3279e4f5decb661543674a",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "f9bc138ec6090e97f4f42a5cc6e83bac2a2fb022178437698604b18721d027c9",
+      "size": 7866
+    },
+    "output.json": {
+      "sha256": "122052ce25e2a3da5cc7deb0f95befe85fee69bb4279f395c887f11381bfa673",
+      "size": 4438
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_AC_basicTest.png": {
+      "sha256": "95e3fcaa20f00477e38959a7dbd4a72a7a608bc168789b91aeca589c2d5e22f0",
+      "size": 349729
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_DJF_basicTest.png": {
+      "sha256": "79374c381aa602e82351284dd0e225ade34d0c97004784b2805c1282c7cf1b13",
+      "size": 352811
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_JJA_basicTest.png": {
+      "sha256": "78e1c9d89ba1d9e0ca4bb80c4041bd2b498416956ff1c3af6aa253d431fafbe3",
+      "size": 349441
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_MAM_basicTest.png": {
+      "sha256": "84a7b0a069eb4febe33d619d47d30e2535b9565e12d41c4521f5414818d1e9da",
+      "size": 350694
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_doubleITCZ_SON_basicTest.png": {
+      "sha256": "0e1a04494952d0d704ce199c8f2a4d19fda521e4529ee9029a3d370a1b576101",
+      "size": 351642
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
+      "sha256": "3c6e696df54949eeec64f0ad5f71180b79486d5f7831650d3a03e70b77ca1639",
+      "size": 448683
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
+      "sha256": "149b0fccaaa00fee0dfa8d18080574b3bace64a2ba7ed0228a6202a6202361f2",
+      "size": 461598
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
+      "sha256": "ad497844aadd541856b22b27da49e539f6a68c84c7401ef0583418af58545782",
+      "size": 460324
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
+      "sha256": "dbf74faad95deb9f55dbfbdb9a8d0cfb2ffda288440467289fa4a7d39806ec3d",
+      "size": 452255
+    },
+    "pr/pr_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
+      "sha256": "8aa90c9e80102d342eacdb681888ec2fe5ce8b00c552a737aeff39e884e5068b",
+      "size": 462489
+    },
+    "pr_2.5x2.5_regrid2_metrics_basicTest_cmec.json": {
+      "sha256": "b378d237f2986a4213b69b74b3cc6657a4b7bc21372f7f796f6981896c33ae41",
+      "size": 21773
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

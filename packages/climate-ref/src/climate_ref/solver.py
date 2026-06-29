@@ -623,17 +623,13 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     logger.info("Solving for diagnostics that require recalculation...")
 
     # A dry run is a read-only preview: it must not create execution groups,
-    # reap stale executions, or build/submit to an executor. Instead of reaping,
-    # it passes the same stale cutoff to ``should_run`` so abandoned executions are
-    # previewed as runnable without mutating the database.
+    # reap stale executions, or build/submit to an executor.
     stale_cutoff = None
     if dry_run:
         stale_cutoff = _stale_execution_cutoff()
     else:
-        # Reap any executions that were left in-progress by a previous run that
-        # crashed, hit walltime, or otherwise lost its result-handling callback.
-        # Without this sweep, ``ExecutionGroup.should_run`` keeps returning False
-        # for these rows and the group is never retried.
+        # Reap any executions that were left in-progress by a previous run that crashed,
+        # hit walltime, or otherwise lost its result-handling callback.
         fail_stale_in_progress_executions(db)
 
     executor = None if dry_run else config.executor.build(config, db)
@@ -688,8 +684,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         # are created correctly before potentially executing out of process
         with db.session.begin():
             if dry_run:
-                # Read-only preview: look the group up without creating it. A group
-                # that does not exist yet is one this solve *would* create and run.
+                # Read-only preview: look the group up without creating it.
+                # A group that does not exist yet is one this solve *would* create and run.
                 execution_group = (
                     db.session.query(ExecutionGroup)
                     .filter_by(
@@ -730,8 +726,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 f"provider_count={provider_count}"
             )
 
-            # A not-yet-created group (dry-run only) would always run; an existing
-            # group defers to its should_run logic.
+            # A not-yet-created group (dry-run only) would always run;
+            # an existing group defers to its should_run logic.
             if execution_group is not None and not execution_group.should_run(
                 definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
             ):
@@ -750,8 +746,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 if limit is not None and total_count >= limit:
                     limit_reached = True
             else:
-                # Only the dry-run branch leaves the group unresolved; here it is
-                # always the row returned by get_or_create above.
+                # Only the dry-run branch leaves the group unresolved
                 assert execution_group is not None
                 logger.info(
                     f"Running new execution for execution group: {potential_execution.execution_slug()!r}"

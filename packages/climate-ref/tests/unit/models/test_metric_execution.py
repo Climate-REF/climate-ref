@@ -104,11 +104,7 @@ class TestMetricExecution:
         assert ExecutionGroup.should_run(execution, "dataset_hash", rerun_failed=True)
 
     def test_should_run_stale_in_progress_dirty(self, mocker):
-        """A stale in-progress execution is treated as failed under a dry-run cutoff.
-
-        A real solve reaps it before evaluating should_run, so a dry-run preview must
-        report the dirty group as runnable rather than hiding it as in-progress.
-        """
+        """A stale in-progress execution is treated as failed under a dry-run cutoff"""
         execution = mocker.Mock(spec=ExecutionGroup)
         execution_result = mocker.Mock(spec=Execution)
 

@@ -21,8 +21,9 @@ def _validate_provider_filter(config: "Config", provider: list[str] | None) -> N
     """
     Fail loudly when no configured provider can satisfy the solve.
 
-    Without this, ``ref solve`` (or ``ref solve --provider <typo>``) exits 0 having
-    done nothing, which looks like success. Provider matching mirrors the solver:
+    Without this, ``ref solve`` (or ``ref solve --provider <typo>``) exits 0 having done nothing,
+    which looks like success.
+    Provider matching mirrors the solver:
     a filter matches a provider when it is a case-insensitive substring of the slug.
     """
     from climate_ref_core.providers import import_provider

@@ -44,8 +44,8 @@ class TestSolve:
     def test_solve_with_filters(self, sample_data_dir, db, invoke_cli, mocker, config):
         from climate_ref.config import DiagnosticProviderConfig
 
-        # The provider filter is validated against configured providers, so the
-        # filtered providers must be configured for this parsing test.
+        # The provider filter is validated against configured providers,
+        # so the filtered providers must be configured for this parsing test.
         config.diagnostic_providers = [
             DiagnosticProviderConfig(provider="climate_ref_esmvaltool"),
             DiagnosticProviderConfig(provider="climate_ref_ilamb"),

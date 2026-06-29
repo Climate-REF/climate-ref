@@ -119,11 +119,10 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
         rerun_failed
             Re-run the group even if the last execution failed and the group is not dirty.
         stale_cutoff
-            When provided, an in-progress execution created before this timestamp is
-            treated as already failed. A real solve reaps such abandoned executions
-            (via ``fail_stale_in_progress_executions``) before evaluating this method;
-            a read-only dry-run passes the same cutoff here so its preview matches what
-            the next solve would run, without mutating the database.
+            When provided,
+            an in-progress execution created before this timestamp is treated as already failed.
+            A real solve reaps such abandoned executions (via ``fail_stale_in_progress_executions``)
+            before evaluating this method.
         """
         if not self.executions:
             logger.debug(f"Execution group {self.diagnostic.slug}/{self.key} was never executed")
@@ -138,8 +137,6 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
             )
             return True
 
-        # A stale in-progress execution will be reaped (marked failed) by the next real
-        # solve, so treat it as failed when a cutoff is supplied (dry-run preview).
         treat_as_failed = (
             last_execution.successful is None
             and stale_cutoff is not None

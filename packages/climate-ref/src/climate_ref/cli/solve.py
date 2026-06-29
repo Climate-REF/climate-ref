@@ -1,10 +1,47 @@
-from typing import Annotated
+from typing import TYPE_CHECKING, Annotated
 
 import typer
+from loguru import logger
 
 from climate_ref.cli._utils import parse_facet_filters
 
+if TYPE_CHECKING:
+    from climate_ref.config import Config
+
 app = typer.Typer()
+
+_PROVIDER_REMEDIATION = (
+    "Configure a diagnostic provider before solving:\n"
+    "  - install one, e.g. `pip install 'climate-ref[aft-providers]'` or `pip install climate-ref-example`\n"
+    "  - then regenerate your configuration, or add it under [[diagnostic_providers]] in ref.toml"
+)
+
+
+def _validate_provider_filter(config: "Config", provider: list[str] | None) -> None:
+    """
+    Fail loudly when no configured provider can satisfy the solve.
+
+    Without this, ``ref solve`` (or ``ref solve --provider <typo>``) exits 0 having
+    done nothing, which looks like success. Provider matching mirrors the solver:
+    a filter matches a provider when it is a case-insensitive substring of the slug.
+    """
+    from climate_ref_core.providers import import_provider
+
+    configured = [import_provider(p.provider).slug for p in config.diagnostic_providers]
+
+    if not configured:
+        logger.error("No diagnostic providers are configured.\n" + _PROVIDER_REMEDIATION)
+        raise typer.Exit(code=1)
+
+    if provider:
+        matched = [slug for slug in configured if any(f.lower() in slug for f in provider)]
+        if not matched:
+            available = ", ".join(configured)
+            logger.error(
+                f"No configured providers match the --provider filter {provider}. "
+                f"Available providers: {available}.\n" + _PROVIDER_REMEDIATION
+            )
+            raise typer.Exit(code=1)
 
 
 @app.command()
@@ -90,6 +127,8 @@ def solve(  # noqa: PLR0913
 
     config = ctx.obj.config
     db = ctx.obj.database
+
+    _validate_provider_filter(config, provider)
 
     try:
         parsed_dataset_filters = parse_facet_filters(dataset_filter) or None

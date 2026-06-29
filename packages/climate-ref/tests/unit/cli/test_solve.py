@@ -41,7 +41,17 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
         assert kwargs["dry_run"]
 
-    def test_solve_with_filters(self, sample_data_dir, db, invoke_cli, mocker):
+    def test_solve_with_filters(self, sample_data_dir, db, invoke_cli, mocker, config):
+        from climate_ref.config import DiagnosticProviderConfig
+
+        # The provider filter is validated against configured providers, so the
+        # filtered providers must be configured for this parsing test.
+        config.diagnostic_providers = [
+            DiagnosticProviderConfig(provider="climate_ref_esmvaltool"),
+            DiagnosticProviderConfig(provider="climate_ref_ilamb"),
+        ]
+        config.save()
+
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(
             [
@@ -58,6 +68,25 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
         assert kwargs["filters"].diagnostic == ["global-mean-timeseries"]
         assert kwargs["filters"].provider == ["esmvaltool", "ilamb"]
+
+    def test_solve_provider_filter_no_match_fails(self, sample_data_dir, db, invoke_cli, mocker):
+        # A --provider filter that matches no configured provider must fail loudly
+        # rather than exiting 0 having done nothing.
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        result = invoke_cli(["solve", "--provider", "does-not-exist"], expected_exit_code=1)
+
+        assert "No configured providers match" in result.stderr
+        mock_solve.assert_not_called()
+
+    def test_solve_no_providers_configured_fails(self, sample_data_dir, db, invoke_cli, mocker, config):
+        config.diagnostic_providers = []
+        config.save()
+
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        result = invoke_cli(["solve"], expected_exit_code=1)
+
+        assert "No diagnostic providers are configured" in result.stderr
+        mock_solve.assert_not_called()
 
     def test_solve_with_dataset_filter(self, sample_data_dir, db, invoke_cli, mocker):
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")

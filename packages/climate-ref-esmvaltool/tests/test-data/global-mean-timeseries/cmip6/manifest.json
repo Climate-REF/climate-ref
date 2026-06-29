@@ -1,0 +1,40 @@
+{
+  "catalog_hash": "4a4bb41808b6038a7a101e7201f4f2b40cc33750",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "ec46b24f66ebe4116471f65b6da7b1b141cd5fdc6683baba7b09c5f9579c207d",
+    "series.json": "6e2a7bfbf5eb29f4380344a81b7022c772e2d5b22620266af47b739f6c92e5d6"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "ed1e3aea3cc7611de276cd28ec8352e6b5751f073b073d2075bc3a6196674024",
+      "size": 13269
+    },
+    "executions/recipe/plots/timeseries/script1/png/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_18500116T120000-20141216T120000.png": {
+      "sha256": "5676677d63348c156f94d939b2624c75b2afc819998ef75a60bb8e64d7acc96f",
+      "size": 36916
+    },
+    "executions/recipe/run/timeseries/script1/diagnostic_provenance.yml": {
+      "sha256": "40c4bd8202be7c967ced00c219c5d85914c1c2fc9f055255d14697ef870fb7e3",
+      "size": 1042
+    },
+    "executions/recipe/work/timeseries/script1/CMIP6_CanESM5_Amon_historical_r1i1p1f1_tas_gn_18500116T120000-20141216T120000.nc": {
+      "sha256": "df8f6c3e12024f76e83bc87daccb7ec4f67964c78864eb2dc69798f9ca55400d",
+      "size": 31605
+    },
+    "output.json": {
+      "sha256": "549e6588ac73c81d6b935f0ba01fd2b659e6521316272c3a018925912c0e9365",
+      "size": 1614
+    },
+    "series.json": {
+      "sha256": "373fae95f32780f7fa58529e5cc860d2abd4100fcb92f4d241aa68b10b4b8cb1",
+      "size": 9827
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

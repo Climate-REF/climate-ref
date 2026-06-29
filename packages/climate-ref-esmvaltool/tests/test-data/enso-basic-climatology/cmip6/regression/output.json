@@ -1,0 +1,248 @@
+{
+  "data": {
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_pr_bias.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the time-mean pr structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_pr_bias.nc",
+      "long_name": "Zonal bias in the time-mean precipitation structure across the equatorial Pacific (averaged between 5°S-5°N), illustrating the increased precipitation in the eastern Pacific and decreased precipitation in the western Pacific."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_pr_seacycle.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the amplitude of the mean seasonal cycle of pr in the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_pr_seacycle.nc",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of precipitation in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_sst_bias.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the time-mean sst structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_sst_bias.nc",
+      "long_name": "Zonal bias in the sea surface temperature structure across the equatorial Pacific (averaged between 5°S-5°N), primarily illustrating the cold tongue bias (typically warmer near South America and cooler further west)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_sst_seacycle.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the amplitude of the mean seasonal cycle of sst in the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_sst_seacycle.nc",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of sea surface temperature in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_tauu_bias.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the time-mean tauu structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_tauu_bias.nc",
+      "long_name": "Zonal bias in the structure of zonal wind stress across the equatorial Pacific (averaged between 5°S-5°N), primarily highlighting the trade winds bias (typically weaker circulation in the central Pacific and stronger in the western Pacific)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_tauu_seacycle.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the amplitude of the mean seasonal cycle of tauu in the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_eq_tauu_seacycle.nc",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of zonal wind stress in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_pr_double.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "meridional bias in the time-mean pr structure across the eastern Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_pr_double.nc",
+      "long_name": "Meridional bias in the time-mean precipitation structure across the eastern Pacific (averaged between 150-90°W), primarily illustrating the double intertropical convergence zone (ITCZ) bias."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_pr_double_seacycle.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "meridional bias in the amplitude of the mean seasonal pr cycle in the eastern Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/CanESM5_pr_double_seacycle.nc",
+      "long_name": "Meridional bias in the amplitude of the mean seasonal precipitation cycle in the eastern Pacific (averaged between 150-90°W). "
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_bias.nc": {
+      "description": "",
+      "dimensions": {
+        "reference_source_id": "GPCP-V2.3",
+        "statistic": "zonal bias in the time-mean pr structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_bias.nc",
+      "long_name": "Zonal bias in the time-mean precipitation structure across the equatorial Pacific (averaged between 5°S-5°N), illustrating the increased precipitation in the eastern Pacific and decreased precipitation in the western Pacific."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_seacycle.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_eq_pr_seacycle.nc",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of precipitation in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double.nc",
+      "long_name": "Meridional bias in the time-mean precipitation structure across the eastern Pacific (averaged between 150-90°W), primarily illustrating the double intertropical convergence zone (ITCZ) bias."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double_seacycle.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "meridional bias in the amplitude of the mean seasonal pr cycle in the eastern Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/GPCP-V2.3_pr_double_seacycle.nc",
+      "long_name": "Meridional bias in the amplitude of the mean seasonal precipitation cycle in the eastern Pacific (averaged between 150-90°W). "
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_bias.nc": {
+      "description": "",
+      "dimensions": {
+        "reference_source_id": "TROPFLUX",
+        "statistic": "zonal bias in the time-mean sst structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_bias.nc",
+      "long_name": "Zonal bias in the sea surface temperature structure across the equatorial Pacific (averaged between 5°S-5°N), primarily illustrating the cold tongue bias (typically warmer near South America and cooler further west)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_seacycle.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_sst_seacycle.nc",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of sea surface temperature in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_bias.nc": {
+      "description": "",
+      "dimensions": {
+        "reference_source_id": "TROPFLUX",
+        "statistic": "zonal bias in the time-mean tauu structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_bias.nc",
+      "long_name": "Zonal bias in the structure of zonal wind stress across the equatorial Pacific (averaged between 5°S-5°N), primarily highlighting the trade winds bias (typically weaker circulation in the central Pacific and stronger in the western Pacific)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_seacycle.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/TROPFLUX_eq_tauu_seacycle.nc",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of zonal wind stress in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv",
+      "long_name": "List of metric values."
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_pr_map_bias_level2.png": {
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_pr_map_bias_level2.png",
+      "long_name": "Time-mean precipitation bias in the equatorial Pacific, primarily highlighting the double intertropical convergence zone (ITCZ) bias."
+    },
+    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_pr_map_sea_cyclel2.png": {
+      "description": "",
+      "dimensions": {
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_pr_map_sea_cyclel2.png",
+      "long_name": "Bias in the amplitude of the mean seasonal cycle of precipitation in the equatorial Pacific."
+    },
+    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_tauu_map_bias_level2.png": {
+      "description": "",
+      "dimensions": {
+        "variable_id": "tauu"
+      },
+      "filename": "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_tauu_map_bias_level2.png",
+      "long_name": "Time-mean zonal wind stress bias in the equatorial Pacific."
+    },
+    "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_tos_map_bias_level2.png": {
+      "description": "",
+      "dimensions": {
+        "variable_id": "tos"
+      },
+      "filename": "executions/recipe/plots/diagnostic_level2/plot_script/png/CanESM5_tos_map_bias_level2.png",
+      "long_name": "Time-mean sea surface temperature bias in the equatorial Pacific."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_pr_bias.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the time-mean pr structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_pr_bias.png",
+      "long_name": "Zonal bias in the time-mean precipitation structure across the equatorial Pacific (averaged between 5°S-5°N), illustrating the increased precipitation in the eastern Pacific and decreased precipitation in the western Pacific."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_pr_seacycle.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the amplitude of the mean seasonal cycle of pr in the equatorial Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_pr_seacycle.png",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of precipitation in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_sst_bias.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the time-mean sst structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_sst_bias.png",
+      "long_name": "Zonal bias in the sea surface temperature structure across the equatorial Pacific (averaged between 5°S-5°N), primarily illustrating the cold tongue bias (typically warmer near South America and cooler further west)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_sst_seacycle.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the amplitude of the mean seasonal cycle of sst in the equatorial Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_sst_seacycle.png",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of sea surface temperature in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_tauu_bias.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the time-mean tauu structure across the equatorial Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_tauu_bias.png",
+      "long_name": "Zonal bias in the structure of zonal wind stress across the equatorial Pacific (averaged between 5°S-5°N), primarily highlighting the trade winds bias (typically weaker circulation in the central Pacific and stronger in the western Pacific)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_tauu_seacycle.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal bias in the amplitude of the mean seasonal cycle of tauu in the equatorial Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_eq_tauu_seacycle.png",
+      "long_name": "Zonal bias in the amplitude of the mean seasonal cycle of zonal wind stress in the equatorial Pacific (averaged between 5°S-5°N)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_pr_double.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "meridional bias in the time-mean pr structure across the eastern Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_pr_double.png",
+      "long_name": "Meridional bias in the time-mean precipitation structure across the eastern Pacific (averaged between 150-90°W), primarily illustrating the double intertropical convergence zone (ITCZ) bias."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_pr_double_seacycle.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "meridional bias in the amplitude of the mean seasonal pr cycle in the eastern Pacific"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_pr_double_seacycle.png",
+      "long_name": "Meridional bias in the amplitude of the mean seasonal precipitation cycle in the eastern Pacific (averaged between 150-90°W). "
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

@@ -279,6 +279,12 @@ def get_child_and_parent_dataset(
         calendar=child_attrs["calendar"],
     )
     child_start = child_df["start_time"].dropna().min()
+    if isinstance(child_start, str):
+        # Catalogs serialised to YAML store start_time as an ISO-like string
+        # but the database returns CFDatetime objects.
+        child_start = cftime.datetime.strptime(
+            child_start, "%Y-%m-%d %H:%M:%S", calendar=child_attrs["calendar"]
+        )
     parent_start = child_start + (branch_time_in_parent - branch_time_in_child)
 
     # Create the datasets for use in the recipe.

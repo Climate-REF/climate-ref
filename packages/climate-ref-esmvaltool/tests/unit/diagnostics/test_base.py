@@ -7,7 +7,10 @@ import pytest
 import xarray as xr
 import yaml
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
-from climate_ref_esmvaltool.diagnostics.regional_historical_changes import _region_to_filename
+from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
+    RegionalHistoricalTimeSeries,
+    _region_to_filename,
+)
 from climate_ref_esmvaltool.types import Recipe
 
 from climate_ref_core.datasets import SourceDatasetType
@@ -399,3 +402,43 @@ def test_reconstruction_inputs_capture_provenance_for_replay(metric_definition, 
     rebuilt_bundle = json.loads(rebuilt.to_output_path(rebuilt.output_bundle_filename).read_text())
     assert set(rebuilt_bundle[OutputCV.DATA.value]) == set(original_bundle[OutputCV.DATA.value])
     assert set(rebuilt_bundle[OutputCV.PLOTS.value]) == set(original_bundle[OutputCV.PLOTS.value])
+
+
+def _recipe_with_region_preprocessors(regions: list[str]) -> Recipe:
+    """A minimal recipe with two extract_shape preprocessors and one without."""
+    return {
+        "preprocessors": {
+            "pp": {"extract_shape": {"shapefile": "ar6", "ids": {"Name": list(regions)}}},
+            "pp_200": {"extract_shape": {"shapefile": "ar6", "ids": {"Name": list(regions)}}},
+            "pp_no_shape": {"custom_order": True},
+        },
+    }
+
+
+def test_reduce_recipe_for_regression_fixture_subsets_regions(mocker):
+    """A test-fixture run keeps only ``test_regions`` in every extract_shape step."""
+    diagnostic = RegionalHistoricalTimeSeries()
+    full_regions = ["Arabian-Peninsula", "Arctic-Ocean", "C.North-America", "Mediterranean", "S.Asia"]
+    recipe = _recipe_with_region_preprocessors(full_regions)
+    definition = mocker.Mock(spec=ExecutionDefinition, key="test-cmip6")
+
+    diagnostic.reduce_recipe_for_regression_fixture(recipe, definition)
+
+    expected = list(diagnostic.test_regions)
+    assert recipe["preprocessors"]["pp"]["extract_shape"]["ids"]["Name"] == expected
+    assert recipe["preprocessors"]["pp_200"]["extract_shape"]["ids"]["Name"] == expected
+    # Preprocessors without an extract_shape step are left untouched.
+    assert recipe["preprocessors"]["pp_no_shape"] == {"custom_order": True}
+
+
+def test_reduce_recipe_for_regression_fixture_noop_for_production(mocker):
+    """A production run (non ``test-`` key) keeps the full region set unchanged."""
+    diagnostic = RegionalHistoricalTimeSeries()
+    full_regions = ["Arabian-Peninsula", "Arctic-Ocean", "C.North-America", "Mediterranean", "S.Asia"]
+    recipe = _recipe_with_region_preprocessors(full_regions)
+    definition = mocker.Mock(spec=ExecutionDefinition, key="CanESM5_r1i1p1f1_gn")
+
+    diagnostic.reduce_recipe_for_regression_fixture(recipe, definition)
+
+    assert recipe["preprocessors"]["pp"]["extract_shape"]["ids"]["Name"] == full_regions
+    assert recipe["preprocessors"]["pp_200"]["extract_shape"]["ids"]["Name"] == full_regions

@@ -1,0 +1,95 @@
+{
+  "data": {
+    "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Northern Hemisphere",
+        "statistic": "September sea ice area"
+      },
+      "filename": "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+      "long_name": "Time series of NH September/SH February sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    },
+    "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Southern Hemisphere",
+        "statistic": "February sea ice area"
+      },
+      "filename": "executions/recipe/work/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+      "long_name": "Time series of NH September/SH February sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    },
+    "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Northern Hemisphere",
+        "statistic": "20-year average seasonal cycle of the sea ice area"
+      },
+      "filename": "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+      "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    },
+    "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc": {
+      "description": "",
+      "dimensions": {
+        "region": "Southern Hemisphere",
+        "statistic": "20-year average seasonal cycle of the sea ice area"
+      },
+      "filename": "executions/recipe/work/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.nc",
+      "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Northern Hemisphere",
+        "statistic": "September sea ice area"
+      },
+      "filename": "executions/recipe/plots/siarea_min/allplots/timeseries_sea_ice_area_nh_sep_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+      "long_name": "Time series of NH September/SH February sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    },
+    "executions/recipe/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Southern Hemisphere",
+        "statistic": "February sea ice area"
+      },
+      "filename": "executions/recipe/plots/siarea_min/allplots/timeseries_sea_ice_area_sh_feb_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+      "long_name": "Time series of NH September/SH February sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    },
+    "executions/recipe/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Northern Hemisphere",
+        "statistic": "20-year average seasonal cycle of the sea ice area"
+      },
+      "filename": "executions/recipe/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_nh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+      "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    },
+    "executions/recipe/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png": {
+      "description": "",
+      "dimensions": {
+        "region": "Southern Hemisphere",
+        "statistic": "20-year average seasonal cycle of the sea ice area"
+      },
+      "filename": "executions/recipe/plots/siarea_seas/allplots/annual_cycle_sea_ice_area_sh_ambiguous_dataset_ambiguous_mip_historical_r1i1p1f1.png",
+      "long_name": "20-year average seasonal cycle of the sea ice area in million km2 from CanESM5.r1i1p1f1.gn compared with OSI-450."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

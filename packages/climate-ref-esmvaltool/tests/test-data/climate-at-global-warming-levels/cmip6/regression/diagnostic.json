@@ -1,0 +1,40 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "ssp245": {}
+    },
+    "global_warming_level": {
+      "1.5": {},
+      "2.0": {},
+      "3.0": {},
+      "4.0": {}
+    },
+    "json_structure": [
+      "experiment_id",
+      "global_warming_level",
+      "metric"
+    ],
+    "metric": {
+      "exceedance_year": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "ssp245": {
+      "1.5": {
+        "exceedance_year": 2013
+      },
+      "2.0": {
+        "exceedance_year": 2024
+      },
+      "3.0": {
+        "exceedance_year": 2050
+      },
+      "4.0": {
+        "exceedance_year": 2084
+      }
+    }
+  }
+}

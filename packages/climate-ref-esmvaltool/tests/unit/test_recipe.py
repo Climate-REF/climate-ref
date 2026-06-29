@@ -76,6 +76,56 @@ def test_get_child_and_parent_dataset():
     }
 
 
+def test_get_child_and_parent_dataset_string_start_time():
+    # When a catalog is loaded from YAML, start_time round-trips as an ISO-like string
+    # Also needs a calendar
+    df = pd.DataFrame(
+        {
+            "instance_id": [
+                "CMIP6.CMIP.CCCma.CanESM5.1pctCO2.r1i1p1f1.Amon.tas.gn.v20190429",
+                "CMIP6.CMIP.CCCma.CanESM5.piControl.r1i1p1f1.Amon.tas.gn.v20190429",
+            ],
+            "activity_id": ["CMIP", "CMIP"],
+            "branch_time_in_child": [0.0, 1223115.0],
+            "branch_time_in_parent": [1223115.0, 1223115.0],
+            "experiment_id": ["1pctCO2", "piControl"],
+            "grid_label": ["gn", "gn"],
+            "institution_id": ["CCCma", "CCCma"],
+            "source_id": ["CanESM5", "CanESM5"],
+            "table_id": ["Amon", "Amon"],
+            "variable_id": ["tas", "tas"],
+            "variant_label": ["r1i1p1f1", "r1i1p1f1"],
+            "member_id": ["r1i1p1f1", "r1i1p1f1"],
+            "start_time": [
+                "1850-01-16 12:00:00",
+                "5201-01-16 12:00:00",
+            ],
+            "end_time": [
+                "1989-12-16 12:00:00",
+                "5340-12-16 12:00:00",
+            ],
+            "time_units": ["days since 1850-01-01", "days since 1850-01-01"],
+            "calendar": ["365_day", "365_day"],
+            "path": [
+                "tas_Amon_CanESM5_1pctCO2_r1i1p1f1_gn_185001-198912.nc",
+                "tas_Amon_CanESM5_piControl_r1i1p1f1_gn_520101-534012.nc",
+            ],
+            "version": ["v20190429", "v20190429"],
+        }
+    )
+
+    child, parent = get_child_and_parent_dataset(
+        df,
+        parent_experiment="piControl",
+        child_duration_in_years=140,
+        parent_offset_in_years=0,
+        parent_duration_in_years=140,
+    )
+
+    assert child["timerange"] == "1850/1989"
+    assert parent["timerange"] == "5201/5340"
+
+
 def test_as_facets_uses_activity_from_instance_id():
     """activity_id can be space-separated (e.g. 'C4MIP CDRMIP').
 

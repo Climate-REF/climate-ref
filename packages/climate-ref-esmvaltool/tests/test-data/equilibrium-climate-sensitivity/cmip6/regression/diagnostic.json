@@ -1,0 +1,42 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "member_id",
+      "source_id",
+      "region",
+      "metric"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "ecs": {},
+      "lambda": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "CanESM5": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "gn": {
+      "r1i1p1f1": {
+        "CanESM5": {
+          "global": {
+            "ecs": 5.615868,
+            "lambda": -0.6587246
+          }
+        }
+      }
+    }
+  }
+}

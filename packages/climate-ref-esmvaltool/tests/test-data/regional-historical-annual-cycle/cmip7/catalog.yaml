@@ -1,0 +1,231 @@
+_metadata:
+  hash: ea67fe0eef24fbd1fdad84837e37f1ca1cd73cc9
+cmip7:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: areacella_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: null
+    filename: areacella_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos land
+    region: glb
+    source_id: CanESM5
+    standard_name: cell_area
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/3b2dd0bb-aef7-437c-8147-5b47446cf48c
+    units: m2
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: hus_tavg-p19-hxy-u
+    branding_suffix: tavg-p19-hxy-u
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: hus_tavg-p19-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.hus.tavg-p19-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Specific Humidity
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: specific_humidity
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/44c69107-7ca2-4e4c-9437-70ab199413f2
+    units: '1'
+    variable_id: hus
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: pr_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: pr_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.pr.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Precipitation
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: precipitation_flux
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/f8ed8043-a5d4-4d41-a798-cc7d01ef73e7
+    units: kg m-2 s-1
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: psl_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: psl_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.psl.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Level Pressure
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: air_pressure_at_mean_sea_level
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/04859d8a-f0ba-43f1-b2cd-e65a81612541
+    units: Pa
+    variable_id: psl
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: tas_tavg-h2m-hxy-u
+    branding_suffix: tavg-h2m-hxy-u
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Near-Surface Air Temperature
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: air_temperature
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/29fd6a7f-a383-46d5-9ca1-17b215ccbaf3
+    units: K
+    variable_id: tas
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: ua_tavg-p19-hxy-air
+    branding_suffix: tavg-p19-hxy-air
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: ua_tavg-p19-hxy-air_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.ua.tavg-p19-hxy-air.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Eastward Wind
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: eastward_wind
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/0a4ba27f-d588-4c69-a24a-29ca355d3ce6
+    units: m s-1
+    variable_id: ua
+    variant_label: r1i1p1f1
+    version: v0

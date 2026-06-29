@@ -526,14 +526,13 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         facets={
                             "experiment_id": ["historical"],
                             "source_id": "CanESM5",
-                            "variable_id": ["areacella", *variables],
+                            # Subset to keep the committed series.json small; see ``test_variables``
+                            # (regions are likewise reduced in reduce_recipe_for_regression_fixture).
+                            "variable_id": ["areacella", *test_variables],
                             "branded_variable": [
                                 "areacella_ti-u-hxy-u",
-                                "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
-                                "psl_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
-                                "ua_tavg-p19-hxy-air",
                             ],
                             "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],

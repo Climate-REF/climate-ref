@@ -114,11 +114,10 @@ def rewrite_tree(
 @frozen
 class PlaceholderMap:
     """
-    Bidirectional map between absolute runtime directories and portable ``<TOKEN>`` placeholders.
+    Map between absolute runtime directories and portable ``<TOKEN>`` placeholders.
 
     A committed regression bundle is made machine-independent
-    by replacing host-specific absolute paths with stable tokens --
-    ``<OUTPUT_DIR>``, ``<TEST_DATA_DIR>`` and (optionally) ``<SOFTWARE_ROOT_DIR>``.
+    by replacing host-specific absolute paths with stable tokens.
     The *same* map drives every direction:
 
     - :meth:`sanitise` rewrites absolute paths to tokens (capture / mint).
@@ -126,14 +125,9 @@ class PlaceholderMap:
     - :meth:`as_replacements` yields the ``{absolute: token}`` mapping
       the bundle and series comparators apply to a freshly regenerated artefact before diffing.
 
-    The token set is declared in one place (:meth:`for_baseline` then :meth:`with_output`),
-    so the capture side and the verification side cannot declare different sets and drift apart.
-    Adding a placeholder is a one-line change here,
-    not a new parameter threaded through every caller.
-
     The two configuration-stable tokens (``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>``)
-    are fixed for a whole run;
-    the per-execution ``<OUTPUT_DIR>`` is late-bound with :meth:`with_output`.
+    are fixed for a whole run,
+    while the per-execution ``<OUTPUT_DIR>`` is late-bound with :meth:`with_output`.
     """
 
     pairs: tuple[tuple[str, Path], ...]
@@ -283,8 +277,7 @@ def _copy_extra_globs(
     can re-derive its bundle on replay from the persisted set alone.
     Each glob is resolved against ``scratch_directory / fragment``
     (so ``**`` and ``/`` in the pattern behave as for :meth:`pathlib.Path.glob`);
-    directories are skipped, and a file is copied once even if it matches several globs or is
-    already in ``exclude`` (the relpaths the curated set already copied).
+    directories are skipped.
     """
     input_directory = scratch_directory / fragment
 
@@ -338,8 +331,7 @@ def copy_execution_outputs(  # noqa: PLR0913
     extra_globs
         Additional output globs (relative to the execution directory) to persist beyond the
         bundle-referenced files, e.g. a diagnostic's
-        :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`. A file already
-        copied as part of the curated set is not duplicated in the returned key set.
+        :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`.
 
     Returns
     -------

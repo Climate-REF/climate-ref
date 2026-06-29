@@ -41,10 +41,7 @@ if TYPE_CHECKING:
     from climate_ref_core.regression.store import NativeStore
 
 
-# Canonical JSON serialisation applied to every committed-bundle file. One format for all of them
-# (rather than per-file rules) keeps the committed bytes deterministic across machines: sorted keys
-# remove dict-order churn, allow_nan=False rejects non-finite leaves, and ensure_ascii=False keeps
-# non-ASCII text (e.g. accented provenance) as raw UTF-8 rather than escaping it.
+# Canonical JSON serialisation applied to every committed-bundle file.
 _COMMITTED_JSON_DUMP_KWARGS: dict[str, object] = {
     "indent": 2,
     "sort_keys": True,
@@ -88,10 +85,9 @@ def _redact_provenance_fields(obj: object) -> bool:
     """
     Redact the declared provenance fields in every CMEC provenance block of ``obj`` in place.
 
-    Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block, overwrites the
-    fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders, and the host fields in
-    :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform`` sub-block. Scoping to
-    the provenance block means a same-named key elsewhere in the bundle is never touched.
+    Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block,
+    overwrites the fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders,
+    and the host fields in :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform``.
 
     Returns
     -------
@@ -119,16 +115,14 @@ def _canonicalise_committed_bundle(regression_dir: Path) -> None:
     """
     Rewrite every committed JSON file into its portable, reproducible canonical form, in place.
 
-    For each file in :data:`COMMITTED_BUNDLE_FILES` that is present: round floats to a stable
-    precision (:func:`~climate_ref_core.regression._quantise.round_floats`), redact host/user CMEC
-    provenance (:func:`_redact_provenance_fields`), then re-serialise with
-    :data:`_COMMITTED_JSON_DUMP_KWARGS`. The same transform runs on every file -- one with no floats
-    or no provenance simply passes those steps through -- so the committed bytes are deterministic
-    regardless of how the diagnostic originally serialised them, and a mint and a replay on different
-    machines produce identical bytes.
+    For each file in :data:`COMMITTED_BUNDLE_FILES` that is present:
+    round floats to a stable precision (:func:`~climate_ref_core.regression._quantise.round_floats`),
+    redact host/user CMEC provenance (:func:`_redact_provenance_fields`),
+    then re-serialise with :data:`_COMMITTED_JSON_DUMP_KWARGS`.
 
-    Float precision is bounded (see :mod:`._quantise`), so a re-dump on another host cannot churn the
-    committed bytes; the native blobs and their content-addressed digests are never touched.
+    The same transform runs on every file so the committed files are deterministic
+    regardless of how the diagnostic originally serialised them,
+    and a mint and a replay on different machines produce identical bytes.
 
     Parameters
     ----------
@@ -279,8 +273,8 @@ def capture_execution(  # noqa: PLR0913
         Defaults to False, matching the behaviour of
         :func:`~climate_ref_core.output_files.copy_execution_outputs`.
     extra_globs
-        Extra output globs to persist beyond the bundle-referenced files (a diagnostic's
-        :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`).
+        Extra output globs to persist beyond the bundle-referenced files
+        (a diagnostic's :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`).
 
     Returns
     -------

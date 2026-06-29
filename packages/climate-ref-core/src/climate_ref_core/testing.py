@@ -565,12 +565,8 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     # TODO: Add content regression checks for the CMEC bundles (diagnostic.json /
     # output.json), mirroring `validate_series_regression`. These bundles are only
     # structurally validated here, so a diagnostic can change the metric/output
-    # values without any regression test failing (see issue #703 for the series
-    # equivalent). A content comparison must sanitise the regenerated bundle first
-    # via `PlaceholderMap.for_baseline(...).with_output(...).as_replacements()`, since the
-    # committed bundles store `<OUTPUT_DIR>` / `<TEST_DATA_DIR>` / `<SOFTWARE_ROOT_DIR>`
-    # placeholders. diagnostic.json provenance carries the software root, so building the
-    # replacements from the map (rather than a hand-rolled dict) keeps this in step with capture.
+    # values without any regression test failing.
+    # A content comparison must sanitise the regenerated bundle first via `PlaceholderMap.
     assert result.successful, f"Execution failed: {result}"
 
     # Validate metric bundle

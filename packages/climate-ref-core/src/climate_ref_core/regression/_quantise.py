@@ -1,24 +1,20 @@
 """
 Float quantisation for committed regression bundles.
 
-The committed JSON bundle records full-precision floats whose least-significant digits are
-platform-dependent (CPU, BLAS, library versions).
-Those last digits churn byte-for-byte between CI and local runs even when the result is numerically identical,
+The regression files include floats whose least-significant digits are platform-dependent
+(CPU, BLAS, library versions).
+The last digits churn byte-for-byte between CI and local runs even when the result is numerically identical,
 producing noisy, unreviewable diffs in the committed bundle.
 
 Rounding every float to a fixed number of significant figures at write time gives
 stable, reviewable committed bytes.
-The bundle is rounded uniformly: ``output.json`` (the CMEC output bundle) carries no float leaves
-by construction, so rounding it is a harmless no-op.
-We round to seven significant figures: one digit finer than the regression compare
-tolerance (``rtol=1e-6`` in :mod:`climate_ref_core.regression.compare`),
+We round to seven significant figures: one digit finer than the regression compare tolerance
+(``rtol=1e-6`` in :mod:`climate_ref_core.regression.compare`),
 so the rounding error stays an order of magnitude under tolerance and can never flip a boundary gate verdict.
 
 This affects only the committed bundle.
 The native blobs (``.nc`` / ``.png``) and their content-addressed digests are never touched.
 """
-
-from __future__ import annotations
 
 from typing import Any
 

@@ -76,8 +76,9 @@ def baseline_placeholders(paths: TestCasePaths, config: Config) -> PlaceholderMa
 
     Declares the configuration-stable token set once (``<TEST_DATA_DIR>`` from the test case and
     ``<SOFTWARE_ROOT_DIR>`` from the configured software root) so ``run`` / ``mint`` / ``replay`` /
-    ``build`` cannot sanitise against drifting token sets. The per-execution ``<OUTPUT_DIR>`` is
-    bound later by the caller via :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
+    ``build`` cannot sanitise against drifting token sets.
+
+    The per-execution ``<OUTPUT_DIR>`` is bound later by the caller.
 
     Parameters
     ----------
@@ -231,16 +232,17 @@ def snapshot_native(
     """
     Sanitise the slot's native set to portable placeholders, then snapshot it (manifest / upload).
 
-    The curated native (and any captured reconstruction inputs) still embed absolute paths -- the
-    output directory the slot's text references (``source.bundle_output_dir``), plus the shared
-    ``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>`` roots. Rewriting those to ``<TOKEN>`` placeholders
-    *before* digesting makes the stored blobs, and therefore their recorded digests, machine
-    independent: a re-mint on another host produces identical digests (so ``upload`` is a no-op --
-    no churn), and ``replay`` can hydrate the blobs into any slot. Binary artefacts (``.nc`` /
-    ``.png``) are never rewritten.
+    The curated native (and any captured reconstruction inputs) still embed absolute paths to the
+    output directory of the execution (``source.bundle_output_dir``),
+    plus the shared ``<TEST_DATA_DIR>`` / ``<SOFTWARE_ROOT_DIR>`` roots.
+    Rewriting those to ``<TOKEN>`` placeholders *before* digesting makes the stored blobs,
+    and therefore their recorded digests, machine independent,
+    and ``replay`` can hydrate the blobs into any slot.
+    Binary artefacts (``.nc`` / ``.png``) are never rewritten.
 
-    Like :func:`stage_build`, the placeholder map is bound to ``source.bundle_output_dir`` here
-    rather than by the caller, so the two stages cannot drift on which output directory they sanitise.
+    Like :func:`stage_build`,
+    the placeholder map is bound to ``source.bundle_output_dir`` here rather than by the caller,
+    so the two stages cannot drift on which output directory they sanitise.
 
     Parameters
     ----------
@@ -252,6 +254,7 @@ def snapshot_native(
         The (unbound) placeholder map for this run.
     """
     placeholders.with_output(source.bundle_output_dir).sanitise(slot)
+
     return build_native_snapshot(slot, slot_native_relpaths(slot))
 
 

@@ -572,12 +572,13 @@ class Diagnostic(AbstractDiagnostic):
     CMEC output bundle references.
 
     :meth:`build_execution_result` for some providers re-derives the bundle by re-scanning raw
-    execution artefacts (e.g. ESMValTool ``diagnostic_provenance.yml`` or the PMP driver's
-    ``*_cmec.json``) that the curated output set would otherwise exclude. Declaring those globs
-    here makes them part of the persisted baseline, so a ``replay`` can rebuild the bundle from
-    the stored native set alone. Patterns are relative to the execution output directory (``**``
-    and ``/`` behave as for :meth:`pathlib.Path.glob`); the copied files are sanitised for
-    portability like every other text artefact. Default: none.
+    execution artefacts (e.g. ESMValTool ``diagnostic_provenance.yml`` or the PMP driver's ``*_cmec.json``)
+    that the curated output set would otherwise exclude.
+    Declaring those globs here makes them part of the persisted baseline,
+    so a ``replay`` can rebuild the bundle from the stored native set alone.
+
+    Patterns are relative to the execution output directory (see :meth:`pathlib.Path.glob`).
+    The copied files are sanitised for portability like every other text artefact.
     """
 
     def __init__(self) -> None:

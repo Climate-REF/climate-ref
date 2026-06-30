@@ -32,6 +32,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
 
     name = "Transient Climate Response to Cumulative CO2 Emissions"
     slug = "transient-climate-response-emissions"
+    version = 2
     base_recipe = "ref/recipe_ref_tcre.yml"
 
     variables = (

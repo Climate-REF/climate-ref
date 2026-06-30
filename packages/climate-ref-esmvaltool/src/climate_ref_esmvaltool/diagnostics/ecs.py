@@ -22,7 +22,7 @@ from climate_ref_esmvaltool.diagnostics.base import (
     fillvalues_to_nan,
     get_cmip_source_type,
 )
-from climate_ref_esmvaltool.recipe import dataframe_to_recipe, get_child_and_parent_dataset
+from climate_ref_esmvaltool.recipe import get_child_and_parent_dataset
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 
@@ -33,17 +33,14 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
 
     name = "Equilibrium Climate Sensitivity"
     slug = "equilibrium-climate-sensitivity"
-    base_recipe = "recipe_ecs.yml"
+    version = 2
+    base_recipe = "ref/recipe_ref_ecs.yml"
 
     variables = (
         "rlut",
         "rsdt",
         "rsut",
         "tas",
-    )
-    experiments = (
-        "abrupt-4xCO2",
-        "piControl",
     )
 
     data_requirements = (
@@ -185,67 +182,28 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        # Only run the diagnostic that computes ECS for a single model.
-        recipe["diagnostics"] = {
-            "ecs": {
-                "description": "Calculate ECS.",
-                "variables": {
-                    "tas": {
-                        "preprocessor": "spatial_mean",
-                    },
-                    "rtnt": {
-                        "preprocessor": "spatial_mean",
-                        "derive": True,
-                    },
-                },
-                "scripts": {
-                    "calculate": {
-                        "script": "climate_metrics/ecs.py",
-                        "calculate_mmm": False,
-                    },
-                },
-            },
-        }
-
         # Prepare updated datasets section in recipe. It contains two
         # datasets, one for the "abrupt-4xCO2" and one for the "piControl"
         # experiment.
         cmip_source = get_cmip_source_type(input_files)
-        if cmip_source == SourceDatasetType.CMIP6:
-            df = input_files[SourceDatasetType.CMIP6]
-            recipe["datasets"] = get_child_and_parent_dataset(
-                df[df.variable_id == "tas"],
-                parent_experiment="piControl",
-                child_duration_in_years=150,
-                parent_offset_in_years=0,
-                parent_duration_in_years=150,
-            )
-        else:
-            # CMIP7: use per-variable additional_datasets to preserve correct branding_suffix
-            recipe_variables = dataframe_to_recipe(
-                input_files[cmip_source],
-                equalize_timerange=True,
-            )
-            recipe["datasets"] = []
-            for var_name, var_settings in recipe["diagnostics"]["ecs"]["variables"].items():
-                short_name = var_settings.get("short_name", var_name)
-                if short_name in recipe_variables:
-                    var_settings["additional_datasets"] = recipe_variables[short_name]["additional_datasets"]
-                elif var_name == "rtnt":
-                    # rtnt is derived from rlut, rsdt, rsut - use rlut's dataset
-                    var_settings["additional_datasets"] = recipe_variables["rlut"]["additional_datasets"]
+        df = input_files[cmip_source]
+        recipe["datasets"] = get_child_and_parent_dataset(
+            df[df.variable_id == "tas"],
+            parent_experiment="piControl",
+            child_duration_in_years=150,
+            parent_offset_in_years=0,
+            parent_duration_in_years=150,
+        )
 
-        # Remove keys from the recipe that are only used for YAML anchors
-        keys_to_remove = [
-            "CMIP5_RTMT",
-            "CMIP6_RTMT",
-            "CMIP5_RTNT",
-            "CMIP6_RTNT",
-            "ECS_SCRIPT",
-            "SCATTERPLOT",
-        ]
-        for key in keys_to_remove:
-            recipe.pop(key, None)
+        # Delete branding suffixes from dataset entries because they are
+        # variable-specific
+        for dataset in recipe["datasets"]:
+            dataset.pop("branding_suffix", None)
+
+        # For CMIP6, delete all appearances of branding suffixes
+        if cmip_source == SourceDatasetType.CMIP6:
+            for variable in recipe["diagnostics"]["ecs"]["variables"].values():
+                variable.pop("branding_suffix", None)
 
     @staticmethod
     def format_result(

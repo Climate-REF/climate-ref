@@ -99,7 +99,7 @@ defaults:
   image:
     repository: ghcr.io/climate-ref/climate-ref
     pullPolicy: IfNotPresent
-    tag: v0.14.7
+    tag: v0.15.0
 
   annotations: {}
 

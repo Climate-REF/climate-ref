@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import json
+from enum import StrEnum
 from typing import TYPE_CHECKING
 
 from loguru import logger
@@ -11,6 +13,15 @@ if TYPE_CHECKING:
     import pandas as pd
 
 _BYTES_PER_UNIT = 1024
+
+
+class OutputFormat(StrEnum):
+    """
+    Output format for tabular CLI commands.
+    """
+
+    table = "table"
+    json = "json"
 
 
 def format_size(size_bytes: int | float) -> str:
@@ -145,7 +156,11 @@ def pretty_print_df(df: pd.DataFrame, console: Console | None = None) -> None:
         If not provided, a new Console instance will be created
     """
     # Drop duplicates as they are not informative to CLI users.
-    df = df.drop_duplicates()
+    try:
+        df = df.drop_duplicates()
+    except TypeError:
+        # Some columns may hold unhashable values so fallback to str
+        df = df.loc[~df.astype(str).duplicated()]
 
     if console is None:  # pragma: no branch
         logger.debug("Creating new console for pretty printing")
@@ -155,3 +170,32 @@ def pretty_print_df(df: pd.DataFrame, console: Console | None = None) -> None:
     table = df_to_table(df, max_col_count=max_col_count)
 
     console.print(table)
+
+
+def render_dataframe(
+    df: pd.DataFrame,
+    console: Console | None = None,
+    output_format: OutputFormat = OutputFormat.table,
+) -> None:
+    """
+    Render a DataFrame as either a rich table or machine-readable JSON.
+
+    Parameters
+    ----------
+    df
+        DataFrame to render
+    console
+        Console to use for table output (ignored for JSON)
+    output_format
+        ``table`` (default) for a human-readable rich table,
+        or ``json`` for a list of records printed to stdout.
+
+        Unlike the table output, the JSON output is not truncated and does not
+        drop duplicate rows, so it always contains the full values
+        (e.g. complete IDs and paths) and is suitable for scripting.
+    """
+    if output_format == OutputFormat.json:
+        records = df.to_dict(orient="records")
+        print(json.dumps(records, default=str, indent=2))
+    else:
+        pretty_print_df(df, console=console)

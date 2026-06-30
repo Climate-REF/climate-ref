@@ -1,0 +1,128 @@
+_metadata:
+  hash: 8b197849872bee9728ad6a5f0187d128579dec84
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: CESM2
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 674885.0
+    branch_time_in_parent: 219000.0
+    calendar: noleap
+    end_time: '2014-12-15 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: burntFractionAll_Lmon_CESM2_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190308
+    institution_id: NCAR
+    long_name: Percentage of Entire Grid cell  that is Covered by Burnt Vegetation
+      (All Classes)
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CESM2
+    parent_time_units: days since 0001-01-01 00:00:00
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: land
+    source_id: CESM2
+    source_type: AOGCM BGC
+    standard_name: area_fraction
+    start_time: '1850-01-15 11:45:00.000016'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Lmon
+    time_range: 1850-01-15 11:45:00.000016-2014-12-15 12:00:00
+    time_units: days since 0001-01-01 00:00:00
+    units: '%'
+    variable_id: burntFractionAll
+    variant_label: r1i1p1f1
+    version: v20190308
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 674885.0
+    branch_time_in_parent: 219000.0
+    calendar: null
+    end_time: null
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: areacella_fx_CESM2_historical_r1i1p1f1_gn.nc
+    finalised: true
+    frequency: fx
+    grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+    institution_id: NCAR
+    long_name: Grid-Cell Area for Atmospheric Grid Variables
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CESM2
+    parent_time_units: days since 0001-01-01 00:00:00
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos land
+    source_id: CESM2
+    source_type: AOGCM BGC
+    standard_name: cell_area
+    start_time: null
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    time_range: null
+    time_units: null
+    units: m2
+    variable_id: areacella
+    variant_label: r1i1p1f1
+    version: v20190308
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 674885.0
+    branch_time_in_parent: 219000.0
+    calendar: null
+    end_time: null
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: sftlf_fx_CESM2_historical_r1i1p1f1_gn.nc
+    finalised: true
+    frequency: fx
+    grid: native 0.9x1.25 finite volume grid (192x288 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.sftlf.gn.v20190308
+    institution_id: NCAR
+    long_name: Percentage of the grid  cell occupied by land (including lakes)
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CESM2
+    parent_time_units: days since 0001-01-01 00:00:00
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: CESM2
+    source_type: AOGCM BGC
+    standard_name: land_area_fraction
+    start_time: null
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: fx
+    time_range: null
+    time_units: null
+    units: '%'
+    variable_id: sftlf
+    variant_label: r1i1p1f1
+    version: v20190308
+    vertical_levels: 1

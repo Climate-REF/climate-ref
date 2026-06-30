@@ -13,6 +13,7 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
 
         assert kwargs["timeout"] == 6 * 60 * 60
+        assert kwargs["wait"] is True
         assert not kwargs["dry_run"]
         assert kwargs["execute"]
         assert kwargs["filters"].diagnostic is None
@@ -25,6 +26,14 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
         assert kwargs["timeout"] == 10
 
+    def test_solve_with_zero_timeout_still_waits(self, sample_data_dir, db, invoke_cli, mocker):
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        invoke_cli(["solve", "--timeout", "0"])
+
+        _args, kwargs = mock_solve.call_args
+        assert kwargs["timeout"] == 0
+        assert kwargs["wait"] is True
+
     def test_solve_with_dryrun(self, sample_data_dir, db, invoke_cli, mocker):
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve", "--dry-run"])
@@ -32,7 +41,17 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
         assert kwargs["dry_run"]
 
-    def test_solve_with_filters(self, sample_data_dir, db, invoke_cli, mocker):
+    def test_solve_with_filters(self, sample_data_dir, db, invoke_cli, mocker, config):
+        from climate_ref.config import DiagnosticProviderConfig
+
+        # The provider filter is validated against configured providers,
+        # so the filtered providers must be configured for this parsing test.
+        config.diagnostic_providers = [
+            DiagnosticProviderConfig(provider="climate_ref_esmvaltool"),
+            DiagnosticProviderConfig(provider="climate_ref_ilamb"),
+        ]
+        config.save()
+
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(
             [
@@ -49,6 +68,41 @@ class TestSolve:
         _args, kwargs = mock_solve.call_args
         assert kwargs["filters"].diagnostic == ["global-mean-timeseries"]
         assert kwargs["filters"].provider == ["esmvaltool", "ilamb"]
+
+    def test_solve_with_mixed_case_provider_filter(self, sample_data_dir, db, invoke_cli, mocker, config):
+        from climate_ref.config import DiagnosticProviderConfig
+
+        # Provider matching is a case-insensitive substring match against the slug,
+        # so a mixed-case partial filter must validate and be passed through verbatim.
+        config.diagnostic_providers = [
+            DiagnosticProviderConfig(provider="climate_ref_esmvaltool"),
+        ]
+        config.save()
+
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        invoke_cli(["solve", "--provider", "ESMval"])
+
+        _args, kwargs = mock_solve.call_args
+        assert kwargs["filters"].provider == ["ESMval"]
+
+    def test_solve_provider_filter_no_match_fails(self, sample_data_dir, db, invoke_cli, mocker):
+        # A --provider filter that matches no configured provider must fail loudly
+        # rather than exiting 0 having done nothing.
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        result = invoke_cli(["solve", "--provider", "does-not-exist"], expected_exit_code=1)
+
+        assert "No configured providers match" in result.stderr
+        mock_solve.assert_not_called()
+
+    def test_solve_no_providers_configured_fails(self, sample_data_dir, db, invoke_cli, mocker, config):
+        config.diagnostic_providers = []
+        config.save()
+
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        result = invoke_cli(["solve"], expected_exit_code=1)
+
+        assert "No diagnostic providers are configured" in result.stderr
+        mock_solve.assert_not_called()
 
     def test_solve_with_dataset_filter(self, sample_data_dir, db, invoke_cli, mocker):
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
@@ -122,5 +176,8 @@ class TestSolve:
         mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
         invoke_cli(["solve", "--no-wait", "--timeout", "30"])
 
+        # --no-wait is now passed through explicitly rather than being collapsed
+        # onto timeout=0, so --timeout keeps its literal value.
         _args, kwargs = mock_solve.call_args
-        assert kwargs["timeout"] == 0
+        assert kwargs["wait"] is False
+        assert kwargs["timeout"] == 30

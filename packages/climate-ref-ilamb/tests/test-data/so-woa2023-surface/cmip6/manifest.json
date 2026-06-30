@@ -1,0 +1,60 @@
+{
+  "catalog_hash": "7d5bed01949d7432b58c0890c0313a4894efb8f1",
+  "committed": {
+    "diagnostic.json": "e53e8bb7a7e62eaa404de7b0075aea613737b91c0217046d3194cf9ed495d666",
+    "output.json": "ab674e556c95adf33dcc6b8235d7eb1cc38a2a5927f25fd096dc9b5250f82dd1",
+    "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
+  },
+  "native": {
+    "CanESM5.csv": {
+      "sha256": "5484012b34693af33960ae1047aa4032806b1eb01e8a98446654c664a15f4c0e",
+      "size": 563
+    },
+    "CanESM5.nc": {
+      "sha256": "ca00e0a7458c398d53368f66ed2cb8883e90d59479db08ba5edb642002c76534",
+      "size": 1590374
+    },
+    "CanESM5_None_bias.png": {
+      "sha256": "69e9b8eb0ae1f88f33f10c5e340d085001e6b4585ee5b5e6549489404a3caf89",
+      "size": 36534
+    },
+    "CanESM5_None_biasscore.png": {
+      "sha256": "5ce9d140074b8852c273219fc65cc746db48f367e3596267c91bf0704641af6c",
+      "size": 50384
+    },
+    "CanESM5_None_mean.png": {
+      "sha256": "3a0f98d7883a75040b2ba5b1c3c60cdb5c98bb8ac29c48398d81c40b0bb2ce30",
+      "size": 37733
+    },
+    "None_None_taylor.png": {
+      "sha256": "c75a7f5cf28010d5b43b603c024bccfa3552ac93ff1c456d561b84477eeae643",
+      "size": 73758
+    },
+    "Reference.nc": {
+      "sha256": "9f198ff76e3b908e222e70aadec033a6e8746f75f7e9a72d0f7f00fa00e919b2",
+      "size": 544626
+    },
+    "Reference_None_mean.png": {
+      "sha256": "8a49576672b3a84c17d0c5e4e3e8d6e1d04cee6720adf23480010f199b860a79",
+      "size": 36485
+    },
+    "diagnostic.json": {
+      "sha256": "e53e8bb7a7e62eaa404de7b0075aea613737b91c0217046d3194cf9ed495d666",
+      "size": 1782
+    },
+    "index.html": {
+      "sha256": "efab848c29226562d9aa8661a94a99a60154f041be7b6b8f062dbda7e279cdc0",
+      "size": 14632
+    },
+    "output.json": {
+      "sha256": "ab674e556c95adf33dcc6b8235d7eb1cc38a2a5927f25fd096dc9b5250f82dd1",
+      "size": 3151
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

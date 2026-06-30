@@ -143,6 +143,37 @@ class TestIntakeESGFMixin:
         assert "key" in result.columns
         assert "files" in result.columns
 
+    def test_fetch_datasets_pyarrow_string_backend(self):
+        """
+        Regression: intake-esgf assigns Python lists into single string cells
+        (``df.at[idx, "id"] = [...]``), which raises under pandas' pyarrow-backed
+        string dtype (``future.infer_string=True``, the default from pandas 3.0).
+        fetch_datasets must run the intake-esgf interaction with that disabled,
+        so the call succeeds regardless of the ambient option.
+        """
+        request = CMIP6Request(slug="test", facets={"variable_id": "tas"})
+
+        mock_cat = MagicMock()
+
+        def fake_search(**_kwargs):
+            # Mirror intake_esgf.base.combine_results: a list assigned into one cell.
+            df = pd.DataFrame({"key": ["ds1"], "id": ["placeholder"]})
+            df.at[df.index[0], "id"] = ["node1.example.org", "node2.example.org"]
+            mock_cat.df = df
+
+        mock_cat.search.side_effect = fake_search
+        mock_cat.to_path_dict.return_value = {"ds1": ["/path/to/file.nc"]}
+
+        # Simulate the pandas >= 3.0 default that triggers the upstream crash.
+        with (
+            pd.option_context("future.infer_string", True),
+            patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat),
+        ):
+            result = request.fetch_datasets()
+
+        assert not result.empty
+        assert result.iloc[0]["key"] == "ds1"
+
     def test_fetch_datasets_with_time_span(self):
         """Test fetch_datasets with time span filter."""
         request = CMIP6Request(

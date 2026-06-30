@@ -3,7 +3,8 @@ Dataset management and filtering
 """
 
 import hashlib
-from collections.abc import Collection, Iterable, Iterator, Mapping
+import re
+from collections.abc import Collection, Iterable, Iterator, Mapping, Sequence
 from typing import Any
 
 import pandas as pd
@@ -13,6 +14,45 @@ from attrs import field, frozen
 from climate_ref_core.source_types import Selector, SourceDatasetType
 
 __all__ = ["Selector", "SourceDatasetType"]
+
+
+_VERSION_NUMERIC_RE = re.compile(r"^v(\d+)$")
+
+
+def version_sort_key(version: object) -> int:
+    """
+    Return a numeric ordering key for a dataset version string.
+
+    Handles the ``vYYYYMMDD`` and ``vN`` forms by comparing the integer value after the leading ``v``
+    (so ``v10`` > ``v2``, unlike lexicographic ordering).
+    Non-conforming or missing values sort lowest (``-1``).
+    """
+    match = _VERSION_NUMERIC_RE.match(str(version))
+    return int(match.group(1)) if match else -1
+
+
+def select_latest_version(
+    datasets: pd.DataFrame,
+    *,
+    version_column: str = "version",
+    group_by: Sequence[str] | None = None,
+) -> pd.DataFrame:
+    """
+    Return only the rows belonging to the numerically-latest dataset version.
+
+    Versions are compared with :func:`version_sort_key`,
+    so ``v10`` is preferred over ``v2`` and ``vYYYYMMDD`` forms order chronologically.
+    When ``group_by`` columns are given the latest version is chosen independently within each group.
+    """
+    version_key = datasets[version_column].map(version_sort_key)
+    if group_by is None:
+        is_latest = version_key == version_key.max()
+    else:
+        max_version_key = version_key.groupby(
+            [datasets[column] for column in group_by], sort=False
+        ).transform("max")
+        is_latest = version_key == max_version_key
+    return datasets[is_latest]
 
 
 def _clean_facets(raw_values: Mapping[str, str | Collection[str]]) -> dict[str, tuple[str, ...]]:
@@ -102,9 +142,19 @@ class DatasetCollection:
     def __getitem__(self, item: str | list[str]) -> Any:
         return self.datasets[item]
 
+    @property
+    def stable_hash(self) -> str:
+        """
+        Reproducible SHA1 digest of the collection's dataset identifiers.
+
+        Hashes the sorted ``slug_column`` values directly
+        so the result is stable across platforms and independent of row order.
+        """
+        values = sorted(str(value) for value in self.datasets[self.slug_column])
+        return hashlib.sha1("\n".join(values).encode("utf-8")).hexdigest()  # noqa: S324
+
     def __hash__(self) -> int:
-        # This hashes each item individually and sums them so order doesn't matter
-        return int(pd.util.hash_pandas_object(self.datasets[self.slug_column]).sum())
+        return int(self.stable_hash, 16)
 
     def __eq__(self, other: object) -> bool:
         return self.__hash__() == other.__hash__()
@@ -171,12 +221,15 @@ class ExecutionDatasetCollection:
         :
             SHA1 hash of the collections
         """
-        # The dataset collection hashes are reproducible,
-        # so we can use them to hash the diagnostic dataset.
-        # This isn't explicitly true for all Python hashes
-        hash_sum = sum(hash(item) for item in self._collection.values())
-        hash_bytes = hash_sum.to_bytes(16, "little", signed=True)
-        return hashlib.sha1(hash_bytes).hexdigest()  # noqa: S324
+        # Combine the per-source stable digests in a fixed (sorted) order so the aggregate
+        # hash is reproducible across pandas versions and platforms and independent of the
+        # order in which source types were inserted. The source-type key is included so two
+        # collections with identical identifiers under different source types do not collide.
+        parts = sorted(
+            f"{source_type.value}:{collection.stable_hash}"
+            for source_type, collection in self._collection.items()
+        )
+        return hashlib.sha1("\n".join(parts).encode("utf-8")).hexdigest()  # noqa: S324
 
     @property
     def selectors(self) -> dict[str, Selector]:

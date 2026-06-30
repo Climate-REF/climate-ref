@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/climate-ref.svg)](https://badge.fury.io/py/climate-ref)
 [![Documentation Status](https://readthedocs.org/projects/climate-ref/badge/?version=latest)](https://climate-ref.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 
 **Status**: This project is in active development. We expect to be ready for beta releases in Q2 2025.
 
@@ -28,8 +28,8 @@ pip install "climate-ref[aft-providers]"
 
 ```bash
 # Ingest some observation datasets
-ref datasets fetch-data --registry obs4ref ---output-directory datasets/obs4ref
-ref datasets fetch-data --registry sample-data ---output-directory datasets/sample-data
+ref datasets fetch-data --registry obs4ref --output-directory datasets/obs4ref
+ref datasets fetch-data --registry sample-data --output-directory datasets/sample-data
 
 # Run metrics against your climate data
 ref solve

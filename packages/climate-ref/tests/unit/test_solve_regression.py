@@ -17,12 +17,13 @@ from __future__ import annotations
 import pytest
 from climate_ref_example import provider as example_provider
 
-from climate_ref.solve_helpers import solve_results_for_regression, solve_to_results
+from climate_ref.solve_helpers import solve_results_for_regression
 
 
 @pytest.fixture(scope="module")
-def example_results(esgf_data_catalog):
-    return solve_to_results(esgf_data_catalog, providers=[example_provider])
+def example_results(esgf_example_solve_results):
+    """Reuse the session-cached example-provider solve (see root conftest)."""
+    return esgf_example_solve_results
 
 
 @pytest.mark.parametrize(

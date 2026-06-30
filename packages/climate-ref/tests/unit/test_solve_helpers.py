@@ -6,10 +6,8 @@ from __future__ import annotations
 
 import json
 
-import cftime
 import pandas as pd
 import pytest
-from climate_ref_example import provider as example_provider
 
 from climate_ref.solve_helpers import (
     format_solve_results_json,
@@ -17,7 +15,6 @@ from climate_ref.solve_helpers import (
     generate_catalog,
     load_solve_catalog,
     solve_results_for_regression,
-    solve_to_results,
     write_catalog_parquet,
 )
 from climate_ref_core.datasets import SourceDatasetType
@@ -35,15 +32,22 @@ def _align_for_parquet_roundtrip(source: pd.DataFrame, target: pd.DataFrame) -> 
     for col in aligned.columns:
         if col not in target.columns:
             continue
-        # cftime objects -> strings (only when target has strings, not cftime)
-        if aligned[col].dtype == object and target[col].dtype == object:
-            has_source_cftime = aligned[col].apply(lambda x: isinstance(x, cftime.datetime)).any()
-            has_target_strings = target[col].dropna().apply(lambda x: isinstance(x, str)).any()
-            if has_source_cftime and has_target_strings:
-                aligned[col] = aligned[col].apply(lambda x: str(x) if isinstance(x, cftime.datetime) else x)
+        # datetime-like objects -> strings (only when target has strings, not cftime)
+        if aligned[col].dtype == object:
+            target_dtype_is_string = target[col].dtype != object and pd.api.types.is_string_dtype(
+                target[col].dtype
+            )
+            has_target_strings = (
+                target_dtype_is_string or target[col].dropna().apply(lambda x: isinstance(x, str)).any()
+            )
+            if has_target_strings:
+                aligned[col] = aligned[col].apply(lambda x: str(x) if pd.notna(x) else x)
         # None -> NaT alignment for datetime columns
         if target[col].dtype.kind == "M" and aligned[col].dtype == object:
             aligned[col] = aligned[col].fillna(pd.NaT)
+        target_null = target[col].isna()
+        if target_null.any():
+            aligned.loc[target_null, col] = target.loc[target_null, col].astype(object).to_numpy()
     return aligned
 
 
@@ -60,9 +64,9 @@ def obs4mips_generated_catalog(sample_data_dir):
 
 
 @pytest.fixture(scope="module")
-def example_solve_results(esgf_data_catalog):
-    """Module-cached solve results to avoid redundant solver runs."""
-    return solve_to_results(esgf_data_catalog, providers=[example_provider])
+def example_solve_results(esgf_example_solve_results):
+    """Reuse the session-cached example-provider solve (see root conftest)."""
+    return esgf_example_solve_results
 
 
 class TestGenerateCatalog:

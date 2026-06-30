@@ -15,6 +15,7 @@ import pandas as pd
 from loguru import logger
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
+from climate_ref_core.datasets import select_latest_version
 
 # Number of path parts in PMP climatology registry keys
 _PMP_CLIMATOLOGY_PATH_PARTS = 5
@@ -112,11 +113,12 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
     _, _variable_id_dir, _grid_label, _version, filename = parts
 
     # Parse filename: {var}_mon_{source_id}_{inst_id}_{grid}_{time}_AC_{ver}_{res}.nc
-    # Handle source_ids with hyphens (e.g., "ERA-5", "GPCP-Monthly-3-2")
+    # source_id and institution_id may both contain hyphens (e.g. "GPCP-3-3", "NASA-GISS");
+    # the literal "_" separators keep tokenisation unambiguous.
     filename_pattern = re.compile(
         r"^(?P<variable_id>[a-z]+)_mon_"
         r"(?P<source_id>[A-Za-z0-9-]+)_"
-        r"(?P<institution_id>[A-Za-z0-9]+)_"
+        r"(?P<institution_id>[A-Za-z0-9-]+)_"
         r"(?P<grid_label>[a-z]+)_"
         r"(?P<time_range>\d+-\d+)_AC_"
         r"(?P<version>v\d+)_"
@@ -292,15 +294,15 @@ class RegistryRequest:
 
         result = pd.DataFrame(matching_rows)
 
-        # Filter to only the latest version for each unique dataset
-        # Datasets are identified by source_id, variable_id, and grid_label
+        # Filter to only the latest version for each unique dataset.
+        # Datasets are identified by source_id, variable_id, and grid_label.
+        # Versions are compared numerically (so v10 > v2) via select_latest_version.
         if "version" in result.columns:
-            group_by_cols = ["source_id", "variable_id", "grid_label"]
-            # Only group by columns that exist in the DataFrame
-            group_by_cols = [col for col in group_by_cols if col in result.columns]
+            group_by_cols = [
+                col for col in ("source_id", "variable_id", "grid_label") if col in result.columns
+            ]
             if group_by_cols:
-                max_version = result.groupby(group_by_cols, sort=False)["version"].transform("max")
-                result = result[result["version"] == max_version]
+                result = select_latest_version(result, group_by=group_by_cols)
 
         logger.info(f"Found {len(result)} datasets matching request: {self.slug}")
 

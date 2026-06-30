@@ -19,51 +19,16 @@ def provider_test_data_dir() -> Path:
     return Path(__file__).parent.parent / "test-data"
 
 
-SKIP = {
-    "regional-historical-annual-cycle",
-    "regional-historical-timeseries",
-    # No data in sample data catalog
-    "ozone-annual-cycle",
-    "ozone-lat-time",
-    "ozone-nh-mar",
-    "ozone-sh-oct",
-    "ozone-zonal",
-}
-
-diagnostics = [
-    pytest.param(
-        diagnostic,
-        id=diagnostic.slug,
-        marks=pytest.mark.skipif(
-            diagnostic.slug in SKIP,
-            reason="Output data too large to store in git",
-        ),
-    )
-    for diagnostic in provider.diagnostics()
-]
-
 # Test case params for parameterized test_case tests
 test_case_params = collect_test_case_params(provider)
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_diagnostics(diagnostic: Diagnostic, diagnostic_validation):
-    validator = diagnostic_validation(diagnostic)
-
-    definition = validator.get_definition()
-    validator.execute(definition)
-
-
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
-    validator = diagnostic_validation(diagnostic)
-
-    definition = validator.get_regression_definition()
-    validator.validate(definition)
-    validator.execution_regression.check(definition.key, definition.output_directory)
-
-
+@pytest.mark.skip(
+    reason="Parked: RegressionValidator replays the committed bundle offline, but native baselines "
+    "now live in the object store (Framework B), so build_execution_result cannot rebuild from the "
+    "repo alone. `ref test-cases replay` provides regression coverage via the store; this offline "
+    "path is retained (body intact) for local step-through debugging."
+)
 @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
 def test_validate_test_case_regression(
     diagnostic: Diagnostic,

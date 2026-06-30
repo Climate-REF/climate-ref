@@ -4,7 +4,7 @@ There are several ways to install and use the `climate-ref` package and associat
 
 The REF itself is a pure Python package and does not require any conda-based dependencies.
 This was a deliberate decision to make it easy to make the framework easy to install in a range of different environments.
-Some of the [diagnostic providers](nutshell.md) require additional dependencies in order to run an execution.
+Some of the [diagnostic providers](concepts.md#diagnostic-providers) require additional dependencies in order to run an execution.
 For these providers, the REF can automatically create a new Conda environment and install the required dependencies in this standalone environment.
 Each of these provider-specific environments are decoupled to allow for potentially incompatible dependencies.
 This uses a bundled version of [micromamba](https://github.com/mamba-org/micromamba-releases)
@@ -18,7 +18,7 @@ HPC users are recommended to install the REF inside a conda environment to ensur
 This can be achieved using the following commands:
 
 ```bash
-conda create -n climate-ref python=3.11
+conda create -n climate-ref python=3.12
 conda activate climate-ref
 pip install "climate-ref[aft-providers]"
 ```
@@ -51,7 +51,7 @@ pip install climate-ref[celery,aft-providers]
 /// admonition | Note
 
 `pip install "climate-ref[aft-providers]"` additionally installs the [diagnostic
-providers](nutshell.md) that are used for the Assessment Fast Track. These
+providers](concepts.md#diagnostic-providers) that are used for the Assessment Fast Track. These
 diagnostic providers declare the available diagnostics and the rules for when
 they should be run. The actual execution occurs within a provider-specific conda
 environment.
@@ -126,7 +126,7 @@ See the [development documentation](development.md) for more information on how 
 /// admonition | Windows support
     type: warning
 
-Windows doesn't support some of the packages required by the [diagnostic providers](nutshell.md),
+Windows doesn't support some of the packages required by the [diagnostic providers](concepts.md#diagnostic-providers),
 so we only support MacOS and Linux.
 Windows users are recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
 or a Linux VM if they wish to use the REF.

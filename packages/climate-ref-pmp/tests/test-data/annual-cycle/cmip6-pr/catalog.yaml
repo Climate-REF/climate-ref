@@ -1,0 +1,79 @@
+_metadata:
+  hash: 326fc588c4f244b1efdeade4f781bc72b0c73ba6
+pmp-climatology:
+  slug_column: instance_id
+  selector:
+    source_id: GPCP-3-3
+    variable_id: pr
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '0001-12-01 00:00:00'
+    filename: pr_mon_GPCP-3-3_NASA-GISS_gr_198301-201412_AC_v20260513_2.5x2.5.nc
+    finalised: true
+    frequency: mon
+    grid: 0.5x0.5 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-GSFC.GPCP-3-3.mon.pr.50km.gn.v20260513
+    institution_id: NASA-GSFC
+    long_name: Precipitation
+    nominal_resolution: 50 km
+    product: observations
+    realm: atmos
+    source_id: GPCP-3-3
+    source_type: satellite_blended
+    source_version_number: '3.3'
+    start_time: '0001-01-01 00:00:00'
+    time_range: 0001-01-01 00:00:00-0001-12-01 00:00:00
+    units: kg m-2 s-1
+    variable_id: pr
+    variant_label: NASA-GISS
+    version: v20260513
+    vertical_levels: 1
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+    variable_id: pr
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    calendar: proleptic_gregorian
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: pr_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.pr.gn.v20191115
+    institution_id: CSIRO
+    long_name: Precipitation
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: precipitation_flux
+    start_time: '1850-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    units: kg m-2 s-1
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1

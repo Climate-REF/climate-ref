@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/climate-ref-example.svg)](https://badge.fury.io/py/climate-ref-example)
 [![Documentation Status](https://readthedocs.org/projects/climate-ref/badge/?version=latest)](https://climate-ref.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python Version](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 
 This package provides an example implementation of a diagnostic provider for the Climate REF (Rapid Evaluation Framework).
 It serves as a template and reference for developers who want to create their own diagnostic providers.

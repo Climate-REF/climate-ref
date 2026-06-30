@@ -1,7 +1,0 @@
-source,region,analysis,name,type,units,value
-Reference,None,timeseries,Period Mean [Sv],scalar,Sv,17.151744588569294
-ACCESS-ESM1-5-r1i1p1f1-gn,None,timeseries,Period Mean [Sv],scalar,Sv,19.4475997462655
-ACCESS-ESM1-5-r1i1p1f1-gn,None,timeseries,Bias Score [1],score,1,0.8747164616927197
-ACCESS-ESM1-5-r1i1p1f1-gn,None,timeseries,Normalized Standard Deviation [1],scalar,1,0.6247995359266051
-ACCESS-ESM1-5-r1i1p1f1-gn,None,timeseries,Correlation [1],scalar,1,-0.0011448381137671023
-ACCESS-ESM1-5-r1i1p1f1-gn,None,timeseries,Taylor Score [1],score,1,0.40341342554882165

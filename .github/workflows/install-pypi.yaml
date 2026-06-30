@@ -58,7 +58,7 @@ jobs:
       run: |
         echo "${{ env.INSTALLED_VERSION }}"
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         ref: ${{ env.INSTALLED_VERSION }}
         # Windows can't clone the entire directory due to filename length
@@ -112,7 +112,7 @@ jobs:
       run: |
         echo "${{ env.INSTALLED_VERSION }}"
     - name: Checkout repository
-      uses: actions/checkout@v6
+      uses: actions/checkout@v7
       with:
         ref: ${{ env.INSTALLED_VERSION }}
         sparse-checkout: |

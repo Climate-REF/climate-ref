@@ -1,0 +1,48 @@
+{
+  "catalog_hash": "fad5e2c4374674b2aac83a47be7061c2b9d17723",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "c3ad14429dfae8653c4ee2a86e24c5c8b49fa7f5ec4e7b13f3183aaf719fb75a",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "86e4231677b9cac1b822c75d7c6091c84faa32aba2985f9475deecd8099427ca",
+      "size": 14276
+    },
+    "executions/recipe/plots/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical.png": {
+      "sha256": "e218f4b6c52eb8a0b612b73cfa34605d4f2055d5953d7beddf096738bcfb17a2",
+      "size": 79743
+    },
+    "executions/recipe/run/zonal_mean_profiles/plot/diagnostic_provenance.yml": {
+      "sha256": "6e9939996bc7956093fc96683135c6ca7015ffd2f91b053ac92a7f8977ace112",
+      "size": 1909
+    },
+    "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_bottom.nc": {
+      "sha256": "eca31581f93f63f0267c6b48384f58ce88bd2d969143312de1f676e66e168814",
+      "size": 30522
+    },
+    "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_top_left.nc": {
+      "sha256": "9ea28bfe65bb83f739aca5e65129c838da1930310161a9689a5a7ea03c0272dc",
+      "size": 29830
+    },
+    "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_top_right.nc": {
+      "sha256": "997363d3ba582440de4fb7cac86b6f58dcef2bed14341545dd09bfb44cc910a5",
+      "size": 25094
+    },
+    "output.json": {
+      "sha256": "2e4a87a330ad8514d0c2878646d65809a0c7e9092ade03ec703ef36ce740fefd",
+      "size": 2054
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

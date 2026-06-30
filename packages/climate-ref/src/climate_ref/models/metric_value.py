@@ -1,9 +1,11 @@
 import enum
-from collections.abc import Mapping
+import hashlib
+import json
+from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from sqlalchemy import ForeignKey, event
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import ForeignKey, event, select
+from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from climate_ref.models.base import Base
 from climate_ref.models.mixins import CreatedUpdatedMixin, DimensionMixin
@@ -138,6 +140,80 @@ class ScalarMetricValue(MetricValue):
         )
 
 
+class SeriesIndex(Base):
+    """
+    A shared 1-d index axis for series metric values
+
+    Many series share the same index (for example a common monthly time axis),
+    so the index is stored once here and referenced by
+    [SeriesMetricValue.index_id][climate_ref.models.metric_value.SeriesMetricValue]
+    rather than duplicated on every row. Axes are deduplicated by ``hash``.
+    """
+
+    __tablename__ = "index_axis"
+
+    id: Mapped[int] = mapped_column(primary_key=True)
+
+    hash: Mapped[str] = mapped_column(unique=True, index=True)
+    """
+    Content hash of ``(name, values)``.
+
+    The axes are deduplicated by this hash, so identical axes will share the same row and be referenced by id.
+    """
+
+    name: Mapped[str] = mapped_column(nullable=True)
+    """Name of the index (e.g. ``"time"``). Used for presentation."""
+
+    values: Mapped[list[float | int | str]] = mapped_column()
+    """The 1-d array of index values."""
+
+    length: Mapped[int] = mapped_column()
+    """Number of points in the index; used to validate series lengths."""
+
+    def __repr__(self) -> str:
+        return f"<SeriesIndex id={self.id} name={self.name} length={self.length}>"
+
+    @staticmethod
+    def compute_hash(name: str | None, values: Sequence[float | int | str]) -> str:
+        """
+        Compute the content hash used to deduplicate identical axes.
+
+        The hash covers both the name and the ordered values,
+        so two axes are only shared when they are genuinely identical.
+        """
+        payload = json.dumps([name, list(values)], separators=(",", ":"), ensure_ascii=False)
+        return hashlib.sha256(payload.encode()).hexdigest()
+
+    @classmethod
+    def get_or_create(
+        cls, session: Session, name: str | None, values: Sequence[float | int | str]
+    ) -> "SeriesIndex":
+        """
+        Return the existing axis with this content, or create and flush a new one.
+
+        Parameters
+        ----------
+        session
+            Active database session.
+        name
+            Name of the index.
+        values
+            1-d array of index values.
+
+        Returns
+        -------
+            The shared [SeriesIndex][climate_ref.models.metric_value.SeriesIndex] row.
+        """
+        digest = cls.compute_hash(name, values)
+        existing = session.execute(select(cls).where(cls.hash == digest)).scalar_one_or_none()
+        if existing is not None:
+            return existing
+        axis = cls(hash=digest, name=name, values=list(values), length=len(values))
+        session.add(axis)
+        session.flush()
+        return axis
+
+
 class SeriesMetricValue(MetricValue):
     """
     A 1d series with associated dimensions
@@ -150,10 +226,20 @@ class SeriesMetricValue(MetricValue):
         "polymorphic_identity": MetricValueType.SERIES,
     }
 
-    # This is a scalar value
     values: Mapped[list[float | int]] = mapped_column(nullable=True)
-    index: Mapped[list[float | int | str]] = mapped_column(nullable=True)
-    index_name: Mapped[str] = mapped_column(nullable=True)
+
+    index_id: Mapped[int | None] = mapped_column(ForeignKey("index_axis.id"), nullable=True, index=True)
+    index_axis: Mapped["SeriesIndex | None"] = relationship(lazy="joined")
+
+    @property
+    def index(self) -> list[float | int | str] | None:
+        """The 1-d index values, resolved from the shared axis."""
+        return self.index_axis.values if self.index_axis is not None else None
+
+    @property
+    def index_name(self) -> str | None:
+        """The name of the index, resolved from the shared axis."""
+        return self.index_axis.name if self.index_axis is not None else None
 
     def __repr__(self) -> str:
         return (
@@ -162,13 +248,12 @@ class SeriesMetricValue(MetricValue):
         )
 
     @classmethod
-    def build(  # noqa: PLR0913
+    def build(
         cls,
         *,
         execution_id: int,
         values: list[float | int],
-        index: list[float | int | str],
-        index_name: str,
+        index_axis: "SeriesIndex",
         dimensions: dict[str, str],
         attributes: dict[str, Any] | None,
     ) -> "MetricValue":
@@ -181,10 +266,9 @@ class SeriesMetricValue(MetricValue):
             Execution that created the diagnostic value
         values
             1-d array of values
-        index
-            1-d array of index values
-        index_name
-            Name of the index. Used for presentation purposes
+        index_axis
+            The shared index axis for this series, obtained via
+            [SeriesIndex.get_or_create][climate_ref.models.metric_value.SeriesIndex.get_or_create]
         dimensions
             Dimensions that describe the diagnostic execution result
         attributes
@@ -208,14 +292,13 @@ class SeriesMetricValue(MetricValue):
             if k not in cls._cv_dimensions:
                 raise KeyError(f"Unknown dimension column '{k}'")
 
-        if len(values) != len(index):
-            raise ValueError(f"Index length ({len(index)}) must match values length ({len(values)})")
+        if len(values) != index_axis.length:
+            raise ValueError(f"Index length ({index_axis.length}) must match values length ({len(values)})")
 
         return SeriesMetricValue(
             execution_id=execution_id,
             values=values,
-            index=index,
-            index_name=index_name,
+            index_axis=index_axis,
             attributes=attributes,
             **dimensions,
         )
@@ -225,11 +308,10 @@ class SeriesMetricValue(MetricValue):
 @event.listens_for(SeriesMetricValue, "before_update")
 def validate_series_lengths(mapper: Any, connection: Any, target: SeriesMetricValue) -> None:
     """
-    Validate that values and index have matching lengths
+    Validate that values and the referenced index axis have matching lengths
 
     This is done on insert and update to ensure that the database is consistent.
     """
-    if target.values is not None and target.index is not None and len(target.values) != len(target.index):
-        raise ValueError(
-            f"Index length ({len(target.index)}) must match values length ({len(target.values)})"
-        )
+    axis = target.index_axis
+    if target.values is not None and axis is not None and len(target.values) != axis.length:
+        raise ValueError(f"Index length ({axis.length}) must match values length ({len(target.values)})")

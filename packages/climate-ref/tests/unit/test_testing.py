@@ -121,13 +121,13 @@ class TestTestCaseRunnerClass:
             test_cases=(TestCase(name="default", description="Default"),)
         )
         mock_result = MagicMock(successful=True)
-        mock_diagnostic.run.return_value = mock_result
+        mock_diagnostic.build_execution_result.return_value = mock_result
 
         result = runner.run(mock_diagnostic, "default")
 
         assert result.successful
-        # Verify diagnostic.run was called with an ExecutionDefinition
-        call_args = mock_diagnostic.run.call_args[0][0]
+        # Verify the diagnostic was executed with an ExecutionDefinition
+        call_args = mock_diagnostic.execute.call_args[0][0]
         assert "test-cases" in str(call_args.output_directory)
         assert "test-provider" in str(call_args.output_directory)
         assert "test-diag" in str(call_args.output_directory)
@@ -150,16 +150,19 @@ class TestTestCaseRunnerClass:
             )
         )
 
-        # Mock the run method to avoid actual execution
+        # Mock the execution phases to avoid actual execution
         mock_result = MagicMock()
         mock_result.successful = True
-        mock_diagnostic.run.return_value = mock_result
+        mock_diagnostic.build_execution_result.return_value = mock_result
 
         result = runner.run(mock_diagnostic, "default", output_dir=tmp_path)
 
         assert result.successful
-        mock_diagnostic.run.assert_called_once()
-        execution_definition = mock_diagnostic.run.call_args[0][0]
+        # The runner drives the phases itself, inserting the regression-capture hook
+        mock_diagnostic.execute.assert_called_once()
+        mock_diagnostic.prepare_regression_output.assert_called_once()
+        mock_diagnostic.build_execution_result.assert_called_once()
+        execution_definition = mock_diagnostic.execute.call_args[0][0]
         assert execution_definition.datasets == mock_datasets
 
     def test_run_without_paths(self, config, tmp_path):

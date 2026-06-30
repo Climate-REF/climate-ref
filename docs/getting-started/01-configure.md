@@ -26,14 +26,14 @@ export REF_CONFIGURATION="/path/to/your/ref/configuration"
 
 ## 2. Generate
 
-Climate-REF provides a script to write out the default configuration.
+Climate-REF provides a command to write out the default configuration.
 
 ```bash
-mkdir $REF_CONFIGURATION
-ref config list > $REF_CONFIGURATION/ref.toml
+ref config init
 ```
 
 This command will create the `$REF_CONFIGURATION` directory and create a `ref.toml` inside it with the default configuration settings.
+It refuses to overwrite an existing file unless you pass `--force`.
 
 /// admonition | Note
 
@@ -54,6 +54,7 @@ You will see a template configuration file with sections for logging, paths, dat
 These should be customized to suit your environment and preferences.
 
 Additional information about the configuration file can be found in the [Configuration documentation](../configuration.md).
+After editing, run `ref config validate` to check that `ref.toml` is valid before continuing.
 
 An example configuration file might look like this with some placeholders:
 
@@ -122,10 +123,14 @@ If environment variables are set, Climate-REF will use their values in preferenc
 To ensure your configuration is valid and correctly read by the REF, you can run the following command:
 
 ```bash
-ref config list
+ref config validate
 ```
 
-Your configuration should be displayed without errors and should include any changes you made in the `ref.toml` file.
+You can also inspect the effective configuration, including environment variable overrides, with:
+
+```bash
+ref config list
+```
 
 ## 6. Set up diagnostic providers
 

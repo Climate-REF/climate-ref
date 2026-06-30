@@ -1,0 +1,113 @@
+_metadata:
+  hash: a16659110546b6f7fd904b0b26331bc14e6ffabd
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    source_id: ACCESS-ESM1-5
+    variable_id: tos
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    branded_variable: areacello_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: null
+    filename: areacello_ti-u-hxy-u_fx_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v0
+    institution_id: CSIRO
+    license_id: CC-BY-4.0
+    long_name: Grid-Cell Area for Ocean Variables
+    mip_era: CMIP7
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: ACCESS-ESM1-5
+    standard_name: cell_area
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/a241ae64-4a61-4c0a-b3b7-f78dbd4b0279
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    branded_variable: tos_tavg-u-hxy-sea
+    branding_suffix: tavg-u-hxy-sea
+    calendar: proleptic_gregorian
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello
+    filename: tos_tavg-u-hxy-sea_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v0
+    institution_id: CSIRO
+    license_id: CC-BY-4.0
+    long_name: Sea Surface Temperature
+    mip_era: CMIP7
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: ACCESS-ESM1-5
+    standard_name: sea_surface_temperature
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/1dd77a06-8cb6-4ef8-a9a0-987dc1dc0394
+    units: degC
+    variable_id: tos
+    variant_label: r1i1p1f1
+    version: v0
+obs4mips:
+  slug_column: instance_id
+  selector:
+    source_id: HadISST-1-1
+    variable_id: ts
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2025-01-16 12:00:00'
+    filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    institution_id: MOHC
+    long_name: Surface Temperature
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: HadISST-1-1
+    source_type: satellite_blended
+    source_version_number: 1-1
+    start_time: '1870-01-16 12:00:00'
+    time_range: 1870-01-16 12:00:00-2025-01-16 12:00:00
+    units: K
+    variable_id: ts
+    variant_label: PCMDI
+    version: v20250415
+    vertical_levels: 1

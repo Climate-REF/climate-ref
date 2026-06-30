@@ -275,6 +275,7 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
             extraction_changed=extraction_changed,
             committed_integrity_ok=committed_integrity_ok,
             catalog_integrity_ok=catalog_integrity_ok,
+            code_diagnostic_version=diag.version,
         )
         record(case_id, decision.action, decision.reason)
 

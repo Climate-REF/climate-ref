@@ -6,6 +6,8 @@ It records:
 - ``schema``: the manifest schema version (``SCHEMA_VERSION``).
 - ``test_case_version``: a monotonic, author-bumped integer coupling the committed
   bundle to its native outputs.
+- ``diagnostic_version``: the author-declared ``Diagnostic.version`` captured at mint
+  time, coupling the baseline to the diagnostic code that produced it.
 - ``committed``: sha256 digests of the committed regression JSON artefacts,
   computed over the exact placeholder-substituted bytes as they sit on disk,
   so that a CI recompute is deterministic.
@@ -26,7 +28,7 @@ from attrs import asdict, frozen
 
 from climate_ref_core.paths import safe_path
 
-SCHEMA_VERSION: int = 1
+SCHEMA_VERSION: int = 2
 """Current manifest schema version."""
 
 _DIGEST_RE = re.compile(r"^[0-9a-f]{64}$")
@@ -133,6 +135,14 @@ class Manifest:
     test_case_version: int
     """Monotonic, author-bumped version coupling the bundle to its native outputs."""
 
+    diagnostic_version: int
+    """Author-declared ``Diagnostic.version`` at mint time.
+
+    Monotonic and append-only (with an authorised-revert carve-out in the CI gate).
+    The gate fails a case whose in-code ``Diagnostic.version`` exceeds this value
+    (a stale baseline that must be re-minted).
+    """
+
     committed: dict[str, str]
     """Digests of committed regression JSON artefacts: ``{relpath: sha256}``."""
 
@@ -195,7 +205,11 @@ class Manifest:
             (e.g. hand-edited or written by an incompatible version).
         """
         data = json.loads(text)
-        missing = [key for key in ("schema", "test_case_version", "committed", "native") if key not in data]
+        missing = [
+            key
+            for key in ("schema", "test_case_version", "diagnostic_version", "committed", "native")
+            if key not in data
+        ]
         if missing:
             raise ValueError(
                 f"Invalid manifest {source}: missing required keys {missing}. "
@@ -208,6 +222,16 @@ class Manifest:
                 f"Invalid manifest {source}: unsupported schema {schema!r}, "
                 f"expected {SCHEMA_VERSION}. The manifest was written by an incompatible "
                 "version; regenerate it with `ref test-cases run --force-regen`."
+            )
+        diagnostic_version = data["diagnostic_version"]
+        if (
+            isinstance(diagnostic_version, bool)
+            or not isinstance(diagnostic_version, int)
+            or diagnostic_version < 1
+        ):
+            raise ValueError(
+                f"Invalid manifest {source}: diagnostic_version {diagnostic_version!r} "
+                "is invalid; expected an integer >= 1."
             )
         try:
             native = {
@@ -235,6 +259,7 @@ class Manifest:
         return cls(
             schema=data["schema"],
             test_case_version=data["test_case_version"],
+            diagnostic_version=diagnostic_version,
             committed=dict(data["committed"]),
             native=native,
             # TODO: remove optonality when all manifests have this field.
@@ -256,6 +281,7 @@ class Manifest:
         payload = {
             "schema": self.schema,
             "test_case_version": self.test_case_version,
+            "diagnostic_version": self.diagnostic_version,
             "catalog_hash": self.catalog_hash,
             "committed": self.committed,
             "native": {relpath: asdict(entry) for relpath, entry in self.native.items()},
@@ -264,7 +290,12 @@ class Manifest:
         path.write_text(text, encoding="utf-8")
 
     @classmethod
-    def seed_v1(cls, committed_digests: dict[str, str], catalog_hash: str | None = None) -> Manifest:
+    def seed_v1(
+        cls,
+        committed_digests: dict[str, str],
+        catalog_hash: str | None = None,
+        diagnostic_version: int = 1,
+    ) -> Manifest:
         """
         Create an initial manifest at ``test_case_version == 1`` with no native outputs.
 
@@ -274,6 +305,9 @@ class Manifest:
             Digests of the committed regression JSON artefacts.
         catalog_hash
             Hash of the input ``catalog.yaml`` that produced the baseline, if known.
+        diagnostic_version
+            Author-declared ``Diagnostic.version`` at seed time. Defaults to ``1``,
+            the version of a brand-new baseline.
 
         Returns
         -------
@@ -283,6 +317,7 @@ class Manifest:
         return cls(
             schema=SCHEMA_VERSION,
             test_case_version=1,
+            diagnostic_version=diagnostic_version,
             committed=dict(committed_digests),
             catalog_hash=catalog_hash,
             native={},

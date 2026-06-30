@@ -61,6 +61,33 @@ provider = "climate_ref_pmp:provider"
 [diagnostic_providers.config]
 ```
 
+## Managing configuration from the CLI
+
+Use `ref config init` to create a supported starter `ref.toml` in `REF_CONFIGURATION`.
+The command creates parent directories and refuses to overwrite an existing file unless you pass `--force`.
+
+Individual scalar values can be inspected or changed with dotted keys:
+
+```bash
+ref config get paths.scratch
+ref config set log_level DEBUG
+ref config unset log_level
+```
+
+`ref config get` prints the effective value the REF will use at runtime,
+so environment variables such as `REF_DATABASE_URL` take precedence over values in `ref.toml`.
+When an environment variable shadows a requested key,
+the CLI keeps stdout script-friendly and writes the notice to stderr.
+
+Run `ref config validate` after hand-editing the file.
+For CI or editor integrations, use `ref config validate --format json` and rely on the exit code:
+0 means valid, 1 means invalid.
+
+`ref config set` and `ref config unset` rewrite `ref.toml` from the parsed configuration model.
+This is convenient for simple scalar changes,
+but it does not preserve comments or custom key ordering in a hand-edited file.
+Edit structured values such as `diagnostic_providers` and `executor.config` directly in TOML.
+
 ## Additional Environment Variables
 
 Environment variables are used to control some aspects of the framework

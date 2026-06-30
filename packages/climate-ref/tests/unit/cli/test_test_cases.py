@@ -2752,6 +2752,28 @@ class TestCIGateCommand:
         assert result.exit_code == 0
         assert "replay" in result.output
 
+    def test_schema_1_base_manifest_treated_as_seeding(self, invoke_cli, mocker, tmp_path):
+        # The transition window: git show returns a *valid-JSON* schema-1 base manifest (no
+        # diagnostic_version). The schema-2 loader rejects it, and the real ci_gate try/except
+        # must convert that into base_manifest=None (seeding) rather than crashing the gate.
+        import json as _json
+
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        repo, _, digests = self._setup(
+            mocker, tmp_path, current_version=1, native={"data.nc": NativeEntry("a" * 64, 10)}
+        )
+        repo.git.show.side_effect = None
+        repo.git.show.return_value = _json.dumps(
+            {"schema": 1, "test_case_version": 1, "committed": digests, "native": {}},
+            indent=2,
+            sort_keys=True,
+        )
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "replay" in result.output
+
     def test_catalog_drift_fails(self, invoke_cli, mocker, tmp_path):
         # The manifest records a catalog_hash that the on-disk catalog no longer matches.
         from climate_ref_core.regression.manifest import Manifest
@@ -2909,6 +2931,39 @@ class TestMigrateManifestsCommand:
         assert migrated.test_case_version == 3
         assert migrated.catalog_hash == "abc"
         assert migrated.committed == {"output.json": "a" * 64}
+
+    def test_migrate_preserves_recorded_diagnostic_version(self, invoke_cli, mocker, tmp_path):
+        import json as _json
+
+        # Code has advanced to version 3, but the committed manifest still records
+        # version 2 — the canonical "authorised bump not yet re-minted" state, where the
+        # gate's staleness check is meant to fail the case until a re-mint. migrate-manifests
+        # must not paper over that by re-stamping the recorded value to the in-code version.
+        paths = self._wire(mocker, tmp_path, code_version=3)
+        paths.manifest.write_text(
+            _json.dumps(
+                {
+                    "schema": 2,
+                    "test_case_version": 1,
+                    "diagnostic_version": 2,
+                    "catalog_hash": None,
+                    "committed": {"output.json": "a" * 64},
+                    "native": {},
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
+        assert result.exit_code == 0
+
+        from climate_ref_core.regression.manifest import Manifest
+
+        migrated = Manifest.load(paths.manifest)
+        assert migrated.diagnostic_version == 2  # preserved, NOT re-stamped to 3
 
     def test_migrate_is_idempotent_and_byte_stable(self, invoke_cli, mocker, tmp_path):
         import json as _json

@@ -3,7 +3,9 @@
 
 A one-shot, idempotent maintenance command that backfills every committed
 ``manifest.json`` to the current ``SCHEMA_VERSION``, stamping each case's
-``diagnostic_version`` from the diagnostic's in-code ``Diagnostic.version``.
+``diagnostic_version`` from the diagnostic's in-code ``Diagnostic.version`` only
+when the field is absent. An already-recorded ``diagnostic_version`` is preserved,
+so re-running never re-stamps a stale bundle and subverts the gate's staleness check.
 
 It iterates the same ``_iter_test_cases`` the CI gate uses, so its coverage is
 definitionally aligned with the gate (iterator parity). A pre-bump manifest is
@@ -51,10 +53,11 @@ def migrate_manifests(
     """
     Backfill every committed ``manifest.json`` to the current schema.
 
-    For each test case with an existing manifest, re-stamps ``diagnostic_version``
-    from the diagnostic's in-code ``Diagnostic.version`` and rewrites the manifest at
-    the current ``SCHEMA_VERSION``. The operation is idempotent: re-running on an
-    already-migrated manifest re-stamps the same value and produces identical bytes.
+    For each test case with an existing manifest, backfills ``diagnostic_version``
+    from the diagnostic's in-code ``Diagnostic.version`` when it is absent (an
+    already-recorded value is preserved) and rewrites the manifest at the current
+    ``SCHEMA_VERSION``. The operation is idempotent: re-running on an already-migrated
+    manifest preserves the recorded value and produces identical bytes.
 
     Examples
     --------
@@ -92,10 +95,15 @@ def migrate_manifests(
             relpath: NativeEntry(sha256=entry["sha256"], size=entry["size"])
             for relpath, entry in data["native"].items()
         }
+        # Only backfill diagnostic_version when it is absent. Preserving an already-recorded
+        # value keeps this a pure backfill: re-running after an authorised version bump (where
+        # the manifest legitimately lags the in-code Diagnostic.version until a re-mint) must
+        # not silently re-stamp a stale bundle as current and subvert the gate's staleness check.
+        diagnostic_version = data.get("diagnostic_version", diag.version)
         manifest = Manifest(
             schema=SCHEMA_VERSION,
             test_case_version=data["test_case_version"],
-            diagnostic_version=diag.version,
+            diagnostic_version=diagnostic_version,
             committed=dict(data["committed"]),
             native=native,
             catalog_hash=data.get("catalog_hash"),
@@ -104,7 +112,7 @@ def migrate_manifests(
         # match exactly what a later mint would write.
         manifest.dump(paths.manifest)
         migrated += 1
-        logger.info(f"Migrated {case_id} -> schema {SCHEMA_VERSION}, diagnostic_version {diag.version}")
+        logger.info(f"Migrated {case_id} -> schema {SCHEMA_VERSION}, diagnostic_version {diagnostic_version}")
 
     console.print()
     console.print(

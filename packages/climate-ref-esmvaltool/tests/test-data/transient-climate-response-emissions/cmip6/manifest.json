@@ -2,40 +2,44 @@
   "catalog_hash": "b613fa1005fc988c79aa0fbf950bc77cdabfa48c",
   "committed": {
     "diagnostic.json": "7ab48ab04e69764ede371f1fccc138b0fbda081bb7c8467d5bd1f0e290751a98",
-    "output.json": "666d10cf64bf489e34d726b6cad954dbd05b92cff0cb61b054b3a06d036c7558",
-    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    "output.json": "e1dd1235434cecfbafce398569bcea49ca13bd12a1e91f27b2bddf05dbcfd33c",
+    "series.json": "b9fa8c422920a79713d7099109895ff0517132ce69e744ce50fa90da13a1a195"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "0afbce145a1ba1dfe5fba69d3c49102d63d9b859722644a449accd7ea4f57fb6",
       "size": 604
     },
     "executions/recipe/index.html": {
-      "sha256": "7e07bcb94c7b63c199def3235aa68d52387b190c62c9473a7a88f1bc42e0c343",
-      "size": 13707
+      "sha256": "1c62c1b064cda409351eed28c4aaf19a5df536f3582742b3890931566c3c0621",
+      "size": 14390
     },
-    "executions/recipe/plots/tcre/calculate_tcre/tcre.png": {
-      "sha256": "d50c684a93bc6b05eaa2dfe174010cb5d0a0fa1338ac4f08b604197772a9236e",
-      "size": 118352
+    "executions/recipe/plots/tcre/calculate/tcre.png": {
+      "sha256": "6145f02a740c3e1ac90cf2f809cc701a5d0e173e06ca982e3e7953b8f8ce0f40",
+      "size": 111737
     },
-    "executions/recipe/run/tcre/calculate_tcre/diagnostic_provenance.yml": {
-      "sha256": "bf24ddd1df4e219cfd58a0c7bb28bfc4bf84a7f438e71034465725b2dc769c5a",
-      "size": 1749
+    "executions/recipe/run/tcre/calculate/diagnostic_provenance.yml": {
+      "sha256": "343266f6eb2f8fce3fa2a1c8e356e51c49338faeb2f0d7ffc6e75dda67b0b0b7",
+      "size": 2645
     },
-    "executions/recipe/work/tcre/calculate_tcre/tcre.nc": {
-      "sha256": "d277f87e14cb5450049be9a6d51b2634ca5f0082d3cd16cd590747777a9c8c61",
+    "executions/recipe/work/tcre/calculate/MPI-ESM1-2-LR.nc": {
+      "sha256": "5072c7ef38ca520f9dbe290d016dfb5fba0a8cc457e64d0b880017d2123cf685",
+      "size": 28705
+    },
+    "executions/recipe/work/tcre/calculate/tcre.nc": {
+      "sha256": "83b852855e229a0982207e72fc19ffa80c58e3140e3b7be3eebb6ff0b4d614d5",
       "size": 9232
     },
     "output.json": {
-      "sha256": "28f6049b2890b0e7826f54f21c1dc3df7ca6611e0f62235fee89feeb89cf6fe6",
-      "size": 1527
+      "sha256": "e391a64ec1d0a7099b9301f77d465012027c26eb28425482799d4c6abb13843e",
+      "size": 2138
     },
     "series.json": {
-      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "size": 2
+      "sha256": "46dfb1c1dd0dfb16ece7e53ffcb15257509093519fa76aec8d1a3fce7bca87c3",
+      "size": 4257
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

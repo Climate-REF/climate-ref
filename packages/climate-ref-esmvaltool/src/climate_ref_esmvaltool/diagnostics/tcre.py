@@ -12,7 +12,7 @@ from climate_ref_core.constraints import (
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request
-from climate_ref_core.metric_values.typing import FileDefinition
+from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -32,7 +32,8 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
 
     name = "Transient Climate Response to Cumulative CO2 Emissions"
     slug = "transient-climate-response-emissions"
-    base_recipe = "recipe_tcre.yml"
+    version = 2
+    base_recipe = "ref/recipe_ref_tcre.yml"
 
     variables = (
         "tas",
@@ -80,19 +81,8 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 filters=(
                     FacetFilter(
                         facets={
-                            "branded_variable": (
-                                "fco2antt_tavg-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                            ),
-                            "experiment_id": "esm-1pctCO2",
-                            "frequency": "mon",
-                            "region": "glb",
-                        },
-                    ),
-                    FacetFilter(
-                        facets={
                             "branded_variable": "tas_tavg-h2m-hxy-u",
-                            "experiment_id": "esm-piControl",
+                            "experiment_id": "esm-flat10",
                             "frequency": "mon",
                             "region": "glb",
                         },
@@ -100,24 +90,47 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 ),
                 group_by=("source_id", "variant_label", "grid_label"),
                 constraints=(
+                    AddParentDataset.from_defaults(SourceDatasetType.CMIP7),
+                    AddSupplementaryDataset(
+                        supplementary_facets={
+                            "branded_variable": "fco2antt_tavg-u-hxy-u",
+                            "experiment_id": "esm-flat10",
+                            "frequency": "mon",
+                            "region": "glb",
+                        },
+                        matching_facets=(
+                            "source_id",
+                            "variant_label",
+                            "grid_label",
+                        ),
+                        optional_matching_facets=("version",),
+                    ),
                     RequireContiguousTimerange(group_by=("instance_id",)),
-                    RequireFacets("experiment_id", ("esm-1pctCO2", "esm-piControl")),
-                    RequireFacets("variable_id", variables),
+                    RequireFacets("variable_id", ("tas", "fco2antt")),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                 ),
             ),
         ),
     )
     facets = ("grid_label", "member_id", "variant_label", "source_id", "region", "metric")
-    # TODO: the ESMValTool diagnostic script does not save the data for the timeseries.
-    series = tuple()
+    series = (
+        SeriesDefinition(
+            file_pattern="tcre/calculate/{source_id}.nc",
+            dimensions={
+                "statistic": "global annual mean anomaly of tas vs cumulative fco2antt",
+            },
+            values_name="tas",
+            index_name="cumulative_fco2antt",
+            attributes=[],
+        ),
+    )
     files = (
         FileDefinition(
-            file_pattern="plots/tcre/calculate_tcre/*.png",
+            file_pattern="plots/tcre/calculate/*.png",
             dimensions={"statistic": "tcre"},
         ),
         FileDefinition(
-            file_pattern="work/tcre/calculate_tcre/tcre.nc",
+            file_pattern="work/tcre/calculate/tcre.nc",
             dimensions={"metric": "tcre"},
         ),
     )
@@ -147,7 +160,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                     CMIP7Request(
                         slug="cmip7",
                         facets={
-                            "experiment_id": ["esm-1pctCO2", "esm-piControl"],
+                            "experiment_id": ["esm-flat10", "esm-piControl"],
                             "source_id": "MPI-ESM1-2-LR",
                             "variable_id": ["areacella", "fco2antt", "tas"],
                             "branded_variable": [
@@ -173,31 +186,35 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
     ) -> None:
         """Update the recipe."""
         # Prepare updated datasets section in recipe. It contains three
-        # datasets, "tas" and "fco2antt" for the "esm-1pctCO2" and just "tas"
-        # for the "esm-piControl" experiment.
+        # datasets, "tas" and "fco2antt" for a scenario with steady CO2
+        # increase (i.e., "esm-flat10" for CMIP7 and "esm-1pctCO2" for CMIP6)
+        # and just "tas" for the "esm-piControl" experiment.
         cmip_source = get_cmip_source_type(input_files)
         df = input_files[cmip_source]
-        tas_esm_1pctCO2, tas_esm_piControl = get_child_and_parent_dataset(
+        if cmip_source == SourceDatasetType.CMIP6:
+            exp_duration_in_years = 65
+        else:
+            exp_duration_in_years = 110
+        tas_co2_increase, tas_esm_piControl = get_child_and_parent_dataset(
             df[df.variable_id == "tas"],
             parent_experiment="esm-piControl",
-            child_duration_in_years=65,
+            child_duration_in_years=exp_duration_in_years,
             parent_offset_in_years=0,
-            parent_duration_in_years=65,
+            parent_duration_in_years=exp_duration_in_years,
         )
         recipe_variables = dataframe_to_recipe(df[df.variable_id == "fco2antt"])
 
         fco2antt_esm_1pctCO2 = next(
             ds for ds in recipe_variables["fco2antt"]["additional_datasets"] if ds["exp"] == "esm-1pctCO2"
         )
-        fco2antt_esm_1pctCO2["timerange"] = tas_esm_1pctCO2["timerange"]
+        fco2antt_esm_1pctCO2["timerange"] = tas_co2_increase["timerange"]
 
         recipe["diagnostics"]["tcre"]["variables"] = {
-            "tas_esm-1pctCO2": {
-                "short_name": "tas",
+            "tas": {
                 "preprocessor": "global_annual_mean_anomaly",
-                "additional_datasets": [tas_esm_1pctCO2],
+                "additional_datasets": [tas_co2_increase],
             },
-            "tas_esm-piControl": {
+            "tas_control": {
                 "short_name": "tas",
                 "preprocessor": "global_annual_mean_anomaly",
                 "additional_datasets": [tas_esm_piControl],
@@ -207,18 +224,21 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
                 "additional_datasets": [fco2antt_esm_1pctCO2],
             },
         }
-        recipe["diagnostics"].pop("barplot")
 
-        # Update descriptions.
-        dataset = tas_esm_1pctCO2["dataset"]
-        ensemble = tas_esm_1pctCO2["ensemble"]
-        settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate_tcre"]
-        settings["caption"] = (
-            settings["caption"].replace("MPI-ESM1-2-LR", dataset).replace("r1i1p1f1", ensemble)
-        )
-        settings["pyplot_kwargs"]["title"] = (
-            settings["pyplot_kwargs"]["title"].replace("MPI-ESM1-2-LR", dataset).replace("r1i1p1f1", ensemble)
-        )
+        # For CMIP6, some special settings are necessary because the esm-flat10
+        # experiment does not exist
+        if cmip_source == SourceDatasetType.CMIP6:
+            diag_settings = recipe["diagnostics"]["tcre"]["scripts"]["calculate"]
+            diag_settings["calc_tcre_period"] = [45, 65]
+            diag_settings["caption"] = (
+                "Global annual mean near-surface air temperature anomaly ΔT vs. "
+                "global annual cumulative CO2 emissions E of the emission-driven "
+                "1% CO2 increase per year experiment. The transient climate "
+                "response to cumulative CO2 Emissions (TCRE) is defined as the "
+                "20-year average ΔT centered at the time where cumulative CO2 "
+                "emissions E reach 1000 PgC (i.e., after 55 years)."
+            )
+            diag_settings["exp_target"] = "esm-1pctCO2"
 
     @staticmethod
     def format_result(
@@ -228,7 +248,7 @@ class TransientClimateResponseEmissions(ESMValToolDiagnostic):
         output_args: OutputBundleArgs,
     ) -> tuple[CMECMetric, CMECOutput]:
         """Format the result."""
-        tcre_ds = xarray.open_dataset(result_dir / "work" / "tcre" / "calculate_tcre" / "tcre.nc")
+        tcre_ds = xarray.open_dataset(result_dir / "work" / "tcre" / "calculate" / "tcre.nc")
         tcre = float(fillvalues_to_nan(tcre_ds["tcre"].values)[0])
 
         # Update the diagnostic bundle arguments with the computed diagnostics.

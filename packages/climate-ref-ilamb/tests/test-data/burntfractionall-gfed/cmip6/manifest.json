@@ -5,6 +5,7 @@
     "output.json": "bea6d4be3d825f3ebca24eb6a164409d05cbce234eeab4378ad21c57a9d199d1",
     "series.json": "bfc11736e025968323c015e182d4473fc1e03726d7d2d2a241fcd8f0002cdc71"
   },
+  "diagnostic_version": 2,
   "native": {
     "CESM2.csv": {
       "sha256": "d139d936df5f7a3c1b28572ae40058a6072b8decc0dc3f61eecef405ca2f5577",
@@ -99,6 +100,6 @@
       "size": 49856
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 1
 }

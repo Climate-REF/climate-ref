@@ -818,6 +818,7 @@ class TestRunTestCaseCommand:
         mock_spec = MagicMock()
         mock_spec.test_cases = [mock_tc]
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.version = 1
         mock_diag.provider = MagicMock(slug="example")
         mock_provider = MagicMock(slug="example")
         mock_provider.diagnostics.return_value = [mock_diag]
@@ -1042,6 +1043,7 @@ class TestRunTestCaseCommand:
         Manifest(
             schema=SCHEMA_VERSION,
             test_case_version=3,
+            diagnostic_version=4,
             committed={},
             native={"diagnostic.json": NativeEntry(sha256="00" * 32, size=1)},
         ).dump(paths.manifest)
@@ -1054,6 +1056,8 @@ class TestRunTestCaseCommand:
         # run preserves the mint-owned native block and version (it never authors native).
         manifest = Manifest.load(paths.manifest)
         assert manifest.test_case_version == 3
+        # run preserves the recorded diagnostic_version (only mint advances it).
+        assert manifest.diagnostic_version == 4
         assert set(manifest.native) == {"diagnostic.json"}
 
 
@@ -1400,6 +1404,7 @@ def _make_case_mocks():
     spec = MagicMock()
     spec.test_cases = [tc]
     diag = MagicMock(slug="test-diag", test_data_spec=spec)
+    diag.version = 1
     diag.provider = MagicMock(slug="example")
     provider = MagicMock(slug="example")
     provider.diagnostics.return_value = [diag]
@@ -1515,8 +1520,9 @@ class TestSyncCommand:
         case_dir.mkdir(parents=True)
         paths = TestCasePaths(root=case_dir)
         Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed={},
             native={"out.nc": NativeEntry(sha256=digest, size=len(b"native-data"))},
         ).dump(paths.manifest)
@@ -1543,8 +1549,9 @@ class TestSyncCommand:
         case_dir.mkdir(parents=True)
         paths = TestCasePaths(root=case_dir)
         Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed={},
             native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
         ).dump(paths.manifest)
@@ -1779,7 +1786,9 @@ class TestReplayCommand:
         (regression_dir / "diagnostic.json").write_text("{}")
         digests = compute_committed_digests(regression_dir)
         paths = TestCasePaths(root=case_dir)
-        Manifest(schema=1, test_case_version=1, committed=digests, native={}).dump(paths.manifest)
+        Manifest(schema=2, test_case_version=1, diagnostic_version=1, committed=digests, native={}).dump(
+            paths.manifest
+        )
 
         store = LocalFilesystemStore(root=tmp_path / "store")
         mocker.patch(
@@ -1864,8 +1873,9 @@ class TestReplayCommand:
         paths = TestCasePaths(root=case_dir)
         # Committed digest deliberately wrong -> integrity mismatch (now a warning, not a gate).
         Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed={"diagnostic.json": "00" * 32},
             native={},
         ).dump(paths.manifest)
@@ -1915,8 +1925,9 @@ class TestReplayCommand:
         paths = TestCasePaths(root=case_dir)
         # Wrong committed digest -> integrity warns; native present -> passes the mint guard.
         Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed={"series.json": "00" * 32},
             native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
         ).dump(paths.manifest)
@@ -2126,6 +2137,8 @@ class TestMintCommand:
 
         manifest = Manifest.load(paths.manifest)
         assert manifest.test_case_version == 1
+        # mint stamps the diagnostic's in-code Diagnostic.version.
+        assert manifest.diagnostic_version == 1
         # mint authored the native block from the captured snapshot.
         assert set(manifest.native) == {"diagnostic.json", "output.json", "series.json"}
         # Each native blob was PUT into the store.
@@ -2198,8 +2211,9 @@ class TestMintCommand:
         paths = TestCasePaths(root=case_dir)
         stored_native = {"output.json": NativeEntry(sha256="aa" * 32, size=10)}
         Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed={"diagnostic.json": "00" * 32},
             native=stored_native,
         ).dump(paths.manifest)
@@ -2238,6 +2252,60 @@ class TestMintCommand:
         }
         # The from-replay path must not snapshot the hydrated slot at all.
         snapshot.assert_not_called()
+
+    def test_mint_from_replay_advances_diagnostic_version(self, invoke_cli, mocker, tmp_path):
+        """`mint --from-replay` re-stamps the manifest's diagnostic_version from the code version.
+
+        A version bump followed by `mint --from-replay` re-couples the unchanged native bundle to
+        the new declared Diagnostic.version even though the native blobs are reused verbatim.
+        """
+        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, diag, _tc = _make_case_mocks()
+        # The diagnostic code has been bumped past the recorded baseline.
+        diag.version = 2
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        (case_dir / "catalog.yaml").touch()
+        paths = TestCasePaths(root=case_dir)
+        stored_native = {"output.json": NativeEntry(sha256="aa" * 32, size=10)}
+        Manifest(
+            schema=2,
+            test_case_version=1,
+            diagnostic_version=1,
+            committed={"diagnostic.json": "00" * 32},
+            native=stored_native,
+        ).dump(paths.manifest)
+
+        store = MagicMock()
+        store.has.return_value = True
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch("climate_ref_core.testing.get_catalog_hash", return_value=None)
+        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
+        mocker.patch("climate_ref.cli.test_cases.baselines.stage_materialise")
+        mocker.patch(
+            "climate_ref.cli.test_cases.baselines.stage_build",
+            return_value={"diagnostic.json": "00" * 32},
+        )
+        mocker.patch("climate_ref.cli.test_cases.baselines.promote_to_baseline")
+
+        result = invoke_cli(
+            ["test-cases", "mint", "--provider", "example", "--diagnostic", "test-diag", "--from-replay"]
+        )
+        assert result.exit_code == 0
+
+        written = Manifest.load(paths.manifest)
+        # The native is preserved, but diagnostic_version advances to the in-code version.
+        assert {k: v.sha256 for k, v in written.native.items()} == {
+            k: v.sha256 for k, v in stored_native.items()
+        }
+        assert written.diagnostic_version == 2
 
     def test_mint_from_replay_requires_minted_manifest(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` fails when there is no existing minted native to replay from."""
@@ -2403,6 +2471,8 @@ class TestCIGateCommand:
         current_version=None,
         committed_content=None,
         native=None,
+        diagnostic_version=1,
+        code_diagnostic_version=1,
     ):
         """
         Wire a single example test case for the gate.
@@ -2444,6 +2514,7 @@ class TestCIGateCommand:
         mock_tc.name = "default"
         mock_spec = MagicMock(test_cases=[mock_tc])
         mock_diag = MagicMock(slug="test-diag", test_data_spec=mock_spec)
+        mock_diag.version = code_diagnostic_version
         mock_diag.provider = MagicMock(slug="example")
         mock_provider = MagicMock(slug="example")
         mock_provider.diagnostics.return_value = [mock_diag]
@@ -2463,6 +2534,7 @@ class TestCIGateCommand:
             Manifest(
                 schema=SCHEMA_VERSION,
                 test_case_version=current_version,
+                diagnostic_version=diagnostic_version,
                 committed=committed_digests,
                 native=native or {},
             ).dump(paths.manifest)
@@ -2482,7 +2554,7 @@ class TestCIGateCommand:
         return repo, paths, committed_digests
 
     @staticmethod
-    def _set_base(repo, version, committed, native=None):
+    def _set_base(repo, version, committed, native=None, diagnostic_version=1):
         """Configure ``repo.git.show`` to return a base manifest with these fields."""
         import json as _json
 
@@ -2493,6 +2565,7 @@ class TestCIGateCommand:
         payload = {
             "schema": SCHEMA_VERSION,
             "test_case_version": version,
+            "diagnostic_version": diagnostic_version,
             "committed": committed,
             "native": {relpath: asdict(entry) for relpath, entry in (native or {}).items()},
         }
@@ -2679,6 +2752,28 @@ class TestCIGateCommand:
         assert result.exit_code == 0
         assert "replay" in result.output
 
+    def test_schema_1_base_manifest_treated_as_seeding(self, invoke_cli, mocker, tmp_path):
+        # The transition window: git show returns a *valid-JSON* schema-1 base manifest (no
+        # diagnostic_version). The schema-2 loader rejects it, and the real ci_gate try/except
+        # must convert that into base_manifest=None (seeding) rather than crashing the gate.
+        import json as _json
+
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        repo, _, digests = self._setup(
+            mocker, tmp_path, current_version=1, native={"data.nc": NativeEntry("a" * 64, 10)}
+        )
+        repo.git.show.side_effect = None
+        repo.git.show.return_value = _json.dumps(
+            {"schema": 1, "test_case_version": 1, "committed": digests, "native": {}},
+            indent=2,
+            sort_keys=True,
+        )
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "replay" in result.output
+
     def test_catalog_drift_fails(self, invoke_cli, mocker, tmp_path):
         # The manifest records a catalog_hash that the on-disk catalog no longer matches.
         from climate_ref_core.regression.manifest import Manifest
@@ -2688,6 +2783,7 @@ class TestCIGateCommand:
         Manifest(
             schema=manifest.schema,
             test_case_version=manifest.test_case_version,
+            diagnostic_version=manifest.diagnostic_version,
             committed=manifest.committed,
             native=manifest.native,
             catalog_hash="expected_hash",
@@ -2697,3 +2793,202 @@ class TestCIGateCommand:
         result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
         assert result.exit_code == 1
         assert "fail" in result.output
+
+    def test_stale_diagnostic_version_fails(self, invoke_cli, mocker, tmp_path):
+        # The in-code Diagnostic.version is ahead of the recorded baseline: stale -> FAIL.
+        repo, _, digests = self._setup(
+            mocker, tmp_path, current_version=1, diagnostic_version=1, code_diagnostic_version=2
+        )
+        self._set_base(repo, 1, digests, diagnostic_version=1)
+
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output
+
+    def test_matched_diagnostic_version_does_not_fail(self, invoke_cli, mocker, tmp_path):
+        # code == manifest.diagnostic_version: no new failure, falls through to normal logic.
+        repo, _, digests = self._setup(
+            mocker, tmp_path, current_version=1, diagnostic_version=2, code_diagnostic_version=2
+        )
+        self._set_base(repo, 1, digests, diagnostic_version=2)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        assert "skip" in result.output
+
+    def test_ecs_blind_spot_closed_then_remint_recovers(self, invoke_cli, mocker, tmp_path):
+        """#671: an execution change (code version bumped) FAILs until the baseline is re-minted."""
+        from climate_ref_core.regression.manifest import Manifest, NativeEntry
+
+        native = {"data.nc": NativeEntry("a" * 64, 10)}
+
+        # Code bumped to 2, baseline still records 1: stale -> FAIL.
+        repo, paths, digests = self._setup(
+            mocker,
+            tmp_path,
+            current_version=1,
+            diagnostic_version=1,
+            code_diagnostic_version=2,
+            native=native,
+        )
+        self._set_base(repo, 1, digests, diagnostic_version=1, native=native)
+        stale = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert stale.exit_code == 1
+        assert "fail" in stale.output
+
+        # Simulate the re-mint: rewrite the HEAD manifest at diagnostic_version 2 (== code).
+        current = Manifest.load(paths.manifest)
+        Manifest(
+            schema=current.schema,
+            test_case_version=current.test_case_version,
+            diagnostic_version=2,
+            committed=current.committed,
+            native=current.native,
+            catalog_hash=current.catalog_hash,
+        ).dump(paths.manifest)
+        recovered = invoke_cli(["test-cases", "ci-gate"])
+        assert recovered.exit_code == 0
+        assert "fail" not in recovered.output
+
+    def test_revert_green_path(self, invoke_cli, mocker, tmp_path):
+        """A legitimate revert (code v2->v1 + re-mint + tcv bump) has a GREEN gate exit."""
+        from climate_ref_core.regression.manifest import NativeEntry
+
+        native = {"data.nc": NativeEntry("a" * 64, 10)}
+        # HEAD: re-minted at diagnostic_version 1, tcv bumped to 2, committed re-authored.
+        repo, _, _ = self._setup(
+            mocker,
+            tmp_path,
+            current_version=2,
+            diagnostic_version=1,
+            code_diagnostic_version=1,
+            committed_content={"output.json": '{"reauthored": 1}\n'},
+            native=native,
+        )
+        # Base: the pre-revert baseline at diagnostic_version 2 with the old committed bundle.
+        self._set_base(repo, 1, {"output.json": "f" * 64}, native=native, diagnostic_version=2)
+
+        result = invoke_cli(["test-cases", "ci-gate"])
+        assert result.exit_code == 0
+        # 2a passes on equality, 2b's carve-out lets the decrease through, the tcv bump REPLAYs.
+        assert "replay" in result.output
+        assert "fail" not in result.output
+
+
+class TestMigrateManifestsCommand:
+    """Tests for the ``ref test-cases migrate-manifests`` verb."""
+
+    def _wire(self, mocker, tmp_path, *, code_version=1):
+        from climate_ref_core.testing import TestCasePaths
+
+        registry, diag, _tc = _make_case_mocks()
+        diag.version = code_version
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        paths = TestCasePaths(root=case_dir)
+
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        return paths
+
+    def test_migrate_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "migrate-manifests", "--help"])
+        assert "diagnostic_version" in result.output or "schema" in result.output
+
+    def test_migrate_stamps_code_version_and_bumps_schema(self, invoke_cli, mocker, tmp_path):
+        import json as _json
+
+        paths = self._wire(mocker, tmp_path, code_version=2)
+        # A schema-1 manifest (no diagnostic_version) on disk, as it would exist pre-migration.
+        paths.manifest.write_text(
+            _json.dumps(
+                {
+                    "schema": 1,
+                    "test_case_version": 3,
+                    "catalog_hash": "abc",
+                    "committed": {"output.json": "a" * 64},
+                    "native": {},
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
+        assert result.exit_code == 0
+
+        from climate_ref_core.regression.manifest import Manifest
+
+        migrated = Manifest.load(paths.manifest)
+        assert migrated.schema == 2
+        assert migrated.diagnostic_version == 2  # stamped from diag.version
+        assert migrated.test_case_version == 3
+        assert migrated.catalog_hash == "abc"
+        assert migrated.committed == {"output.json": "a" * 64}
+
+    def test_migrate_preserves_recorded_diagnostic_version(self, invoke_cli, mocker, tmp_path):
+        import json as _json
+
+        # Code has advanced to version 3 but the committed manifest still records version 2:
+        # an authorised bump not yet re-minted, which the gate's staleness check fails until
+        # a re-mint. migrate-manifests must not paper over that by re-stamping the recorded
+        # value to the in-code version.
+        paths = self._wire(mocker, tmp_path, code_version=3)
+        paths.manifest.write_text(
+            _json.dumps(
+                {
+                    "schema": 2,
+                    "test_case_version": 1,
+                    "diagnostic_version": 2,
+                    "catalog_hash": None,
+                    "committed": {"output.json": "a" * 64},
+                    "native": {},
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        result = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
+        assert result.exit_code == 0
+
+        from climate_ref_core.regression.manifest import Manifest
+
+        migrated = Manifest.load(paths.manifest)
+        assert migrated.diagnostic_version == 2  # preserved, NOT re-stamped to 3
+
+    def test_migrate_is_idempotent_and_byte_stable(self, invoke_cli, mocker, tmp_path):
+        import json as _json
+
+        paths = self._wire(mocker, tmp_path, code_version=1)
+        paths.manifest.write_text(
+            _json.dumps(
+                {
+                    "schema": 1,
+                    "test_case_version": 1,
+                    "committed": {},
+                    "native": {},
+                },
+                indent=2,
+                sort_keys=True,
+            )
+            + "\n",
+            encoding="utf-8",
+        )
+
+        first = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
+        assert first.exit_code == 0
+        after_first = paths.manifest.read_bytes()
+
+        # Re-running on an already-migrated manifest is a no-op (byte-identical).
+        second = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
+        assert second.exit_code == 0
+        assert paths.manifest.read_bytes() == after_first

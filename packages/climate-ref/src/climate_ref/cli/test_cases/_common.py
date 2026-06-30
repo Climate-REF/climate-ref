@@ -100,10 +100,11 @@ def _validate_requested_filters(
             raise typer.Exit(code=1)
 
 
-def _write_test_case_manifest(
+def _write_test_case_manifest(  # noqa: PLR0913
     paths: TestCasePaths,
     *,
     test_case_version: int,
+    diagnostic_version: int,
     committed: dict[str, str],
     native: dict[str, NativeEntry],
     schema: int | None = None,
@@ -114,6 +115,8 @@ def _write_test_case_manifest(
     Shared by ``run`` (which preserves the existing version and native block) and
     ``mint`` (which authors the native block and may bump the version); the two
     callers differ only in the ``test_case_version`` and ``native`` they supply.
+    Only ``mint`` advances ``diagnostic_version`` to the diagnostic's current
+    ``Diagnostic.version``; ``run`` / ``build`` preserve the value already recorded.
     The ``catalog_hash`` is always (re)derived from the current ``catalog.yaml`` so
     the manifest stays coupled to the inputs that produced the committed bundle.
     """
@@ -123,6 +126,7 @@ def _write_test_case_manifest(
     manifest = Manifest(
         schema=SCHEMA_VERSION if schema is None else schema,
         test_case_version=test_case_version,
+        diagnostic_version=diagnostic_version,
         committed=dict(committed),
         native=native,
         catalog_hash=get_catalog_hash(paths.catalog),

@@ -1,0 +1,28 @@
+{
+  "catalog_hash": "8f3a4713d6af9bf6fbac2c17dfc468151d122fb5",
+  "committed": {
+    "diagnostic.json": "3c9cc85e0bec0faefd167bfd57435751c7b05b1f426b314e9698a8411aacadc0",
+    "output.json": "da444e2c0fc801fedb684e3c1a9636a8711552502368ced5708d4053c9b8f6b8",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "b10d52a3c6d047837402a141b1eb426c9b8dd2633ecbdf64b4faa0262bc64742",
+      "size": 940
+    },
+    "global_mean_surface_temperature.nc": {
+      "sha256": "65b870fbc5f6b533cc67df93287532c65d232a71bd97383bf42708b4d6fca042",
+      "size": 22595
+    },
+    "output.json": {
+      "sha256": "87de2a1aa8fc8d3faeaefee582e3cb820a61ddc7be3b7d24170b9a6c3590ba96",
+      "size": 612
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

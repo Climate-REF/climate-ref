@@ -1,0 +1,28 @@
+{
+  "catalog_hash": "f08a7aebd0f75f6aee658e536ee9de9f28317bba",
+  "committed": {
+    "diagnostic.json": "ba83c82cb032e1c216e0e6669713e4024dc5333eb1e88a119758de6f82f114d0",
+    "output.json": "da444e2c0fc801fedb684e3c1a9636a8711552502368ced5708d4053c9b8f6b8",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "818ea20569cd18682e426e99312b4b2c863311d24b83ee47d1383bc995f8034c",
+      "size": 940
+    },
+    "global_mean_surface_temperature.nc": {
+      "sha256": "2050008f4d67c4b1a6da855f902c115d6bc5d81aa8cd4ae8bf2643d01d7283a8",
+      "size": 22595
+    },
+    "output.json": {
+      "sha256": "87de2a1aa8fc8d3faeaefee582e3cb820a61ddc7be3b7d24170b9a6c3590ba96",
+      "size": 612
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

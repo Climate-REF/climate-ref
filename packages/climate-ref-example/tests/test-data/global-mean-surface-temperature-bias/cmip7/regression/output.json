@@ -1,0 +1,21 @@
+{
+  "data": {
+    "surface_temperature_comparison": {
+      "description": "Annual area-weighted global-mean surface temperature for the model and the HadISST-1-1 reference dataset, together with the model-minus-reference bias.",
+      "dimensions": null,
+      "filename": "global_mean_surface_temperature.nc",
+      "long_name": "Global Mean Surface Temperature: model, reference and bias"
+    }
+  },
+  "diagnostics": {},
+  "html": {},
+  "index": "index.html",
+  "metrics": null,
+  "plots": {},
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

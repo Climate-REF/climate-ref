@@ -1,0 +1,173 @@
+{
+  "data": {
+    "executions/recipe/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv",
+      "long_name": "CSV file of Global Warming level Exceedances"
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.nc",
+      "long_name": "Multimodel mean of Precipitation at 1.5 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.nc",
+      "long_name": "Multimodel mean of Precipitation at 2.0 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.nc",
+      "long_name": "Multimodel mean of Precipitation at 3.0 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.nc",
+      "long_name": "Multimodel mean of Precipitation at 4.0 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.nc",
+      "long_name": "Multimodel mean of Temperature at 1.5 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.nc",
+      "long_name": "Multimodel mean of Temperature at 2.0 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.nc",
+      "long_name": "Multimodel mean of Temperature at 3.0 $^\\circ$ C"
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.nc",
+      "long_name": "Multimodel mean of Temperature at 4.0 $^\\circ$ C"
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.png",
+      "long_name": "Multimodel mean of Precipitation at 1.5 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.png",
+      "long_name": "Multimodel mean of Precipitation at 2.0 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.png",
+      "long_name": "Multimodel mean of Precipitation at 3.0 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "pr"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.png",
+      "long_name": "Multimodel mean of Precipitation at 4.0 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.png",
+      "long_name": "Multimodel mean of Temperature at 1.5 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.png",
+      "long_name": "Multimodel mean of Temperature at 2.0 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.png",
+      "long_name": "Multimodel mean of Temperature at 3.0 $^\\circ$ C"
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "mean",
+        "variable_id": "tas"
+      },
+      "filename": "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.png",
+      "long_name": "Multimodel mean of Temperature at 4.0 $^\\circ$ C"
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

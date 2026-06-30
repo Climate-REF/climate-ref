@@ -1,0 +1,55 @@
+{
+  "data": {
+    "executions/recipe/work/zec/zec/zec.nc": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zec"
+      },
+      "filename": "executions/recipe/work/zec/zec/zec.nc",
+      "long_name": ""
+    },
+    "executions/recipe/work/zec/zec/zec_50.nc": {
+      "description": "",
+      "dimensions": {
+        "metric": "zec"
+      },
+      "filename": "executions/recipe/work/zec/zec/zec_50.nc",
+      "long_name": ""
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/zec/zec/zec_50_barplot.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zec"
+      },
+      "filename": "executions/recipe/plots/zec/zec/zec_50_barplot.png",
+      "long_name": "Barplot of ZEC_50"
+    },
+    "executions/recipe/plots/zec/zec/zec_timeseries_all_models.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zec"
+      },
+      "filename": "executions/recipe/plots/zec/zec/zec_timeseries_all_models.png",
+      "long_name": "ZEC timeseries"
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

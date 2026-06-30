@@ -12,7 +12,12 @@ from climate_ref.models.execution import (
     ExecutionGroup,
     ExecutionOutput,
 )
-from climate_ref.models.metric_value import MetricValue, ScalarMetricValue, SeriesMetricValue
+from climate_ref.models.metric_value import (
+    MetricValue,
+    ScalarMetricValue,
+    SeriesIndex,
+    SeriesMetricValue,
+)
 from climate_ref.models.provider import Provider
 
 __all__ = [
@@ -25,6 +30,7 @@ __all__ = [
     "MetricValue",
     "Provider",
     "ScalarMetricValue",
+    "SeriesIndex",
     "SeriesMetricValue",
     "Table",
 ]

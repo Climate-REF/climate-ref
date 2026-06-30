@@ -7,12 +7,17 @@ import pytest
 import xarray as xr
 import yaml
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic
-from climate_ref_esmvaltool.diagnostics.regional_historical_changes import _region_to_filename
+from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
+    RegionalHistoricalTimeSeries,
+    _region_to_filename,
+)
 from climate_ref_esmvaltool.types import Recipe
 
 from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.diagnostics import CommandLineDiagnostic, ExecutionDefinition
 from climate_ref_core.metric_values import SeriesMetricValue as SeriesMetricValueType
 from climate_ref_core.metric_values.typing import SeriesDefinition
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.output import OutputCV
 
@@ -245,3 +250,195 @@ def test_series_validation_failure(tmp_path, metric_definition, mock_diagnostic,
     # Run build_execution_result (should log exception)
     mock_diagnostic.build_execution_result(definition=metric_definition)
     assert log_spy.call_count >= 0  # Should log the validation failure
+
+
+def test_stabilise_execution_dir(metric_definition, mock_diagnostic):
+    """The timestamped session directory is renamed and its references rewritten."""
+    executions_dir = metric_definition.to_output_path("executions")
+    session_dir = executions_dir / "recipe_20260130_162732"
+
+    nc_path = session_dir / "work" / "timeseries" / "script1" / "file0.nc"
+    provenance = session_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml"
+    provenance.parent.mkdir(parents=True)
+    provenance.write_text(yaml.safe_dump({str(nc_path): {"caption": "c"}}), encoding="utf-8")
+    index = session_dir / "index.html"
+    index.write_text(f"<a href='{session_dir}/work'>x</a>", encoding="utf-8")
+
+    mock_diagnostic._stabilise_execution_dir(metric_definition)
+
+    stable_dir = executions_dir / "recipe"
+    assert stable_dir.is_dir()
+    assert not session_dir.exists()
+    # The timestamped name no longer appears, and references resolve to the renamed dir.
+    assert "recipe_20260130_162732" not in (stable_dir / "index.html").read_text(encoding="utf-8")
+    rewritten = yaml.safe_load(
+        (stable_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml").read_text(
+            encoding="utf-8"
+        )
+    )
+    assert all(key.startswith(f"{stable_dir}/") for key in rewritten)
+
+
+def test_stabilise_execution_dir_no_output(metric_definition, mock_diagnostic):
+    """Stabilisation is a no-op when no session directory was produced."""
+    executions_dir = metric_definition.to_output_path("executions")
+    executions_dir.mkdir(parents=True)
+
+    mock_diagnostic._stabilise_execution_dir(metric_definition)
+
+    assert not (executions_dir / "recipe").exists()
+
+
+def test_prepare_regression_output_stabilises(metric_definition, mock_diagnostic):
+    """The regression-capture hook stabilises the timestamped directory."""
+    executions_dir = metric_definition.to_output_path("executions")
+    session_dir = executions_dir / "recipe_20260130_162732"
+    session_dir.mkdir(parents=True)
+    (session_dir / "index.html").write_text(f"{session_dir}", encoding="utf-8")
+
+    mock_diagnostic.prepare_regression_output(metric_definition)
+
+    assert (executions_dir / "recipe").is_dir()
+    assert not session_dir.exists()
+
+
+def test_execute_does_not_stabilise(metric_definition, mock_diagnostic, mocker):
+    """Normal execution leaves the timestamped directory untouched (regression-only)."""
+    executions_dir = metric_definition.to_output_path("executions")
+
+    def fake_execute(_self, definition):
+        session_dir = definition.to_output_path("executions") / "recipe_20260130_162732"
+        session_dir.mkdir(parents=True)
+
+    mocker.patch.object(CommandLineDiagnostic, "execute", autospec=True, side_effect=fake_execute)
+
+    mock_diagnostic.execute(metric_definition)
+
+    assert (executions_dir / "recipe_20260130_162732").is_dir()
+    assert not (executions_dir / "recipe").exists()
+
+
+def test_build_execution_result_prefers_stable_dir(metric_definition, mock_diagnostic):
+    """build_execution_result resolves the stabilised ``recipe`` dir over a timestamped one."""
+    executions_dir = metric_definition.to_output_path("executions")
+
+    # Stabilised directory with one data file and one plot.
+    stable_dir = executions_dir / "recipe"
+    metadata = {}
+    for dirname in "work", "plots":
+        suffix = ".nc" if dirname == "work" else ".png"
+        filepath = stable_dir / dirname / "timeseries" / "script1" / f"file0{suffix}"
+        metadata[str(filepath)] = {"caption": "stable file"}
+    provenance = stable_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml"
+    provenance.parent.mkdir(parents=True)
+    provenance.write_text(yaml.safe_dump(metadata), encoding="utf-8")
+
+    # Decoy timestamped directory that must be ignored when the stable one exists.
+    decoy_dir = executions_dir / "recipe_20990101_000000"
+    decoy_provenance = decoy_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml"
+    decoy_provenance.parent.mkdir(parents=True)
+    decoy_nc = decoy_dir / "work" / "timeseries" / "script1" / "decoy.nc"
+    decoy_provenance.write_text(yaml.safe_dump({str(decoy_nc): {"caption": "decoy"}}), encoding="utf-8")
+
+    result = mock_diagnostic.build_execution_result(definition=metric_definition)
+    output_bundle = json.loads(
+        result.to_output_path(result.output_bundle_filename).read_text(encoding="utf-8")
+    )
+
+    captured = list(output_bundle[OutputCV.DATA.value]) + list(output_bundle[OutputCV.PLOTS.value])
+    assert captured
+    assert all(path.startswith("executions/recipe/") for path in captured)
+    assert not any("recipe_20990101_000000" in path for path in captured)
+
+
+def test_reconstruction_inputs_capture_provenance_for_replay(metric_definition, mock_diagnostic, tmp_path):
+    """The declared ``reconstruction_inputs`` glob persists the provenance a replay needs to rebuild."""
+    output_dir = metric_definition.output_directory
+    stable_dir = output_dir / "executions" / "recipe"
+
+    # A stabilised run: one data file, one plot, an index page, and the provenance that registers them.
+    metadata = {}
+    for dirname in ("work", "plots"):
+        suffix = ".nc" if dirname == "work" else ".png"
+        filepath = stable_dir / dirname / "timeseries" / "script1" / f"file0{suffix}"
+        filepath.parent.mkdir(parents=True, exist_ok=True)
+        filepath.touch()
+        metadata[str(filepath)] = {"caption": "stable file"}
+    (stable_dir / "index.html").write_text("<html></html>", encoding="utf-8")
+    provenance = stable_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml"
+    provenance.parent.mkdir(parents=True)
+    provenance.write_text(yaml.safe_dump(metadata), encoding="utf-8")
+
+    result = mock_diagnostic.build_execution_result(definition=metric_definition)
+
+    results_dir = tmp_path / "results"
+    copied = copy_execution_outputs(
+        output_dir, results_dir, ".", result, extra_globs=mock_diagnostic.reconstruction_inputs
+    )
+
+    prov_relpath = provenance.relative_to(output_dir)
+    # The provenance is NOT referenced by the bundle, so only the reconstruction-inputs glob keeps it.
+    assert prov_relpath in copied, f"reconstruction input not captured; got {sorted(map(str, copied))}"
+    assert (results_dir / prov_relpath).exists()
+
+    # Mirror the mint -> replay path: sanitise the captured set to portable placeholders (as
+    # snapshot_native does), then hydrate to the replay directory (as stage_rebuild_from_slot does),
+    # so the provenance's absolute paths resolve under the new output directory.
+    placeholders = PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td")
+    placeholders.with_output(output_dir).sanitise(results_dir)
+    placeholders.with_output(results_dir).hydrate(results_dir)
+
+    # The curated set plus the captured provenance is sufficient to rebuild the bundle.
+    rebuilt = mock_diagnostic.build_execution_result(
+        definition=ExecutionDefinition(
+            diagnostic=mock_diagnostic,
+            key=metric_definition.key,
+            datasets=metric_definition.datasets,
+            output_directory=results_dir,
+            root_directory=results_dir.parent,
+        )
+    )
+    original_bundle = json.loads(result.to_output_path(result.output_bundle_filename).read_text())
+    rebuilt_bundle = json.loads(rebuilt.to_output_path(rebuilt.output_bundle_filename).read_text())
+    assert set(rebuilt_bundle[OutputCV.DATA.value]) == set(original_bundle[OutputCV.DATA.value])
+    assert set(rebuilt_bundle[OutputCV.PLOTS.value]) == set(original_bundle[OutputCV.PLOTS.value])
+
+
+def _recipe_with_region_preprocessors(regions: list[str]) -> Recipe:
+    """A minimal recipe with two extract_shape preprocessors and one without."""
+    return {
+        "preprocessors": {
+            "pp": {"extract_shape": {"shapefile": "ar6", "ids": {"Name": list(regions)}}},
+            "pp_200": {"extract_shape": {"shapefile": "ar6", "ids": {"Name": list(regions)}}},
+            "pp_no_shape": {"custom_order": True},
+        },
+    }
+
+
+def test_reduce_recipe_for_regression_fixture_subsets_regions(mocker):
+    """A test-fixture run keeps only ``test_regions`` in every extract_shape step."""
+    diagnostic = RegionalHistoricalTimeSeries()
+    full_regions = ["Arabian-Peninsula", "Arctic-Ocean", "C.North-America", "Mediterranean", "S.Asia"]
+    recipe = _recipe_with_region_preprocessors(full_regions)
+    definition = mocker.Mock(spec=ExecutionDefinition, key="test-cmip6")
+
+    diagnostic.reduce_recipe_for_regression_fixture(recipe, definition)
+
+    expected = list(diagnostic.test_regions)
+    assert recipe["preprocessors"]["pp"]["extract_shape"]["ids"]["Name"] == expected
+    assert recipe["preprocessors"]["pp_200"]["extract_shape"]["ids"]["Name"] == expected
+    # Preprocessors without an extract_shape step are left untouched.
+    assert recipe["preprocessors"]["pp_no_shape"] == {"custom_order": True}
+
+
+def test_reduce_recipe_for_regression_fixture_noop_for_production(mocker):
+    """A production run (non ``test-`` key) keeps the full region set unchanged."""
+    diagnostic = RegionalHistoricalTimeSeries()
+    full_regions = ["Arabian-Peninsula", "Arctic-Ocean", "C.North-America", "Mediterranean", "S.Asia"]
+    recipe = _recipe_with_region_preprocessors(full_regions)
+    definition = mocker.Mock(spec=ExecutionDefinition, key="CanESM5_r1i1p1f1_gn")
+
+    diagnostic.reduce_recipe_for_regression_fixture(recipe, definition)
+
+    assert recipe["preprocessors"]["pp"]["extract_shape"]["ids"]["Name"] == full_regions
+    assert recipe["preprocessors"]["pp_200"]["extract_shape"]["ids"]["Name"] == full_regions

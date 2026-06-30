@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/climate-ref-ilamb.svg)](https://badge.fury.io/py/climate-ref-ilamb)
 [![Documentation Status](https://readthedocs.org/projects/climate-ref/badge/?version=latest)](https://climate-ref.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 
 This package integrates [ILAMB](https://github.com/rubisco-sfa/ilamb3) as a metrics provider for the Climate REF (Rapid Evaluation Framework).
 

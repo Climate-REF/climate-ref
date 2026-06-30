@@ -1,0 +1,88 @@
+{
+  "catalog_hash": "b4e2e696f9c6a161cd5f2bf6fa9ff2c213f7bf4d",
+  "committed": {
+    "diagnostic.json": "adc23ce83762f8ccec25c1198f6e46a1f2bc96a01afb28127e2bc3a402e327a6",
+    "output.json": "51aa6644a84d7632889f588d83bf8c7680caecdcae2c5af9c4f1f38a699f9e53",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "16da698a382486c5e22437b79581eb7effbb8308f0539b077b077348c0eb9491",
+      "size": 19850
+    },
+    "executions/recipe/index.html": {
+      "sha256": "aa2fb7af653d02b987701a01a2c9fa534701649616fe441e714ea9d8424768f7",
+      "size": 19704
+    },
+    "executions/recipe/plots/hus200_trends/plot/seaborn_barplot.png": {
+      "sha256": "99eaae3100077e6551ea674014849f9d5042ef8790556630d635a0d31e428d0f",
+      "size": 142421
+    },
+    "executions/recipe/plots/pr_trends/plot/seaborn_barplot.png": {
+      "sha256": "e34ae732d7d4c79ae87ae16acd40eca6c622eb3f6301e90df6b2a30fadb7c177",
+      "size": 145704
+    },
+    "executions/recipe/plots/psl_trends/plot/seaborn_barplot.png": {
+      "sha256": "48768511837d71f78042473309d6ffc6554d494f809fb165e83f2bd2a05086ca",
+      "size": 140430
+    },
+    "executions/recipe/plots/tas_trends/plot/seaborn_barplot.png": {
+      "sha256": "c4fb8c55496c11ed2a125a0bb18460d4fb7d4ca459fd4686bcf3423e28aa66c9",
+      "size": 151797
+    },
+    "executions/recipe/plots/ua200_trends/plot/seaborn_barplot.png": {
+      "sha256": "52d068c1105caa096b9e8f2b1d8fc49d43756c2dcb420f146c939e7c9a6c45d9",
+      "size": 161863
+    },
+    "executions/recipe/run/hus200_trends/plot/diagnostic_provenance.yml": {
+      "sha256": "2e0d910bcc151bfc712270959539d660537554c7d85e2463ee470bc6dff15cb1",
+      "size": 389
+    },
+    "executions/recipe/run/pr_trends/plot/diagnostic_provenance.yml": {
+      "sha256": "c803d73b577c4496970fd425edadf1343df36aa961fccffcbdc46b8b4fd7ec10",
+      "size": 375
+    },
+    "executions/recipe/run/psl_trends/plot/diagnostic_provenance.yml": {
+      "sha256": "b17c38201d9efa69a21849cbda0dd0eea409774a93cb648b7b851ecdf6f375bd",
+      "size": 380
+    },
+    "executions/recipe/run/tas_trends/plot/diagnostic_provenance.yml": {
+      "sha256": "ee4d35dffcd068911fd087c0c94b0f446f613f2f7dd8c39d2b2cff885c57f672",
+      "size": 380
+    },
+    "executions/recipe/run/ua200_trends/plot/diagnostic_provenance.yml": {
+      "sha256": "feec88e3b4df3f148701c59ac654baf92bc5870931ca67763f16e855fb0f2020",
+      "size": 384
+    },
+    "executions/recipe/work/hus200_trends/plot/seaborn_barplot.nc": {
+      "sha256": "b3d2b3d23a164e79884f15776a5f247d55b619b5a2548c887bba5f77dbdf1457",
+      "size": 10150
+    },
+    "executions/recipe/work/pr_trends/plot/seaborn_barplot.nc": {
+      "sha256": "5965e437674874cebe8461ae11ce61ce0b47061ce7886e3bbae260c41f98ca7c",
+      "size": 10146
+    },
+    "executions/recipe/work/psl_trends/plot/seaborn_barplot.nc": {
+      "sha256": "8b8e8965cb01213baf60af6423ad6c4d079a545fc3d46ff9defc13a13e234886",
+      "size": 10150
+    },
+    "executions/recipe/work/tas_trends/plot/seaborn_barplot.nc": {
+      "sha256": "54a7853f72ea84823a60690a872b35f82bc93f807e3aa74f6e8bdefd0f52a0e9",
+      "size": 10150
+    },
+    "executions/recipe/work/ua200_trends/plot/seaborn_barplot.nc": {
+      "sha256": "6ae64bf35633713ad58a4dc890b9db40817ff78d7ede0ee37e8263b95bf42ec2",
+      "size": 10146
+    },
+    "output.json": {
+      "sha256": "39112f71eba2c137e363a1fdc08428b040135daa2426958392db4670e7d3b086",
+      "size": 3920
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

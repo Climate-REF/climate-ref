@@ -114,7 +114,7 @@ def transform_error(
     return errors
 
 
-def _environment_override(value: T, env_name: str, convertor: Callable[[Any], T] | None = None) -> T:
+def _environment_override[T](value: T, env_name: str, convertor: Callable[[Any], T] | None = None) -> T:
     try:
         env_value = env.str(env_name)
     except EnvError:
@@ -148,7 +148,7 @@ def config(
 
 
 @overload
-def config(
+def config[C: type](
     maybe_cls: C,
     *,
     prefix: str,
@@ -156,7 +156,7 @@ def config(
 ) -> C: ...
 
 
-def config(
+def config[C: type](
     maybe_cls: C | None = None,
     *,
     prefix: str,

@@ -566,6 +566,21 @@ class Diagnostic(AbstractDiagnostic):
     files: Sequence[FileDefinition] = tuple()
     test_data_spec: TestDataSpecification | None = None
 
+    reconstruction_inputs: tuple[str, ...] = ()
+    """
+    Extra output globs to persist into the results/regression set, beyond the files the
+    CMEC output bundle references.
+
+    :meth:`build_execution_result` for some providers re-derives the bundle by re-scanning raw
+    execution artefacts (e.g. ESMValTool ``diagnostic_provenance.yml`` or the PMP driver's ``*_cmec.json``)
+    that the curated output set would otherwise exclude.
+    Declaring those globs here makes them part of the persisted baseline,
+    so a ``replay`` can rebuild the bundle from the stored native set alone.
+
+    Patterns are relative to the execution output directory (see :meth:`pathlib.Path.glob`).
+    The copied files are sanitised for portability like every other text artefact.
+    """
+
     def __init__(self) -> None:
         super().__init__()
         self._provider: DiagnosticProvider | None = None
@@ -612,6 +627,26 @@ class Diagnostic(AbstractDiagnostic):
 
         # Build the result from the output bundle
         return self.build_execution_result(definition)
+
+    def prepare_regression_output(self, definition: ExecutionDefinition) -> None:
+        """
+        Normalise native output for deterministic regression capture.
+
+        Hook called by the test-case regression runner *between*
+        :meth:`execute` and :meth:`build_execution_result`,
+        allowing a provider to remove avoidable non-determinism (e.g. timestamped directory names)
+        before the output bundle is built and captured as a baseline.
+
+        This is **not** called during normal execution (:meth:`run`),
+        so it must only be used for regression-capture concerns.
+
+        The default implementation does nothing.
+
+        Parameters
+        ----------
+        definition
+            The configuration the diagnostic was run on.
+        """
 
 
 class CommandLineDiagnostic(Diagnostic):

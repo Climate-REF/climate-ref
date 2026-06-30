@@ -115,9 +115,19 @@ class SeriesMetricValue(BaseModel):
         series
             The series values to dump.
         """
+        # Sort the series by their dimensions before serialising so the order is
+        # deterministic across platforms and runs. Diagnostics may emit series in an
+        # implementation-defined order (e.g. set or dict iteration that differs by
+        # platform), which otherwise produces spurious diffs and breaks the positional
+        # regression comparator. ``dimensions`` uniquely identifies a series; ``index_name``
+        # is a stable tie-breaker.
+        ordered = sorted(
+            series,
+            key=lambda s: (json.dumps(s.dimensions, sort_keys=True), s.index_name),
+        )
         with open(path, "w") as f:
             json.dump(
-                [s.model_dump(mode="json") for s in series],
+                [s.model_dump(mode="json") for s in ordered],
                 f,
                 indent=2,
                 allow_nan=False,

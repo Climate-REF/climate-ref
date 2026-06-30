@@ -1,3 +1,5 @@
+import datetime
+
 import pytest
 
 from climate_ref.models.execution import Execution, ExecutionGroup, ExecutionOutput, ResultOutputType
@@ -100,6 +102,55 @@ class TestMetricExecution:
         execution.dirty = False
 
         assert ExecutionGroup.should_run(execution, "dataset_hash", rerun_failed=True)
+
+    def test_should_run_stale_in_progress_dirty(self, mocker):
+        """A stale in-progress execution is treated as failed under a dry-run cutoff"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = None
+        execution_result.created_at = datetime.datetime(2020, 1, 1)
+        execution.executions = [execution_result]
+        execution.dirty = True
+
+        cutoff = datetime.datetime(2020, 6, 1)
+
+        # Without a cutoff the in-progress execution suppresses the run...
+        assert not ExecutionGroup.should_run(execution, "dataset_hash")
+        # ...but with a cutoff the stale execution is treated as reaped.
+        assert ExecutionGroup.should_run(execution, "dataset_hash", stale_cutoff=cutoff)
+
+    def test_should_run_stale_in_progress_rerun_flag(self, mocker):
+        """A stale in-progress execution re-runs under rerun_failed even if not dirty"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = None
+        execution_result.created_at = datetime.datetime(2020, 1, 1)
+        execution.executions = [execution_result]
+        execution.dirty = False
+
+        cutoff = datetime.datetime(2020, 6, 1)
+
+        assert not ExecutionGroup.should_run(execution, "dataset_hash", stale_cutoff=cutoff)
+        assert ExecutionGroup.should_run(execution, "dataset_hash", rerun_failed=True, stale_cutoff=cutoff)
+
+    def test_should_run_fresh_in_progress_with_cutoff(self, mocker):
+        """An in-progress execution newer than the cutoff is still left alone"""
+        execution = mocker.Mock(spec=ExecutionGroup)
+        execution_result = mocker.Mock(spec=Execution)
+
+        execution_result.dataset_hash = "dataset_hash"
+        execution_result.successful = None
+        execution_result.created_at = datetime.datetime(2020, 12, 1)
+        execution.executions = [execution_result]
+        execution.dirty = True
+
+        cutoff = datetime.datetime(2020, 6, 1)
+
+        assert not ExecutionGroup.should_run(execution, "dataset_hash", stale_cutoff=cutoff)
 
 
 class TestExecutionOutput:

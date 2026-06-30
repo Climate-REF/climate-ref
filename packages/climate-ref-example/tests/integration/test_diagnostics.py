@@ -22,6 +22,12 @@ def provider_test_data_dir() -> Path:
 test_case_params = collect_test_case_params(provider)
 
 
+@pytest.mark.skip(
+    reason="Parked: RegressionValidator replays the committed bundle offline, but native baselines "
+    "now live in the object store (Framework B), so build_execution_result cannot rebuild from the "
+    "repo alone. `ref test-cases replay` provides regression coverage via the store; this offline "
+    "path is retained (body intact) for local step-through debugging."
+)
 @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
 def test_validate_test_case_regression(
     diagnostic: Diagnostic,
@@ -53,6 +59,10 @@ def test_validate_test_case_regression(
         pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
     if not validator.has_regression_data():
         pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
+
+    # TODO: remove this once we have migrated test cases to use the committed bundles.
+    if not any(paths.regression.glob("*.nc")):
+        pytest.skip(f"No committed NetCDF baseline for {diagnostic.slug}/{test_case_name}")
 
     definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
     validator.validate(definition)

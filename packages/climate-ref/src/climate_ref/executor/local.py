@@ -69,6 +69,10 @@ class LocalExecutor:
 
     name = "local"
 
+    # Results are copied to the results directory and ingested only during ``join``,
+    # so skipping ``join`` (queue-and-exit) would orphan completed work in scratch.
+    collects_results_on_join = True
+
     def __init__(
         self,
         *,
@@ -151,12 +155,13 @@ class LocalExecutor:
         Parameters
         ----------
         timeout
-            Overall wall-clock timeout in seconds for the whole join
+            Overall wall-clock timeout in seconds for the whole join.
+            A non-positive value (``<= 0``) waits indefinitely.
 
         Raises
         ------
         TimeoutError
-            If the overall timeout is reached
+            If a positive overall timeout is reached
         """
         start_time = time.time()
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
@@ -223,7 +228,8 @@ class LocalExecutor:
 
                 elapsed_time = time.time() - start_time
 
-                if elapsed_time > timeout:
+                # ``timeout <= 0`` means wait indefinitely (no overall deadline).
+                if timeout > 0 and elapsed_time > timeout:
                     self._fail_outstanding(results, t)
                     self.pool.shutdown(wait=False, cancel_futures=True)
                     raise TimeoutError("Not all tasks completed within the specified timeout")

@@ -19,6 +19,18 @@ class TestDatasetsList:
         result = invoke_cli(["datasets", "list"])
         assert "experi…" in result.stdout
 
+    def test_list_json_is_untruncated(self, db_seeded, invoke_cli):
+        import json
+
+        result = invoke_cli(["datasets", "list", "--format", "json"])
+
+        payload = json.loads(result.stdout)
+        assert isinstance(payload, list)
+        assert payload
+        # The table output truncates wide columns (e.g. "experi…"); JSON must not.
+        assert "experiment_id" in payload[0]
+        assert "experi…" not in result.stdout
+
     def test_list_limit(self, db_seeded, invoke_cli):
         result = invoke_cli(["datasets", "list", "--limit", "1", "--column", "variable_id"])
         assert len(result.stdout.strip().split("\n")) == 3  # header + spacer + 1 row

@@ -1,0 +1,54 @@
+{
+  "DIMENSIONS": {
+    "experiment_id": {
+      "historical": {}
+    },
+    "json_structure": [
+      "source_id",
+      "experiment_id",
+      "variant_label",
+      "reference_source_id",
+      "region",
+      "metric",
+      "statistic"
+    ],
+    "metric": {
+      "tos": {}
+    },
+    "reference_source_id": {
+      "HadISST-1-1": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    },
+    "statistic": {
+      "mean-bias": {},
+      "rmse": {}
+    },
+    "variant_label": {
+      "r1i1p1f1": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "ACCESS-ESM1-5": {
+      "historical": {
+        "r1i1p1f1": {
+          "HadISST-1-1": {
+            "global": {
+              "tos": {
+                "mean-bias": 0.4735244,
+                "rmse": 0.5010421
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}

@@ -566,6 +566,31 @@ class Config:
         config._config_file = config_file
         return config
 
+    @classmethod
+    def collect_validation_errors(cls, config_file: Path) -> list[str]:
+        """
+        Collect strict validation errors for a configuration file.
+
+        Parameters
+        ----------
+        config_file
+            Path to the configuration file to validate.
+
+        Returns
+        -------
+        :
+            A list of validation errors. An empty list means the file is valid.
+        """
+        try:
+            with config_file.open() as fh:
+                doc = tomlkit.load(fh)
+            if "ignore_datasets_file" not in doc:
+                doc["ignore_datasets_file"] = str(config_file.parent / "__validation_ignore_datasets.yaml")
+            _converter_defaults.structure(doc, cls)
+        except Exception as exc:
+            return transform_error(exc, format_exception=_format_exception)
+        return []
+
     def refresh(self) -> "Config":
         """
         Refresh the configuration values

@@ -5,6 +5,7 @@
     "output.json": "c62a83a4a1fd9a05e038666a26220d0f8dbaa25bd24d31445073fd21e01706d8",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 1,
   "native": {
     "ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1_EnsoAmpl.nc": {
       "sha256": "cc2458e45806d117169a1b96f523daf5a1a8d56489eefacdf118379d855db5f7",
@@ -187,6 +188,6 @@
       "size": 2
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 1
 }

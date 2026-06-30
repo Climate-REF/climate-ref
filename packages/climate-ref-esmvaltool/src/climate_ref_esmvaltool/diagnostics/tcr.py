@@ -31,6 +31,7 @@ class TransientClimateResponse(ESMValToolDiagnostic):
 
     name = "Transient Climate Response"
     slug = "transient-climate-response"
+    version = 2
     base_recipe = "ref/recipe_ref_tcr.yml"
 
     data_requirements = (

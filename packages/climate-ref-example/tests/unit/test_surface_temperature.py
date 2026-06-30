@@ -8,7 +8,6 @@ from climate_ref_example.surface_temperature import (
     GlobalMeanSurfaceTemperatureBias,
     compare_model_and_reference,
     format_cmec_metric_bundle,
-    latest_version_files,
     model_global_mean_sst,
     reference_global_mean_sst,
 )
@@ -55,16 +54,10 @@ def _make_obs_file(tmp_path: Path, *, years: range, ts_kelvin: float, name: str 
 def _collection(
     paths: Path | list[Path],
     selector: tuple[tuple[str, str], ...],
-    versions: list[str] | None = None,
-    variable_ids: list[str] | None = None,
 ) -> DatasetCollection:
     """Wrap one or more files in a DatasetCollection with the given selector facets."""
     paths = [paths] if isinstance(paths, Path) else paths
-    data: dict[str, list[str]] = {"instance_id": [p.stem for p in paths], "path": [str(p) for p in paths]}
-    if versions is not None:
-        data["version"] = versions
-    if variable_ids is not None:
-        data["variable_id"] = variable_ids
+    data = {"instance_id": [p.stem for p in paths], "path": [str(p) for p in paths]}
     return DatasetCollection(pd.DataFrame(data), "instance_id", selector=selector)
 
 
@@ -121,42 +114,10 @@ def test_format_cmec_metric_bundle():
 def test_diagnostic_metadata():
     diagnostic = GlobalMeanSurfaceTemperatureBias()
 
-    assert diagnostic.slug == "global-mean-surface-temperature-bias"
+    assert diagnostic.slug == "global-sst-bias"
     # Two AND-groups: CMIP6+reference and CMIP7+reference.
     assert len(diagnostic.data_requirements) == 2
     assert all(len(group) == 2 for group in diagnostic.data_requirements)
-
-
-def test_latest_version_files_picks_latest():
-    df = pd.DataFrame(
-        {
-            "instance_id": ["old", "new"],
-            "path": ["/data/old.nc", "/data/new.nc"],
-            "version": ["v20210727", "v20250415"],
-        }
-    )
-    collection = DatasetCollection(df, "instance_id", selector=(("source_id", "HadISST-1-1"),))
-
-    files = latest_version_files(collection)
-
-    assert files == [Path("/data/new.nc")]
-
-
-def test_latest_version_files_keeps_supplementary_per_variable():
-    # tos has two versions; areacello has one. The latest tos plus areacello must survive.
-    df = pd.DataFrame(
-        {
-            "instance_id": ["tos_v1", "tos_v2", "area"],
-            "path": ["/data/tos_v1.nc", "/data/tos_v2.nc", "/data/areacello.nc"],
-            "version": ["v20191115", "v20200101", "v20191115"],
-            "variable_id": ["tos", "tos", "areacello"],
-        }
-    )
-    collection = DatasetCollection(df, "instance_id", selector=(("source_id", "ACCESS-ESM1-5"),))
-
-    files = set(latest_version_files(collection))
-
-    assert files == {Path("/data/tos_v2.nc"), Path("/data/areacello.nc")}
 
 
 def test_execute_end_to_end(tmp_path, definition_factory):
@@ -215,39 +176,4 @@ def test_execute_end_to_end_cmip7(tmp_path, definition_factory):
 
     assert result.successful
     with xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc") as comparison:
-        np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)
-
-
-def test_execute_with_multiple_reference_versions(tmp_path, definition_factory):
-    # The full obs4REF archive ships two HadISST-1-1 versions with overlapping time ranges.
-    # The diagnostic must use only the latest rather than combining both.
-    model_files = _make_model_files(tmp_path, years=range(2000, 2005), tos_celsius=18.0)
-    old_reference = _make_obs_file(tmp_path, years=range(1990, 2011), ts_kelvin=287.15, name="obs_old.nc")
-    new_reference = _make_obs_file(tmp_path, years=range(1990, 2016), ts_kelvin=288.15, name="obs_new.nc")
-
-    diagnostic = GlobalMeanSurfaceTemperatureBias()
-    definition = definition_factory(
-        diagnostic=diagnostic,
-        cmip6=_collection(
-            model_files,
-            selector=(
-                ("source_id", "ACCESS-ESM1-5"),
-                ("experiment_id", "historical"),
-                ("variant_label", "r1i1p1f1"),
-            ),
-        ),
-        obs4mips=_collection(
-            [old_reference, new_reference],
-            selector=(("source_id", "HadISST-1-1"),),
-            versions=["v20210727", "v20250415"],
-            variable_ids=["ts", "ts"],
-        ),
-    )
-    definition.output_directory.mkdir(parents=True, exist_ok=True)
-
-    result = diagnostic.run(definition)
-
-    assert result.successful
-    with xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc") as comparison:
-        # Bias is model (18.0) minus the latest reference (288.15 K = 15.0 degC), not the older one.
         np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)

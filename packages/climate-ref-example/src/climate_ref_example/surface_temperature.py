@@ -3,10 +3,9 @@ from typing import Any, cast
 
 import numpy as np
 import xarray as xr
-from loguru import logger
 
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireContiguousTimerange
-from climate_ref_core.datasets import DatasetCollection, FacetFilter, SourceDatasetType
+from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     DataRequirement,
     Diagnostic,
@@ -26,46 +25,6 @@ _AREA_VARIABLE = "areacello"
 # reported in K), distributed via the REF obs4REF registry. It is ocean-only.
 _REFERENCE_VARIABLE = "ts"
 _REFERENCE_SOURCE_ID = "HadISST-1-1"
-
-
-def latest_version_files(collection: DatasetCollection) -> list[Path]:
-    """
-    Return the file paths for the most recent version in a dataset collection.
-
-    A collection grouped only by ``source_id``/``variable_id`` can contain more than one
-    dataset version (for example, the obs4REF archive ships two HadISST-1-1 versions).
-    Combining versions with overlapping time ranges would make the global mean ambiguous,
-    so we deterministically keep only the latest version before opening the files. When the
-    collection mixes variables (e.g. ``tos`` plus its ``areacello`` supplementary) the
-    latest version is selected per variable so a supplementary is never dropped.
-
-    Parameters
-    ----------
-    collection
-        The datasets selected for one source type of an execution.
-
-    Returns
-    -------
-    :
-        Paths belonging to the latest version (per variable) present in the collection.
-    """
-    df = collection.datasets
-    if "version" not in df.columns:
-        return [Path(path) for path in df["path"].to_list()]
-
-    group_column = "variable_id" if "variable_id" in df.columns else None
-    groups = df.groupby(group_column) if group_column else [(None, df)]
-
-    paths: list[Path] = []
-    for _, group in groups:
-        versions = sorted(str(version) for version in group["version"].dropna().unique())
-        selected = group
-        if len(versions) > 1:
-            latest = versions[-1]
-            logger.warning(f"Multiple versions present ({', '.join(versions)}); using the latest, {latest}.")
-            selected = group[group["version"].astype(str) == latest]
-        paths.extend(Path(path) for path in selected["path"].to_list())
-    return paths
 
 
 def _to_celsius(da: xr.DataArray) -> xr.DataArray:
@@ -296,19 +255,18 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
     """
     Compare modelled sea surface temperature against observations.
 
-    This diagnostic computes the annual, area-weighted global-mean sea surface
-    temperature for a model (``tos``, weighted by ``areacello``) and for the HadISST-1-1
-    observational record, then reports the root-mean-square error and mean bias between
-    them. Because both sides are ocean SST, this is a like-for-like comparison. It is a
-    deliberately small model-versus-observation example that runs in seconds on the sample
-    data, and shows how a diagnostic combines a model dataset with a reference dataset and
-    emits both metrics and figures.
+    This diagnostic computes the annual, area-weighted global-mean sea surface temperature for a model
+    (``tos``, weighted by ``areacello``) and for the HadISST-1-1 observational record,
+    then reports the root-mean-square error and mean bias between them.
+
+    This is a deliberately small model-versus-observation example that runs in seconds on the sample data,
+    and shows how a diagnostic combines a model dataset with a reference dataset.
 
     Supports both CMIP6 and CMIP7 model datasets via alternative data requirements.
     """
 
-    name = "Global Mean Surface Temperature Bias"
-    slug = "global-mean-surface-temperature-bias"
+    name = "Global Mean SST Bias"
+    slug = "global-sst-bias"
 
     # Each option is an AND-group: a model requirement combined with the observational
     # reference requirement. The diagnostic runs if either the CMIP6 or the CMIP7 model
@@ -462,10 +420,8 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
         model_datasets = definition.datasets[model_source_type]
         reference_datasets = definition.datasets[SourceDatasetType.obs4MIPs]
 
-        # latest_version_files guards against multiple dataset versions being grouped into a
-        # single execution (selecting the latest version per variable, so areacello is kept).
-        model_series = model_global_mean_sst(latest_version_files(model_datasets))
-        reference_series = reference_global_mean_sst(latest_version_files(reference_datasets))
+        model_series = model_global_mean_sst(model_datasets.path.to_list())
+        reference_series = reference_global_mean_sst(reference_datasets.path.to_list())
 
         comparison = compare_model_and_reference(model_series, reference_series)
         comparison.to_netcdf(definition.output_directory / "global_mean_surface_temperature.nc")

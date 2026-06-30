@@ -131,7 +131,7 @@ ref solve --provider example
 To run only the model-vs-observation diagnostic, add a diagnostic filter:
 
 ```bash
-ref solve --provider example --diagnostic global-mean-surface-temperature-bias
+ref solve --provider example --diagnostic global-sst-bias
 ```
 
 ## 6. Observe the results (~20 s)

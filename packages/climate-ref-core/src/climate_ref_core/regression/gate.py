@@ -14,9 +14,17 @@ based on what changed relative to the base branch:
     not, to seed a newly added manifest, and to verify a ``test_case_version`` bump that ships native blobs
     — but only when native blobs exist to replay.
 - **FAIL** — the committed bundle (or its input catalog) changed without a
-    ``test_case_version`` bump (an unauthorised baseline change), or the version moved backwards.
+    ``test_case_version`` bump (an unauthorised baseline change), the version moved backwards,
+    or the in-code ``Diagnostic.version`` no longer matches the recorded ``diagnostic_version``
+    (a stale baseline whose diagnostic results changed without a re-mint).
 - **SKIP** — nothing relevant to this test case changed, or the case is not yet under
     regression-baseline management.
+
+The gate tracks two orthogonal version axes: ``test_case_version`` (per-case, mint-authored)
+and ``diagnostic_version`` (per-diagnostic, author-authored). Both are independently monotonic.
+A ``diagnostic_version`` decrease is permitted only as an authorised revert — the code version
+is lowered AND the baseline is re-minted (so the committed bundle changes) — which the gate
+recognises structurally rather than via a flag.
 
 See [Regression Baselines](https://climate-ref.readthedocs.io/en/latest/background/regression-baselines/)
 for more information about the motivation and workflow for regression baselines.
@@ -59,13 +67,14 @@ class GateDecision:
     """A human-readable explanation, surfaced in CI logs."""
 
 
-def decide_coupling(  # noqa: PLR0911, PLR0912
+def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
     manifest: Manifest | None,
     base_manifest: Manifest | None,
     *,
     extraction_changed: bool = False,
     committed_integrity_ok: bool = True,
     catalog_integrity_ok: bool = True,
+    code_diagnostic_version: int | None = None,
 ) -> GateDecision:
     """
     Decide how CI should verify a single test case's regression baseline.
@@ -118,6 +127,12 @@ def decide_coupling(  # noqa: PLR0911, PLR0912
         so the committed bundle no longer reflects its inputs — a hard failure.
 
         Always ``True`` when the manifest carries no ``catalog_hash``
+    code_diagnostic_version
+        The diagnostic's current in-code ``Diagnostic.version``, injected by the caller
+        (the pure function does no I/O). When provided, a code version that exceeds
+        ``manifest.diagnostic_version`` fails the case as a stale baseline that must be
+        re-minted, and a code version below it fails as an illegal downgrade with no re-mint.
+        ``None`` (the default) skips the staleness comparison entirely, preserving legacy behaviour.
 
     Returns
     -------
@@ -156,6 +171,29 @@ def decide_coupling(  # noqa: PLR0911, PLR0912
             "regenerate the baseline with `ref test-cases run` after changing the inputs",
         )
 
+    # Staleness: the in-code Diagnostic.version vs the HEAD manifest. This is a HEAD-only
+    # property, independent of the base branch, so it runs before seeding to also catch a
+    # newly added manifest whose author bumped the code without re-minting. Equality MUST
+    # fall through (only the > and < arms return) so a matched baseline proceeds normally.
+    if manifest is not None and code_diagnostic_version is not None:
+        if code_diagnostic_version > manifest.diagnostic_version:
+            return GateDecision(
+                Action.FAIL,
+                f"diagnostic Diagnostic.version is {code_diagnostic_version} but the baseline "
+                f"manifest records diagnostic_version {manifest.diagnostic_version}; the "
+                "diagnostic's results changed — re-mint this baseline (`ref test-cases mint`) "
+                "so the committed bundle reflects the new version",
+            )
+        if code_diagnostic_version < manifest.diagnostic_version:
+            return GateDecision(
+                Action.FAIL,
+                f"diagnostic Diagnostic.version ({code_diagnostic_version}) is below the "
+                f"baseline's diagnostic_version ({manifest.diagnostic_version}); "
+                "Diagnostic.version is append-only. To revert legitimately, lower the code "
+                "version AND re-mint (`ref test-cases mint`) so the bundle is re-authored at "
+                "the lower version.",
+            )
+
     if base_manifest is None:
         # Seeding a newly added manifest.
         # Replay only verifies something when native blobs exist
@@ -176,6 +214,22 @@ def decide_coupling(  # noqa: PLR0911, PLR0912
             f"test_case_version decreased ({base_manifest.test_case_version} -> "
             f"{manifest.test_case_version}); version must be monotonic",
         )
+
+    # Conditioned monotonicity: a diagnostic_version decrease across base...HEAD is only a
+    # failure when the committed bundle is unchanged — a bare downgrade with no re-mint is
+    # illegal. A decrease that ships a freshly re-minted bundle (committed changed) is an
+    # authorised revert and falls through to the normal committed-changed / version_bumped
+    # logic, which independently re-verifies the new bundle.
+    if manifest.diagnostic_version < base_manifest.diagnostic_version:
+        if manifest.committed == base_manifest.committed:
+            return GateDecision(
+                Action.FAIL,
+                f"diagnostic_version decreased ({base_manifest.diagnostic_version} -> "
+                f"{manifest.diagnostic_version}) with the committed bundle unchanged; "
+                "a bare downgrade is not permitted — re-mint to re-author the baseline at "
+                "the lower version, or restore the version",
+            )
+        # else: authorised revert — the bundle was re-minted at the lower version; fall through.
 
     version_bumped = manifest.test_case_version > base_manifest.test_case_version
     committed_changed = manifest.committed != base_manifest.committed

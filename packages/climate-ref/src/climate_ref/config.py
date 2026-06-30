@@ -584,6 +584,8 @@ class Config:
         try:
             with config_file.open() as fh:
                 doc = tomlkit.load(fh)
+            if "ignore_datasets_file" not in doc:
+                doc["ignore_datasets_file"] = str(config_file.parent / "__validation_ignore_datasets.yaml")
             _converter_defaults.structure(doc, cls)
         except Exception as exc:
             return transform_error(exc, format_exception=_format_exception)

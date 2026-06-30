@@ -24,7 +24,11 @@ class ConfigKeyError(KeyError):
 def _field_map(obj: object) -> dict[str, Attribute[Any]]:
     if not attrs.has(obj.__class__):
         return {}
-    return {field.name: field for field in attrs.fields(obj.__class__)}
+    return {
+        field.name: field
+        for field in attrs.fields(obj.__class__)
+        if field.init and not field.name.startswith("_")
+    }
 
 
 def resolve_key(config: object, dotted: str) -> tuple[object, Attribute[Any], Any]:

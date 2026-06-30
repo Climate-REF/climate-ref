@@ -1,9 +1,10 @@
 import json
 from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
-from climate_ref.cli._config_access import coerce_value, resolve_key
+from climate_ref.cli._config_access import available_keys, coerce_value, resolve_key
 from climate_ref.config import Config
 from climate_ref.constants import CONFIG_FILENAME
 
@@ -90,6 +91,14 @@ class TestConfigInit:
 
         assert "is valid" in result.stdout
 
+    def test_init_does_not_write_environment_overrides(self, monkeypatch, tmp_path, invoke_cli):
+        config_dir = tmp_path / "new-config"
+        monkeypatch.setenv("REF_DATABASE_URL", "sqlite:///env.db")
+
+        invoke_cli(["--configuration-directory", str(config_dir), "config", "init"])
+
+        assert "sqlite:///env.db" not in (config_dir / CONFIG_FILENAME).read_text()
+
 
 class TestConfigGet:
     def test_get_scalar(self, invoke_cli):
@@ -113,6 +122,11 @@ class TestConfigGet:
         result = invoke_cli(["config", "get", "not.real"], expected_exit_code=1)
 
         assert "Unknown configuration key: not.real" in result.stderr
+
+    def test_get_rejects_private_config_fields(self, invoke_cli):
+        result = invoke_cli(["config", "get", "_config_file"], expected_exit_code=1)
+
+        assert "Unknown configuration key: _config_file" in result.stderr
 
     def test_get_warns_when_env_overrides(self, monkeypatch, invoke_cli):
         monkeypatch.setenv("REF_DATABASE_URL", "sqlite:///env.db")
@@ -148,13 +162,27 @@ class TestConfigSet:
 
         assert "Editing structured configuration values" in result.stderr
 
-    def test_set_warns_when_env_overrides(self, monkeypatch, invoke_cli):
+    def test_set_warns_when_env_overrides(self, monkeypatch, config, invoke_cli):
+        assert config._config_file is not None
         monkeypatch.setenv("REF_DATABASE_URL", "sqlite:///env.db")
 
         result = invoke_cli(["config", "set", "db.database_url", "sqlite:///file.db"])
 
         assert "REF_DATABASE_URL" in result.stderr
         assert "db.database_url = sqlite:///file.db" in result.stdout
+        config_text = config._config_file.read_text()
+        assert "sqlite:///file.db" in config_text
+        assert "sqlite:///env.db" not in config_text
+
+    def test_set_does_not_write_unrelated_environment_overrides(self, monkeypatch, config, invoke_cli):
+        assert config._config_file is not None
+        monkeypatch.setenv("REF_DATABASE_URL", "sqlite:///env.db")
+
+        invoke_cli(["config", "set", "log_level", "DEBUG"])
+
+        config_text = config._config_file.read_text()
+        assert 'log_level = "DEBUG"' in config_text
+        assert "sqlite:///env.db" not in config_text
 
 
 class TestConfigUnset:
@@ -174,6 +202,14 @@ class TestConfigUnset:
         result = invoke_cli(["config", "unset", "diagnostic_providers"], expected_exit_code=1)
 
         assert "Editing structured configuration values" in result.stderr
+
+    def test_unset_does_not_write_unrelated_environment_overrides(self, monkeypatch, config, invoke_cli):
+        assert config._config_file is not None
+        monkeypatch.setenv("REF_DATABASE_URL", "sqlite:///env.db")
+
+        invoke_cli(["config", "unset", "log_level"])
+
+        assert "sqlite:///env.db" not in config._config_file.read_text()
 
 
 class TestConfigEdit:
@@ -204,6 +240,23 @@ class TestConfigEdit:
         assert result.exit_code == 0
         assert "invalid after editing" in result.stderr
         assert "unknown" in result.stderr
+
+    def test_edit_opens_malformed_file_for_repair(self, monkeypatch, tmp_path, invoke_cli):
+        config_dir = tmp_path / "bad-config"
+        config_dir.mkdir()
+        config_file = config_dir / CONFIG_FILENAME
+        config_file.write_text("not valid toml")
+
+        def fake_edit(*, filename: str) -> None:
+            Path(filename).write_text('log_level = "DEBUG"\n')
+
+        monkeypatch.setattr("climate_ref.cli.config.click.edit", fake_edit)
+
+        result = invoke_cli(["--configuration-directory", str(config_dir), "config", "edit"])
+
+        assert result.exit_code == 0
+        assert "Edited" in result.stdout
+        assert config_file.read_text() == 'log_level = "DEBUG"\n'
 
 
 class TestConfigValidate:
@@ -254,6 +307,16 @@ class TestConfigValidate:
         assert payload["error_count"] >= 1
         assert "unexpected" in payload["diagnostics"][0]["message"]
 
+    def test_validate_omitted_ignore_file_does_not_fetch_default(self, monkeypatch, tmp_path):
+        config_file = tmp_path / CONFIG_FILENAME
+        config_file.write_text('log_level = "INFO"\n')
+        request_get = Mock()
+        monkeypatch.setattr("climate_ref.config.platformdirs.user_cache_path", lambda _: tmp_path / "cache")
+        monkeypatch.setattr("climate_ref.config.requests.get", request_get)
+
+        assert Config.collect_validation_errors(config_file) == []
+        request_get.assert_not_called()
+
 
 class TestConfigAccessHelpers:
     def test_resolve_key(self):
@@ -263,6 +326,13 @@ class TestConfigAccessHelpers:
 
         assert field.name == "scratch"
         assert getattr(parent, field.name) == value
+
+    def test_private_fields_are_not_available(self):
+        config = Config()
+
+        assert "_config_file" not in available_keys(config)
+        with pytest.raises(Exception):
+            resolve_key(config, "_config_file")
 
     @pytest.mark.parametrize(
         "raw, expected",

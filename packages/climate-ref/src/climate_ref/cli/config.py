@@ -7,12 +7,16 @@ from __future__ import annotations
 import json
 import os
 import tomllib
+from collections.abc import Iterator, MutableMapping
+from contextlib import contextmanager
 from difflib import get_close_matches
 from enum import StrEnum
 from pathlib import Path
 from typing import Annotated, Any, cast
 
+import attrs
 import click
+import tomlkit
 import typer
 from loguru import logger
 from tomlkit import TOMLDocument
@@ -118,6 +122,80 @@ def _validation_payload(errors: list[str]) -> dict[str, Any]:
     }
 
 
+def _config_env_vars(config: object) -> set[str]:
+    if not attrs.has(config.__class__):
+        return set()
+
+    env_vars: set[str] = set()
+    prefix = getattr(config, "_prefix", None)
+    for field in attrs.fields(config.__class__):
+        env_name = field.metadata.get("env")
+        if prefix and env_name:
+            env_vars.add(f"{prefix}_{env_name}")
+
+        if not field.name.startswith("_"):
+            value = getattr(config, field.name, None)
+            env_vars.update(_config_env_vars(value))
+
+    return env_vars
+
+
+@contextmanager
+def _without_config_env_overrides(config: object) -> Iterator[None]:
+    saved = {name: os.environ.get(name) for name in _config_env_vars(config)}
+    try:
+        for name in saved:
+            os.environ.pop(name, None)
+        yield
+    finally:
+        for name, value in saved.items():
+            if value is None:
+                os.environ.pop(name, None)
+            else:
+                os.environ[name] = value
+
+
+def _load_config_document(config_file: Path) -> TOMLDocument:
+    if not config_file.is_file():
+        return TOMLDocument()
+    with config_file.open() as fh:
+        return tomlkit.load(fh)
+
+
+def _toml_scalar(value: Any) -> Any:
+    if isinstance(value, Path):
+        return str(value)
+    return value
+
+
+def _set_config_document_key(doc: TOMLDocument, dotted: str, value: Any) -> None:
+    node: MutableMapping[str, Any] = doc
+    parts = dotted.split(".")
+    for part in parts[:-1]:
+        child = node.get(part)
+        if not isinstance(child, MutableMapping):
+            child = tomlkit.table()
+            node[part] = child
+        node = child
+    node[parts[-1]] = _toml_scalar(value)
+
+
+def _unset_config_document_key(doc: TOMLDocument, dotted: str) -> None:
+    node: MutableMapping[str, Any] = doc
+    parts = dotted.split(".")
+    for part in parts[:-1]:
+        child = node.get(part)
+        if not isinstance(child, MutableMapping):
+            return
+        node = child
+    node.pop(parts[-1], None)
+
+
+def _write_config_document(config_file: Path, doc: TOMLDocument) -> None:
+    config_file.parent.mkdir(parents=True, exist_ok=True)
+    config_file.write_text(doc.as_string())
+
+
 @app.command(name="list")
 def list_(
     ctx: typer.Context,
@@ -170,11 +248,15 @@ def init(
         )
         raise typer.Exit(1)
 
+    with _without_config_env_overrides(config):
+        template_config = config.__class__()
+    template_config._config_file = config_file
+
     config_file.parent.mkdir(parents=True, exist_ok=True)
     if no_defaults:
-        config_file.write_text(config.dumps(defaults=False))
+        config_file.write_text(template_config.dumps(defaults=False))
     else:
-        config.save(config_file)
+        template_config.save(config_file)
 
     action = "Overwrote" if force else "Wrote"
     ctx.obj.console.print(f"{action} configuration file at {config_file}")
@@ -220,8 +302,8 @@ def set_(
     """
     Set one scalar configuration value and persist it to ref.toml.
 
-    This rewrites the whole configuration file from the in-memory model, so comments and custom key
-    ordering in a hand-edited file are not preserved.
+    The value is written to the file-backed configuration, even when environment variables shadow
+    the effective runtime value.
     """
     _ensure_config_loaded(ctx)
     config = ctx.obj.config
@@ -239,7 +321,10 @@ def set_(
         raise typer.Exit(1)
 
     setattr(parent, field.name, coerced)
-    config.save()
+    config_file = _config_file(ctx)
+    doc = _load_config_document(config_file)
+    _set_config_document_key(doc, key, coerced)
+    _write_config_document(config_file, doc)
     _warn_if_env_shadowed(parent, field, key)
     typer.echo(f"{key} = {_stringify_scalar(coerced)}")
     typer.echo(f"Saved to {config._config_file}")
@@ -271,7 +356,10 @@ def unset(
         raise typer.Exit(1)
 
     setattr(parent, field.name, reset_value)
-    config.save()
+    config_file = _config_file(ctx)
+    doc = _load_config_document(config_file)
+    _unset_config_document_key(doc, key)
+    _write_config_document(config_file, doc)
     _warn_if_env_shadowed(parent, field, key)
     typer.echo(f"{key} reset to default {_stringify_scalar(reset_value)}")
     typer.echo(f"Saved to {config._config_file}")
@@ -285,7 +373,6 @@ def edit(ctx: typer.Context) -> None:
     The editor is selected by Click from ``$VISUAL`` / ``$EDITOR``. If no config file exists yet,
     run ``ref config init`` first.
     """
-    _ensure_config_loaded(ctx)
     config_file = _config_file(ctx)
     if not config_file.is_file():
         typer.secho(

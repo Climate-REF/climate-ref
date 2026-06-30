@@ -33,6 +33,7 @@ class EquilibriumClimateSensitivity(ESMValToolDiagnostic):
 
     name = "Equilibrium Climate Sensitivity"
     slug = "equilibrium-climate-sensitivity"
+    version = 2
     base_recipe = "ref/recipe_ref_ecs.yml"
 
     variables = (

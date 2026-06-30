@@ -14,6 +14,18 @@ if TYPE_CHECKING:
     from climate_ref.models.execution import Execution
 
 
+def _content_hash(payload: list[Any]) -> str:
+    """
+    Hash a JSON-serialisable payload into a stable content digest.
+
+    The serialisation is fixed (compact separators, ``ensure_ascii=False``) so the digest
+    is reproducible across platforms and runs. Keep it stable: the same serialisation is
+    relied on by the series-index migration backfill.
+    """
+    serialised = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(serialised.encode()).hexdigest()
+
+
 class MetricValueType(enum.Enum):
     """
     Type of metric value
@@ -181,8 +193,7 @@ class SeriesIndex(Base):
         The hash covers both the name and the ordered values,
         so two axes are only shared when they are genuinely identical.
         """
-        payload = json.dumps([name, list(values)], separators=(",", ":"), ensure_ascii=False)
-        return hashlib.sha256(payload.encode()).hexdigest()
+        return _content_hash([name, list(values)])
 
     @classmethod
     def get_or_create(
@@ -230,6 +241,32 @@ class SeriesMetricValue(MetricValue):
 
     index_id: Mapped[int | None] = mapped_column(ForeignKey("index_axis.id"), nullable=True, index=True)
     index_axis: Mapped["SeriesIndex | None"] = relationship(lazy="joined")
+
+    reference_id: Mapped[str | None] = mapped_column(nullable=True, index=True)
+    """
+    Content hash of the reference payload, for reference (observation) series only.
+
+    Two reference series with an identical payload share the same ``reference_id``,
+    so observations can be deduplicated deterministically across executions.
+    It is ``None`` for model series. See
+    [compute_reference_id][climate_ref.models.metric_value.SeriesMetricValue.compute_reference_id].
+    """
+
+    @staticmethod
+    def compute_reference_id(
+        values: Sequence[float | int],
+        index: Sequence[float | int | str] | None,
+        reference_source_id: str | None,
+    ) -> str:
+        """
+        Compute the content hash that deduplicates an identical reference payload.
+
+        The hash covers the values, the index and the reference source,
+        so two reference series are only treated as the same observation
+        when their payloads are genuinely identical.
+        Keep this payload stable: it is the deduplication key used downstream.
+        """
+        return _content_hash([list(values), list(index) if index is not None else None, reference_source_id])
 
     @property
     def index(self) -> list[float | int | str] | None:

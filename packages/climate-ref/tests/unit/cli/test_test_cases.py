@@ -2935,10 +2935,10 @@ class TestMigrateManifestsCommand:
     def test_migrate_preserves_recorded_diagnostic_version(self, invoke_cli, mocker, tmp_path):
         import json as _json
 
-        # Code has advanced to version 3, but the committed manifest still records
-        # version 2 — the canonical "authorised bump not yet re-minted" state, where the
-        # gate's staleness check is meant to fail the case until a re-mint. migrate-manifests
-        # must not paper over that by re-stamping the recorded value to the in-code version.
+        # Code has advanced to version 3 but the committed manifest still records version 2:
+        # an authorised bump not yet re-minted, which the gate's staleness check fails until
+        # a re-mint. migrate-manifests must not paper over that by re-stamping the recorded
+        # value to the in-code version.
         paths = self._wire(mocker, tmp_path, code_version=3)
         paths.manifest.write_text(
             _json.dumps(

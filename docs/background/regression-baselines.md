@@ -181,7 +181,7 @@ because an empty native set is legitimate, a missing native baseline downgrades 
 - **`skip`** — nothing relevant to this case changed, or the case is not under regression management.
 - **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
 - **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline *and* no native baseline exists to replay against.
-- **`fail`** — an unauthorised or unverifiable change (committed bundle edited without a version bump, version moved backwards, bundle drifted from its manifest, catalog changed without regenerating the baseline, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version` — a stale baseline whose diagnostic results changed without a re-mint).
+- **`fail`** — an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
 
 ### Decision flow
 
@@ -200,8 +200,8 @@ flowchart TD
     catalogOk -->|no| failCatalog[["FAIL<br/>inputs changed without<br/>regenerating baseline"]]
 
     catalogOk -->|yes| staleVersion{code Diagnostic.version<br/>vs baseline<br/>diagnostic_version}
-    staleVersion -->|"code &gt; baseline"| failStale[["FAIL<br/>stale baseline —<br/>re-mint required"]]
-    staleVersion -->|"code &lt; baseline"| failDowngrade[["FAIL<br/>illegal downgrade —<br/>lower code AND re-mint"]]
+    staleVersion -->|"code &gt; baseline"| failStale[["FAIL<br/>stale baseline<br/>re-mint required"]]
+    staleVersion -->|"code &lt; baseline"| failDowngrade[["FAIL<br/>illegal downgrade<br/>lower code AND re-mint"]]
 
     staleVersion -->|equal| seeding{newly added<br/>this branch?}
     seeding -->|yes| seedNative{native<br/>non-empty?}
@@ -211,7 +211,7 @@ flowchart TD
     seeding -->|no| versionCmp{test_case_version<br/>vs base}
     versionCmp -->|decreased| failVersion[["FAIL<br/>version not monotonic"]]
     versionCmp -->|"unchanged or bumped"| diagVersionCmp{diagnostic_version<br/>decreased vs base?}
-    diagVersionCmp -->|"yes, committed unchanged"| failBareDowngrade[["FAIL<br/>bare downgrade —<br/>re-mint required"]]
+    diagVersionCmp -->|"yes, committed unchanged"| failBareDowngrade[["FAIL<br/>bare downgrade<br/>re-mint required"]]
     diagVersionCmp -->|"no, or committed re-minted"| versionBumped{test_case_version<br/>bumped?}
     versionBumped -->|yes| bumpNative{native<br/>present?}
     bumpNative -->|yes| replayBump[["REPLAY<br/>verify new baseline<br/>reproduces from native"]]
@@ -244,8 +244,8 @@ and maps the changed-file list onto each case:
 - **`diagnostic_version`** is the *author-declared* execution-change signal: when a diagnostic's
   results change the author bumps `Diagnostic.version`, and the gate fails any baseline whose
   recorded `diagnostic_version` no longer matches the in-code value until it is re-minted.
-  This closes the **replay blind-spot** that `extraction_changed` alone leaves open — an
-  execution-affecting change with no extraction-path edit (the #671 ECS case) would otherwise
+  This closes the **replay blind-spot** that `extraction_changed` alone leaves open:
+  an execution-affecting change with no extraction-path edit (the #671 ECS case) would otherwise
   route to a green replay against a stale bundle.
   A `diagnostic_version` decrease is permitted only as an **authorised revert**: the author lowers
   the code version *and* re-mints, so the committed bundle changes and the gate recognises the

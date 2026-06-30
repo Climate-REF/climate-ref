@@ -87,18 +87,15 @@ def migrate_manifests(
             skipped += 1
             continue
 
-        # A pre-bump (schema-1) manifest is rejected by Manifest.load, so read the raw
-        # JSON and re-construct, injecting diagnostic_version and the current schema while
-        # carrying every other field through unchanged.
+        # Manifest.load rejects a schema-1 manifest, so read raw JSON and re-construct.
         data = json.loads(paths.manifest.read_text(encoding="utf-8"))
         native = {
             relpath: NativeEntry(sha256=entry["sha256"], size=entry["size"])
             for relpath, entry in data["native"].items()
         }
-        # Only backfill diagnostic_version when it is absent. Preserving an already-recorded
-        # value keeps this a pure backfill: re-running after an authorised version bump (where
-        # the manifest legitimately lags the in-code Diagnostic.version until a re-mint) must
-        # not silently re-stamp a stale bundle as current and subvert the gate's staleness check.
+        # Preserve an already-recorded value so this stays a pure backfill.
+        # After an authorised bump the manifest lags the in-code version until a re-mint,
+        # and re-stamping it would mask the gate's staleness check.
         diagnostic_version = data.get("diagnostic_version", diag.version)
         manifest = Manifest(
             schema=SCHEMA_VERSION,

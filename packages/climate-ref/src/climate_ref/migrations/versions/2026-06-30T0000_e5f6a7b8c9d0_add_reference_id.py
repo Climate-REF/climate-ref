@@ -25,7 +25,7 @@ depends_on: str | Sequence[str] | None = None
 
 def upgrade() -> None:
     with op.batch_alter_table("metric_value", schema=None) as batch_op:
-        batch_op.add_column(sa.Column("reference_id", sa.Text(), nullable=True))
+        batch_op.add_column(sa.Column("reference_id", sa.String(), nullable=True))
         batch_op.create_index(batch_op.f("ix_metric_value_reference_id"), ["reference_id"], unique=False)
 
 

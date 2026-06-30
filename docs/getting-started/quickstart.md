@@ -160,6 +160,8 @@ and the diagnostic's outputs.
 The surface-temperature diagnostic writes a NetCDF exposing the **model** series, the **reference** (observation) series,
 and the **bias** between them, plus two figures:
 `surface_temperature_timeseries.png` (model and reference together) and `surface_temperature_bias.png` (the bias over time).
+Those three time series are also extracted as CMEC series values (`series.json`), so they are ingested into the REF
+database and can be queried and plotted alongside the scalar metrics.
 
 ## Control and configuration options
 

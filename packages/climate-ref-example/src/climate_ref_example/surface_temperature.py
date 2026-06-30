@@ -13,6 +13,7 @@ from climate_ref_core.diagnostics import (
     ExecutionResult,
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -251,6 +252,50 @@ def format_cmec_metric_bundle(comparison: xr.Dataset) -> dict[str, Any]:
     return cmec_metric
 
 
+def build_series(
+    comparison: xr.Dataset,
+    model_selectors: dict[str, str],
+    reference_source_id: str,
+) -> list[SeriesMetricValue]:
+    """
+    Extract the model, reference and bias annual series as CMEC series values.
+
+    These are ingested into the REF database so the time series can be queried and plotted
+    alongside the scalar metrics, rather than only being available inside the NetCDF output.
+    The model and reference series share ``statistic="mean"`` and are distinguished by
+    ``source_id`` (the reference uses ``"Reference"``, following the convention used by other
+    providers); the bias series uses ``statistic="bias"``.
+    """
+    years = [int(year) for year in comparison["year"].values]
+    common = {
+        "experiment_id": model_selectors["experiment_id"],
+        "variant_label": model_selectors["variant_label"],
+        "reference_source_id": reference_source_id,
+        "region": "global",
+        "metric": _MODEL_VARIABLE,
+    }
+    return [
+        SeriesMetricValue(
+            dimensions={"source_id": model_selectors["source_id"], "statistic": "mean", **common},
+            values=comparison["model"].values.tolist(),
+            index=years,
+            index_name="year",
+        ),
+        SeriesMetricValue(
+            dimensions={"source_id": "Reference", "statistic": "mean", **common},
+            values=comparison["reference"].values.tolist(),
+            index=years,
+            index_name="year",
+        ),
+        SeriesMetricValue(
+            dimensions={"source_id": model_selectors["source_id"], "statistic": "bias", **common},
+            values=comparison["bias"].values.tolist(),
+            index=years,
+            index_name="year",
+        ),
+    ]
+
+
 class GlobalMeanSurfaceTemperatureBias(Diagnostic):
     """
     Compare modelled sea surface temperature against observations.
@@ -446,9 +491,11 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
                     "reference_source_id": reference_selectors["source_id"],
                 }
             )
+            series = build_series(comparison, model_selectors, reference_selectors["source_id"])
 
         return ExecutionResult.build_from_output_bundle(
             definition,
             cmec_output_bundle=format_cmec_output_bundle(),
             cmec_metric_bundle=cmec_metric_bundle,
+            series=series,
         )

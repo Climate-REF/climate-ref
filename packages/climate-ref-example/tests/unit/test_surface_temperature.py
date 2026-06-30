@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 
 import numpy as np
@@ -6,6 +7,7 @@ import pytest
 import xarray as xr
 from climate_ref_example.surface_temperature import (
     GlobalMeanSurfaceTemperatureBias,
+    build_series,
     compare_model_and_reference,
     format_cmec_metric_bundle,
     model_global_mean_sst,
@@ -111,6 +113,25 @@ def test_format_cmec_metric_bundle():
     np.testing.assert_allclose(results["mean-bias"], comparison.attrs["mean_bias"])
 
 
+def test_build_series():
+    model = xr.DataArray([18.0, 19.0], coords={"year": [2000, 2001]}, dims="year")
+    reference = xr.DataArray([17.5, 17.5], coords={"year": [2000, 2001]}, dims="year")
+    comparison = compare_model_and_reference(model, reference)
+    selectors = {"source_id": "ACCESS-ESM1-5", "experiment_id": "historical", "variant_label": "r1i1p1f1"}
+
+    series = build_series(comparison, selectors, "HadISST-1-1")
+
+    assert len(series) == 3
+    by_key = {(s.dimensions["source_id"], s.dimensions["statistic"]): s for s in series}
+    # Model, reference and bias series, each annual.
+    assert set(by_key) == {("ACCESS-ESM1-5", "mean"), ("Reference", "mean"), ("ACCESS-ESM1-5", "bias")}
+    model_series = by_key[("ACCESS-ESM1-5", "mean")]
+    assert model_series.index == [2000, 2001]
+    assert model_series.index_name == "year"
+    np.testing.assert_allclose(model_series.values, [18.0, 19.0])
+    np.testing.assert_allclose(by_key[("ACCESS-ESM1-5", "bias")].values, [0.5, 1.5])
+
+
 def test_diagnostic_metadata():
     diagnostic = GlobalMeanSurfaceTemperatureBias()
 
@@ -147,6 +168,10 @@ def test_execute_end_to_end(tmp_path, definition_factory):
     assert (definition.output_directory / "surface_temperature_bias.png").exists()
     with xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc") as comparison:
         np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)  # 18.0 - 15.0 degC
+
+    # The model, reference and bias time series are extracted as CMEC series values.
+    series = json.loads((definition.output_directory / result.series_filename).read_text())
+    assert len(series) == 3
 
 
 def test_execute_end_to_end_cmip7(tmp_path, definition_factory):

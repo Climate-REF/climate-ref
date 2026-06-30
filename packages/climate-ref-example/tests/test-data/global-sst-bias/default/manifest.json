@@ -3,7 +3,7 @@
   "committed": {
     "diagnostic.json": "f3ede4762bd0b55ec0b7f172a7433ec45fd9dc241789ea44f9f150a970742a57",
     "output.json": "3fe2b84a2d7c0b7c5332657ccd49b6dfdbb6634d8d48902e883da35cd74ad9d4",
-    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    "series.json": "3428ff5e5721babeff3dc23cbaec3ed9c3e3fa3960168d86e4d6e973cea3e4c3"
   },
   "native": {
     "diagnostic.json": {
@@ -19,8 +19,8 @@
       "size": 1127
     },
     "series.json": {
-      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "size": 2
+      "sha256": "398821ffdf19f01911d004c6a73b2d59eda43e70f2bd7e67326bb9573dbb525a",
+      "size": 17501
     },
     "surface_temperature_bias.png": {
       "sha256": "38d64d87ae3ab6e7c61b2b0f2396a509a005a82772723278657ca4fdb806eab7",

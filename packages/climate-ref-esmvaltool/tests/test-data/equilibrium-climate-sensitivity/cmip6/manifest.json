@@ -5,6 +5,7 @@
     "output.json": "dd8c208f2134be1289606e1b12be998d327f4ae329318a5a83cfd82ac2325219",
     "series.json": "cac18de7ea3575ad34111d4e3402545ba358959e2037e5bc8c48fdf22f264267"
   },
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "4253b68b6116fc9afc5970a9186b20c82be9975330842a8e61efe812b1c2d0aa",
@@ -43,6 +44,6 @@
       "size": 8877
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 2
 }

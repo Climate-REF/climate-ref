@@ -79,26 +79,26 @@ def global_mean_surface_temperature(input_files: list[Path]) -> xr.DataArray:
         Annual global-mean surface temperature, indexed by integer calendar ``year``.
     """
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-    xr_ds = xr.open_mfdataset(
+    with xr.open_mfdataset(
         input_files,
         combine="by_coords",
         chunks=None,
         decode_times=time_coder,
         data_vars="all",
         compat="no_conflicts",
-    )
+    ) as xr_ds:
+        da = xr_ds[_VARIABLE]
 
-    da = xr_ds[_VARIABLE]
+        # Cosine-of-latitude weighting approximates the grid-cell area for a regular grid.
+        weights = cast(xr.DataArray, np.cos(np.deg2rad(xr_ds["lat"])))
+        spatial_mean = da.weighted(weights.fillna(0)).mean(dim=["lat", "lon"], keep_attrs=True)
 
-    # Cosine-of-latitude weighting approximates the grid-cell area for a regular grid.
-    weights = cast(xr.DataArray, np.cos(np.deg2rad(xr_ds["lat"])))
-    spatial_mean = da.weighted(weights.fillna(0)).mean(dim=["lat", "lon"], keep_attrs=True)
-
-    # Grouping by integer year keeps the model and reference series alignable even when
-    # their calendars differ (e.g. proleptic_gregorian model vs gregorian observations).
-    annual_mean = spatial_mean.groupby("time.year").mean()
-    annual_mean.name = _VARIABLE
-    return annual_mean
+        # Grouping by integer year keeps the model and reference series alignable even when
+        # their calendars differ (e.g. proleptic_gregorian model vs gregorian observations).
+        # Materialise the result with ``.load()`` so it survives closing the file.
+        annual_mean = spatial_mean.groupby("time.year").mean().load()
+        annual_mean.name = _VARIABLE
+        return annual_mean
 
 
 def compare_model_and_reference(
@@ -361,20 +361,21 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
         """
         Create a result object from the output of the diagnostic.
         """
-        comparison = xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc")
+        with xr.open_dataset(
+            definition.output_directory / "global_mean_surface_temperature.nc"
+        ) as comparison:
+            model_source_type = self._get_model_source_type(definition)
+            model_selectors = definition.datasets[model_source_type].selector_dict()
+            reference_selectors = definition.datasets[SourceDatasetType.obs4MIPs].selector_dict()
 
-        model_source_type = self._get_model_source_type(definition)
-        model_selectors = definition.datasets[model_source_type].selector_dict()
-        reference_selectors = definition.datasets[SourceDatasetType.obs4MIPs].selector_dict()
-
-        cmec_metric_bundle = CMECMetric(**format_cmec_metric_bundle(comparison)).prepend_dimensions(
-            {
-                "source_id": model_selectors["source_id"],
-                "experiment_id": model_selectors["experiment_id"],
-                "variant_label": model_selectors["variant_label"],
-                "reference_source_id": reference_selectors["source_id"],
-            }
-        )
+            cmec_metric_bundle = CMECMetric(**format_cmec_metric_bundle(comparison)).prepend_dimensions(
+                {
+                    "source_id": model_selectors["source_id"],
+                    "experiment_id": model_selectors["experiment_id"],
+                    "variant_label": model_selectors["variant_label"],
+                    "reference_source_id": reference_selectors["source_id"],
+                }
+            )
 
         return ExecutionResult.build_from_output_bundle(
             definition,

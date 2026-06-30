@@ -22,7 +22,8 @@ classifiers = [
 ]
 dependencies = [
     "climate-ref-core",
-    "xarray >= 2022",
+    # CFDatetimeCoder is part of the public xarray.coders API from 2025.1.0.
+    "xarray >= 2025.1.0",
     "netcdf4>=1.5.0",
     "dask>=2024.10.0",
 ]

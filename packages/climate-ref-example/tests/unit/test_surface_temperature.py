@@ -12,7 +12,11 @@ from climate_ref_example.surface_temperature import (
     latest_version_files,
 )
 
-from climate_ref_core.datasets import DatasetCollection
+from climate_ref_core.datasets import (
+    DatasetCollection,
+    ExecutionDatasetCollection,
+    SourceDatasetType,
+)
 
 
 def _make_ts_dataset(path: Path, *, years: range, value: float) -> Path:
@@ -131,6 +135,37 @@ def test_execute_end_to_end(tmp_path, definition_factory):
 
     assert result.successful
     assert (definition.output_directory / "global_mean_surface_temperature.nc").exists()
+
+
+def test_execute_end_to_end_cmip7(tmp_path, definition_factory):
+    # Drive the CMIP7 branch of _get_model_source_type. definition_factory has no cmip7
+    # kwarg, so build the collection explicitly.
+    model_path = _make_ts_dataset(tmp_path / "model.nc", years=range(2000, 2005), value=290.0)
+    reference_path = _make_ts_dataset(tmp_path / "obs.nc", years=range(1990, 2010), value=288.0)
+
+    collection = ExecutionDatasetCollection(
+        {
+            SourceDatasetType.CMIP7: _collection(
+                model_path,
+                selector=(
+                    ("source_id", "ACCESS-ESM1-5"),
+                    ("experiment_id", "historical"),
+                    ("variant_label", "r1i1p1f1"),
+                ),
+            ),
+            SourceDatasetType.obs4MIPs: _collection(reference_path, selector=(("source_id", "HadISST-1-1"),)),
+        }
+    )
+
+    diagnostic = GlobalMeanSurfaceTemperatureBias()
+    definition = definition_factory(diagnostic=diagnostic, execution_dataset_collection=collection)
+    definition.output_directory.mkdir(parents=True, exist_ok=True)
+
+    result = diagnostic.run(definition)
+
+    assert result.successful
+    comparison = xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc")
+    np.testing.assert_allclose(comparison.attrs["mean_bias"], 2.0)
 
 
 def test_execute_with_multiple_reference_versions(tmp_path, definition_factory):

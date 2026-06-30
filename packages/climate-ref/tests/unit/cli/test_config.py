@@ -29,6 +29,16 @@ class TestConfigList:
 
         assert "Configuration file not found" in result.stdout
 
+    def test_config_list_json(self, config, invoke_cli):
+        import json
+
+        result = invoke_cli(["config", "list", "--format", "json"])
+
+        # Output must be valid JSON (the TOML structure rendered as nested objects).
+        payload = json.loads(result.stdout)
+        assert isinstance(payload, dict)
+        assert "sqlite://" in json.dumps(payload)
+
 
 # class TestConfigUpdate:
 #     def test_config_update(self, invoke_cli):

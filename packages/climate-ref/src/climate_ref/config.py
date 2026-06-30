@@ -40,6 +40,7 @@ from climate_ref._config_helpers import (
     transform_error,
 )
 from climate_ref.constants import CONFIG_FILENAME
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
@@ -156,6 +157,68 @@ class PathConfig:
     def _dimensions_cv_factory(self) -> Path:
         filename = "cv_cmip7_aft.yaml"
         return Path(str(importlib.resources.files("climate_ref_core.pycmec") / filename))
+
+
+@config(prefix=env_prefix)
+class NativeStoreConfig:
+    """
+    Configuration for the content-addressed native-bundle object store.
+
+    The native store holds the curated native outputs (NetCDF, PNG, ...) produced by each
+    test case, keyed by their sha256 digest.
+    Read operations (``has``, ``fetch``) are always anonymous and credential-free.
+    Write operations are gated to the ``mint`` verb only.
+    """
+
+    url: str = env_field(name="NATIVE_STORE_URL", default="https://baselines.climate-ref.org")
+    """
+    Base URL of the native-bundle object store.
+
+    Blobs are served at ``{url}/{digest}``.
+    Defaults to the production Climate-REF baselines endpoint.
+
+    Set ``REF_NATIVE_STORE_URL`` to a local ``file:///path/to/dir`` (or a plain filesystem path)
+    for offline development and testing.
+    """
+
+    s3_endpoint_url: str = env_field(
+        name="NATIVE_STORE_S3_ENDPOINT_URL",
+        default="https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
+    )
+    """
+    S3 API endpoint for the writable (Cloudflare R2) backend, without the bucket.
+
+    Non-secret routing config, consumed only by the ``mint`` verb. Defaults to the
+    production Climate-REF R2 account endpoint (default jurisdiction — note there is no
+    ``.eu`` in the host). Anonymous read (``fetch`` / ``has``) uses :attr:`url` instead and
+    never touches this.
+    Set ``REF_NATIVE_STORE_S3_ENDPOINT_URL`` to override (e.g. a staging account).
+    """
+
+    bucket: str = env_field(name="NATIVE_STORE_BUCKET", default="ref-baselines-public")
+    """
+    Name of the writable (Cloudflare R2) bucket.
+
+    Non-secret routing config, consumed only by the ``mint`` verb.
+    Set ``REF_NATIVE_STORE_BUCKET`` to override.
+
+    Write credentials are **not** stored here: the access-key id and secret-access-key are
+    read from ``REF_NATIVE_STORE_ACCESS_KEY_ID`` / ``REF_NATIVE_STORE_SECRET_ACCESS_KEY``
+    (falling back to boto3's default credential chain) at upload time only, so secrets never
+    land in a serialised config.
+    """
+
+    cache_dir: Path = env_field(name="NATIVE_STORE_CACHE_DIR", converter=Path)
+    """
+    Local pooch cache directory for downloaded native blobs.
+
+    Defaults via :func:`~climate_ref_core.dataset_registry.resolve_cache_dir`,
+    so the ``REF_DATASET_CACHE_DIR`` environment variable applies here too.
+    """
+
+    @cache_dir.default
+    def _cache_dir_factory(self) -> Path:
+        return resolve_cache_dir("native-baselines")
 
 
 @config(prefix=env_prefix)
@@ -353,31 +416,39 @@ def _get_default_ignore_datasets_file() -> Path:
     Get the path to the ignore datasets file
     """
     cache_dir = platformdirs.user_cache_path("climate_ref")
-    cache_dir.mkdir(parents=True, exist_ok=True)
     ignore_datasets_file = cache_dir / "default_ignore_datasets.yaml"
 
-    download = True
-    if ignore_datasets_file.exists():
-        # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
-        modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
-        age = datetime.datetime.now() - modification_time
-        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
-            download = False
+    try:
+        cache_dir.mkdir(parents=True, exist_ok=True)
 
-    if download:
-        logger.info(
-            f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
-            f"to {ignore_datasets_file}"
-        )
-        try:
-            response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
-            response.raise_for_status()
-        except requests.RequestException as exc:
-            logger.warning(f"Failed to download default ignore datasets file: {exc}")
-            ignore_datasets_file.touch(exist_ok=True)
-        else:
-            with ignore_datasets_file.open(mode="wb") as file:
-                file.write(response.content)
+        download = True
+        if ignore_datasets_file.exists():
+            # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
+            modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
+            age = datetime.datetime.now() - modification_time
+            if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+                download = False
+
+        if download:
+            logger.info(
+                f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
+                f"to {ignore_datasets_file}"
+            )
+            try:
+                response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
+                response.raise_for_status()
+            except requests.RequestException as exc:
+                logger.warning(f"Failed to download default ignore datasets file: {exc}")
+                ignore_datasets_file.touch(exist_ok=True)
+            else:
+                with ignore_datasets_file.open(mode="wb") as file:
+                    file.write(response.content)
+    except OSError as exc:
+        # Acquiring the default ignore datasets file is a best-effort optimisation.
+        # If the cache directory cannot be created or written to
+        # (e.g. a read-only or otherwise restricted environment),
+        # fall back to the (possibly missing) path rather than breaking configuration loading.
+        logger.warning(f"Unable to prepare default ignore datasets file at {ignore_datasets_file}: {exc}")
 
     return ignore_datasets_file
 
@@ -445,6 +516,7 @@ class Config:
     """
 
     paths: PathConfig = Factory(PathConfig)
+    native_store: NativeStoreConfig = Factory(NativeStoreConfig)
     db: DbConfig = Factory(DbConfig)
     executor: ExecutorConfig = Factory(ExecutorConfig)
     diagnostic_providers: list[DiagnosticProviderConfig] = Factory(default_providers)  # noqa: RUF009, RUF100

@@ -3,6 +3,7 @@
 from typing import ClassVar
 
 import pandas as pd
+import pytest
 
 from climate_ref.datasets.base import _is_na
 from climate_ref.datasets.cmip7 import (
@@ -409,6 +410,55 @@ class TestCMIP7ConvertedFile:
 
         assert "branded_variable" in data_catalog.columns
         assert row["branded_variable"] == f"{row['variable_id']}_{row['branding_suffix']}"
+
+    def test_branded_variable_survives_db_round_trip(self, cmip7_converted_file, db, config):
+        """branded_variable is reconstructed (with correct value) when loading from the DB.
+
+        Regression test for issue #687
+        """
+        adapter = CMIP7DatasetAdapter(config=config)
+
+        catalog = adapter.validate_data_catalog(adapter.find_local_datasets(cmip7_converted_file.parent))
+        with db.session.begin():
+            for _instance_id, dataset in catalog.groupby(adapter.slug_column):
+                adapter.register_dataset(db, dataset)
+
+        db_catalog = adapter.load_catalog(db)
+
+        assert "branded_variable" in db_catalog.columns
+        row = db_catalog.iloc[0]
+        assert row["branded_variable"] == f"{row['variable_id']}_{row['branding_suffix']}"
+
+    def test_branded_variable_requires_source_column(self, config):
+        """Deriving branded_variable on a catalog missing branding_suffix is a hard error."""
+        adapter = CMIP7DatasetAdapter(config=config)
+        catalog = pd.DataFrame({"variable_id": ["tas"]})  # no branding_suffix column
+
+        with pytest.raises(ValueError, match="missing required column"):
+            adapter._add_derived_columns(catalog)
+
+    def test_branded_variable_rejects_null_source_value(self, config):
+        """Deriving branded_variable when an input value is null is a hard error."""
+        adapter = CMIP7DatasetAdapter(config=config)
+        catalog = pd.DataFrame({"variable_id": ["tas"], "branding_suffix": [pd.NA]})
+
+        with pytest.raises(ValueError, match="is null"):
+            adapter._add_derived_columns(catalog)
+
+    def test_branded_variable_empty_catalog_has_column(self, config):
+        """An empty catalog still gains the branded_variable column (no rows to validate)."""
+        adapter = CMIP7DatasetAdapter(config=config)
+        catalog = pd.DataFrame(
+            {
+                "variable_id": pd.Series(dtype="object"),
+                "branding_suffix": pd.Series(dtype="object"),
+            }
+        )
+
+        result = adapter._add_derived_columns(catalog)
+
+        assert "branded_variable" in result.columns
+        assert len(result) == 0
 
 
 class TestParseCMIP7UsingDirectories:

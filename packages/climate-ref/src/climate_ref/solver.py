@@ -181,7 +181,11 @@ def extract_covered_datasets(
         catalog_df = data_catalog
 
     if len(catalog_df) == 0:
-        logger.error(f"No datasets found in the data catalog: {requirement.source_type.value}")
+        # A requirement may target a source type that simply was not ingested
+        # (e.g. a diagnostic supporting CMIP6 *or* CMIP7 when only CMIP6 is present).
+        # This is an expected skip, not an error, so it must not surface as ERROR
+        # on an otherwise successful solve.
+        logger.debug(f"No datasets found in the data catalog: {requirement.source_type.value}")
         return {}
 
     subset = requirement.apply_filters(catalog_df)
@@ -526,6 +530,15 @@ class ExecutionSolver:
 DEFAULT_STALE_EXECUTION_AGE_SECONDS = 6 * 60 * 60
 
 
+def _stale_execution_cutoff(
+    stale_after_seconds: int = DEFAULT_STALE_EXECUTION_AGE_SECONDS,
+) -> datetime.datetime:
+    """Naive UTC timestamp before which an in-progress execution is considered abandoned."""
+    return datetime.datetime.now(datetime.UTC).replace(tzinfo=None) - datetime.timedelta(
+        seconds=stale_after_seconds
+    )
+
+
 def fail_stale_in_progress_executions(
     db: Database,
     *,
@@ -556,9 +569,7 @@ def fail_stale_in_progress_executions(
     :
         The number of executions that were marked failed.
     """
-    cutoff = datetime.datetime.now(datetime.timezone.utc).replace(tzinfo=None) - datetime.timedelta(
-        seconds=stale_after_seconds
-    )
+    cutoff = _stale_execution_cutoff(stale_after_seconds)
 
     with db.session.begin():
         stale = (
@@ -585,6 +596,7 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     solver: ExecutionSolver | None = None,
     config: Config | None = None,
     timeout: int = 60,
+    wait: bool = True,
     one_per_provider: bool = False,
     one_per_diagnostic: bool = False,
     filters: SolveFilterOptions | None = None,
@@ -597,10 +609,15 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     This may trigger a number of additional calculations depending on what data has been ingested
     since the last solve.
 
+    When ``wait`` is True (the default) this blocks until all executions complete,
+    copying their outputs to the results directory and ingesting them.
+    ``timeout`` bounds that wait; a non-positive ``timeout`` (``<= 0``) waits with no time limit.
+    ``wait=False`` queues the executions and returns immediately without collecting their results.
+
     Raises
     ------
     TimeoutError
-        If the execution isn't completed within the specified timeout
+        If the executions aren't completed within a positive ``timeout``
     """
     if config is None:
         config = Config.default()
@@ -609,13 +626,27 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
     logger.info("Solving for diagnostics that require recalculation...")
 
-    # Reap any executions that were left in-progress by a previous run that
-    # crashed, hit walltime, or otherwise lost its result-handling callback.
-    # Without this sweep, ``ExecutionGroup.should_run`` keeps returning False
-    # for these rows and the group is never retried.
-    fail_stale_in_progress_executions(db)
+    # A dry run is a read-only preview: it must not create execution groups,
+    # reap stale executions, or build/submit to an executor.
+    stale_cutoff = None
+    if dry_run:
+        stale_cutoff = _stale_execution_cutoff()
+    else:
+        # Reap any executions that were left in-progress by a previous run that crashed,
+        # hit walltime, or otherwise lost its result-handling callback.
+        fail_stale_in_progress_executions(db)
 
-    executor = config.executor.build(config, db)
+    executor = None if dry_run else config.executor.build(config, db)
+
+    if executor is not None and not wait and getattr(executor, "collects_results_on_join", False):
+        logger.warning(
+            f"--no-wait was requested with the {getattr(executor, 'name', 'configured')!r} executor, "
+            f"which only persists results while waiting (during join). "
+            f"Queued executions will run, "
+            f"but their outputs will be left in the scratch directory and never copied to the results "
+            f"directory or ingested into the database. Re-run without --no-wait, or recover existing "
+            f"scratch outputs with `ref executions reingest --include-failed`."
+        )
 
     diagnostic_count: dict[str, int] = {}
     provider_count: dict[str, int] = {}
@@ -656,23 +687,36 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
         # Use a transaction to make sure that the models
         # are created correctly before potentially executing out of process
         with db.session.begin():
-            # diagnostic_version is part of the lookup key so bumping
-            # ``Diagnostic.version`` produces a fresh v2 group instead of reusing the v1 row.
-            execution_group, created = db.get_or_create(
-                ExecutionGroup,
-                key=definition.key,
-                diagnostic_id=diagnostic_id,
-                diagnostic_version=diagnostic_version,
-                defaults={
-                    "selectors": potential_execution.selectors,
-                    "dirty": True,
-                },
-            )
+            if dry_run:
+                # Read-only preview: look the group up without creating it.
+                # A group that does not exist yet is one this solve *would* create and run.
+                execution_group = (
+                    db.session.query(ExecutionGroup)
+                    .filter_by(
+                        key=definition.key,
+                        diagnostic_id=diagnostic_id,
+                        diagnostic_version=diagnostic_version,
+                    )
+                    .one_or_none()
+                )
+            else:
+                # diagnostic_version is part of the lookup key so bumping
+                # ``Diagnostic.version`` produces a fresh v2 group instead of reusing the v1 row.
+                execution_group, created = db.get_or_create(
+                    ExecutionGroup,
+                    key=definition.key,
+                    diagnostic_id=diagnostic_id,
+                    diagnostic_version=diagnostic_version,
+                    defaults={
+                        "selectors": potential_execution.selectors,
+                        "dirty": True,
+                    },
+                )
 
-            if created:
-                logger.info(f"Created new execution group: {potential_execution.execution_slug()!r}")
-                db.session.flush()
-                recompute_promoted_version(diagnostic_id, db.session)
+                if created:
+                    logger.info(f"Created new execution group: {potential_execution.execution_slug()!r}")
+                    db.session.flush()
+                    recompute_promoted_version(diagnostic_id, db.session)
 
             # TODO: Move this logic to the solver
             # Check if we should run given the one_per_provider or one_per_diagnostic flags
@@ -686,7 +730,11 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 f"provider_count={provider_count}"
             )
 
-            if not execution_group.should_run(definition.datasets.hash, rerun_failed=rerun_failed):
+            # A not-yet-created group (dry-run only) would always run;
+            # an existing group defers to its should_run logic.
+            if execution_group is not None and not execution_group.should_run(
+                definition.datasets.hash, rerun_failed=rerun_failed, stale_cutoff=stale_cutoff
+            ):
                 continue
 
             if (one_per_provider or one_per_diagnostic) and one_of_check_failed:
@@ -702,6 +750,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                 if limit is not None and total_count >= limit:
                     limit_reached = True
             else:
+                # Only the dry-run branch leaves the group unresolved
+                assert execution_group is not None
                 logger.info(
                     f"Running new execution for execution group: {potential_execution.execution_slug()!r}"
                 )
@@ -749,7 +799,8 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
                     limit_reached = True
 
         # Transaction has committed; safe to submit to the executor.
-        if pending is not None:
+        # ``pending`` is only set on the non-dry-run path, where the executor exists.
+        if pending is not None and executor is not None:
             pending_definition, pending_execution = pending
             executor.run(
                 definition=pending_definition,
@@ -767,6 +818,6 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     for prov, count in provider_count.items():
         logger.info(f"  {prov}: {count} new executions")
 
-    if timeout > 0:
+    if wait and executor is not None:
         executor.join(timeout=timeout)
         logger.info("All executions complete")

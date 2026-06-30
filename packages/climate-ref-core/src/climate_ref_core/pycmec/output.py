@@ -16,7 +16,7 @@ Both ways will create the CMECOutput instance (cmec)
 
 import pathlib
 from enum import Enum
-from typing import Any, Literal
+from typing import Any, Literal, Self
 
 from pydantic import (
     BaseModel,
@@ -24,7 +24,6 @@ from pydantic import (
     FilePath,
     validate_call,
 )
-from typing_extensions import Self
 
 
 class OutputCV(Enum):

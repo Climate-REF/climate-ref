@@ -10,6 +10,7 @@ This module provides:
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 from pathlib import Path
@@ -28,8 +29,12 @@ from climate_ref_core.datasets import (
 )
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
+from climate_ref_core.metric_values.typing import SeriesMetricValue
+from climate_ref_core.output_files import PlaceholderMap, ordered_replacements
+from climate_ref_core.paths import safe_path
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.regression.manifest import Manifest
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
@@ -193,9 +198,31 @@ class TestCasePaths:
         return self.root / "regression"
 
     @property
-    def regression_catalog_hash(self) -> Path:
-        """Path to catalog hash file in regression directory."""
-        return self.regression / ".catalog_hash"
+    def manifest(self) -> Path:
+        """Path to manifest.json (the regression bundle manifest, tracked in git)."""
+        return self.root / "manifest.json"
+
+    @property
+    def output(self) -> Path:
+        """Path to the output/ directory (gitignored; holds materialised native slots)."""
+        return self.root / "output"
+
+    def output_slot(self, label: str = "latest") -> Path:
+        """
+        Path to a named output slot under ``output/`` (gitignored).
+
+        A slot is a self-contained, inspectable snapshot of one execute/materialise:
+        the curated native set (flat, at manifest-relative paths) plus a ``regression/``
+        subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
+        ``latest`` (the default) is overwritten on every run; named slots persist so two
+        runs can be diffed (e.g. ``--label before`` vs ``--label after``).
+
+        Parameters
+        ----------
+        label
+            Slot name. Must be a single path segment (no separators or ``..``).
+        """
+        return safe_path(label, self.output, label="output slot label", single_segment=True)
 
     @property
     def test_data_dir(self) -> Path:
@@ -358,10 +385,14 @@ def catalog_changed_since_regression(paths: TestCasePaths) -> bool:
     """
     Check if the catalog has changed since regression data was generated.
 
+    The baseline's input hash is read from ``manifest.json`` (``catalog_hash``),
+    the single coupling record; there is no separate sidecar.
+
     Returns True if:
     - No regression data exists (new test case)
-    - No stored catalog hash exists (legacy regression data)
-    - The catalog hash differs from the stored one
+    - No manifest, or the manifest records no ``catalog_hash`` (legacy regression data)
+    - No catalog file exists
+    - The current catalog hash differs from the one recorded in the manifest
 
     Parameters
     ----------
@@ -375,15 +406,16 @@ def catalog_changed_since_regression(paths: TestCasePaths) -> bool:
     """
     if not paths.regression.exists():
         return True  # No regression data, needs to run
-    if not paths.regression_catalog_hash.exists():
-        return True  # No stored hash, needs to run
     if not paths.catalog.exists():
         return True  # No catalog file, needs to run
+    if not paths.manifest.exists():
+        return True  # No manifest, needs to run
 
-    stored_hash = paths.regression_catalog_hash.read_text().strip()
-    current_hash = get_catalog_hash(paths.catalog)
+    stored_hash = Manifest.load(paths.manifest).catalog_hash
+    if stored_hash is None:
+        return True  # Legacy manifest without a recorded catalog hash, needs to run
 
-    return stored_hash != current_hash
+    return stored_hash != get_catalog_hash(paths.catalog)
 
 
 def _sanitize_for_yaml(value: Any) -> Any:
@@ -400,50 +432,19 @@ def _sanitize_for_yaml(value: Any) -> Any:
     return value
 
 
-def save_datasets_to_yaml(
+def _serialise_datasets(
     datasets: ExecutionDatasetCollection,
-    path: Path,
-    *,
-    force: bool = False,
-) -> bool:
+) -> tuple[dict[str, Any], dict[str, str]]:
     """
-    Save ExecutionDatasetCollection to a YAML file.
+    Build the version-controlled catalog payload and its separate local-paths map.
 
-    Paths are saved to a separate `.paths.yaml` file to allow the main
-    catalog to be version-controlled while paths remain user-specific.
-
-    Multi-file datasets (e.g., time-chunked data) are stored as multiple rows,
-    one per file. Paths are keyed by `{instance_id}::{filename}` to support
-    multiple files per dataset.
-
-    By default, the catalog is only written if the content has changed
-    (detected via hash comparison). Use `force=True` to always write.
-
-    Parameters
-    ----------
-    datasets
-        The datasets to save
-    path
-        Path to write the YAML file
-    force
-        If True, always write the catalog even if unchanged
-
-    Returns
-    -------
-    :
-        True if the catalog was written, False if skipped (unchanged)
+    Returns a ``(data, paths_map)`` tuple: ``data`` is the catalog content (metadata plus
+    per-source records with local paths stripped out), and ``paths_map`` maps
+    ``{instance_id}::{filename}`` to each local file path. The two are written to
+    ``catalog.yaml`` and the gitignored ``catalog.paths.yaml`` respectively.
     """
-    # Compute the hash first to check if we need to write
-    new_hash = datasets.hash
-
-    if not force:
-        existing_hash = get_catalog_hash(path)
-        if existing_hash == new_hash:
-            logger.info(f"Catalog unchanged, skipping write: {path}")
-            return False
-
     data: dict[str, Any] = {
-        "_metadata": {"hash": new_hash},
+        "_metadata": {"hash": datasets.hash},
     }
     paths_map: dict[str, str] = {}
 
@@ -476,14 +477,76 @@ def save_datasets_to_yaml(
             "datasets": filtered_records,
         }
 
-    path.parent.mkdir(parents=True, exist_ok=True)
+    return data, paths_map
 
-    with open(path, "w") as f:
-        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
 
-    paths_file = _get_paths_file(path)
+def _write_paths_file(paths_file: Path, paths_map: dict[str, str]) -> None:
+    """Write the gitignored local-paths sidecar (``catalog.paths.yaml``)."""
+    paths_file.parent.mkdir(parents=True, exist_ok=True)
     with open(paths_file, "w") as f:
         yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
+
+
+def save_datasets_to_yaml(
+    datasets: ExecutionDatasetCollection,
+    path: Path,
+    *,
+    force: bool = False,
+) -> bool:
+    """
+    Save ExecutionDatasetCollection to a YAML file.
+
+    Paths are saved to a separate `.paths.yaml` file to allow the main
+    catalog to be version-controlled while paths remain user-specific.
+
+    Multi-file datasets (e.g., time-chunked data) are stored as multiple rows,
+    one per file. Paths are keyed by `{instance_id}::{filename}` to support
+    multiple files per dataset.
+
+    By default, the catalog is only written if the content has changed
+    (detected via hash comparison). Use `force=True` to always write.
+
+    The gitignored `.paths.yaml` sidecar is (re)generated whenever it is **missing**, even
+    when the catalog content is unchanged: on a fresh checkout the version-controlled
+    `catalog.yaml` exists but the local paths file does not, and `run`/`mint` need it to
+    resolve inputs. In that case the catalog itself is left untouched (so a plain
+    `ref test-cases fetch` is enough — no `--force` required) and only the paths file is written.
+
+    Parameters
+    ----------
+    datasets
+        The datasets to save
+    path
+        Path to write the YAML file
+    force
+        If True, always write the catalog even if unchanged
+
+    Returns
+    -------
+    :
+        True if the catalog was (re)written, False if the catalog was left unchanged
+        (the paths sidecar may still have been regenerated).
+    """
+    new_hash = datasets.hash
+    paths_file = _get_paths_file(path)
+
+    if not force and get_catalog_hash(path) == new_hash:
+        # Catalog content is unchanged. Still regenerate the gitignored paths sidecar if it
+        # is missing (e.g. a fresh checkout) so run/mint can resolve inputs, but leave the
+        # version-controlled catalog untouched to avoid spurious diffs.
+        if paths_file.exists():
+            logger.info(f"Catalog unchanged, skipping write: {path}")
+        else:
+            _, paths_map = _serialise_datasets(datasets)
+            _write_paths_file(paths_file, paths_map)
+            logger.info(f"Catalog unchanged; regenerated missing paths file: {paths_file}")
+        return False
+
+    data, paths_map = _serialise_datasets(datasets)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with open(path, "w") as f:
+        yaml.dump(data, f, default_flow_style=False, sort_keys=False)
+    _write_paths_file(paths_file, paths_map)
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
     return True
 
@@ -499,6 +562,11 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
     AssertionError
         If the result is not successful or bundles are invalid
     """
+    # TODO: Add content regression checks for the CMEC bundles (diagnostic.json /
+    # output.json), mirroring `validate_series_regression`. These bundles are only
+    # structurally validated here, so a diagnostic can change the metric/output
+    # values without any regression test failing.
+    # A content comparison must sanitise the regenerated bundle first via `PlaceholderMap.
     assert result.successful, f"Execution failed: {result}"
 
     # Validate metric bundle
@@ -515,6 +583,72 @@ def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> No
 
     # Validate output bundle
     CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
+
+
+def _load_series_sanitised(path: Path, replacements: dict[str, str]) -> list[SeriesMetricValue]:
+    """
+    Load series from ``path``, replacing real paths with regression placeholders.
+    """
+    text = path.read_text(encoding="utf-8")
+    # Apply replacements longest-key-first so a shorter key cannot shadow a longer one
+    # (the canonical ordering shared with all other sanitisation).
+    for real, placeholder in ordered_replacements(replacements):
+        text = text.replace(real, placeholder)
+    data = json.loads(text)
+    if not isinstance(data, list):
+        raise ValueError(f"Expected a list of series values, got {type(data)}")
+    return [SeriesMetricValue.model_validate(s, strict=True) for s in data]
+
+
+def validate_series_regression(
+    expected_path: Path,
+    actual_path: Path,
+    *,
+    slug: str,
+    replacements: dict[str, str] | None = None,
+) -> None:
+    """
+    Assert that regenerated series match the committed regression series.
+
+    If ``expected_path`` does not exist (legacy regression data without a stored series),
+    the check is skipped.
+
+    Parameters
+    ----------
+    expected_path
+        Path to the committed ``series.json`` regression artifact. This file
+        stores sanitized placeholders (e.g. ``<OUTPUT_DIR>``).
+    actual_path
+        Path to the freshly regenerated ``series.json`` in the output directory.
+        This file contains expanded absolute paths.
+    slug
+        The diagnostic slug, used for error messages.
+    replacements
+        Optional ``real path -> placeholder`` mapping applied to the regenerated series before comparison,
+        mirroring the sanitisation used when the regression data was written.
+
+    Raises
+    ------
+    AssertionError
+        If the regenerated series differ from the committed series.
+    """
+    if not expected_path.exists():
+        return
+
+    expected = SeriesMetricValue.load_from_json(expected_path)
+    actual = _load_series_sanitised(actual_path, replacements or {})
+
+    def _sorted_dump(series: list[SeriesMetricValue]) -> list[dict[str, Any]]:
+        return sorted((s.model_dump(mode="json") for s in series), key=lambda s: repr(s["dimensions"]))
+
+    assert len(actual) == len(expected), (
+        f"Diagnostic {slug} produced {len(actual)} series but the committed series.json "
+        f"has {len(expected)}. Regenerate the regression data with `--force-regen`."
+    )
+    assert _sorted_dump(actual) == _sorted_dump(expected), (
+        f"Diagnostic {slug} produced series that differ from the committed series.json. "
+        f"Regenerate the regression data with `--force-regen`."
+    )
 
 
 @frozen
@@ -537,6 +671,18 @@ class RegressionValidator:
     def paths(self) -> TestCasePaths:
         """Get paths for this test case."""
         return TestCasePaths.from_test_data_dir(self.test_data_dir, self.diagnostic.slug, self.test_case_name)
+
+    @property
+    def _baseline_placeholders(self) -> PlaceholderMap:
+        """
+        Base placeholder map for this verification context.
+
+        Declared once and reused by both :meth:`load_regression_definition` (hydrate) and
+        :meth:`validate` (series replacements) so the two sides cannot drift to different token sets.
+        This context does not know the shared-software root, so the map omits ``<SOFTWARE_ROOT_DIR>``;
+        each caller binds the per-execution ``<OUTPUT_DIR>`` via :meth:`PlaceholderMap.with_output`.
+        """
+        return PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir)
 
     def has_regression_data(self) -> bool:
         """Check if regression data exists for this test case."""
@@ -565,15 +711,8 @@ class RegressionValidator:
         output_dir.mkdir(parents=True, exist_ok=True)
         shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
 
-        # Replace placeholders with actual paths
-        for pattern in ("*.json", "*.txt", "*.yaml", "*.yml"):
-            for file in output_dir.rglob(pattern):
-                content = file.read_text()
-                content = content.replace("<OUTPUT_DIR>", str(output_dir))
-                content = content.replace("<TEST_DATA_DIR>", str(self.test_data_dir))
-                file.write_text(content)
+        self._baseline_placeholders.with_output(output_dir).hydrate(output_dir)
 
-        # Load datasets from catalog
         datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
 
         return ExecutionDefinition(
@@ -585,10 +724,18 @@ class RegressionValidator:
         )
 
     def validate(self, definition: ExecutionDefinition) -> None:
-        """Validate CMEC bundles in the regression output."""
+        """Validate CMEC bundles and series in the regression output."""
         result = self.diagnostic.build_execution_result(definition)
         result.to_output_path("out.log").touch()  # Log file not tracked in regression
         validate_cmec_bundles(self.diagnostic, result)
+        validate_series_regression(
+            expected_path=self.paths.regression / "series.json",
+            actual_path=definition.output_directory / "series.json",
+            slug=self.diagnostic.slug,
+            replacements=self._baseline_placeholders.with_output(
+                definition.output_directory
+            ).as_replacements(),
+        )
 
 
 def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:

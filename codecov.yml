@@ -1,3 +1,12 @@
+codecov:
+  notify:
+    # Wait for every coverage report before posting any status, so the
+    # project/patch checks are not transiently marked failed while jobs
+    # are still uploading partial coverage.
+    # Count = tests-core (1) + tests-integration (1) + tests-providers (4).
+    # Bump this if the set of coverage-uploading jobs changes.
+    after_n_builds: 6
+    wait_for_ci: true
 coverage:
   status:
     project:
@@ -8,3 +17,5 @@ coverage:
       default:
         target: auto
         threshold: 5%
+comment:
+  after_n_builds: 6

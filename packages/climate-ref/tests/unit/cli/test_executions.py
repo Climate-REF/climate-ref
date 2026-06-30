@@ -160,6 +160,40 @@ class TestExecutionList:
             ["executions", "list-groups", "--column", "key", "--column", "missing"], expected_exit_code=1
         )
 
+    def test_list_default_columns_omit_verbose(self, sample_data_dir, db_seeded, invoke_cli):
+        self._setup_db(db_seeded)
+
+        result = invoke_cli(["executions", "list-groups"])
+
+        # The default table shows a sane subset; verbose columns are omitted.
+        assert "dirty" in result.stdout
+        assert "created_at" in result.stdout
+        assert "selectors" not in result.stdout
+        assert "updated_at" not in result.stdout
+
+    def test_list_json(self, sample_data_dir, db_seeded, invoke_cli):
+        import json
+
+        self._setup_db(db_seeded)
+
+        result = invoke_cli(["executions", "list-groups", "--format", "json"])
+
+        payload = json.loads(result.stdout)
+        keys = {row["key"] for row in payload}
+        assert {"key1", "key2"} <= keys
+
+        # ``selectors`` must be emitted as structured JSON, not a double-encoded
+        # string (i.e. ``{}`` not ``"{}"``), so callers don't have to parse twice.
+        assert all(isinstance(row["selectors"], dict) for row in payload)
+
+    def test_list_json_empty(self, sample_data_dir, db_seeded, invoke_cli):
+        import json
+
+        # No execution groups created: JSON output must still be valid (an empty list).
+        result = invoke_cli(["executions", "list-groups", "--format", "json"])
+
+        assert json.loads(result.stdout) == []
+
 
 class TestListGroupsFiltering:
     def test_filter_by_diagnostic(self, db_with_groups, invoke_cli):
@@ -264,8 +298,10 @@ class TestListGroupsFiltering:
                 "source_id=ACCESS-ESM1-5",
             ]
         )
-        assert "ACCESS-ESM1-5" in result.stdout
-        assert "GFDL-ESM4" in result.stdout
+        # key1 -> source_id=GFDL-ESM4, key2 -> source_id=ACCESS-ESM1-5.
+        # selectors are omitted from the default table, so assert on the group keys.
+        assert "key1" in result.stdout
+        assert "key2" in result.stdout
 
     def test_filter_successful(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "list-groups", "--successful"])
@@ -925,7 +961,7 @@ class TestFailRunning:
             )
 
             # Old running execution (48 hours ago)
-            old_time = datetime.datetime.now(tz=datetime.timezone.utc) - datetime.timedelta(hours=48)
+            old_time = datetime.datetime.now(tz=datetime.UTC) - datetime.timedelta(hours=48)
             db_seeded.session.add(
                 Execution(
                     execution_group_id=eg2.id,

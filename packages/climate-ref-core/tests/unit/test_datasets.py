@@ -1,7 +1,13 @@
 import pandas as pd
 import pytest
 
-from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
+from climate_ref_core.datasets import (
+    DatasetCollection,
+    ExecutionDatasetCollection,
+    SourceDatasetType,
+    select_latest_version,
+    version_sort_key,
+)
 
 
 @pytest.fixture
@@ -147,3 +153,47 @@ class TestDatasetCollectionObs4MIPs:
         # This hash will change if the data catalog changes
         # Specifically if more tas datasets are provided
         data_regression.check(dataset_hash, basename="dataset_collection_obs4mips_hash")
+
+
+class TestVersionSortKey:
+    """``version_sort_key`` orders versions numerically, not lexicographically."""
+
+    def test_vn_form_orders_numerically(self):
+        # The regression this fixes: v10 must beat v2, unlike string ``.max()``.
+        assert version_sort_key("v10") > version_sort_key("v2")
+        assert version_sort_key("v2") > version_sort_key("v0")
+
+    def test_date_form_orders_chronologically(self):
+        assert version_sort_key("v20250622") > version_sort_key("v20240101")
+
+    def test_v0_is_zero(self):
+        assert version_sort_key("v0") == 0
+
+    @pytest.mark.parametrize("value", ["latest", "", "1", "v", "vX", None])
+    def test_non_conforming_values_sort_lowest(self, value):
+        assert version_sort_key(value) == -1
+
+
+class TestSelectLatestVersion:
+    """``select_latest_version`` keeps the numerically-latest rows, optionally per group."""
+
+    def test_ungrouped_keeps_single_latest_version(self):
+        df = pd.DataFrame({"version": ["v1", "v2", "v10"], "path": ["a", "b", "c"]})
+        result = select_latest_version(df)
+        assert list(result["version"]) == ["v10"]
+
+    def test_grouped_keeps_latest_per_group(self):
+        df = pd.DataFrame(
+            {
+                "source_id": ["A", "A", "B", "B"],
+                "version": ["v2", "v10", "v9", "v1"],
+                "path": ["a", "b", "c", "d"],
+            }
+        )
+        result = select_latest_version(df, group_by=["source_id"])
+        assert set(zip(result["source_id"], result["version"])) == {("A", "v10"), ("B", "v9")}
+
+    def test_custom_version_column(self):
+        df = pd.DataFrame({"ver": ["v2", "v10"], "path": ["a", "b"]})
+        result = select_latest_version(df, version_column="ver")
+        assert list(result["ver"]) == ["v10"]

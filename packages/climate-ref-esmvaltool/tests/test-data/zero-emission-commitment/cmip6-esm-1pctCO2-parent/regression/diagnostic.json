@@ -1,0 +1,40 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "member_id",
+      "source_id",
+      "region",
+      "metric"
+    ],
+    "member_id": {
+      "r1i1p1f2": {}
+    },
+    "metric": {
+      "zec": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "MIROC-ES2L": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "gn": {
+      "r1i1p1f2": {
+        "MIROC-ES2L": {
+          "global": {
+            "zec": -2.002331
+          }
+        }
+      }
+    }
+  }
+}

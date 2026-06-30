@@ -2,7 +2,7 @@
 
 import importlib
 import sys
-from enum import Enum
+from enum import StrEnum
 from pathlib import Path
 from typing import Annotated
 
@@ -34,7 +34,17 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("executions", "stats"),
     ("providers", "list"),
     ("providers", "show"),
+    # test-cases commands operate on test artifacts (filesystem, native store, manifests).
+    # None persist diagnostic executions to the database, so they never need a pre-migration backup.
+    ("test-cases", "fetch"),
     ("test-cases", "list"),
+    ("test-cases", "run"),
+    ("test-cases", "sync"),
+    ("test-cases", "replay"),
+    ("test-cases", "mint"),
+    ("test-cases", "build"),
+    ("test-cases", "ci-gate"),
+    ("test-cases", "check-store"),
 }
 
 
@@ -56,7 +66,7 @@ def _is_read_only_command() -> bool:
     return False
 
 
-class LogLevel(str, Enum):
+class LogLevel(StrEnum):
     """
     Log levels for the CLI
     """
@@ -192,10 +202,10 @@ def build_app() -> typer.Typer:
 
     try:
         celery_app = importlib.import_module("climate_ref_celery.cli").app
-
-        app.add_typer(celery_app, name="celery")
     except ImportError:
-        logger.debug("Celery CLI not available")
+        pass
+    else:
+        app.add_typer(celery_app, name="celery")
 
     return app
 
@@ -248,6 +258,9 @@ def main(  # noqa: PLR0913
     initialise_logging(level=config.log_level, format=log_format, log_directory=config.paths.log)
 
     logger.debug(f"Configuration loaded from: {config._config_file!s}")
+
+    if not any(group.name == "celery" for group in app.registered_groups):
+        logger.debug("Celery CLI not available")
 
     # Create context with lazy database initialization
     # The database is only created when first accessed

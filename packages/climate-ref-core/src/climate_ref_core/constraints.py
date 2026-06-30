@@ -2,23 +2,17 @@
 Dataset selection constraints
 """
 
-import sys
 from collections import defaultdict
 from collections.abc import Mapping
 from functools import total_ordering
-from typing import Literal, Protocol, runtime_checkable
-
-if sys.version_info < (3, 11):
-    from typing_extensions import Self
-else:
-    from typing import Self
+from typing import Literal, Protocol, Self, runtime_checkable
 
 import numpy as np
 import pandas as pd
 from attrs import field, frozen
 from loguru import logger
 
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.datasets import SourceDatasetType, select_latest_version
 
 
 @runtime_checkable
@@ -257,10 +251,8 @@ class AddSupplementaryDataset:
                     scores = (supplementaries[facets] == dataset).sum(axis="columns")
                     supplementaries = supplementaries[scores == scores.max()]
                     if "version" in supplementaries.columns:
-                        # Select the latest version if there are multiple matches
-                        supplementaries = supplementaries[
-                            supplementaries["version"] == supplementaries["version"].max()
-                        ]
+                        # Select the latest version if there are multiple matches.
+                        supplementaries = select_latest_version(supplementaries)
                     # Select only the first group if there are still multiple matches
                     first_supplementary_dataset = supplementaries[facets].drop_duplicates().iloc[0]
                     select |= (supplementaries[facets] == first_supplementary_dataset).all(axis="columns")
@@ -598,7 +590,7 @@ class AddParentDataset:
                 select.loc[child_dataset.index] = False
             else:
                 # Add the latest version of the dataset to the selection.
-                parent_dataset = parent_dataset[parent_dataset["version"] == parent_dataset["version"].max()]
+                parent_dataset = select_latest_version(parent_dataset)
                 select.loc[parent_dataset.index] = True
 
         return data_catalog[select]

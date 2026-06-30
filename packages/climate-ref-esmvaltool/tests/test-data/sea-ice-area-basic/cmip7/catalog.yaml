@@ -1,0 +1,83 @@
+_metadata:
+  hash: 17e3d6f89f882ddd222876210a7a1a99f4fd7ef5
+cmip7:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: areacello_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: null
+    filename: areacello_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Grid-Cell Area for Ocean Variables
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: cell_area
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/f1ffaa8e-f80e-46e5-b2e9-b1a212b0372e
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: siconc_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello
+    filename: siconc_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.siconc.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea-ice Area Percentage (Ocean Grid)
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: seaIce
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_ice_area_fraction
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/e27188f7-4611-4001-98a3-f96edff2fc50
+    units: '%'
+    variable_id: siconc
+    variant_label: r1i1p1f1
+    version: v0

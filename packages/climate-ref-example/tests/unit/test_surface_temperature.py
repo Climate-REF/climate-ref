@@ -184,8 +184,8 @@ def test_execute_end_to_end(tmp_path, definition_factory):
     assert (definition.output_directory / "global_mean_surface_temperature.nc").exists()
     assert (definition.output_directory / "surface_temperature_timeseries.png").exists()
     assert (definition.output_directory / "surface_temperature_bias.png").exists()
-    comparison = xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc")
-    np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)  # 18.0 - 15.0 degC
+    with xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc") as comparison:
+        np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)  # 18.0 - 15.0 degC
 
 
 def test_execute_end_to_end_cmip7(tmp_path, definition_factory):
@@ -214,8 +214,8 @@ def test_execute_end_to_end_cmip7(tmp_path, definition_factory):
     result = diagnostic.run(definition)
 
     assert result.successful
-    comparison = xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc")
-    np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)
+    with xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc") as comparison:
+        np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)
 
 
 def test_execute_with_multiple_reference_versions(tmp_path, definition_factory):
@@ -248,6 +248,6 @@ def test_execute_with_multiple_reference_versions(tmp_path, definition_factory):
     result = diagnostic.run(definition)
 
     assert result.successful
-    comparison = xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc")
-    # Bias is model (18.0) minus the latest reference (288.15 K = 15.0 degC), not the older one.
-    np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)
+    with xr.open_dataset(definition.output_directory / "global_mean_surface_temperature.nc") as comparison:
+        # Bias is model (18.0) minus the latest reference (288.15 K = 15.0 degC), not the older one.
+        np.testing.assert_allclose(comparison.attrs["mean_bias"], 3.0)

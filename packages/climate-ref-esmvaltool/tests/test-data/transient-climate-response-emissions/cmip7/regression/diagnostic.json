@@ -1,0 +1,40 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "source_id",
+      "variant_label",
+      "region",
+      "metric"
+    ],
+    "metric": {
+      "tcre": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "MPI-ESM1-2-LR": {}
+    },
+    "variant_label": {
+      "r1i1p1f1": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "gn": {
+      "MPI-ESM1-2-LR": {
+        "r1i1p1f1": {
+          "global": {
+            "tcre": null
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "data": {
+    "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc",
+      "long_name": "Hovmoeller plot of Total Column Ozone of dataset CMIP7 - GTO-ECV."
+    },
+    "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc",
+      "long_name": "Hovmoeller plot of Total Column Ozone of dataset CMIP7."
+    },
+    "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc",
+      "long_name": "Hovmoeller plot of Total Ozone Column of dataset GTO-ECV."
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png": {
+      "description": "",
+      "dimensions": {
+        "statistic": "zonal mean vs time",
+        "variable_id": "toz"
+      },
+      "filename": "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png",
+      "long_name": "Hovmoeller plot of Total Column Ozone of dataset CMIP7."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

@@ -6,7 +6,7 @@ The Rapid Evaluation Framework(REF) is a set of Python packages that provide the
 The aim is to be able to evaluate climate data against a set of reference data in near-real time as datasets are published,
 and to update any produced data and figures as new datasets become available.
 This is somewhat analogous to a CI/CD pipeline for climate data.
-To get a better idea of what REF is and does, see this [overview](nutshell.md).
+To get a better idea of what REF is and does, see this [overview](concepts.md).
 
 The REF is designed to be run in a variety of environments, including local execution, cloud-based execution, and execution on HPC systems.
 The REF can be run as a standalone application, as a set of services, or as a set of docker containers.
@@ -18,6 +18,7 @@ REF is a [community project](https://wcrp-cmip.org/cmip-phases/cmip7/rapid-evalu
 [![CI](https://github.com/Climate-REF/climate-ref/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/Climate-REF/climate-ref/actions/workflows/ci.yaml)
 [![Coverage](https://codecov.io/gh/Climate-REF/climate-ref/branch/main/graph/badge.svg)](https://codecov.io/gh/Climate-REF/climate-ref)
 [![Docs](https://readthedocs.org/projects/climate-ref/badge/?version=latest)](https://climate-ref.readthedocs.io)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15103441.svg)](https://doi.org/10.5281/zenodo.15103441)
 
 **PyPI :**
 [![PyPI](https://img.shields.io/pypi/v/climate-ref.svg)](https://pypi.org/project/climate-ref/)
@@ -72,18 +73,20 @@ This provides the ability to:
 
 This CLI tool is the main interface to the REF and is used to manage the REF.
 
-
 ## Where to next?
 
 We recommend starting with the [Getting Started](getting-started/01-configure.md) guide,
 which will walk you through the initial steps of configuring and using the REF.
+Modelling centres preparing local or pre-publication model output should also review the
+[modelling centre onboarding guide](getting-started/modelling-centres.md).
 
 Some other potential points of interest:
 
-- [Installation][installation]
-- [Basic Concepts][basic-concepts]
-- [Architecture overview][architecture]
-- [How to Guides][how-to-guides]
+* [Installation][installation]
+* [Modelling centre onboarding](getting-started/modelling-centres.md)
+* [Concepts](concepts.md)
+* [Architecture overview][architecture]
+* [How to Guides][how-to-guides]
 
 ---
 

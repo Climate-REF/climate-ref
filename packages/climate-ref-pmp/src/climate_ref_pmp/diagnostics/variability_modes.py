@@ -15,7 +15,12 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_pmp.pmp_driver import build_pmp_command, get_model_source_type, process_json_result
+from climate_ref_pmp.pmp_driver import (
+    PMP_RECONSTRUCTION_INPUTS,
+    build_pmp_command,
+    get_model_source_type,
+    process_json_result,
+)
 
 # CMIP7 branded variable names (from CMIP7 Data Request)
 _BRANDED_VARIABLE_NAMES: dict[str, str] = {
@@ -28,6 +33,8 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     """
     Calculate the extratropical modes of variability for a given area
     """
+
+    reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
@@ -317,9 +324,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         clean_up_json(results_files[0])
 
-        # Find the other outputs
-        png_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.png")]
-        data_files = [definition.as_relative_path(f) for f in definition.output_directory.glob("*.nc")]
+        # Sort so the committed output.json plot/data key order is deterministic across hosts.
+        output_dir = definition.output_directory
+        png_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.png"))]
+        data_files = [definition.as_relative_path(f) for f in sorted(output_dir.glob("*.nc"))]
 
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_files[0], png_files, data_files)
         input_datasets = definition.datasets[model_source_type]

@@ -88,7 +88,14 @@ class DiagnosticProvider:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        ignore_datasets_all = yaml.safe_load(config.ignore_datasets_file.read_text(encoding="utf-8")) or {}
+        ignore_datasets_file = config.ignore_datasets_file
+        if ignore_datasets_file.is_file():
+            ignore_datasets_all = yaml.safe_load(ignore_datasets_file.read_text(encoding="utf-8")) or {}
+        else:
+            logger.warning(
+                f"Ignore datasets file {ignore_datasets_file} not found; no datasets will be ignored"
+            )
+            ignore_datasets_all = {}
         ignore_datasets = ignore_datasets_all.get(self.slug, {})
         if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:
             logger.warning(

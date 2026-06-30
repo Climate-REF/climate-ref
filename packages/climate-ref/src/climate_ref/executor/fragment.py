@@ -9,6 +9,8 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from climate_ref_core.paths import safe_path
+
 if TYPE_CHECKING:
     from sqlalchemy.orm import Session
 
@@ -56,7 +58,7 @@ def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
     FileExistsError
         If the computed output directory already exists under *results_dir*
     """
-    now = datetime.datetime.now(tz=datetime.timezone.utc)
+    now = datetime.datetime.now(tz=datetime.UTC)
     fragment = f"{base_fragment}_{now.strftime('%Y%m%dT%H%M%S%f')}"
 
     target = results_dir / fragment
@@ -66,22 +68,6 @@ def allocate_output_fragment(base_fragment: str, results_dir: Path) -> str:
         )
 
     return fragment
-
-
-_UNSAFE_SEGMENT_RE = re.compile(r"[/\\\x00]")
-
-
-def _validate_path_segment(value: str, *, label: str) -> str:
-    r"""
-    Ensure *value* is a safe single path segment.
-
-    Rejects empty strings, path separators (``/``, ``\``), NUL bytes, and dot-segments
-    (``.``, ``..``) so that downstream ``Path`` joins cannot escape the intended
-    results/scratch base directories.
-    """
-    if not value or _UNSAFE_SEGMENT_RE.search(value) or value in (".", ".."):
-        raise ValueError(f"Invalid {label}: {value!r} is not a safe single path segment")
-    return value
 
 
 def _sanitize_token(value: str) -> str:
@@ -213,8 +199,8 @@ def assign_execution_fragment(  # noqa: PLR0913
 
     Returns the assigned fragment string.
     """
-    _validate_path_segment(provider_slug, label="provider slug")
-    _validate_path_segment(diagnostic_slug, label="diagnostic slug")
+    safe_path(provider_slug, label="provider slug", single_segment=True)
+    safe_path(diagnostic_slug, label="diagnostic slug", single_segment=True)
     session.flush()
     group_short = compute_group_short(selectors, group_id=group_id, diagnostic_version=diagnostic_version)
     fragment = str(Path(provider_slug) / diagnostic_slug / group_short / str(execution.id))

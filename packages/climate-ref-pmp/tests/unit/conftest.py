@@ -5,13 +5,9 @@ import pytest
 
 
 @pytest.fixture(scope="module")
-def pdo_example_dir(regression_data_dir) -> Path:
-    return (
-        regression_data_dir
-        / "pmp"
-        / "extratropical-modes-of-variability-pdo"
-        / "cmip6_hist-GHG_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_HadISST-1-1_ts"
-    )
+def pdo_example_dir() -> Path:
+    """Captured PMP PDO output used as input fixture by the driver/metric unit tests."""
+    return Path(__file__).parent / "test-data" / "pdo-example"
 
 
 @pytest.fixture

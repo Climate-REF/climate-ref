@@ -1,0 +1,84 @@
+{
+  "catalog_hash": "d07fdf9856c054308f5b93e722ce8fa52370169d",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "4b9ebaf83c65b8e0718a84951502617a545fce6386cabe640de7ec406afe6509",
+    "series.json": "4ec8ab11924089ef7cba8bd16de237ad8431399caaef74c0a66e81fefee69ef3"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "ac6598b6311c7ba84ecbfada6fd68352217d85780f2f147c0b39e2cf778ed8e8",
+      "size": 21899
+    },
+    "executions/recipe/plots/plot_maps/plot/map_lwcre_CanESM5_Amon.png": {
+      "sha256": "0679cc923adde2d6653b581a36cff6bc4f462d7e015c603b905bb7a90406cb48",
+      "size": 546973
+    },
+    "executions/recipe/plots/plot_maps/plot/map_swcre_CanESM5_Amon.png": {
+      "sha256": "b308cf701d7518c76c5580086241cbdb1bf78a84cb529e4d2255046e51753ea3",
+      "size": 573184
+    },
+    "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.png": {
+      "sha256": "c23c61166d22106df7f8162fb9d16e4c15894b94c85e8ff3175aaea19c9d21cb",
+      "size": 223503
+    },
+    "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.png": {
+      "sha256": "5d81f089abc13d3a82fca10fd406636ca7d5b41bdd0e4ef494cc1552e5f81098",
+      "size": 230600
+    },
+    "executions/recipe/run/plot_maps/plot/diagnostic_provenance.yml": {
+      "sha256": "88a9e30f4a983f1054064c7e6347ce08a01cde4b464f9335b6419447be877f1d",
+      "size": 3628
+    },
+    "executions/recipe/run/plot_profiles/plot/diagnostic_provenance.yml": {
+      "sha256": "78555b1746b716b95bef6df60817e7e25aa0291210bfbf7c294aa45da340f8ba",
+      "size": 1838
+    },
+    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_Amon_bottom.nc": {
+      "sha256": "e183da32ad457d5200fca3900b6145bedaf1cdd902729621c520b8f7f0303e51",
+      "size": 299138
+    },
+    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_Amon_top_left.nc": {
+      "sha256": "6b3f3f4ce19f01b10f014a74bb9f4e1226b54995b46a1d3aa19abe20e3961e7a",
+      "size": 296703
+    },
+    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_Amon_top_right.nc": {
+      "sha256": "33e47f01696c32d999d1867174949153f5c5b6932cf421c1da44a9d5abf98800",
+      "size": 288725
+    },
+    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_Amon_bottom.nc": {
+      "sha256": "888dc49bf3b3d94027cd70bda6b325987de472af20b7fcfb8d6c43d6e082d386",
+      "size": 299414
+    },
+    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_Amon_top_left.nc": {
+      "sha256": "8a3dd181ac066715cbb011eec45729512c36d2b35bfde1e8231e94c44069eb04",
+      "size": 296985
+    },
+    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_Amon_top_right.nc": {
+      "sha256": "e2b9f68af47259170a47703013113605fe2e33a4d2d8dee4d6bad31b93c72649",
+      "size": 288701
+    },
+    "executions/recipe/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.nc": {
+      "sha256": "d380002e7e0c37b28c3f955ad53d9c71ba511da6a5b03cf77c49958afd148a1c",
+      "size": 15861
+    },
+    "executions/recipe/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_Amon.nc": {
+      "sha256": "c837441a5f4a69daf61ce7959d1c2a526fe506dd28d1e7a1fdb414b194f0d5b3",
+      "size": 15863
+    },
+    "output.json": {
+      "sha256": "3217997bc6eda640c4bec418a6a3ec72f7f0f7846ae7ce6853beaadcedb977cf",
+      "size": 5434
+    },
+    "series.json": {
+      "sha256": "75d11b9acdfa9747d8e582f4d6f9f9d692ccd2d1f2a9e6a6be73e88fa0b32b2a",
+      "size": 60160
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

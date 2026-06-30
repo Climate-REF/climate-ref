@@ -1,3 +1,7 @@
+from pathlib import Path
+
+import pytest
+
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider
 from climate_ref_core.summary import (
@@ -14,6 +18,16 @@ class TestProvidersList:
         assert result.exit_code == 0
         assert "provider" in result.stdout
         assert "example" in result.stdout
+
+    def test_list_json(self, config, invoke_cli):
+        import json
+
+        result = invoke_cli(["providers", "list", "--format", "json"])
+        assert result.exit_code == 0
+
+        payload = json.loads(result.stdout)
+        assert isinstance(payload, list)
+        assert any(row["provider"] == "example" for row in payload)
 
     def test_list_with_conda_provider(self, config, invoke_cli, mocker, tmp_path):
         """Test list command shows conda environment info."""
@@ -33,13 +47,13 @@ class TestProvidersList:
         assert "conda-test" in result.stdout
         assert "(not installed)" in result.stdout
 
-    def test_list_with_data_path_not_fetched(self, config, invoke_cli, mocker, tmp_path):
+    def test_list_with_data_path_not_fetched(self, config, invoke_cli, mocker):
         """Test list command shows data path not fetched info."""
-        # Create a mock provider with data_path that doesn't exist
+        # Create a mock provider with data_path that doesn't exist.
         mock_provider = mocker.MagicMock(spec=DiagnosticProvider)
         mock_provider.slug = "data-test"
         mock_provider.version = "1.0.0"
-        mock_provider.get_data_path.return_value = tmp_path / "nonexistent_data"
+        mock_provider.get_data_path.return_value = Path("/ref-nonexistent-data")
 
         mock_registry = mocker.MagicMock(spec=ProviderRegistry)
         mock_registry.providers = [mock_provider]
@@ -92,6 +106,7 @@ class TestProvidersList:
         assert "(not fetched)" not in result.stdout
 
 
+@pytest.mark.filterwarnings("ignore:create-env is deprecated:DeprecationWarning")
 class TestProvidersCreateEnv:
     def test_create_env(self, config, invoke_cli):
         result = invoke_cli(["providers", "create-env"])

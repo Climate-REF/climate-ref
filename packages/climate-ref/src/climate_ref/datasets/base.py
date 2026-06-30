@@ -9,6 +9,7 @@ from sqlalchemy.orm import joinedload
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.utils import _is_na, _to_db_str, parse_cftime_dates, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
+from climate_ref_core.datasets import select_latest_version
 from climate_ref_core.exceptions import RefException
 
 
@@ -118,6 +119,15 @@ class DatasetAdapter(Protocol):
 
     This is generally the columns that describe the `slug` of a dataset,
     excluding the version information.
+    """
+    derived_metadata: tuple[str, ...] = ()
+    """
+    Columns that are not stored in the database but are computed from stored metadata.
+
+    These are reconstructed by :meth:`_add_derived_columns` whenever a catalog is loaded,
+    so that a DB-loaded catalog has the same columns as a freshly parsed one
+    (e.g. CMIP7's ``branded_variable``).
+    :meth:`load_catalog` enforces that every column listed here is present after loading.
     """
 
     def pretty_subset(self, data_catalog: pd.DataFrame) -> pd.DataFrame:
@@ -413,8 +423,8 @@ class DatasetAdapter(Protocol):
         """
         Filter a data catalog to only include the latest version of each dataset
 
-        Groups by ``dataset_id_metadata`` and keeps only the rows where the version
-        matches the maximum version within each group (lexicographic comparison).
+        Delegates to :func:`select_latest_version`, which compares versions numerically
+        (so ``v10`` > ``v2``, not lexicographically), grouping by ``dataset_id_metadata``.
 
         Parameters
         ----------
@@ -429,14 +439,11 @@ class DatasetAdapter(Protocol):
         if catalog.empty or not self.dataset_id_metadata:
             return catalog
 
-        # Get the latest version for each dataset group
-        # Uses transform to compute max version per group, then filters rows matching the max
-        # This assumes version can be sorted lexicographically
-        max_version_per_group = catalog.groupby(list(self.dataset_id_metadata), sort=False)[
-            self.version_metadata
-        ].transform("max")
-
-        return catalog[catalog[self.version_metadata] == max_version_per_group]
+        return select_latest_version(
+            catalog,
+            version_column=self.version_metadata,
+            group_by=self.dataset_id_metadata,
+        )
 
     def _get_dataset_files(self, db: Database, limit: int | None = None) -> pd.DataFrame:
         dataset_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
@@ -504,7 +511,8 @@ class DatasetAdapter(Protocol):
 
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:
-            return pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
+            empty = pd.DataFrame(columns=self.dataset_specific_metadata + self.file_specific_metadata)
+            return self._finalise_loaded_catalog(empty)
 
         # Convert start_time/end_time strings from DB to cftime objects
         if "start_time" in catalog.columns:
@@ -512,4 +520,43 @@ class DatasetAdapter(Protocol):
             catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
             catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
 
-        return self.filter_latest_versions(catalog)
+        return self._finalise_loaded_catalog(self.filter_latest_versions(catalog))
+
+    def _finalise_loaded_catalog(self, catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add derived columns and enforce the loaded-catalog invariant.
+
+        Every column listed in :attr:`derived_metadata` must be present after loading,
+        so downstream code (e.g. the solver applying data requirement filters) can rely on its existence.
+        """
+        catalog = self._add_derived_columns(catalog)
+
+        missing = set(self.derived_metadata) - set(catalog.columns)
+        if missing:
+            raise RuntimeError(
+                f"{type(self).__name__} did not produce its declared derived column(s): {sorted(missing)}"
+            )
+        return catalog
+
+    def _add_derived_columns(self, catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add derived columns to a loaded data catalog.
+
+        Derived columns are computed from stored metadata rather than persisted in
+        the database (e.g. CMIP7's ``branded_variable``).
+        They must be reconstructed whenever a catalog is loaded from the database.
+
+        Adapters that declare :attr:`derived_metadata` must override this to populate
+        every column listed there; the base implementation is a no-op.
+
+        Parameters
+        ----------
+        catalog
+            Data catalog loaded from the database
+
+        Returns
+        -------
+        :
+            Data catalog with any derived columns added
+        """
+        return catalog

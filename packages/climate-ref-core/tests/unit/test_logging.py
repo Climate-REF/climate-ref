@@ -4,7 +4,12 @@ import pytest
 from loguru import logger
 
 from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.logging import EXECUTION_LOG_FILENAME, capture_logging, redirect_logs
+from climate_ref_core.logging import (
+    EXECUTION_LOG_FILENAME,
+    _retention_count_ignore_missing,
+    capture_logging,
+    redirect_logs,
+)
 
 
 @pytest.fixture
@@ -72,6 +77,21 @@ def test_redirect_logs_stdlog_captured(definition):
 
     assert "stdlog inner" in output_file.read_text()
     assert "stdlog debug" not in output_file.read_text()
+
+
+def test_retention_count_ignores_missing_files(tmp_path):
+    """Log retention cleanup should tolerate files removed by another process."""
+    logs = []
+    for idx in range(12):
+        log = tmp_path / f"log-{idx}.log"
+        log.write_text(str(idx))
+        logs.append(str(log))
+    missing = tmp_path / "already-removed.log"
+    logs.append(str(missing))
+
+    _retention_count_ignore_missing(logs)
+
+    assert len(list(tmp_path.glob("*.log"))) == 10
 
 
 def test_redirect_logs_exception(definition, caplog):

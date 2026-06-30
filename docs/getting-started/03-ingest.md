@@ -95,7 +95,7 @@ ref datasets fetch-data --registry sample-data --output-directory $REF_CONFIGURA
 ref datasets ingest --source-type cmip6 $REF_CONFIGURATION/datasets/sample-data/CMIP6
 ```
 
-Alternatively, the CMIP6 datasets matching the dataset requirements of the Assessment Fast Track REF can be downloaded using this script: [./scripts/fetch-esfgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esfgf.py).
+Alternatively, the CMIP6 datasets matching the dataset requirements of the Assessment Fast Track REF can be downloaded using this script: [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py).
 This requires several terabytes of storage so we recommend configuring an appropriate [intake-esgf `local_cache`](https://intake-esgf.readthedocs.io/en/latest/configure.html) first.
 
 ```bash

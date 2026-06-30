@@ -1,0 +1,85 @@
+{
+  "data": {
+    "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv": {
+      "description": "",
+      "dimensions": {},
+      "filename": "executions/recipe/work/diagnostic_metrics/plot_script/matrix.csv",
+      "long_name": "List of metric values."
+    }
+  },
+  "diagnostics": {},
+  "html": {
+    "<OUTPUT_DIR>/executions/recipe/index.html": {
+      "description": "Page showing the executions of the ESMValTool run.",
+      "dimensions": null,
+      "filename": "<OUTPUT_DIR>/executions/recipe/index.html",
+      "long_name": "Results page"
+    }
+  },
+  "index": "<OUTPUT_DIR>/executions/recipe/index.html",
+  "metrics": null,
+  "plots": {
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_09pattern.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "09pattern"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_09pattern.png",
+      "long_name": "Zonal structure of sea surface temperature anomalies in the equatorial Pacific (averaged between 5°S and 5°N)."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_10lifecycle.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "10lifecycle"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_10lifecycle.png",
+      "long_name": "Temporal evolution of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), illustrating the ENSO-associated variability."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_11amplitude.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "11amplitude"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_11amplitude.png",
+      "long_name": "Standard deviation of sea surface temperature anomalies in the central equatorial Pacific (Niño 3.4 region average), representing the amplitude of variability."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_12seasonality.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "12seasonality"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_12seasonality.png",
+      "long_name": "Ratio of winter to spring standard deviation of sea surface temperature anomalies in the central equatorial Pacific, illustrating the seasonal timing of SSTA."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_13asymmetry.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "13asymmetry"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_13asymmetry.png",
+      "long_name": "Skewness of sea surface temperature anomalies in the central equatorial Pacific, illustrating the expected asymmetry where positive SSTA values should typically be larger than negative SSTA values (usually close to 0). "
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_14duration.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "14duration"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_14duration.png",
+      "long_name": "Duration of the ENSO life cycle where SSTA exceeds 0.25, illustrating the 'duration' of the SSTA event."
+    },
+    "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_15diversity.png": {
+      "description": "",
+      "dimensions": {
+        "metric": "15diversity"
+      },
+      "filename": "executions/recipe/plots/diagnostic_metrics/plot_script/png/CanESM5_15diversity.png",
+      "long_name": "Width of the zonal location of maximum (minimum) SSTA during all El Niño (La Niña) events, illustrating the 'diversity' of ENSO events."
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "<OUTPUT_DIR>/executions/recipe/run/main_log_debug.txt",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

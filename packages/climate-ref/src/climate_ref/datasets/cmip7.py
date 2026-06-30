@@ -101,6 +101,9 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
 
     file_specific_metadata = ("start_time", "end_time", "path", "tracking_id")
 
+    # Not stored in the DB; reconstructed by _add_derived_columns on every load.
+    derived_metadata = ("branded_variable",)
+
     version_metadata = "version"
 
     # CMIP7 DRS directory structure (MIP-DRS7 spec):
@@ -216,12 +219,43 @@ class CMIP7DatasetAdapter(FinaliseableDatasetAdapterMixin, DatasetAdapter):
             datasets[column] = pd.NA
 
         # Add branded_variable for the raw catalog (before DB ingestion)
-        if not datasets.empty:
-            datasets["branded_variable"] = datasets["variable_id"] + "_" + datasets["branding_suffix"]
-        else:
-            datasets["branded_variable"] = pd.Series(dtype="object")
+        datasets = self._add_derived_columns(datasets)
 
         return datasets
+
+    def _add_derived_columns(self, catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Add the derived ``branded_variable`` column (``{variable_id}_{branding_suffix}``).
+
+        ``branded_variable`` is not stored in the database as it is derived from
+        ``variable_id`` and ``branding_suffix``.
+        Both inputs are mandatory CMIP7 DRS facets,
+        so a catalog missing the columns or carrying null values is malformed and an exception is raised.
+        """
+        catalog = super()._add_derived_columns(catalog)
+
+        required = ("variable_id", "branding_suffix")
+        missing = [column for column in required if column not in catalog.columns]
+        if missing:
+            raise ValueError(
+                f"Cannot derive 'branded_variable': catalog is missing required column(s) {missing}"
+            )
+
+        if catalog.empty:
+            catalog["branded_variable"] = pd.Series(dtype="object")
+            return catalog
+
+        invalid = catalog["variable_id"].isna() | catalog["branding_suffix"].isna()
+        if invalid.any():
+            raise ValueError(
+                "Cannot derive 'branded_variable': "
+                f"'variable_id'/'branding_suffix' is null for {int(invalid.sum())} row(s)"
+            )
+
+        catalog["branded_variable"] = (
+            catalog["variable_id"].astype(str) + "_" + catalog["branding_suffix"].astype(str)
+        )
+        return catalog
 
     def find_local_datasets(self, file_or_directory: Path) -> pd.DataFrame:
         """

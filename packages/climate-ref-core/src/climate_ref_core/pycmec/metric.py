@@ -18,7 +18,7 @@ from collections import Counter
 from collections.abc import Generator
 from copy import deepcopy
 from enum import Enum
-from typing import Any, cast
+from typing import Any, Self, cast
 
 import numpy as np
 from pydantic import (
@@ -34,7 +34,6 @@ from pydantic import (
 )
 from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode, JsonSchemaValue
 from pydantic_core import CoreSchema
-from typing_extensions import Self
 
 from climate_ref_core.env import env
 from climate_ref_core.metric_values import ScalarMetricValue

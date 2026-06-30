@@ -1,0 +1,750 @@
+_metadata:
+  hash: e51d4d5fb3e134312b40b2c705893dd6a715d629
+cmip7:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    source_id: CanESM5
+    variant_label: r1i1p1f1
+  datasets:
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: areacello_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: null
+    filename: areacello_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacello.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Grid-Cell Area for Ocean Variables
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: cell_area
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/53bf326c-d643-45e4-9078-d6cc4a502d05
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: sftof_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
+    calendar: null
+    end_time: null
+    experiment_id: historical
+    external_variables: areacello
+    filename: sftof_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
+    finalised: true
+    frequency: fx
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.sftof.ti-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Area Percentage
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_area_fraction
+    start_time: null
+    time_range: null
+    time_units: null
+    tracking_id: hdl:21.14107/8ec21762-f4ad-47ba-bf1b-468fabeb350a
+    units: '%'
+    variable_id: sftof
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1860-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-186012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-1860-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/5d25993e-0b60-489b-8120-5ef0b627f405
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1870-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_186101-187012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1861-01-16 12:00:00'
+    time_range: 1861-01-16 12:00:00-1870-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/442286e6-4e56-4eeb-be1e-3a3e4217f7e8
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1880-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_187101-188012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1871-01-16 12:00:00'
+    time_range: 1871-01-16 12:00:00-1880-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/bd38e8d2-4a99-421f-916a-7bd44078755c
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1890-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_188101-189012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1881-01-16 12:00:00'
+    time_range: 1881-01-16 12:00:00-1890-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/07c408d2-e194-487c-a404-ed2cdc479832
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1900-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_189101-190012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1891-01-16 12:00:00'
+    time_range: 1891-01-16 12:00:00-1900-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/c0b60a1d-07d0-476a-b4eb-7a33c7942401
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1910-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_190101-191012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1901-01-16 12:00:00'
+    time_range: 1901-01-16 12:00:00-1910-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/eb08b65a-fa69-4a3c-a592-281bccacb6cb
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1920-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_191101-192012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1911-01-16 12:00:00'
+    time_range: 1911-01-16 12:00:00-1920-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/236b8f5b-d6b7-4c7c-b926-117e89624e9d
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1930-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_192101-193012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1921-01-16 12:00:00'
+    time_range: 1921-01-16 12:00:00-1930-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/75e8645f-585a-4b06-b31e-d38891176df8
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1940-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_193101-194012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1931-01-16 12:00:00'
+    time_range: 1931-01-16 12:00:00-1940-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/684e8465-1f26-4e2a-9919-e9bf7841a168
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1950-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_194101-195012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1941-01-16 12:00:00'
+    time_range: 1941-01-16 12:00:00-1950-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/1c6e6f27-f001-4260-8f72-8f6c18ac066b
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1960-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_195101-196012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1951-01-16 12:00:00'
+    time_range: 1951-01-16 12:00:00-1960-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/b5afe1d2-0f45-4823-b0e2-44843726dac2
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1970-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_196101-197012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1961-01-16 12:00:00'
+    time_range: 1961-01-16 12:00:00-1970-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/e7712b16-0783-4251-bdc7-4505a487acd3
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1980-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_197101-198012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1971-01-16 12:00:00'
+    time_range: 1971-01-16 12:00:00-1980-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/03b77075-b302-4437-b394-b73a5fb5b5c4
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '1990-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_198101-199012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1981-01-16 12:00:00'
+    time_range: 1981-01-16 12:00:00-1990-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/88054906-b386-4910-aa18-4b94a9d71a9c
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '2000-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_199101-200012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '1991-01-16 12:00:00'
+    time_range: 1991-01-16 12:00:00-2000-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/73d6554b-ad21-4868-a09e-66c46204fba7
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '2010-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_200101-201012.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '2001-01-16 12:00:00'
+    time_range: 2001-01-16 12:00:00-2010-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/cd97f013-6bf3-4f3f-9a17-16ab2b70d7b8
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: thetao_tavg-ol-hxy-sea
+    branding_suffix: tavg-ol-hxy-sea
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello volcello
+    filename: thetao_tavg-ol-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_201101-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.thetao.tavg-ol-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Water Potential Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_water_potential_temperature
+    start_time: '2011-01-16 12:00:00'
+    time_range: 2011-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/834abd7c-6f26-4c68-a0c4-d37c5cdd8681
+    units: degC
+    variable_id: thetao
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: tos_tavg-u-hxy-sea
+    branding_suffix: tavg-u-hxy-sea
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacello
+    filename: tos_tavg-u-hxy-sea_mon_glb_gn_CanESM5_historical_r1i1p1f1_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tos.tavg-u-hxy-sea.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: Sea Surface Temperature
+    mip_era: CMIP7
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: ocean
+    region: glb
+    source_id: CanESM5
+    standard_name: sea_surface_temperature
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/7ec2cc15-b899-4c18-b454-76a6186bbfb3
+    units: degC
+    variable_id: tos
+    variant_label: r1i1p1f1
+    version: v0

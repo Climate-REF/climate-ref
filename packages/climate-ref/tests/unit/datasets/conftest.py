@@ -8,6 +8,7 @@ def catalog_regression(data_regression, sample_data_dir):
         # Strip the path to make the test more robust
         df["path"] = df["path"].str.replace(str(sample_data_dir), "{esgf_data_dir}")
 
-        data_regression.check(df.to_dict(orient="records"), basename=basename)
+        records = df.astype(object).where(df.notna(), None).to_dict(orient="records")
+        data_regression.check(records, basename=basename)
 
     return check

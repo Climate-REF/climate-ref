@@ -18,6 +18,7 @@ from climate_ref.config import (
     _get_default_ignore_datasets_file,
     transform_error,
 )
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.executor import Executor
 
@@ -50,6 +51,24 @@ class TestConfig:
         # The default location is overridden in the config fixture
         loaded = Config.default()
         assert loaded.paths.scratch == Path("data").resolve()
+
+    def test_default_missing_file_unwritable_cache(self, tmp_path, monkeypatch, mocker):
+        # Regression: Config.default() must not fail when no config file exists and the
+        # ignore-datasets cache directory cannot be written. Previously the OSError raised by the
+        # ignore_datasets_file factory surfaced as a misleading "Error loading configuration".
+        monkeypatch.setenv("REF_CONFIGURATION", str(tmp_path / "climate_ref"))
+        assert not (tmp_path / "climate_ref" / "ref.toml").exists()
+
+        blocker = tmp_path / "blocker"
+        blocker.write_text("not a directory", encoding="utf-8")
+        mocker.patch.object(
+            climate_ref.config.platformdirs, "user_cache_path", return_value=blocker / "climate_ref"
+        )
+
+        loaded = Config.default()
+
+        assert loaded.ignore_datasets_file == blocker / "climate_ref" / "default_ignore_datasets.yaml"
+        assert loaded.paths.scratch == tmp_path / "climate_ref" / "scratch"
 
     def test_load(self, config, tmp_path):
         res = config.dump(defaults=True)
@@ -106,13 +125,9 @@ filename = "sqlite://climate_ref.db"
         assert "extra fields found (filename) @ $.db" in caplog.records[0].message
         assert caplog.records[0].levelname == "WARNING"
 
-        if sys.version_info >= (3, 12):
-            expected_msg = (
-                "argument should be a str or an os.PathLike object where __fspath__ returns a str, "
-                "not 'Integer'"
-            )
-        else:
-            expected_msg = "expected str, bytes or os.PathLike object, not Integer"
+        expected_msg = (
+            "argument should be a str or an os.PathLike object where __fspath__ returns a str, not 'Integer'"
+        )
         assert f"invalid type ({expected_msg}) @ $.paths.scratch" in caplog.records[1].message
         assert caplog.records[1].levelname == "ERROR"
 
@@ -179,6 +194,12 @@ filename = "sqlite://climate_ref.db"
                 },
             ],
             "executor": {"executor": "climate_ref.executor.LocalExecutor", "config": {}},
+            "native_store": {
+                "url": "https://baselines.climate-ref.org",
+                "s3_endpoint_url": "https://2aa5172b2bba093c516027d6fa13cdc8.r2.cloudflarestorage.com",
+                "bucket": "ref-baselines-public",
+                "cache_dir": str(resolve_cache_dir("native-baselines")),
+            },
             "paths": {
                 "log": f"{default_path}/log",
                 "results": f"{default_path}/results",
@@ -302,6 +323,23 @@ def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
     assert path == tmp_path / "default_ignore_datasets.yaml"
     assert path.parent.exists()
     assert path.read_text(encoding="utf-8") == ""
+
+
+def test_get_default_ignore_datasets_file_unwritable_cache(mocker, tmp_path, caplog):
+    """A non-writable cache directory must degrade gracefully rather than raise."""
+    # A regular file standing where the cache directory should be makes mkdir() raise an OSError,
+    # mimicking a read-only or otherwise restricted environment (e.g. an HPC login node).
+    blocker = tmp_path / "blocker"
+    blocker.write_text("not a directory", encoding="utf-8")
+    unwritable_cache = blocker / "climate_ref"
+    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=unwritable_cache)
+
+    with caplog.at_level(logging.WARNING):
+        path = _get_default_ignore_datasets_file()
+
+    assert path == unwritable_cache / "default_ignore_datasets.yaml"
+    assert not path.exists()
+    assert any("Unable to prepare default ignore datasets file" in r.message for r in caplog.records)
 
 
 def test_get_default_ignore_datasets_file_network_error(mocker, tmp_path):

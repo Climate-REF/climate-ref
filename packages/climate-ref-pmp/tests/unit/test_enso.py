@@ -9,12 +9,11 @@ def test_invalid_diagnostic():
         ENSO(metrics_collection="invalid_metrics")
 
 
-def test_build_cmds(diagnostic_validation):
+def test_build_cmds(solved_definition_factory):
     diagnostic = ENSO("ENSO_tel")
     diagnostic.provider = pmp_provider
-    validator = diagnostic_validation(diagnostic)
 
-    definition = validator.get_definition()
+    definition = solved_definition_factory(diagnostic)
     definition.output_directory.mkdir(parents=True, exist_ok=True)
 
     cmd = diagnostic.build_cmd(definition)

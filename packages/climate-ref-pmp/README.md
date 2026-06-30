@@ -3,7 +3,7 @@
 [![PyPI version](https://badge.fury.io/py/climate-ref-pmp.svg)](https://badge.fury.io/py/climate-ref-pmp)
 [![Documentation Status](https://readthedocs.org/projects/climate-ref/badge/?version=latest)](https://climate-ref.readthedocs.io/en/latest/?badge=latest)
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Python Version](https://img.shields.io/badge/python-3.11%2B-blue)](https://www.python.org/downloads/)
+[![Python Version](https://img.shields.io/badge/python-3.12%2B-blue)](https://www.python.org/downloads/)
 
 This package integrates the [PCMDI Metrics Package (PMP)](https://github.com/PCMDI/pcmdi_metrics) as a metrics provider for the Climate REF (Rapid Evaluation Framework).
 
@@ -24,7 +24,7 @@ PMP has some additional preprocessed climatology datasets that should be ingeste
 can find them.
 
 ```
-ref datasets fetch-data --registry pmp-climatology --output directory data/pmp-climatology
+ref datasets fetch-data --registry pmp-climatology --output-directory data/pmp-climatology
 ref datasets ingest --source-type pmp-climatology data/pmp-climatology
 ```
 

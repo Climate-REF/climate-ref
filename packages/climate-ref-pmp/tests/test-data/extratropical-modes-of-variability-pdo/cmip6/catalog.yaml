@@ -1,0 +1,78 @@
+_metadata:
+  hash: 8f3a4713d6af9bf6fbac2c17dfc468151d122fb5
+obs4mips:
+  slug_column: instance_id
+  selector:
+    source_id: HadISST-1-1
+    variable_id: ts
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2025-01-16 12:00:00'
+    filename: ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
+    institution_id: MOHC
+    long_name: Surface Temperature
+    nominal_resolution: 250 km
+    product: observations
+    realm: atmos
+    source_id: HadISST-1-1
+    source_type: satellite_blended
+    source_version_number: 1-1
+    start_time: '1870-01-16 12:00:00'
+    time_range: 1870-01-16 12:00:00-2025-01-16 12:00:00
+    units: K
+    variable_id: ts
+    variant_label: PCMDI
+    version: v20250415
+    vertical_levels: 1
+cmip6:
+  slug_column: instance_id
+  selector:
+    experiment_id: historical
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: ACCESS-ESM1-5
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    calendar: proleptic_gregorian
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
+    institution_id: CSIRO
+    long_name: Surface Temperature
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: surface_temperature
+    start_time: '1850-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    units: K
+    variable_id: ts
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1

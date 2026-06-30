@@ -1,0 +1,49 @@
+_metadata:
+  hash: fad5e2c4374674b2aac83a47be7061c2b9d17723
+cmip6:
+  slug_column: instance_id
+  selector:
+    grid_label: gr1
+    member_id: r1i1p1f1
+    source_id: GFDL-ESM4
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 36500.0
+    calendar: noleap
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: o3_Amon_GFDL-ESM4_historical_r1i1p1f1_gr1_195001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: 'atmos data regridded from Cubed-sphere (c96) to 180,288; interpolation
+      method: conserve_order1'
+    grid_label: gr1
+    instance_id: CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Amon.o3.gr1.v20190726
+    institution_id: NOAA-GFDL
+    long_name: Mole Fraction of O3
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: GFDL-ESM4
+    parent_time_units: days since 0001-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos atmosChem
+    source_id: GFDL-ESM4
+    source_type: AOGCM AER CHEM BGC
+    standard_name: mole_fraction_of_ozone_in_air
+    start_time: '1950-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01 00:00:00
+    units: mol mol-1
+    variable_id: o3
+    variant_label: r1i1p1f1
+    version: v20190726
+    vertical_levels: 19

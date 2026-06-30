@@ -325,50 +325,30 @@ def test_expected_executions():
     )
 ```
 
-We also recommend writing an integration test that runs the diagnostic end-to-end, and saves the output to a known location.
-These results are then checked into the repository to ensure that the diagnostic produces consistent results across runs.
+We also recommend pinning each diagnostic to a **regression baseline** so that an
+unintended change in its output is caught in CI.
+Baselines are managed with the `ref test-cases` CLI rather than by hand:
 
-This involves two tests:
-one for the diagnostic execution and another checking that result from building the execution result
-from the regression output.
-The first test is marked as `slow` to indicate that it may take longer to run and is only run if the `--slow`
-argument is passed to pytest.
-The regression output is regenerated if `--force-regen` is passed to pytest,
+1. Define one or more test cases for the diagnostic
+   (see [Testing diagnostics](testing-diagnostics.md) for the `test_data_spec` format).
+2. Fetch the inputs and record a baseline:
 
+    ```bash
+    ref test-cases fetch --provider my-provider --diagnostic my-diagnostic
+    ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
+    ```
 
-```python
-import pytest
-from climate_ref_myprovider import provider as myprovider_provider
+    This writes the small, git-tracked committed bundle
+    (`series.json`, `diagnostic.json`, `output.json`)
+    plus a `manifest.json` and `catalog.yaml` into the test case's `regression/` directory.
+3. Commit those files.
+   The shared `test_validate_test_case_regression` and `test_run_test_cases` tests
+   (provided in each provider's `tests/integration/test_diagnostics.py`)
+   then exercise the baseline automatically.
 
-from climate_ref_core.diagnostics import Diagnostic
-
-diagnostics = [pytest.param(diagnostic, id=diagnostic.slug) for diagnostic in myprovider_provider.diagnostics()]
-
-
-@pytest.mark.slow
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_diagnostics(diagnostic: Diagnostic, diagnostic_validation):
-    validator = diagnostic_validation(diagnostic)
-
-    definition = validator.get_definition()
-    validator.execute(definition)
-
-
-@pytest.mark.parametrize("diagnostic", diagnostics)
-def test_build_results(diagnostic: Diagnostic, diagnostic_validation):
-    validator = diagnostic_validation(diagnostic)
-
-    definition = validator.get_regression_definition()
-    validator.validate(definition)
-    validator.execution_regression.check(definition.key, definition.output_directory)
-```
-
-These tests can be run using:
-```bash
-pytest  --slow -k "[global-mean-timeseries]" --force-regen
-```
-
-The `global-mean-timeseries` is the slug (or the subset of the slug) of the diagnostic you want to test.
+See [Regression baselines](../background/regression-baselines.md)
+for the full two-layer model and the CI coupling gate,
+and [Testing diagnostics](testing-diagnostics.md) for the day-to-day workflow.
 
 ## 7. Enable your provider in configuration
 

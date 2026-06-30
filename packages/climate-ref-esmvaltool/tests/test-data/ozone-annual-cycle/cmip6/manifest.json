@@ -1,0 +1,48 @@
+{
+  "catalog_hash": "b4bb77dae5865642def4836b939c5cd39bbebc95",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "978fd3b10d7e7ff386b4c39dbdc1f33ef5509fcb3afd3759132eee6524fc1b60",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "6ea79dbba4b828d3a6262d62d290613b3b755e8b0baf230b12adc5330163e544",
+      "size": 14653
+    },
+    "executions/recipe/plots/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map.png": {
+      "sha256": "8fa2cdb0b57672ac9317c83501fbae86ce3b3cc73ed8d45f22ab7783bbb5667f",
+      "size": 78375
+    },
+    "executions/recipe/run/lat_month_mapplot/plot/diagnostic_provenance.yml": {
+      "sha256": "6de2cf0191236dbd4dbd811bcf7fd0f3cc5f5e18070c6488055d57dc8a3f380d",
+      "size": 1979
+    },
+    "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
+      "sha256": "851e0c63ddf4e57b85044b121558c3be78987bfa526e6fb711a812e7b83b99dc",
+      "size": 27463
+    },
+    "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
+      "sha256": "02fbfccd7b3382aa1201cdad6b7c413674785ce29ef09db3d46b007273555322",
+      "size": 27512
+    },
+    "executions/recipe/work/lat_month_mapplot/plot/hovmoeller_anncyc_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
+      "sha256": "ab1f0c176ce93f069c0cf2aff709650cd8470e6f137c234921d5d59c791febe1",
+      "size": 24162
+    },
+    "output.json": {
+      "sha256": "1a25bbce94af301cc8243d77eeae19bfa1813e136f4cf58c179254f0a047a88a",
+      "size": 2136
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

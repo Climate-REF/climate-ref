@@ -52,6 +52,18 @@ class TestParsePMPClimatologyKey:
         assert result["variable_id"] == "rlds"
         assert result["source_id"] == "CERES-EBAF-4-2"
 
+    def test_parse_hyphenated_institution_id(self):
+        """A hyphenated institution_id (e.g. NASA-GISS) must still parse."""
+        key = (
+            "PMP_obs4MIPsClims/pr/gr/v20260513/"
+            "pr_mon_GPCP-3-3_NASA-GISS_gr_198301-201412_AC_v20260513_2.5x2.5.nc"
+        )
+        result = _parse_pmp_climatology_key(key)
+
+        assert result["variable_id"] == "pr"
+        assert result["source_id"] == "GPCP-3-3"
+        assert result["institution_id"] == "NASA-GISS"
+
     def test_parse_invalid_key_wrong_parts(self):
         """Test parsing a key with wrong number of path parts."""
         key = "invalid/path/structure.nc"
@@ -366,4 +378,33 @@ class TestRegistryRequest:
             assert len(result) == 2
             # All returned rows should have the latest version
             assert all(result["version"] == "v20250415")
-            assert set(result["source_id"].tolist()) == {"HadISST-1-1", "TropFlux-1-0"}
+
+    def test_fetch_datasets_filters_to_numerically_latest_vn_version(self):
+        """vN-form versions are compared numerically, so v10 beats v2 (not lexicographically)."""
+        mock_registry = MagicMock()
+        # Same dataset, three vN versions. Lexicographically "v2" > "v10"; numerically v10 wins.
+        mock_registry.registry.keys.return_value = [
+            "obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v1/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc",
+            "obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v2/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc",
+            "obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v10/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc",
+        ]
+        mock_registry.fetch.side_effect = lambda key: f"/path/to/{key}"
+
+        mock_manager = MagicMock()
+        mock_manager.__getitem__ = MagicMock(return_value=mock_registry)
+        mock_manager.keys.return_value = ["obs4ref"]
+
+        with patch(
+            "climate_ref_core.esgf.registry.dataset_registry_manager",
+            mock_manager,
+        ):
+            request = RegistryRequest(
+                slug="test-request",
+                registry_name="obs4ref",
+                source_type="obs4MIPs",
+                facets={"source_id": "HadISST-1-1"},
+            )
+            result = request.fetch_datasets()
+
+            assert len(result) == 1
+            assert all(result["version"] == "v10")

@@ -11,7 +11,7 @@ from climate_ref_core.constraints import (
     RequireTimerange,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
-from climate_ref_core.diagnostics import DataRequirement
+from climate_ref_core.diagnostics import DataRequirement, ExecutionDefinition
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, Obs4MIPsRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
@@ -392,6 +392,21 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         "ua",
     )
 
+    # The committed series.json scales with variables x regions x timesteps, so the full
+    # variable set over all AR6 regions produced a ~12 MB blob. The cmip6 regression fixture
+    # is therefore cut down on two axes that do not affect production: ``test_variables``
+    # (a representative variable subset, applied via the test request below) and
+    # ``test_regions`` (a few regions, applied in reduce_recipe_for_regression_fixture).
+    test_variables = (
+        "pr",
+        "tas",
+    )
+    test_regions = (
+        "Arctic-Ocean",
+        "C.North-America",
+        "Mediterranean",
+    )
+
     data_requirements = (
         (
             DataRequirement(
@@ -493,7 +508,9 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                             "experiment_id": ["historical"],
                             "frequency": ["fx", "mon"],
                             "source_id": "CanESM5",
-                            "variable_id": ["areacella", *variables],
+                            # Subset to keep the committed series.json small; see ``test_variables``
+                            # (regions are likewise reduced in reduce_recipe_for_regression_fixture).
+                            "variable_id": ["areacella", *test_variables],
                         },
                         remove_ensembles=True,
                         time_span=("1980", "2014"),
@@ -509,14 +526,13 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
                         facets={
                             "experiment_id": ["historical"],
                             "source_id": "CanESM5",
-                            "variable_id": ["areacella", *variables],
+                            # Subset to keep the committed series.json small; see ``test_variables``
+                            # (regions are likewise reduced in reduce_recipe_for_regression_fixture).
+                            "variable_id": ["areacella", *test_variables],
                             "branded_variable": [
                                 "areacella_ti-u-hxy-u",
-                                "hus_tavg-p19-hxy-u",
                                 "pr_tavg-u-hxy-u",
-                                "psl_tavg-u-hxy-u",
                                 "tas_tavg-h2m-hxy-u",
-                                "ua_tavg-p19-hxy-air",
                             ],
                             "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],
@@ -607,6 +623,27 @@ class RegionalHistoricalTimeSeries(RegionalHistoricalAnnualCycle):
         for var_name, diag_name in TIMESERIES_DIAGNOSTICS
         for region in REGIONS
     )
+
+    def reduce_recipe_for_regression_fixture(
+        self,
+        recipe: Recipe,
+        definition: ExecutionDefinition,
+    ) -> None:
+        """Restrict the AR6 regions to ``test_regions`` for regression-fixture runs only.
+
+        The committed series.json has one entry per (variable, region, statistic), so the
+        full 58-region set makes the bundle very large. Production runs (whose execution key
+        is not a ``test-`` fixture key) are left untouched and still process all regions.
+        """
+        if not definition.key.startswith("test-"):
+            return
+        keep = list(self.test_regions)
+        for preprocessor in recipe.get("preprocessors", {}).values():
+            if not isinstance(preprocessor, dict):
+                continue
+            extract_shape = preprocessor.get("extract_shape")
+            if isinstance(extract_shape, dict) and isinstance(extract_shape.get("ids"), dict):
+                extract_shape["ids"]["Name"] = keep
 
 
 class RegionalHistoricalTrend(ESMValToolDiagnostic):

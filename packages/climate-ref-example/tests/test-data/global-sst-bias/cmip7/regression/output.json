@@ -1,0 +1,34 @@
+{
+  "data": {
+    "surface_temperature_comparison": {
+      "description": "Annual area-weighted global-mean sea surface temperature for the model (tos, weighted by areacello) and the HadISST-1-1 reference, with the model-minus-reference bias.",
+      "dimensions": null,
+      "filename": "global_mean_surface_temperature.nc",
+      "long_name": "Global Mean Sea Surface Temperature: model, reference and bias"
+    }
+  },
+  "diagnostics": {},
+  "html": {},
+  "index": "index.html",
+  "metrics": null,
+  "plots": {
+    "bias": {
+      "description": "Annual model-minus-reference global-mean SST bias.",
+      "dimensions": null,
+      "filename": "surface_temperature_bias.png",
+      "long_name": "Global-mean SST bias (model - reference)"
+    },
+    "timeseries": {
+      "description": "Annual global-mean SST for the model and the HadISST-1-1 reference.",
+      "dimensions": null,
+      "filename": "surface_temperature_timeseries.png",
+      "long_name": "Global-mean SST: model and reference"
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
+}

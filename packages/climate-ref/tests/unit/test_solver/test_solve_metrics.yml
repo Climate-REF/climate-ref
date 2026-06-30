@@ -30,6 +30,12 @@ cmip6_historical_ACCESS-ESM1-5_tas_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.tas.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
+cmip6_historical_ACCESS-ESM1-5_tos_r1i1p1f1__obs4mips_HadISST-1-1_ts:
+  SourceDatasetType.CMIP6:
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
+  - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.areacello.gn.v20191115
+  SourceDatasetType.obs4MIPs:
+  - obs4MIPs.obs4MIPs.MOHC.HadISST-1-1.mon.ts.250km.gn.v20250415
 cmip6_historical_CESM2_rsut_r1i1p1f1:
   SourceDatasetType.CMIP6:
   - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Amon.rsut.gn.v20190308

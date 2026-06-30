@@ -9,6 +9,7 @@ repo_url: https://github.com/Climate-REF/climate-ref
 nav:
   - Rapid Evaluation Framework: index.md
   - Installation: installation.md
+  - Quick Start: getting-started/quickstart.md
   - Concepts: concepts.md
   - Getting Started:
       - Modelling Centres: getting-started/modelling-centres.md

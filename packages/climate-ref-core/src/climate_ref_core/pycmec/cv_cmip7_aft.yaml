@@ -1,4 +1,16 @@
 dimensions:
+- name: kind
+  long_name: Kind
+  description: "Role of the value: a model value or a reference (observation) value"
+  required: false
+  allow_extra_values: false
+  values:
+    - name: model
+      long_name: Model
+      description: "A value computed from model output"
+    - name: reference
+      long_name: Reference
+      description: "A value computed from a reference (observation) dataset"
 - name: mip_id
   long_name: MIP ID
   description: "MIP ID (e.g., CMIP6)"

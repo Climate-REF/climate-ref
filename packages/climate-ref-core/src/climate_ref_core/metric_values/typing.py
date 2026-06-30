@@ -1,12 +1,15 @@
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 from pydantic import BaseModel, field_validator, model_validator
 
 Value = float | int
+
+MetricValueKind = Literal["model", "reference"]
+"""The role of a metric value: a model value or a reference (observation) value."""
 
 
 class FileDefinition(BaseModel):
@@ -52,6 +55,21 @@ class SeriesMetricValue(BaseModel):
 
     These values are used for a faceted search of the metric values.
     """
+    kind: MetricValueKind = "model"
+    """
+    Whether the series is a model value or a reference (observation) value.
+
+    This is the first-class signal for the role of the value
+    and replaces provider-specific conventions for distinguishing the two.
+    """
+    reference_id: str | None = None
+    """
+    Content hash identifying the reference payload of the series.
+
+    Stable across executions for an identical reference payload,
+    so reference series can be deduplicated deterministically.
+    It is ``None`` for model series and is populated at ingest for reference series.
+    """
     values: Sequence[Value]
     """
     A 1-d array of values
@@ -69,6 +87,31 @@ class SeriesMetricValue(BaseModel):
     The name of the index.
 
     This is used for presentation purposes and is not used in the controlled vocabulary.
+    """
+
+    value_units: str | None = None
+    """
+    Units of the series values (e.g. ``"K"``).
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
+    """
+    value_long_name: str | None = None
+    """
+    Human-readable name of the series values (e.g. ``"Near-Surface Air Temperature"``).
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
+    """
+    index_units: str | None = None
+    """
+    Units of the index (e.g. ``"days since 1850-01-01"``).
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
+    """
+    calendar: str | None = None
+    """
+    Calendar of a time index (e.g. ``"360_day"``), when the index is temporal.
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
     """
 
     attributes: dict[str, str | Value | None] | None = None
@@ -166,6 +209,13 @@ class ScalarMetricValue(BaseModel):
     Key, value pairs that identify the dimensions of the metric
 
     These values are used for a faceted search of the metric values.
+    """
+    kind: MetricValueKind = "model"
+    """
+    Whether the value is a model value or a reference (observation) value.
+
+    This is the first-class signal for the role of the value
+    and replaces provider-specific conventions for distinguishing the two.
     """
     value: Value
     """

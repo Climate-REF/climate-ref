@@ -5,6 +5,7 @@
     "output.json": "95d0c169733834bf9256cc1bd42df6f7dacfc4e723c8c8dc9056b260ee513b69",
     "series.json": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"
   },
+  "diagnostic_version": 2,
   "native": {
     "CanESM5.csv": {
       "sha256": "d4a40c7f4f710e7b3f46873a97efeb0dfd955c517a1a25639c47b888bd00b446",
@@ -75,6 +76,6 @@
       "size": 2
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 1
 }

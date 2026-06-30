@@ -384,7 +384,13 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             version = previous.test_case_version + 1 if bump_version else previous.test_case_version
         else:
             version = 1
-        _write_test_case_manifest(paths, test_case_version=version, committed=committed, native=native)
+        _write_test_case_manifest(
+            paths,
+            test_case_version=version,
+            diagnostic_version=diag.version,
+            committed=committed,
+            native=native,
+        )
         write_source_stamp(slot, label=label, verb="mint", source=source_kind, test_case_version=version)
 
         minted += 1
@@ -497,6 +503,7 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
                 _write_test_case_manifest(
                     paths,
                     test_case_version=previous.test_case_version,
+                    diagnostic_version=previous.diagnostic_version,
                     committed=committed,
                     native=previous.native,
                     schema=previous.schema,
@@ -507,7 +514,13 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
                         "re-mint with `ref test-cases mint`"
                     )
             else:
-                _write_test_case_manifest(paths, test_case_version=1, committed=committed, native={})
+                _write_test_case_manifest(
+                    paths,
+                    test_case_version=1,
+                    diagnostic_version=diag.version,
+                    committed=committed,
+                    native={},
+                )
             logger.info(f"Promoted rebuilt bundle to regression baseline: {paths.regression}")
         else:
             logger.info(

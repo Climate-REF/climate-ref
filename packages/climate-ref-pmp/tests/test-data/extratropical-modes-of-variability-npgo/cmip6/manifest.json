@@ -5,6 +5,7 @@
     "output.json": "e36bf1d06d3635f2047609530f9da8d0dc048f352df424f0168d5bb913145079",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 1,
   "native": {
     "EG_Spec_North_test_NPGO_monthly_HadISST-1-1_1900-2005.png": {
       "sha256": "f7e720e3115fd6cd39e57144a4aaf3cc427944c761436b87e96f752a351c9ddc",
@@ -83,6 +84,6 @@
       "size": 5457
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 1
 }

@@ -5,6 +5,7 @@
     "output.json": "e20535bfc6e337eb4f36b90f75494a192878dc04b6a83cc334bc7595aafb05b4",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 1,
   "native": {
     "EG_Spec_North_test_PNA_DJF_20CR_1900-2005.png": {
       "sha256": "507f5faee65bd25a8d517604e236fae5c6fa0759c040dbfa96d1be6a1275a88b",
@@ -215,6 +216,6 @@
       "size": 12338
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 1
 }

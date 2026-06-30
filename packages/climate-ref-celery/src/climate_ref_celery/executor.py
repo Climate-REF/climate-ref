@@ -35,6 +35,12 @@ class CeleryExecutor(Executor):
 
     name = "celery"
 
+    # Results are persisted by the worker via the ``handle_result`` task link,
+    # so ``join`` only waits for completion.
+    # Skipping it (queue-and-exit) does not lose work.
+    # The workers keep processing and ingesting results in the background.
+    collects_results_on_join = False
+
     def __init__(self, *, config: Config, **kwargs: Any) -> None:
         self.config = config
         super().__init__(**kwargs)  # type: ignore
@@ -97,12 +103,13 @@ class CeleryExecutor(Executor):
         Parameters
         ----------
         timeout
-            Maximum time to wait in seconds before raising a TimeoutError
+            Maximum time to wait in seconds before raising a TimeoutError.
+            A non-positive value (``<= 0``) waits indefinitely.
 
         Raises
         ------
         TimeoutError
-            If all executions aren't completed within the specified timeout
+            If all executions aren't completed within a positive timeout
         """
         start_time = time.time()
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
@@ -117,7 +124,8 @@ class CeleryExecutor(Executor):
 
                 elapsed_time = time.time() - start_time
 
-                if elapsed_time > timeout:
+                # ``timeout <= 0`` means wait indefinitely (no overall deadline).
+                if timeout > 0 and elapsed_time > timeout:
                     raise TimeoutError("Not all tasks completed within the specified timeout")
 
                 # Iterate over a copy of the list and remove finished tasks

@@ -7,7 +7,6 @@ from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from climate_ref.executor.result_handling import (
-    _copy_file_to_results,
     handle_execution_result,
     ingest_execution_result,
     ingest_scalar_values,
@@ -27,6 +26,7 @@ from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
+from climate_ref_core.output_files import copy_output_file
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
@@ -67,21 +67,24 @@ def test_handle_execution_result_successful(
         mock_definition.to_output_path(metric_bundle_filename),
     )
 
-    mock_copy = mocker.patch("climate_ref.executor.result_handling._copy_file_to_results")
+    mock_copy = mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+    mock_curate = mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_copy.assert_any_call(
+    # The log is copied directly (health check); the curated output set is delegated
+    # to copy_execution_outputs (which file lands where is covered by test_output_files).
+    mock_copy.assert_called_once_with(
         config.paths.scratch,
         config.paths.results,
         mock_execution_result.output_fragment,
         EXECUTION_LOG_FILENAME,
     )
-    mock_copy.assert_called_with(
+    mock_curate.assert_called_once_with(
         config.paths.scratch,
         config.paths.results,
         mock_execution_result.output_fragment,
-        metric_bundle_filename,
+        result,
     )
     mock_execution_result.mark_successful.assert_called_once_with(metric_bundle_filename)
     assert not mock_execution_result.execution_group.dirty
@@ -120,27 +123,23 @@ def test_handle_execution_result_with_series(
     ]
     TSeries.dump_to_json(mock_definition.to_output_path(series_filename), series_data)
 
-    mock_copy = mocker.patch("climate_ref.executor.result_handling._copy_file_to_results")
+    mock_copy = mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+    mock_curate = mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
 
     handle_execution_result(config, db, mock_execution_result, result)
 
-    mock_copy.assert_any_call(
+    # The log is copied directly
+    mock_copy.assert_called_once_with(
         config.paths.scratch,
         config.paths.results,
         mock_execution_result.output_fragment,
         EXECUTION_LOG_FILENAME,
     )
-    mock_copy.assert_any_call(
+    mock_curate.assert_called_once_with(
         config.paths.scratch,
         config.paths.results,
         mock_execution_result.output_fragment,
-        metric_bundle_filename,
-    )
-    mock_copy.assert_called_with(
-        config.paths.scratch,
-        config.paths.results,
-        mock_execution_result.output_fragment,
-        series_filename,
+        result,
     )
     mock_execution_result.mark_successful.assert_called_once_with(metric_bundle_filename)
     assert not mock_execution_result.execution_group.dirty
@@ -247,6 +246,35 @@ def test_handle_execution_result_system_failure(config, db, mock_execution_resul
     assert mock_execution_result.execution_group.dirty
 
 
+def test_handle_execution_result_ingestion_failure_leaves_dirty(
+    config, db, mock_execution_result, mocker, mock_definition
+):
+    """A successful diagnostic whose results fail to ingest must be marked failed and retried.
+
+    The ingestion savepoint rolls back the partial inserts,
+    so reporting success here would record an execution with zero metric values
+    and clear dirty, silently dropping the result.
+    Instead the execution is marked failed and the group left dirty for retry.
+    """
+    mock_execution_result.execution_group.dirty = True
+    result = ExecutionResult(
+        definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("bundle.json")
+    )
+
+    mocker.patch("climate_ref.executor.result_handling.copy_output_file")
+    mocker.patch("climate_ref.executor.result_handling.copy_execution_outputs")
+    mocker.patch(
+        "climate_ref.executor.result_handling.ingest_execution_result",
+        side_effect=RuntimeError("boom"),
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_successful.assert_not_called()
+    assert mock_execution_result.execution_group.dirty
+
+
 def test_handle_execution_result_missing_log_file_leaves_dirty(
     config, db, mock_execution_result, mocker, definition_factory
 ):
@@ -289,9 +317,9 @@ def test_copy_file_to_results_success(filename, is_relative, tmp_path):
     scratch_filename.touch()
 
     if is_relative:
-        _copy_file_to_results(scratch_directory, results_directory, fragment, filename)
+        copy_output_file(scratch_directory, results_directory, fragment, filename)
     else:
-        _copy_file_to_results(
+        copy_output_file(
             scratch_directory, results_directory, fragment, scratch_directory / fragment / filename
         )
 
@@ -309,7 +337,7 @@ def test_copy_file_to_results_file_not_found(mocker):
     with pytest.raises(
         FileNotFoundError, match=f"Could not find {filename} in {scratch_directory / fragment}"
     ):
-        _copy_file_to_results(scratch_directory, results_directory, fragment, filename)
+        copy_output_file(scratch_directory, results_directory, fragment, filename)
 
 
 SAMPLE_SERIES = [

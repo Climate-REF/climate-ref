@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref"
-version = "0.14.3"
+version = "0.14.7"
 description = "Application which runs the CMIP Rapid Evaluation Framework"
 readme = "README.md"
 authors = [
@@ -13,14 +13,13 @@ authors = [
     { name = "Dora Hegedus", email = "dora.hegedus@stfc.ac.uk" },
 ]
 license = "Apache-2.0"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Topic :: Scientific/Engineering",
@@ -42,7 +41,7 @@ dependencies = [
     "netCDF4>=1.6.0",
     "platformdirs>=4.3.6",
     "tqdm>=4.67.1",
-    "gitpython>=3.1.0",
+    "gitpython>=3.1.50",
     # parsl doesn't support Windows yet
     # We don't target Windows either, but this __might__ allow Windows users to install the package
     'parsl>=2025.5.19; sys_platform != "win32"'

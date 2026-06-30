@@ -195,6 +195,10 @@ class HPCExecutor:
 
     name = "hpc"
 
+    # Results are copied to the results directory and ingested only during ``join``,
+    # so skipping ``join`` (queue-and-exit) would orphan completed work in scratch.
+    collects_results_on_join = True
+
     def __init__(
         self,
         *,

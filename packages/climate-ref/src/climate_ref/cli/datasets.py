@@ -14,7 +14,7 @@ from typing import Annotated
 import typer
 from loguru import logger
 
-from climate_ref.cli._utils import parse_facet_filters, pretty_print_df
+from climate_ref.cli._utils import OutputFormat, parse_facet_filters, pretty_print_df, render_dataframe
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models import Dataset
 from climate_ref.solver import apply_dataset_filters
@@ -48,6 +48,10 @@ def list_(  # noqa: PLR0913
             "Multiple values can be provided"
         ),
     ] = None,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: 'table' (default) or machine-readable 'json'."),
+    ] = OutputFormat.table,
 ) -> None:
     """
     List the datasets that have been ingested
@@ -91,7 +95,7 @@ def list_(  # noqa: PLR0913
             raise typer.Exit(code=1)
         data_catalog = data_catalog[column].sort_values(by=column)
 
-    pretty_print_df(data_catalog, console=ctx.obj.console)
+    render_dataframe(data_catalog, console=ctx.obj.console, output_format=output_format)
 
 
 @app.command()

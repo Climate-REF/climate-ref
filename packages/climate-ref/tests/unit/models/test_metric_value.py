@@ -2,7 +2,7 @@ import re
 
 import pytest
 
-from climate_ref.models import ScalarMetricValue, SeriesMetricValue
+from climate_ref.models import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 
 
 class TestScalarMetricValue:
@@ -74,11 +74,11 @@ class TestScalarMetricValue:
 class TestSeriesMetricValue:
     def test_build_with_matching_lengths(self, db_seeded):
         """Test that building a SeriesMetricValue with matching lengths works"""
+        axis = SeriesIndex.get_or_create(db_seeded.session, "time", [0, 1, 2])
         item = SeriesMetricValue.build(
             execution_id=1,
             values=[1.0, 2.0, 3.0],
-            index=[0, 1, 2],
-            index_name="time",
+            index_axis=axis,
             dimensions={"source_id": "test"},
             attributes={"attr": "value"},
         )
@@ -94,23 +94,23 @@ class TestSeriesMetricValue:
 
     def test_build_with_mismatched_lengths(self, db_seeded):
         """Test that building a SeriesMetricValue with mismatched lengths raises an error"""
+        axis = SeriesIndex.get_or_create(db_seeded.session, "time", [0, 1])
         with pytest.raises(ValueError, match=re.escape(r"Index length (2) must match values length (3)")):
             SeriesMetricValue.build(
                 execution_id=1,
                 values=[1.0, 2.0, 3.0],
-                index=[0, 1],
-                index_name="time",
+                index_axis=axis,
                 dimensions={"source_id": "test"},
                 attributes=None,
             )
 
     def test_update_with_mismatched_lengths(self, db_seeded):
         """Test that updating a SeriesMetricValue with mismatched lengths raises an error"""
+        axis = SeriesIndex.get_or_create(db_seeded.session, "time", [0, 1])
         item = SeriesMetricValue.build(
             execution_id=1,
             values=[1.0, 2.0],
-            index=[0, 1],
-            index_name="time",
+            index_axis=axis,
             dimensions={"source_id": "test"},
             attributes=None,
         )

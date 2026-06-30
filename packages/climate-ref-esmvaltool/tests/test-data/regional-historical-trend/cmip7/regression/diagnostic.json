@@ -1,0 +1,790 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "source_id",
+      "variant_label",
+      "variable_id",
+      "region",
+      "metric"
+    ],
+    "metric": {
+      "trend": {}
+    },
+    "region": {
+      "ARP": {},
+      "CAF": {},
+      "CAR": {},
+      "CAU": {},
+      "CNA": {},
+      "EAN": {},
+      "EAS": {},
+      "EAU": {},
+      "ECA": {},
+      "EEU": {},
+      "ENA": {},
+      "ESAF": {},
+      "ESB": {},
+      "GIC": {},
+      "MDG": {},
+      "MED": {},
+      "NAU": {},
+      "NCA": {},
+      "NEAF": {},
+      "NEN": {},
+      "NES": {},
+      "NEU": {},
+      "NSA": {},
+      "NWN": {},
+      "NWS": {},
+      "NZ": {},
+      "RAR": {},
+      "RFE": {},
+      "SAH": {},
+      "SAM": {},
+      "SAS": {},
+      "SAU": {},
+      "SCA": {},
+      "SEA": {},
+      "SEAF": {},
+      "SES": {},
+      "SSA": {},
+      "SWS": {},
+      "TIB": {},
+      "WAF": {},
+      "WAN": {},
+      "WCA": {},
+      "WCE": {},
+      "WNA": {},
+      "WSAF": {},
+      "WSB": {}
+    },
+    "source_id": {
+      "CanESM5": {}
+    },
+    "variable_id": {
+      "hus": {},
+      "pr": {},
+      "psl": {},
+      "tas": {},
+      "ua": {}
+    },
+    "variant_label": {
+      "r1i1p1f1": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "gn": {
+      "CanESM5": {
+        "r1i1p1f1": {
+          "hus": {
+            "ARP": {
+              "trend": 0.0
+            },
+            "CAF": {
+              "trend": 0.0
+            },
+            "CAR": {
+              "trend": 0.0
+            },
+            "CAU": {
+              "trend": 0.0
+            },
+            "CNA": {
+              "trend": 0.0
+            },
+            "EAN": {
+              "trend": 0.0
+            },
+            "EAS": {
+              "trend": 0.0
+            },
+            "EAU": {
+              "trend": 0.0
+            },
+            "ECA": {
+              "trend": 0.0
+            },
+            "EEU": {
+              "trend": 0.0
+            },
+            "ENA": {
+              "trend": 0.0
+            },
+            "ESAF": {
+              "trend": 0.0
+            },
+            "ESB": {
+              "trend": 0.0
+            },
+            "GIC": {
+              "trend": 0.0
+            },
+            "MDG": {
+              "trend": 0.0
+            },
+            "MED": {
+              "trend": 0.0
+            },
+            "NAU": {
+              "trend": 0.0
+            },
+            "NCA": {
+              "trend": 0.0
+            },
+            "NEAF": {
+              "trend": 0.0
+            },
+            "NEN": {
+              "trend": 0.0
+            },
+            "NES": {
+              "trend": 0.0
+            },
+            "NEU": {
+              "trend": 0.0
+            },
+            "NSA": {
+              "trend": 0.0
+            },
+            "NWN": {
+              "trend": 0.0
+            },
+            "NWS": {
+              "trend": 0.0
+            },
+            "NZ": {
+              "trend": 0.0
+            },
+            "RAR": {
+              "trend": 0.0
+            },
+            "RFE": {
+              "trend": 0.0
+            },
+            "SAH": {
+              "trend": 0.0
+            },
+            "SAM": {
+              "trend": 0.0
+            },
+            "SAS": {
+              "trend": 0.0
+            },
+            "SAU": {
+              "trend": 0.0
+            },
+            "SCA": {
+              "trend": 0.0
+            },
+            "SEA": {
+              "trend": 0.0
+            },
+            "SEAF": {
+              "trend": 0.0
+            },
+            "SES": {
+              "trend": 0.0
+            },
+            "SSA": {
+              "trend": 0.0
+            },
+            "SWS": {
+              "trend": 0.0
+            },
+            "TIB": {
+              "trend": 0.0
+            },
+            "WAF": {
+              "trend": 0.0
+            },
+            "WAN": {
+              "trend": 0.0
+            },
+            "WCA": {
+              "trend": 0.0
+            },
+            "WCE": {
+              "trend": 0.0
+            },
+            "WNA": {
+              "trend": 0.0
+            },
+            "WSAF": {
+              "trend": 0.0
+            },
+            "WSB": {
+              "trend": 0.0
+            }
+          },
+          "pr": {
+            "ARP": {
+              "trend": 0.0
+            },
+            "CAF": {
+              "trend": 0.0
+            },
+            "CAR": {
+              "trend": 0.0
+            },
+            "CAU": {
+              "trend": 0.0
+            },
+            "CNA": {
+              "trend": 0.0
+            },
+            "EAN": {
+              "trend": 0.0
+            },
+            "EAS": {
+              "trend": 0.3183594
+            },
+            "EAU": {
+              "trend": 0.0
+            },
+            "ECA": {
+              "trend": 0.0
+            },
+            "EEU": {
+              "trend": 0.0
+            },
+            "ENA": {
+              "trend": 0.0
+            },
+            "ESAF": {
+              "trend": 0.0
+            },
+            "ESB": {
+              "trend": 0.0
+            },
+            "GIC": {
+              "trend": 0.0
+            },
+            "MDG": {
+              "trend": 0.0
+            },
+            "MED": {
+              "trend": 0.0
+            },
+            "NAU": {
+              "trend": 0.0
+            },
+            "NCA": {
+              "trend": 0.03613281
+            },
+            "NEAF": {
+              "trend": 0.0
+            },
+            "NEN": {
+              "trend": 0.0
+            },
+            "NES": {
+              "trend": 0.0
+            },
+            "NEU": {
+              "trend": 0.0
+            },
+            "NSA": {
+              "trend": 0.6484375
+            },
+            "NWN": {
+              "trend": 0.0
+            },
+            "NWS": {
+              "trend": 9.861328
+            },
+            "NZ": {
+              "trend": 0.0
+            },
+            "RAR": {
+              "trend": 0.0
+            },
+            "RFE": {
+              "trend": 0.0
+            },
+            "SAH": {
+              "trend": 0.0
+            },
+            "SAM": {
+              "trend": 0.5146484
+            },
+            "SAS": {
+              "trend": 0.0
+            },
+            "SAU": {
+              "trend": 0.0
+            },
+            "SCA": {
+              "trend": -1.173828
+            },
+            "SEA": {
+              "trend": 0.4257812
+            },
+            "SEAF": {
+              "trend": 1.30957
+            },
+            "SES": {
+              "trend": -0.3945312
+            },
+            "SSA": {
+              "trend": 0.0
+            },
+            "SWS": {
+              "trend": 0.0
+            },
+            "TIB": {
+              "trend": 0.0
+            },
+            "WAF": {
+              "trend": 0.0
+            },
+            "WAN": {
+              "trend": 0.0
+            },
+            "WCA": {
+              "trend": 0.0
+            },
+            "WCE": {
+              "trend": 0.0
+            },
+            "WNA": {
+              "trend": 0.0
+            },
+            "WSAF": {
+              "trend": 0.0
+            },
+            "WSB": {
+              "trend": 0.0
+            }
+          },
+          "psl": {
+            "ARP": {
+              "trend": -1.546875
+            },
+            "CAF": {
+              "trend": -0.2001953
+            },
+            "CAR": {
+              "trend": 1.145508
+            },
+            "CAU": {
+              "trend": 0.03613281
+            },
+            "CNA": {
+              "trend": 0.009765625
+            },
+            "EAN": {
+              "trend": -2.691406
+            },
+            "EAS": {
+              "trend": -0.07519531
+            },
+            "EAU": {
+              "trend": 0.1972656
+            },
+            "ECA": {
+              "trend": -2.231445
+            },
+            "EEU": {
+              "trend": -2.198242
+            },
+            "ENA": {
+              "trend": 1.12793
+            },
+            "ESAF": {
+              "trend": -1.326172
+            },
+            "ESB": {
+              "trend": -1.876953
+            },
+            "GIC": {
+              "trend": -1.569336
+            },
+            "MDG": {
+              "trend": -1.139648
+            },
+            "MED": {
+              "trend": -0.7685547
+            },
+            "NAU": {
+              "trend": 0.5742188
+            },
+            "NCA": {
+              "trend": 0.2587891
+            },
+            "NEAF": {
+              "trend": -0.84375
+            },
+            "NEN": {
+              "trend": -3.484375
+            },
+            "NES": {
+              "trend": 0.5048828
+            },
+            "NEU": {
+              "trend": -2.637695
+            },
+            "NSA": {
+              "trend": -0.34375
+            },
+            "NWN": {
+              "trend": -2.044922
+            },
+            "NWS": {
+              "trend": -0.2470703
+            },
+            "NZ": {
+              "trend": -2.15625
+            },
+            "RAR": {
+              "trend": -5.661133
+            },
+            "RFE": {
+              "trend": -1.158203
+            },
+            "SAH": {
+              "trend": -0.5263672
+            },
+            "SAM": {
+              "trend": -0.2089844
+            },
+            "SAS": {
+              "trend": -0.8808594
+            },
+            "SAU": {
+              "trend": -1.710938
+            },
+            "SCA": {
+              "trend": 0.4609375
+            },
+            "SEA": {
+              "trend": -0.2333984
+            },
+            "SEAF": {
+              "trend": -0.5859375
+            },
+            "SES": {
+              "trend": 1.412109
+            },
+            "SSA": {
+              "trend": 3.316406
+            },
+            "SWS": {
+              "trend": 0.4785156
+            },
+            "TIB": {
+              "trend": -8.704102
+            },
+            "WAF": {
+              "trend": 0.1337891
+            },
+            "WAN": {
+              "trend": -1.40332
+            },
+            "WCA": {
+              "trend": -1.905273
+            },
+            "WCE": {
+              "trend": -2.473633
+            },
+            "WNA": {
+              "trend": 0.5039062
+            },
+            "WSAF": {
+              "trend": -0.4970703
+            },
+            "WSB": {
+              "trend": -2.203125
+            }
+          },
+          "tas": {
+            "ARP": {
+              "trend": 0.04199219
+            },
+            "CAF": {
+              "trend": 0.02832031
+            },
+            "CAR": {
+              "trend": 0.02441406
+            },
+            "CAU": {
+              "trend": 0.02246094
+            },
+            "CNA": {
+              "trend": 0.04785156
+            },
+            "EAN": {
+              "trend": 0.04589844
+            },
+            "EAS": {
+              "trend": 0.04882812
+            },
+            "EAU": {
+              "trend": 0.01953125
+            },
+            "ECA": {
+              "trend": 0.06835938
+            },
+            "EEU": {
+              "trend": 0.07226562
+            },
+            "ENA": {
+              "trend": 0.04882812
+            },
+            "ESAF": {
+              "trend": 0.02636719
+            },
+            "ESB": {
+              "trend": 0.0703125
+            },
+            "GIC": {
+              "trend": 0.08496094
+            },
+            "MDG": {
+              "trend": 0.02246094
+            },
+            "MED": {
+              "trend": 0.04882812
+            },
+            "NAU": {
+              "trend": 0.01855469
+            },
+            "NCA": {
+              "trend": 0.02832031
+            },
+            "NEAF": {
+              "trend": 0.02832031
+            },
+            "NEN": {
+              "trend": 0.1064453
+            },
+            "NES": {
+              "trend": 0.02734375
+            },
+            "NEU": {
+              "trend": 0.03027344
+            },
+            "NSA": {
+              "trend": 0.03417969
+            },
+            "NWN": {
+              "trend": 0.07226562
+            },
+            "NWS": {
+              "trend": 0.03027344
+            },
+            "NZ": {
+              "trend": 0.004882812
+            },
+            "RAR": {
+              "trend": 0.078125
+            },
+            "RFE": {
+              "trend": 0.05566406
+            },
+            "SAH": {
+              "trend": 0.04296875
+            },
+            "SAM": {
+              "trend": 0.03808594
+            },
+            "SAS": {
+              "trend": 0.0390625
+            },
+            "SAU": {
+              "trend": 0.005859375
+            },
+            "SCA": {
+              "trend": 0.02636719
+            },
+            "SEA": {
+              "trend": 0.0234375
+            },
+            "SEAF": {
+              "trend": 0.0234375
+            },
+            "SES": {
+              "trend": 0.01855469
+            },
+            "SSA": {
+              "trend": 0.01855469
+            },
+            "SWS": {
+              "trend": 0.02441406
+            },
+            "TIB": {
+              "trend": 0.1083984
+            },
+            "WAF": {
+              "trend": 0.02050781
+            },
+            "WAN": {
+              "trend": -0.01171875
+            },
+            "WCA": {
+              "trend": 0.06933594
+            },
+            "WCE": {
+              "trend": 0.04980469
+            },
+            "WNA": {
+              "trend": 0.046875
+            },
+            "WSAF": {
+              "trend": 0.02148438
+            },
+            "WSB": {
+              "trend": 0.09277344
+            }
+          },
+          "ua": {
+            "ARP": {
+              "trend": -0.08203125
+            },
+            "CAF": {
+              "trend": -0.03320312
+            },
+            "CAR": {
+              "trend": -0.06152344
+            },
+            "CAU": {
+              "trend": 0.02441406
+            },
+            "CNA": {
+              "trend": -0.006835938
+            },
+            "EAN": {
+              "trend": -0.006835938
+            },
+            "EAS": {
+              "trend": -0.05371094
+            },
+            "EAU": {
+              "trend": 0.03710938
+            },
+            "ECA": {
+              "trend": -0.0078125
+            },
+            "EEU": {
+              "trend": 0.06152344
+            },
+            "ENA": {
+              "trend": -0.009765625
+            },
+            "ESAF": {
+              "trend": 0.02539062
+            },
+            "ESB": {
+              "trend": 0.03613281
+            },
+            "GIC": {
+              "trend": 0.01074219
+            },
+            "MDG": {
+              "trend": 0.0078125
+            },
+            "MED": {
+              "trend": 0.03710938
+            },
+            "NAU": {
+              "trend": 0.01074219
+            },
+            "NCA": {
+              "trend": -0.0009765625
+            },
+            "NEAF": {
+              "trend": -0.03417969
+            },
+            "NEN": {
+              "trend": 0.0078125
+            },
+            "NES": {
+              "trend": 0.02441406
+            },
+            "NEU": {
+              "trend": 0.01660156
+            },
+            "NSA": {
+              "trend": 0.01757812
+            },
+            "NWN": {
+              "trend": 0.02832031
+            },
+            "NWS": {
+              "trend": 0.0390625
+            },
+            "NZ": {
+              "trend": 0.03027344
+            },
+            "RAR": {
+              "trend": 0.03125
+            },
+            "RFE": {
+              "trend": 0.046875
+            },
+            "SAH": {
+              "trend": -0.09375
+            },
+            "SAM": {
+              "trend": 0.04296875
+            },
+            "SAS": {
+              "trend": -0.06933594
+            },
+            "SAU": {
+              "trend": 0.07324219
+            },
+            "SCA": {
+              "trend": -0.03027344
+            },
+            "SEA": {
+              "trend": -0.0078125
+            },
+            "SEAF": {
+              "trend": -0.03613281
+            },
+            "SES": {
+              "trend": 0.008789062
+            },
+            "SSA": {
+              "trend": 0.02636719
+            },
+            "SWS": {
+              "trend": 0.01367188
+            },
+            "TIB": {
+              "trend": -0.05078125
+            },
+            "WAF": {
+              "trend": -0.02832031
+            },
+            "WAN": {
+              "trend": 0.005859375
+            },
+            "WCA": {
+              "trend": -0.03125
+            },
+            "WCE": {
+              "trend": 0.078125
+            },
+            "WNA": {
+              "trend": -0.01953125
+            },
+            "WSAF": {
+              "trend": 0.03417969
+            },
+            "WSB": {
+              "trend": 0.03222656
+            }
+          }
+        }
+      }
+    }
+  }
+}

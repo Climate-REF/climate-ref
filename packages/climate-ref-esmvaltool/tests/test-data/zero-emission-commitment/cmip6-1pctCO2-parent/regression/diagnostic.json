@@ -1,0 +1,40 @@
+{
+  "DIMENSIONS": {
+    "grid_label": {
+      "gn": {}
+    },
+    "json_structure": [
+      "grid_label",
+      "member_id",
+      "source_id",
+      "region",
+      "metric"
+    ],
+    "member_id": {
+      "r1i1p1f1": {}
+    },
+    "metric": {
+      "zec": {}
+    },
+    "region": {
+      "global": {}
+    },
+    "source_id": {
+      "ACCESS-ESM1-5": {}
+    }
+  },
+  "DISCLAIMER": null,
+  "NOTES": null,
+  "PROVENANCE": null,
+  "RESULTS": {
+    "gn": {
+      "r1i1p1f1": {
+        "ACCESS-ESM1-5": {
+          "global": {
+            "zec": -0.003024453
+          }
+        }
+      }
+    }
+  }
+}

@@ -1,4 +1,5 @@
 import fnmatch
+import shutil
 from abc import abstractmethod
 from collections.abc import Iterable
 from pathlib import Path
@@ -31,6 +32,20 @@ from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Rec
 
 _DATASETS_REGISTRY_NAME = "esmvaltool-datasets"
 
+_STABLE_SESSION_NAME = "recipe"
+"""Stable name for the ESMValTool session directory.
+
+ESMValTool writes each run into a timestamped ``recipe_<YYYYMMDD>_<HHMMSS>`` session directory.
+We rename it to this fixed name after the run so that the captured regression output is deterministic.
+"""
+
+_PROVENANCE_GLOB = "run/*/*/diagnostic_provenance.yml"
+"""Glob (relative to the stabilised session directory) matching ESMValTool's per-run provenance YAML.
+
+Single-sourced so the capture-side :attr:`ESMValToolDiagnostic.reconstruction_inputs` declaration and
+the rebuild-side scan in :meth:`ESMValToolDiagnostic.build_execution_result` cannot drift apart.
+"""
+
 
 def get_cmip_source_type(
     input_files: dict[SourceDatasetType, pandas.DataFrame],
@@ -58,6 +73,16 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
     base_recipe: ClassVar[str]
 
+    reconstruction_inputs = (f"executions/{_STABLE_SESSION_NAME}/{_PROVENANCE_GLOB}",)
+    """Raw provenance YAML that :meth:`build_execution_result` re-scans to discover the run's outputs.
+
+    These files are not referenced by the CMEC output bundle, so ``copy_execution_outputs`` would not
+    curate them; declaring them here persists them into the baseline so a ``replay`` can rebuild the
+    bundle. ``prepare_regression_output`` first stabilises the timestamped session directory to
+    ``recipe`` and every path the provenance contains is then under the execution output directory, so
+    the native sanitiser rewrites them to ``<OUTPUT_DIR>`` and the captured blobs stay portable.
+    """
+
     @staticmethod
     @abstractmethod
     def update_recipe(
@@ -74,6 +99,30 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         input_files:
             The dataframe describing the input files.
 
+        """
+
+    def reduce_recipe_for_regression_fixture(
+        self,
+        recipe: Recipe,
+        definition: ExecutionDefinition,
+    ) -> None:
+        """
+        Optionally shrink the recipe for a regression-fixture run.
+
+        Hook for diagnostics whose full recipe would produce a large committed regression bundle
+        (e.g. many regions over a long timeseries).
+
+
+        It is called for every execution,
+        so the default should be a no-op
+        and implementations should only apply changes when ``definition.key`` starts with ``"test-"``.
+
+        Parameters
+        ----------
+        recipe:
+            The recipe to update in place.
+        definition:
+            The execution definition; its ``key`` identifies regression-fixture runs.
         """
 
     @staticmethod
@@ -103,6 +152,52 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         """
         return CMECMetric.model_validate(metric_args), CMECOutput.model_validate(output_args)
 
+    def prepare_regression_output(self, definition: ExecutionDefinition) -> None:
+        """
+        Stabilise the timestamped ESMValTool session directory for regression capture.
+
+        Called only by the regression test-case runner (not during normal execution),
+        so the timestamp rewriting never affects production runs.
+
+        Parameters
+        ----------
+        definition
+            A description of the information needed for this execution of the diagnostic
+        """
+        self._stabilise_execution_dir(definition)
+
+    @staticmethod
+    def _stabilise_execution_dir(definition: ExecutionDefinition) -> None:
+        """
+        Rename the timestamped ESMValTool session directory to a stable name.
+
+        Rename the directory to :data:`_STABLE_SESSION_NAME`
+        and rewrite the timestamped name embedded in the text outputs (provenance, ``index.html``, logs)
+        so the paths they contain resolve to the renamed directory.
+
+        Parameters
+        ----------
+        definition
+            A description of the information needed for this execution of the diagnostic
+        """
+        executions_dir = definition.to_output_path("executions")
+        session_dirs = sorted(path for path in executions_dir.glob("recipe_*") if path.is_dir())
+        if not session_dirs:
+            return
+
+        session_dir = session_dirs[-1]
+        old_name = session_dir.name
+        stable_dir = executions_dir / _STABLE_SESSION_NAME
+        if stable_dir.exists():
+            shutil.rmtree(stable_dir)
+        session_dir.rename(stable_dir)
+
+        for pattern in ("*.json", "*.yml", "*.yaml", "*.txt", "*.html"):
+            for file in stable_dir.rglob(pattern):
+                content = file.read_text(encoding="utf-8")
+                if old_name in content:
+                    file.write_text(content.replace(old_name, _STABLE_SESSION_NAME), encoding="utf-8")
+
     def write_recipe(self, definition: ExecutionDefinition) -> Path:
         """
         Update the ESMValTool recipe for the diagnostic and write it to file.
@@ -123,6 +218,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         }
         recipe = load_recipe(self.base_recipe)
         self.update_recipe(recipe, input_files)
+        self.reduce_recipe_for_regression_fixture(recipe, definition)
         rewrite_mip_for_cmip7(recipe)
         fix_annual_statistics_keep_year(recipe)
         recipe_txt = yaml.safe_dump(recipe, sort_keys=False)
@@ -285,7 +381,11 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         :
             The resulting diagnostic.
         """
-        result_dir = max(definition.to_output_path("executions").glob("*"))
+        executions_dir = definition.to_output_path("executions")
+        stable_dir = executions_dir / _STABLE_SESSION_NAME
+        # Prefer the stabilised directory; fall back to the timestamped directory
+        # for regression baselines generated before stabilisation was introduced.
+        result_dir = stable_dir if stable_dir.exists() else max(executions_dir.glob("*"))
 
         metric_args = CMECMetric.create_template()
         output_args = CMECOutput.create_template()
@@ -304,7 +404,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         series = []
         plot_suffixes = {".png", ".jpg", ".pdf", ".ps"}
         # Sort metadata files for stable processing
-        metadata_files = sorted(result_dir.glob("run/*/*/diagnostic_provenance.yml"))
+        metadata_files = sorted(result_dir.glob(_PROVENANCE_GLOB))
         for metadata_file in metadata_files:
             metadata = yaml.safe_load(metadata_file.read_text(encoding="utf-8"))
             for filename in metadata:

@@ -1,0 +1,77 @@
+{
+  "data": {},
+  "diagnostics": {},
+  "html": {},
+  "index": "index.html",
+  "metrics": null,
+  "plots": {
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_AC_basicTest.png",
+      "long_name": "Plot"
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_DJF_basicTest.png",
+      "long_name": "Plot"
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_JJA_basicTest.png",
+      "long_name": "Plot"
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_MAM_basicTest.png",
+      "long_name": "Plot"
+    },
+    "ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png": {
+      "description": "Plot produced by the diagnostic",
+      "dimensions": null,
+      "filename": "ts/ts_ACCESS-ESM1-5_r1i1p1f1_interpolated_regrid2_global_SON_basicTest.png",
+      "long_name": "Plot"
+    }
+  },
+  "provenance": {
+    "commandLine": "<SOFTWARE_ROOT_DIR>/conda/pmp-a0cd98ec96f7c858f788439a4f0b4951fe2d7a55/bin/mean_climate_driver.py -p /home/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/params/pmp_param_annualcycle_2-metrics.py --vars ts --custom_observations <OUTPUT_DIR>/obs_dict.json --test_data_path <OUTPUT_DIR> --test_data_set ACCESS-ESM1-5 --realization r1i1p1f1 --filename_template %(variable)_ACCESS-ESM1-5_historical_r1i1p1f1_clims.198101-200512.AC.v20260628.nc --metrics_output_path <OUTPUT_DIR> --cmec",
+    "conda": {
+      "Platform": "linux-64"
+    },
+    "date": "<DATE>",
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {},
+    "openGL": {
+      "GLX": {
+        "client": {},
+        "server": {}
+      }
+    },
+    "osAccess": false,
+    "packages": {
+      "PMP": "3.9.2",
+      "PMPObs": "See 'References' key below, for detailed obs provenance information.",
+      "cdat_info": "8.2.1",
+      "cdp": "1.7.0",
+      "esmf": "0.8.10",
+      "esmpy": "8.9.0",
+      "matplotlib": "3.10.6",
+      "numpy": "2.0.2",
+      "python": "3.10.10",
+      "scipy": "1.15.2",
+      "xarray": "2025.6.1",
+      "xcdat": "0.10.0"
+    },
+    "platform": {
+      "Name": "<HOSTNAME>",
+      "OS": "Linux",
+      "Version": "<HOST_VERSION>"
+    },
+    "userId": "<USER>"
+  }
+}

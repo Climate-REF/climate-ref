@@ -95,6 +95,37 @@ def test_config_directory_append(config, invoke_cli):
     )
 
 
+def test_import_emits_no_debug_logs_without_celery():
+    """
+    Importing the CLI must not leak debug logs to stderr, even when an optional
+    dependency (the Celery CLI) is unavailable.
+
+    ``build_app()`` runs at import time before the ``main`` callback configures
+    the logging level so it must not emit any logs itself.
+    """
+    import subprocess
+    import sys
+
+    script = (
+        "import importlib\n"
+        "_real = importlib.import_module\n"
+        "def _fake(name, *args, **kwargs):\n"
+        "    if name.startswith('climate_ref_celery'):\n"
+        "        raise ImportError(name)\n"
+        "    return _real(name, *args, **kwargs)\n"
+        "importlib.import_module = _fake\n"
+        "import climate_ref.cli  # noqa: F401\n"
+    )
+    # Fixed args, trusted interpreter -- safe subprocess use.
+    result = subprocess.run(  # noqa: S603
+        [sys.executable, "-c", script], capture_output=True, text=True, check=False
+    )
+
+    assert result.returncode == 0, result.stderr
+    assert "Celery CLI not available" not in result.stderr
+    assert "DEBUG" not in result.stderr
+
+
 @pytest.fixture()
 def expected_groups() -> set[str]:
     return {"config", "datasets", "db", "executions", "providers", "celery", "test-cases"}
@@ -154,6 +185,31 @@ def test_cli_context_skip_backup(config, mocker):
     _ = ctx.database
 
     mock_from_config.assert_called_once_with(config, skip_backup=True)
+
+
+@pytest.mark.parametrize(
+    "command, expected",
+    [
+        # test-cases commands operate on test artifacts, never the database.
+        (["test-cases", "fetch"], True),
+        (["test-cases", "list"], True),
+        (["test-cases", "run", "--provider", "example"], True),
+        (["test-cases", "sync"], True),
+        (["test-cases", "replay", "--provider", "example"], True),
+        (["test-cases", "mint", "--provider", "example"], True),
+        (["test-cases", "build", "--provider", "example"], True),
+        # Data-modifying commands must still take a pre-migration backup.
+        (["datasets", "ingest"], False),
+        (["providers", "create-env"], False),
+        (["solve"], False),
+    ],
+)
+def test_is_read_only_command(command, expected, monkeypatch):
+    """Read-only commands skip the pre-migration backup; data-modifying ones do not."""
+    from climate_ref.cli import _is_read_only_command
+
+    monkeypatch.setattr("sys.argv", ["ref", *command])
+    assert _is_read_only_command() is expected
 
 
 def test_cli_context_close_without_database(config):

@@ -16,6 +16,10 @@ from climate_ref_core.pycmec.output import CMECOutput
 #: Model source types in order of preference
 MODEL_SOURCE_TYPES = (SourceDatasetType.CMIP7, SourceDatasetType.CMIP6)
 
+# Raw PMP driver CMEC JSON that ``build_execution_result`` re-scans (via :func:`process_json_result`)
+# to rebuild the bundle, but which the CMEC output bundle does not reference
+PMP_RECONSTRUCTION_INPUTS: tuple[str, ...] = ("*_cmec.json",)
+
 
 def get_model_source_type(definition: ExecutionDefinition) -> SourceDatasetType:
     """

@@ -18,10 +18,15 @@ from typing import TYPE_CHECKING, Any
 
 import pandas as pd
 from loguru import logger
+from sqlalchemy.orm import object_session, selectinload, with_polymorphic
 
 from climate_ref.datasets import get_slug_column
-from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
+from climate_ref.executor.fragment import (
+    PLACEHOLDER_FRAGMENT,
+    assign_execution_fragment,
+)
 from climate_ref.executor.result_handling import handle_execution_result
+from climate_ref.models.dataset import Dataset
 from climate_ref.models.execution import (
     Execution,
     ExecutionGroup,
@@ -34,19 +39,26 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.diagnostics import ExecutionDefinition
+from climate_ref_core.output_files import SANITISED_FILE_GLOBS, rewrite_tree
+from climate_ref_core.paths import safe_path
 
 if TYPE_CHECKING:
     from pathlib import Path
 
     from climate_ref.config import Config
     from climate_ref.database import Database
-    from climate_ref.models.dataset import Dataset
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.diagnostics import Diagnostic
 
 
 class _ReingestSavepointAbort(Exception):
     """Internal sentinel used to roll back the savepoint on a soft-fail path."""
+
+
+def _remove_dir(path: "Path | None") -> None:
+    """Remove a directory if it exists, ignoring missing paths."""
+    if path is not None and path.exists():
+        shutil.rmtree(path)
 
 
 def reconstruct_execution_definition(
@@ -82,9 +94,27 @@ def reconstruct_execution_definition(
     """
     execution_group = execution.execution_group
 
+    session = object_session(execution)
+    if session is None:  # pragma: no cover - executions are always session-bound here
+        raise RuntimeError("reconstruct_execution_definition requires a session-bound execution")
+
+    # Load the execution's linked datasets, eager-loading both their polymorphic
+    # subclass columns (``with_polymorphic`` -> no per-row subclass SELECT in
+    # ``_extract_dataset_attributes``) and their files (``selectinload`` -> no
+    # per-dataset SELECT in the ``for file in dataset.files`` loop below). This
+    # keeps the query count constant rather than scaling with the dataset count.
+    dataset_poly = with_polymorphic(Dataset, "*")
+    datasets = (
+        session.query(dataset_poly)
+        .join(execution_datasets, execution_datasets.c.dataset_id == dataset_poly.id)
+        .where(execution_datasets.c.execution_id == execution.id)
+        .options(selectinload(dataset_poly.files))
+        .all()
+    )
+
     # Build DatasetCollection per source type from the execution's linked datasets
     datasets_by_type: dict[SourceDatasetType, list[Any]] = defaultdict(list)
-    for dataset in execution.datasets:
+    for dataset in datasets:
         datasets_by_type[dataset.dataset_type].append(dataset)
 
     collection: dict[SourceDatasetType | str, DatasetCollection] = {}
@@ -157,20 +187,6 @@ def _extract_dataset_attributes(dataset: "Dataset") -> dict[str, object]:
     return attrs
 
 
-def _validate_path_containment(path: "Path", base: "Path", label: str) -> None:
-    """
-    Check that *path* stays within *base* after resolving symlinks and ``..`` segments.
-
-    Raises
-    ------
-    ValueError
-        If the resolved *path* escapes *base*
-    """
-    if not path.resolve().is_relative_to(base.resolve()):
-        msg = f"Computed {label} path {path} escapes {base}."
-        raise ValueError(msg)
-
-
 def _resolve_diagnostic_and_scratch(
     config: "Config",
     execution: Execution,
@@ -195,9 +211,8 @@ def _resolve_diagnostic_and_scratch(
         )
         return None
 
-    scratch_dir = config.paths.scratch / execution.output_fragment
     try:
-        _validate_path_containment(scratch_dir, config.paths.scratch, "scratch")
+        scratch_dir = safe_path(execution.output_fragment, config.paths.scratch, label="scratch")
     except ValueError:
         logger.error(f"Skipping execution {execution.id}: scratch path escapes base.")
         return None
@@ -257,6 +272,7 @@ def reingest_execution(
 
     new_fragment: str | None = None
     new_scratch_dir: Path | None = None
+    new_results_dir: Path | None = None
     new_execution: Execution | None = None
 
     try:
@@ -280,8 +296,18 @@ def reingest_execution(
                 )
 
                 new_scratch_dir = config.paths.scratch / new_fragment
+                new_results_dir = config.paths.results / new_fragment
                 new_scratch_dir.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copytree(scratch_dir, new_scratch_dir)
+                # Re-point any absolute paths embedded in the copied artifacts
+                # (e.g. ESMValTool's diagnostic_provenance.yml) from the original
+                # scratch directory to the new one so build_execution_result can
+                # resolve them within the new output directory.
+                rewrite_tree(
+                    new_scratch_dir,
+                    {str(scratch_dir): str(new_scratch_dir)},
+                    SANITISED_FILE_GLOBS,
+                )
 
                 definition = reconstruct_execution_definition(
                     config, execution, diagnostic, output_fragment=new_fragment
@@ -297,33 +323,40 @@ def reingest_execution(
                     raise _ReingestSavepointAbort
 
                 # Copy dataset links from the original execution
-                for dataset in execution.datasets:
-                    database.session.execute(
-                        execution_datasets.insert().values(
-                            execution_id=new_execution.id,
-                            dataset_id=dataset.id,
-                        )
+                link_rows = [
+                    {"execution_id": new_execution.id, "dataset_id": dataset.id}
+                    for dataset in execution.datasets
+                ]
+                if link_rows:
+                    database.session.execute(execution_datasets.insert(), link_rows)
+
+                # Ingest within the SAME savepoint so that a failure rolls the new Execution row
+                # (and its dataset links) back together with the partial ingest.
+                handle_execution_result(
+                    config,
+                    database,
+                    new_execution,
+                    result,
+                    update_dirty=False,
+                )
+
+                # handle_execution_result catches ingestion errors internally
+                # Treat a non-successful outcome as a failed reingest.
+                if new_execution.successful is not True:
+                    logger.warning(
+                        f"Reingest of execution {execution.id} failed during result ingestion; "
+                        f"rolling back the new execution."
                     )
+                    raise _ReingestSavepointAbort
         except _ReingestSavepointAbort:
-            if new_scratch_dir is not None and new_scratch_dir.exists():
-                shutil.rmtree(new_scratch_dir)
+            _remove_dir(new_scratch_dir)
+            _remove_dir(new_results_dir)
             return False
 
-        handle_execution_result(
-            config,
-            database,
-            new_execution,
-            result,
-            update_dirty=False,
-        )
     except Exception:
         logger.exception(f"Ingestion failed for execution {execution.id}. Rolling back changes.")
-        if new_scratch_dir is not None and new_scratch_dir.exists():
-            shutil.rmtree(new_scratch_dir)
-        if new_fragment is not None:
-            new_results_dir = config.paths.results / new_fragment
-            if new_results_dir.exists():
-                shutil.rmtree(new_results_dir)
+        _remove_dir(new_scratch_dir)
+        _remove_dir(new_results_dir)
         return False
 
     logger.info(f"Successfully reingested execution {execution.id} -> new execution {new_execution.id}")
@@ -376,6 +409,14 @@ def get_executions_for_reingest(
     if execution_group_ids:
         id_set = set(execution_group_ids)
         results = [(eg, ex) for eg, ex in results if eg.id in id_set]
+
+    group_ids = [eg.id for eg, _ in results]
+    if group_ids:
+        # Warm the session identity map so eg.executions[0] below does not
+        # issue one SELECT per group.
+        database.session.query(ExecutionGroup).filter(ExecutionGroup.id.in_(group_ids)).options(
+            selectinload(ExecutionGroup.executions)
+        ).all()
 
     # Filter out entries with no execution, then select the oldest per group.
     # ExecutionGroup.executions is ordered by created_at ascending,

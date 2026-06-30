@@ -1,0 +1,108 @@
+{
+  "catalog_hash": "2ffcfd7440ae1420a63803f0b5b8162fd3bf4d0f",
+  "committed": {
+    "diagnostic.json": "0962b974fe9b617fd1fa5d49f121a095e599c0611dff2f445b5f8a4484a2d652",
+    "output.json": "e0dd8f0902fcc0d6b032e6ef1e57b785c776aa18847ef60805d4b388166a2daa",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "20a2c7e604440a3e14b33de2306b0deee39187a7bebf626af2dab1cebdc6ab92",
+      "size": 653
+    },
+    "executions/recipe/index.html": {
+      "sha256": "45e329f818dc9faba7652b60c33186523afc1d9de42b69616011bea3efbbf508",
+      "size": 25317
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.png": {
+      "sha256": "514c54bb99a877ed4d9dfa2db4a59ccf127fd532f13c106ed47c6c00109ad36f",
+      "size": 112849
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.png": {
+      "sha256": "095befca924063fb7444ed5e13d2f12f2406721be9ae88cd92b80b8773418db2",
+      "size": 113219
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.png": {
+      "sha256": "769c2538035c11d7b35e1ccf31ae76ca02597b688555bdfead2c0519afa74636",
+      "size": 114891
+    },
+    "executions/recipe/plots/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.png": {
+      "sha256": "55e960c68040130d27abd3709a25ea5c0c0b32ae7d33a480639b21f01d61b47a",
+      "size": 115388
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.png": {
+      "sha256": "dd3c4d02b71bcd66d88f21a54332b60dab79802dddb113d583da6b3d35387ed2",
+      "size": 110196
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.png": {
+      "sha256": "46a930eced7ee15007182d43c6f3dd987d4d088e5ce949bca228c8d9dc1bbe06",
+      "size": 110629
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.png": {
+      "sha256": "236de3281137410a4348bc91a6d1d034e72a983e335b8bec073f36bcae88682d",
+      "size": 113968
+    },
+    "executions/recipe/plots/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.png": {
+      "sha256": "8196ef45daf9cdb2df0e14318bc575a69e2eeca044b8fa8e3655e32e56d5370b",
+      "size": 113477
+    },
+    "executions/recipe/run/calculate_gwl_exceedance_years/gwl_exceedance_calculation/diagnostic_provenance.yml": {
+      "sha256": "ce7c45d5268ef821bad5410f98e8ed6369bf0b23b325a037ab7a3c05b6ac36bc",
+      "size": 458
+    },
+    "executions/recipe/run/gwl_mean_plots_pr/plot_gwl_stats/diagnostic_provenance.yml": {
+      "sha256": "895927c4040e9198af6a39af7d3683e088cdc42e44be80a3d6700ca688832b9b",
+      "size": 4372
+    },
+    "executions/recipe/run/gwl_mean_plots_tas/plot_gwl_stats/diagnostic_provenance.yml": {
+      "sha256": "93c010ed06730869373b2cf1fc1bc1fe1ed0c93173895d4111e044a2c6d53694",
+      "size": 4388
+    },
+    "executions/recipe/work/calculate_gwl_exceedance_years/gwl_exceedance_calculation/GWL_exceedance_years.csv": {
+      "sha256": "9a471bef33a0955e4992c74dbcfa0e219e2a7ce8d5847162f85a8b96ca84fa50",
+      "size": 242
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
+      "sha256": "ab5dd977667cfcd68cffa0c6b82c849591c3c998d5537b14756bcaf903a96164",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
+      "sha256": "0c251554b95d09ecaa1e07831c215763dd89b81feabc1500f91f41ace892cb69",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_3.0.nc": {
+      "sha256": "01827bb2a20c20a674dcf16abf7fed64102d73456f50e2f88e6f78c18800d8b8",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_pr/plot_gwl_stats/CMIP6_mm_mean_4.0.nc": {
+      "sha256": "f1f0488962400ba872f840302983db98af9865197f6cdac192eeff863ab7e847",
+      "size": 547694
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_1.5.nc": {
+      "sha256": "4760ad397e27d854b92ede83c1860743f112a7dc92c0d6803da8e03bae9f9f02",
+      "size": 288610
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_2.0.nc": {
+      "sha256": "8501d026a7e6aab6d711ed25d148f0acac63e6cb4af26bc624381f423847a7cb",
+      "size": 288610
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_3.0.nc": {
+      "sha256": "7b639261cc881b5b4242a3c5aa8277a724d6068567ae080af95e2999207b83c5",
+      "size": 288610
+    },
+    "executions/recipe/work/gwl_mean_plots_tas/plot_gwl_stats/CMIP6_mm_mean_4.0.nc": {
+      "sha256": "1002fcbfeaaf2be5487af77b625e6c0d4b6f692c13b1e07d4dcebdfa05e868f4",
+      "size": 288610
+    },
+    "output.json": {
+      "sha256": "c9b4acd2ed0929f33ee51b6389962370399f38d89db2c21e7e74d8e7be9960f6",
+      "size": 6992
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

@@ -6,17 +6,27 @@ on:
     branches: [main]
     tags: ['v*']
 
+# Cancel superseded in-progress runs for the same PR to free up runner slots.
+# Pushes to main / tags keep running (cancel-in-progress is false there) so
+# release-relevant builds are never interrupted.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       # Verifies that Ruff and mypy checks are passing
       - name: pre-commit
         run: make pre-commit
 
+  # Core, celery and the climate-ref *unit* tests. The slower climate-ref
+  # integration suite runs in the separate tests-integration job below so the
+  # two execute in parallel rather than serially in one runner.
   tests-core:
     runs-on: ubuntu-latest
     defaults:
@@ -24,7 +34,7 @@ jobs:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
@@ -35,15 +45,50 @@ jobs:
           echo "::group::test-core"
           time make test-core
           echo "::endgroup::"
-      - name: Test ref
+      - name: Test ref (unit)
         run: |
-          echo "::group::test-ref"
-          time make test-ref
+          echo "::group::test-ref-unit"
+          time make test-ref-unit
           echo "::endgroup::"
       - name: Test celery
         run: |
           echo "::group::test-celery"
           time make test-celery
+          echo "::endgroup::"
+      - name: Coverage report
+        # Per-job coverage is partial (the integration job covers the rest), so
+        # the aggregate fail_under gate is enforced by codecov/project rather
+        # than here -- both jobs upload to the same `core` flag.
+        run: |
+          uv run coverage report --fail-under=0
+          uv run coverage xml --fail-under=0
+      - name: Upload coverage reports to Codecov with GitHub Action
+        uses: codecov/codecov-action@v7
+        with:
+          flags: core
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
+  # The climate-ref integration suite (expensive solver-parity fixtures) plus
+  # the top-level cross-package integration tests, split out from tests-core so
+  # the critical path is the slower of the two jobs rather than their sum.
+  tests-integration:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+      - uses: ./.github/actions/setup
+        with:
+          python-version: "3.13"
+      - name: Fetch sample data
+        run: uv run ref datasets fetch-sample-data
+      - name: Test ref (integration)
+        run: |
+          echo "::group::test-ref-integration"
+          time make test-ref-integration
           echo "::endgroup::"
       - name: Test integration
         run: |
@@ -52,56 +97,54 @@ jobs:
           echo "::endgroup::"
       - name: Coverage report
         run: |
-          uv run coverage report
-          uv run coverage xml
+          uv run coverage report --fail-under=0
+          uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           flags: core
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
+  # Each provider runs in its own matrix job so they execute in parallel rather
+  # than serially in a single runner. This keeps the providers critical path at
+  # the slowest single provider instead of the sum of all of them.
   tests-providers:
     env:
       REF_TEST_OUTPUT: "test-outputs"
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        provider: [example, esmvaltool, ilamb, pmp]
+    name: tests-providers (${{ matrix.provider }})
     defaults:
       run:
         shell: bash
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
-      - name: Fetch test data
-        run: make fetch-test-data
-      - name: Test example provider
+      # Only sample data is needed up front; the ilamb target fetches its own
+      # ilamb-test registry, so the other providers skip that download.
+      - name: Fetch sample data
+        run: uv run ref datasets fetch-sample-data
+      - name: Test ${{ matrix.provider }} provider
         run: |
-          echo "::group::test-diagnostic-example"
-          time make test-diagnostic-example
-          echo "::endgroup::"
-      - name: Test ESMValTool provider
-        run: |
-          echo "::group::test-diagnostic-esmvaltool"
-          time make test-diagnostic-esmvaltool
-          echo "::endgroup::"
-      - name: Test ILAMB provider
-        run: |
-          echo "::group::test-diagnostic-ilamb"
-          time make test-diagnostic-ilamb
-          echo "::endgroup::"
-      - name: Test PMP provider
-        run: |
-          echo "::group::test-diagnostic-pmp"
-          time make test-diagnostic-pmp
+          echo "::group::test-diagnostic-${{ matrix.provider }}"
+          time make test-diagnostic-${{ matrix.provider }}
           echo "::endgroup::"
       - name: Coverage report
+        # Per-job coverage is scoped to a single provider, so the aggregate
+        # fail_under gate is enforced by codecov/project (all jobs upload to the
+        # same `providers` flag) rather than here.
         run: |
-          uv run coverage report
-          uv run coverage xml
+          uv run coverage report --fail-under=0
+          uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           flags: providers
         env:
@@ -110,8 +153,9 @@ jobs:
         uses: actions/upload-artifact@v7
         if: always()
         with:
-          name: test-output-providers
+          name: test-output-providers-${{ matrix.provider }}
           path: ${{ env.REF_TEST_OUTPUT }}
+          if-no-files-found: ignore
           retention-days: 7
 
   imports-without-extras:
@@ -119,11 +163,11 @@ jobs:
       fail-fast: false
       matrix:
         os: [ "ubuntu-latest" ]
-        python-version: [ "3.11",  "3.13" ]
+        python-version: [ "3.12",  "3.13" ]
     runs-on: "${{ matrix.os }}"
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
         with:
           python-version: ${{ matrix.python-version }}
@@ -140,7 +184,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Check build
         run: |
@@ -161,7 +205,7 @@ jobs:
     if: github.event.pull_request && github.actor != 'dependabot[bot]'
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - uses: ./.github/actions/setup
       - name: Get all changelog files
         id: changed-changelog-files
@@ -186,7 +230,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check out repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
       - name: Set up Docker Compose

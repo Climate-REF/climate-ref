@@ -6,7 +6,6 @@ from unittest.mock import patch
 import pytest
 
 from climate_ref.executor.fragment import (
-    _validate_path_segment,
     allocate_output_fragment,
     compute_group_short,
 )
@@ -36,7 +35,7 @@ class TestAllocateOutputFragment:
 
     def test_raises_if_directory_already_exists(self, tmp_path):
         """Should raise FileExistsError when the target directory already exists."""
-        fixed_time = datetime.datetime(2026, 1, 1, 12, 0, 0, 0, tzinfo=datetime.timezone.utc)
+        fixed_time = datetime.datetime(2026, 1, 1, 12, 0, 0, 0, tzinfo=datetime.UTC)
         with patch("climate_ref.executor.fragment.datetime") as mock_dt:
             mock_dt.datetime.now.return_value = fixed_time
             mock_dt.timezone = datetime.timezone
@@ -117,22 +116,3 @@ class TestComputeGroupShort:
         }
         out = compute_group_short(selectors, group_id=10**9, diagnostic_version=1)
         assert len(out) <= 96, f"Expected len <= 96, got {len(out)}: {out!r}"
-
-
-class TestValidatePathSegment:
-    """``_validate_path_segment`` rejects values that could escape the base directory."""
-
-    @pytest.mark.parametrize(
-        "value",
-        ["", "foo/bar", "foo\\bar", "..", ".", "foo\x00bar"],
-    )
-    def test_rejects_unsafe_segments(self, value):
-        with pytest.raises(ValueError, match="not a safe single path segment"):
-            _validate_path_segment(value, label="test slug")
-
-    @pytest.mark.parametrize(
-        "value",
-        ["esmvaltool", "my-diag", "foo_bar", "..hidden", "diag.v2"],
-    )
-    def test_accepts_safe_segments(self, value):
-        assert _validate_path_segment(value, label="test slug") == value

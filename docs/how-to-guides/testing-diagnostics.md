@@ -102,13 +102,12 @@ class MyDiagnostic(Diagnostic):
 
 ### TestCase Attributes
 
-| Attribute       | Type                         | Description                                                    |
-| --------------- | ---------------------------- | -------------------------------------------------------------- |
-| `name`          | `str`                        | Unique identifier (e.g., `"default"`, `"edge-case"`)           |
-| `description`   | `str`                        | Human-readable description of the test scenario                |
-| `requests`      | `tuple[ESGFRequest, ...]`    | ESGF requests to fetch the required datasets for the test case |
-| `datasets`      | `ExecutionDatasetCollection` | Explicit datasets (highest priority)                           |
-| `datasets_file` | `str`                        | Path to YAML file with datasets (relative to package)          |
+| Attribute       | Type                      | Description                                                    |
+| --------------- | ------------------------- | -------------------------------------------------------------- |
+| `name`          | `str`                     | Unique identifier (e.g., `"default"`, `"edge-case"`)           |
+| `description`   | `str`                     | Human-readable description of the test scenario                |
+| `requests`      | `tuple[ESGFRequest, ...]` | ESGF requests to fetch the required datasets for the test case |
+| `datasets_file` | `str \| None`             | Path to a pre-built catalog YAML file (relative to package)    |
 
 ### ESGF Requests
 
@@ -169,13 +168,18 @@ Obs4MIPsRequest(
 | `institution_id` | Institution     | `"CSIRO"`                  |
 | `activity_drs`   | Activity        | `"CMIP"`, `"ScenarioMIP"`  |
 
-### Dataset Resolution Priority
+### Dataset Resolution
 
-When running a test case, datasets are resolved in this order:
+A `TestCase` resolves its datasets via one of two mechanisms:
 
-1. **Explicit `datasets`**: If provided, used directly
-2. **`datasets_file`**: Load from YAML file
-3. **Solve from catalog**: Use `requests` to filter available data from the requests and solved
+- **`datasets_file`**: If set, datasets are loaded directly from the specified YAML file.
+  Use this when you have pre-built catalog data at a known location
+  or when you need precise, machine-independent control over which files are used.
+- **Solve from catalog**: If `datasets_file` is not set, the test runner uses `requests`
+  to filter and solve datasets from the local catalog (populated by `ref test-cases fetch`).
+
+Only datasets resolved by the active mechanism are visible during the test run,
+ensuring reproducible execution regardless of what other data is present locally.
 
 ### Using a Datasets File
 
@@ -268,7 +272,11 @@ packages/climate-ref-{provider}/tests/test-data/
     └── {test_case}/
         ├── catalog.yaml           # Dataset metadata (tracked in git)
         ├── catalog.paths.yaml     # Local file paths (gitignored)
-        └── regression/            # Regression outputs (tracked in git)
+        ├── manifest.json          # Baseline metadata (written by `run`/`mint`)
+        └── regression/            # Committed baseline bundle (tracked in git)
+            ├── series.json
+            ├── diagnostic.json
+            └── output.json
 ```
 
 The catalog is split into two files:
@@ -292,36 +300,20 @@ to download datasets from ESGF if they cannot be found locally.
 The fetch command saves a catalog YAML file that records the paths to these files,
 so subsequent test runs can locate the data without re-scanning directories.
 
-/// Note | Using Shared ESGF Data (HPC/Shared Drives)
+/// Note | Using shared ESGF data (HPC/shared drives)
 
-If your institution has a local ESGF data archive, configure `esg_dataroot` to avoid redundant downloads:
+On HPC systems, point `esg_dataroot` at an existing shared CMIP6 archive so intake-esgf
+reuses it instead of re-downloading; new files still go to `local_cache`:
 
 ```yaml
 # ~/.config/intake-esgf/conf.yaml
 esg_dataroot:
-  - /shared/cmip6/data      # Institutional ESGF mirror (read-only)
-  - /group/climate/esgf     # Group shared cache
+  - /shared/cmip6/data      # Read-only institutional mirror, checked first
 local_cache:
-  - /scratch/$USER/.esgf    # Personal downloads go here
+  - /scratch/$USER/.esgf    # New downloads land here
 ```
 
-With this configuration, intake-esgf will:
-
-1. Check each `esg_dataroot` path for existing files
-2. Only download to `local_cache` if the file isn't found
-
-This is particularly useful on HPC systems where CMIP6 data may already be available on shared filesystems.
-
-For personal workstations without shared data,
-you only need to set `local_cache`:
-
-```yaml
-# ~/.config/intake-esgf/conf.yaml
-local_cache:
-  - /path/to/esgf/cache
-```
-
-See the [intake-esgf documentation](https://github.com/esgf2-us/intake-esgf) for more configuration options.
+See the [intake-esgf documentation](https://github.com/esgf2-us/intake-esgf) for more options.
 ///
 
 ### Running Test Cases
@@ -392,148 +384,95 @@ pytest --slow
 pytest -m "not requires_esgf_data"
 ```
 
-## Regression Testing
+## Regression baselines
 
-Regression testing is particularly useful in the REF.
-Often the diagnostics may take a significant period of time to run,
-so it isn't desireable to run a large number of them on every Pull Request.
-The regression outputs provide useful insights into what figures and data an execution produces.
+Diagnostics can be slow, so the REF doesn't re-run them on every pull request.
+Instead each test case is pinned to a **regression baseline** — a recorded, known-good
+output — and CI checks changes against it.
 
-Regression baselines are stored within each provider package, alongside the catalog:
+A baseline has two layers (see
+[Regression baselines](../background/regression-baselines.md) for the full model):
 
-```raw
-packages/climate-ref-{provider}/tests/test-data/
-└── {diagnostic}/
-    └── {test_case}/
-        ├── catalog.yaml       # Dataset metadata
-        ├── catalog.paths.yaml # Local file paths (gitignored)
-        └── regression/        # Regression outputs
-            ├── diagnostic.json    # Execution result
-            ├── output.json        # CMEC output bundle
-            └── ...                # Other output files
-```
+- the small, git-tracked **committed bundle** (`series.json`, `diagnostic.json`,
+  `output.json`) under `regression/`, which is what review and CI gate on; and
+- the heavy **native bundle** (`.nc`, `.png`, ...), stored by digest in a shared object
+  store and fetched anonymously.
 
-For example, the ILAMB provider's `gpp-fluxcom` diagnostic with the `default` test case:
+`manifest.json` (shown in the layout above) binds the two, recording a `test_case_version`
+that authorises a new baseline, the digests of both layers, and the input catalog's hash.
 
-```
-packages/climate-ref-ilamb/tests/test-data/
-└── gpp-fluxcom/
-    └── default/
-        ├── catalog.yaml
-        ├── catalog.paths.yaml
-        └── regression/
-            ├── diagnostic.json
-            ├── output.json
-            └── ...
-```
+### Creating or updating a baseline
 
-### Creating a Baseline
-
-If a new diagnostic is added or updated,
-the regression baseline should be regenerated.
+Regenerate the committed bundle when you add a diagnostic or intend to change its results:
 
 ```bash
 ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
 ```
 
-This can produce large files some of which may be added to the `.gitignore` file if needed.
-Generally files that are less than a few MB are ok (a pre-commit hook checks the size of committed files).
-How we store these regression outputs may need to change over time.
+We keep committed files small.
+After `ref test-cases run`, `_print_regression_summary` reports any file in the
+`regression/` directory that exceeds the `--size-threshold` (default 1.0 MB).
+Large outputs belong in the native bundle, published with `mint` (see below).
 
-### Comparing Against Baseline
+/// note
+The pre-commit `check-added-large-files` hook does **not** flag regression baselines —
+`.*/regression/.*` is explicitly excluded in `.pre-commit-config.yaml`.
+Size enforcement for regression files comes solely from `ref test-cases run`.
+///
 
-The `execution_regression` fixture compares results automatically:
+### The pull request workflow
 
-```python
-def test_regression(run_test_case, execution_regression):
-    from my_provider import MyDiagnostic
+When you open a pull request, CI decides *how* to verify each test case from what your
+branch changed — you don't re-run every diagnostic. The diagram shows the path; the table
+below says what each outcome asks of you.
 
-    diagnostic = MyDiagnostic()
-    result = run_test_case.run(diagnostic, "default")
+```mermaid
+flowchart TD
+    start([You changed a diagnostic]) --> q1{Did the committed<br/>bundle change?}
+    q1 -->|"no — refactor,<br/>same results"| openA[Open pull request]
+    q1 -->|"yes — intended<br/>new results"| regen["Regenerate locally:<br/>ref test-cases run --force-regen"]
+    regen --> bump["Bump test_case_version<br/>in manifest.json"]
+    bump --> openB[Open pull request]
 
-    # Compare metric bundle against baseline
-    execution_regression.check(result, "my-provider/my-diagnostic/default")
+    openA --> gate{{"PR gate runs<br/>ref test-cases ci-gate"}}
+    openB --> gate
+
+    gate -->|skip| done1([Nothing to verify — merge])
+    gate -->|replay| rep[CI replays the cached<br/>native baseline]
+    rep --> repok{Reproduces within<br/>tolerance?}
+    repok -->|yes| done2([Gate passes — merge])
+    repok -->|no| fixcode[["Your change moved the results:<br/>regenerate + bump, or fix the code"]]
+    gate -->|fail| failed[["Baseline changed without a<br/>version bump — bump or revert"]]
+    gate -->|execute| flagged[Version bump detected —<br/>new baseline authorised]
+    flagged --> mint["Publish the native baseline:<br/>dispatch the mint workflow"]
+    mint --> done3([Reviewed via the committed diff — merge])
 ```
 
-## Complete Example
+| Outcome | Meaning | What to do |
+| --- | --- | --- |
+| **skip** | Nothing relevant changed. | Nothing. |
+| **replay** | Your change could affect the result; CI re-checks the cached native baseline against the committed bundle. | Nothing if it passes. On drift, regenerate and bump `test_case_version`, or fix the code. |
+| **execute** | You bumped `test_case_version`, authorising a new baseline; the credential-free PR tier flags it rather than publishing native files. | Publish the native baseline (below); the new committed bundle is reviewed in the diff. |
+| **fail** | The committed bundle or input catalog changed without a `test_case_version` bump (or the version moved backwards). | Bump `test_case_version` to authorise it, or revert the edit. |
 
-Here's a complete diagnostic with test data specification:
+Bump `test_case_version` whenever you *intend* to change a baseline — it tells reviewers and CI the new output is correct.
 
-```python
-from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult, DataRequirement
-from climate_ref_core.datasets import FacetFilter, SourceDatasetType
-from climate_ref_core.constraints import AddSupplementaryDataset, RequireContiguousTimerange
-from climate_ref_core.testing import TestDataSpecification, TestCase
-from climate_ref_core.esgf import CMIP6Request
+!!! tip "Check the gate locally before pushing"
+    Run the same gate your pull request will hit with `make regression-gate` (it compares against `origin/main`).
 
+#### Publishing a native baseline
 
-class TemperatureBias(Diagnostic):
-    """Calculate temperature bias against observations."""
+Native files are written to the object store only by `ref test-case mint`, which needs write credentials.
+Instead of every contributor requiring credentials, we run the minting via a CI workflow:
 
-    name = "Temperature Bias"
-    slug = "temperature-bias"
+1. Regenerate and commit the new bundle locally (`run --force-regen`) and bump `test_case_version`.
+2. Run the **"Regression baselines (mint)"** workflow from the Actions tab,
+   dispatched **on your branch** (gated behind a reviewed environment).
+   It uploads the native files and commits the updated `manifest.json` back to your branch.
+3. The PR gate then replays the published baseline.
 
-    data_requirements = (
-        DataRequirement(
-            source_type=SourceDatasetType.CMIP6,
-            filters=(FacetFilter(facets={"variable_id": "tas"}),),
-            group_by=("source_id", "experiment_id", "variant_label"),
-            constraints=(
-                AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
-                RequireContiguousTimerange(group_by=("instance_id",)),
-            ),
-        ),
-    )
-
-    facets = ("source_id", "experiment_id", "variant_label", "region", "statistic")
-
-    test_data_spec = TestDataSpecification(
-        test_cases=(
-            TestCase(
-                name="default",
-                description="Historical temperature from ACCESS-ESM1-5",
-                requests=(
-                    CMIP6Request(
-                        slug="tas-historical",
-                        facets={
-                            "source_id": "ACCESS-ESM1-5",
-                            "experiment_id": "historical",
-                            "variable_id": "tas",
-                            "member_id": "r1i1p1f1",
-                            "table_id": "Amon",
-                        },
-                    ),
-                ),
-            ),
-            TestCase(
-                name="short-timeseries",
-                description="Edge case: very short time series",
-                requests=(
-                    CMIP6Request(
-                        slug="tas-short",
-                        facets={
-                            "source_id": "ACCESS-ESM1-5",
-                            "experiment_id": "historical",
-                            "variable_id": "tas",
-                            "member_id": "r1i1p1f1",
-                            "table_id": "Amon",
-                        },
-                        # TODO: this doesn't actually clip the dataset yet
-                        time_span=("2014-01", "2014-12"),
-                    ),
-                ),
-            ),
-        ),
-    )
-
-    def execute(self, definition: ExecutionDefinition) -> None:
-        # Implementation here
-        ...
-
-    def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:
-        # Build result here
-        ...
-```
+Use the **`--dry-run`** input to preflight without uploading.
+If you hold credentials locally, `ref test-cases mint` does the same from your machine.
 
 ## Troubleshooting
 

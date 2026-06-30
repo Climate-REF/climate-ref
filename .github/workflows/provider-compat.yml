@@ -28,6 +28,12 @@ on:
 permissions:
   contents: read
 
+# Cancel superseded in-progress PR runs to free up runner slots.defaults:
+#  Never cancel main / tag builds.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   provider-compat:
     runs-on: ubuntu-latest
@@ -39,13 +45,14 @@ jobs:
           - climate-ref-esmvaltool
           - climate-ref-pmp
           - climate-ref-ilamb
-        python-version: ["3.11", "3.12"]
+        # On PRs this is an informational check, so test only the lowest supported Python
+        python-version: ${{ github.event_name == 'pull_request' && fromJSON('["3.12"]') || fromJSON('["3.12", "3.13"]') }}
     name: ${{ matrix.provider }} (py${{ matrix.python-version }})
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Install uv
-        uses: astral-sh/setup-uv@v8.1.0
+        uses: astral-sh/setup-uv@v8.2.0
 
       - name: Set up Python ${{ matrix.python-version }}
         run: uv python install ${{ matrix.python-version }}

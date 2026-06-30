@@ -19,8 +19,9 @@ continue with the [Configure](01-configure.md) tutorial.
 
 - A model-only diagnostic: **Global Mean Timeseries** (annual global-mean of a CMIP variable).
 - A model-vs-observation diagnostic: **Global Mean Surface Temperature Bias**,
-  which compares modelled surface temperature (`ts`) against the HadISST-1-1 observational record
-  and reports the root-mean-square error and mean bias.
+  which compares modelled global-mean sea surface temperature (`tos`, area-weighted by `areacello`)
+  against the HadISST-1-1 observational record, reports the root-mean-square error and mean bias,
+  and produces two figures (the model and reference series together, and the bias over time).
 ///
 
 ## Prerequisites
@@ -155,9 +156,10 @@ ls -d $REF_CONFIGURATION/results/*/*/*/
 
 Each result directory contains a [CMEC](https://pcmdi.github.io/CMEC/) output bundle (`output.json`),
 a CMEC metric bundle (`diagnostic.json`) with the scalar metrics,
-and the diagnostic's NetCDF output.
-The surface-temperature diagnostic's NetCDF exposes the **model** series, the **reference** (observation) series,
-and the **bias** between them, so you can plot all three directly.
+and the diagnostic's outputs.
+The surface-temperature diagnostic writes a NetCDF exposing the **model** series, the **reference** (observation) series,
+and the **bias** between them, plus two figures:
+`surface_temperature_timeseries.png` (model and reference together) and `surface_temperature_bias.png` (the bias over time).
 
 ## Control and configuration options
 

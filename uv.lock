@@ -848,6 +848,7 @@ source = { editable = "packages/climate-ref-example" }
 dependencies = [
     { name = "climate-ref-core" },
     { name = "dask" },
+    { name = "matplotlib" },
     { name = "netcdf4" },
     { name = "xarray" },
 ]
@@ -856,6 +857,7 @@ dependencies = [
 requires-dist = [
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },
     { name = "dask", specifier = ">=2024.10.0" },
+    { name = "matplotlib", specifier = ">=3.5" },
     { name = "netcdf4", specifier = ">=1.5.0" },
     { name = "xarray", specifier = ">=2025.1.0" },
 ]

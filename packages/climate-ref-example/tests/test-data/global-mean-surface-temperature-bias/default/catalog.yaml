@@ -1,29 +1,29 @@
 _metadata:
-  hash: 8f3a4713d6af9bf6fbac2c17dfc468151d122fb5
+  hash: 81a4bf72aa73f7e694a6d40e85a30718d13275a9
 cmip6:
   slug_column: instance_id
   selector:
     experiment_id: historical
     source_id: ACCESS-ESM1-5
-    variable_id: ts
+    variable_id: tos
     variant_label: r1i1p1f1
   datasets:
   - activity_id: CMIP
     branch_method: standard
     branch_time_in_child: 0.0
     branch_time_in_parent: 21915.0
-    calendar: proleptic_gregorian
-    end_time: '2014-12-16 12:00:00'
+    calendar: null
+    end_time: null
     experiment: all-forcing simulation of the recent past
     experiment_id: historical
-    filename: ts_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc
+    filename: areacello_Ofx_ACCESS-ESM1-5_historical_r1i1p1f1_gn.nc
     finalised: true
-    frequency: mon
+    frequency: fx
     grid: native atmosphere N96 grid (145x192 latxlon)
     grid_label: gn
-    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Amon.ts.gn.v20191115
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Ofx.areacello.gn.v20191115
     institution_id: CSIRO
-    long_name: Surface Temperature
+    long_name: Grid-Cell Area for Ocean Variables
     member_id: r1i1p1f1
     nominal_resolution: 250 km
     parent_activity_id: CMIP
@@ -32,18 +32,57 @@ cmip6:
     parent_time_units: days since 0101-1-1
     parent_variant_label: r1i1p1f1
     product: model-output
-    realm: atmos
+    realm: ocean
     source_id: ACCESS-ESM1-5
     source_type: AOGCM
-    standard_name: surface_temperature
+    standard_name: cell_area
+    start_time: null
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Ofx
+    time_range: null
+    time_units: null
+    units: m2
+    variable_id: areacello
+    variant_label: r1i1p1f1
+    version: v20191115
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
+    calendar: proleptic_gregorian
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: tos_Omon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: native atmosphere N96 grid (145x192 latxlon)
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Omon.tos.gn.v20191115
+    institution_id: CSIRO
+    long_name: Sea Surface Temperature
+    member_id: r1i1p1f1
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: ACCESS-ESM1-5
+    source_type: AOGCM
+    standard_name: sea_surface_temperature
     start_time: '1850-01-16 12:00:00'
     sub_experiment: none
     sub_experiment_id: none
-    table_id: Amon
+    table_id: Omon
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    units: K
-    variable_id: ts
+    units: degC
+    variable_id: tos
     variant_label: r1i1p1f1
     version: v20191115
     vertical_levels: 1

@@ -13,7 +13,7 @@
       "statistic"
     ],
     "metric": {
-      "ts": {}
+      "tos": {}
     },
     "reference_source_id": {
       "HadISST-1-1": {}
@@ -41,9 +41,9 @@
         "r1i1p1f1": {
           "HadISST-1-1": {
             "global": {
-              "ts": {
-                "mean-bias": -2.725513,
-                "rmse": 2.732855
+              "tos": {
+                "mean-bias": 0.4735244,
+                "rmse": 0.5010421
               }
             }
           }

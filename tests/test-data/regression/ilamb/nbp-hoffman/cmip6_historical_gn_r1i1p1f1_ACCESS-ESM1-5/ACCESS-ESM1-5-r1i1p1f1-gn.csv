@@ -1,6 +1,0 @@
-source,region,analysis,name,type,units,value
-Reference,None,nbp,nbp(2010) [Pg],scalar,Pg,8.044575826544499
-ACCESS-ESM1-5-r1i1p1f1-gn,None,nbp,nbp(2010) [Pg],scalar,Pg,-98.2640672102777
-ACCESS-ESM1-5-r1i1p1f1-gn,None,nbp,diff(2010) [Pg],scalar,Pg,-106.3086430368222
-ACCESS-ESM1-5-r1i1p1f1-gn,None,nbp,Difference Score [1],score,1,0.1899653799845261
-ACCESS-ESM1-5-r1i1p1f1-gn,None,nbp,Trajectory Score [1],score,1,0.04017321342073312

@@ -1,5 +1,0 @@
-Follow the links below to find more information about CMIP6 data:
-- https://cera-www.dkrz.de/WDCC/ui/cerasearch/cmip6?input=CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical
-
-Additional data citation information was found, for which no entry is available in the bibtex file:
-- doi:10.1007/s00382-011-1115-0, doi:10.1007/s00382-012-1455-4

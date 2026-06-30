@@ -10,7 +10,6 @@ This is useful for local testing and debugging.
 """
 
 import pathlib
-import shutil
 from concurrent.futures import Future
 from typing import TYPE_CHECKING
 
@@ -19,12 +18,13 @@ from loguru import logger
 from sqlalchemy import insert
 
 from climate_ref.database import Database
-from climate_ref.models import ScalarMetricValue, SeriesMetricValue
+from climate_ref.models import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutputType
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
+from climate_ref_core.output_files import copy_execution_outputs, copy_output_file
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputDict
@@ -85,41 +85,6 @@ def mark_execution_failed(
             process_result(config, database, failure_result, execution)
     except Exception:
         logger.exception(f"Failed to record failure for {definition.execution_slug()!r}")
-
-
-def _copy_file_to_results(
-    scratch_directory: pathlib.Path,
-    results_directory: pathlib.Path,
-    fragment: pathlib.Path | str,
-    filename: pathlib.Path | str,
-) -> None:
-    """
-    Copy a file from the scratch directory to the executions directory
-
-    Parameters
-    ----------
-    scratch_directory
-        The directory where the file is currently located
-    results_directory
-        The directory where the file should be copied to
-    fragment
-        The fragment of the executions directory where the file should be copied
-    filename
-        The name of the file to be copied
-    """
-    assert results_directory != scratch_directory
-    input_directory = scratch_directory / fragment
-    output_directory = results_directory / fragment
-
-    filename = ensure_relative_path(filename, input_directory)
-
-    if not (input_directory / filename).exists():
-        raise FileNotFoundError(f"Could not find {filename} in {input_directory}")
-
-    output_filename = output_directory / filename
-    output_filename.parent.mkdir(parents=True, exist_ok=True)
-
-    shutil.copy(input_directory / filename, output_filename)
 
 
 def ingest_scalar_values(
@@ -212,15 +177,25 @@ def ingest_series_values(
             "Diagnostic series values do not conform with the controlled vocabulary", exc_info=True
         )
 
+    # Resolve (deduplicate) the shared index axes for this batch first,
+    # so each distinct index is stored once in ``index_axis`` and referenced by id rather
+    # than duplicated on every series row.
+    axis_id_by_hash: dict[str, int] = {}
+    for series_result in series_values:
+        digest = SeriesIndex.compute_hash(series_result.index_name, series_result.index)
+        if digest not in axis_id_by_hash:
+            axis = SeriesIndex.get_or_create(database.session, series_result.index_name, series_result.index)
+            axis_id_by_hash[digest] = axis.id
+
     new_values = []
     for series_result in series_values:
+        digest = SeriesIndex.compute_hash(series_result.index_name, series_result.index)
         new_values.append(
             {
                 "execution_id": execution.id,
                 "values": series_result.values,
                 "attributes": series_result.attributes,
-                "index": series_result.index,
-                "index_name": series_result.index_name,
+                "index_id": axis_id_by_hash[digest],
                 **series_result.dimensions,
             }
         )
@@ -372,7 +347,7 @@ def handle_execution_result(
     """
     # Always copy log data to the results directory
     try:
-        _copy_file_to_results(
+        copy_output_file(
             config.paths.scratch,
             config.paths.results,
             execution.output_fragment,
@@ -401,33 +376,16 @@ def handle_execution_result(
 
     logger.info(f"{execution} successful")
 
-    _copy_file_to_results(
+    # Copy the curated subset of outputs that REF persists for a successful execution
+    # (metric bundle, output bundle and the files it references, series)
+    # from scratch to results.
+    # Only the files in results are served by the API.
+    copy_execution_outputs(
         config.paths.scratch,
         config.paths.results,
         execution.output_fragment,
-        result.metric_bundle_filename,
+        result,
     )
-
-    if result.output_bundle_filename:
-        _copy_file_to_results(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            result.output_bundle_filename,
-        )
-        _copy_output_bundle_files(
-            config,
-            execution,
-            result.to_output_path(result.output_bundle_filename),
-        )
-
-    if result.series_filename:
-        _copy_file_to_results(
-            config.paths.scratch,
-            config.paths.results,
-            execution.output_fragment,
-            result.series_filename,
-        )
 
     # Ingest outputs and metrics into the database via the shared ingestion path
     cv = CV.load_from_file(config.paths.dimensions_cv)
@@ -441,7 +399,14 @@ def handle_execution_result(
                 output_base_path=config.paths.scratch / execution.output_fragment,
             )
     except Exception:
+        # The diagnostic ran, but persisting its results failed
+        # (malformed bundle, CV/schema mismatch, DB error).
+        # The savepoint already rolled back the partial inserts.
+        # Record this as a failed execution and leave the group dirty
+        # so the next solve retries it — never report success with no metric values.
         logger.exception("Something went wrong when ingesting execution result")
+        execution.mark_failed()
+        return
 
     # TODO: This should check if the result is the most recent for the execution,
     # if so then update the dirty fields
@@ -451,23 +416,3 @@ def handle_execution_result(
 
     # Finally, mark the execution as successful
     execution.mark_successful(result.as_relative_path(result.metric_bundle_filename))
-
-
-def _copy_output_bundle_files(
-    config: "Config",
-    execution: Execution,
-    cmec_output_bundle_filename: pathlib.Path,
-) -> None:
-    """Copy output bundle referenced files (plots, data, html) from scratch to results."""
-    cmec_output_bundle = CMECOutput.load_from_json(cmec_output_bundle_filename)
-    scratch_base = config.paths.scratch / execution.output_fragment
-
-    for attr in ("plots", "data", "html"):
-        for output_info in (getattr(cmec_output_bundle, attr) or {}).values():
-            filename = ensure_relative_path(output_info.filename, scratch_base)
-            _copy_file_to_results(
-                config.paths.scratch,
-                config.paths.results,
-                execution.output_fragment,
-                filename,
-            )

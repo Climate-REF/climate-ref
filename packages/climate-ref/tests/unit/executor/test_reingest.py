@@ -4,19 +4,20 @@ import json
 import pathlib
 
 import pytest
+import yaml
 from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
+from sqlalchemy import event
 
 from climate_ref.executor.reingest import (
     _extract_dataset_attributes,
-    _validate_path_containment,
     get_executions_for_reingest,
     reconstruct_execution_definition,
     reingest_execution,
 )
 from climate_ref.executor.result_handling import ingest_execution_result
 from climate_ref.models import ScalarMetricValue, SeriesMetricValue
-from climate_ref.models.dataset import CMIP6Dataset
+from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
 from climate_ref.models.diagnostic import Diagnostic as DiagnosticModel
 from climate_ref.models.execution import (
     Execution,
@@ -182,21 +183,86 @@ def _patch_build_result(mocker, registry, mock_result):
     return diagnostic
 
 
-class TestValidatePathContainment:
-    def test_valid_path_within_base(self, tmp_path):
-        """Should not raise for a path within the base directory."""
-        base = tmp_path / "base"
-        base.mkdir()
-        path = base / "subdir" / "file.txt"
-        _validate_path_containment(path, base, "test")
+def _count_selects(bind):
+    """Attach a SELECT counter to ``bind``; returns (counter, listener) for teardown."""
+    counter = {"n": 0}
 
-    def test_path_escaping_base_raises(self, tmp_path):
-        """Should raise ValueError when path escapes the base directory."""
-        base = tmp_path / "base"
-        base.mkdir()
-        escaping_path = base / ".." / "outside"
-        with pytest.raises(ValueError, match="escapes"):
-            _validate_path_containment(escaping_path, base, "test")
+    def _listener(conn, cursor, statement, *args):
+        if statement.lstrip().upper().startswith("SELECT"):
+            counter["n"] += 1
+
+    event.listen(bind, "before_cursor_execute", _listener)
+    return counter, _listener
+
+
+def _seed_execution_with_datasets(db, n_datasets, n_files_per_dataset, *, suffix=""):
+    """Create an execution linked to ``n_datasets`` CMIP6 datasets, each with files.
+
+    ``suffix`` keeps the unique ``slug``/``instance_id`` values distinct so the
+    helper can be called more than once against the same database.
+    """
+    with db.session.begin():
+        provider_model = ProviderModel(
+            name=f"qc_provider{suffix}", slug=f"qc_provider{suffix}", version="v0.1.0"
+        )
+        db.session.add(provider_model)
+        db.session.flush()
+
+        diag_model = DiagnosticModel(name="qc", slug=f"qc{suffix}", provider_id=provider_model.id)
+        db.session.add(diag_model)
+        db.session.flush()
+
+        eg = ExecutionGroup(
+            key=f"qc-key{suffix}",
+            diagnostic_id=diag_model.id,
+            selectors={"cmip6": [["source_id", "ACCESS-ESM1-5"]]},
+            dirty=False,
+        )
+        db.session.add(eg)
+        db.session.flush()
+
+        execution = Execution(
+            execution_group_id=eg.id,
+            successful=True,
+            output_fragment=f"qc_provider{suffix}/qc/abc123",
+            dataset_hash="hash-qc",
+        )
+        db.session.add(execution)
+        db.session.flush()
+
+        for i in range(n_datasets):
+            dataset = CMIP6Dataset(
+                slug=f"qc-dataset{suffix}-{i}.tas.gn",
+                instance_id=f"CMIP6.qc{suffix}.tas.{i}",
+                variable_id="tas",
+                source_id="ACCESS-ESM1-5",
+                experiment_id="historical",
+                table_id="Amon",
+                grid_label="gn",
+                member_id="r1i1p1f1",
+                variant_label="r1i1p1f1",
+                version="v20200101",
+                activity_id="CMIP",
+                institution_id="CSIRO",
+            )
+            db.session.add(dataset)
+            db.session.flush()
+
+            for j in range(n_files_per_dataset):
+                db.session.add(
+                    DatasetFile(
+                        dataset_id=dataset.id,
+                        path=f"/data/qc{suffix}-{i}-{j}.nc",
+                        start_time="2000-01-01",
+                        end_time="2000-12-31",
+                    )
+                )
+
+            db.session.execute(
+                execution_datasets.insert().values(execution_id=execution.id, dataset_id=dataset.id)
+            )
+
+    return db.session.get(Execution, execution.id)
 
 
 class TestExtractDatasetAttributes:
@@ -298,6 +364,41 @@ class TestReconstructExecutionDefinition:
         assert definition.key == "recon-test"
         if dataset:
             assert SourceDatasetType.CMIP6 in definition.datasets
+
+    def test_query_count_is_constant_in_dataset_count(self, db, config, provider):
+        """Reconstruction must not issue one query per dataset/file (no N+1).
+
+        With files eager-loaded via a single ``selectinload`` query, the SELECT
+        count for reconstruction is a small constant independent of how many
+        datasets (and files) the execution links. Before the eager load, the
+        inner ``for file in dataset.files`` loop issued one SELECT per dataset,
+        so the count grew with the dataset count and this assertion would fail.
+        """
+        diagnostic = provider.get("mock")
+
+        def _count_for(n_datasets, suffix):
+            execution = _seed_execution_with_datasets(db, n_datasets, n_files_per_dataset=3, suffix=suffix)
+            db.session.expire_all()  # force reconstruction to actually hit the DB
+            bind = db.session.get_bind()
+            counter, listener = _count_selects(bind)
+            try:
+                reconstruct_execution_definition(config, execution, diagnostic)
+            finally:
+                event.remove(bind, "before_cursor_execute", listener)
+            # Close the read-only transaction autobegun by the measured query so a
+            # subsequent ``session.begin()`` (for the next seed) does not collide.
+            db.session.rollback()
+            return counter["n"]
+
+        few = _count_for(1, suffix="-few")
+        many = _count_for(8, suffix="-many")
+
+        assert many == few, (
+            f"reconstruct_execution_definition scales queries with dataset count: "
+            f"1 dataset -> {few} SELECTs, 8 datasets -> {many} SELECTs"
+        )
+        # Sanity: the SELECT count is a small constant, not zero (it really queried).
+        assert 0 < few <= 6, f"expected a small constant SELECT count, got {few}"
 
 
 class TestReingestExecution:
@@ -429,6 +530,72 @@ class TestReingestExecution:
             definition.output_directory
         ).startswith(str(config.paths.scratch))
         assert definition.output_directory.exists()
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_reingest_rewrites_embedded_absolute_paths(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """Absolute paths embedded in copied artifacts are re-pointed at the new scratch dir.
+
+        Regression test for the reingest crash: ESMValTool records absolute output
+        paths in ``diagnostic_provenance.yml``. ``shutil.copytree`` copies these
+        verbatim, so before the fix they still referenced the original execution's
+        directory and ``build_execution_result`` raised
+        ``ValueError: ... is not in the subpath of ...``.
+        """
+        original_scratch = scratch_dir_with_results
+        provenance = (
+            original_scratch
+            / "executions"
+            / "recipe_20260617_122233"
+            / "run"
+            / "diag"
+            / "script1"
+            / "diagnostic_provenance.yml"
+        )
+        provenance.parent.mkdir(parents=True)
+        embedded_plot = original_scratch / "executions" / "recipe_20260617_122233" / "plots" / "jointplot.png"
+        provenance.write_text(yaml.safe_dump({str(embedded_plot): {"caption": "c"}}), encoding="utf-8")
+
+        mock_result = mock_result_factory(original_scratch)
+        spy = mocker.patch.object(
+            mock_provider_registry.get_metric("mock_provider", "mock"),
+            "build_execution_result",
+            return_value=mock_result,
+        )
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+        assert ok is True
+
+        new_scratch = spy.call_args[0][0].output_directory
+        assert new_scratch != original_scratch
+        copied_provenance = (
+            new_scratch
+            / "executions"
+            / "recipe_20260617_122233"
+            / "run"
+            / "diag"
+            / "script1"
+            / "diagnostic_provenance.yml"
+        )
+        content = copied_provenance.read_text(encoding="utf-8")
+        # The original fragment's absolute path must be gone, replaced by the new one.
+        assert str(original_scratch) not in content
+        expected = new_scratch / "executions" / "recipe_20260617_122233" / "plots" / "jointplot.png"
+        assert str(expected) in content
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
     def test_creates_new_execution(
@@ -748,7 +915,7 @@ class TestReingestExecution:
         assert len(new_execution.datasets) == 0
 
     @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
-    def test_ingestion_failure_still_creates_execution_and_results_dir(
+    def test_ingestion_failure_returns_false_and_rolls_back(
         self,
         config,
         reingest_db,
@@ -758,15 +925,16 @@ class TestReingestExecution:
         mock_result_factory,
         mocker,
     ):
-        """handle_execution_result swallows ingestion errors; reingest still creates new execution."""
+        """A soft-fail in handle_execution_result must return False and not commit a new Execution row."""
         original_count = reingest_db.session.query(Execution).count()
+        results_root = config.paths.results
 
         mock_result = mock_result_factory(
             scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
-        # Corrupt the metric bundle
+        # Corrupt the metric bundle so handle_execution_result soft-fails
         (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
 
         ok = reingest_execution(
@@ -776,16 +944,78 @@ class TestReingestExecution:
             provider_registry=mock_provider_registry,
         )
         reingest_db.session.commit()
-        assert ok is True
+        assert ok is False
 
+        # No new Execution row should have been committed
         new_count = reingest_db.session.query(Execution).count()
-        assert new_count == original_count + 1
+        assert new_count == original_count
 
-        new_execution = (
-            reingest_db.session.query(Execution).filter(Execution.id != reingest_execution_obj.id).one()
+        # Fragments are 4 levels deep: provider/diag/group_short/execution_id.
+        # _remove_dir removes the leaf (execution_id) dir, but may orphan empty parent dirs.
+        # Check that no non-empty leaf dirs exist in the results root beyond known execution fragments.
+        existing_fragments = {ex.output_fragment for ex in reingest_db.session.query(Execution).all()}
+        leaked_leaves = []
+        if results_root.exists():
+            for p1 in results_root.iterdir():
+                if not p1.is_dir():
+                    continue
+                for p2 in p1.iterdir():
+                    if not p2.is_dir():
+                        continue
+                    for p3 in p2.iterdir():
+                        if not p3.is_dir():
+                            continue
+                        for p4 in p3.iterdir():
+                            if p4.is_dir():
+                                fragment = f"{p1.name}/{p2.name}/{p3.name}/{p4.name}"
+                                if fragment not in existing_fragments:
+                                    leaked_leaves.append(p4)
+        assert not leaked_leaves, f"Orphaned results fragment directories leaked: {leaked_leaves}"
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_soft_fail_does_not_leave_orphan_execution(
+        self,
+        config,
+        reingest_db,
+        reingest_execution_obj,
+        mock_provider_registry,
+        scratch_dir_with_results,
+        mock_result_factory,
+        mocker,
+    ):
+        """A soft-fail in handle_execution_result must not leave a committed
+        Execution row with successful=False (orphan) while reporting success to the caller.
+        """
+        original_execution_id = reingest_execution_obj.id
+        original_count = reingest_db.session.query(Execution).count()
+
+        mock_result = mock_result_factory(
+            scratch_dir_with_results, output_bundle_filename=None, series_filename=None
         )
-        results_dir = config.paths.results / new_execution.output_fragment
-        assert results_dir.exists(), "Results directory should exist even when ingestion had errors"
+        _patch_build_result(mocker, mock_provider_registry, mock_result)
+
+        # Corrupt the metric bundle so handle_execution_result soft-fails
+        (scratch_dir_with_results / "diagnostic.json").write_text("not valid json")
+
+        ok = reingest_execution(
+            config=config,
+            database=reingest_db,
+            execution=reingest_execution_obj,
+            provider_registry=mock_provider_registry,
+        )
+        reingest_db.session.commit()
+
+        assert ok is False, "reingest_execution must return False when ingestion soft-fails"
+
+        # The Execution count must be unchanged — no orphan row was committed
+        assert reingest_db.session.query(Execution).count() == original_count, (
+            "No new Execution row should be committed when ingestion soft-fails"
+        )
+
+        # The original execution must remain intact and successful
+        original = reingest_db.session.get(Execution, original_execution_id)
+        assert original is not None
+        assert original.successful is True, "Original execution must remain successful after failed reingest"
 
     def test_scratch_directory_preserved_after_success(
         self,

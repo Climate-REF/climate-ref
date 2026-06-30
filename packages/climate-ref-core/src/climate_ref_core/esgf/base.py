@@ -104,19 +104,23 @@ class IntakeESGFMixin:
             if isinstance(value, tuple):
                 facets[key] = list(value)
 
-        cat = ESGFCatalog()  # type: ignore[no-untyped-call]
-        cat.search(**facets)
+        # intake-esgf assigns Python lists into individual DataFrame cells, which only works for object dtype.
+        # Pandas >= 3.0 defaults strings to the pyarrow-backed dtype, where that assignment raises,
+        # so pin the legacy object-string behaviour for the intake-esgf interaction.
+        with pd.option_context("future.infer_string", False):
+            cat = ESGFCatalog()  # type: ignore[no-untyped-call]
+            cat.search(**facets)
 
-        if self.remove_ensembles:
-            cat.remove_ensembles()
+            if self.remove_ensembles:
+                cat.remove_ensembles()
 
-        path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)
-        if cat.df is None or cat.df.empty:
-            raise ValueError("No datasets found for the given ESGF request")
-        merged_df = cat.df.merge(pd.Series(path_dict, name="files"), left_on="key", right_index=True)
+            path_dict = cat.to_path_dict(prefer_streaming=False, minimal_keys=False, quiet=True)
+            if cat.df is None or cat.df.empty:
+                raise ValueError("No datasets found for the given ESGF request")
+            merged_df = cat.df.merge(pd.Series(path_dict, name="files"), left_on="key", right_index=True)
 
-        if self.time_span:
-            merged_df["time_start"] = self.time_span[0]
-            merged_df["time_end"] = self.time_span[1]
+            if self.time_span:
+                merged_df["time_start"] = self.time_span[0]
+                merged_df["time_end"] = self.time_span[1]
 
-        return _deduplicate_datasets(merged_df)
+            return _deduplicate_datasets(merged_df)

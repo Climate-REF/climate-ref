@@ -1,0 +1,48 @@
+{
+  "catalog_hash": "fc6660f8727ec195579a7541f588cd430a8fbc12",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "454335b7796afd5d5c214c24501fad57b9dbaf21c997177209da025d24b3b6aa",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "11f3dab8888e88a37753fcee0fff097447af4301f4bfaa6c631838ecb4b9e8f7",
+      "size": 14231
+    },
+    "executions/recipe/plots/plot_joint_cli_ta_model/plot/png/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014.png": {
+      "sha256": "0cbd968ed76407041b78e226673efa19265d19d4f340db26dca658add9a9c754",
+      "size": 110525
+    },
+    "executions/recipe/run/plot_joint_cli_ta_model/plot/diagnostic_provenance.yml": {
+      "sha256": "1a294ded4c3f858640c46dbb20cde10fb56a773f69deb5688efe56dd0633f973",
+      "size": 2256
+    },
+    "executions/recipe/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_cli_histogram.nc": {
+      "sha256": "f7a548568bcb44e28d36fabf72a20467655d8c20c7a6dc820eff687a0216a21b",
+      "size": 8852
+    },
+    "executions/recipe/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_cli_ta_histogram.nc": {
+      "sha256": "e8df013f1ee4a7b96262043fa2df0240f9faf1347e66c511080fa1c87f120886",
+      "size": 13300
+    },
+    "executions/recipe/work/plot_joint_cli_ta_model/plot/jointplot_cli_ta_CMIP6_CESM2_r1i1p1f1_gn_1996-2014_ta_histogram.nc": {
+      "sha256": "4d236e233a228bcc238d52215df9354b7600694e83493224d89202d3bed75136",
+      "size": 8852
+    },
+    "output.json": {
+      "sha256": "ce00b89413194e159bae4c8ea172ed3fe6a5d551526bf49818ea9481287713ed",
+      "size": 2600
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 1,
+  "test_case_version": 1
+}

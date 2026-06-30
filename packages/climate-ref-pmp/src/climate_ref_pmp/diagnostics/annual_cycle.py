@@ -16,6 +16,7 @@ from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.pycmec.metric import remove_dimensions
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
+    PMP_RECONSTRUCTION_INPUTS,
     build_glob_pattern,
     build_pmp_command,
     get_model_source_type,
@@ -274,6 +275,8 @@ class AnnualCycle(CommandLineDiagnostic):
     Calculate the annual cycle for a dataset
     """
 
+    reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
+
     name = "Annual Cycle"
     slug = "annual-cycle"
     facets = (
@@ -287,6 +290,7 @@ class AnnualCycle(CommandLineDiagnostic):
         "statistic",
         "season",
     )
+    version = 2
 
     _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
@@ -300,7 +304,7 @@ class AnnualCycle(CommandLineDiagnostic):
         ("va", "ERA-5"),
         ("zg", "ERA-5"),
         # Other reference datasets, spatial 2-D variables
-        ("pr", "GPCP-Monthly-3-2"),
+        ("pr", "GPCP-3-3"),
         ("rlds", "CERES-EBAF-4-2"),
         ("rlus", "CERES-EBAF-4-2"),
         ("rlut", "CERES-EBAF-4-2"),
@@ -342,13 +346,13 @@ class AnnualCycle(CommandLineDiagnostic):
             ),
             TestCase(
                 name="cmip6-pr",
-                description="Test with CMIP6 pr data and GPCP-Monthly-3-2 climatology. "
+                description="Test with CMIP6 pr data and GPCP-3-3 climatology. "
                 "Produces double ITCZ pattern in the diagnostics.",
                 requests=(
                     RegistryRequest(
                         slug="annual-cycle-gpcp-pr",
                         registry_name="pmp-climatology",
-                        facets={"variable_id": "pr", "source_id": "GPCP-Monthly-3-2"},
+                        facets={"variable_id": "pr", "source_id": "GPCP-3-3"},
                     ),
                     CMIP6Request(
                         slug="annual-cycle-cmip6-pr",
@@ -570,9 +574,9 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
-        # Find the other outputs: PNG and NetCDF files
-        png_files = list(png_directory.glob("*.png"))
-        data_files = list(data_directory.glob("*.nc"))
+        # Sort so the committed output.json plot/data key order is deterministic across hosts.
+        png_files = [definition.as_relative_path(f) for f in sorted(png_directory.glob("*.png"))]
+        data_files = [definition.as_relative_path(f) for f in sorted(data_directory.glob("*.nc"))]
 
         # Prepare the output bundles
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)

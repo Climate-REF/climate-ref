@@ -1,16 +1,20 @@
 # Download Required Datasets
 
-This tutorial covers how to fetch all reference datasets needed to run Climate-REF diagnostics. You may see references to *fetch*, *download*, and *retrieve* all of which refer to the process of copying data from one computer system to another. [Ingesting](../nutshell.md) these datasets is covered in the next tutorial.
+This tutorial covers how to fetch all reference datasets needed to run Climate-REF diagnostics. You may see references to *fetch*, *download*, and *retrieve* all of which refer to the process of copying data from one computer system to another. [Ingesting](../concepts.md) these datasets is covered in the next tutorial.
 
 These commands should be rerun after new releases of Climate-REF to ensure you have the latest datasets.
 
 ## Input datasets
 
-The Climate-REF requires local input datasets from CMIP6/CMIP6plus to evaluate. Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already, if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly. We have provided a script in [./scripts/fetch-esfgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esfgf.py) for fetching the datasets that can be evaluated by the REF. This involves a moderate volume of data, requireing more than 4TB of storage when assessing a single ensemble member per model.
+The Climate-REF requires local input datasets from CMIP6/CMIP6plus to evaluate. Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already, if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly. We have provided a script in [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py) for fetching the datasets that can be evaluated by the REF. This involves a moderate volume of data, requireing more than 4TB of storage when assessing a single ensemble member per model.
 
 Note that not all of these datasets are required. The Climate-REF will determine which diagnostics can be evaluated according the datasets that are available.
 
 The data used by the Climate-REF do not necessarily need to have been previously published to ESGF. As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process they can be evaluated via the REF.
+
+If you are preparing data for a modelling centre,
+start with the [modelling centre onboarding guide](modelling-centres.md)
+to capture any additional requirements before ingesting local output.
 
 ## Reference dataset requirements
 

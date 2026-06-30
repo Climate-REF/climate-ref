@@ -1,0 +1,77 @@
+_metadata:
+  hash: b4bb77dae5865642def4836b939c5cd39bbebc95
+cmip6:
+  slug_column: instance_id
+  selector:
+    grid_label: gr1
+    member_id: r1i1p1f1
+    source_id: GFDL-ESM4
+  datasets:
+  - activity_id: CMIP
+    branch_method: standard
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 36500.0
+    calendar: noleap
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: toz_AERmon_GFDL-ESM4_historical_r1i1p1f1_gr1_195001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: 'atmos data regridded from Cubed-sphere (c96) to 180,288; interpolation
+      method: conserve_order1'
+    grid_label: gr1
+    instance_id: CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.AERmon.toz.gr1.v20190726
+    institution_id: NOAA-GFDL
+    long_name: Total Ozone Column
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: GFDL-ESM4
+    parent_time_units: days since 0001-1-1
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: aerosol
+    source_id: GFDL-ESM4
+    source_type: AOGCM AER CHEM BGC
+    standard_name: equivalent_thickness_at_stp_of_atmosphere_ozone_content
+    start_time: '1950-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: AERmon
+    time_range: 1950-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01 00:00:00
+    units: m
+    variable_id: toz
+    variant_label: r1i1p1f1
+    version: v20190726
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    source_id: C3S-GTO-ECV-9-0
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2022-04-16 00:00:00'
+    filename: toz_mon_C3S-GTO-ECV-9-0_BE_gn_199507-202204.nc
+    finalised: true
+    frequency: mon
+    grid: data gridded to 1x1 degree lat x lon
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.DLR-BIRA.C3S-GTO-ECV-9-0.mon.toz.1x1degree.gn.v20231115
+    institution_id: DLR-BIRA
+    long_name: Total Column Ozone
+    nominal_resolution: 1x1 degree
+    product: observations
+    realm: atmos
+    source_id: C3S-GTO-ECV-9-0
+    source_type: satellite_retrieval
+    source_version_number: '9.0'
+    start_time: '1995-07-16 12:00:00'
+    time_range: 1995-07-16 12:00:00-2022-04-16 00:00:00
+    units: m
+    variable_id: toz
+    variant_label: BE
+    version: v20231115
+    vertical_levels: 1

@@ -27,6 +27,7 @@ The REF is agnostic to what types of data and metrics are to be performed.
 [![CI](https://github.com/Climate-REF/climate-ref/actions/workflows/ci.yaml/badge.svg?branch=main)](https://github.com/Climate-REF/climate-ref/actions/workflows/ci.yaml)
 [![Coverage](https://codecov.io/gh/Climate-REF/climate-ref/branch/main/graph/badge.svg)](https://codecov.io/gh/Climate-REF/climate-ref)
 [![Docs](https://readthedocs.org/projects/climate-ref/badge/?version=latest)](https://climate-ref.readthedocs.io)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.15103441.svg)](https://doi.org/10.5281/zenodo.15103441)
 
 **PyPI :**
 [![PyPI](https://img.shields.io/pypi/v/climate-ref.svg)](https://pypi.org/project/climate-ref/)

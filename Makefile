@@ -67,11 +67,22 @@ ruff-fixes:  ## fix the code using ruff
 # Each target appends to .coverage; the `test` target runs a final report.
 
 .PHONY: test-ref
-test-ref:  ## run the tests
+test-ref: test-ref-unit test-ref-integration  ## run all the climate-ref tests (unit + integration)
+
+.PHONY: test-ref-unit
+test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 	uv run --package climate-ref \
 		coverage run --append --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref \
+		--ignore=packages/climate-ref/tests/integration \
 		-r a -v --doctest-modules --durations=20
+
+.PHONY: test-ref-integration
+test-ref-integration:  ## run the climate-ref integration tests
+	uv run --package climate-ref \
+		coverage run --append --source=packages/climate-ref/src \
+		-m pytest packages/climate-ref/tests/integration \
+		-r a -v --durations=20
 
 .PHONY: test-core
 test-core:  ## run the tests
@@ -133,6 +144,10 @@ test-diagnostics: test-diagnostic-example test-diagnostic-esmvaltool test-diagno
 
 .PHONY: test-executors
 test-executors: test-celery
+
+.PHONY: regression-gate
+regression-gate:  ## run the regression baseline coupling gate + replay (compares against origin/main)
+	bash scripts/ci/regression-pr-gate.sh
 
 .PHONY: test
 test: clean test-core test-ref test-executors test-diagnostics test-integration ## run the tests

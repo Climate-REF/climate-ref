@@ -1,0 +1,130 @@
+_metadata:
+  hash: 95adcf0e15ac8162a61c2dcf727948a746453a99
+cmip6:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    member_id: r1i1p1f1
+    source_id: CanESM5
+  datasets:
+  - activity_id: CMIP
+    branch_method: Spin-up documentation
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: pr_Amon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
+      49 levels; top level 1 hPa
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.pr.gn.v20190429
+    institution_id: CCCma
+    long_name: Precipitation
+    member_id: r1i1p1f1
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: CanESM5
+    source_type: AOGCM
+    standard_name: precipitation_flux
+    start_time: '1850-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01 0:0:0.0
+    units: kg m-2 s-1
+    variable_id: pr
+    variant_label: r1i1p1f1
+    version: v20190429
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: Spin-up documentation
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: tauu_Amon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
+      49 levels; top level 1 hPa
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.tauu.gn.v20190429
+    institution_id: CCCma
+    long_name: Surface Downward Eastward Wind Stress
+    member_id: r1i1p1f1
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: atmos
+    source_id: CanESM5
+    source_type: AOGCM
+    standard_name: surface_downward_eastward_stress
+    start_time: '1850-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Amon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01 0:0:0.0
+    units: Pa
+    variable_id: tauu
+    variant_label: r1i1p1f1
+    version: v20190429
+    vertical_levels: 1
+  - activity_id: CMIP
+    branch_method: Spin-up documentation
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    calendar: 365_day
+    end_time: '2014-12-16 12:00:00'
+    experiment: all-forcing simulation of the recent past
+    experiment_id: historical
+    filename: tos_Omon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
+    finalised: true
+    frequency: mon
+    grid: ORCA1 tripolar grid, 1 deg with refinement to 1/3 deg within 20 degrees
+      of the equator; 361 x 290 longitude/latitude; 45 vertical levels; top grid cell
+      0-6.19 m
+    grid_label: gn
+    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Omon.tos.gn.v20190429
+    institution_id: CCCma
+    long_name: Sea Surface Temperature
+    member_id: r1i1p1f1
+    nominal_resolution: 100 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    product: model-output
+    realm: ocean
+    source_id: CanESM5
+    source_type: AOGCM
+    standard_name: sea_surface_temperature
+    start_time: '1850-01-16 12:00:00'
+    sub_experiment: none
+    sub_experiment_id: none
+    table_id: Omon
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01 0:0:0.0
+    units: degC
+    variable_id: tos
+    variant_label: r1i1p1f1
+    version: v20190429
+    vertical_levels: 1

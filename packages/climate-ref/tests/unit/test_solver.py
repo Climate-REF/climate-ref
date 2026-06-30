@@ -8,12 +8,13 @@ from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_example import provider as example_provider
 from climate_ref_ilamb import provider as ilamb_provider
 from climate_ref_pmp import provider as pmp_provider
+from loguru import logger
 
 from climate_ref.config import ExecutorConfig
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.database import Database
 from climate_ref.datasets import CMIP6DatasetAdapter, Obs4MIPsDatasetAdapter, ingest_datasets
-from climate_ref.models import Execution
+from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.provider_registry import ProviderRegistry, _register_provider
 from climate_ref.solver import (
     DiagnosticExecution,
@@ -656,6 +657,32 @@ def test_solve_metrics_default_solver(mocker, mock_metric_execution, mock_execut
     assert run_kwargs["execution"].id == execution_result.id
 
 
+def test_solve_waits_when_timeout_zero(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """--timeout 0 (wait=True) must still join so results are collected"""
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    solve_required_executions(db_seeded, wait=True, timeout=0)
+
+    mock_executor.return_value.join.assert_called_once()
+    assert mock_executor.return_value.join.call_args.kwargs["timeout"] == 0
+
+
+def test_solve_skips_join_when_no_wait(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """``wait=False`` queues executions and returns without joining (collecting results)."""
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    solve_required_executions(db_seeded, wait=False, timeout=0)
+
+    mock_executor.return_value.run.assert_called_once()
+    mock_executor.return_value.join.assert_not_called()
+
+
 def test_two_executions_same_group_distinct_output_fragments(
     mocker, mock_metric_execution, mock_executor, db_seeded
 ):
@@ -724,9 +751,22 @@ def test_solve_metrics(mocker, db_seeded, solver, data_regression, mock_executor
 
 
 def test_solve_metrics_dry_run(db_seeded, config, solver, mock_executor):
+    def group_count() -> int:
+        with db_seeded.session.begin():
+            return db_seeded.session.query(ExecutionGroup).count()
+
+    assert group_count() == 0
+
     solve_required_executions(config=config, db=db_seeded, dry_run=True, solver=solver)
 
     assert mock_executor.return_value.run.call_count == 0
+    # A dry run is a read-only preview: it must not persist any execution groups.
+    assert group_count() == 0
+
+    # A real solve over the same catalog does create groups, confirming the dry
+    # run had candidates to report and only the persistence was suppressed.
+    solve_required_executions(config=config, db=db_seeded, dry_run=False, execute=False, solver=solver)
+    assert group_count() > 0
 
 
 def test_solve_metric_executions_missing(mock_diagnostic, provider):
@@ -883,6 +923,59 @@ def test_solve_metric_executions_or_logic_missing_source_type(mock_diagnostic, p
     # Should fall back to CMIP6 requirement
     assert len(executions) == 1
     assert SourceDatasetType.CMIP6 in executions[0].datasets
+
+
+def test_missing_source_type_logs_debug_not_error(mock_diagnostic, provider):
+    """
+    Skipping an optional source type must not surface as an ERROR.
+
+    A diagnostic that supports CMIP6 *or* CMIP7 will hit an empty catalog for the
+    unavailable source type on every otherwise-successful solve. That skip should
+    be logged at DEBUG so successful solves emit no scary ERROR lines.
+    """
+    metric = mock_diagnostic
+    metric.data_requirements = (
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP7,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+        (
+            DataRequirement(
+                source_type=SourceDatasetType.CMIP6,
+                filters=(FacetFilter(facets={"variable_id": "tas"}),),
+                group_by=("variable_id",),
+            ),
+        ),
+    )
+    # CMIP7 is present in the catalog but empty: this is what makes the solver
+    # call extract_covered_datasets with an empty frame and hit the skip log.
+    data_catalog = {
+        SourceDatasetType.CMIP7: pd.DataFrame(columns=["variable_id", "experiment_id", "variant_label"]),
+        SourceDatasetType.CMIP6: pd.DataFrame(
+            {
+                "variable_id": ["tas"],
+                "experiment_id": ["historical"],
+                "variant_label": ["r1i1p1f1"],
+            }
+        ),
+    }
+
+    records: list[dict[str, Any]] = []
+    sink_id = logger.add(lambda message: records.append(message.record), level="DEBUG")
+    try:
+        executions = list(solve_executions(data_catalog, metric, provider))
+    finally:
+        logger.remove(sink_id)
+
+    assert len(executions) == 1
+
+    catalog_messages = [r for r in records if "No datasets found in the data catalog" in r["message"]]
+    assert catalog_messages, "expected the empty-catalog skip to be logged"
+    assert all(r["level"].name == "DEBUG" for r in catalog_messages)
+    assert not any(r["level"].name == "ERROR" for r in records)
 
 
 def test_solve_metric_executions_or_logic_first_matches(mock_diagnostic, provider):

@@ -8,14 +8,17 @@ from climate_ref_pmp import provider as pmp_provider
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
+from climate_ref.models.execution import ExecutionOutput, ResultOutputType
 from climate_ref.provider_registry import _register_provider
-from climate_ref.results import ExecutionGroupFilter, Reader
-from climate_ref.results.executions import select_execution_statistics
+from climate_ref.results import ExecutionGroupFilter, MetricValueFilter, OutlierPolicy, Reader
+from climate_ref.results.executions import select_execution_outputs, select_execution_statistics
 
 
 def test_import_smoke() -> None:
-    """`ExecutionGroupFilter` and `Reader` import cleanly from the top-level package."""
+    """Public surface imports cleanly (guards the `values`<->`artifacts`<->`executions` wiring)."""
     assert ExecutionGroupFilter is not None
+    assert MetricValueFilter is not None
+    assert OutlierPolicy is not None
     assert Reader is not None
 
 
@@ -404,3 +407,115 @@ class TestLatestExecution:
         reader = Reader(db_with_groups)
         group_id = db_with_groups.group_ids["key6"]
         assert reader.executions.latest_execution(group_id) is None
+
+
+@pytest.fixture
+def execution_with_outputs(db_with_groups):
+    """The `key1` execution, with a mix of `ExecutionOutput` rows attached."""
+    session = db_with_groups.session
+    group_id = db_with_groups.group_ids["key1"]
+    execution = session.query(Execution).filter_by(execution_group_id=group_id).one()
+
+    with session.begin_nested() if session.in_transaction() else session.begin():
+        session.add(
+            ExecutionOutput(
+                execution_id=execution.id,
+                output_type=ResultOutputType.Data,
+                filename="data.csv",
+                short_name="data-short",
+                long_name="Data long name",
+                description="A data output",
+            )
+        )
+        session.add(
+            ExecutionOutput(
+                execution_id=execution.id,
+                output_type=ResultOutputType.Plot,
+                filename="plot.png",
+                short_name="plot-short",
+                long_name="Plot long name",
+            )
+        )
+        # A metadata-only output with no filename (e.g. an HTML summary row without a file).
+        session.add(
+            ExecutionOutput(
+                execution_id=execution.id,
+                output_type=ResultOutputType.HTML,
+                filename=None,
+                short_name="html-short",
+            )
+        )
+
+    return db_with_groups, execution.id
+
+
+class TestOutputs:
+    def test_dto_fields_and_order(self, execution_with_outputs):
+        db, execution_id = execution_with_outputs
+        reader = Reader(db)
+
+        outs = reader.executions.outputs(execution_id)
+
+        assert len(outs) == 3
+        # Ordered by (output_type, id): HTML < Data < Plot alphabetically by enum value.
+        assert [o.output_type for o in outs] == ["data", "html", "plot"]
+
+        data_out = next(o for o in outs if o.output_type == "data")
+        assert data_out.execution_id == execution_id
+        assert data_out.filename == "data.csv"
+        assert data_out.short_name == "data-short"
+        assert data_out.long_name == "Data long name"
+        assert data_out.description == "A data output"
+        assert isinstance(data_out.dimensions, dict)
+
+        html_out = next(o for o in outs if o.output_type == "html")
+        assert html_out.filename is None
+        assert html_out.long_name is None
+
+    def test_empty_for_execution_with_no_outputs(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        group_id = db_with_groups.group_ids["key2"]
+        execution = db_with_groups.session.query(Execution).filter_by(execution_group_id=group_id).one()
+
+        assert reader.executions.outputs(execution.id) == ()
+
+    def test_detached_survival(self, execution_with_outputs):
+        db, execution_id = execution_with_outputs
+        reader = Reader(db)
+
+        outs = reader.executions.outputs(execution_id)
+        db.session.expunge_all()
+
+        assert len(outs) == 3
+        for out in outs:
+            assert type(out.dimensions) is dict
+
+
+class TestSelectExecutionOutputs:
+    def test_raw_rows_count_and_ordering(self, execution_with_outputs):
+        db, execution_id = execution_with_outputs
+        stmt = select_execution_outputs(execution_id)
+        rows = db.session.execute(stmt).scalars().all()
+
+        assert len(rows) == 3
+        output_types = [row.output_type.value for row in rows]
+        assert output_types == sorted(output_types)
+
+    def test_raw_rows_scoped_to_execution(self, db_with_groups):
+        group_id = db_with_groups.group_ids["key2"]
+        execution = db_with_groups.session.query(Execution).filter_by(execution_group_id=group_id).one()
+
+        stmt = select_execution_outputs(execution.id)
+        rows = db_with_groups.session.execute(stmt).scalars().all()
+        assert rows == []
+
+
+class TestReaderArtifactsGating:
+    def test_raises_without_paths(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        with pytest.raises(ValueError):
+            reader.artifacts
+
+    def test_works_with_paths(self, db_with_groups, tmp_path):
+        reader = Reader(db_with_groups, results=tmp_path)
+        assert reader.artifacts is not None

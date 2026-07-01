@@ -3,10 +3,10 @@ Typed, ORM-free surface for execution-group and execution results.
 
 [ExecutionsReader][climate_ref.results.executions.ExecutionsReader] is reached via
 [Reader.executions][climate_ref.results.values.Reader.executions].
-It wraps the sanctioned group+latest query
+It wraps the group+latest query
 ([get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered])
-and the per-(provider, diagnostic) status aggregate (formerly inlined in ``cli/executions.py::stats``),
-mapping ORM rows to frozen, detached DTOs that outlive the originating session.
+and the per-(provider, diagnostic) status aggregate mapping ORM rows to frozen DTOs (Data Transfer Objects).
+These DTOs are detached from the database so outlive the database session.
 
 Two write/recovery paths deliberately stay on the ORM helper instead of this reader:
 
@@ -27,7 +27,12 @@ from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import Execution, ExecutionGroup, get_execution_group_and_latest_filtered
+from climate_ref.models.execution import (
+    Execution,
+    ExecutionGroup,
+    ExecutionOutput,
+    get_execution_group_and_latest_filtered,
+)
 from climate_ref.models.provider import Provider
 from climate_ref.results._query import latest_execution_for_group
 
@@ -136,6 +141,19 @@ class ExecutionStats:
     not_started: int
     dirty: int
     total: int
+
+
+@attrs.frozen(kw_only=True)
+class OutputView:
+    """A single registered execution output, detached from the ORM."""
+
+    execution_id: int
+    output_type: str
+    filename: str | None
+    short_name: str | None
+    long_name: str | None
+    description: str | None
+    dimensions: Mapping[str, str]
 
 
 @attrs.frozen(kw_only=True)
@@ -261,6 +279,20 @@ def select_execution_statistics(
     return stmt
 
 
+def select_execution_outputs(execution_id: int) -> Select[Any]:
+    """
+    Build the ``Select`` for one execution's registered ``ExecutionOutput`` rows.
+
+    Ordered by ``(output_type, id)`` for stable, grouped output -- there is no prior consumer
+    ordering to preserve, since ``inspect`` did not list these rows before.
+    """
+    return (
+        select(ExecutionOutput)
+        .where(ExecutionOutput.execution_id == execution_id)
+        .order_by(ExecutionOutput.output_type, ExecutionOutput.id)
+    )
+
+
 class ExecutionsReader:
     """
     Execution-group and execution read domain.
@@ -377,3 +409,20 @@ class ExecutionsReader:
         """
         execution = latest_execution_for_group(self.session, execution_group_id)
         return self._to_execution_view(execution) if execution is not None else None
+
+    def outputs(self, execution_id: int) -> tuple[OutputView, ...]:
+        """Execute the ``select_execution_outputs`` builder and map rows to ``OutputView``."""
+        stmt = select_execution_outputs(execution_id)
+        rows = self.session.execute(stmt).scalars().all()
+        return tuple(
+            OutputView(
+                execution_id=row.execution_id,
+                output_type=row.output_type.value,
+                filename=row.filename,
+                short_name=row.short_name,
+                long_name=row.long_name,
+                description=row.description,
+                dimensions=dict(row.dimensions),
+            )
+            for row in rows
+        )

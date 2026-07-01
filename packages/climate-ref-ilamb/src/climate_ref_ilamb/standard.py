@@ -984,9 +984,10 @@ def _caption_from_filename(filename: Path, common_dimensions: dict[str, str]) ->
         if plot_option is not None:
             figure_dimensions["statistic"] += f"|{plot_option}"
 
-    # If the source is the reference we don't need some dimensions as they are not applicable
+    # Reference plots carry the reference identity, not a model source_id.
     if source == "Reference":
-        figure_dimensions["source_id"] = "Reference"
+        figure_dimensions["kind"] = "reference"
+        figure_dimensions["reference_source_id"] = common_dimensions.get("reference_source_id", "None")
     else:
         figure_dimensions = {**common_dimensions, **figure_dimensions}
 

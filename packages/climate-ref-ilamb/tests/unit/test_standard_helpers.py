@@ -133,6 +133,8 @@ class TestBuildSeries:
         assert model.dimensions["region"] == "global"
         assert model.value_long_name == "Gross Primary Productivity"
         assert model.calendar == "noleap"
+        # The decoded time axis has no units attribute, so index_units stays unset.
+        assert model.index_units is None
 
     def test_month_index_and_higher_dims_skipped(self, tmp_path):
         # A month index has no calendar and stays numeric; a 2-d field is not a series.
@@ -154,6 +156,7 @@ class TestBuildSeries:
         assert s.index_name == "month"
         assert s.index == [1, 2, 3]
         assert s.calendar is None
+        assert s.index_units is None
 
 
 class TestBuildCmecBundle:

@@ -18,12 +18,12 @@ gpp-WECANN:
 gpp-FLUXNET2015:
   version: 3
   sources:
-    gpp:
-      obs_source: obs4ref
-      source_id: Fluxnet-2015-1-0
-      variable_id: gpp
-      grid_label: site
-      version: v20260202
+    # Referenced by exact registry key rather than ingested facets: this file's
+    # source_id is spelled three different ways across its path
+    # (FLUXNET2015-1-0), filename (Fluxnet-2015-1-0) and internal attribute
+    # (Fluxnet-2015), so no single facet filter matches both the fetch and the
+    # solve stage until the upstream metadata is reconciled.
+    gpp: obs4REF/Fluxnet/FLUXNET2015-1-0/mon/gpp/site/v20260202/gpp_mon_Fluxnet-2015-1-0_REF_site_19910101-20141231.nc
   variable_cmap: Greens
 
 mrro-LORA:

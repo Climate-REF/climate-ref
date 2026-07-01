@@ -1,5 +1,7 @@
 import datetime
+import json
 import pathlib
+from typing import ClassVar
 from unittest.mock import patch
 
 import pytest
@@ -12,7 +14,7 @@ from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import ExecutionOutput, ResultOutputType, execution_datasets
-from climate_ref.models.metric_value import ScalarMetricValue
+from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
 from climate_ref_core.datasets import SourceDatasetType
 
@@ -1186,3 +1188,151 @@ class TestReingestCLI:
         assert result.exit_code == 0
         assert "1 succeeded" in result.stdout
         assert "0 skipped" in result.stdout
+
+
+class TestExecutionValues:
+    """The ``executions values`` command, backed by the shared ``climate_ref.results`` layer."""
+
+    _MODELS: ClassVar[dict[str, float]] = {
+        "ACCESS-CM2": 10.0,
+        "CESM3": 10.5,
+        "MIROC6": 9.5,
+        "MPI-ESM": 10.2,
+        "NorESM": 9.8,
+    }
+
+    def _setup(self, db):
+        """Seed one group / execution with six scalar tas values (one wild) and one series."""
+        with db.session.begin():
+            diagnostic = db.session.query(Diagnostic).first()
+            assert diagnostic is not None
+            group = ExecutionGroup(key="valkey", diagnostic_id=diagnostic.id, selectors={})
+            db.session.add(group)
+            db.session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag",
+                dataset_hash="valhash",
+                successful=True,
+            )
+            db.session.add(execution)
+            db.session.flush()
+
+            for source_id, value in self._MODELS.items():
+                db.session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=value,
+                        attributes=None,
+                        dimensions={"statistic": "mean", "metric": "tas", "source_id": source_id},
+                    )
+                )
+            db.session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution.id,
+                    value=1000.0,  # wild outlier
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "WILD"},
+                )
+            )
+
+            axis = SeriesIndex.get_or_create(db.session, "time", [0, 1, 2])
+            db.session.add(
+                SeriesMetricValue.build(
+                    execution_id=execution.id,
+                    values=[1.0, 2.0, 3.0],
+                    index_axis=axis,
+                    dimensions={"source_id": "ACCESS-CM2", "metric": "tas"},
+                    attributes=None,
+                )
+            )
+            db.session.flush()
+            group_id = group.id
+            execution_id = execution.id
+        return group_id, execution_id
+
+    def test_scalar_table(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id)])
+
+        assert result.exit_code == 0
+        # Dimension columns and the raw values are rendered; outliers shown by default.
+        assert "source_id" in result.stdout
+        assert "WILD" in result.stdout
+        assert "1000.0" in result.stdout
+
+    def test_scalar_json(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--format", "json"])
+
+        assert result.exit_code == 0
+        records = json.loads(result.stdout)
+        assert len(records) == len(self._MODELS) + 1  # models + wild
+        assert any(r["value"] == 1000.0 for r in records)
+
+    def test_scalar_outliers_hidden(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--outliers"])
+
+        assert result.exit_code == 0
+        assert "WILD" not in result.stdout
+        assert "flagged as outliers" in result.stderr
+
+    def test_scalar_outliers_shown(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--outliers", "--include-unverified"])
+
+        assert result.exit_code == 0
+        assert "WILD" in result.stdout
+
+    def test_dimension_filter(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "-d", "source_id=WILD"])
+
+        assert result.exit_code == 0
+        assert "WILD" in result.stdout
+        assert "ACCESS-CM2" not in result.stdout
+
+    def test_unknown_dimension(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(
+            ["executions", "values", str(group_id), "-d", "not_a_dim=1"], expected_exit_code=1
+        )
+
+        assert "Unknown dimension" in result.stderr
+
+    def test_series(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--kind", "series"])
+
+        assert result.exit_code == 0
+        # The terminal shows a compact per-series summary rather than raw arrays.
+        assert "n_points" in result.stdout
+        assert "3" in result.stdout
+
+    def test_specific_execution_wrong_group(self, db_seeded, invoke_cli):
+        _group_id, execution_id = self._setup(db_seeded)
+        with db_seeded.session.begin():
+            other = ExecutionGroup(key="othergroup", diagnostic_id=1)
+            db_seeded.session.add(other)
+            db_seeded.session.flush()
+            other_id = other.id
+
+        result = invoke_cli(
+            ["executions", "values", str(other_id), "--execution-id", str(execution_id)],
+            expected_exit_code=1,
+        )
+
+        assert "does not belong" in result.stderr
+
+    def test_missing_group(self, db_seeded, invoke_cli):
+        result = invoke_cli(["executions", "values", "99999"], expected_exit_code=1)
+
+        assert "Execution group not found" in result.stderr

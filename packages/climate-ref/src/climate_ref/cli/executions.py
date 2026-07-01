@@ -5,12 +5,13 @@ View execution groups and their results
 import pathlib
 import shutil
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Annotated
 from urllib.parse import quote
 
 import typer
 from loguru import logger
-from rich.console import Group
+from rich.console import Console, Group
 from rich.filesize import decimal
 from rich.markup import escape
 from rich.panel import Panel
@@ -30,6 +31,12 @@ from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
 from climate_ref.models.provider import Provider
+from climate_ref.results import (
+    MetricValueFilter,
+    OutlierPolicy,
+    Reader,
+    latest_execution_for_group,
+)
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 app = typer.Typer(help=__doc__)
@@ -47,6 +54,13 @@ class ListGroupsFilterOptions:
 
     facets: dict[str, list[str]] | None = None
     """Filter by facet key-value pairs (AND across keys, OR within key)"""
+
+
+class ValueKind(StrEnum):
+    """Which kind of metric value the ``values`` command should show."""
+
+    scalar = "scalar"
+    series = "series"
 
 
 # Default columns for the ``list-groups`` table.
@@ -555,6 +569,198 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
     console.print(_datasets_panel(result))
     console.print(_results_directory_panel(result_directory))
     console.print(_log_panel(result_directory))
+
+
+@app.command()
+def values(  # noqa: PLR0913
+    ctx: typer.Context,
+    group_id: Annotated[int, typer.Argument(help="Execution group ID to show metric values for.")],
+    kind: Annotated[
+        ValueKind,
+        typer.Option(help="Which kind of value to show: scalar (default) or series."),
+    ] = ValueKind.scalar,
+    execution_id: Annotated[
+        int | None,
+        typer.Option(help="Show values for a specific execution instead of the latest one in the group."),
+    ] = None,
+    dimension: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--dimension",
+            "-d",
+            help="Filter by CV dimension key=value (exact match). Repeat for AND across keys; "
+            "repeat the same key for OR within a key.",
+        ),
+    ] = None,
+    outliers: Annotated[
+        bool,
+        typer.Option(
+            "--outliers/--no-outliers",
+            help="Run source-id-aware IQR outlier detection (scalar values only).",
+        ),
+    ] = False,
+    include_unverified: Annotated[
+        bool,
+        typer.Option(
+            "--include-unverified",
+            help="Include values flagged as outliers (only meaningful with --outliers).",
+        ),
+    ] = False,
+    limit: Annotated[
+        int | None,
+        typer.Option(help="Maximum number of values to display."),
+    ] = None,
+    offset: Annotated[
+        int,
+        typer.Option(help="Number of values to skip before displaying."),
+    ] = 0,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: table (default) or json."),
+    ] = OutputFormat.table,
+) -> None:
+    """
+    Show computed metric values for an execution group.
+
+    By default this shows the scalar values from the latest execution in the group.
+    Use --kind series for 1-d series, --execution-id to target a specific execution,
+    and --dimension key=value to filter by controlled-vocabulary dimensions.
+
+    Values are read through the shared climate_ref.results layer, so the same filtering
+    is applied here as in the API.
+    """
+    database = ctx.obj.database
+    console = ctx.obj.console
+    reader = Reader(database)
+
+    group = database.session.get(ExecutionGroup, group_id)
+    if group is None:
+        logger.error(f"Execution group not found: {group_id}")
+        raise typer.Exit(code=1)
+
+    if execution_id is None:
+        latest = latest_execution_for_group(database.session, group_id)
+        if latest is None:
+            logger.error(f"No executions found for group {group_id}.")
+            raise typer.Exit(code=1)
+        execution_id = latest.id
+    else:
+        execution = database.session.get(Execution, execution_id)
+        if execution is None or execution.execution_group_id != group_id:
+            logger.error(f"Execution {execution_id} does not belong to group {group_id}.")
+            raise typer.Exit(code=1)
+
+    try:
+        dimensions = parse_facet_filters(dimension)
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
+
+    # Scope to the concrete execution: promotion/retraction gating would otherwise hide the
+    # values the user explicitly asked to inspect.
+    filters = MetricValueFilter(
+        execution_ids=[execution_id],
+        dimensions=dimensions or None,
+        promoted_only=False,
+        include_retracted=True,
+    )
+
+    try:
+        if kind == ValueKind.scalar:
+            _render_scalar_values(
+                reader,
+                filters,
+                console=console,
+                output_format=output_format,
+                outliers=outliers,
+                include_unverified=include_unverified,
+                offset=offset,
+                limit=limit,
+            )
+        else:
+            _render_series_values(
+                reader,
+                filters,
+                console=console,
+                output_format=output_format,
+                offset=offset,
+                limit=limit,
+            )
+    except KeyError as e:
+        # Raised by the filter when a --dimension key is not a registered CV dimension.
+        logger.error(f"Unknown dimension: {e}")
+        raise typer.Exit(code=1)
+
+
+def _render_scalar_values(  # noqa: PLR0913
+    reader: Reader,
+    filters: MetricValueFilter,
+    *,
+    console: Console,
+    output_format: OutputFormat,
+    outliers: bool,
+    include_unverified: bool,
+    offset: int,
+    limit: int | None,
+) -> None:
+    collection = reader.scalar_values(
+        filters,
+        outliers=OutlierPolicy() if outliers else None,
+        include_unverified=include_unverified,
+        offset=offset,
+        limit=limit,
+        with_facets=False,
+    )
+    if not len(collection):
+        console.print("No scalar values found.")
+        return
+
+    render_dataframe(collection.to_pandas(), console=console, output_format=output_format)
+
+    if collection.had_outliers:
+        state = "shown" if include_unverified else "hidden"
+        logger.warning(
+            f"{collection.outlier_count} value(s) flagged as outliers ({state}). "
+            f"Use --include-unverified to show them."
+        )
+    displayed = offset + len(collection)
+    if displayed < collection.total_count:
+        logger.warning(
+            f"Displaying {len(collection)} of {collection.total_count} values. "
+            f"Use --limit / --offset to see more."
+        )
+
+
+def _render_series_values(  # noqa: PLR0913
+    reader: Reader,
+    filters: MetricValueFilter,
+    *,
+    console: Console,
+    output_format: OutputFormat,
+    offset: int,
+    limit: int | None,
+) -> None:
+    collection = reader.series_values(filters, offset=offset, limit=limit, with_facets=False)
+    if not len(collection):
+        console.print("No series values found.")
+        return
+
+    if output_format == OutputFormat.json:
+        # Full long-form data for scripting.
+        render_dataframe(collection.to_pandas(explode=True), output_format=output_format)
+    else:
+        # Compact one-row-per-series summary for the terminal; the raw arrays are too wide.
+        df = collection.to_pandas(explode=False)
+        df["n_points"] = df["values"].apply(len)
+        df = df.drop(columns=["values", "index"])
+        render_dataframe(df, console=console, output_format=output_format)
+
+    displayed = offset + len(collection)
+    if displayed < collection.total_count:
+        logger.warning(
+            f"Displaying {len(collection)} of {collection.total_count} series. "
+            f"Use --limit / --offset to see more."
+        )
 
 
 @app.command()

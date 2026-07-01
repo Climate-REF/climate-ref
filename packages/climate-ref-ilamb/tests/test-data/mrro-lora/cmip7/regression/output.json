@@ -1,279 +1,279 @@
 {
-  "index": "index.html",
-  "provenance": {
-    "environment": {},
-    "modeldata": [],
-    "obsdata": {},
-    "log": "cmec_output.log"
-  },
   "data": {
     "CanESM5.csv": {
-      "filename": "CanESM5.csv",
-      "long_name": "CanESM5.csv",
       "description": "Scalar and time-series data produced by ILAMB.",
-      "dimensions": null
+      "dimensions": null,
+      "filename": "CanESM5.csv",
+      "long_name": "CanESM5.csv"
     },
     "CanESM5.nc": {
-      "filename": "CanESM5.nc",
-      "long_name": "CanESM5.nc",
       "description": "Scalar and time-series data produced by ILAMB.",
-      "dimensions": null
+      "dimensions": null,
+      "filename": "CanESM5.nc",
+      "long_name": "CanESM5.nc"
     },
     "Reference.nc": {
-      "filename": "Reference.nc",
-      "long_name": "Reference.nc",
       "description": "Scalar and time-series data produced by ILAMB.",
-      "dimensions": null
+      "dimensions": null,
+      "filename": "Reference.nc",
+      "long_name": "Reference.nc"
     }
   },
-  "plots": {
-    "CanESM5_global_bias.png": {
-      "filename": "CanESM5_global_bias.png",
-      "long_name": "The bias for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "Bias"
-      }
-    },
-    "CanESM5_global_biasscore.png": {
-      "filename": "CanESM5_global_biasscore.png",
-      "long_name": "The bias score for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "Bias score"
-      }
-    },
-    "CanESM5_global_mean.png": {
-      "filename": "CanESM5_global_mean.png",
-      "long_name": "The period mean for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "Period Mean"
-      }
-    },
-    "CanESM5_global_rmse.png": {
-      "filename": "CanESM5_global_rmse.png",
-      "long_name": "The RMSE for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "RMSE"
-      }
-    },
-    "CanESM5_global_rmsescore.png": {
-      "filename": "CanESM5_global_rmsescore.png",
-      "long_name": "The RMSE score for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "RMSE score"
-      }
-    },
-    "CanESM5_global_trace.png": {
-      "filename": "CanESM5_global_trace.png",
-      "long_name": "The regional mean for CanESM5 over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "Regional mean"
-      }
-    },
-    "CanESM5_tropical_bias.png": {
-      "filename": "CanESM5_tropical_bias.png",
-      "long_name": "The bias for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "Bias"
-      }
-    },
-    "CanESM5_tropical_biasscore.png": {
-      "filename": "CanESM5_tropical_biasscore.png",
-      "long_name": "The bias score for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "Bias score"
-      }
-    },
-    "CanESM5_tropical_mean.png": {
-      "filename": "CanESM5_tropical_mean.png",
-      "long_name": "The period mean for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "Period Mean"
-      }
-    },
-    "CanESM5_tropical_rmse.png": {
-      "filename": "CanESM5_tropical_rmse.png",
-      "long_name": "The RMSE for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "RMSE"
-      }
-    },
-    "CanESM5_tropical_rmsescore.png": {
-      "filename": "CanESM5_tropical_rmsescore.png",
-      "long_name": "The RMSE score for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "RMSE score"
-      }
-    },
-    "CanESM5_tropical_trace.png": {
-      "filename": "CanESM5_tropical_trace.png",
-      "long_name": "The regional mean for CanESM5 over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "Regional mean"
-      }
-    },
-    "None_global_taylor.png": {
-      "filename": "None_global_taylor.png",
-      "long_name": "The Taylor diagram over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "global",
-        "statistic": "Taylor diagram"
-      }
-    },
-    "None_tropical_taylor.png": {
-      "filename": "None_tropical_taylor.png",
-      "long_name": "The Taylor diagram over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "experiment_id": "historical",
-        "grid_label": "gn",
-        "source_id": "CanESM5",
-        "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA",
-        "region": "tropical",
-        "statistic": "Taylor diagram"
-      }
-    },
-    "Reference_global_mean.png": {
-      "filename": "Reference_global_mean.png",
-      "long_name": "The period mean for the reference data over the Global - Land region.",
-      "description": "",
-      "dimensions": {
-        "region": "global",
-        "statistic": "Period Mean",
-        "source_id": "Reference"
-      }
-    },
-    "Reference_tropical_mean.png": {
-      "filename": "Reference_tropical_mean.png",
-      "long_name": "The period mean for the reference data over the Tropical climates region.",
-      "description": "",
-      "dimensions": {
-        "region": "tropical",
-        "statistic": "Period Mean",
-        "source_id": "Reference"
-      }
-    },
-    "nan_global_uncert.png": {
-      "filename": "nan_global_uncert.png",
-      "long_name": "",
-      "description": "",
-      "dimensions": {
-        "region": "global"
-      }
-    },
-    "nan_tropical_uncert.png": {
-      "filename": "nan_tropical_uncert.png",
-      "long_name": "",
-      "description": "",
-      "dimensions": {
-        "region": "tropical"
-      }
-    }
-  },
+  "diagnostics": {},
   "html": {
     "index.html": {
-      "filename": "index.html",
-      "long_name": "Results page",
       "description": "Page displaying scalars and plots from the ILAMB execution.",
       "dimensions": {
         "experiment_id": "historical",
         "grid_label": "gn",
-        "source_id": "CanESM5",
         "member_id": "r1i1p1f1",
-        "reference_source_id": "LORA"
-      }
+        "reference_source_id": "LORA",
+        "source_id": "CanESM5"
+      },
+      "filename": "index.html",
+      "long_name": "Results page"
     }
   },
+  "index": "index.html",
   "metrics": null,
-  "diagnostics": {}
+  "plots": {
+    "CanESM5_global_bias.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Bias"
+      },
+      "filename": "CanESM5_global_bias.png",
+      "long_name": "The bias for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_biasscore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Bias score"
+      },
+      "filename": "CanESM5_global_biasscore.png",
+      "long_name": "The bias score for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Period Mean"
+      },
+      "filename": "CanESM5_global_mean.png",
+      "long_name": "The period mean for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_rmse.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "RMSE"
+      },
+      "filename": "CanESM5_global_rmse.png",
+      "long_name": "The RMSE for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_rmsescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "RMSE score"
+      },
+      "filename": "CanESM5_global_rmsescore.png",
+      "long_name": "The RMSE score for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_global_trace.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Regional mean"
+      },
+      "filename": "CanESM5_global_trace.png",
+      "long_name": "The regional mean for CanESM5 over the Global - Land region."
+    },
+    "CanESM5_tropical_bias.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Bias"
+      },
+      "filename": "CanESM5_tropical_bias.png",
+      "long_name": "The bias for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_biasscore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Bias score"
+      },
+      "filename": "CanESM5_tropical_biasscore.png",
+      "long_name": "The bias score for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_mean.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Period Mean"
+      },
+      "filename": "CanESM5_tropical_mean.png",
+      "long_name": "The period mean for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_rmse.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "RMSE"
+      },
+      "filename": "CanESM5_tropical_rmse.png",
+      "long_name": "The RMSE for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_rmsescore.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "RMSE score"
+      },
+      "filename": "CanESM5_tropical_rmsescore.png",
+      "long_name": "The RMSE score for CanESM5 over the Tropical climates region."
+    },
+    "CanESM5_tropical_trace.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Regional mean"
+      },
+      "filename": "CanESM5_tropical_trace.png",
+      "long_name": "The regional mean for CanESM5 over the Tropical climates region."
+    },
+    "None_global_taylor.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "global",
+        "source_id": "CanESM5",
+        "statistic": "Taylor diagram"
+      },
+      "filename": "None_global_taylor.png",
+      "long_name": "The Taylor diagram over the Global - Land region."
+    },
+    "None_tropical_taylor.png": {
+      "description": "",
+      "dimensions": {
+        "experiment_id": "historical",
+        "grid_label": "gn",
+        "member_id": "r1i1p1f1",
+        "reference_source_id": "LORA",
+        "region": "tropical",
+        "source_id": "CanESM5",
+        "statistic": "Taylor diagram"
+      },
+      "filename": "None_tropical_taylor.png",
+      "long_name": "The Taylor diagram over the Tropical climates region."
+    },
+    "Reference_global_mean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "global",
+        "source_id": "Reference",
+        "statistic": "Period Mean"
+      },
+      "filename": "Reference_global_mean.png",
+      "long_name": "The period mean for the reference data over the Global - Land region."
+    },
+    "Reference_tropical_mean.png": {
+      "description": "",
+      "dimensions": {
+        "region": "tropical",
+        "source_id": "Reference",
+        "statistic": "Period Mean"
+      },
+      "filename": "Reference_tropical_mean.png",
+      "long_name": "The period mean for the reference data over the Tropical climates region."
+    },
+    "nan_global_uncert.png": {
+      "description": "",
+      "dimensions": {
+        "region": "global"
+      },
+      "filename": "nan_global_uncert.png",
+      "long_name": ""
+    },
+    "nan_tropical_uncert.png": {
+      "description": "",
+      "dimensions": {
+        "region": "tropical"
+      },
+      "filename": "nan_tropical_uncert.png",
+      "long_name": ""
+    }
+  },
+  "provenance": {
+    "environment": {},
+    "log": "cmec_output.log",
+    "modeldata": [],
+    "obsdata": {}
+  }
 }

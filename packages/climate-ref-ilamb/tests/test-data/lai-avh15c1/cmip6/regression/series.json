@@ -1,10 +1,12 @@
 [
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Leaf Area Index",
       "standard_name": "leaf_area_index",
       "units": "dimensionless"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -425,6 +427,8 @@
       "2014-12-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Leaf Area Index",
+    "value_units": "dimensionless",
     "values": [
       1.136776,
       1.145124,
@@ -838,10 +842,12 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Leaf Area Index",
       "standard_name": "leaf_area_index",
       "units": "dimensionless"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -1262,6 +1268,8 @@
       "2014-12-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Leaf Area Index",
+    "value_units": "dimensionless",
     "values": [
       3.190338,
       3.202337,
@@ -1675,15 +1683,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Leaf Area Index",
       "standard_name": "lai area index",
       "units": "dimensionless"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "AVH15C1",
-      "region": "global",
-      "source_id": "Reference"
+      "region": "global"
     },
     "index": [
       "1981-01-16T12:00:00",
@@ -2097,6 +2106,9 @@
       "2015-01-16T12:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "Leaf Area Index",
+    "value_units": "dimensionless",
     "values": [
       null,
       null,
@@ -2511,15 +2523,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Leaf Area Index",
       "standard_name": "lai area index",
       "units": "dimensionless"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "AVH15C1",
-      "region": "tropical",
-      "source_id": "Reference"
+      "region": "tropical"
     },
     "index": [
       "1981-01-16T12:00:00",
@@ -2933,6 +2946,9 @@
       "2015-01-16T12:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "Leaf Area Index",
+    "value_units": "dimensionless",
     "values": [
       null,
       null,

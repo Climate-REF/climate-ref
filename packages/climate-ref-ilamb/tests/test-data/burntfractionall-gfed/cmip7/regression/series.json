@@ -1,10 +1,12 @@
 [
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Percentage of Entire Grid cell  that is Covered by Burnt Vegetation (All Classes)",
       "standard_name": "area_fraction",
-      "units": "percent"
+      "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -233,6 +235,8 @@
       "2014-12-15T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Percentage of Entire Grid cell  that is Covered by Burnt Vegetation (All Classes)",
+    "value_units": "%",
     "values": [
       0.2665243,
       0.2709545,
@@ -454,10 +458,12 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Percentage of Entire Grid cell  that is Covered by Burnt Vegetation (All Classes)",
       "standard_name": "area_fraction",
-      "units": "percent"
+      "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -686,6 +692,8 @@
       "2014-12-15T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Percentage of Entire Grid cell  that is Covered by Burnt Vegetation (All Classes)",
+    "value_units": "%",
     "values": [
       0.3740672,
       0.6281754,
@@ -907,15 +915,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "GFED4s burned fraction. Note that this INCLUDES an experimental \"small fire\" estimate and is thus different from the Giglio et al. (2013) paper",
       "standard_name": "burned area fraction",
       "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "GFED",
-      "region": "global",
-      "source_id": "Reference"
+      "region": "global"
     },
     "index": [
       "1997-01-16T12:00:00",
@@ -1137,6 +1146,9 @@
       "2015-01-16T12:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "GFED4s burned fraction. Note that this INCLUDES an experimental \"small fire\" estimate and is thus different from the Giglio et al. (2013) paper",
+    "value_units": "%",
     "values": [
       0.4290861,
       0.2379493,
@@ -1359,15 +1371,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "GFED4s burned fraction. Note that this INCLUDES an experimental \"small fire\" estimate and is thus different from the Giglio et al. (2013) paper",
       "standard_name": "burned area fraction",
       "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "GFED",
-      "region": "tropical",
-      "source_id": "Reference"
+      "region": "tropical"
     },
     "index": [
       "1997-01-16T12:00:00",
@@ -1589,6 +1602,9 @@
       "2015-01-16T12:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "GFED4s burned fraction. Note that this INCLUDES an experimental \"small fire\" estimate and is thus different from the Giglio et al. (2013) paper",
+    "value_units": "%",
     "values": [
       1.522187,
       0.8108254,

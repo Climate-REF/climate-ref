@@ -32,6 +32,7 @@
       12
     ],
     "index_name": "month_number",
+    "kind": "reference",
     "values": [
       12.79599,
       13.63637,
@@ -113,6 +114,7 @@
       "2014-09-16T00:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
     "values": [
       6.301603,
       null,
@@ -193,6 +195,7 @@
       12
     ],
     "index_name": "month_number",
+    "kind": "reference",
     "values": [
       3.640914,
       2.252787,
@@ -282,6 +285,7 @@
       "2014-02-15T00:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
     "values": [
       2.269726,
       null,

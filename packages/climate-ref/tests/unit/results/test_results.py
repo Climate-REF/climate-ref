@@ -11,8 +11,8 @@ from climate_ref.results import (
     MetricValueFilter,
     OutlierPolicy,
     Reader,
-    latest_execution_for_group,
 )
+from climate_ref.results._query import latest_execution_for_group
 
 
 @pytest.fixture
@@ -106,7 +106,7 @@ def dal_db(db_seeded):
 class TestScalarValues:
     def test_returns_all_without_outlier_detection(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
+        coll = ref.values.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
         assert coll.total_count == 8  # 5 base + wild + nan + reference
         assert len(coll) == 8
         assert coll.had_outliers is False
@@ -116,7 +116,7 @@ class TestScalarValues:
 
     def test_outlier_detection_removes_flagged(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(
+        coll = ref.values.scalar_values(
             MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]),
             outliers=OutlierPolicy(),
             include_unverified=False,
@@ -132,7 +132,7 @@ class TestScalarValues:
 
     def test_include_unverified_keeps_flagged_with_annotation(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(
+        coll = ref.values.scalar_values(
             MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]),
             outliers=OutlierPolicy(),
             include_unverified=True,
@@ -146,7 +146,7 @@ class TestScalarValues:
 
     def test_to_pandas_columns(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
+        coll = ref.values.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
         df = coll.to_pandas()
         expected_cols = (
             "source_id",
@@ -164,7 +164,7 @@ class TestScalarValues:
 
     def test_facets(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
+        coll = ref.values.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
         facets = coll.facets_dict()
         assert "source_id" in facets
         assert "WILD" in facets["source_id"]
@@ -172,7 +172,7 @@ class TestScalarValues:
 
     def test_pagination(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(
+        coll = ref.values.scalar_values(
             MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]),
             limit=3,
             offset=0,
@@ -182,7 +182,7 @@ class TestScalarValues:
 
     def test_dimension_filter(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(
+        coll = ref.values.scalar_values(
             MetricValueFilter(
                 execution_group_ids=[dal_db.execution_group_id],
                 dimensions={"source_id": ["ACCESS-CM2", "CESM3"]},
@@ -194,11 +194,11 @@ class TestScalarValues:
     def test_unknown_dimension_raises(self, dal_db):
         ref = Reader(dal_db)
         with pytest.raises(KeyError, match="not_a_dim"):
-            ref.scalar_values(MetricValueFilter(dimensions={"not_a_dim": "x"}))
+            ref.values.scalar_values(MetricValueFilter(dimensions={"not_a_dim": "x"}))
 
     def test_include_context_adds_slugs(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(
+        coll = ref.values.scalar_values(
             MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]),
             include_context=True,
             limit=1,
@@ -209,7 +209,7 @@ class TestScalarValues:
 
     def test_detached_after_session_expunge(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
+        coll = ref.values.scalar_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
         dal_db.session.expunge_all()
         # DTOs are detached; building a frame must not touch the ORM/session.
         df = coll.to_pandas()
@@ -219,7 +219,7 @@ class TestScalarValues:
 class TestSeriesValues:
     def test_returns_series_with_resolved_index(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.series_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
+        coll = ref.values.series_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
         assert coll.total_count == 2
         v = coll.items[0]
         assert v.index == [0, 1, 2]
@@ -228,14 +228,14 @@ class TestSeriesValues:
 
     def test_reference_only_filter(self, dal_db):
         ref = Reader(dal_db)
-        refs = ref.series_values(
+        refs = ref.values.series_values(
             MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], reference_only=True)
         )
         assert refs.total_count == 1
         assert refs.items[0].is_reference
         assert refs.items[0].reference_id == "ref-hash-1"
 
-        models = ref.series_values(
+        models = ref.values.series_values(
             MetricValueFilter(execution_group_ids=[dal_db.execution_group_id], reference_only=False)
         )
         assert models.total_count == 1
@@ -243,7 +243,7 @@ class TestSeriesValues:
 
     def test_to_pandas_long_form(self, dal_db):
         ref = Reader(dal_db)
-        coll = ref.series_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
+        coll = ref.values.series_values(MetricValueFilter(execution_group_ids=[dal_db.execution_group_id]))
         df = coll.to_pandas(explode=True)
         # 2 series x 3 points
         assert len(df) == 6

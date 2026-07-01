@@ -127,6 +127,29 @@ class TestParseObs4refKey:
         assert result["source_id"] == "CERES-EBAF-4-2"
         assert result["institution_id"] == "NASA-LaRC"
 
+    def test_parse_monthly_climatology_key(self):
+        """Test parsing a monthly-climatology (monC) key."""
+        key = (
+            "obs4REF/NOAA-NCEO-OCL/WOA-23/monC/thetao/gn/v20251024/thetao_monC_WOA-23_REF_gn_200501-202212.nc"
+        )
+        result = _parse_obs4ref_key(key)
+
+        assert result["variable_id"] == "thetao"
+        assert result["frequency"] == "monC"
+        assert result["source_id"] == "WOA-23"
+        assert result["grid_label"] == "gn"
+        assert result["version"] == "v20251024"
+
+    def test_parse_fixed_field_single_year_key(self):
+        """Test parsing a fixed-field (fx) key whose time range is a single year."""
+        key = "obs4REF/IIASA-FAO/HWSD-2-0/fx/cSoil/gn/v20250903/cSoil_fx_HWSD-2-0_REF_gn_2023.nc"
+        result = _parse_obs4ref_key(key)
+
+        assert result["variable_id"] == "cSoil"
+        assert result["frequency"] == "fx"
+        assert result["source_id"] == "HWSD-2-0"
+        assert result["time_range"] == "2023"
+
     def test_parse_invalid_key_wrong_parts(self):
         """Test parsing a key with wrong number of path parts."""
         key = "invalid/path/structure.nc"

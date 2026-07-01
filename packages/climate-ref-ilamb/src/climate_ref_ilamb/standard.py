@@ -627,7 +627,12 @@ class ILAMBStandard(Diagnostic):
     Apply the standard ILAMB analysis with respect to a given reference dataset.
     """
 
-    version = 3
+    version = 2
+    """
+    Default version for ILAMB diagnostics.
+
+    Individual diagnostics can override this with a ``version`` key in their configuration entry.
+    """
 
     def __init__(
         self,
@@ -655,6 +660,10 @@ class ILAMBStandard(Diagnostic):
         # Allow per-diagnostic override of the test source_id
         # (not all variables are available from CanESM5)
         test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
+
+        diagnostic_version = ilamb_kwargs.pop("version", None)
+        if diagnostic_version is not None:
+            self.version = diagnostic_version
 
         self.ilamb_kwargs = ilamb_kwargs
 

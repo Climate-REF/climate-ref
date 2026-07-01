@@ -155,6 +155,46 @@ def test_series_extraction(tmp_path, metric_definition, mock_diagnostic, mocker)
     assert s.attributes["caption"] == "Test caption."
 
 
+@pytest.mark.parametrize(
+    "dimensions,expected_kind",
+    [
+        ({"variable_id": "lwcre", "statistic": "zonal mean"}, "model"),
+        (
+            {"variable_id": "lwcre", "statistic": "zonal mean", "reference_source_id": "CERES-EBAF"},
+            "reference",
+        ),
+    ],
+)
+def test_series_extraction_kind(tmp_path, metric_definition, mock_diagnostic, dimensions, expected_kind):
+    """A series_def carrying ``reference_source_id`` yields ``kind="reference"``; otherwise ``"model"``."""
+    metric_definition.diagnostic.series = [
+        SeriesDefinition(
+            file_pattern="work/timeseries/script1/file0.nc",
+            attributes=[],
+            dimensions=dimensions,
+            values_name="data",
+            index_name="time",
+        )
+    ]
+
+    results_dir = metric_definition.to_output_path("executions") / "recipe_test"
+    nc_path = results_dir / "work" / "timeseries" / "script1" / "file0.nc"
+    nc_path.parent.mkdir(parents=True, exist_ok=True)
+    ds = xr.Dataset({"data": ("time", np.array([10.0, 20.0, 30.0]))}, coords={"time": np.array([1, 2, 3])})
+    ds.to_netcdf(nc_path)
+
+    metadata_file = results_dir / "run" / "timeseries" / "script1" / "diagnostic_provenance.yml"
+    metadata_file.parent.mkdir(parents=True, exist_ok=True)
+    with metadata_file.open("w", encoding="utf-8") as file:
+        yaml.dump({str(nc_path): {"caption": "Test caption."}}, file)
+
+    result = mock_diagnostic.build_execution_result(definition=metric_definition)
+    loaded_series = SeriesMetricValueType.load_from_json(result.to_output_path(result.series_filename))
+
+    assert loaded_series, "Series should not be empty"
+    assert loaded_series[0].kind == expected_kind
+
+
 def test_series_extraction_byte_string_index(tmp_path, metric_definition, mock_diagnostic, mocker):
     """Test that byte string coordinates in NetCDF files are decoded to regular strings."""
     metric_definition.diagnostic.series = [

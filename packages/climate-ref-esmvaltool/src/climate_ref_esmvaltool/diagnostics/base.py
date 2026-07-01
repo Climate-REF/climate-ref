@@ -19,7 +19,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.metric_values.typing import SeriesMetricValue
+from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_esmvaltool.recipe import (
@@ -517,9 +517,15 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
                     # Convert byte strings from NetCDF to regular strings.
                     index = [v.decode().strip() for v in index]
 
+                # A reference (observation) series is signalled by ``reference_source_id`` in the
+                # definition's dimensions; everything else is a model series.
+                kind: MetricValueKind = (
+                    "reference" if "reference_source_id" in series_def.dimensions else "model"
+                )
                 series.append(
                     SeriesMetricValue(
                         dimensions={**input_selectors, **series_def.dimensions},
+                        kind=kind,
                         values=fillvalues_to_nan(dataset[series_def.values_name].values).tolist(),
                         index=index,
                         index_name=series_def.index_name,

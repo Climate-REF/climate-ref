@@ -3,10 +3,10 @@
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "ece9f19183b1bede25cda85779d3eb905f51bc24615559dbcc2ac6688835cd92",
-    "series.json": "1535dab04428841a3ac32a30acaa7c78ce57d8035cd3671518c01ab1db9e52eb"
+    "series.json": "19a25697156765ef8707c5c28123bd22026c723faa38c998a94d8875f1e283c4"
   },
   "diagnostic_version": 1,
   "native": {},
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

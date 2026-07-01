@@ -1,10 +1,12 @@
 [
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Total Runoff",
       "standard_name": "runoff_flux",
-      "units": "kg / meter ** 2 / second"
+      "units": "kg m-2 s-1"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -414,6 +416,8 @@
       "2013-01-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Total Runoff",
+    "value_units": "kg m-2 s-1",
     "values": [
       0.0,
       0.0,
@@ -816,10 +820,12 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Total Runoff",
       "standard_name": "runoff_flux",
-      "units": "kg / meter ** 2 / second"
+      "units": "kg m-2 s-1"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -1229,6 +1235,8 @@
       "2013-01-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Total Runoff",
+    "value_units": "kg m-2 s-1",
     "values": [
       0.0,
       0.0,
@@ -1631,15 +1639,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "sum of surface runoff and subsurface drainage per unit area",
       "standard_name": "",
       "units": "kg m-2 s-1"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "LORA",
-      "region": "global",
-      "source_id": "Reference"
+      "region": "global"
     },
     "index": [
       "1980-01-16T12:00:00",
@@ -2040,6 +2049,9 @@
       "2012-12-16T12:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "sum of surface runoff and subsurface drainage per unit area",
+    "value_units": "kg m-2 s-1",
     "values": [
       6.961358e-06,
       7.063786e-06,
@@ -2441,15 +2453,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "sum of surface runoff and subsurface drainage per unit area",
       "standard_name": "",
       "units": "kg m-2 s-1"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "LORA",
-      "region": "tropical",
-      "source_id": "Reference"
+      "region": "tropical"
     },
     "index": [
       "1980-01-16T12:00:00",
@@ -2850,6 +2863,9 @@
       "2012-12-16T12:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "sum of surface runoff and subsurface drainage per unit area",
+    "value_units": "kg m-2 s-1",
     "values": [
       1.838392e-05,
       1.966277e-05,

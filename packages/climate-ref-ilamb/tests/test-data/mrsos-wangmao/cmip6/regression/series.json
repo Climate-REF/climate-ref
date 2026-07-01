@@ -1,10 +1,12 @@
 [
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
       "units": "dimensionless"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -557,6 +559,8 @@
       "2014-12-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
+    "value_units": "dimensionless",
     "values": [
       0.3169949,
       0.3128713,
@@ -1102,10 +1106,12 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Moisture in Upper Portion of Soil Column",
       "standard_name": "mass_content_of_water_in_soil_layer",
       "units": "dimensionless"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -1658,6 +1664,8 @@
       "2014-12-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Moisture in Upper Portion of Soil Column",
+    "value_units": "dimensionless",
     "values": [
       0.231658,
       0.2082346,
@@ -2203,15 +2211,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "trace_global",
       "standard_name": "soil_moisture_content",
       "units": "m3 m-3"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "WangMao",
-      "region": "global",
-      "source_id": "Reference"
+      "region": "global"
     },
     "index": [
       "1970-01-15T00:00:00",
@@ -2757,6 +2766,9 @@
       "2015-01-15T00:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "trace_global",
+    "value_units": "m3 m-3",
     "values": [
       0.2464659,
       0.2474005,
@@ -3303,15 +3315,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "trace_tropical",
       "standard_name": "soil_moisture_content",
       "units": "m3 m-3"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "WangMao",
-      "region": "tropical",
-      "source_id": "Reference"
+      "region": "tropical"
     },
     "index": [
       "1970-01-15T00:00:00",
@@ -3857,6 +3870,9 @@
       "2015-01-15T00:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "trace_tropical",
+    "value_units": "m3 m-3",
     "values": [
       0.2925631,
       0.2924622,

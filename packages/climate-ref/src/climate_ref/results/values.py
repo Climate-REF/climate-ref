@@ -3,14 +3,15 @@ Typed, ORM-free surface for metric-value results.
 
 [Reader][climate_ref.results.values.Reader] is the intent-named entry point that notebooks
 and (eventually) the API use, via its [values][climate_ref.results.values.Reader.values]
-sub-reader. [ValuesReader][climate_ref.results.values.ValuesReader]'s read methods return frozen,
-detached value objects wrapped in collections that offer ``to_pandas()``. The objects are fully
-materialised, so they remain valid after the originating session closes -- a notebook can build a
-DataFrame inside a ``with Database(...)`` block and keep using it afterwards.
+sub-reader.
+[ValuesReader][climate_ref.results.values.ValuesReader]'s read methods return frozen,
+detached value objects wrapped in collections that offer ``to_pandas()``.
+The objects are fully materialised, so they remain valid after the originating session closes.
+A notebook can build a DataFrame inside a ``with Database(...)`` block and keep using it afterwards.
 
-Everything here is a thin layer over [climate_ref.results._query][] (the shared ``Select``
-builders) and [climate_ref.results.outliers][]; power users who need the raw ``Select`` or ORM
-rows use those modules directly.
+Everything here is a thin layer over [climate_ref.results._query][]
+(the shared ``Select`` builders) and [climate_ref.results.outliers][].
+power users who need the raw ``Select`` or ORM rows use those modules directly.
 """
 
 import functools
@@ -31,6 +32,7 @@ from climate_ref.results._query import (
     select_scalar_values,
     select_series_values,
 )
+from climate_ref.results.executions import ExecutionsReader
 from climate_ref.results.frames import collect_facets
 from climate_ref.results.outliers import OutlierPolicy, detect_scalar_outliers
 
@@ -394,7 +396,8 @@ class Reader:
 
     Constructed from a [Database][climate_ref.database.Database], which owns the session and the
     read-only story. This is a thin entry point: it exposes per-domain sub-readers as properties,
-    currently just [values][climate_ref.results.values.Reader.values] for metric-value reads.
+    [values][climate_ref.results.values.Reader.values] for metric-value reads and
+    [executions][climate_ref.results.values.Reader.executions] for execution-group reads.
     """
 
     def __init__(self, database: Database) -> None:
@@ -409,3 +412,8 @@ class Reader:
     def values(self) -> ValuesReader:
         """Metric-value reads (scalar/series/facets)."""
         return ValuesReader(self._db)
+
+    @functools.cached_property
+    def executions(self) -> ExecutionsReader:
+        """Execution-group and execution reads."""
+        return ExecutionsReader(self._db)

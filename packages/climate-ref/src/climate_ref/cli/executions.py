@@ -17,7 +17,7 @@ from rich.markup import escape
 from rich.panel import Panel
 from rich.text import Text
 from rich.tree import Tree
-from sqlalchemy import case, func, or_
+from sqlalchemy import or_
 
 from climate_ref.cli._utils import (
     OutputFormat,
@@ -32,11 +32,11 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
 from climate_ref.models.provider import Provider
 from climate_ref.results import (
+    ExecutionGroupFilter,
     MetricValueFilter,
     OutlierPolicy,
     Reader,
 )
-from climate_ref.results._query import latest_execution_for_group
 from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
@@ -138,10 +138,9 @@ def list_groups(  # noqa: PLR0913
 
     The output is a table by default, or machine-readable JSON with ``--format json``.
     """
-    import pandas as pd
-
     session = ctx.obj.database.session
     console = ctx.obj.console
+    reader = Reader(ctx.obj.database)
 
     # Parse facet filters
     try:
@@ -163,52 +162,25 @@ def list_groups(  # noqa: PLR0913
 
     # Apply filters to query
     try:
-        all_filtered_results = get_execution_group_and_latest_filtered(
-            session,
-            diagnostic_filters=filters.diagnostic,
-            provider_filters=filters.provider,
-            facet_filters=filters.facets,
-            successful=successful,
-            dirty=dirty,
+        collection = reader.executions.groups(
+            ExecutionGroupFilter(
+                diagnostic_contains=diagnostic,
+                provider_contains=provider,
+                facets=facet_filters or None,
+                successful=successful,
+                dirty=dirty,
+            ),
+            limit=limit,
         )
-        execution_groups_results = all_filtered_results[:limit]
     except Exception as e:  # pragma: no cover
         logger.error(f"Error applying filters: {e}")
         raise typer.Exit(code=1)
 
     # Check if any results found
-    if not execution_groups_results:
+    if len(collection) == 0:
         emit_no_results_warning(filters, total_count)
-        results_df = pd.DataFrame(
-            columns=[
-                "id",
-                "key",
-                "provider",
-                "diagnostic",
-                "dirty",
-                "successful",
-                "created_at",
-                "updated_at",
-                "selectors",
-            ]
-        )
-    else:
-        results_df = pd.DataFrame(
-            [
-                {
-                    "id": eg.id,
-                    "key": eg.key,
-                    "provider": eg.diagnostic.provider.slug,
-                    "diagnostic": eg.diagnostic.slug,
-                    "dirty": eg.dirty,
-                    "successful": result.successful if result else None,
-                    "created_at": eg.created_at,
-                    "updated_at": eg.updated_at,
-                    "selectors": eg.selectors,
-                }
-                for eg, result in execution_groups_results
-            ]
-        )
+
+    results_df = collection.to_pandas()
 
     # Select columns to display.
     if column:
@@ -224,7 +196,7 @@ def list_groups(  # noqa: PLR0913
     render_dataframe(results_df, console=console, output_format=output_format)
 
     # Show limit warning if applicable
-    filtered_count = len(all_filtered_results)
+    filtered_count = collection.total_count
     if filtered_count > limit:
         logger.warning(
             f"Displaying {limit} of {filtered_count} filtered results. "
@@ -232,6 +204,8 @@ def list_groups(  # noqa: PLR0913
         )
 
 
+# Stays on `get_execution_group_and_latest_filtered` rather than `reader.executions.groups()` by design.
+# Revisit once a mutable query surface exists.
 @app.command()
 def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
     ctx: typer.Context,
@@ -640,7 +614,7 @@ def values(  # noqa: PLR0913
         raise typer.Exit(code=1)
 
     if execution_id is None:
-        latest = latest_execution_for_group(database.session, group_id)
+        latest = reader.executions.latest_execution(group_id)
         if latest is None:
             logger.error(f"No executions found for group {group_id}.")
             raise typer.Exit(code=1)
@@ -891,64 +865,12 @@ def stats(
     """
     import pandas as pd
 
-    session = ctx.obj.database.session
     console = ctx.obj.console
+    reader = Reader(ctx.obj.database)
 
-    # Subquery to get the latest execution per execution group
-    latest_exec_subquery = (
-        session.query(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("latest_created_at"),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
+    stats_rows = reader.executions.statistics(diagnostic_contains=diagnostic, provider_contains=provider)
 
-    # Build query: join ExecutionGroup -> Diagnostic -> Provider, and optionally latest Execution
-    query = (
-        session.query(
-            Provider.slug.label("provider"),
-            Diagnostic.slug.label("diagnostic"),
-            func.count().label("total"),
-            func.sum(
-                case(
-                    (Execution.successful.is_(None) & Execution.id.isnot(None), 1),
-                    else_=0,
-                )
-            ).label("running"),
-            func.sum(case((Execution.successful.is_(False), 1), else_=0)).label("failed"),
-            func.sum(case((Execution.successful.is_(True), 1), else_=0)).label("successful"),
-            func.sum(case((Execution.id.is_(None), 1), else_=0)).label("not_started"),
-            func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
-        )
-        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-        .join(Provider, Diagnostic.provider_id == Provider.id)
-        .outerjoin(latest_exec_subquery, ExecutionGroup.id == latest_exec_subquery.c.execution_group_id)
-        .outerjoin(
-            Execution,
-            (Execution.execution_group_id == ExecutionGroup.id)
-            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
-        )
-        .group_by(Provider.slug, Diagnostic.slug)
-        .order_by(Provider.slug, Diagnostic.slug)
-    )
-
-    # Apply diagnostic filter
-    if diagnostic:
-        diagnostic_conditions = [
-            Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic
-        ]
-        query = query.filter(or_(*diagnostic_conditions))
-
-    # Apply provider filter
-    if provider:
-        provider_conditions = [Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider]
-        query = query.filter(or_(*provider_conditions))
-
-    results = query.all()
-
-    if not results:
+    if not stats_rows:
         console.print("No execution groups found.")
         return
 
@@ -963,7 +885,7 @@ def stats(
             "dirty": row.dirty,
             "total": row.total,
         }
-        for row in results
+        for row in stats_rows
     ]
 
     results_df = pd.DataFrame(rows)
@@ -979,6 +901,11 @@ def stats(
     pretty_print_df(results_df, console=console)
 
 
+# `get_executions_for_reingest` stays on the ORM helper by design.
+# it passes`include_superseded=True` and selects `eg.executions[0]`
+# (the oldest / original execution in the group),
+# which is a different "latest" than `reader.executions` definition.
+# Revisit once a mutable query surface exists.
 @app.command()
 def reingest(  # noqa: PLR0913
     ctx: typer.Context,

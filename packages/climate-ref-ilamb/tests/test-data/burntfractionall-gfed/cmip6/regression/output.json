@@ -236,8 +236,9 @@
     "Reference_global_mean.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "GFED",
         "region": "global",
-        "source_id": "Reference",
         "statistic": "Period Mean"
       },
       "filename": "Reference_global_mean.png",
@@ -246,8 +247,9 @@
     "Reference_tropical_mean.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "GFED",
         "region": "tropical",
-        "source_id": "Reference",
         "statistic": "Period Mean"
       },
       "filename": "Reference_tropical_mean.png",

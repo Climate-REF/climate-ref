@@ -348,8 +348,9 @@
     "Reference_global_distribution-pr.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
         "region": "global",
-        "source_id": "Reference",
         "statistic": "Distribution|pr"
       },
       "filename": "Reference_global_distribution-pr.png",
@@ -358,8 +359,9 @@
     "Reference_global_distribution-tas.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
         "region": "global",
-        "source_id": "Reference",
         "statistic": "Distribution|tas"
       },
       "filename": "Reference_global_distribution-tas.png",
@@ -368,8 +370,9 @@
     "Reference_global_mean.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
         "region": "global",
-        "source_id": "Reference",
         "statistic": "Period Mean"
       },
       "filename": "Reference_global_mean.png",
@@ -378,8 +381,9 @@
     "Reference_tropical_distribution-pr.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
         "region": "tropical",
-        "source_id": "Reference",
         "statistic": "Distribution|pr"
       },
       "filename": "Reference_tropical_distribution-pr.png",
@@ -388,8 +392,9 @@
     "Reference_tropical_distribution-tas.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
         "region": "tropical",
-        "source_id": "Reference",
         "statistic": "Distribution|tas"
       },
       "filename": "Reference_tropical_distribution-tas.png",
@@ -398,8 +403,9 @@
     "Reference_tropical_mean.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WECANN",
         "region": "tropical",
-        "source_id": "Reference",
         "statistic": "Period Mean"
       },
       "filename": "Reference_tropical_mean.png",

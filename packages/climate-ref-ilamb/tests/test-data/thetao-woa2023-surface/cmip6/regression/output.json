@@ -96,8 +96,9 @@
     "Reference_None_mean.png": {
       "description": "",
       "dimensions": {
+        "kind": "reference",
+        "reference_source_id": "WOA2023",
         "region": "None",
-        "source_id": "Reference",
         "statistic": "Period Mean"
       },
       "filename": "Reference_None_mean.png",

@@ -67,6 +67,8 @@ class TestCleanUnits:
             # Already-clean CF units round-trip unchanged.
             ("kg m-2 s-1", "kg m-2 s-1"),
             ("K", "K"),
+            # A fractional exponent keeps its float power.
+            ("m ** 0.5", "m0.5"),
             # Dimensionless and unparseable strings are preserved as-is.
             ("1", "1"),
             ("", ""),
@@ -131,6 +133,27 @@ class TestBuildSeries:
         assert model.dimensions["region"] == "global"
         assert model.value_long_name == "Gross Primary Productivity"
         assert model.calendar == "noleap"
+
+    def test_month_index_and_higher_dims_skipped(self, tmp_path):
+        # A month index has no calendar and stays numeric; a 2-d field is not a series.
+        ds = xr.Dataset(
+            {
+                "nbp_global": ("month", [1.0, 2.0, 3.0]),
+                "map_global": (("month", "region"), [[1.0], [2.0], [3.0]]),
+            },
+            coords={"month": [1, 2, 3]},
+        )
+        ds["nbp_global"].attrs["units"] = "kg m-2 s-1"
+        ds.to_netcdf(tmp_path / "CanESM5.nc")
+
+        series = _build_series(tmp_path, "GFED", {"source_id": "CanESM5"})
+
+        # Only the 1-d month trace becomes a series; the 2-d field is skipped.
+        assert len(series) == 1
+        (s,) = series
+        assert s.index_name == "month"
+        assert s.index == [1, 2, 3]
+        assert s.calendar is None
 
 
 class TestBuildCmecBundle:

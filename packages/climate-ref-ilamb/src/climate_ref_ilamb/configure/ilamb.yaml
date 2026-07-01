@@ -2,9 +2,7 @@ registry: ilamb
 
 gpp-WECANN:
   sources:
-      # TODO: Update to use the obs4REF equiv
-    gpp: ilamb/gpp/WECANN/gpp.nc
-    # gpp: obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/20250516/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
+    gpp: obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/v20250902/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
   relationships:
     pr: ilamb/pr/GPCPv2.3/pr.nc
     # pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
@@ -13,16 +11,12 @@ gpp-WECANN:
 
 gpp-FLUXNET2015:
   sources:
-    gpp: ilamb/gpp/FLUXNET2015/gpp.nc
+    gpp: obs4REF/Fluxnet/FLUXNET2015-1-0/mon/gpp/site/v20260202/gpp_mon_Fluxnet-2015-1-0_REF_site_19910101-20141231.nc
   variable_cmap: Greens
 
 mrro-LORA:
   sources:
-     # TODO: Update to use the obs4REF equiv
-    mrro: ilamb/mrro/LORA/LORA.nc
-    # mrro:
-    #   obs_source: obs4ref
-    #   source_id: LORA-1-1
+    mrro: obs4REF/ARCCSS/LORA-1-0/mon/mrro/gn/v20250902/mrro_mon_LORA-1-0_REF_gn_198001-201212.nc
   variable_cmap: Blues
 
 mrsos-WangMao:
@@ -38,7 +32,7 @@ mrsos-WangMao:
 
 cSoil-HWSD2:
   sources:
-    cSoil: ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc
+    cSoil: obs4REF/IIASA-FAO/HWSD-2-0/fx/cSoil/gn/v20250903/cSoil_fx_HWSD-2-0_REF_gn_2023.nc
   variable_cmap: viridis
 
 lai-AVH15C1:
@@ -54,25 +48,18 @@ nbp-Hoffman:
   analyses:
   - nbp
   sources:
-    # TODO: Update to use the obs4REF equiv
-    nbp: ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
-    # nbp:
-    #   obs_source: obs4ref
-    #   variable_id: nbp
-    #   source_id: Hoffman
+    nbp: obs4REF/UCI-ORNL/Hoffman-1-0/yr/nbp/gm/v20251117/nbp_yr_Hoffman-1-0_REF_gm_1850-2010.nc
   transforms:
   - integrate_space:
       varname: nbp
 
 snc-ESACCI:
   sources:
-    snc: ilamb/snc/Snow-cci/snc_mon_Snow-cci_BE_gn_198201-201906.nc
+    snc: obs4REF/NR/CCI-CryoClim-FSC-1/mon/snc/gn/v20250519/snc_mon_CCI-CryoClim-FSC-1_BE_gn_198201-201906.nc
 
 burntFractionAll-GFED:
   sources:
-    burntArea: ilamb/burntFractionAll/GFED/burntArea.nc
-  alternate_vars:
-  - burntFractionAll
+    burntFractionAll: obs4REF/DoESS-UCI/GFED-5-0/mon/burntFractionAll/gr/v20260128/burntFractionAll_mon_GFED-5-0_REF_gr_199701-202012.nc
   test_source_id: CESM2
 
 emp-GLEAMGPCP2.3:

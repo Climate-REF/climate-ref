@@ -627,7 +627,7 @@ class ILAMBStandard(Diagnostic):
     Apply the standard ILAMB analysis with respect to a given reference dataset.
     """
 
-    version = 2
+    version = 3
 
     def __init__(
         self,

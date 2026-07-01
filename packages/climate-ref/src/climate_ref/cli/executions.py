@@ -15,6 +15,7 @@ from rich.console import Console, Group
 from rich.filesize import decimal
 from rich.markup import escape
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
 from sqlalchemy import or_
@@ -29,7 +30,10 @@ from climate_ref.cli._utils import (
 from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
+from climate_ref.models.execution import (
+    execution_datasets,
+    get_execution_group_and_latest_filtered,
+)
 from climate_ref.models.provider import Provider
 from climate_ref.results import (
     ExecutionGroupFilter,
@@ -37,6 +41,7 @@ from climate_ref.results import (
     OutlierPolicy,
     Reader,
 )
+from climate_ref.results.executions import OutputView
 from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
@@ -122,7 +127,10 @@ def list_groups(  # noqa: PLR0913
     ] = None,
     output_format: Annotated[
         OutputFormat,
-        typer.Option("--format", help="Output format: 'table' (default) or machine-readable 'json'."),
+        typer.Option(
+            "--format",
+            help="Output format: 'table' (default) or machine-readable 'json'.",
+        ),
     ] = OutputFormat.table,
 ) -> None:
     """
@@ -246,7 +254,9 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
         ),
     ] = None,
     remove_outputs: bool = typer.Option(
-        False, "--remove-outputs", help="Also remove output directories from the filesystem"
+        False,
+        "--remove-outputs",
+        help="Also remove output directories from the filesystem",
     ),
     force: bool = typer.Option(False, help="Skip confirmation prompt"),
 ) -> None:
@@ -437,7 +447,11 @@ def _datasets_panel(result: Execution) -> Panel:
 
     datasets_df = pd.DataFrame(
         [
-            {"id": dataset.id, "slug": dataset.slug, "dataset_type": dataset.dataset_type}
+            {
+                "id": dataset.id,
+                "slug": dataset.slug,
+                "dataset_type": dataset.dataset_type,
+            }
             for dataset in datasets
         ]
     )
@@ -446,6 +460,27 @@ def _datasets_panel(result: Execution) -> Panel:
         df_to_table(datasets_df),
         title=f"Datasets hash: {result.dataset_hash}",
     )
+
+
+def _outputs_panel(outputs: tuple[OutputView, ...], output_fragment: str, reader: Reader) -> Panel:
+    if not outputs:
+        return Panel(Text("No registered outputs.", "bold red"), title="Outputs")
+
+    table = Table("output_type", "short_name", "long_name", "filename")
+    for out in outputs:
+        if out.filename is None:
+            filename_cell: Text | str = ""
+        else:
+            output_path = reader.artifacts.output_file(output_fragment, out.filename)
+            filename_cell = Text(out.filename, style=f"link file://{output_path}")
+        table.add_row(
+            out.output_type,
+            out.short_name or "",
+            out.long_name or "",
+            filename_cell,
+        )
+
+    return Panel(table, title="Outputs")
 
 
 def _results_directory_panel(result_directory: pathlib.Path) -> Panel:
@@ -525,6 +560,7 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
     config: Config = ctx.obj.config
     session = ctx.obj.database.session
     console = ctx.obj.console
+    reader = Reader(ctx.obj.database, results=config.paths.results)
 
     execution_group = session.get(ExecutionGroup, execution_id)
 
@@ -539,11 +575,12 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
         return
 
     result: Execution = execution_group.executions[-1]
-    result_directory = config.paths.results / result.output_fragment
+    output_dir = reader.artifacts.output_directory(result.output_fragment)
 
     console.print(_datasets_panel(result))
-    console.print(_results_directory_panel(result_directory))
-    console.print(_log_panel(result_directory))
+    console.print(_outputs_panel(reader.executions.outputs(result.id), result.output_fragment, reader))
+    console.print(_results_directory_panel(output_dir))
+    console.print(_log_panel(output_dir))
 
 
 @app.command()

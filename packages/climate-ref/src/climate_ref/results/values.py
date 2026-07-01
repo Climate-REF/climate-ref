@@ -16,7 +16,8 @@ power users who need the raw ``Select`` or ORM rows use those modules directly.
 
 import functools
 from collections.abc import Iterator, Mapping, Sequence
-from typing import Any
+from pathlib import Path
+from typing import TYPE_CHECKING, Any
 
 import attrs
 import pandas as pd
@@ -35,6 +36,9 @@ from climate_ref.results._query import (
 from climate_ref.results.executions import ExecutionsReader
 from climate_ref.results.frames import collect_facets
 from climate_ref.results.outliers import OutlierPolicy, detect_scalar_outliers
+
+if TYPE_CHECKING:
+    from climate_ref.results.artifacts import ArtifactsReader
 
 
 def _kind_of(dimensions: Mapping[str, str]) -> str:
@@ -396,12 +400,15 @@ class Reader:
 
     Constructed from a [Database][climate_ref.database.Database], which owns the session and the
     read-only story. This is a thin entry point: it exposes per-domain sub-readers as properties,
-    [values][climate_ref.results.values.Reader.values] for metric-value reads and
-    [executions][climate_ref.results.values.Reader.executions] for execution-group reads.
+    [values][climate_ref.results.values.Reader.values] for metric-value reads,
+    [executions][climate_ref.results.values.Reader.executions] for execution-group reads, and
+    [artifacts][climate_ref.results.values.Reader.artifacts] for output path resolution
+    (only available when a ``results`` root is supplied).
     """
 
-    def __init__(self, database: Database) -> None:
+    def __init__(self, database: Database, results: Path | None = None) -> None:
         self._db = database
+        self._results = results
 
     @property
     def session(self) -> Session:
@@ -417,3 +424,19 @@ class Reader:
     def executions(self) -> ExecutionsReader:
         """Execution-group and execution reads."""
         return ExecutionsReader(self._db)
+
+    @functools.cached_property
+    def artifacts(self) -> "ArtifactsReader":
+        """
+        Output path resolution.
+
+        Raises ``ValueError`` when no ``results`` root was supplied to the constructor.
+        """
+        if self._results is None:
+            raise ValueError(
+                "reader.artifacts requires a results root; construct "
+                "Reader(database, results=config.paths.results)."
+            )
+        from climate_ref.results.artifacts import ArtifactsReader  # noqa: PLC0415
+
+        return ArtifactsReader(self._results)

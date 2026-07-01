@@ -9,13 +9,15 @@ from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 from rich.console import Console
 
-from climate_ref.cli.executions import _results_directory_panel
+from climate_ref.cli.executions import _outputs_panel, _results_directory_panel
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import ExecutionOutput, ResultOutputType, execution_datasets
 from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
+from climate_ref.results import Reader
+from climate_ref.results.executions import OutputView
 from climate_ref_core.datasets import SourceDatasetType
 
 
@@ -856,6 +858,121 @@ class TestExecutionInspect:
     def test_inspect_missing(self, invoke_cli):
         result = invoke_cli(["executions", "inspect", "999"], expected_exit_code=1)
         assert "Execution not found: 999" in result.stderr
+
+    def test_inspect_outputs_panel(self, sample_data_dir, db_seeded, invoke_cli, config):
+        # Real on-disk results root so the directory-tree / log panels keep their existing behaviour.
+        results_path = config.paths.results
+        results_path.mkdir(parents=True, exist_ok=True)
+
+        execution_group = ExecutionGroup(
+            key="key1",
+            diagnostic_id=1,
+            created_at=datetime.datetime(2021, 1, 1),
+            updated_at=datetime.datetime(2021, 2, 1),
+        )
+        with db_seeded.session.begin():
+            db_seeded.session.add(execution_group)
+            db_seeded.session.flush()
+
+            execution = Execution(
+                execution_group_id=execution_group.id,
+                successful=True,
+                output_fragment="output",
+                dataset_hash="hash",
+            )
+            db_seeded.session.add(execution)
+            db_seeded.session.flush()
+
+            output_dir = results_path / execution.output_fragment
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / "plot.png").write_text("fake plot")
+
+            db_seeded.session.add(
+                ExecutionOutput(
+                    execution_id=execution.id,
+                    output_type=ResultOutputType.Plot,
+                    filename="plot.png",
+                    short_name="plot-short",
+                    long_name="Plot long name",
+                )
+            )
+            # A metadata-only row with no filename must not emit a bogus file link/path.
+            db_seeded.session.add(
+                ExecutionOutput(
+                    execution_id=execution.id,
+                    output_type=ResultOutputType.HTML,
+                    filename=None,
+                    short_name="html-short",
+                    long_name="HTML long name",
+                )
+            )
+
+        result = invoke_cli(["executions", "inspect", str(execution_group.id)])
+
+        assert "Outputs" in result.stdout
+        assert "plot-short" in result.stdout
+        assert "plot.png" in result.stdout
+        assert "html-short" in result.stdout
+
+        # Directory-tree / log panels still render (regression).
+        assert "File Tree" in result.stdout
+        assert "Execution Logs" in result.stdout
+        assert "plot.png (9 bytes)" in result.stdout
+
+    def test_inspect_no_results_skips_outputs_panel(self, sample_data_dir, db_seeded, invoke_cli):
+        metric_execution_group = ExecutionGroup(key="key1", diagnostic_id=1)
+        with db_seeded.session.begin():
+            db_seeded.session.add(metric_execution_group)
+
+        result = invoke_cli(["executions", "inspect", str(metric_execution_group.id)])
+
+        assert result.exit_code == 0
+        assert "not-started" in result.stdout
+        assert "Outputs" not in result.stdout
+
+    def test_outputs_panel_no_outputs(self, db_seeded, tmp_path):
+        reader = Reader(db_seeded, results=tmp_path)
+        panel = _outputs_panel((), "frag", reader)
+
+        console = Console()
+        with console.capture() as capture:
+            console.print(panel)
+
+        assert "No registered outputs." in capture.get()
+
+    def test_outputs_panel_links_filename_rows_only(self, db_seeded, tmp_path):
+        outputs = (
+            OutputView(
+                execution_id=1,
+                output_type="plot",
+                filename="plot.png",
+                short_name="plot-short",
+                long_name="Plot long name",
+                description=None,
+                dimensions={},
+            ),
+            OutputView(
+                execution_id=1,
+                output_type="html",
+                filename=None,
+                short_name="html-short",
+                long_name="HTML long name",
+                description=None,
+                dimensions={},
+            ),
+        )
+        reader = Reader(db_seeded, results=tmp_path)
+        panel = _outputs_panel(outputs, "frag", reader)
+
+        # `force_terminal=True` so rich emits the OSC 8 hyperlink escape sequence to inspect.
+        console = Console(force_terminal=True)
+        with console.capture() as capture:
+            console.print(panel)
+        rendered = capture.get()
+
+        assert f"file://{tmp_path / 'frag' / 'plot.png'}" in rendered
+        assert "html-short" in rendered
+        assert "file://" not in rendered.split("html-short")[1]
 
     def test_results_directory_panel(self, tmp_path):
         tmp_path = tmp_path / "inner"

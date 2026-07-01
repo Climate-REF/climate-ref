@@ -15,6 +15,8 @@ Layers:
 * [values][climate_ref.results.values] -- typed DTOs + collections + the ``Reader`` facade.
 * [executions][climate_ref.results.executions] -- execution-group / execution DTOs + collection +
   the ``ExecutionsReader`` facade.
+* [artifacts][climate_ref.results.artifacts] -- the ``ArtifactsReader`` facade,
+  resolving execution output fragments into filesystem paths under a results root.
 
 The typical notebook entry point::
 
@@ -34,7 +36,7 @@ so the namespace stays small as domains are added:
 * the ``Reader`` entry point,
 * filter objects you construct and pass in (``MetricValueFilter``, ``ExecutionGroupFilter``,
   and the future ``DatasetFilter``),
-* value objects you pass in (``OutlierPolicy``, and the future ``ResultPaths``).
+* value objects you pass in (``OutlierPolicy``).
 
 Everything the package *returns* -- DTOs, collections, views -- and the sub-reader classes reached
 via ``reader.values`` etc. live in their domain submodule (``climate_ref.results.values``, ...).

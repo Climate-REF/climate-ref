@@ -2,16 +2,18 @@
 Typed, ORM-free surface for metric-value results.
 
 [Reader][climate_ref.results.values.Reader] is the intent-named entry point that notebooks
-and (eventually) the API use. Its read methods return frozen, detached value objects wrapped in
-collections that offer ``to_pandas()``. The objects are fully materialised, so they remain valid
-after the originating session closes -- a notebook can build a DataFrame inside a
-``with Database(...)`` block and keep using it afterwards.
+and (eventually) the API use, via its [values][climate_ref.results.values.Reader.values]
+sub-reader. [ValuesReader][climate_ref.results.values.ValuesReader]'s read methods return frozen,
+detached value objects wrapped in collections that offer ``to_pandas()``. The objects are fully
+materialised, so they remain valid after the originating session closes -- a notebook can build a
+DataFrame inside a ``with Database(...)`` block and keep using it afterwards.
 
 Everything here is a thin layer over [climate_ref.results._query][] (the shared ``Select``
 builders) and [climate_ref.results.outliers][]; power users who need the raw ``Select`` or ORM
 rows use those modules directly.
 """
 
+import functools
 from collections.abc import Iterator, Mapping, Sequence
 from typing import Any
 
@@ -183,9 +185,9 @@ class SeriesValueCollection:
         return pd.DataFrame.from_records(records)
 
 
-class Reader:
+class ValuesReader:
     """
-    Typed entry point to REF query results.
+    Metric-value read domain: scalar/series values and their facets.
 
     Constructed from a [Database][climate_ref.database.Database], which owns the session and the
     read-only story. All read methods return detached collections that outlive the session.
@@ -384,3 +386,26 @@ class Reader:
             diagnostic_slug=diagnostic_slug,
             provider_slug=provider_slug,
         )
+
+
+class Reader:
+    """
+    Typed entry point to REF query results.
+
+    Constructed from a [Database][climate_ref.database.Database], which owns the session and the
+    read-only story. This is a thin entry point: it exposes per-domain sub-readers as properties,
+    currently just [values][climate_ref.results.values.Reader.values] for metric-value reads.
+    """
+
+    def __init__(self, database: Database) -> None:
+        self._db = database
+
+    @property
+    def session(self) -> Session:
+        """The underlying database session."""
+        return self._db.session
+
+    @functools.cached_property
+    def values(self) -> ValuesReader:
+        """Metric-value reads (scalar/series/facets)."""
+        return ValuesReader(self._db)

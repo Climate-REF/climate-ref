@@ -35,8 +35,9 @@ from climate_ref.results import (
     MetricValueFilter,
     OutlierPolicy,
     Reader,
-    latest_execution_for_group,
 )
+from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 
 app = typer.Typer(help=__doc__)
@@ -668,7 +669,7 @@ def values(  # noqa: PLR0913
     try:
         if kind == ValueKind.scalar:
             _render_scalar_values(
-                reader,
+                reader.values,
                 filters,
                 console=console,
                 output_format=output_format,
@@ -679,7 +680,7 @@ def values(  # noqa: PLR0913
             )
         else:
             _render_series_values(
-                reader,
+                reader.values,
                 filters,
                 console=console,
                 output_format=output_format,
@@ -693,7 +694,7 @@ def values(  # noqa: PLR0913
 
 
 def _render_scalar_values(  # noqa: PLR0913
-    reader: Reader,
+    values: ValuesReader,
     filters: MetricValueFilter,
     *,
     console: Console,
@@ -703,7 +704,7 @@ def _render_scalar_values(  # noqa: PLR0913
     offset: int,
     limit: int | None,
 ) -> None:
-    collection = reader.scalar_values(
+    collection = values.scalar_values(
         filters,
         outliers=OutlierPolicy() if outliers else None,
         include_unverified=include_unverified,
@@ -732,7 +733,7 @@ def _render_scalar_values(  # noqa: PLR0913
 
 
 def _render_series_values(  # noqa: PLR0913
-    reader: Reader,
+    values: ValuesReader,
     filters: MetricValueFilter,
     *,
     console: Console,
@@ -740,7 +741,7 @@ def _render_series_values(  # noqa: PLR0913
     offset: int,
     limit: int | None,
 ) -> None:
-    collection = reader.series_values(filters, offset=offset, limit=limit, with_facets=False)
+    collection = values.series_values(filters, offset=offset, limit=limit, with_facets=False)
     if not len(collection):
         console.print("No series values found.")
         return

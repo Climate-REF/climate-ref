@@ -21,46 +21,32 @@ The typical notebook entry point::
     from climate_ref.results import Reader
 
     with Database.from_config(Config.default(), read_only=True) as db:
-        df = Reader(db).scalar_values().to_pandas()
+        df = Reader(db).values.scalar_values().to_pandas()
+
+Public surface convention
+-------------------------
+
+The top level exports only what a caller *names to make a call*, so the namespace stays small as
+domains are added:
+
+* the ``Reader`` entry point,
+* filter objects you construct and pass in (``MetricValueFilter``, and future
+  ``ExecutionGroupFilter`` / ``DatasetFilter``),
+* value objects you pass in (``OutlierPolicy``, and the future ``ResultPaths``).
+
+Everything the package *returns* -- DTOs, collections, views -- and the sub-reader classes reached
+via ``reader.values`` etc. live in their domain submodule (``climate_ref.results.values``, ...).
+Import them from there on the rare occasion you need to name one, e.g.
+``from climate_ref.results.values import ScalarValue``. The ``Select`` builders and other plumbing
+stay in ``climate_ref.results._query`` and are not part of the public surface.
 """
 
-from climate_ref.results._query import (
-    MetricValueFilter,
-    count_values,
-    latest_execution_for_group,
-    select_scalar_values,
-    select_series_values,
-)
-from climate_ref.results.frames import (
-    collect_facets,
-    scalar_values_to_frame,
-    series_values_to_frame,
-)
-from climate_ref.results.outliers import OutlierPolicy, detect_scalar_outliers
-from climate_ref.results.values import (
-    Facet,
-    Reader,
-    ScalarValue,
-    ScalarValueCollection,
-    SeriesValue,
-    SeriesValueCollection,
-)
+from climate_ref.results._query import MetricValueFilter
+from climate_ref.results.outliers import OutlierPolicy
+from climate_ref.results.values import Reader
 
 __all__ = [
-    "Facet",
     "MetricValueFilter",
     "OutlierPolicy",
     "Reader",
-    "ScalarValue",
-    "ScalarValueCollection",
-    "SeriesValue",
-    "SeriesValueCollection",
-    "collect_facets",
-    "count_values",
-    "detect_scalar_outliers",
-    "latest_execution_for_group",
-    "scalar_values_to_frame",
-    "select_scalar_values",
-    "select_series_values",
-    "series_values_to_frame",
 ]

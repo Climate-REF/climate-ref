@@ -480,6 +480,44 @@ def test_iter_results(cmec_metric):
     assert list(cmec_metric.iter_results())
 
 
+def test_iter_results_lifts_kind():
+    # A ``kind`` dimension in the bundle is lifted onto the value's first-class ``kind``
+    # field and removed from the free dimensions (it has its own database column).
+    bundle = CMECMetric(
+        DIMENSIONS={
+            "json_structure": ["kind", "source_id", "metric"],
+            "kind": {"reference": {}},
+            "source_id": {"ACCESS-ESM1-5": {}},
+            "metric": {"rmse": {}},
+        },
+        RESULTS={"reference": {"ACCESS-ESM1-5": {"rmse": 1.5}}},
+    )
+
+    (value,) = list(bundle.iter_results())
+
+    assert value.kind == "reference"
+    assert "kind" not in value.dimensions
+    assert value.dimensions == {"source_id": "ACCESS-ESM1-5", "metric": "rmse"}
+
+
+def test_iter_results_without_kind_defaults_to_model():
+    # A bundle that predates the contract (no ``kind`` dimension) is unchanged: the value
+    # keeps the default role and its dimensions are untouched.
+    bundle = CMECMetric(
+        DIMENSIONS={
+            "json_structure": ["source_id", "metric"],
+            "source_id": {"ACCESS-ESM1-5": {}},
+            "metric": {"rmse": {}},
+        },
+        RESULTS={"ACCESS-ESM1-5": {"rmse": 2.0}},
+    )
+
+    (value,) = list(bundle.iter_results())
+
+    assert value.kind == "model"
+    assert value.dimensions == {"source_id": "ACCESS-ESM1-5", "metric": "rmse"}
+
+
 def test_iter_results_empty(cmec_right_metric_dict):
     cmec_metric = CMECMetric.model_validate(CMECMetric.create_template())
     assert not list(cmec_metric.iter_results())

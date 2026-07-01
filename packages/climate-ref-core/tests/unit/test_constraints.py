@@ -930,6 +930,40 @@ class TestContiguousTimerange:
         expected_data = data.loc[expected_rows]
         assert_frame_equal(self.constraint.apply(data, data.loc[[]]), expected_data)
 
+    def test_multi_file_monthly_wobbling_centers(self) -> None:
+        """Monthly data split across files with cell-centers on day 15 or 16 is accepted.
+
+        The 32-day gaps between consecutive file boundaries are contiguous
+        monthly data, not a real gap.
+        """
+        data = pd.DataFrame(
+            {
+                "variable_id": ["tas", "tas", "tas", "tas", "tas"],
+                "start_time": [
+                    datetime(500, 1, 16),
+                    datetime(600, 1, 16),
+                    datetime(700, 1, 16),
+                    datetime(800, 1, 16),
+                    datetime(900, 1, 16),
+                ],
+                "end_time": [
+                    datetime(599, 12, 15),
+                    datetime(699, 12, 16),
+                    datetime(799, 12, 15),
+                    datetime(899, 12, 15),
+                    datetime(999, 12, 16),
+                ],
+                "path": [
+                    "tas_Amon_NESM3_piControl_r1i1p1f1_gn_050001-059912.nc",
+                    "tas_Amon_NESM3_piControl_r1i1p1f1_gn_060001-069912.nc",
+                    "tas_Amon_NESM3_piControl_r1i1p1f1_gn_070001-079912.nc",
+                    "tas_Amon_NESM3_piControl_r1i1p1f1_gn_080001-089912.nc",
+                    "tas_Amon_NESM3_piControl_r1i1p1f1_gn_090001-099912.nc",
+                ],
+            }
+        )
+        assert_frame_equal(self.constraint.apply(data, data.loc[[]]), data)
+
     def test_cftime_same_calendar_contiguous(self) -> None:
         """Contiguous cftime dates with the same calendar are accepted."""
         data = pd.DataFrame(

@@ -466,12 +466,10 @@ class RequireContiguousTimerange:
         """
         Check that all subgroups of the group have a contiguous timerange.
         """
-        # Maximum allowed time difference between the end of one file and the
-        # start of the next file.
-        max_timedelta = pd.Timedelta(
-            days=31,  # Maximum number of days in a month.
-            hours=1,  # Allow for potential rounding errors.
-        )
+        # Maximum allowed gap between the end of one file and the start of the
+        # next. Assumes monthly frequency: 45 days clears a monthly step while
+        # staying below two steps, so genuine month-sized holes still fail.
+        max_timedelta = pd.Timedelta(days=45)
 
         select = pd.Series(True, index=group.index)
 

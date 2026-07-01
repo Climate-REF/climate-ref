@@ -1,10 +1,11 @@
 {
   "catalog_hash": "97fbf6c3eafe72779d017d41744a0f69504f6128",
   "committed": {
-    "diagnostic.json": "d5eaddcd57663b2f957fe1e4367abbcabe39a76826022835ce1f53b10f539e81",
+    "diagnostic.json": "5b771925465c89f29804da47425b48e486d782261e3231f6f91cc83a27a3edf6",
     "output.json": "e20535bfc6e337eb4f36b90f75494a192878dc04b6a83cc334bc7595aafb05b4",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 2,
   "native": {
     "EG_Spec_North_test_PNA_DJF_20CR_1900-2005.png": {
       "sha256": "507f5faee65bd25a8d517604e236fae5c6fa0759c040dbfa96d1be6a1275a88b",
@@ -215,6 +216,6 @@
       "size": 12338
     }
   },
-  "schema": 1,
-  "test_case_version": 1
+  "schema": 2,
+  "test_case_version": 2
 }

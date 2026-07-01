@@ -24,7 +24,9 @@ from climate_ref.models.execution import (
 from climate_ref.models.metric_value import MetricValueType
 from climate_ref.models.provider import Provider as ProviderModel
 from climate_ref_core.diagnostics import ExecutionResult
+from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.metric_values import ScalarMetricValue as TScalar
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
 from climate_ref_core.output_files import copy_output_file
 from climate_ref_core.pycmec.controlled_vocabulary import CV
@@ -151,7 +153,8 @@ def test_handle_execution_result_with_series(
     series = list(db.session.execute(select(SeriesMetricValue)).scalars())
     assert len(series) == 1
     assert series[0].type == MetricValueType.SERIES
-    assert series[0].dimensions == {"source_id": "test1"}
+    # ``kind`` is a faceted dimension, so it surfaces here alongside the provider dimensions.
+    assert series[0].dimensions == {"source_id": "test1", "kind": "model"}
     assert series[0].values == [1.0, 2.0, 3.0]
     assert series[0].index == [0, 1, 2]
     assert series[0].index_name == "time"
@@ -519,6 +522,134 @@ class TestIngestSeriesValues:
             .all()
         )
         assert len(series) >= 1
+
+
+class TestIngestKind:
+    """Ingest-time handling of the metric-value ``kind`` role signal."""
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_series_persists_kind(
+        self, config, _ingestion_db, ingestion_execution, scratch_dir_with_data, mock_result_factory
+    ):
+        """A series defaults to kind ``model`` and that role is persisted."""
+        mock_result = mock_result_factory(scratch_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
+        _ingestion_db.session.commit()
+
+        series = (
+            _ingestion_db.session.query(SeriesMetricValue)
+            .filter_by(execution_id=ingestion_execution.id)
+            .all()
+        )
+        assert len(series) == 1
+        assert series[0].kind == "model"
+        assert series[0].reference_id is None
+
+    def test_ingest_series_rejects_invalid_kind(
+        self,
+        config,
+        _ingestion_db,
+        ingestion_execution,
+        scratch_dir_with_data,
+        mock_result_factory,
+        mocker,
+    ):
+        """A series whose kind is not a known role is rejected hard, not warned."""
+        bad = TSeries(dimensions={"source_id": "m"}, values=[1.0], index=[0], index_name="time")
+        # Bypass the pydantic Literal to simulate a non-conforming value reaching ingest.
+        bad.kind = "bogus"
+        mocker.patch.object(TSeries, "load_from_json", return_value=[bad])
+
+        mock_result = mock_result_factory(scratch_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        with pytest.raises(ResultValidationError, match="Invalid metric-value kind"):
+            ingest_series_values(
+                database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv
+            )
+
+    def test_ingest_scalar_rejects_invalid_kind(
+        self,
+        config,
+        _ingestion_db,
+        ingestion_execution,
+        scratch_dir_with_data,
+        mock_result_factory,
+        mocker,
+    ):
+        """A scalar whose kind is not a known role is rejected hard, not warned."""
+        bad = TScalar(dimensions={"source_id": "m"}, value=1.0)
+        # Bypass the pydantic Literal to simulate a non-conforming value reaching ingest.
+        bad.kind = "bogus"
+        bundle = CMECMetric(**CMECMetric.create_template())
+        mocker.patch("climate_ref.executor.result_handling.CMECMetric.load_from_json", return_value=bundle)
+        mocker.patch.object(CMECMetric, "iter_results", return_value=[bad])
+
+        mock_result = mock_result_factory(scratch_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        with pytest.raises(ResultValidationError, match="Invalid metric-value kind"):
+            ingest_scalar_values(
+                database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv
+            )
+
+    @pytest.mark.filterwarnings("ignore:Unknown dimension values.*:UserWarning")
+    def test_ingest_series_reference_id_is_deterministic(
+        self, config, _ingestion_db, ingestion_execution, scratch_dir_with_data, mock_result_factory
+    ):
+        """Identical reference payloads share a reference_id; different ones differ; models have none."""
+        ref_a1 = TSeries(
+            dimensions={"reference_source_id": "HadISST"},
+            kind="reference",
+            values=[1.0, 2.0],
+            index=[0, 1],
+            index_name="time",
+        )
+        ref_a2 = TSeries(
+            dimensions={"reference_source_id": "HadISST"},
+            kind="reference",
+            values=[1.0, 2.0],
+            index=[0, 1],
+            index_name="time",
+        )
+        ref_b = TSeries(
+            dimensions={"reference_source_id": "HadISST"},
+            kind="reference",
+            values=[9.0, 9.0],
+            index=[0, 1],
+            index_name="time",
+        )
+        model = TSeries(
+            dimensions={"source_id": "CanESM5"},
+            values=[1.0, 2.0],
+            index=[0, 1],
+            index_name="time",
+        )
+        TSeries.dump_to_json(scratch_dir_with_data / "series.json", [ref_a1, ref_a2, ref_b, model])
+
+        mock_result = mock_result_factory(scratch_dir_with_data)
+        cv = CV.load_from_file(config.paths.dimensions_cv)
+
+        ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
+        _ingestion_db.session.commit()
+
+        series = (
+            _ingestion_db.session.query(SeriesMetricValue)
+            .filter_by(execution_id=ingestion_execution.id)
+            .all()
+        )
+        a_ids = [s.reference_id for s in series if s.kind == "reference" and s.values == [1.0, 2.0]]
+        b_ids = [s.reference_id for s in series if s.kind == "reference" and s.values == [9.0, 9.0]]
+        model_rows = [s for s in series if s.kind == "model"]
+
+        assert len(a_ids) == 2
+        assert a_ids[0] is not None
+        assert a_ids[0] == a_ids[1]
+        assert b_ids[0] != a_ids[0]
+        assert len(model_rows) == 1
+        assert model_rows[0].reference_id is None
 
 
 class TestIngestExecutionResult:

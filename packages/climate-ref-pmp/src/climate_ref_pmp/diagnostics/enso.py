@@ -43,14 +43,17 @@ class ENSO(CommandLineDiagnostic):
 
     reconstruction_inputs = PMP_RECONSTRUCTION_INPUTS
 
+    version = 2
+
     facets = (
+        "kind",
         "mip_id",
         "source_id",
         "member_id",
         "grid_label",
         "experiment_id",
         "metric",
-        "reference_datasets",
+        "reference_source_id",
     )
 
     def __init__(self, metrics_collection: str, experiments: Collection[str] = ("historical",)) -> None:
@@ -392,6 +395,9 @@ class ENSO(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
+                # PMP scalars are model-performance scores against a reference, not reference
+                # (observation) values, so every value's role is ``model``.
+                "kind": "model",
                 "mip_id": model_source_type.value,
                 "source_id": source_id,
                 "member_id": member_id,

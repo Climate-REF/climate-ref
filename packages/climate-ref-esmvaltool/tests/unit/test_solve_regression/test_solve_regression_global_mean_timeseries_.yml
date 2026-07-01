@@ -1287,6 +1287,9 @@ cmip6_piControl_gn_r1i1p1f1_MRI-ESM2-0_Amon_tas:
   cmip6:
   - CMIP6.CMIP.MRI.MRI-ESM2-0.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190603
   - CMIP6.CMIP.MRI.MRI-ESM2-0.piControl.r1i1p1f1.Amon.tas.gn.v20190222
+cmip6_piControl_gn_r1i1p1f1_NESM3_Amon_tas:
+  cmip6:
+  - CMIP6.CMIP.NUIST.NESM3.piControl.r1i1p1f1.Amon.tas.gn.v20190708
 cmip6_piControl_gn_r1i1p1f1_NorCPM1_Amon_tas:
   cmip6:
   - CMIP6.CMIP.NCC.NorCPM1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190914
@@ -3488,6 +3491,9 @@ cmip7_piControl_gn_MRI-ESM2-0_tas_r1i2p1f1:
   cmip7:
   - CMIP7.CMIP.MRI.MRI-ESM2-0.1pctCO2.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190603
   - CMIP7.CMIP.MRI.MRI-ESM2-0.piControl.r1i2p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v20191205
+cmip7_piControl_gn_NESM3_tas_r1i1p1f1:
+  cmip7:
+  - CMIP7.CMIP.NUIST.NESM3.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v20190708
 cmip7_piControl_gn_NorCPM1_tas_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NCC.NorCPM1.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20200724

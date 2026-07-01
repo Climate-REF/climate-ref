@@ -5,6 +5,7 @@
     "output.json": "e937c8b787585d0c2f4025eb93a4effe8f4065ba4575285655d5be6cffa5db55",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 1,
   "native": {
     "annual_mean_global_mean_timeseries.nc": {
       "sha256": "acd6202a8fd46d5e1a8d5bef1650b20ab1a93452193aba56a0d05a173cacc62b",
@@ -23,6 +24,6 @@
       "size": 2
     }
   },
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 2
 }

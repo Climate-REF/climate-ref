@@ -12,8 +12,29 @@ documentation:
   - schlund_manuel
   references:
   - gregory04grl
-  projects:
-  - crescendo
+datasets:
+- project: CMIP7
+  activity: CMIP
+  dataset: ACCESS-ESM1-5
+  ensemble: r1i1p1f1
+  exp: abrupt-4xCO2
+  frequency: mon
+  grid: gn
+  institute: CSIRO
+  mip: atmos
+  region: glb
+  timerange: 0101/0250
+- project: CMIP7
+  activity: CMIP
+  dataset: ACCESS-ESM1-5
+  ensemble: r1i1p1f1
+  exp: piControl
+  frequency: mon
+  grid: gn
+  institute: CSIRO
+  mip: atmos
+  region: glb
+  timerange: 0101/0250
 preprocessors:
   spatial_mean:
     area_statistics:
@@ -23,62 +44,13 @@ diagnostics:
     description: Calculate ECS.
     variables:
       tas:
+        branding_suffix: tavg-h2m-hxy-u
         preprocessor: spatial_mean
-        additional_datasets:
-        - project: CMIP7
-          activity: CMIP
-          branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r1i1p1f1
-          exp: abrupt-4xCO2
-          frequency: mon
-          grid: gn
-          institute: CSIRO
-          mip: atmos
-          region: glb
-          timerange: 01010116T120000/02501216T120000
-        - project: CMIP7
-          activity: CMIP
-          branding_suffix: tavg-h2m-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r1i1p1f1
-          exp: piControl
-          frequency: mon
-          grid: gn
-          institute: CSIRO
-          mip: atmos
-          region: glb
-          timerange: 01010116T120000/02501216T120000
       rtnt:
-        preprocessor: spatial_mean
+        branding_suffix: tavg-u-hxy-u
         derive: true
-        additional_datasets:
-        - project: CMIP7
-          activity: CMIP
-          branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r1i1p1f1
-          exp: abrupt-4xCO2
-          frequency: mon
-          grid: gn
-          institute: CSIRO
-          mip: atmos
-          region: glb
-          timerange: 01010116T120000/02501216T120000
-        - project: CMIP7
-          activity: CMIP
-          branding_suffix: tavg-u-hxy-u
-          dataset: ACCESS-ESM1-5
-          ensemble: r1i1p1f1
-          exp: piControl
-          frequency: mon
-          grid: gn
-          institute: CSIRO
-          mip: atmos
-          region: glb
-          timerange: 01010116T120000/02501216T120000
+        preprocessor: spatial_mean
     scripts:
       calculate:
         script: climate_metrics/ecs.py
         calculate_mmm: false
-datasets: []

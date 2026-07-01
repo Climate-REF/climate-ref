@@ -357,6 +357,10 @@ cmip6_gn_r1i1p1f1_NESM3:
   - CMIP6.CMIP.NUIST.NESM3.abrupt-4xCO2.r1i1p1f1.Amon.rsdt.gn.v20190707
   - CMIP6.CMIP.NUIST.NESM3.abrupt-4xCO2.r1i1p1f1.Amon.rsut.gn.v20190707
   - CMIP6.CMIP.NUIST.NESM3.abrupt-4xCO2.r1i1p1f1.Amon.tas.gn.v20190707
+  - CMIP6.CMIP.NUIST.NESM3.piControl.r1i1p1f1.Amon.rlut.gn.v20190708
+  - CMIP6.CMIP.NUIST.NESM3.piControl.r1i1p1f1.Amon.rsdt.gn.v20190708
+  - CMIP6.CMIP.NUIST.NESM3.piControl.r1i1p1f1.Amon.rsut.gn.v20190708
+  - CMIP6.CMIP.NUIST.NESM3.piControl.r1i1p1f1.Amon.tas.gn.v20190708
 cmip6_gn_r1i1p1f1_NorCPM1:
   cmip6:
   - CMIP6.CMIP.NCC.NorCPM1.1pctCO2.r1i1p1f1.fx.areacella.gn.v20190914
@@ -1795,6 +1799,10 @@ cmip7_gn_NESM3_r1i1p1f1:
   - CMIP7.CMIP.NUIST.NESM3.abrupt-4xCO2.r1i1p1f1.glb.mon.rsdt.tavg-u-hxy-u.gn.v20190707
   - CMIP7.CMIP.NUIST.NESM3.abrupt-4xCO2.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gn.v20190707
   - CMIP7.CMIP.NUIST.NESM3.abrupt-4xCO2.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v20190707
+  - CMIP7.CMIP.NUIST.NESM3.piControl.r1i1p1f1.glb.mon.rlut.tavg-u-hxy-u.gn.v20190708
+  - CMIP7.CMIP.NUIST.NESM3.piControl.r1i1p1f1.glb.mon.rsdt.tavg-u-hxy-u.gn.v20190708
+  - CMIP7.CMIP.NUIST.NESM3.piControl.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gn.v20190708
+  - CMIP7.CMIP.NUIST.NESM3.piControl.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v20190708
 cmip7_gn_NorCPM1_r1i1p1f1:
   cmip7:
   - CMIP7.CMIP.NCC.NorCPM1.abrupt-4xCO2.r1i1p1f1.glb.mon.rlut.tavg-u-hxy-u.gn.v20190914

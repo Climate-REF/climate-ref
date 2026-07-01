@@ -7,6 +7,8 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
+      "reference_source_id",
       "experiment_id",
       "source_id",
       "member_id",
@@ -15,12 +17,18 @@
       "metric",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
     "metric": {
       "Bias": {},
       "Spatial Distribution": {}
+    },
+    "reference_source_id": {
+      "WOA2023": {}
     },
     "region": {
       "None": {
@@ -63,20 +71,24 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "historical": {
-      "CanESM5": {
-        "r1i1p1f1": {
-          "gn": {
-            "None": {
-              "Bias": {
-                "Bias": -0.2060351564518165,
-                "Bias Score": 0.1588352181287018,
-                "Period Mean": 34.33855620637232
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.8964721764070219,
-                "Normalized Standard Deviation": 0.989683986828935,
-                "Spatial Distribution Score": 0.9481341331659856
+    "model": {
+      "WOA2023": {
+        "historical": {
+          "CanESM5": {
+            "r1i1p1f1": {
+              "gn": {
+                "None": {
+                  "Bias": {
+                    "Bias": -0.2060352,
+                    "Bias Score": 0.1588352,
+                    "Period Mean": 34.33856
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.8964722,
+                    "Normalized Standard Deviation": 0.989684,
+                    "Spatial Distribution Score": 0.9481341
+                  }
+                }
               }
             }
           }

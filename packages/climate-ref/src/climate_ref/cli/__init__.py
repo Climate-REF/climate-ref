@@ -16,12 +16,15 @@ from climate_ref.config import Config
 from climate_ref.constants import CONFIG_FILENAME
 from climate_ref.database import Database
 from climate_ref_core import __version__ as __core_version__
+from climate_ref_core.env import env
 from climate_ref_core.logging import initialise_logging
 
 # Registry of read-only command paths (group, command)
 # These commands skip database backup before migrations since they don't modify data
 _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("config", "list"),
+    ("config", "get"),
+    ("config", "validate"),
     ("datasets", "list"),
     ("datasets", "list-columns"),
     ("datasets", "stats"),
@@ -47,6 +50,27 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("test-cases", "check-store"),
 }
 
+# Commands whose job is to create or inspect the configuration file, so they must
+# run even when that file is missing or malformed.
+_CONFIG_BOOTSTRAP_COMMANDS: set[tuple[str, str]] = {
+    ("config", "init"),
+    ("config", "validate"),
+}
+
+
+def _command_path_in_argv(command_paths: set[tuple[str, str]]) -> bool:
+    args = sys.argv[1:]
+    for index, arg in enumerate(args[:-1]):
+        if arg.startswith("-"):
+            continue
+        for group, command in command_paths:
+            if arg != group:
+                continue
+            remaining = [candidate for candidate in args[index + 1 :] if not candidate.startswith("-")]
+            if remaining and remaining[0] == command:
+                return True
+    return False
+
 
 def _is_read_only_command() -> bool:
     """
@@ -55,15 +79,12 @@ def _is_read_only_command() -> bool:
     This checks against a registry of known read-only command paths since
     the Typer callback runs before nested commands are resolved.
     """
-    # Parse sys.argv to find the command path
-    # Skip options (--flag) and the program name
-    args = [arg for arg in sys.argv[1:] if not arg.startswith("-")]
+    return _command_path_in_argv(_READ_ONLY_COMMANDS)
 
-    if len(args) >= 2:  # noqa: PLR2004
-        # Check if (group, command) is in our read-only registry
-        return (args[0], args[1]) in _READ_ONLY_COMMANDS
 
-    return False
+def _is_config_bootstrap_command() -> bool:
+    """Check if the current command must tolerate missing or malformed config."""
+    return _command_path_in_argv(_CONFIG_BOOTSTRAP_COMMANDS)
 
 
 class LogLevel(StrEnum):
@@ -88,6 +109,8 @@ class CLIContext:
 
     config: Config
     console: Console
+    configuration_directory: Path | None = None
+    config_load_error: str | None = None
     skip_backup: bool = False
     _database: Database | None = field(default=None, alias="_database")
     _database_unmigrated: Database | None = field(default=None, alias="_database_unmigrated")
@@ -137,7 +160,9 @@ def _create_console() -> Console:
     return Console()
 
 
-def _load_config(configuration_directory: Path | None = None) -> Config:
+def _load_config(
+    configuration_directory: Path | None = None, tolerate_problems: bool = False
+) -> tuple[Config, str | None]:
     """
     Load the configuration from the specified directory
 
@@ -155,6 +180,18 @@ def _load_config(configuration_directory: Path | None = None) -> Config:
     :
         The configuration loaded from the specified directory
     """
+    if tolerate_problems:
+        if configuration_directory:
+            target = configuration_directory / CONFIG_FILENAME
+        else:
+            target = env.path("REF_CONFIGURATION") / CONFIG_FILENAME
+        try:
+            return Config.load(target, allow_missing=True), None
+        except Exception as exc:
+            config = Config()
+            config._config_file = target
+            return config, str(exc)
+
     try:
         if configuration_directory:
             config = Config.load(configuration_directory / CONFIG_FILENAME, allow_missing=False)
@@ -163,7 +200,7 @@ def _load_config(configuration_directory: Path | None = None) -> Config:
     except FileNotFoundError:
         typer.secho("Configuration file not found", fg=typer.colors.RED)
         raise typer.Exit(1)
-    return config
+    return config, None
 
 
 def build_app() -> typer.Typer:
@@ -229,9 +266,9 @@ def main(  # noqa: PLR0913
         typer.Option("--quiet", "-q", help="Set the log level to WARNING"),
     ] = False,
     log_level: Annotated[
-        LogLevel,
+        LogLevel | None,
         typer.Option(case_sensitive=False, help="Set the level of logging information to display"),
-    ] = LogLevel.Info,
+    ] = None,
     version: Annotated[
         bool | None,
         typer.Option(
@@ -251,8 +288,13 @@ def main(  # noqa: PLR0913
 
     logger.remove()
 
-    config = _load_config(configuration_directory)
-    config.log_level = log_level.value
+    tolerate_config_problems = ctx.invoked_subcommand == "config" or _is_config_bootstrap_command()
+    config, config_load_error = _load_config(
+        configuration_directory,
+        tolerate_problems=tolerate_config_problems,
+    )
+    if log_level is not None:
+        config.log_level = log_level.value
 
     log_format = config.log_format
     initialise_logging(level=config.log_level, format=log_format, log_directory=config.paths.log)
@@ -266,7 +308,13 @@ def main(  # noqa: PLR0913
     # The database is only created when first accessed
     # Skip backup for read-only commands to reduce overhead
     skip_backup = _is_read_only_command()
-    cli_context = CLIContext(config=config, console=_create_console(), skip_backup=skip_backup)
+    cli_context = CLIContext(
+        config=config,
+        console=_create_console(),
+        configuration_directory=configuration_directory,
+        config_load_error=config_load_error,
+        skip_backup=skip_backup,
+    )
     ctx.obj = cli_context
 
     # Register cleanup to close database connection when CLI exits

@@ -1,10 +1,12 @@
 [
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Snow Area Percentage",
       "standard_name": "surface_snow_area_fraction",
-      "units": "percent"
+      "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -413,6 +415,8 @@
       "2014-12-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Snow Area Percentage",
+    "value_units": "%",
     "values": [
       37.26287,
       36.34818,
@@ -814,10 +818,12 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Snow Area Percentage",
       "standard_name": "surface_snow_area_fraction",
-      "units": "percent"
+      "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "experiment_id": "historical",
       "grid_label": "gn",
@@ -1226,6 +1232,8 @@
       "2014-12-16T12:00:00"
     ],
     "index_name": "time",
+    "value_long_name": "Snow Area Percentage",
+    "value_units": "%",
     "values": [
       0.0,
       0.0,
@@ -1627,15 +1635,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Fractional Snow Cover",
       "standard_name": "surface_snow_area_fraction",
-      "units": "percent"
+      "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "ESACCI",
-      "region": "global",
-      "source_id": "Reference"
+      "region": "global"
     },
     "index": [
       "1982-01-15T00:00:00",
@@ -2037,6 +2046,9 @@
       "2015-01-15T00:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "Fractional Snow Cover",
+    "value_units": "%",
     "values": [
       24.99769,
       25.35823,
@@ -2439,15 +2451,16 @@
   },
   {
     "attributes": {
+      "calendar": "noleap",
       "long_name": "Fractional Snow Cover",
       "standard_name": "surface_snow_area_fraction",
-      "units": "percent"
+      "units": "%"
     },
+    "calendar": "noleap",
     "dimensions": {
       "metric": "trace",
       "reference_source_id": "ESACCI",
-      "region": "tropical",
-      "source_id": "Reference"
+      "region": "tropical"
     },
     "index": [
       "1982-01-15T00:00:00",
@@ -2849,6 +2862,9 @@
       "2015-01-15T00:00:00"
     ],
     "index_name": "time",
+    "kind": "reference",
+    "value_long_name": "Fractional Snow Cover",
+    "value_units": "%",
     "values": [
       0.007487896,
       0.006604818,

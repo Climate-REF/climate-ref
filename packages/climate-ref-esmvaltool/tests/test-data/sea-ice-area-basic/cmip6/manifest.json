@@ -3,8 +3,9 @@
   "committed": {
     "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
     "output.json": "ece9f19183b1bede25cda85779d3eb905f51bc24615559dbcc2ac6688835cd92",
-    "series.json": "8ad040e4747b2fc954d9166da0e6a11749cf5f97efc51ea73e49b220b2062f8b"
+    "series.json": "7b48e1d8126b3c37a27eb167cdeebc00ca1d5a2c8f955e9362120dbedd84b926"
   },
+  "diagnostic_version": 1,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -63,6 +64,6 @@
       "size": 17179
     }
   },
-  "schema": 1,
-  "test_case_version": 1
+  "schema": 2,
+  "test_case_version": 2
 }

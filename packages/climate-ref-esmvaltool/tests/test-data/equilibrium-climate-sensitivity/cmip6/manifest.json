@@ -5,33 +5,34 @@
     "output.json": "dd8c208f2134be1289606e1b12be998d327f4ae329318a5a83cfd82ac2325219",
     "series.json": "cac18de7ea3575ad34111d4e3402545ba358959e2037e5bc8c48fdf22f264267"
   },
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "4253b68b6116fc9afc5970a9186b20c82be9975330842a8e61efe812b1c2d0aa",
       "size": 652
     },
     "executions/recipe/index.html": {
-      "sha256": "6be8b655cedb899d06c265a70289ac05e80c4f006a78225ba2c6b5497149a784",
-      "size": 15248
+      "sha256": "0b0f4161a6be85de16bbe9fdff79bd39bc7ac4cd1a3fc3772744cdc679de1761",
+      "size": 15205
     },
     "executions/recipe/plots/ecs/calculate/CanESM5.png": {
-      "sha256": "e4f2631cad3197632294d6c67e6bac6b1df33ce46c5f1083c1506b0925fca76e",
-      "size": 132712
+      "sha256": "eadfe66066e4c0db4d4a3be46f55df120d88a039841feeecefa55a3b1af3df50",
+      "size": 134226
     },
     "executions/recipe/run/ecs/calculate/diagnostic_provenance.yml": {
-      "sha256": "924927c1ba86ef64a9d4c0280d08b04d2b4963cf5ce29be6935a23cf29e509a6",
+      "sha256": "745779fc2f28cfa647e1b7f770bab71ed35dc732a0284a9149e93605a3bfd31b",
       "size": 3062
     },
     "executions/recipe/work/ecs/calculate/ecs.nc": {
-      "sha256": "d70288b967dacf5fa30262b0e0f08f2af690cf57c85d4e16237d0878ec98eb81",
+      "sha256": "de1f7cb247a3bef9fa64a131c949cd1ecbb2e8c8e59d2bb4d8d9f8fd990a16cd",
       "size": 9035
     },
     "executions/recipe/work/ecs/calculate/ecs_regression_CanESM5.nc": {
-      "sha256": "8f956d58cbe5ee01284fbb7853287d26e766b43220e53570da39c53f0e92d6bd",
-      "size": 27056
+      "sha256": "f3cb94049198e5e9339b511f646c8667aa881601488d1fe1382d920921b5f070",
+      "size": 27071
     },
     "executions/recipe/work/ecs/calculate/lambda.nc": {
-      "sha256": "b1ffa7059ce8fc9d9fa730c6b3703f5d303b40dcbf8922dc3c09e8d5d0af24e6",
+      "sha256": "4c8772a4570bdf5a5d9068887494ae1243928d2745f76c0ba23e67ba702b5bdd",
       "size": 9014
     },
     "output.json": {
@@ -43,6 +44,6 @@
       "size": 8877
     }
   },
-  "schema": 1,
-  "test_case_version": 1
+  "schema": 2,
+  "test_case_version": 2
 }

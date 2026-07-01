@@ -7,6 +7,8 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
+      "reference_source_id",
       "experiment_id",
       "source_id",
       "member_id",
@@ -15,6 +17,9 @@
       "metric",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -22,6 +27,9 @@
       "Bias": {},
       "RMSE": {},
       "Spatial Distribution": {}
+    },
+    "reference_source_id": {
+      "GFED": {}
     },
     "region": {
       "global": {
@@ -77,40 +85,44 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "historical": {
-      "CESM2": {
-        "r1i1p1f1": {
-          "gn": {
-            "global": {
-              "Bias": {
-                "Bias": -0.01023764,
-                "Bias Score": 0.5853679,
-                "Period Mean": 0.2841744
-              },
-              "RMSE": {
-                "RMSE": 1.202991,
-                "RMSE Score": 0.227415
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.5236028,
-                "Normalized Standard Deviation": 0.7309008,
-                "Spatial Distribution Score": 0.6915851
-              }
-            },
-            "tropical": {
-              "Bias": {
-                "Bias": -0.2166273,
-                "Bias Score": 0.5737502,
-                "Period Mean": 0.6258388
-              },
-              "RMSE": {
-                "RMSE": 2.364947,
-                "RMSE Score": 0.2249285
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.4581601,
-                "Normalized Standard Deviation": 0.6864285,
-                "Spatial Distribution Score": 0.6348802
+    "model": {
+      "GFED": {
+        "historical": {
+          "CESM2": {
+            "r1i1p1f1": {
+              "gn": {
+                "global": {
+                  "Bias": {
+                    "Bias": -0.01023764,
+                    "Bias Score": 0.5853679,
+                    "Period Mean": 0.2841744
+                  },
+                  "RMSE": {
+                    "RMSE": 1.202991,
+                    "RMSE Score": 0.227415
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.5236028,
+                    "Normalized Standard Deviation": 0.7309008,
+                    "Spatial Distribution Score": 0.6915851
+                  }
+                },
+                "tropical": {
+                  "Bias": {
+                    "Bias": -0.2166273,
+                    "Bias Score": 0.5737502,
+                    "Period Mean": 0.6258388
+                  },
+                  "RMSE": {
+                    "RMSE": 2.364947,
+                    "RMSE Score": 0.2249285
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.4581601,
+                    "Normalized Standard Deviation": 0.6864285,
+                    "Spatial Distribution Score": 0.6348802
+                  }
+                }
               }
             }
           }

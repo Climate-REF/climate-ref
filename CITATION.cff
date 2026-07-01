@@ -36,8 +36,8 @@ authors:
 - family-names: "Price"
   given-names: "Zach"
   orcid: "https://orcid.org/0009-0001-7804-886X"
-version: 0.14.7
+version: 0.15.0
 doi: 10.5281/zenodo.15103441
-date-released: 2026-06-18
+date-released: 2026-06-30
 url: "https://github.com/Climate-REF/climate-ref"
 license: "Apache-2.0"

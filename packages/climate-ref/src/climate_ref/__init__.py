@@ -19,6 +19,15 @@ dataset_registry_manager.register(
     package="climate_ref.dataset_registry",
     resource="obs4ref_reference.txt",
 )
+# Register the quickstart data registry -- a tiny curated subset of obs4REF used by the
+# five-minute quickstart so users can fetch a single reference dataset rather than the
+# full (multi-gigabyte) obs4REF collection.
+dataset_registry_manager.register(
+    "quickstart",
+    base_url=DATASET_URL,
+    package="climate_ref.dataset_registry",
+    resource="quickstart.txt",
+)
 # Register the sample data registry -- used for testing
 dataset_registry_manager.register(
     "sample-data",

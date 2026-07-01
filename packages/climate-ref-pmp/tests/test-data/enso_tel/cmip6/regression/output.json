@@ -254,9 +254,9 @@
     }
   },
   "provenance": {
-    "commandLine": "/home/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
     "conda": {
-      "Platform": "linux-64"
+      "Platform": "osx-64"
     },
     "date": "<DATE>",
     "environment": {},
@@ -286,7 +286,7 @@
     },
     "platform": {
       "Name": "<HOSTNAME>",
-      "OS": "Linux",
+      "OS": "<OS>",
       "Version": "<HOST_VERSION>"
     },
     "userId": "<USER>"

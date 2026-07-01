@@ -1,11 +1,11 @@
 {
   "catalog_hash": "8f3a4713d6af9bf6fbac2c17dfc468151d122fb5",
   "committed": {
-    "diagnostic.json": "16c1a520a6aed7e2ae30491c0aba071021fa2d0dc94997a0ad1deb621e256075",
+    "diagnostic.json": "3ce9983da16036524ee2474cccd9f91533a76cca4a1fa32f8c51a55e97aa71b5",
     "output.json": "e36bf1d06d3635f2047609530f9da8d0dc048f352df424f0168d5bb913145079",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "EG_Spec_North_test_NPGO_monthly_HadISST-1-1_1900-2005.png": {
       "sha256": "f7e720e3115fd6cd39e57144a4aaf3cc427944c761436b87e96f752a351c9ddc",
@@ -85,5 +85,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

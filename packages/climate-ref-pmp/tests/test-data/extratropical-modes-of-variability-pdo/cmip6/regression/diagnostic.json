@@ -4,6 +4,7 @@
       "historical": {}
     },
     "json_structure": [
+      "kind",
       "mip_id",
       "source_id",
       "member_id",
@@ -14,6 +15,9 @@
       "method",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -57,52 +61,54 @@
   "NOTES": null,
   "PROVENANCE": {},
   "RESULTS": {
-    "cmip6": {
-      "ACCESS-ESM1-5": {
-        "r1i1p1f1": {
-          "historical": {
-            "HadISST-1-1": {
-              "PDO": {
-                "attributes": {
-                  "target_model_eofs": 1
-                },
-                "monthly": {
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "historical": {
+              "HadISST-1-1": {
+                "PDO": {
                   "attributes": {
-                    "best_matching_model_eofs__cor": 1,
-                    "best_matching_model_eofs__rms": 1,
-                    "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                    "period": "1900-2005"
+                    "target_model_eofs": 1
                   },
-                  "cbf": {
-                    "bias": -0.001180545,
-                    "bias_glo": -0.0490107,
-                    "cor": 0.898669,
-                    "cor_glo": 0.8131307,
-                    "frac": 0.1940063,
-                    "frac_cbf_regrid": 0.3454751,
-                    "mean": 1.306594e-16,
-                    "mean_glo": 0.03319002,
-                    "rms": 0.1720045,
-                    "rms_glo": 0.1126162,
-                    "rmsc": 0.453562,
-                    "rmsc_glo": 0.6673075,
-                    "stdv_pc": 0.255592,
-                    "stdv_pc_ratio_to_obs": 1.083201
-                  },
-                  "eof1": {
-                    "bias": -0.0006476972,
-                    "bias_glo": -0.04768813,
-                    "cor": 0.8341324,
-                    "cor_glo": 0.7640831,
-                    "frac": 0.2065719,
-                    "mean": 2.912426e-17,
-                    "mean_glo": 0.03476321,
-                    "rms": 0.2171376,
-                    "rms_glo": 0.1224397,
-                    "rmsc": 0.5787447,
-                    "rmsc_glo": 0.7385282,
-                    "stdv_pc": 0.3114757,
-                    "stdv_pc_ratio_to_obs": 1.320037
+                  "monthly": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 1,
+                      "best_matching_model_eofs__rms": 1,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                      "period": "1900-2005"
+                    },
+                    "cbf": {
+                      "bias": -0.001180545,
+                      "bias_glo": -0.0490107,
+                      "cor": 0.898669,
+                      "cor_glo": 0.8131307,
+                      "frac": 0.1940063,
+                      "frac_cbf_regrid": 0.3454751,
+                      "mean": 1.306594e-16,
+                      "mean_glo": 0.03319002,
+                      "rms": 0.1720045,
+                      "rms_glo": 0.1126162,
+                      "rmsc": 0.453562,
+                      "rmsc_glo": 0.6673075,
+                      "stdv_pc": 0.255592,
+                      "stdv_pc_ratio_to_obs": 1.083201
+                    },
+                    "eof1": {
+                      "bias": -0.0006476972,
+                      "bias_glo": -0.04768813,
+                      "cor": 0.8341324,
+                      "cor_glo": 0.7640831,
+                      "frac": 0.2065719,
+                      "mean": 2.912426e-17,
+                      "mean_glo": 0.03476321,
+                      "rms": 0.2171376,
+                      "rms_glo": 0.1224397,
+                      "rmsc": 0.5787447,
+                      "rmsc_glo": 0.7385282,
+                      "stdv_pc": 0.3114757,
+                      "stdv_pc_ratio_to_obs": 1.320037
+                    }
                   }
                 }
               }

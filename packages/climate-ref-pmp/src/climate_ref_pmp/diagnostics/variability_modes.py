@@ -39,7 +39,10 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
+    version = 2
+
     facets = (
+        "kind",
         "mip_id",
         "source_id",
         "member_id",
@@ -331,7 +334,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
 
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_files[0], png_files, data_files)
         input_datasets = definition.datasets[model_source_type]
-        reference_datasets = definition.datasets[SourceDatasetType.obs4MIPs]
+        reference_collection = definition.datasets[SourceDatasetType.obs4MIPs]
         member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
         cmec_metric_bundle = cmec_metric_bundle.remove_dimensions(
             [
@@ -341,11 +344,14 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             ],
         ).prepend_dimensions(
             {
+                # PMP scalars are model-performance scores against a reference, not reference
+                # (observation) values, so every value's role is ``model``.
+                "kind": "model",
                 "mip_id": model_source_type.value,
                 "source_id": input_datasets["source_id"].unique()[0],
                 "member_id": input_datasets[member_id_col].unique()[0],
                 "experiment_id": input_datasets["experiment_id"].unique()[0],
-                "reference_source_id": reference_datasets["source_id"].unique()[0],
+                "reference_source_id": reference_collection["source_id"].unique()[0],
             }
         )
 

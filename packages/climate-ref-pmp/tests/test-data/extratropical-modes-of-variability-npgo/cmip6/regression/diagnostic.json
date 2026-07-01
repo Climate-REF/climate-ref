@@ -4,6 +4,7 @@
       "historical": {}
     },
     "json_structure": [
+      "kind",
       "mip_id",
       "source_id",
       "member_id",
@@ -14,6 +15,9 @@
       "method",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -58,67 +62,69 @@
   "NOTES": null,
   "PROVENANCE": {},
   "RESULTS": {
-    "cmip6": {
-      "ACCESS-ESM1-5": {
-        "r1i1p1f1": {
-          "historical": {
-            "HadISST-1-1": {
-              "NPGO": {
-                "attributes": {
-                  "target_model_eofs": 2
-                },
-                "monthly": {
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "historical": {
+              "HadISST-1-1": {
+                "NPGO": {
                   "attributes": {
-                    "best_matching_model_eofs__cor": 2,
-                    "best_matching_model_eofs__rms": 2,
-                    "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 2,
-                    "period": "1900-2005"
+                    "target_model_eofs": 2
                   },
-                  "cbf": {
-                    "bias": 0.002721996,
-                    "bias_glo": 0.005024369,
-                    "cor": 0.8527454,
-                    "cor_glo": 0.6949935,
-                    "frac": 0.09980431,
-                    "frac_cbf_regrid": 0.1771883,
-                    "mean": -8.428902e-16,
-                    "mean_glo": 0.0524414,
-                    "rms": 0.1551412,
-                    "rms_glo": 0.08805765,
-                    "rmsc": 0.5688539,
-                    "rmsc_glo": 0.824039,
-                    "stdv_pc": 0.1771279,
-                    "stdv_pc_ratio_to_obs": 1.162984
-                  },
-                  "eof1": {
-                    "bias": 0.01766398,
-                    "bias_glo": -0.08198712,
-                    "cor": 0.1773933,
-                    "cor_glo": 0.1636136,
-                    "frac": 0.2065719,
-                    "mean": -6.013302e-17,
-                    "mean_glo": -0.03476321,
-                    "rms": 0.4021689,
-                    "rms_glo": 0.1884392,
-                    "rmsc": 1.291321,
-                    "rmsc_glo": 1.320243,
-                    "stdv_pc": 0.3114757,
-                    "stdv_pc_ratio_to_obs": 2.045084
-                  },
-                  "eof2": {
-                    "bias": 0.001959521,
-                    "bias_glo": 0.01491575,
-                    "cor": 0.6879323,
-                    "cor_glo": 0.6004924,
-                    "frac": 0.1055683,
-                    "mean": -1.021519e-15,
-                    "mean_glo": 0.06201272,
-                    "rms": 0.2080476,
-                    "rms_glo": 0.09836151,
-                    "rmsc": 0.8079302,
-                    "rmsc_glo": 0.9303123,
-                    "stdv_pc": 0.2226667,
-                    "stdv_pc_ratio_to_obs": 1.461983
+                  "monthly": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 2,
+                      "best_matching_model_eofs__rms": 2,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 2,
+                      "period": "1900-2005"
+                    },
+                    "cbf": {
+                      "bias": 0.002721996,
+                      "bias_glo": 0.005024369,
+                      "cor": 0.8527454,
+                      "cor_glo": 0.6949935,
+                      "frac": 0.09980431,
+                      "frac_cbf_regrid": 0.1771883,
+                      "mean": -8.428902e-16,
+                      "mean_glo": 0.0524414,
+                      "rms": 0.1551412,
+                      "rms_glo": 0.08805765,
+                      "rmsc": 0.5688539,
+                      "rmsc_glo": 0.824039,
+                      "stdv_pc": 0.1771279,
+                      "stdv_pc_ratio_to_obs": 1.162984
+                    },
+                    "eof1": {
+                      "bias": 0.01766398,
+                      "bias_glo": -0.08198712,
+                      "cor": 0.1773933,
+                      "cor_glo": 0.1636136,
+                      "frac": 0.2065719,
+                      "mean": -6.013302e-17,
+                      "mean_glo": -0.03476321,
+                      "rms": 0.4021689,
+                      "rms_glo": 0.1884392,
+                      "rmsc": 1.291321,
+                      "rmsc_glo": 1.320243,
+                      "stdv_pc": 0.3114757,
+                      "stdv_pc_ratio_to_obs": 2.045084
+                    },
+                    "eof2": {
+                      "bias": 0.001959521,
+                      "bias_glo": 0.01491575,
+                      "cor": 0.6879323,
+                      "cor_glo": 0.6004924,
+                      "frac": 0.1055683,
+                      "mean": -1.021519e-15,
+                      "mean_glo": 0.06201272,
+                      "rms": 0.2080476,
+                      "rms_glo": 0.09836151,
+                      "rmsc": 0.8079302,
+                      "rmsc_glo": 0.9303123,
+                      "stdv_pc": 0.2226667,
+                      "stdv_pc_ratio_to_obs": 1.461983
+                    }
                   }
                 }
               }

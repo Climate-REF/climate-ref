@@ -24,6 +24,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
     name = "Climate drivers for fire"
     slug = "climate-drivers-for-fire"
     base_recipe = "ref/recipe_ref_fire.yml"
+    version = 2
 
     data_requirements = (
         (

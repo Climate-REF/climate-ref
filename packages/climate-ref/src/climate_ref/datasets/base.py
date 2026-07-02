@@ -4,11 +4,13 @@ from typing import Any, Protocol, cast
 import pandas as pd
 from attrs import define
 from loguru import logger
-from sqlalchemy.orm import joinedload
+from sqlalchemy import Select
+from sqlalchemy.orm import selectinload
 
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets.utils import _is_na, _to_db_str, parse_cftime_dates, validate_path
+from climate_ref.datasets.utils import _is_na, _to_db_str, coerce_catalog_times, validate_path
 from climate_ref.models.dataset import Dataset, DatasetFile
+from climate_ref.models.dataset_query import DatasetFilter, select_datasets
 from climate_ref_core.datasets import select_latest_version
 from climate_ref_core.exceptions import RefException
 
@@ -445,42 +447,44 @@ class DatasetAdapter(Protocol):
             group_by=self.dataset_id_metadata,
         )
 
-    def _get_dataset_files(self, db: Database, limit: int | None = None) -> pd.DataFrame:
-        dataset_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
+    def _dataset_query(self) -> Select[Any]:
+        """
+        Build the ``Select`` for this adapter's datasets via the shared query builder.
 
-        result = (
-            db.session.query(DatasetFile)
-            # The join is necessary to be able to order by the dataset columns
-            .join(DatasetFile.dataset)
-            .where(Dataset.dataset_type == dataset_type)
-            # The joinedload is necessary to avoid N+1 queries (one for each dataset)
-            # https://docs.sqlalchemy.org/en/14/orm/loading_relationships.html#the-zen-of-joined-eager-loading
-            .options(joinedload(DatasetFile.dataset.of_type(self.dataset_cls)))
-            .order_by(Dataset.updated_at.desc())
-            .limit(limit)
-            .all()
-        )
+        Routing through ``climate_ref.models.dataset_query.select_datasets`` keeps ONE definition of
+        "the datasets query" behind both ``load_catalog`` and ``climate_ref.results``'s
+        ``reader.datasets``, so the two cannot drift apart.
+        """
+        source_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
+        # ``select_datasets`` does not apply the latest-version filter;
+        # ``load_catalog`` still owns deduplication (``filter_latest_versions``) and the limit,
+        # so behaviour is unchanged.
+        return select_datasets(DatasetFilter(source_type=source_type))
+
+    def _get_dataset_files(self, db: Database) -> pd.DataFrame:
+        # Eager-load files to avoid N+1 (one query per dataset), then explode to one row per file.
+        stmt = self._dataset_query().options(selectinload(self.dataset_cls.files))  # type: ignore[attr-defined]
+        datasets = db.session.execute(stmt).scalars().unique().all()
 
         return pd.DataFrame(
             [
                 {
                     **{k: getattr(file, k) for k in self.file_specific_metadata},
-                    **{k: getattr(file.dataset, k) for k in self.dataset_specific_metadata},
-                    "finalised": file.dataset.finalised,
+                    **{k: getattr(dataset, k) for k in self.dataset_specific_metadata},
+                    "finalised": dataset.finalised,
                 }
-                for file in result
+                for dataset in datasets
+                for file in dataset.files
             ],
-            index=[file.dataset.id for file in result],
+            index=[dataset.id for dataset in datasets for _file in dataset.files],
         )
 
-    def _get_datasets(self, db: Database, limit: int | None = None) -> pd.DataFrame:
-        result_datasets = (
-            db.session.query(self.dataset_cls).order_by(Dataset.updated_at.desc()).limit(limit).all()
-        )
+    def _get_datasets(self, db: Database) -> pd.DataFrame:
+        result_datasets = db.session.execute(self._dataset_query()).scalars().unique().all()
 
         return pd.DataFrame(
             [{k: getattr(dataset, k) for k in self.dataset_specific_metadata} for dataset in result_datasets],
-            index=[file.id for file in result_datasets],
+            index=[dataset.id for dataset in result_datasets],
         )
 
     def load_catalog(
@@ -497,6 +501,9 @@ class DatasetAdapter(Protocol):
         The index of the data catalog is the primary key of the dataset.
         This should be maintained during any processing.
 
+        ``limit`` (when given) bounds the returned rows after deduplicating to the latest version,
+        so up to ``limit`` datasets are returned.
+
         Returns
         -------
         :
@@ -505,9 +512,9 @@ class DatasetAdapter(Protocol):
         with db.session.begin():
             # TODO: Paginate this query to avoid loading all the data at once
             if include_files:
-                catalog = self._get_dataset_files(db, limit)
+                catalog = self._get_dataset_files(db)
             else:
-                catalog = self._get_datasets(db, limit)
+                catalog = self._get_datasets(db)
 
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:
@@ -515,12 +522,14 @@ class DatasetAdapter(Protocol):
             return self._finalise_loaded_catalog(empty)
 
         # Convert start_time/end_time strings from DB to cftime objects
-        if "start_time" in catalog.columns:
-            cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
-            catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
-            catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
+        catalog = coerce_catalog_times(catalog)
 
-        return self._finalise_loaded_catalog(self.filter_latest_versions(catalog))
+        # Deduplicate to the latest version BEFORE applying the limit, so the limit is not spent on
+        # superseded versions (which would otherwise be dropped, returning fewer rows than requested).
+        catalog = self.filter_latest_versions(catalog)
+        if limit is not None:
+            catalog = catalog.head(limit)
+        return self._finalise_loaded_catalog(catalog)
 
     def _finalise_loaded_catalog(self, catalog: pd.DataFrame) -> pd.DataFrame:
         """

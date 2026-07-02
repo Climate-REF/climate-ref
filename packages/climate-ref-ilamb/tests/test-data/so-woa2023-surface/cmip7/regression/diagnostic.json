@@ -79,14 +79,14 @@
               "gn": {
                 "None": {
                   "Bias": {
-                    "Bias": -0.2060348,
-                    "Bias Score": 0.1588366,
-                    "Period Mean": 34.33856
+                    "Bias": -0.2016663,
+                    "Bias Score": 0.1673369,
+                    "Period Mean": 34.34852
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.8964723,
-                    "Normalized Standard Deviation": 0.9896838,
-                    "Spatial Distribution Score": 0.9481342
+                    "Correlation": 0.9039591,
+                    "Normalized Standard Deviation": 0.9916509,
+                    "Spatial Distribution Score": 0.9519126
                   }
                 }
               }

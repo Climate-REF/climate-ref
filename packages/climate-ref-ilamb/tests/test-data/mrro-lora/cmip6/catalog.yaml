@@ -1,5 +1,5 @@
 _metadata:
-  hash: 82797e715e871f6441f98adbffb5f5bc4ffffd75
+  hash: d64eea4e069a326cc46564881d70a4840c442fed
 cmip6:
   slug_column: instance_id
   selector:
@@ -127,4 +127,35 @@ cmip6:
     variable_id: sftlf
     variant_label: r1i1p1f1
     version: v20190429
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: LORA-1-0
+    variable_id: mrro
+    version: v20250902
+  datasets:
+  - activity_id: obs4REF
+    end_time: '2012-12-16 12:00:00'
+    filename: mrro_mon_LORA-1-0_REF_gn_198001-201212.nc
+    finalised: true
+    frequency: mon
+    grid: 0.5x0.5 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4REF.ARCCSS.LORA-1-0.mon.mrro.50km.gn.v20250902
+    institution_id: ARCCSS
+    long_name: Total Runoff
+    nominal_resolution: 50 km
+    product: observations
+    realm: land
+    source_id: LORA-1-0
+    source_type: gridded_insitu
+    source_version_number: '1.0'
+    start_time: '1980-01-16 12:00:00'
+    time_range: 1980-01-16 12:00:00-2012-12-16 12:00:00
+    units: kg m-2 s-1
+    variable_id: mrro
+    variant_label: REF
+    version: v20250902
     vertical_levels: 1

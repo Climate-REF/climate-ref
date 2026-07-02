@@ -818,6 +818,18 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+            # Relationship analyses (and any remaining legacy string-path sources)
+            # still refer to keys in the ILAMB/obs4REF registries.
+            # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so
+            # they remain resolvable when a diagnostic mixes obs4REF and registry data.
+            ref_datasets = pd.concat(
+                [
+                    ref_datasets,
+                    self.ilamb_data.datasets,
+                    registry_to_collection(dataset_registry_manager["obs4ref"]).datasets,
+                ],
+                ignore_index=True,
+            )
         else:
             # If the data is not ingested yet but in a registry, we concat the
             # obs4REF registries to the ilamb one so that any key may be used

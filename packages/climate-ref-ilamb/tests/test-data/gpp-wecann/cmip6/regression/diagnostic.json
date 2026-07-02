@@ -51,7 +51,7 @@
     "statistic": {
       "Bias": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "Bias Score": {
         "type": "score",
@@ -67,11 +67,11 @@
       },
       "Period Mean": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "RMSE": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "RMSE Score": {
         "type": "score",
@@ -103,12 +103,12 @@
               "gn": {
                 "global": {
                   "Bias": {
-                    "Bias": 0.7111357,
+                    "Bias": 8.230737e-09,
                     "Bias Score": 0.4763393,
-                    "Period Mean": 3.034645
+                    "Period Mean": 3.51232e-08
                   },
                   "RMSE": {
-                    "RMSE": 1.915129,
+                    "RMSE": 2.216584e-08,
                     "RMSE Score": 0.3551713
                   },
                   "Relationship pr": {
@@ -125,12 +125,12 @@
                 },
                 "tropical": {
                   "Bias": {
-                    "Bias": 1.539486,
+                    "Bias": 1.781812e-08,
                     "Bias Score": 0.3472816,
-                    "Period Mean": 6.707158
+                    "Period Mean": 7.762915e-08
                   },
                   "RMSE": {
-                    "RMSE": 3.020736,
+                    "RMSE": 3.496222e-08,
                     "RMSE Score": 0.2914812
                   },
                   "Relationship pr": {

@@ -1,5 +1,5 @@
 _metadata:
-  hash: 8b197849872bee9728ad6a5f0187d128579dec84
+  hash: f94b0a576ec6e0537424603e1147cf16551abaf0
 cmip6:
   slug_column: instance_id
   selector:
@@ -37,11 +37,11 @@ cmip6:
     source_id: CESM2
     source_type: AOGCM BGC
     standard_name: area_fraction
-    start_time: '1850-01-15 11:45:00.000016'
+    start_time: '1850-01-15 11:45:00.000013'
     sub_experiment: none
     sub_experiment_id: none
     table_id: Lmon
-    time_range: 1850-01-15 11:45:00.000016-2014-12-15 12:00:00
+    time_range: 1850-01-15 11:45:00.000013-2014-12-15 12:00:00
     time_units: days since 0001-01-01 00:00:00
     units: '%'
     variable_id: burntFractionAll
@@ -125,4 +125,36 @@ cmip6:
     variable_id: sftlf
     variant_label: r1i1p1f1
     version: v20190308
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gr
+    source_id: GFED-5-0
+    variable_id: burntFractionAll
+    version: v20260128
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2020-12-16 12:00:00'
+    filename: burntFractionAll_mon_GFED-5-0_REF_gr_199701-202012.nc
+    finalised: true
+    frequency: mon
+    grid: 0.25x0.25 degree latitude x longitude
+    grid_label: gr
+    instance_id: obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+    institution_id: NASA-NOSR
+    long_name: Percentage of Entire Grid Cell That Is Covered by Burnt Vegetation
+      (All Classes)
+    nominal_resolution: 25 km
+    product: observations
+    realm: land
+    source_id: GFED-5-0
+    source_type: satellite_retrieval
+    source_version_number: '5.0'
+    start_time: '1997-01-16 12:00:00'
+    time_range: 1997-01-16 12:00:00-2020-12-16 12:00:00
+    units: '%'
+    variable_id: burntFractionAll
+    variant_label: REF
+    version: v20260128
     vertical_levels: 1

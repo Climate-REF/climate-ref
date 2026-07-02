@@ -11,7 +11,7 @@ from climate_ref_core.dataset_registry import (
     validate_registry_cache,
 )
 
-NUM_OBS4REF_FILES = 58
+NUM_OBS4REF_FILES = 83
 
 
 @pytest.fixture

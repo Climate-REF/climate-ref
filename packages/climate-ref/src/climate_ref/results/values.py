@@ -40,6 +40,7 @@ from climate_ref.results.outliers import OutlierPolicy, detect_scalar_outliers
 if TYPE_CHECKING:
     from climate_ref.results.artifacts import ArtifactsReader
     from climate_ref.results.datasets import DatasetsReader
+    from climate_ref.results.diagnostics import DiagnosticsReader
 
 
 def _kind_of(dimensions: Mapping[str, str]) -> str:
@@ -403,7 +404,8 @@ class Reader:
     read-only story. This is a thin entry point: it exposes per-domain sub-readers as properties,
     [values][climate_ref.results.values.Reader.values] for metric-value reads,
     [executions][climate_ref.results.values.Reader.executions] for execution-group reads,
-    [datasets][climate_ref.results.values.Reader.datasets] for dataset reads, and
+    [datasets][climate_ref.results.values.Reader.datasets] for dataset reads,
+    [diagnostics][climate_ref.results.values.Reader.diagnostics] for diagnostic reads, and
     [artifacts][climate_ref.results.values.Reader.artifacts] for output path resolution
     (only available when a ``results`` root is supplied).
     """
@@ -433,6 +435,13 @@ class Reader:
         from climate_ref.results.datasets import DatasetsReader  # noqa: PLC0415
 
         return DatasetsReader(self._db)
+
+    @functools.cached_property
+    def diagnostics(self) -> "DiagnosticsReader":
+        """Diagnostic reads."""
+        from climate_ref.results.diagnostics import DiagnosticsReader  # noqa: PLC0415
+
+        return DiagnosticsReader(self._db)
 
     @functools.cached_property
     def artifacts(self) -> "ArtifactsReader":

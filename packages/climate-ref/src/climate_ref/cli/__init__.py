@@ -32,6 +32,7 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("db", "heads"),
     ("db", "history"),
     ("db", "tables"),
+    ("diagnostics", "list"),
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("executions", "stats"),
@@ -221,6 +222,7 @@ def build_app() -> typer.Typer:
         config,
         datasets,
         db,
+        diagnostics,
         executions,
         providers,
         solve,
@@ -233,6 +235,7 @@ def build_app() -> typer.Typer:
     app.add_typer(config.app, name="config")
     app.add_typer(datasets.app, name="datasets")
     app.add_typer(db.app, name="db")
+    app.add_typer(diagnostics.app, name="diagnostics")
     app.add_typer(executions.app, name="executions")
     app.add_typer(providers.app, name="providers")
     app.add_typer(test_cases.app, name="test-cases")

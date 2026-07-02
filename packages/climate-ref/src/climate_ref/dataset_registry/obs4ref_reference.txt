@@ -1,8 +1,39 @@
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/ARCCSS/LORA-1-0/mon/mrro/50km/v20250902/mrro_mon_LORA-1-0_REF_gn_198001-201212.nc
+obs4REF/ARCCSS/LORA-1-0/mon/mrro/gn/v20250902/mrro_mon_LORA-1-0_REF_gn_198001-201212.nc md5:c1d290a26b4c0a094724b3dc19230f73
 obs4REF/ARCCSS/LORA-1-1/mon/mrro/gn/20250516/mrro_mon_LORA-1-1_REF_gn_198001-201212.nc md5:4cfbbfa3be9632b14de99b18066fbffe
 obs4REF/CNES/AVISO-1-0/mon/zos/gn/v20210727/zos_mon_AVISO-1-0_PCMDI_gn_199301-201912.nc md5:91252303cb65548fee5ff42dd3024825
-obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/20250516/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc md5:c8757a92f915e7e270d94bfbf25accf7
-obs4REF/ColumbiaU/WECANN-1-0/mon/hfls/gn/20250516/hfls_mon_WECANN-1-0_REF_gn_200701-201512.nc md5:d99c5879948f10c7fcb2f8e95922898d
-obs4REF/ColumbiaU/WECANN-1-0/mon/hfss/gn/20250516/hfss_mon_WECANN-1-0_REF_gn_200701-201512.nc md5:b7a911e0fc164d07d3ab42a86d09b18b
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/ColumbiaU/WECANN-1-0/mon/gpp/100km/v20250902/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
+obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/v20250902/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc md5:eb4fcde64bcdf605b4e72c95e9bbdd54
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/ColumbiaU/WECANN-1-0/mon/hfls/100km/v20250902/hfls_mon_WECANN-1-0_REF_gn_200701-201512.nc
+obs4REF/ColumbiaU/WECANN-1-0/mon/hfls/gn/v20250902/hfls_mon_WECANN-1-0_REF_gn_200701-201512.nc md5:dd3bd01233eb17cb6cb566c9eed7349f
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/ColumbiaU/WECANN-1-0/mon/hfss/100km/v20250902/hfss_mon_WECANN-1-0_REF_gn_200701-201512.nc
+obs4REF/ColumbiaU/WECANN-1-0/mon/hfss/gn/v20250902/hfss_mon_WECANN-1-0_REF_gn_200701-201512.nc md5:1605e0d962c3794206e979e51c04f2f9
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/clivi/50km/v20250723/clivi_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/clivi/gn/v20250723/clivi_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:1eaf07b5d5c7d70c2c40ae9eea4bfd4a
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/clt/50km/v20250723/clt_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/clt/gn/v20250723/clt_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:365eb28750f836291bf092527004e000
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/cltStderr/50km/v20250730/cltStderr_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/cltStderr/gn/v20250730/cltStderr_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:35a41fbcb81560a985ceadf30458ef06
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/clwvi/50km/v20250723/clwvi_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/clwvi/gn/v20250723/clwvi_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:613cd5cedc058ed1af1fb207387c9b75
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rlus/50km/v20250723/rlus_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rlus/gn/v20250723/rlus_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:afa636f33b75a33a39d637a8856a9f8e
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rlut/50km/v20250723/rlut_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rlut/gn/v20250723/rlut_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:604e276a1ff690b91cab9424cba283c9
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rlutcs/50km/v20250723/rlutcs_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rlutcs/gn/v20250723/rlutcs_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:68dacbf21050147498ca69a03da2e36f
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsdt/50km/v20250723/rsdt_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsdt/gn/v20250723/rsdt_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:7495089688a354703cbb259e9db50e95
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsus/50km/v20250723/rsus_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsus/gn/v20250723/rsus_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:4d1cdd1bb8e53d1ca1f64c0555e56f8d
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsuscs/50km/v20250723/rsuscs_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsuscs/gn/v20250723/rsuscs_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:9838b744119c9794d8567af88afc0bdb
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsut/50km/v20250723/rsut_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsut/gn/v20250723/rsut_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:410819bf27229967eef1b6451e34210f
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsutcs/50km/v20250723/rsutcs_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc
+obs4REF/DWD/ESACCI-CLOUD-AVHRR-AMPM-3-0/mon/rsutcs/gn/v20250723/rsutcs_mon_ESACCI-CLOUD-AVHRR-AMPM-3-0_ESMValTool-REF_gn_198201-201612.nc md5:2b4004587d6d572d52697868977d1b24
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/DoESS-UCI/GFED-5-0/mon/burntFractionAll/25km/v20260128/burntFractionAll_mon_GFED-5-0_REF_gr_199701-202012.nc
+obs4REF/DoESS-UCI/GFED-5-0/mon/burntFractionAll/gr/v20260128/burntFractionAll_mon_GFED-5-0_REF_gr_199701-202012.nc md5:7cddfd3b1d5e50e22d2f2621c9b0393e
 obs4REF/ECMWF/ERA-20C/mon/psl/gn/v20210727/psl_mon_ERA-20C_PCMDI_gn_190001-201012.nc md5:c100cf25d5681c375cd6c1ee60b678ba
 obs4REF/ECMWF/ERA-20C/mon/ts/gn/v20210727/ts_mon_ERA-20C_PCMDI_gn_190001-201012.nc md5:9ed8dfbb805ed4caa282ed70f873a3a0
 obs4REF/ECMWF/ERA-INT/mon/hfls/gn/v20210727/hfls_mon_ERA-INT_PCMDI_gn_197901-201903.nc md5:1ae4587143f05ee81432b3d9960aab63
@@ -36,6 +67,12 @@ obs4REF/ESSO/TropFlux-1-0/mon/tauu/gn/v20210727/tauu_mon_TropFlux-1-0_PCMDI_gn_1
 obs4REF/ESSO/TropFlux-1-0/mon/tauu/gn/v20250415/tauu_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc md5:0822e2002e61472277116d38e5e19498
 obs4REF/ESSO/TropFlux-1-0/mon/tauv/gn/v20210727/tauv_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc md5:8abc7a724a7a297826e2f783a4ea14f9
 obs4REF/ESSO/TropFlux-1-0/mon/ts/gn/v20210727/ts_mon_TropFlux-1-0_PCMDI_gn_197901-201707.nc md5:8697d3d7862f6e3b72bb5a161aa75ee8
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/FMI/SAGE-CCI-OMPS-v00008/mon/o3/1000km/v20250718/o3_mon_SAGE-CCI-OMPS-v0008_SAGE-CCI-OMPS_REF_gnz_198410-202212.nc
+obs4REF/FMI/SAGE-CCI-OMPS-v00008/mon/o3/gnz/v20250718/o3_mon_SAGE-CCI-OMPS-v0008_SAGE-CCI-OMPS_REF_gnz_198410-202212.nc md5:e8f320054b6fc9a92a6e6ed94bb54563
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/Fluxnet/FLUXNET2015-1-0/mon/gpp/site/v20260202/gpp_mon_Fluxnet-2015-1-0_REF_site_19910101-20141231.nc
+obs4REF/Fluxnet/FLUXNET2015-1-0/mon/gpp/site/v20260202/gpp_mon_Fluxnet-2015-1-0_REF_site_19910101-20141231.nc md5:04008ab6b510b217beb9be476787b8c3
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/IIASA-FAO/HWSD-2-0/fx/cSoil/0.5x0.5degree/v20250903/cSoil_fx_HWSD-2-0_REF_gn_2023.nc
+obs4REF/IIASA-FAO/HWSD-2-0/fx/cSoil/gn/v20250903/cSoil_fx_HWSD-2-0_REF_gn_2023.nc md5:3ee04ba2df36051965d549ff86c32858
 obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20210727/ts_mon_HadISST-1-1_PCMDI_gn_187001-201907.nc md5:99c8691e0f615dc4d79b4fb5e926cc76
 obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20250415/ts_mon_HadISST-1-1_PCMDI_gn_187001-202501.nc md5:66fb8cdf53ec0e073c565adfa57862b3
 obs4REF/NASA-GSFC/TRMM-3B43v-7/mon/pr/gn/v20210727/pr_mon_TRMM-3B43v-7_PCMDI_gn_199801-201712.nc md5:b80c9989d358656c781be5ea5a44c64c
@@ -43,16 +80,37 @@ obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rlds/gn/v20230209/rlds_mon_CERES-EBAF-4-2_R
 obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rlus/gn/v20230209/rlus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc md5:750650025845fc89d9e56a3690deea21
 obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rsds/gn/v20230209/rsds_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc md5:5c33068dd11e6eb8d0bf6e2aa0335ef2
 obs4REF/NASA-LaRC/CERES-EBAF-4-2/mon/rsus/gn/v20230209/rsus_mon_CERES-EBAF-4-2_RSS_gn_200003-202309.nc md5:4f67c58186905e995a8b9497a49ecbf0
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NASA_LaRC/CALIPSO-ICECLOUD-1-0/mon/cli/100km/v20251008/cli_mon_CALIPSO-ICECLOUD-1-0_DLR_gn_200701-201512.nc
+obs4REF/NASA_LaRC/CALIPSO-ICECLOUD-1-0/mon/cli/gn/v20251008/cli_mon_CALIPSO-ICECLOUD-1-0_DLR_gn_200701-201512.nc md5:978a3a8448477383608c932a36025460
 obs4REF/NOAA-ESRL-PSD/20CR/mon/psl/gn/v20210727/psl_mon_20CR_PCMDI_gn_187101-201212.nc md5:570ce90b3afd1d0b31690ae5dbe32d31
 obs4REF/NOAA-ESRL-PSD/20CR/mon/ts/gn/v20210727/ts_mon_20CR_PCMDI_gn_187101-201212.nc md5:e4890cc19ccc5bac29c6b70f28265ff1
 obs4REF/NOAA-NCEI/CMAP-V1902/mon/pr/gn/v20210727/pr_mon_CMAP-V1902_PCMDI_gn_197901-201901.nc md5:9d943d2dd0645850b616820f246aedf3
 obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc md5:0877f014868b83547448f96c3e7c83e9
 obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20231205/pr_mon_GPCP-Monthly-3-2_RSS_gn_198301-202303.nc md5:6970c22443e2097c45de5db8947318eb
-obs4REF/NOAA-NCEI/WOA2023/mon/no3/gn/20250516/no3_mon_WOA2023_REF_gn_201501-202212.nc md5:ffd2b0c1b1f35f5176ba26c43478c9d2
-obs4REF/NOAA-NCEI/WOA2023/mon/o2/gn/20250516/o2_mon_WOA2023_REF_gn_201501-202212.nc md5:1a41d343329730d357a6a21b59f201c7
-obs4REF/NOAA-NCEI/WOA2023/mon/po4/gn/20250516/po4_mon_WOA2023_REF_gn_201501-202212.nc md5:ff65f5c81f3775af49be3e22305d4979
-obs4REF/NOAA-NCEI/WOA2023/mon/so/gn/20250516/so_mon_WOA2023_REF_gn_201501-202212.nc md5:0da9596667c3b6bbc5388e420cd24a3b
-obs4REF/NOAA-NCEI/WOA2023/mon/thetao/gn/20250516/thetao_mon_WOA2023_REF_gn_201501-202212.nc md5:e3bb4f9b387191571459dc49520632ee
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/monC/no3/1x1degree/v20250902/no3_monC_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/monC/no3/gn/v20250902/no3_monC_WOA-23_REF_gn_200501-202212.nc md5:fd8c3af50d5dc6fedec730d38879d2b4
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/monC/o2/1x1degree/v20250902/o2_monC_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/monC/o2/gn/v20250902/o2_monC_WOA-23_REF_gn_200501-202212.nc md5:8bc541d7fe602b156054863867ad6cc7
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/monC/po4/1x1degree/v20250902/po4_monC_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/monC/po4/gn/v20250902/po4_monC_WOA-23_REF_gn_200501-202212.nc md5:abc02f6a8606f276b27fe1ceb2557fe4
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/monC/si/1x1degree/v20250902/si_monC_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/monC/si/gn/v20250902/si_monC_WOA-23_REF_gn_200501-202212.nc md5:8a42fb90cc49bfa83aa285d9d0edf31b
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/monC/so/1x1degree/v20251024/so_monC_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/monC/so/gn/v20251024/so_monC_WOA-23_REF_gn_200501-202212.nc md5:28a6049a9ef0435bce0a9e13c83fd77c
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/monC/thetao/1x1degree/v20251024/thetao_monC_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/monC/thetao/gn/v20251024/thetao_monC_WOA-23_REF_gn_200501-202212.nc md5:a76187904de6d66281af2267d3dddfa3
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/yr/ohc/site/v20250903/ohc_yr_WOA-23_REF_gm_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/yr/ohc/gm/v20250903/ohc_yr_WOA-23_REF_gm_200501-202212.nc md5:98f20f959d9d297d50ac81a4e697b1fb
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOAA-NCEO-OCL/WOA-23/yr/ohcJm2/1x1degree/v20250903/ohcjm2_yr_WOA-23_REF_gn_200501-202212.nc
+obs4REF/NOAA-NCEO-OCL/WOA-23/yr/ohcJm2/gn/v20250903/ohcjm2_yr_WOA-23_REF_gn_200501-202212.nc md5:1e4e7a86227d98d15baad7a06130cb7e
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NOC/RAPID-2023-1a/mon/msftmz/site/v20250902/msftmz_mon_RAPID-2023-1a_REF_gm_200404-202302.nc
+obs4REF/NOC/RAPID-2023-1a/mon/msftmz/gm/v20250902/msftmz_mon_RAPID-2023-1a_REF_gm_200404-202302.nc md5:f5ff38176be71f717e3c4d7460938571
 obs4REF/NOC/RAPID/mon/msftmz/NA/20250516/msftmz_mon_RAPID_REF_NA_200404-202302.nc md5:e9ee555d923d39112dcbf591440000b3
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/NR/CCI-CryoClim-FSC-1/mon/snc/0.5x0.5degree/v20250519/snc_mon_CCI-CryoClim-FSC-1_BE_gn_198201-201906.nc
+obs4REF/NR/CCI-CryoClim-FSC-1/mon/snc/gn/v20250519/snc_mon_CCI-CryoClim-FSC-1_BE_gn_198201-201906.nc md5:d53cddd61a90776f353ee8627dc992a5
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/UCI-ORNL/Hoffman-1-0/yr/fgco2/site/v20251117/fgco2_yr_Hoffman-1-0_REF_gm_1850-2010.nc
+obs4REF/UCI-ORNL/Hoffman-1-0/yr/fgco2/gm/v20251117/fgco2_yr_Hoffman-1-0_REF_gm_1850-2010.nc md5:1808ca5fd11be62934ba062df63d1be1
+# source: https://dap.ceda.ac.uk/neodc/obs_for_ref_v2/data/UCI-ORNL/Hoffman-1-0/yr/nbp/site/v20251117/nbp_yr_Hoffman-1-0_REF_gm_1850-2010.nc
+obs4REF/UCI-ORNL/Hoffman-1-0/yr/nbp/gm/v20251117/nbp_yr_Hoffman-1-0_REF_gm_1850-2010.nc md5:ea86edee4cb869699cdb9b15ed957d2b
 obs4REF/UCI-ORNL/Hoffman/yr/fgco2/gm/20250516/fgco2_yr_Hoffman_REF_gm_185007-201007.nc md5:93419dd752e0ae20e69b7db3f8ea9f5b
 obs4REF/UCI-ORNL/Hoffman/yr/nbp/gm/20250516/nbp_yr_Hoffman_REF_gm_185007-201007.nc md5:1c0b93c81e2608c668ec39c45ca828de

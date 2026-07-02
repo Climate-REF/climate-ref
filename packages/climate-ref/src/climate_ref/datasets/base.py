@@ -449,20 +449,24 @@ class DatasetAdapter(Protocol):
 
     def _dataset_query(self) -> Select[Any]:
         """
-        Build the ``Select`` for this adapter's datasets via the shared query builder.
+        Build the ``Select`` for this adapter's latest-version datasets via the shared query builder.
 
         Routing through ``climate_ref.models.dataset_query.select_datasets`` keeps ONE definition of
         "the datasets query" behind both ``load_catalog`` and ``climate_ref.results``'s
         ``reader.datasets``, so the two cannot drift apart.
+
+        Passes this adapter's ``dataset_id_metadata`` as ``latest_group_by`` so deduplication to the
+        latest version happens in SQL using a ``RANK`` window keyed on ``version_key``.
         """
         source_type = self.dataset_cls.__mapper_args__["polymorphic_identity"]
-        # ``select_datasets`` does not apply the latest-version filter;
-        # ``load_catalog`` still owns deduplication (``filter_latest_versions``) and the limit,
-        # so behaviour is unchanged.
-        return select_datasets(DatasetFilter(source_type=source_type))
+        return select_datasets(
+            DatasetFilter(source_type=source_type), latest_group_by=self.dataset_id_metadata
+        )
 
     def _get_dataset_files(self, db: Database) -> pd.DataFrame:
         # Eager-load files to avoid N+1 (one query per dataset), then explode to one row per file.
+        # No SQL limit here: ``limit`` bounds *files* for this path (applied after exploding, in
+        # ``load_catalog``), not datasets, so it cannot be pushed into this dataset-level query.
         stmt = self._dataset_query().options(selectinload(self.dataset_cls.files))  # type: ignore[attr-defined]
         datasets = db.session.execute(stmt).scalars().unique().all()
 
@@ -479,8 +483,11 @@ class DatasetAdapter(Protocol):
             index=[dataset.id for dataset in datasets for _file in dataset.files],
         )
 
-    def _get_datasets(self, db: Database) -> pd.DataFrame:
-        result_datasets = db.session.execute(self._dataset_query()).scalars().unique().all()
+    def _get_datasets(self, db: Database, limit: int | None = None) -> pd.DataFrame:
+        stmt = self._dataset_query()
+        if limit is not None:
+            stmt = stmt.limit(limit)
+        result_datasets = db.session.execute(stmt).scalars().unique().all()
 
         return pd.DataFrame(
             [{k: getattr(dataset, k) for k in self.dataset_specific_metadata} for dataset in result_datasets],
@@ -497,12 +504,16 @@ class DatasetAdapter(Protocol):
         operation for the `instance_id` column.
 
         Only the latest version of each dataset is returned.
+        Deduplication happens in SQL (``_dataset_query``), not in pandas.
 
         The index of the data catalog is the primary key of the dataset.
         This should be maintained during any processing.
 
         ``limit`` (when given) bounds the returned rows after deduplicating to the latest version,
-        so up to ``limit`` datasets are returned.
+        so up to ``limit`` datasets are returned when ``include_files=False`` (the limit is pushed
+        into the SQL query). When ``include_files=True``, ``limit`` bounds *files* instead (per the
+        CLI help text), so it is applied in Python after exploding datasets to one row per file --
+        it is not pushed into the dataset-level query in that case.
 
         Returns
         -------
@@ -514,7 +525,7 @@ class DatasetAdapter(Protocol):
             if include_files:
                 catalog = self._get_dataset_files(db)
             else:
-                catalog = self._get_datasets(db)
+                catalog = self._get_datasets(db, limit=limit)
 
         # If there are no datasets, return an empty DataFrame
         if catalog.empty:
@@ -524,10 +535,11 @@ class DatasetAdapter(Protocol):
         # Convert start_time/end_time strings from DB to cftime objects
         catalog = coerce_catalog_times(catalog)
 
-        # Deduplicate to the latest version BEFORE applying the limit, so the limit is not spent on
-        # superseded versions (which would otherwise be dropped, returning fewer rows than requested).
-        catalog = self.filter_latest_versions(catalog)
-        if limit is not None:
+        # include_files=True: the SQL query already deduplicated to the latest version; the file-count
+        # limit is applied here, in Python, after exploding to one row per file (it bounds files, not
+        # datasets -- see the docstring). include_files=False: dedup and limit both already happened
+        # in SQL (``_get_datasets``), so this is a no-op pass-through.
+        if include_files and limit is not None:
             catalog = catalog.head(limit)
         return self._finalise_loaded_catalog(catalog)
 

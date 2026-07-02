@@ -126,37 +126,25 @@ class DatasetsReader:
         """
         Query datasets, optionally scoped to a source type, execution or diagnostic.
 
-        ``limit`` (when given) is applied after ``latest_only`` filtering, over the ordered, latest
-        datasets, so it caps returned datasets -- matching ``adapter.load_catalog``'s dedup-then-limit
-        ordering.
+        Deduplication to the latest version (when ``filter.latest_only``) happens in SQL via a
+        ``RANK`` window, keyed off the adapter's ``dataset_id_metadata``. ``limit`` is pushed into
+        the same statement, so it is applied after dedup, over the ordered, latest datasets --
+        matching ``adapter.load_catalog``'s dedup-then-limit ordering, and only fetching the rows
+        actually returned instead of the whole table.
         """
         filter = filter or DatasetFilter()  # noqa: A001
 
-        entity: type[Dataset] = (
-            get_dataset_adapter(filter.source_type.value).dataset_cls if filter.source_type else Dataset
-        )
-        stmt = select_datasets(filter)
+        adapter = get_dataset_adapter(filter.source_type.value) if filter.source_type else None
+        entity: type[Dataset] = adapter.dataset_cls if adapter else Dataset
+
+        latest_group_by = adapter.dataset_id_metadata if adapter is not None else None
+        stmt = select_datasets(filter, latest_group_by=latest_group_by)
         if include_files:
             stmt = stmt.options(selectinload(entity.files))  # type: ignore[attr-defined]
+        if limit is not None:
+            stmt = stmt.limit(limit)
 
         session = self._db.session
         rows = list(session.execute(stmt).scalars().unique().all())
-
-        adapter = get_dataset_adapter(filter.source_type.value) if filter.source_type else None
-        if filter.latest_only and adapter is not None and adapter.dataset_id_metadata:
-            id_cols = adapter.dataset_id_metadata
-            version_col = adapter.version_metadata
-            # Reuse the adapter's own latest-version policy (its short-circuits + numeric compare) so
-            # there is a single definition of "latest version": feed it a minimal id/version frame
-            # indexed by dataset id and keep the survivors.
-            versions = pd.DataFrame(
-                [{**{c: getattr(r, c) for c in id_cols}, version_col: getattr(r, version_col)} for r in rows],
-                index=[r.id for r in rows],
-            )
-            surviving_ids = set(adapter.filter_latest_versions(versions).index)
-            rows = [r for r in rows if r.id in surviving_ids]
-
-        if limit is not None:
-            rows = rows[:limit]
 
         return DatasetCollection(datasets=tuple(self._to_view(r, include_files=include_files) for r in rows))

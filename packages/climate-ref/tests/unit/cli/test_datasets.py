@@ -82,6 +82,31 @@ class TestDatasetsList:
             expected_exit_code=1,
         )
 
+    def test_list_include_files_limit_bounds_files_not_datasets(self, db_seeded, invoke_cli):
+        """``--limit`` bounds *files* (not datasets) when ``--include-files`` is set.
+
+        Add a second file to one of the seeded datasets so at least one dataset has >1 file,
+        then confirm ``--limit`` set to fewer than the total file count still returns that many file rows
+        (i.e. the limit was not spent solely on datasets).
+        """
+        dataset = db_seeded.session.query(CMIP6Dataset).first()
+        db_seeded.session.add(
+            DatasetFile(
+                dataset_id=dataset.id,
+                path="extra-file-for-limit-test.nc",
+                start_time="2000-01-01",
+                end_time="2000-12-31",
+            )
+        )
+        db_seeded.session.commit()
+
+        total_files = db_seeded.session.query(DatasetFile).count()
+        assert total_files >= 2, "need at least 2 files in the DB for this test to be meaningful"
+
+        result = invoke_cli(["datasets", "list", "--include-files", "--limit", "1", "--column", "path"])
+        data_lines = [line for line in result.stdout.strip().split("\n")[2:] if line.strip()]
+        assert len(data_lines) == 1
+
 
 class TestDatasetsStats:
     def test_stats_basic(self, db_seeded, invoke_cli):

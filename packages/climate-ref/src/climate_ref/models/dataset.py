@@ -1,11 +1,12 @@
 import datetime
 from typing import Any, ClassVar
 
-from sqlalchemy import ColumnElement, ForeignKey, func
+from sqlalchemy import BigInteger, ColumnElement, ForeignKey, event, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from climate_ref.models.base import Base
+from climate_ref_core.datasets import version_sort_key
 from climate_ref_core.source_types import SourceDatasetType
 
 
@@ -56,10 +57,34 @@ class Dataset(Base):
     For other dataset types (e.g., obs4MIPs, PMP climatology), this should be True upon creation.
     """
 
+    version_key: Mapped[int] = mapped_column(BigInteger, default=-1, server_default="-1", nullable=False)
+    """
+    Numeric ordering key for the subclass's ``version`` column,
+    computed by :func:`climate_ref_core.datasets.version_sort_key`.
+
+    Kept in sync by the ``_sync_version_key`` mapper event.
+    Rows with no ``version`` attribute (base-table-only inserts) keep the ``-1`` backstop.
+
+    Lives on the base table (not a subclass) so the SQL latest-version window function
+    (``select_datasets(..., latest_group_by=...)``) can read it off any polymorphic row while
+    partitioning on the subclass's ``dataset_id_metadata`` columns.
+    """
+
     def __repr__(self) -> str:
         return f"<Dataset slug={self.slug} dataset_type={self.dataset_type} >"
 
     __mapper_args__: ClassVar[Any] = {"polymorphic_on": dataset_type}  # type: ignore
+
+
+@event.listens_for(Dataset, "before_insert", propagate=True)
+@event.listens_for(Dataset, "before_update", propagate=True)
+def _sync_version_key(mapper: Any, connection: Any, target: Dataset) -> None:
+    """Keep ``version_key`` numerically in sync with the subclass's ``version`` column.
+
+    ``propagate=True`` fires this for every ``Dataset`` subclass,
+    reading the final attribute value on the instance so it is write path independent.
+    """
+    target.version_key = version_sort_key(getattr(target, "version", None))
 
 
 class DatasetFile(Base):

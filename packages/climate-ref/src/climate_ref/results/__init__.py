@@ -15,6 +15,8 @@ Layers:
 * [values][climate_ref.results.values] -- typed DTOs + collections + the ``Reader`` facade.
 * [executions][climate_ref.results.executions] -- execution-group / execution DTOs + collection +
   the ``ExecutionsReader`` facade.
+* [datasets][climate_ref.results.datasets] -- dataset DTOs + collection + the ``DatasetsReader``
+  facade, querying the polymorphic ``Dataset`` hierarchy directly.
 * [artifacts][climate_ref.results.artifacts] -- the ``ArtifactsReader`` facade,
   resolving execution output fragments into filesystem paths under a results root.
 
@@ -35,7 +37,7 @@ so the namespace stays small as domains are added:
 
 * the ``Reader`` entry point,
 * filter objects you construct and pass in (``MetricValueFilter``, ``ExecutionGroupFilter``,
-  and the future ``DatasetFilter``),
+  ``DatasetFilter``),
 * value objects you pass in (``OutlierPolicy``).
 
 Everything the package *returns* -- DTOs, collections, views -- and the sub-reader classes reached
@@ -47,11 +49,13 @@ and are not part of the public surface.
 """
 
 from climate_ref.results._query import MetricValueFilter
+from climate_ref.results.datasets import DatasetFilter
 from climate_ref.results.executions import ExecutionGroupFilter
 from climate_ref.results.outliers import OutlierPolicy
 from climate_ref.results.values import Reader
 
 __all__ = [
+    "DatasetFilter",
     "ExecutionGroupFilter",
     "MetricValueFilter",
     "OutlierPolicy",

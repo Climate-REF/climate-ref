@@ -251,6 +251,44 @@ class TestSeriesValues:
             assert col in df.columns
 
 
+class TestKindSeparation:
+    def test_kind_promoted_out_of_dimensions(self, db_seeded):
+        # kind is a registered CV dimension, so it has its own column; the read layer promotes it
+        # to the dedicated `kind` field and must not leave it duplicated inside `dimensions`.
+        session = db_seeded.session
+        with session.begin():
+            diagnostic = session.query(Diagnostic).first()
+            group = ExecutionGroup(key="kind-key", diagnostic_id=diagnostic.id, selectors={})
+            session.add(group)
+            session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag",
+                dataset_hash="hash-kind",
+                successful=True,
+            )
+            session.add(execution)
+            session.flush()
+            session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution.id,
+                    value=1.0,
+                    attributes=None,
+                    dimensions={"metric": "tas", "source_id": "ACCESS-CM2", "kind": "reference"},
+                )
+            )
+            group_id = group.id
+        db_seeded.execution_group_id = group_id
+
+        coll = Reader(db_seeded).values.scalar_values(MetricValueFilter(execution_group_ids=[group_id]))
+        value = coll.items[0]
+        assert value.kind == "reference"
+        assert "kind" not in value.dimensions
+        assert value.dimensions["source_id"] == "ACCESS-CM2"
+        # kind is still surfaced as a frame column (promoted explicitly, not via dimensions).
+        assert "kind" in coll.to_pandas().columns
+
+
 class TestLatestExecutionForGroup:
     def test_returns_most_recent(self, dal_db):
         session = dal_db.session

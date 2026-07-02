@@ -56,8 +56,13 @@ class AnnotatedScalar:
     """A scalar ORM row paired with its outlier verdict."""
 
     value: ScalarMetricValue
+    """The underlying scalar metric value row."""
+
     is_outlier: bool
-    verification_status: str  # "verified" | "unverified"
+    """Whether this value was flagged as an outlier."""
+
+    verification_status: str
+    """``"verified"`` or ``"unverified"``, mirroring ``is_outlier``."""
 
 
 def _flag_outliers_iqr(values: Sequence[float], factor: float, min_n: int) -> list[bool]:

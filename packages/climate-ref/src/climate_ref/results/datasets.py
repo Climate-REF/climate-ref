@@ -32,9 +32,16 @@ class DatasetFileView:
     """A single dataset file, detached from the ORM. Times are raw stored strings (no cftime)."""
 
     path: str
+    """Path to the file."""
+
     start_time: str | None
+    """Start of the file's time range, as a raw stored string."""
+
     end_time: str | None
+    """End of the file's time range, as a raw stored string."""
+
     tracking_id: str | None
+    """The file's tracking ID, when present."""
 
 
 @attrs.frozen(kw_only=True)
@@ -42,13 +49,28 @@ class DatasetView:
     """A single dataset, detached from the ORM."""
 
     id: int
+    """Primary key of the underlying ``Dataset`` row."""
+
     slug: str
+    """The dataset's slug."""
+
     dataset_type: SourceDatasetType
+    """The dataset's source type (e.g. CMIP6, obs4MIPs)."""
+
     finalised: bool
+    """Whether the dataset was registered via the complete (netCDF-opening) parser."""
+
     created_at: Any
+    """Timestamp the dataset was created."""
+
     updated_at: Any
+    """Timestamp the dataset was last updated."""
+
     facets: Mapping[str, object]
+    """Dataset-specific metadata, keyed by the adapter's ``dataset_specific_metadata`` fields."""
+
     files: tuple[DatasetFileView, ...]
+    """The dataset's files; empty unless requested with ``include_files=True``."""
 
 
 @attrs.frozen(kw_only=True)
@@ -56,6 +78,7 @@ class DatasetCollection:
     """An immutable collection of datasets."""
 
     datasets: tuple[DatasetView, ...]
+    """The datasets in this collection."""
 
     def __iter__(self) -> Iterator[DatasetView]:
         return iter(self.datasets)

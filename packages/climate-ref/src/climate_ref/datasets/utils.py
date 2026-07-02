@@ -140,6 +140,20 @@ def parse_cftime_dates(
     )
 
 
+def coerce_catalog_times(catalog: pd.DataFrame) -> pd.DataFrame:
+    """
+    Coerce a catalog's stored ``start_time``/``end_time`` strings to cftime objects.
+
+    A no-op when the catalog has no ``start_time`` column (dataset-level catalogs). Each row's
+    ``calendar`` is used when present, otherwise ``"standard"``. Mutates and returns ``catalog``.
+    """
+    if "start_time" in catalog.columns:
+        cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
+        catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
+        catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
+    return catalog
+
+
 def clean_branch_time(branch_time: pd.Series[str]) -> pd.Series[float]:
     """
     Clean branch time values, handling missing values and EC-Earth3 suffixes.

@@ -19,7 +19,7 @@ from loguru import logger
 
 from climate_ref.data_catalog import DataCatalog
 from climate_ref.datasets import get_dataset_adapter
-from climate_ref.datasets.utils import parse_cftime_dates
+from climate_ref.datasets.utils import coerce_catalog_times
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.solver import ExecutionSolver, SolveFilterOptions
 from climate_ref_core.datasets import SourceDatasetType
@@ -136,13 +136,9 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
         if path.exists():
             catalog = pd.read_parquet(path)
 
-            # Convert start_time/end_time strings back to cftime objects
-            if "start_time" in catalog.columns:
-                cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
-                catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
-                catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
-
-            # Apply the same version deduplication as DatasetAdapter.load_catalog()
+            # Normalise the parquet catalog the same way DatasetAdapter.load_catalog() does:
+            # coerce time columns to cftime, then keep only the latest version of each dataset.
+            catalog = coerce_catalog_times(catalog)
             adapter = get_dataset_adapter(source_type.value)
             result[source_type] = adapter.filter_latest_versions(catalog)
 

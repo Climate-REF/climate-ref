@@ -10,7 +10,7 @@ from climate_ref.datasets import IngestionStats, get_dataset_adapter, ingest_dat
 from climate_ref.datasets import base as base_module
 from climate_ref.datasets.base import DatasetAdapter, _is_na
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
-from climate_ref.models.dataset import CMIP6Dataset, DatasetFile
+from climate_ref.models.dataset import CMIP6Dataset, Dataset, DatasetFile, _sync_version_key
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.exceptions import RefException
 
@@ -433,6 +433,115 @@ def test_register_dataset_updates_dataset_metadata(monkeypatch, test_db):
     dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
     assert dataset is not None
     assert dataset.grid_label == "gr2"
+
+
+class TestVersionKeySync:
+    """The ``before_insert``/``before_update`` mapper event keeps ``version_key`` in sync."""
+
+    def test_register_dataset_sets_version_key(self, monkeypatch, test_db):
+        """``register_dataset`` (the normal ingest path) picks up the event too."""
+        adapter, db = test_db
+
+        df = _mk_df(rows=[{"path": "f1.nc", "start_time": "2001-01-01", "end_time": "2001-12-31"}])
+        df.loc[:, "version"] = "v10"
+
+        with db.session.begin():
+            adapter.register_dataset(db=db, data_catalog_dataset=df)
+
+        dataset = db.session.query(CMIP6Dataset).filter_by(slug="CESM2.tas.gn").first()
+        assert dataset.version_key == 10
+
+    def test_direct_orm_insert_sets_version_key(self, test_db):
+        """Direct-ORM inserts (e.g. test fixtures) get a correct key without calling register_dataset."""
+        _, db = test_db
+
+        ds = CMIP6Dataset(
+            slug="direct-orm-v2",
+            dataset_type=SourceDatasetType.CMIP6,
+            activity_id="CMIP",
+            experiment_id="historical",
+            institution_id="TEST",
+            source_id="TEST-MODEL",
+            member_id="r1i1p1f1",
+            table_id="Amon",
+            variable_id="tas",
+            grid_label="gn",
+            version="v2",
+            instance_id="direct-orm-v2",
+            variant_label="r1i1p1f1",
+        )
+        with db.session.begin():
+            db.session.add(ds)
+
+        assert ds.version_key == 2
+
+    def test_direct_orm_insert_numeric_v10_beats_v2(self, test_db):
+        """Regression guard for the review blocker: v2/v10 fixtures must not tie at version_key=-1."""
+        _, db = test_db
+
+        def _make(slug: str, version: str) -> CMIP6Dataset:
+            return CMIP6Dataset(
+                slug=slug,
+                dataset_type=SourceDatasetType.CMIP6,
+                activity_id="CMIP",
+                experiment_id="historical",
+                institution_id="TEST",
+                source_id="TEST-MODEL",
+                member_id="r1i1p1f1",
+                table_id="Amon",
+                variable_id="tas",
+                grid_label="gn",
+                version=version,
+                instance_id=slug,
+                variant_label="r1i1p1f1",
+            )
+
+        v2 = _make("regression-v2", "v2")
+        v10 = _make("regression-v10", "v10")
+        with db.session.begin():
+            db.session.add_all([v2, v10])
+
+        assert v2.version_key == 2
+        assert v10.version_key == 10
+        assert v10.version_key > v2.version_key
+
+    def test_no_version_attribute_backstops_to_minus_one(self):
+        """A target with no ``version`` attribute keeps the ``-1`` backstop.
+
+        Exercises the event function directly (rather than a full DB round-trip) since ``Dataset``
+        itself has no ``polymorphic_identity`` and is not meant to be inserted standalone.
+        """
+        target = Dataset(slug="base-only")
+        _sync_version_key(mapper=None, connection=None, target=target)
+
+        assert target.version_key == -1
+
+    def test_update_resyncs_version_key(self, test_db):
+        """Updating ``version`` on an existing row recomputes ``version_key`` via before_update."""
+        _, db = test_db
+
+        ds = CMIP6Dataset(
+            slug="update-me",
+            dataset_type=SourceDatasetType.CMIP6,
+            activity_id="CMIP",
+            experiment_id="historical",
+            institution_id="TEST",
+            source_id="TEST-MODEL",
+            member_id="r1i1p1f1",
+            table_id="Amon",
+            variable_id="tas",
+            grid_label="gn",
+            version="v2",
+            instance_id="update-me",
+            variant_label="r1i1p1f1",
+        )
+        with db.session.begin():
+            db.session.add(ds)
+        assert ds.version_key == 2
+
+        ds.version = "v10"
+        db.session.commit()
+        assert ds.version_key == 10
 
 
 class TestFilterLatestVersions:

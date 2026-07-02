@@ -48,29 +48,41 @@ class MetricValueFilter:
     exists today between the CLI and the ref-app API.
     """
 
-    # scoping to executions / groups
     execution_ids: Sequence[int] | None = None
+    """Restrict to values produced by these executions."""
+
     execution_group_ids: Sequence[int] | None = None
+    """Restrict to values produced by executions belonging to these groups."""
 
-    # provenance filters -- exact (API) vs substring (CLI search)
     diagnostic_slug: str | None = None
+    """Exact-match diagnostic slug, for API path-scoped queries."""
+
     provider_slug: str | None = None
+    """Exact-match provider slug, for API path-scoped queries."""
+
     diagnostic_contains: Sequence[str] | None = None
+    """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
+
     provider_contains: Sequence[str] | None = None
+    """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
-    # CV dimension filters, keyed by registered dimension name; str -> equality, sequence -> IN
     dimensions: Mapping[str, str | Sequence[str]] | None = None
+    """CV dimension filters keyed by registered dimension name; a string is equality, a sequence is IN."""
 
-    # id isolate / exclude (isolate takes precedence, matching the API)
     isolate_ids: Sequence[int] | None = None
+    """Restrict to exactly these value ids; takes precedence over ``exclude_ids``, matching the API."""
+
     exclude_ids: Sequence[int] | None = None
+    """Exclude these value ids; ignored when ``isolate_ids`` is set."""
 
-    # series-only: reference_id IS NOT NULL (observations) / IS NULL (model)
     reference_only: bool | None = None
+    """Series-only: ``True`` for observation/reference series, ``False`` for model series."""
 
-    # version / retraction gating
     promoted_only: bool = True
+    """Restrict to execution groups at the diagnostic's currently promoted version."""
+
     include_retracted: bool = False
+    """Include values produced by retracted executions."""
 
     def dimension_clauses(self, entity: type[MetricValue]) -> list[Any]:
         """

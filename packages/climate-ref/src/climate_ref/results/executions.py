@@ -64,11 +64,22 @@ class ExecutionGroupFilter:
     """
 
     diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Case-insensitive substring matches on diagnostic slug (OR-combined)."""
+
     provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Case-insensitive substring matches on provider slug (OR-combined)."""
+
     dirty: bool | None = None
+    """Constrain on the group's ``dirty`` flag."""
+
     successful: bool | None = None
+    """Constrain on the latest execution's ``successful`` status."""
+
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
+    """Selector-facet map matched against each group's ``selectors``."""
+
     include_superseded: bool = False
+    """Include execution groups whose ``diagnostic_version`` is not the diagnostic's promoted version."""
 
 
 @attrs.frozen(kw_only=True)
@@ -76,15 +87,34 @@ class ExecutionView:
     """A single execution, detached from the ORM."""
 
     id: int
+    """Primary key of the underlying ``Execution`` row."""
+
     execution_group_id: int
+    """The execution group this execution belongs to."""
+
     successful: bool | None
+    """``True``/``False`` once the execution has finished, ``None`` while still running."""
+
     dataset_hash: str
+    """Hash of the input datasets used for this execution."""
+
     retracted: bool
+    """Whether this execution has been retracted."""
+
     output_fragment: str
+    """Relative directory storing this execution's output, once moved to the final output directory."""
+
     path: str | None
+    """Path to the output bundle, relative to the diagnostic execution result output directory."""
+
     provider_version: str | None
+    """Version of the diagnostic provider that produced this execution."""
+
     created_at: Any
+    """Timestamp the execution was created."""
+
     updated_at: Any
+    """Timestamp the execution was last updated."""
 
 
 @attrs.frozen(kw_only=True)
@@ -92,21 +122,43 @@ class ExecutionGroupView:
     """An execution group, detached from the ORM, with its per-group latest execution (if any)."""
 
     id: int
+    """Primary key of the underlying ``ExecutionGroup`` row."""
+
     key: str
+    """Stable key identifying the group's input-dataset selection."""
+
     diagnostic_slug: str
+    """Owning diagnostic's slug."""
+
     provider_slug: str
+    """Owning provider's slug."""
+
     dirty: bool
+    """Whether the group is flagged for re-execution (e.g. new data has arrived)."""
+
     diagnostic_version: int
+    """Diagnostic version this group was executed against."""
+
     selectors: Mapping[str, Any]
+    """The selector-facet values used to build this group's input-dataset selection."""
+
     created_at: Any
+    """Timestamp the group was created."""
+
     updated_at: Any
-    # Reflects the helper's `max(created_at)` outer join
-    # (models/execution.py::get_execution_group_and_latest), which can duplicate a group on an
-    # exact `created_at` tie. This may differ from `ExecutionsReader.latest_execution()`, which
-    # tie-breaks by `created_at DESC, id DESC` (`_query.latest_execution_for_group`). Both
-    # behaviours are intentional for their respective consumers (`groups()` vs `latest_execution()`)
-    # -- do not unify them.
+    """Timestamp the group was last updated."""
+
     latest: ExecutionView | None
+    """
+    The group's most recent execution, or ``None`` if it has never been executed.
+
+    Reflects the helper's ``max(created_at)`` outer join
+    (models/execution.py::get_execution_group_and_latest), which can duplicate a group on an
+    exact ``created_at`` tie. This may differ from ``ExecutionsReader.latest_execution()``, which
+    tie-breaks by ``created_at DESC, id DESC`` (``_query.latest_execution_for_group``). Both
+    behaviours are intentional for their respective consumers (``groups()`` vs ``latest_execution()``)
+    -- do not unify them.
+    """
 
     @property
     def successful(self) -> bool | None:
@@ -119,13 +171,28 @@ class ExecutionStats:
     """Per-(provider, diagnostic) execution status counts, detached from the ORM."""
 
     provider: str
+    """Provider slug."""
+
     diagnostic: str
+    """Diagnostic slug."""
+
     running: int
+    """Groups whose latest execution exists with ``successful IS NULL``."""
+
     failed: int
+    """Groups whose latest execution exists with ``successful IS False``."""
+
     successful: int
+    """Groups whose latest execution exists with ``successful IS True``."""
+
     not_started: int
+    """Groups with no execution yet."""
+
     dirty: int
+    """Groups flagged for re-execution."""
+
     total: int
+    """Total execution groups counted (at the diagnostic's promoted version)."""
 
 
 @attrs.frozen(kw_only=True)
@@ -133,12 +200,25 @@ class OutputView:
     """A single registered execution output, detached from the ORM."""
 
     execution_id: int
+    """The execution that registered this output."""
+
     output_type: str
+    """The output's type (e.g. plot, data, HTML), which determines how it is displayed."""
+
     filename: str | None
+    """Path to the output, relative to the diagnostic execution result output directory."""
+
     short_name: str | None
+    """Short key of the output, unique for a given result and output type."""
+
     long_name: str | None
+    """Human-readable name for the output."""
+
     description: str | None
+    """Free-text description of the output."""
+
     dimensions: Mapping[str, str]
+    """CV dimension values associated with this output."""
 
 
 @attrs.frozen(kw_only=True)
@@ -146,9 +226,16 @@ class ExecutionGroupCollection:
     """An immutable page of execution groups plus collection-level metadata."""
 
     items: tuple[ExecutionGroupView, ...]
+    """The execution groups on this page."""
+
     total_count: int
+    """Total execution groups matching the filter before ``offset``/``limit``."""
+
     offset: int
+    """Rows skipped before this page."""
+
     limit: int | None
+    """Page size requested, or ``None`` when the whole result was returned."""
 
     def __iter__(self) -> Iterator[ExecutionGroupView]:
         return iter(self.items)

@@ -36,7 +36,10 @@ class DiagnosticFilter:
     """
 
     provider_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Case-insensitive substring matches on provider slug (OR-combined)."""
+
     diagnostic_contains: tuple[str, ...] | None = attrs.field(default=None, converter=_as_str_tuple)
+    """Case-insensitive substring matches on diagnostic slug (OR-combined)."""
 
 
 @attrs.frozen(kw_only=True)
@@ -49,7 +52,7 @@ class DiagnosticView:
     """
 
     provider_slug: str
-    """Slug of the provider that owns the diagnostic."""
+    """Owning provider's slug."""
 
     slug: str
     """The diagnostic's own slug, unique within its provider."""

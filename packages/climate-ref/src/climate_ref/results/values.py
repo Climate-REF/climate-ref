@@ -53,7 +53,10 @@ class Facet:
     """Distinct values observed for one CV dimension across a filtered query."""
 
     key: str
+    """The CV dimension name."""
+
     values: tuple[str, ...]
+    """Distinct values observed for the dimension."""
 
 
 @attrs.frozen(kw_only=True)
@@ -61,18 +64,41 @@ class ScalarValue:
     """A single scalar metric value, detached from the ORM."""
 
     id: int
+    """Primary key of the underlying ``ScalarMetricValue`` row."""
+
     execution_id: int
+    """The execution that produced this value."""
+
     execution_group_id: int
+    """The execution group the producing execution belongs to."""
+
     value: float | None
+    """The scalar value itself."""
+
     kind: str
+    """Model/reference kind, resolved from the ``kind`` CV dimension (defaults to ``"model"``)."""
+
     dimensions: Mapping[str, str]
+    """
+    CV dimension values (e.g. ``source_id``, ``statistic``, ``metric``) for this row.
+
+    ``kind`` is excluded here and surfaced as the dedicated ``kind`` field instead.
+    """
+
     attributes: Mapping[str, Any]
-    # per-row outlier verdict (populated when detection ran)
+    """Free-form, non-CV attributes attached to the row."""
+
     is_outlier: bool | None = None
+    """Per-row outlier verdict; ``None`` unless outlier detection ran."""
+
     verification_status: str | None = None
-    # optional provenance, only when include_context=True
+    """``"verified"``/``"unverified"`` status paired with ``is_outlier``; ``None`` unless detection ran."""
+
     diagnostic_slug: str | None = None
+    """Owning diagnostic's slug, populated only when ``include_context=True``."""
+
     provider_slug: str | None = None
+    """Owning provider's slug, populated only when ``include_context=True``."""
 
 
 @attrs.frozen(kw_only=True)
@@ -80,17 +106,44 @@ class SeriesValue:
     """A 1-d series metric value, detached from the ORM. The index is snapshotted from the shared axis."""
 
     id: int
+    """Primary key of the underlying ``SeriesMetricValue`` row."""
+
     execution_id: int
+    """The execution that produced this value."""
+
     execution_group_id: int
+    """The execution group the producing execution belongs to."""
+
     values: Sequence[float | int]
+    """The series' y-values, in index order."""
+
     index: Sequence[float | int | str] | None
+    """The shared index axis values, snapshotted at read time."""
+
     index_name: str | None
+    """Name of the shared index axis (e.g. a time or latitude label)."""
+
     reference_id: str | None
+    """Set for observation/reference series; ``None`` for model series."""
+
     kind: str
+    """Model/reference kind, resolved from the ``kind`` CV dimension (defaults to ``"model"``)."""
+
     dimensions: Mapping[str, str]
+    """
+    CV dimension values (e.g. ``source_id``, ``statistic``, ``metric``) for this row.
+
+    ``kind`` is excluded here and surfaced as the dedicated ``kind`` field instead.
+    """
+
     attributes: Mapping[str, Any]
+    """Free-form, non-CV attributes attached to the row."""
+
     diagnostic_slug: str | None = None
+    """Owning diagnostic's slug, populated only when ``include_context=True``."""
+
     provider_slug: str | None = None
+    """Owning provider's slug, populated only when ``include_context=True``."""
 
     @property
     def is_reference(self) -> bool:
@@ -103,12 +156,25 @@ class ScalarValueCollection:
     """An immutable page of scalar values plus collection-level, outlier-aware metadata."""
 
     items: tuple[ScalarValue, ...]
+    """The scalar values on this page."""
+
     total_count: int
+    """Total values matching the filter before ``offset``/``limit`` (after outlier removal, if any)."""
+
     facets: tuple[Facet, ...]
+    """Distinct CV dimension values observed over the full filtered set, before pagination."""
+
     offset: int
+    """Rows skipped before this page."""
+
     limit: int | None
+    """Page size requested, or ``None`` when the whole result was returned."""
+
     had_outliers: bool
+    """Whether outlier detection ran and flagged at least one value."""
+
     outlier_count: int
+    """Number of values flagged as outliers, or ``0`` when detection did not run."""
 
     def __iter__(self) -> Iterator[ScalarValue]:
         return iter(self.items)
@@ -146,10 +212,19 @@ class SeriesValueCollection:
     """An immutable page of series values plus collection-level metadata."""
 
     items: tuple[SeriesValue, ...]
+    """The series values on this page."""
+
     total_count: int
+    """Total values matching the filter before ``offset``/``limit``."""
+
     facets: tuple[Facet, ...]
+    """Distinct CV dimension values observed over the full filtered set, before pagination."""
+
     offset: int
+    """Rows skipped before this page."""
+
     limit: int | None
+    """Page size requested, or ``None`` when the whole result was returned."""
 
     def __iter__(self) -> Iterator[SeriesValue]:
         return iter(self.items)
@@ -363,12 +438,14 @@ class ValuesReader:
     ) -> ScalarValue:
         diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
         dims = dict(row.dimensions)
+        kind = _kind_of(dims)
+        dims.pop("kind", None)
         return ScalarValue(
             id=row.id,
             execution_id=row.execution_id,
             execution_group_id=row.execution.execution_group_id,
             value=row.value,
-            kind=_kind_of(dims),
+            kind=kind,
             dimensions=dims,
             attributes=dict(row.attributes or {}),
             is_outlier=is_outlier if detection_ran else None,
@@ -380,6 +457,8 @@ class ValuesReader:
     def _to_series_dto(self, row: SeriesMetricValue, include_context: bool) -> SeriesValue:
         diagnostic_slug, provider_slug = self._context_slugs(row.execution, include_context)
         dims = dict(row.dimensions)
+        kind = _kind_of(dims)
+        dims.pop("kind", None)
         return SeriesValue(
             id=row.id,
             execution_id=row.execution_id,
@@ -388,7 +467,7 @@ class ValuesReader:
             index=list(row.index) if row.index is not None else None,
             index_name=row.index_name,
             reference_id=row.reference_id,
-            kind=_kind_of(dims),
+            kind=kind,
             dimensions=dims,
             attributes=dict(row.attributes or {}),
             diagnostic_slug=diagnostic_slug,

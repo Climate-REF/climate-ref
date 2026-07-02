@@ -628,6 +628,11 @@ class ILAMBStandard(Diagnostic):
     """
 
     version = 2
+    """
+    Default version for ILAMB diagnostics.
+
+    Individual diagnostics can override this with a ``version`` key in their configuration entry.
+    """
 
     def __init__(
         self,
@@ -655,6 +660,10 @@ class ILAMBStandard(Diagnostic):
         # Allow per-diagnostic override of the test source_id
         # (not all variables are available from CanESM5)
         test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
+
+        diagnostic_version = ilamb_kwargs.pop("version", None)
+        if diagnostic_version is not None:
+            self.version = diagnostic_version
 
         self.ilamb_kwargs = ilamb_kwargs
 
@@ -809,6 +818,18 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+            # Relationship analyses (and any remaining legacy string-path sources)
+            # still refer to keys in the ILAMB/obs4REF registries.
+            # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so
+            # they remain resolvable when a diagnostic mixes obs4REF and registry data.
+            ref_datasets = pd.concat(
+                [
+                    ref_datasets,
+                    self.ilamb_data.datasets,
+                    registry_to_collection(dataset_registry_manager["obs4ref"]).datasets,
+                ],
+                ignore_index=True,
+            )
         else:
             # If the data is not ingested yet but in a registry, we concat the
             # obs4REF registries to the ilamb one so that any key may be used

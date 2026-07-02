@@ -93,8 +93,8 @@
               "gn": {
                 "global": {
                   "Bias": {
-                    "Bias": -0.02467998,
-                    "Bias Score": 0.618801,
+                    "Bias": -0.02364837,
+                    "Bias Score": 0.6188074,
                     "Period Mean": 3.33597
                   },
                   "RMSE": {
@@ -102,15 +102,15 @@
                     "RMSE Score": 0.4159953
                   },
                   "Spatial Distribution": {
-                    "Correlation": 0.4422229,
-                    "Normalized Standard Deviation": 0.833648,
-                    "Spatial Distribution Score": 0.6977571
+                    "Correlation": 0.4423101,
+                    "Normalized Standard Deviation": 0.8337603,
+                    "Spatial Distribution Score": 0.6978332
                   }
                 },
                 "tropical": {
                   "Bias": {
-                    "Bias": 0.2776717,
-                    "Bias Score": 0.3853342,
+                    "Bias": 0.2766514,
+                    "Bias Score": 0.385412,
                     "Period Mean": 5.731452
                   },
                   "RMSE": {
@@ -118,9 +118,9 @@
                     "RMSE Score": 0.3252845
                   },
                   "Spatial Distribution": {
-                    "Correlation": -0.1425877,
-                    "Normalized Standard Deviation": 0.8926098,
-                    "Spatial Distribution Score": 0.4232204
+                    "Correlation": -0.1427874,
+                    "Normalized Standard Deviation": 0.8930378,
+                    "Spatial Distribution Score": 0.4231676
                   }
                 }
               }

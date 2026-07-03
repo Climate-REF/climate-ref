@@ -68,11 +68,10 @@ def list_(  # noqa: PLR0913
     results_df = collection.to_pandas()
 
     if column:
-        if not results_df.empty:
-            if not all(col in results_df.columns for col in column):
-                logger.error(f"Column not found in data catalog: {column}")
-                raise typer.Exit(code=1)
-            results_df = results_df[column]
+        if not all(col in results_df.columns for col in column):
+            logger.error(f"Column not found in data catalog: {column}")
+            raise typer.Exit(code=1)
+        results_df = results_df[column]
 
     render_dataframe(results_df, console=console, output_format=output_format)
 

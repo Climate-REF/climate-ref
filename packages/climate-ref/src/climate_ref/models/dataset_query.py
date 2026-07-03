@@ -23,10 +23,16 @@ from climate_ref_core.source_types import SourceDatasetType
 def _as_facets(
     value: Mapping[str, Sequence[str]] | None,
 ) -> Mapping[str, tuple[str, ...]] | None:
-    """Copy a facets mapping into an immutable ``dict`` of immutable ``tuple`` values."""
+    """
+    Copy a facets mapping into an immutable ``dict`` of immutable ``tuple`` values.
+
+    A bare ``str`` value is itself a ``Sequence[str]``, so without this guard a caller passing
+    ``facets={"source_id": "TEST-MODEL"}`` would have it iterated character-by-character
+    (``"TEST-MODEL"`` -> ``T``, ``E``, ``S``, ...) before it ever reaches the ``IN`` clause.
+    """
     if value is None:
         return None
-    return {k: tuple(v) for k, v in value.items()}
+    return {k: (v,) if isinstance(v, str) else tuple(v) for k, v in value.items()}
 
 
 @attrs.frozen(kw_only=True)

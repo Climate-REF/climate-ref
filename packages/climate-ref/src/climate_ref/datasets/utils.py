@@ -144,13 +144,16 @@ def coerce_catalog_times(catalog: pd.DataFrame) -> pd.DataFrame:
     """
     Coerce a catalog's stored ``start_time``/``end_time`` strings to cftime objects.
 
-    A no-op when the catalog has no ``start_time`` column (dataset-level catalogs). Each row's
-    ``calendar`` is used when present, otherwise ``"standard"``. Mutates and returns ``catalog``.
+    A no-op when the catalog has no ``start_time`` column (dataset-level catalogs). Each of
+    ``start_time``/``end_time`` is coerced independently, so a catalog with only one of the two
+    columns present does not raise a ``KeyError``. Each row's ``calendar`` is used when present,
+    otherwise ``"standard"``. Mutates and returns ``catalog``.
     """
-    if "start_time" in catalog.columns:
+    if "start_time" in catalog.columns or "end_time" in catalog.columns:
         cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
-        catalog["start_time"] = parse_cftime_dates(catalog["start_time"], cal)
-        catalog["end_time"] = parse_cftime_dates(catalog["end_time"], cal)
+        for column in ("start_time", "end_time"):
+            if column in catalog.columns:
+                catalog[column] = parse_cftime_dates(catalog[column], cal)
     return catalog
 
 

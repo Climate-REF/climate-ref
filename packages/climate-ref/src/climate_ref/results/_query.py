@@ -26,6 +26,7 @@ from climate_ref.models.metric_value import (
     SeriesMetricValue,
 )
 from climate_ref.models.provider import Provider
+from climate_ref.results._converters import _as_str_tuple
 
 
 @attrs.frozen(kw_only=True)
@@ -60,10 +61,10 @@ class MetricValueFilter:
     provider_slug: str | None = None
     """Exact-match provider slug, for API path-scoped queries."""
 
-    diagnostic_contains: Sequence[str] | None = None
+    diagnostic_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on diagnostic slug (OR-combined), for CLI-style search."""
 
-    provider_contains: Sequence[str] | None = None
+    provider_contains: Sequence[str] | None = attrs.field(default=None, converter=_as_str_tuple)
     """Case-insensitive substring matches on provider slug (OR-combined), for CLI-style search."""
 
     dimensions: Mapping[str, str | Sequence[str]] | None = None

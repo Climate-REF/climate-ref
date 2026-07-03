@@ -377,3 +377,15 @@ class TestToPandas:
         for col in ("id", "slug", "dataset_type", "finalised", "created_at", "updated_at"):
             assert col in df.columns
         assert len(df) == len(coll)
+
+    def test_to_pandas_columns_when_empty(self, db_with_datasets):
+        """An empty collection still emits the base columns, so callers can select on them."""
+        reader = Reader(db_with_datasets)
+        coll = reader.datasets.datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("NO-SUCH-MODEL",)})
+        )
+        assert len(coll) == 0
+        df = coll.to_pandas()
+        assert len(df) == 0
+        for col in ("id", "slug", "dataset_type", "finalised", "created_at", "updated_at"):
+            assert col in df.columns

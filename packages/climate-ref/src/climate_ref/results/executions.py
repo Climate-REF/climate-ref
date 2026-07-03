@@ -305,10 +305,25 @@ def select_execution_statistics(
     ``promoted_version`` are counted (same promoted-version gate as
     [get_execution_group_and_latest_filtered][climate_ref.models.execution.get_execution_group_and_latest_filtered]).
     """
+    # Resolve to a single latest execution id per group, tie-broken by max id (matching the
+    # created_at DESC, id DESC tie-break used elsewhere -- see `_query.latest_execution_for_group`).
+    # Joining on `execution_group_id` + `created_at` alone (without this tie-break) can match two
+    # rows for a group whose executions share an exact `created_at`, double-counting that group in
+    # every aggregate column below.
     latest_exec_subquery = (
         select(
             Execution.execution_group_id,
             func.max(Execution.created_at).label("latest_created_at"),
+        )
+        .group_by(Execution.execution_group_id)
+        .subquery()
+    )
+    latest_exec_id_subquery = (
+        select(func.max(Execution.id).label("latest_execution_id"))
+        .join(
+            latest_exec_subquery,
+            (Execution.execution_group_id == latest_exec_subquery.c.execution_group_id)
+            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
         )
         .group_by(Execution.execution_group_id)
         .subquery()
@@ -333,11 +348,10 @@ def select_execution_statistics(
         .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
         .where(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
         .join(Provider, Diagnostic.provider_id == Provider.id)
-        .outerjoin(latest_exec_subquery, ExecutionGroup.id == latest_exec_subquery.c.execution_group_id)
         .outerjoin(
             Execution,
-            (Execution.execution_group_id == ExecutionGroup.id)
-            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
+            Execution.id.in_(select(latest_exec_id_subquery.c.latest_execution_id))
+            & (Execution.execution_group_id == ExecutionGroup.id),
         )
         .group_by(Provider.slug, Diagnostic.slug)
         .order_by(Provider.slug, Diagnostic.slug)

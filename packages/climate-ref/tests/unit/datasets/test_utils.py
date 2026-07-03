@@ -9,6 +9,7 @@ import pytest
 from climate_ref.datasets.utils import (
     build_instance_id,
     clean_branch_time,
+    coerce_catalog_times,
     parse_cftime_dates,
     parse_drs_daterange,
     validate_path,
@@ -254,3 +255,30 @@ class TestBuildInstanceId:
         original = df.copy()
         build_instance_id(df, self.drs_items, prefix="CMIP6")
         pd.testing.assert_frame_equal(df, original)
+
+
+class TestCoerceCatalogTimes:
+    def test_no_time_columns_is_noop(self):
+        catalog = pd.DataFrame({"instance_id": ["a"]})
+        result = coerce_catalog_times(catalog)
+        assert "start_time" not in result.columns
+        assert "end_time" not in result.columns
+
+    def test_both_columns_present(self):
+        catalog = pd.DataFrame({"start_time": ["2000-01-01"], "end_time": ["2000-12-31"]})
+        result = coerce_catalog_times(catalog)
+        assert isinstance(result["start_time"].iloc[0], cftime.datetime)
+        assert isinstance(result["end_time"].iloc[0], cftime.datetime)
+
+    def test_start_time_without_end_time_does_not_raise(self):
+        """A catalog with only ``start_time`` must not KeyError looking up ``end_time``."""
+        catalog = pd.DataFrame({"start_time": ["2000-01-01"]})
+        result = coerce_catalog_times(catalog)
+        assert isinstance(result["start_time"].iloc[0], cftime.datetime)
+        assert "end_time" not in result.columns
+
+    def test_end_time_without_start_time_does_not_raise(self):
+        catalog = pd.DataFrame({"end_time": ["2000-12-31"]})
+        result = coerce_catalog_times(catalog)
+        assert isinstance(result["end_time"].iloc[0], cftime.datetime)
+        assert "start_time" not in result.columns

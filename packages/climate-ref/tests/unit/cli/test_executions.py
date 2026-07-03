@@ -1406,6 +1406,43 @@ class TestExecutionValues:
         assert result.exit_code == 0
         assert "WILD" in result.stdout
 
+    def test_scalar_all_outliers_hidden_reports_outlier_count(self, db_seeded, invoke_cli):
+        """When every value is flagged as an outlier the empty-page message must still surface
+        that outliers exist, instead of silently reporting "No scalar values found."."""
+        with db_seeded.session.begin():
+            diagnostic = db_seeded.session.query(Diagnostic).first()
+            assert diagnostic is not None
+            group = ExecutionGroup(key="allwild", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag-wild",
+                dataset_hash="wildhash",
+                successful=True,
+            )
+            db_seeded.session.add(execution)
+            db_seeded.session.flush()
+            # A non-finite value is always flagged as an outlier, regardless of group size.
+            db_seeded.session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution.id,
+                    value=float("nan"),
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ONLY-MODEL"},
+                )
+            )
+            db_seeded.session.flush()
+            group_id = group.id
+
+        result = invoke_cli(["executions", "values", str(group_id), "--outliers"])
+
+        assert result.exit_code == 0
+        assert "No scalar values found" in result.stdout
+        assert "1" in result.stdout
+        assert "outlier" in result.stdout
+        assert "--include-unverified" in result.stdout
+
     def test_dimension_filter(self, db_seeded, invoke_cli):
         group_id, _ = self._setup(db_seeded)
 
@@ -1433,6 +1470,18 @@ class TestExecutionValues:
         # The terminal shows a compact per-series summary rather than raw arrays.
         assert "n_points" in result.stdout
         assert "3" in result.stdout
+
+    def test_series_json(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--kind", "series", "--format", "json"])
+
+        assert result.exit_code == 0
+        # JSON output is the long-form, exploded shape: one record per (series, index point).
+        records = json.loads(result.stdout)
+        assert len(records) == 3
+        assert all(r["source_id"] == "ACCESS-CM2" for r in records)
+        assert [r["value"] for r in records] == [1.0, 2.0, 3.0]
 
     def test_specific_execution_wrong_group(self, db_seeded, invoke_cli):
         _group_id, execution_id = self._setup(db_seeded)

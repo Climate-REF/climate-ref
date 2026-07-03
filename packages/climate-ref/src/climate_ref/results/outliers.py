@@ -23,6 +23,8 @@ import pandas as pd
 
 from climate_ref.models.metric_value import ScalarMetricValue
 
+_SUPPORTED_METHODS = ("off", "iqr")
+
 
 @attrs.frozen(kw_only=True)
 class OutlierPolicy:
@@ -33,7 +35,7 @@ class OutlierPolicy:
     (``factor=10.0``, source-id-aware IQR grouped by ``("statistic", "metric")``).
     """
 
-    method: str = "iqr"
+    method: str = attrs.field(default="iqr", validator=attrs.validators.in_(_SUPPORTED_METHODS))
     """Detection method. ``"off"`` disables detection; ``"iqr"`` enables it."""
 
     factor: float = 10.0

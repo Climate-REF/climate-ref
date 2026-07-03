@@ -348,6 +348,44 @@ class TestSelectExecutionStatistics:
         diagnostics = {row.diagnostic for row in rows}
         assert diagnostics == {"enso_tel", "enso-characteristics"}
 
+    def test_tied_created_at_does_not_double_count(self, db_with_groups):
+        """Two executions in the same group tied on ``created_at`` must not double-count that
+        group's status in the aggregate (regression test for the outerjoin picking up both rows)."""
+        diag = db_with_groups.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+        assert diag is not None
+        eg = db_with_groups.session.query(ExecutionGroup).filter_by(diagnostic_id=diag.id).first()
+        assert eg is not None
+
+        tied_at = datetime.datetime(2024, 1, 1, tzinfo=datetime.UTC)
+        session = db_with_groups.session
+        with session.begin_nested() if session.in_transaction() else session.begin():
+            db_with_groups.session.add(
+                Execution(
+                    execution_group_id=eg.id,
+                    successful=True,
+                    output_fragment="tie-a",
+                    dataset_hash="tie-a-hash",
+                    created_at=tied_at,
+                )
+            )
+            db_with_groups.session.add(
+                Execution(
+                    execution_group_id=eg.id,
+                    successful=True,
+                    output_fragment="tie-b",
+                    dataset_hash="tie-b-hash",
+                    created_at=tied_at,
+                )
+            )
+
+        stmt = select_execution_statistics(diagnostic_contains=["enso_tel"])
+        rows = db_with_groups.session.execute(stmt).all()
+        by_diag = {row.diagnostic: row for row in rows}
+        row = by_diag["enso_tel"]
+        # Still one execution group, still one status count -- not doubled by the tie.
+        assert row.total == 1
+        assert row.successful == 1
+
 
 class TestStatistics:
     def test_status_counts(self, db_with_groups):

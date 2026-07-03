@@ -99,3 +99,11 @@ class TestDiagnosticsList:
         result = invoke_cli(["diagnostics", "list", "--diagnostic", "nonexistent", "--format", "json"])
 
         assert json.loads(result.stdout) == []
+
+    def test_list_columns_missing_on_empty_results(self, db_seeded, invoke_cli):
+        """An unknown ``--column`` must still be rejected when the filtered result set is empty --
+        ``to_pandas()`` always emits explicit columns, so there is no reason to skip validation."""
+        invoke_cli(
+            ["diagnostics", "list", "--diagnostic", "nonexistent", "--column", "missing"],
+            expected_exit_code=1,
+        )

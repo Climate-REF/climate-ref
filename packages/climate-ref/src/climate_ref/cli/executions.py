@@ -471,8 +471,11 @@ def _outputs_panel(outputs: tuple[OutputView, ...], output_fragment: str, reader
         if out.filename is None:
             filename_cell: Text | str = ""
         else:
-            output_path = reader.artifacts.output_file(output_fragment, out.filename)
-            filename_cell = Text(out.filename, style=f"link file://{output_path}")
+            try:
+                output_path = reader.artifacts.output_file(output_fragment, out.filename)
+                filename_cell = Text(out.filename, style=f"link file://{output_path}")
+            except ValueError:
+                filename_cell = out.filename
         table.add_row(
             out.output_type,
             out.short_name or "",
@@ -724,7 +727,13 @@ def _render_scalar_values(  # noqa: PLR0913
         with_facets=False,
     )
     if not len(collection):
-        console.print("No scalar values found.")
+        if collection.had_outliers:
+            console.print(
+                f"No scalar values found. {collection.outlier_count} value(s) were flagged as "
+                f"outliers and hidden. Use --include-unverified to show them."
+            )
+        else:
+            console.print("No scalar values found.")
         return
 
     render_dataframe(collection.to_pandas(), console=console, output_format=output_format)

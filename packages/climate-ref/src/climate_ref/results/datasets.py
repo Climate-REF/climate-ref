@@ -16,7 +16,7 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy.orm import selectinload
+from sqlalchemy.orm import selectin_polymorphic, selectinload
 
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
@@ -87,7 +87,15 @@ class DatasetCollection:
         return len(self.datasets)
 
     def to_pandas(self) -> pd.DataFrame:
-        """DataFrame with one row per dataset; columns are base fields plus the facet dict expanded."""
+        """
+        DataFrame with one row per dataset; columns are base fields plus the facet dict expanded.
+
+        The base columns (``id, slug, dataset_type, finalised, created_at, updated_at``) are
+        emitted explicitly even when the collection is empty, so callers can select columns /
+        build an empty table without special-casing. Facet columns are dynamic (they depend on
+        the source type queried) and so are only present when at least one row has them.
+        """
+        base_columns = ["id", "slug", "dataset_type", "finalised", "created_at", "updated_at"]
         records = []
         for ds in self.datasets:
             rec: dict[str, Any] = {
@@ -100,7 +108,7 @@ class DatasetCollection:
             }
             rec.update(ds.facets)
             records.append(rec)
-        return pd.DataFrame.from_records(records)
+        return pd.DataFrame.from_records(records, columns=base_columns if not records else None)
 
 
 class DatasetsReader:
@@ -162,6 +170,12 @@ class DatasetsReader:
 
         latest_group_by = adapter.dataset_id_metadata if adapter is not None else None
         stmt = select_datasets(filter, latest_group_by=latest_group_by)
+        if adapter is None:
+            # Mixed listing over the base ``Dataset`` entity: eager-load every polymorphic subtype
+            # table up front (one extra SELECT per subtype) so ``_to_view``'s ``getattr(dataset,
+            # k)`` subtype-facet reads don't lazy-load one row at a time (N+1).
+            subtypes = [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
+            stmt = stmt.options(selectin_polymorphic(Dataset, subtypes))
         if include_files:
             stmt = stmt.options(selectinload(entity.files))  # type: ignore[attr-defined]
         if limit is not None:

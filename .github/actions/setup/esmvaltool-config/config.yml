@@ -1,0 +1,18 @@
+# ESMValCore runtime configuration for CI.
+#
+# The self-hosted `arc-climate-ref` runners have a 16 GiB memory limit.
+# ESMValCore's stock defaults (max_parallel_tasks=2 and a local_distributed Dask
+# cluster of 4 workers x 4 GiB = up to 16 GiB) exhaust that budget,
+# resulting in a MemoryError.
+#
+# Delivered to ESMValCore via ESMVALTOOL_CONFIG_DIR, exported by the setup action.
+max_parallel_tasks: 1
+dask:
+  use: local_distributed
+  profiles:
+    local_distributed:
+      cluster:
+        type: distributed.LocalCluster
+        n_workers: 2
+        threads_per_worker: 2
+        memory_limit: 4GiB

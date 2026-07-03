@@ -6,11 +6,13 @@ import dask.config
 import ilamb3
 import ilamb3.regions as ilr
 import ilamb3.transform
+import numpy as np
 import pandas as pd
 import pint
 import pooch
 import xarray as xr
 from ilamb3 import run
+from ilamb3.dataset import coarsen_dataset, get_dim_name
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
@@ -80,6 +82,42 @@ class _RelationshipTimeTransform(ILAMBTransform):
 
 
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_relationship_time", _RelationshipTimeTransform)
+
+
+class _CoarsenSpatial(ILAMBTransform):
+    """
+    Conservatively coarsen a very fine field before comparison.
+
+    Some obs4MIPs references (e.g. ``NOAA-NCEI-LAI-AVHRR-5-0`` at ~0.05 degrees) are far finer
+    than any CMIP model, which makes ilamb3's regrid/scoring step intractable. This coarsens the
+    field to a common target resolution up front; fields already at or coarser than the target
+    (the models) are left untouched — ``coarsen_dataset`` raises before doing any work in that case.
+    """
+
+    def __init__(self, variable_id: str, resolution: float = 0.5):
+        self.variable_id = variable_id
+        self.resolution = resolution
+
+    def required_variables(self) -> list[str]:
+        return [self.variable_id]
+
+    def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        if self.variable_id not in ds:
+            return ds
+        lat = ds[get_dim_name(ds, "lat")]
+        lon = ds[get_dim_name(ds, "lon")]
+        current = float(
+            np.sqrt(lat.diff(lat.name).mean().values ** 2 + lon.diff(lon.name).mean().values ** 2)
+        )
+        if current >= self.resolution:
+            # Already at or coarser than the target (e.g. model data); leave it lazy.
+            return ds
+        # ``coarsen_dataset`` uses ``.where(..., drop=True)``, whose boolean indexer must be
+        # in memory; the reference is dask-backed (open_mfdataset), so materialise it first.
+        return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+
+
+ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_coarsen_spatial", _CoarsenSpatial)
 
 
 def _get_branded_variable(

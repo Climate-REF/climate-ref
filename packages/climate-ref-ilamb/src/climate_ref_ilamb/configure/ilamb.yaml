@@ -60,12 +60,21 @@ cSoil-HWSD2:
   variable_cmap: viridis
 
 lai-AVH15C1:
-  # TODO: Update to use the obs4REF equiv
+  version: 3
   sources:
-    lai: ilamb/lai/AVH15C1/lai.nc
-    # lai:
-    #   obs_source: obs4mips
-    #   source_id: NOAA-NCEI-LAI-AVHRR-5-0
+    lai:
+      obs_source: obs4mips
+      # No `version`: obs4mips fetches from ESGF, whose version facet is unprefixed
+      # (e.g. 20260110), while the solve fixture stores it v-prefixed. Omitting it lets
+      # the ESGF search resolve the latest and the solver match on source_id/variable_id/grid_label.
+      source_id: NOAA-NCEI-LAI-AVHRR-5-0
+      variable_id: lai
+      grid_label: gn
+  transforms:
+  # NOAA-NCEI-LAI-AVHRR-5-0 is ~0.05 deg (5 km)
+  # Coarsen the reference to a common grid before comparison.
+  - climate_ref_coarsen_spatial:
+      variable_id: lai
   variable_cmap: Greens
 
 nbp-Hoffman:

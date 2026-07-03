@@ -24,3 +24,10 @@ runs:
       shell: bash
       run: |
         uv sync --all-extras --dev --locked
+    # Bound ESMValTool/Dask memory use so the slow suite fits the runner's memory limit.
+    # Mirrors the production HelmRelease providers.esmvaltool.config; see the config file
+    # for details. Merged under the per-run config the REF writes via `--config-dir`.
+    - name: Configure ESMValTool memory limits
+      shell: bash
+      run: |
+        echo "ESMVALTOOL_CONFIG_DIR=${GITHUB_ACTION_PATH}/esmvaltool-config" >> "$GITHUB_ENV"

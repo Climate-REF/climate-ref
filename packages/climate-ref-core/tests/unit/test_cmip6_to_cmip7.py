@@ -1,5 +1,7 @@
 """Tests for CMIP6 to CMIP7 format conversion."""
 
+import itertools
+
 import attrs
 import cftime
 import netCDF4
@@ -23,6 +25,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     get_frequency_from_table,
     get_realm,
     parse_variant_label,
+    shift_time_axis_end,
     suppress_bounds_coordinates,
 )
 
@@ -1031,3 +1034,146 @@ class TestSuppressBoundsCoordinates:
             tas_attrs = {a: tas_var.getncattr(a) for a in tas_var.ncattrs()}
             assert "coordinates" in tas_attrs, "tas should have a 'coordinates' attribute"
             assert "height" in tas_attrs["coordinates"]
+
+
+def _monthly_cftime(start_year: int, start_month: int, n: int) -> list[cftime.datetime]:
+    """Build ``n`` consecutive monthly ``DatetimeNoLeap`` values on the 16th."""
+    out = []
+    index = start_year * 12 + (start_month - 1)
+    for _ in range(n):
+        year, month = divmod(index, 12)
+        out.append(cftime.DatetimeNoLeap(year, month + 1, 16))
+        index += 1
+    return out
+
+
+class TestShiftTimeAxisEnd:
+    """Test relabelling a monthly time axis so it ends on a target month."""
+
+    def _monthly_dataset(self, start_year: int, n: int) -> xr.Dataset:
+        time = _monthly_cftime(start_year, 1, n)
+        bnds = np.array(
+            [[cftime.DatetimeNoLeap(t.year, t.month, 1), t] for t in time],
+            dtype=object,
+        )
+        ds = xr.Dataset(
+            {
+                "tas": ("time", np.arange(n, dtype=float)),
+                "time_bnds": (("time", "bnds"), bnds),
+            },
+            coords={"time": time},
+        )
+        ds["time"].attrs["bounds"] = "time_bnds"
+        return ds
+
+    def test_shifts_end_to_target(self):
+        """The last timestep lands exactly on the requested year/month."""
+        ds = self._monthly_dataset(1850, 12 * 20)  # 1850-01 .. 1869-12
+        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+
+        last = shifted["time"].values[-1]
+        first = shifted["time"].values[0]
+        assert (last.year, last.month) == (2021, 12)
+        # 20 years of monthly data => starts 2002-01
+        assert (first.year, first.month) == (2002, 1)
+
+    def test_preserves_length_and_spacing(self):
+        """Every month is still present, one step apart, after the shift."""
+        n = 12 * 5
+        ds = self._monthly_dataset(1990, n)
+        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+
+        times = shifted["time"].values
+        assert len(times) == n
+        # Consecutive months differ by exactly one calendar month.
+        for prev, nxt in itertools.pairwise(times):
+            expected = prev.year * 12 + prev.month  # next month index
+            assert nxt.year * 12 + (nxt.month - 1) == expected
+
+    def test_preserves_calendar_type(self):
+        """The shifted axis keeps its cftime calendar."""
+        ds = self._monthly_dataset(2000, 12)
+        original_calendar = ds["time"].values[0].calendar
+        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+        last = shifted["time"].values[-1]
+        assert isinstance(last, cftime.datetime)
+        assert last.calendar == original_calendar
+
+    def test_shifts_time_bounds(self):
+        """time_bnds are shifted in lock-step with the time coordinate."""
+        ds = self._monthly_dataset(1900, 24)
+        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+
+        last_time = shifted["time"].values[-1]
+        last_bnds = shifted["time_bnds"].values[-1]
+        # Upper bound matches the final coordinate label.
+        assert (last_bnds[1].year, last_bnds[1].month) == (last_time.year, last_time.month)
+
+    def test_no_op_when_already_at_target(self):
+        """No shift when the series already ends on the target month."""
+        ds = self._monthly_dataset(2002, 12 * 20)  # ends 2021-12 already
+        shifted = shift_time_axis_end(ds, end_year=2021, end_month=12)
+        assert (shifted["time"].values[-1].year, shifted["time"].values[-1].month) == (2021, 12)
+        assert (shifted["time"].values[0].year, shifted["time"].values[0].month) == (2002, 1)
+
+    def test_no_time_coordinate_returns_unchanged(self):
+        """Fixed-frequency datasets (no time coord) pass through untouched."""
+        ds = xr.Dataset({"sftlf": (["lat", "lon"], np.zeros((3, 4)))})
+        result = shift_time_axis_end(ds, end_year=2021)
+        assert "time" not in result.coords
+
+    def test_non_cftime_axis_raises(self):
+        """A non-cftime (numpy datetime64) axis is rejected."""
+        time = np.array(["1990-01-16", "1990-02-16"], dtype="datetime64[ns]")
+        ds = xr.Dataset({"tas": ("time", [1.0, 2.0])}, coords={"time": time})
+        with pytest.raises(TypeError, match="cftime"):
+            shift_time_axis_end(ds, end_year=2021)
+
+    def test_does_not_mutate_input(self):
+        """The original dataset's time axis is left unchanged."""
+        ds = self._monthly_dataset(1850, 24)
+        original_last = ds["time"].values[-1]
+        shift_time_axis_end(ds, end_year=2021, end_month=12)
+        assert ds["time"].values[-1] == original_last
+
+
+class TestConvertCmip6DatasetExtendHistorical:
+    """Test the opt-in extend_historical_to path of convert_cmip6_dataset."""
+
+    def _cmip6_monthly(self, n: int = 12 * 20) -> xr.Dataset:
+        time = _monthly_cftime(1850, 1, n)
+        rng = np.random.default_rng(0)
+        return xr.Dataset(
+            {"tas": (("time", "lat", "lon"), rng.random((n, 2, 3)))},
+            coords={
+                "time": time,
+                "lat": np.linspace(-90, 90, 2),
+                "lon": np.linspace(0, 359, 3),
+            },
+            attrs={
+                "variable_id": "tas",
+                "table_id": "Amon",
+                "source_id": "CanESM5",
+                "experiment_id": "historical",
+                "variant_label": "r1i1p1f1",
+                "institution_id": "CCCma",
+                "grid_label": "gn",
+                "Conventions": "CF-1.7",
+            },
+        )
+
+    def test_default_leaves_time_untouched(self):
+        """Without the opt-in, the time axis is byte-identical to the input."""
+        ds = self._cmip6_monthly()
+        original_time = ds["time"].values.copy()
+        converted = convert_cmip6_dataset(ds)
+        assert list(converted["time"].values) == list(original_time)
+
+    def test_extend_relabels_end(self):
+        """With the opt-in, the converted series ends on the requested month."""
+        ds = self._cmip6_monthly()
+        converted = convert_cmip6_dataset(ds, extend_historical_to=(2021, 12))
+        last = converted["time"].values[-1]
+        first = converted["time"].values[0]
+        assert (last.year, last.month) == (2021, 12)
+        assert (first.year, first.month) == (2002, 1)

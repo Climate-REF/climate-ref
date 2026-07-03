@@ -8,7 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -176,44 +176,11 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            TestCase(
-                name="cmip7",
-                description="Test with CMIP7 data.",
-                requests=(
-                    CMIP7Request(
-                        slug="cmip7",
-                        facets={
-                            "experiment_id": "historical",
-                            "source_id": "CanESM5",
-                            "variable_id": [
-                                "cVeg",
-                                "hurs",
-                                "pr",
-                                "sftlf",
-                                "tas",
-                                "tasmax",
-                                "treeFrac",
-                                "vegFrac",
-                            ],
-                            "branded_variable": [
-                                "cVeg_tavg-u-hxy-lnd",
-                                "hurs_tavg-h2m-hxy-u",
-                                "pr_tavg-u-hxy-u",
-                                "sftlf_ti-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                                "tas_tmaxavg-h2m-hxy-u",
-                                "treeFrac_tavg-u-hxy-u",
-                                "vegFrac_tavg-u-hxy-u",
-                            ],
-                            "variant_label": "r1i1p1f1",
-                            "frequency": ["fx", "mon"],
-                            "region": "glb",
-                        },
-                        remove_ensembles=True,
-                        time_span=("2013", "2014"),
-                    ),
-                ),
-            ),
+            # No CMIP7 regression test case for now. The recipe runs CMIP7 over
+            # 2002-2021, but the only available CanESM5 `historical` test data ends
+            # in 2014, so no baseline can be minted from it. Re-add a CMIP7 test case
+            # once real ESGF data covering the CMIP7 timerange is in the pipeline.
+            # The production CMIP7 data requirement above is unaffected.
         )
     )
 

@@ -406,8 +406,78 @@ class ExecutionOutput(DimensionMixin, CreatedUpdatedMixin, Base):
         )
 
 
+def _latest_execution_ids(
+    session: Session,
+    among_executions: Sequence[Any] | None = None,
+) -> Any:
+    """
+    Subquery selecting the id of the latest execution in each group.
+
+    "Latest" is the execution with the greatest ``created_at``,
+    breaking ties deterministically by greatest ``id`` so that exactly one execution wins per group.
+
+    Parameters
+    ----------
+    session
+        The database session to use for the query.
+    among_executions
+        Optional predicates on ``Execution`` applied *before* ranking.
+        These change which execution is considered "latest" for each group -- the
+        winner is the newest execution *among those matching the predicates*.
+
+        For example ``[Execution.successful.is_(True)]`` selects each group's
+        latest **successful** execution rather than its latest execution.
+        Group-level filters (diagnostic, provider, dirty, version) do not belong here
+        Apply them to the outer query,
+        where they narrow which groups are returned without changing which execution wins.
+
+    Returns
+    -------
+        A subquery exposing ``execution_id`` and ``group_id`` columns,
+        one row per group that has at least one matching execution.
+    """
+    ranked = session.query(
+        Execution.id.label("execution_id"),
+        Execution.execution_group_id.label("group_id"),
+        func.row_number()
+        .over(
+            partition_by=Execution.execution_group_id,
+            order_by=(Execution.created_at.desc(), Execution.id.desc()),
+        )
+        .label("rn"),
+    )
+    for predicate in among_executions or ():
+        ranked = ranked.filter(predicate)
+    ranked_sq = ranked.subquery()
+
+    return (
+        session.query(
+            ranked_sq.c.execution_id.label("execution_id"),
+            ranked_sq.c.group_id.label("group_id"),
+        )
+        .filter(ranked_sq.c.rn == 1)
+        .subquery()
+    )
+
+
+def _successful_predicate(successful: bool) -> Any:
+    """
+    Build a predicate on ``Execution.successful``.
+
+    ``True`` matches successful executions.
+    ``False`` matches unsuccessful *or* in-progress (NULL) executions and,
+    when applied to an outer-joined ``Execution``, also matches groups with no execution at all (NULL row).
+
+    Shared by the pre-rank population filter and the post-rank ``successful`` filter.
+    """
+    if successful:
+        return Execution.successful.is_(True)
+    return or_(Execution.successful.is_(False), Execution.successful.is_(None))
+
+
 def get_execution_group_and_latest(
     session: Session,
+    among_executions: Sequence[Any] | None = None,
 ) -> RowReturningQuery[tuple[ExecutionGroup, Execution | None]]:
     """
     Query to get the most recent result for each execution group
@@ -416,6 +486,10 @@ def get_execution_group_and_latest(
     ----------
     session
         The database session to use for the query.
+    among_executions
+        Optional predicates on ``Execution`` applied *before* the latest-per-group ranking,
+        so "latest" is chosen from that filtered population (see :func:`_latest_execution_ids`).
+        Defaults to ranking over all executions.
 
     Returns
     -------
@@ -423,26 +497,13 @@ def get_execution_group_and_latest(
         The result is a tuple of the execution group and the most recent result,
         which can be None.
     """
-    # Find the most recent result for each execution group
-    # This uses an aggregate function because it is more efficient than order by
-    subquery = (
-        session.query(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("latest_created_at"),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
+    latest = _latest_execution_ids(session, among_executions)
 
-    # Join the diagnostic execution with the latest result
+    # Groups with no matching execution still appear (outer join, Execution=None).
     query = (
         session.query(ExecutionGroup, Execution)
-        .outerjoin(subquery, ExecutionGroup.id == subquery.c.execution_group_id)
-        .outerjoin(
-            Execution,
-            (Execution.execution_group_id == ExecutionGroup.id)
-            & (Execution.created_at == subquery.c.latest_created_at),
-        )
+        .outerjoin(latest, latest.c.group_id == ExecutionGroup.id)
+        .outerjoin(Execution, Execution.id == latest.c.execution_id)
     )
 
     return query  # type: ignore
@@ -526,6 +587,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     facet_filters: dict[str, list[str]] | None = None,
     dirty: bool | None = None,
     successful: bool | None = None,
+    latest_successful: bool | None = None,
     include_superseded: bool = False,
 ) -> list[tuple[ExecutionGroup, Execution | None]]:
     """
@@ -535,6 +597,11 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     the parent diagnostic's ``promoted_version`` so consumers see exactly one
     version's worth of results.
     Pass ``include_superseded=True`` to bypass the version filter and see the full history.
+
+    Success can be filtered in two different ways: ``successful`` and ``latest_successful``.
+    ``successful=True`` keeps a group only if its newest run happened to succeed,
+    whereas ``latest_successful=True`` changes which run is chosen as newest.
+    The two compose but answer different questions.
 
     Parameters
     ----------
@@ -552,9 +619,16 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         If False, only return clean execution groups.
         If None, do not filter by dirty status.
     successful
+        Post-rank filter on the *winning* execution -- asks "is the latest execution successful?".
         If True, only return execution groups whose latest execution was successful.
         If False, only return execution groups whose latest execution was unsuccessful or has no executions.
         If None, do not filter by execution success.
+    latest_successful
+        Pre-rank population filter -- asks "what is the latest *successful* execution?".
+        If True, rank only over successful executions,
+        so the returned execution is each group's latest successful run (if any).
+        If False, rank only over unsuccessful / in-progress executions.
+        If None (default), rank over all executions.
     include_superseded
         If True, include execution groups for diagnostic versions older than the
         currently promoted version.
@@ -582,8 +656,11 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
       Operational queries that must remain version-agnostic
       (e.g. ``mark_failed_running`` in the same module) intentionally do not use this helper at all.
     """
+    # Pre-rank population filter: restrict which executions "latest" is chosen from.
+    among_executions = None if latest_successful is None else [_successful_predicate(latest_successful)]
+
     # Start with base query
-    query = get_execution_group_and_latest(session)
+    query = get_execution_group_and_latest(session, among_executions=among_executions)
 
     # Join Diagnostic when needed for filtering (by name or by promoted version).
     needs_diagnostic_join = bool(diagnostic_filters or provider_filters) or not include_superseded
@@ -611,10 +688,7 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         query = query.filter(or_(*provider_conditions))
 
     if successful is not None:
-        if successful:
-            query = query.filter(Execution.successful.is_(True))
-        else:
-            query = query.filter(or_(Execution.successful.is_(False), Execution.successful.is_(None)))
+        query = query.filter(_successful_predicate(successful))
 
     if dirty is not None:
         if dirty:

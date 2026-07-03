@@ -413,29 +413,28 @@ def _latest_execution_ids(
     """
     Subquery selecting the id of the latest execution in each group.
 
-    "Latest" is the execution with the greatest ``created_at``, breaking ties
-    deterministically by greatest ``id`` so that exactly one execution wins per
-    group. This is stricter than a bare ``max(created_at)`` equijoin, which
-    duplicates a group row when two executions share the same timestamp.
+    "Latest" is the execution with the greatest ``created_at``,
+    breaking ties deterministically by greatest ``id`` so that exactly one execution wins per group.
 
     Parameters
     ----------
     session
         The database session to use for the query.
     among_executions
-        Optional predicates on ``Execution`` applied *before* ranking. These
-        change which execution is considered "latest" for each group -- the
+        Optional predicates on ``Execution`` applied *before* ranking.
+        These change which execution is considered "latest" for each group -- the
         winner is the newest execution *among those matching the predicates*.
+
         For example ``[Execution.successful.is_(True)]`` selects each group's
         latest **successful** execution rather than its latest execution.
-        Group-level filters (diagnostic, provider, dirty, version) do not belong
-        here -- apply them to the outer query, where they narrow which groups are
-        returned without changing which execution wins.
+        Group-level filters (diagnostic, provider, dirty, version) do not belong here
+        Apply them to the outer query,
+        where they narrow which groups are returned without changing which execution wins.
 
     Returns
     -------
-        A subquery exposing ``execution_id`` and ``group_id`` columns, one row
-        per group that has at least one matching execution.
+        A subquery exposing ``execution_id`` and ``group_id`` columns,
+        one row per group that has at least one matching execution.
     """
     ranked = session.query(
         Execution.id.label("execution_id"),
@@ -465,9 +464,10 @@ def _successful_predicate(successful: bool) -> Any:
     """
     Build a predicate on ``Execution.successful``.
 
-    ``True`` matches successful executions; ``False`` matches unsuccessful *or*
-    in-progress (NULL) executions -- and, when applied to an outer-joined
-    ``Execution``, also matches groups with no execution at all (NULL row).
+    ``True`` matches successful executions.
+    ``False`` matches unsuccessful *or* in-progress (NULL) executions and,
+    when applied to an outer-joined ``Execution``, also matches groups with no execution at all (NULL row).
+
     Shared by the pre-rank population filter and the post-rank ``successful`` filter.
     """
     if successful:
@@ -487,9 +487,9 @@ def get_execution_group_and_latest(
     session
         The database session to use for the query.
     among_executions
-        Optional predicates on ``Execution`` applied *before* the latest-per-group
-        ranking, so "latest" is chosen from that filtered population (see
-        :func:`_latest_execution_ids`). Defaults to ranking over all executions.
+        Optional predicates on ``Execution`` applied *before* the latest-per-group ranking,
+        so "latest" is chosen from that filtered population (see :func:`_latest_execution_ids`).
+        Defaults to ranking over all executions.
 
     Returns
     -------
@@ -598,6 +598,11 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
     version's worth of results.
     Pass ``include_superseded=True`` to bypass the version filter and see the full history.
 
+    Success can be filtered in two different ways: ``successful`` and ``latest_successful``.
+    ``successful=True`` keeps a group only if its newest run happened to succeed,
+    whereas ``latest_successful=True`` changes which run is chosen as newest.
+    The two compose but answer different questions.
+
     Parameters
     ----------
     session
@@ -620,14 +625,10 @@ def get_execution_group_and_latest_filtered(  # noqa: PLR0913
         If None, do not filter by execution success.
     latest_successful
         Pre-rank population filter -- asks "what is the latest *successful* execution?".
-        If True, rank only over successful executions, so the returned execution is each group's
-        latest successful run (a group whose newest run failed but succeeded earlier is still
-        included, showing that earlier success).
+        If True, rank only over successful executions,
+        so the returned execution is each group's latest successful run (if any).
         If False, rank only over unsuccessful / in-progress executions.
         If None (default), rank over all executions.
-        This differs from ``successful``: ``successful=True`` keeps a group only if its newest run
-        happened to succeed, whereas ``latest_successful=True`` changes which run is chosen as
-        newest. The two compose but answer different questions.
     include_superseded
         If True, include execution groups for diagnostic versions older than the
         currently promoted version.

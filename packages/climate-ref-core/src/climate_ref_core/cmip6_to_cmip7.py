@@ -20,13 +20,15 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from importlib import resources
 from typing import TYPE_CHECKING, Any
 
 import attrs
 import cftime
+import numpy as np
 import pandas as pd
+from loguru import logger
 
 if TYPE_CHECKING:
     import xarray as xr
@@ -483,9 +485,108 @@ def convert_cmip6_to_cmip7_attrs(
     return attrs
 
 
+def _month_index(t: Any) -> int:
+    """Return the absolute month index (``year * 12 + month - 1``) of a time value."""
+    if isinstance(t, cftime.datetime):
+        return t.year * 12 + t.month - 1
+    ts = pd.Timestamp(t)
+    return ts.year * 12 + ts.month - 1
+
+
+_MONTHS_PER_YEAR = 12
+
+
+def shift_time_axis_end(ds: xr.Dataset, end_year: int, end_month: int = 12) -> xr.Dataset:
+    """
+    Relabel a monthly time axis so the final timestep lands on ``end_year``-``end_month``.
+
+    The whole ``time`` coordinate (and any ``time_bnds``) is shifted by a constant
+    whole-month offset, so monthly spacing, calendar, and cftime types are preserved
+    and only the labels move. This is used to fabricate CMIP7 ``historical`` coverage
+    that reaches years for which no real data exists (e.g. 2002-2021 for the fire
+    diagnostic), without altering the underlying data values.
+
+    Only monthly data with a ``cftime`` time axis is supported; datasets without a
+    ``time`` coordinate (fixed-frequency, e.g. ``sftlf``) are returned unchanged.
+
+    Parameters
+    ----------
+    ds
+        Dataset with a monthly ``cftime`` ``time`` coordinate. Modified out of place.
+    end_year
+        Target calendar year of the final timestep.
+    end_month
+        Target calendar month of the final timestep (1-12, default December).
+
+    Returns
+    -------
+    xr.Dataset
+        A shallow copy with the relabelled time axis.
+    """
+    if not 1 <= end_month <= _MONTHS_PER_YEAR:
+        raise ValueError(f"end_month must be in 1..12, got {end_month}")
+
+    if "time" not in ds.coords or len(ds["time"]) == 0:
+        return ds
+
+    time_values = ds["time"].values
+    last = time_values[-1]
+    if not isinstance(last, cftime.datetime):
+        raise TypeError(
+            "shift_time_axis_end requires a cftime time axis; "
+            f"got {type(last).__name__}. Decode with use_cftime=True."
+        )
+
+    # Whole-month offset that moves the final label onto the requested end.
+    target_index = end_year * 12 + (end_month - 1)
+    offset_months = target_index - _month_index(last)
+    if offset_months == 0:
+        return ds
+
+    calendar = last.calendar  # type: ignore[attr-defined]
+
+    def _days_in_month(year: int, month: int) -> int:
+        # Last day of ``month`` = day before the first of the following month,
+        # computed via cftime arithmetic so it respects the dataset's calendar
+        # (noleap, 360_day, etc.).
+        next_year, next_month = (year + 1, 1) if month == _MONTHS_PER_YEAR else (year, month + 1)
+        first_of_next = cftime.datetime(next_year, next_month, 1, calendar=calendar)  # type: ignore[call-arg]
+        last_of_month = first_of_next - timedelta(days=1)  # type: ignore[operator]
+        return int(last_of_month.day)  # type: ignore[attr-defined]
+
+    def _shift(t: cftime.datetime) -> cftime.datetime:
+        total = _month_index(t) + offset_months
+        year, month = divmod(total, 12)
+        month += 1
+        # Clamp the day to the target month/calendar: a non-multiple-of-12 offset
+        # can land a day-31 (or leap Feb-29) label on a shorter month, which cftime
+        # would reject. Our monthly data is mid-month so this is normally a no-op.
+        day = min(t.day, _days_in_month(year, month))
+        return cftime.datetime(  # type: ignore[call-arg]
+            year, month, day, t.hour, t.minute, t.second, t.microsecond, calendar=calendar
+        )
+
+    ds = ds.copy(deep=False)
+    shifted = np.array([_shift(t) for t in time_values])
+    new_time = ds["time"].copy(data=shifted)
+    new_time.encoding = dict(ds["time"].encoding)
+    ds = ds.assign_coords(time=new_time)
+
+    # Shift the matching time bounds, if present, so the axis stays self-consistent.
+    bounds_name = ds["time"].attrs.get("bounds")
+    if bounds_name and bounds_name in ds:
+        bnds_values = ds[bounds_name].values
+        shifted_bnds = np.array([[_shift(v) for v in row] for row in bnds_values])
+        ds[bounds_name] = ds[bounds_name].copy(data=shifted_bnds)
+
+    logger.debug(f"Shifted time axis by {offset_months} months so it ends {end_year:04d}-{end_month:02d}")
+    return ds
+
+
 def convert_cmip6_dataset(
     ds: xr.Dataset,
     inplace: bool = False,
+    extend_historical_to: tuple[int, int] | None = None,
 ) -> xr.Dataset:
     """
     Convert a CMIP6 xarray Dataset to CMIP7 format in-memory.
@@ -504,6 +605,11 @@ def convert_cmip6_dataset(
         The CMIP6 xarray Dataset to convert
     inplace
         If True, modify the dataset in place; otherwise return a copy
+    extend_historical_to
+        Opt-in ``(end_year, end_month)``. When set, the ``time`` axis is relabelled
+        via :func:`shift_time_axis_end` so the series ends on that month, fabricating
+        CMIP7 coverage for years without real data. Defaults to ``None`` (time axis
+        untouched), so existing conversions are byte-identical.
 
     Returns
     -------
@@ -512,6 +618,10 @@ def convert_cmip6_dataset(
     """
     if not inplace:
         ds = ds.copy(deep=False)
+
+    if extend_historical_to is not None:
+        end_year, end_month = extend_historical_to
+        ds = shift_time_axis_end(ds, end_year=end_year, end_month=end_month)
 
     # Determine the primary variable (skip coordinates/bounds)
     data_vars = [str(v) for v in ds.data_vars if not str(v).endswith("_bnds") and v not in ds.coords]

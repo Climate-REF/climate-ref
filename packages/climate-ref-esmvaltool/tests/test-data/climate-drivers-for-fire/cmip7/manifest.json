@@ -1,0 +1,49 @@
+{
+  "catalog_hash": "0a33e7dc76794bea1cae3db045b63d108dd41457",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "6a004337728d5817f91d8f308be2f589b950b2cacfdd56b5e112556db163dc5b",
+    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+  },
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "87e24e78a16a63b2faeb4d8fb84224069937863f5ba732a05bf84948996fb581",
+      "size": 14659
+    },
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_CanESM5_historical_2002_2021.png": {
+      "sha256": "046026eab98b28a007e51f3783fba09343849fc30f229d8a9a94932e3598ac7a",
+      "size": 353675
+    },
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_CanESM5_historical_2002_2021.png": {
+      "sha256": "f45f9713db3ad099262664f0431914c8bfbd699e25b1f1f9705b1ca0cad26917",
+      "size": 359134
+    },
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_CanESM5_historical_2002_2021.png": {
+      "sha256": "c1eb7e2229b6e8792cbd7d2b8b8bccdf393d1f1cdc464068c0d1e31d60fc4a55",
+      "size": 367211
+    },
+    "executions/recipe/run/fire_evaluation/fire_evaluation/diagnostic_provenance.yml": {
+      "sha256": "a008bdb886d37bbc3c65c957a68c6cb7fa5047e7fe45de2597a18581baab1f07",
+      "size": 4739
+    },
+    "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2002-2021.nc": {
+      "sha256": "24ae391417df4b63d8ef0c64f213e488db861509f08d443ed89112130fc1c3e5",
+      "size": 9981838
+    },
+    "output.json": {
+      "sha256": "98cb09d7af578eb33ce0ee02868fc040b114bd5c792ea84b3f76e8494a3039b5",
+      "size": 2480
+    },
+    "series.json": {
+      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "size": 2
+    }
+  },
+  "schema": 2,
+  "test_case_version": 2
+}

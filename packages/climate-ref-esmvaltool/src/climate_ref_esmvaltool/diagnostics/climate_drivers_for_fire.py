@@ -8,7 +8,7 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
@@ -176,11 +176,39 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                     ),
                 ),
             ),
-            # No CMIP7 regression test case for now. The recipe runs CMIP7 over
-            # 2002-2021, but the only available CanESM5 `historical` test data ends
-            # in 2014, so no baseline can be minted from it. Re-add a CMIP7 test case
-            # once real ESGF data covering the CMIP7 timerange is in the pipeline.
-            # The production CMIP7 data requirement above is unaffected.
+            TestCase(
+                name="cmip7",
+                description="Test with CMIP7 data.",
+                requests=(
+                    # The recipe runs CMIP7 over 2002-2021, but real CanESM5
+                    # `historical` data ends in 2014. We fetch the trailing 20 years
+                    # of real data and relabel its time axis via extend_historical_to
+                    # so the fabricated CMIP7 series ends 2021-12 and covers 2002-2021.
+                    CMIP7Request(
+                        slug="cmip7",
+                        facets={
+                            "experiment_id": ["historical"],
+                            "source_id": "CanESM5",
+                            "variable_id": [
+                                "cVeg",
+                                "hurs",
+                                "pr",
+                                "sftlf",
+                                "tas",
+                                "tasmax",
+                                "treeFrac",
+                                "vegFrac",
+                            ],
+                            "variant_label": "r1i1p1f1",
+                            "frequency": ["fx", "mon"],
+                            "region": "glb",
+                        },
+                        remove_ensembles=True,
+                        time_span=("1995", "2014"),
+                        extend_historical_to=(2021, 12),
+                    ),
+                ),
+            ),
         )
     )
 

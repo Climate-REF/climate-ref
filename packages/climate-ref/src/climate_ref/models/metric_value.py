@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from sqlalchemy import ForeignKey, event, select
+from sqlalchemy import ForeignKey, event, insert, select
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from climate_ref.models.base import Base
@@ -223,6 +223,61 @@ class SeriesIndex(Base):
         session.add(axis)
         session.flush()
         return axis
+
+    @classmethod
+    def bulk_get_or_create(
+        cls,
+        session: Session,
+        axes_by_hash: Mapping[str, tuple[str | None, Sequence[float | int | str]]],
+    ) -> dict[str, int]:
+        """
+        Resolve many axes at once, returning a ``{hash: id}`` map.
+
+        Existing axes are fetched in a single query and any missing axes are bulk-inserted,
+        so a batch of series values costs two queries rather than one ``get_or_create`` per row.
+
+        Parameters
+        ----------
+        session
+            Active database session.
+        axes_by_hash
+            Content hash (see [compute_hash][climate_ref.models.metric_value.SeriesIndex.compute_hash])
+            mapped to the axis ``(name, values)`` it represents.
+
+        Returns
+        -------
+            The shared axis id for every hash in ``axes_by_hash``.
+        """
+        if not axes_by_hash:
+            return {}
+
+        id_by_hash: dict[str, int] = {
+            digest: axis_id
+            for digest, axis_id in session.execute(select(cls.hash, cls.id).where(cls.hash.in_(axes_by_hash)))
+        }
+        missing = [digest for digest in axes_by_hash if digest not in id_by_hash]
+        if missing:
+            session.execute(
+                insert(cls),
+                [
+                    {
+                        "hash": digest,
+                        "name": axes_by_hash[digest][0],
+                        "values": list(axes_by_hash[digest][1]),
+                        "length": len(axes_by_hash[digest][1]),
+                    }
+                    for digest in missing
+                ],
+            )
+            id_by_hash.update(
+                {
+                    digest: axis_id
+                    for digest, axis_id in session.execute(
+                        select(cls.hash, cls.id).where(cls.hash.in_(missing))
+                    )
+                }
+            )
+        return id_by_hash
 
 
 class SeriesMetricValue(MetricValue):

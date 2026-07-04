@@ -26,6 +26,7 @@ from sqlalchemy import Select, case, func, or_, select
 from sqlalchemy.orm import Session
 
 from climate_ref.database import Database
+from climate_ref.models.dataset_query import _as_facets
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import (
     Execution,
@@ -36,15 +37,6 @@ from climate_ref.models.execution import (
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
 from climate_ref.results._query import latest_execution_for_group
-
-
-def _as_facets(
-    value: Mapping[str, Sequence[str]] | None,
-) -> Mapping[str, tuple[str, ...]] | None:
-    """Copy a facets mapping into an immutable ``dict`` of immutable ``tuple`` values."""
-    if value is None:
-        return None
-    return {k: tuple(v) for k, v in value.items()}
 
 
 @attrs.frozen(kw_only=True)
@@ -153,10 +145,11 @@ class ExecutionGroupView:
     The group's most recent execution, or ``None`` if it has never been executed.
 
     Reflects the helper's ``max(created_at)`` outer join
-    (models/execution.py::get_execution_group_and_latest), which can duplicate a group on an
-    exact ``created_at`` tie. This may differ from ``ExecutionsReader.latest_execution()``, which
-    tie-breaks by ``created_at DESC, id DESC`` (``_query.latest_execution_for_group``). Both
-    behaviours are intentional for their respective consumers (``groups()`` vs ``latest_execution()``)
+    (models/execution.py::get_execution_group_and_latest),
+    which can duplicate a group on an exact ``created_at`` tie.
+    This may differ from ``ExecutionsReader.latest_execution()``, which
+    tie-breaks by ``created_at DESC, id DESC`` (``_query.latest_execution_for_group``).
+    Both behaviours are intentional for their respective consumers (``groups()`` vs ``latest_execution()``)
     -- do not unify them.
     """
 

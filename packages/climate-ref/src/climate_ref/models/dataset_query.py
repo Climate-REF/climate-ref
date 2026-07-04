@@ -129,15 +129,8 @@ def select_datasets(
         stmt = stmt.distinct()
 
     if filter.latest_only and latest_group_by:
-        # Rank by version_key within each partition, then keep only ids at rank 1. Applied after all
-        # the where-filters/joins above so "latest" is chosen among the already-filtered set.
-        #
-        # This uses the ``entity.id.in_(<rank==1 id subquery>)`` shape rather than
-        # ``aliased(entity, subquery)``: making the outer entity an alias would break the class-bound
-        # ``selectinload(entity.files)`` loader option that callers attach to the returned ``Select``
-        # (``ArgumentError`` at execution), since a bare ``Select`` gives callers no handle on the
-        # alias to rewrite their options against. Keeping the outer entity a plain class means all
-        # existing ``.options(...)`` calls keep working unchanged.
+        # Rank by version_key within each partition, then keep only ids at rank 1.
+        # Applied after all the where-filters/joins above so "latest" is chosen among the filtered set.
         #
         # RANK (not ROW_NUMBER) keeps every row tied at the max version_key in a partition.
         rank = sa.func.rank().over(
@@ -146,9 +139,8 @@ def select_datasets(
         )
         inner = stmt.add_columns(rank.label("_rank")).subquery()
         latest_ids = select(inner.c.id).where(inner.c._rank == 1)
-        # Plain filtered select of the entity (not the ``stmt`` built above, which now carries the
-        # window's subquery machinery) -- the id membership already encodes every filter/join from
-        # above, so the outer select only needs the entity and the id predicate.
+        # The id membership already encodes every filter/join from above,
+        # so the outer select only needs the entity and the id predicate.
         stmt = select(entity).where(entity.id.in_(latest_ids))
 
     return stmt.order_by(entity.updated_at.desc())

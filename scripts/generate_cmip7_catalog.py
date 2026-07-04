@@ -67,7 +67,60 @@ def _convert_row(row: pd.Series) -> dict | None:
     return attrs
 
 
-def generate_cmip7_catalog(cmip6_catalog: pd.DataFrame) -> pd.DataFrame:
+# The canonical last monthly timestep of a full CMIP6/CMIP7 ``historical`` run.
+# Only rows that already reach this end are lifted, which is what keeps the
+# extension from perturbing any other diagnostic (see ``_extend_historical_end``).
+FULL_HISTORICAL_END = "2014-12-16 12:00:00"
+
+
+def _extend_historical_end(
+    cmip7_catalog: pd.DataFrame,
+    end_time: str,
+    only_from: str = FULL_HISTORICAL_END,
+) -> int:
+    """
+    Relabel full-length CMIP7 ``historical`` runs so their coverage reaches ``end_time``.
+
+    Only rows whose ``end_time`` is *exactly* ``only_from`` (the canonical full
+    historical end, 2014-12) are lifted. This deliberately narrow rule is what keeps
+    the extension from perturbing other diagnostics: those rows already satisfy every
+    diagnostic that requires coverage up to 2014-12 or earlier, so pushing their end
+    further out never removes them and never newly-satisfies such a constraint. Only a
+    diagnostic that requires coverage *beyond* 2014-12 (the fire diagnostic's 2002-2021
+    window) sees any change.
+
+    Shorter historical runs (e.g. a 5-year GFDL slice ending 1854) are left alone so
+    they cannot suddenly satisfy another diagnostic's timerange. Fixed-frequency rows
+    (``fx``, e.g. ``sftlf``) carry a null ``end_time`` and are untouched. Only
+    ``end_time`` is changed -- ``start_time``, ``instance_id``, ``path`` and every other
+    column are preserved.
+
+    Parameters
+    ----------
+    cmip7_catalog
+        The CMIP7 catalog to modify in place.
+    end_time
+        Target ``end_time`` string (``YYYY-MM-DD HH:MM:SS``).
+    only_from
+        Only rows whose ``end_time`` equals this value are extended.
+
+    Returns
+    -------
+    int
+        Number of rows whose ``end_time`` was extended.
+    """
+    is_historical = cmip7_catalog["experiment_id"] == "historical"
+    is_full_run = cmip7_catalog["end_time"] == only_from
+    mask = is_historical & is_full_run
+
+    cmip7_catalog.loc[mask, "end_time"] = end_time
+    return int(mask.sum())
+
+
+def generate_cmip7_catalog(
+    cmip6_catalog: pd.DataFrame,
+    extend_historical_end: str | None = None,
+) -> pd.DataFrame:
     """
     Convert a CMIP6 catalog DataFrame to CMIP7 format.
 
@@ -75,6 +128,11 @@ def generate_cmip7_catalog(cmip6_catalog: pd.DataFrame) -> pd.DataFrame:
     ----------
     cmip6_catalog
         DataFrame from cmip6_catalog.parquet
+    extend_historical_end
+        If set, extend the ``end_time`` of every *full-length* CMIP7 ``historical``
+        run (those ending at 2014-12) up to this timestamp (``YYYY-MM-DD HH:MM:SS``).
+        Opt-in; when ``None`` the catalog copies the CMIP6 time bounds verbatim. See
+        :func:`_extend_historical_end` for why only full runs are lifted.
 
     Returns
     -------
@@ -111,6 +169,10 @@ def generate_cmip7_catalog(cmip6_catalog: pd.DataFrame) -> pd.DataFrame:
     # Reorder columns to match expected layout
     cmip7_df = cmip7_df[CMIP7_COLUMNS]
 
+    if extend_historical_end is not None:
+        extended = _extend_historical_end(cmip7_df, extend_historical_end)
+        logger.info(f"Extended {extended} historical rows to end_time {extend_historical_end!r}")
+
     logger.info(f"Converted {len(cmip7_df)} rows ({len(cmip6_catalog) - len(cmip7_df)} skipped)")
     logger.info(f"Unique instance_ids: {cmip7_df['instance_id'].nunique()}")
     logger.info(f"Unique variables: {sorted(cmip7_df['variable_id'].unique())}")
@@ -136,13 +198,28 @@ def main(
         "--output",
         help="Path for the output CMIP7 parquet catalog",
     ),
+    extend_historical_end_year: int | None = typer.Option(
+        None,
+        "--extend-historical-end-year",
+        "-E",
+        help=(
+            "Opt-in: extend every full-length CMIP7 `historical` row (those already "
+            "ending 2014-12) so its coverage reaches December of this year (e.g. 2021 "
+            "for the fire diagnostic). Shorter historical runs are left untouched. "
+            "Only `end_time` is changed; fixed-frequency (fx) rows are left untouched. "
+            "Omit to copy the CMIP6 time bounds verbatim."
+        ),
+    ),
 ) -> None:
     """Generate a CMIP7 parquet catalog from an existing CMIP6 parquet catalog."""
     logger.info(f"Reading CMIP6 catalog from {input_path}")
     cmip6_df = pd.read_parquet(input_path)
     logger.info(f"Read {len(cmip6_df)} rows with {cmip6_df['instance_id'].nunique()} datasets")
 
-    cmip7_df = generate_cmip7_catalog(cmip6_df)
+    extend_historical_end = (
+        f"{extend_historical_end_year}-12-16 12:00:00" if extend_historical_end_year is not None else None
+    )
+    cmip7_df = generate_cmip7_catalog(cmip6_df, extend_historical_end=extend_historical_end)
 
     output_path.parent.mkdir(parents=True, exist_ok=True)
     cmip7_df.to_parquet(output_path, index=False)

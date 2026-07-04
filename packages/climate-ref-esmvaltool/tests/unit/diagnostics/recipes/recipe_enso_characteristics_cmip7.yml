@@ -21,7 +21,7 @@ datasets:
   institute: CSIRO
   mip: ocean
   region: glb
-  timerange: 18500116T120000/20141216T120000
+  timerange: 18500116T120000/20211216T120000
 - dataset: TROPFLUX
   version: v1
   project: OBS6

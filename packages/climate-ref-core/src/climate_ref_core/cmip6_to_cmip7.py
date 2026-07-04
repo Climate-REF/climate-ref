@@ -20,7 +20,7 @@ import json
 import re
 import uuid
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import UTC, datetime, timedelta
 from importlib import resources
 from typing import TYPE_CHECKING, Any
 
@@ -493,6 +493,9 @@ def _month_index(t: Any) -> int:
     return ts.year * 12 + ts.month - 1
 
 
+_MONTHS_PER_YEAR = 12
+
+
 def shift_time_axis_end(ds: xr.Dataset, end_year: int, end_month: int = 12) -> xr.Dataset:
     """
     Relabel a monthly time axis so the final timestep lands on ``end_year``-``end_month``.
@@ -520,6 +523,9 @@ def shift_time_axis_end(ds: xr.Dataset, end_year: int, end_month: int = 12) -> x
     xr.Dataset
         A shallow copy with the relabelled time axis.
     """
+    if not 1 <= end_month <= _MONTHS_PER_YEAR:
+        raise ValueError(f"end_month must be in 1..12, got {end_month}")
+
     if "time" not in ds.coords or len(ds["time"]) == 0:
         return ds
 
@@ -539,13 +545,25 @@ def shift_time_axis_end(ds: xr.Dataset, end_year: int, end_month: int = 12) -> x
 
     calendar = last.calendar  # type: ignore[attr-defined]
 
+    def _days_in_month(year: int, month: int) -> int:
+        # Last day of ``month`` = day before the first of the following month,
+        # computed via cftime arithmetic so it respects the dataset's calendar
+        # (noleap, 360_day, etc.).
+        next_year, next_month = (year + 1, 1) if month == _MONTHS_PER_YEAR else (year, month + 1)
+        first_of_next = cftime.datetime(next_year, next_month, 1, calendar=calendar)  # type: ignore[call-arg]
+        last_of_month = first_of_next - timedelta(days=1)  # type: ignore[operator]
+        return int(last_of_month.day)  # type: ignore[attr-defined]
+
     def _shift(t: cftime.datetime) -> cftime.datetime:
         total = _month_index(t) + offset_months
         year, month = divmod(total, 12)
-        # Rebuild via cftime with the original calendar, keeping day and sub-day
-        # fields, so the shifted axis matches the shape of a real monthly axis.
+        month += 1
+        # Clamp the day to the target month/calendar: a non-multiple-of-12 offset
+        # can land a day-31 (or leap Feb-29) label on a shorter month, which cftime
+        # would reject. Our monthly data is mid-month so this is normally a no-op.
+        day = min(t.day, _days_in_month(year, month))
         return cftime.datetime(  # type: ignore[call-arg]
-            year, month + 1, t.day, t.hour, t.minute, t.second, t.microsecond, calendar=calendar
+            year, month, day, t.hour, t.minute, t.second, t.microsecond, calendar=calendar
         )
 
     ds = ds.copy(deep=False)

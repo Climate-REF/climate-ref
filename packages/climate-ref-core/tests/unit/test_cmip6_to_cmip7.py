@@ -1136,6 +1136,32 @@ class TestShiftTimeAxisEnd:
         shift_time_axis_end(ds, end_year=2021, end_month=12)
         assert ds["time"].values[-1] == original_last
 
+    @pytest.mark.parametrize("end_month", [0, 13, -1])
+    def test_invalid_end_month_raises(self, end_month):
+        """``end_month`` outside 1..12 fails fast rather than mislabelling."""
+        ds = self._monthly_dataset(1850, 12)
+        with pytest.raises(ValueError, match=r"end_month must be in 1\.\.12"):
+            shift_time_axis_end(ds, end_year=2021, end_month=end_month)
+
+    def test_non_december_end_month(self):
+        """A non-December target shifts month-of-year, keeping spacing."""
+        ds = self._monthly_dataset(1990, 12 * 3)  # 1990-01 .. 1992-12
+        shifted = shift_time_axis_end(ds, end_year=2021, end_month=6)
+        last = shifted["time"].values[-1]
+        assert (last.year, last.month) == (2021, 6)
+        for prev, nxt in itertools.pairwise(shifted["time"].values):
+            assert nxt.year * 12 + (nxt.month - 1) == prev.year * 12 + prev.month
+
+    def test_clamps_day_to_shorter_target_month(self):
+        """A day-31 label shifted onto a shorter month is clamped, not rejected."""
+        # Single Jan-31 timestep shifted forward one month -> Feb, which has no
+        # 31st (28 on the NoLeap calendar); the day must clamp instead of raising.
+        time = [cftime.DatetimeNoLeap(2000, 1, 31)]
+        ds = xr.Dataset({"tas": ("time", [1.0])}, coords={"time": time})
+        shifted = shift_time_axis_end(ds, end_year=2000, end_month=2)
+        last = shifted["time"].values[-1]
+        assert (last.year, last.month, last.day) == (2000, 2, 28)
+
 
 class TestConvertCmip6DatasetExtendHistorical:
     """Test the opt-in extend_historical_to path of convert_cmip6_dataset."""

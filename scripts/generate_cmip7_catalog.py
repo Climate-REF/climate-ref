@@ -203,8 +203,9 @@ def main(
         "--extend-historical-end-year",
         "-E",
         help=(
-            "Opt-in: extend every time-varying CMIP7 `historical` row so its coverage "
-            "reaches December of this year (e.g. 2021 for the fire diagnostic). "
+            "Opt-in: extend every full-length CMIP7 `historical` row (those already "
+            "ending 2014-12) so its coverage reaches December of this year (e.g. 2021 "
+            "for the fire diagnostic). Shorter historical runs are left untouched. "
             "Only `end_time` is changed; fixed-frequency (fx) rows are left untouched. "
             "Omit to copy the CMIP6 time bounds verbatim."
         ),

@@ -82,7 +82,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
 
     diagnostic: Mapped["Diagnostic"] = relationship(back_populates="execution_groups")
     executions: Mapped[list["Execution"]] = relationship(
-        back_populates="execution_group", order_by="Execution.created_at"
+        back_populates="execution_group", order_by="Execution.created_at, Execution.id"
     )
 
     def should_run(

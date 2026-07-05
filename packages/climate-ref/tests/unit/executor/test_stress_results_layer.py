@@ -3,7 +3,7 @@ Stress / performance harness for the results ingest layer.
 
 These tests quantify the database round-trips made while ingesting metric values,
 by counting the SQL statements issued against the engine. They exist to guard the
-axis-resolution path inR
+axis-resolution path in
 [ingest_series_values][climate_ref.executor.result_handling.ingest_series_values]
 against regressing into an N+1 over distinct index axes: the statement count must
 stay a small constant regardless of how many distinct axes a batch contains.

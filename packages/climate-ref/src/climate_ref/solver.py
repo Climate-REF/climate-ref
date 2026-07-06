@@ -32,6 +32,7 @@ from climate_ref.models import Provider as ProviderModel
 from climate_ref.models.diagnostic import recompute_promoted_version
 from climate_ref.models.execution import Execution
 from climate_ref.provider_registry import ProviderRegistry
+from climate_ref.reference_provenance import link_reference_datasets
 from climate_ref_core.constraints import apply_constraint
 from climate_ref_core.datasets import (
     DatasetCollection,
@@ -781,6 +782,11 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
 
                 # Add links to the datasets used in the execution
                 execution.register_datasets(db, definition.datasets)
+
+                # Record reference (observational) datasets the diagnostic compares against.
+                # These are provenance only: they are not solver inputs and do not affect the
+                # dataset hash or the data passed to the diagnostic.
+                link_reference_datasets(db, execution, potential_execution.diagnostic)
 
                 if execute:
                     # Detach the row before the surrounding ``with begin()`` commits.

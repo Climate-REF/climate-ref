@@ -5,7 +5,7 @@ Diagnostic interface
 from __future__ import annotations
 
 import pathlib
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
 from attrs import field, frozen
@@ -414,6 +414,29 @@ class DataRequirement:
         return data_catalog[select]
 
 
+@frozen
+class ReferenceDatasetSelector:
+    """
+    Identifies ingested reference datasets a diagnostic uses, for provenance recording.
+
+    Unlike :class:`DataRequirement`, this does not drive the solver's input selection. It is a
+    provider-agnostic description of reference (observational/reanalysis) datasets that should be
+    recorded against each execution of the diagnostic so their use can be tracked and surfaced,
+    even though the diagnostic references them internally rather than receiving them as inputs.
+    """
+
+    source_type: SourceDatasetType
+    """The dataset type the reference datasets are ingested as (e.g. ``esmvaltool-reference``)."""
+
+    facets: Mapping[str, str]
+    """
+    Metadata facets that must all match (AND) an ingested dataset for it to be linked.
+
+    Keys are columns on the corresponding dataset model (e.g. ``project``, ``source_id``,
+    ``table_id``). All datasets matching the facets are linked, across their variables/versions.
+    """
+
+
 @runtime_checkable
 class AbstractDiagnostic(Protocol):
     """
@@ -635,6 +658,23 @@ class Diagnostic(AbstractDiagnostic):
 
         # Build the result from the output bundle
         return self.build_execution_result(definition)
+
+    def reference_dataset_selectors(self) -> Sequence[ReferenceDatasetSelector]:
+        """
+        Return the reference datasets to record as provenance for each execution.
+
+        These are datasets the diagnostic compares against but does not receive as solver inputs
+        (e.g. observational data baked into a recipe). The solver links every ingested dataset that
+        matches a selector to the execution, so the reference data used can be tracked and surfaced.
+
+        The default returns no selectors; diagnostics with reference data override this.
+
+        Returns
+        -------
+        :
+            The reference dataset selectors for this diagnostic.
+        """
+        return ()
 
     def prepare_regression_output(self, definition: ExecutionDefinition) -> None:
         """

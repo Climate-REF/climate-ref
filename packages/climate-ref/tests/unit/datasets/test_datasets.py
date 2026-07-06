@@ -100,6 +100,10 @@ def test_validate_data_catalog_metadata_variance(caplog):
         (SourceDatasetType.CMIP6.value, "climate_ref.datasets.cmip6.CMIP6DatasetAdapter"),
         (SourceDatasetType.CMIP7.value, "climate_ref.datasets.cmip7.CMIP7DatasetAdapter"),
         (SourceDatasetType.obs4MIPs.value, "climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter"),
+        (
+            SourceDatasetType.ESMValToolReference.value,
+            "climate_ref.datasets.esmvaltool_reference.ESMValToolReferenceDatasetAdapter",
+        ),
     ],
 )
 def test_get_dataset_adapter_valid(source_type, expected_adapter):

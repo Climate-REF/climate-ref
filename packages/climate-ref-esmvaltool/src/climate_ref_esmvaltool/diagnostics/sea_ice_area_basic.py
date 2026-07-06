@@ -1,4 +1,5 @@
 import pandas
+from attrs import evolve
 
 from climate_ref_core.constraints import (
     AddSupplementaryDataset,
@@ -12,6 +13,7 @@ from climate_ref_core.esgf import CMIP6Request, CMIP7Request
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
+from climate_ref_esmvaltool.diagnostics.reference import ESMValToolReferenceSpec
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import Recipe
 
@@ -25,6 +27,18 @@ MONTHS = {
     "sh": "February",
 }
 
+# Reference sea-ice concentration from EUMETSAT OSI SAF, one dataset per hemisphere.
+_OSI_450_NH = ESMValToolReferenceSpec(
+    project="OBS",
+    dataset="OSI-450-nh",
+    mip="OImon",
+    tier=2,
+    obs_type="reanaly",
+    version="v3",
+    supplementary_variables=({"short_name": "areacello", "mip": "fx"},),
+)
+_OSI_450_SH = evolve(_OSI_450_NH, dataset="OSI-450-sh")
+
 
 class SeaIceAreaBasic(ESMValToolDiagnostic):
     """
@@ -34,6 +48,8 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     name = "Sea ice area basic"
     slug = "sea-ice-area-basic"
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
+
+    reference_datasets = (_OSI_450_NH, _OSI_450_SH)
 
     data_requirements = (
         (
@@ -202,23 +218,11 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
         for dataset in recipe["datasets"]:
             dataset.pop("timerange")
 
-        # Update observational datasets
-        nh_obs = {
-            "dataset": "OSI-450-nh",
-            "mip": "OImon",
-            "project": "OBS",
-            "supplementary_variables": [
-                {
-                    "short_name": "areacello",
-                    "mip": "fx",
-                },
-            ],
-            "tier": 2,
-            "type": "reanaly",
-            "version": "v3",
-        }
+        # Update observational datasets. sh shares nh's supplementary_variables list (shallow
+        # copy) so the two hemispheres differ only by dataset name, exactly as before.
+        nh_obs = _OSI_450_NH.to_recipe_dataset()
         sh_obs = nh_obs.copy()
-        sh_obs["dataset"] = "OSI-450-sh"
+        sh_obs["dataset"] = _OSI_450_SH.dataset
         diagnostics = recipe["diagnostics"]
         diagnostics["siarea_min"]["variables"]["sea_ice_area_nh_sep"]["additional_datasets"] = [nh_obs]
         diagnostics["siarea_min"]["variables"]["sea_ice_area_sh_feb"]["additional_datasets"] = [sh_obs]

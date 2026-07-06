@@ -18,10 +18,12 @@ from climate_ref_core.diagnostics import (
     CommandLineDiagnostic,
     ExecutionDefinition,
     ExecutionResult,
+    ReferenceDatasetSelector,
 )
 from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
+from climate_ref_esmvaltool.diagnostics.reference import ESMValToolReferenceSpec
 from climate_ref_esmvaltool.recipe import (
     fix_annual_statistics_keep_year,
     load_recipe,
@@ -73,6 +75,16 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
 
     base_recipe: ClassVar[str]
 
+    reference_datasets: ClassVar[tuple[ESMValToolReferenceSpec, ...]] = ()
+    """
+    Reference (observational/reanalysis) datasets this diagnostic compares against.
+
+    These are the non-CMIP datasets the diagnostic uses; they are declared here as the single
+    source of truth so they can be recorded for provenance and surfaced in the frontend.
+    ``update_recipe`` builds the recipe entries from these specs rather than hardcoding them.
+    Diagnostics whose references have not yet been declared leave this empty.
+    """
+
     reconstruction_inputs = (f"executions/{_STABLE_SESSION_NAME}/{_PROVENANCE_GLOB}",)
     """Raw provenance YAML that :meth:`build_execution_result` re-scans to discover the run's outputs.
 
@@ -82,6 +94,26 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
     ``recipe`` and every path the provenance contains is then under the execution output directory, so
     the native sanitiser rewrites them to ``<OUTPUT_DIR>`` and the captured blobs stay portable.
     """
+
+    def reference_dataset_selectors(self) -> tuple[ReferenceDatasetSelector, ...]:
+        """
+        Map the declared :attr:`reference_datasets` to provenance selectors.
+
+        Each spec resolves to the ingested ESMValTool reference datasets matching its project and
+        dataset name (and MIP table where declared), across their variables.
+        """
+        selectors = []
+        for spec in self.reference_datasets:
+            facets = {"project": spec.project, "source_id": spec.dataset}
+            if spec.mip is not None:
+                facets["table_id"] = spec.mip
+            selectors.append(
+                ReferenceDatasetSelector(
+                    source_type=SourceDatasetType.ESMValToolReference,
+                    facets=facets,
+                )
+            )
+        return tuple(selectors)
 
     @staticmethod
     @abstractmethod

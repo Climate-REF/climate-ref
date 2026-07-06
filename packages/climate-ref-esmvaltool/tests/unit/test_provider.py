@@ -14,6 +14,7 @@ def test_provider():
     diagnostics_per_module = {
         "__init__.py": 0,
         "base.py": 0,
+        "reference.py": 0,
         "cloud_scatterplots.py": 5,
         "enso.py": 2,
         "regional_historical_changes.py": 3,

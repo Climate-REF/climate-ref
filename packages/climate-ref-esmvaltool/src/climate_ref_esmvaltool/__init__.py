@@ -5,7 +5,7 @@ Rapid evaluating CMIP data with ESMValTool.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pooch
 from loguru import logger
@@ -64,6 +64,46 @@ class ESMValToolProvider(CondaDiagnosticProvider):
     def get_data_path(self) -> Path | None:
         """Get the path where ESMValTool data is cached."""
         return resolve_cache_dir("esmvaltool")
+
+    def ingest_data(self, config: Config, db: Any) -> None:
+        """
+        Ingest fetched ESMValTool reference data into the database.
+
+        This records the observational/reanalysis datasets bundled with ESMValTool so
+        their use can be tracked for provenance and surfaced in the frontend. The data is
+        not CMOR compliant, so it is registered under its own dataset type.
+
+        Note: requires the ``climate-ref`` package. When ``climate-ref-esmvaltool`` is used
+        standalone the ingestion is skipped with a warning, mirroring the PMP provider.
+        """
+        try:
+            from climate_ref.datasets import ingest_datasets  # noqa: PLC0415
+            from climate_ref.datasets.esmvaltool_reference import (  # noqa: PLC0415
+                ESMValToolReferenceDatasetAdapter,
+            )
+        except ImportError:
+            logger.info(
+                f"Skipping {self.slug} data ingestion: climate-ref package not installed. "
+                "Run `ref datasets ingest --source-type esmvaltool-reference` manually if needed."
+            )
+            return
+
+        # Reference data is fetched under ``<datasets-registry-cache>/ESMValTool``; the same
+        # location build_cmd() configures as the ESMValCore rootpath.
+        registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
+        data_path = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
+        if not data_path.exists():
+            logger.warning(
+                f"ESMValTool reference data not found at {data_path}. "
+                f"Run `ref providers setup --provider {self.slug}` first."
+            )
+            return
+
+        try:
+            stats = ingest_datasets(ESMValToolReferenceDatasetAdapter(), data_path, db, skip_invalid=True)
+            stats.log_summary("ESMValTool reference ingestion complete:")
+        except ValueError as e:
+            logger.warning(f"No valid ESMValTool reference datasets found: {e}")
 
 
 # Initialise the diagnostics manager.

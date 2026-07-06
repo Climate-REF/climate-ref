@@ -23,11 +23,11 @@ datasets:
   region: glb
   timerange: 18500116T120000/20211216T120000
 - dataset: TROPFLUX
-  version: v1
-  project: OBS6
-  type: reanaly
-  tier: 2
   mip: Omon
+  project: OBS6
+  tier: 2
+  type: reanaly
+  version: v1
 preprocessors:
   ssta_enso:
     custom_order: true

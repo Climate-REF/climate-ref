@@ -18,8 +18,27 @@ from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, fillvalues_to_nan
+from climate_ref_esmvaltool.diagnostics.reference import ESMValToolReferenceSpec
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
+
+# Reference datasets not published as CMIP-style obs4MIPs, used by the regional-historical
+# diagnostics. Declared once and shared across the diagnostics that use them.
+_HADCRUT5 = ESMValToolReferenceSpec(
+    project="OBS",
+    dataset="HadCRUT5",
+    tier=2,
+    obs_type="ground",
+    version="5.0.1.0-analysis",
+)
+_GPCP_V2_3 = ESMValToolReferenceSpec(project="obs4MIPs", dataset="GPCP-V2.3")
+_ERA5_NATIVE6 = ESMValToolReferenceSpec(
+    project="native6",
+    dataset="ERA5",
+    tier=3,
+    obs_type="reanaly",
+    version="v1",
+)
 
 ANNUAL_CYCLE_DIAGNOSTICS = (
     ("hus", "specific_humidity_annual_cycle"),
@@ -113,6 +132,8 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
     name = "Regional historical annual cycle of climate variables"
     slug = "regional-historical-annual-cycle"
     base_recipe = "ref/recipe_ref_annual_cycle_region.yml"
+
+    reference_datasets = (_HADCRUT5, _GPCP_V2_3, _ERA5_NATIVE6)
 
     variables = (
         "hus",
@@ -316,30 +337,9 @@ class RegionalHistoricalAnnualCycle(ESMValToolDiagnostic):
         """Update the recipe."""
         # Extra datasets that are not published as obs4MIPs.
         extra_datasets: dict[str, list[dict[str, str | int]]] = {
-            "tas": [
-                {
-                    "dataset": "HadCRUT5",
-                    "project": "OBS",
-                    "tier": 2,
-                    "type": "ground",
-                    "version": "5.0.1.0-analysis",
-                },
-            ],
-            "pr": [
-                {
-                    "dataset": "GPCP-V2.3",
-                    "project": "obs4MIPs",
-                },
-            ],
-            "hus": [
-                {
-                    "dataset": "ERA5",
-                    "project": "native6",
-                    "tier": 3,
-                    "type": "reanaly",
-                    "version": "v1",
-                },
-            ],
+            "tas": [_HADCRUT5.to_recipe_dataset()],
+            "pr": [_GPCP_V2_3.to_recipe_dataset()],
+            "hus": [_ERA5_NATIVE6.to_recipe_dataset()],
         }
 
         # Remove the unused regions alias.
@@ -655,6 +655,8 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
     slug = "regional-historical-trend"
     base_recipe = "ref/recipe_ref_trend_regions.yml"
 
+    reference_datasets = (_HADCRUT5, _GPCP_V2_3, _ERA5_NATIVE6)
+
     variables = (
         "hus",
         "pr",
@@ -850,37 +852,9 @@ class RegionalHistoricalTrend(ESMValToolDiagnostic):
         """Update the recipe."""
         # Extra datasets that are not published as CMIP6-style obs4MIPs.
         extra_datasets: dict[str, list[dict[str, str | int]]] = {
-            "tas": [
-                {
-                    "dataset": "HadCRUT5",
-                    "project": "OBS",
-                    "tier": 2,
-                    "type": "ground",
-                    "version": "5.0.1.0-analysis",
-                },
-            ],
-            "pr": [
-                {
-                    "dataset": "GPCP-V2.3",
-                    "project": "obs4MIPs",
-                },
-                {
-                    "dataset": "ERA5",
-                    "project": "native6",
-                    "type": "reanaly",
-                    "tier": 3,
-                    "version": "v1",
-                },
-            ],
-            "hus": [
-                {
-                    "dataset": "ERA5",
-                    "project": "native6",
-                    "tier": 3,
-                    "type": "reanaly",
-                    "version": "v1",
-                },
-            ],
+            "tas": [_HADCRUT5.to_recipe_dataset()],
+            "pr": [_GPCP_V2_3.to_recipe_dataset(), _ERA5_NATIVE6.to_recipe_dataset()],
+            "hus": [_ERA5_NATIVE6.to_recipe_dataset()],
         }
 
         # Update the datasets.

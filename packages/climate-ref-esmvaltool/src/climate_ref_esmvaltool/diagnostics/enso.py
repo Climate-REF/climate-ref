@@ -17,8 +17,19 @@ from climate_ref_core.pycmec.metric import CMECMetric, MetricCV
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
+from climate_ref_esmvaltool.diagnostics.reference import ESMValToolReferenceSpec
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
+
+# Reference reanalysis for ENSO characteristics; one observational dataset per run.
+_TROPFLUX = ESMValToolReferenceSpec(
+    project="OBS6",
+    dataset="TROPFLUX",
+    mip="Omon",
+    tier=2,
+    obs_type="reanaly",
+    version="v1",
+)
 
 
 class ENSOBasicClimatology(ESMValToolDiagnostic):
@@ -302,6 +313,8 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
     slug = "enso-characteristics"
     base_recipe = "ref/recipe_enso_characteristics.yml"
 
+    reference_datasets = (_TROPFLUX,)
+
     data_requirements = (
         (
             DataRequirement(
@@ -421,21 +434,11 @@ class ENSOCharacteristics(ESMValToolDiagnostic):
         # TODO: update the observational data requirement once available on ESGF.
         # Observations - use only one per run
         recipe["datasets"].append(
-            # {
-            #     "dataset": "NOAA-ERSSTv5",
-            #     "version": "v5",
-            #     "project": "OBS6",
-            #     "type": "reanaly",
-            #     "tier": 2,
-            # }
-            {
-                "dataset": "TROPFLUX",
-                "version": "v1",
-                "project": "OBS6",
-                "type": "reanaly",
-                "tier": 2,
-                "mip": "Omon",
-            }
+            # Alternative observational dataset:
+            # ESMValToolReferenceSpec(
+            #     project="OBS6", dataset="NOAA-ERSSTv5", tier=2, obs_type="reanaly", version="v5"
+            # )
+            _TROPFLUX.to_recipe_dataset()
         )
 
     @staticmethod

@@ -360,8 +360,8 @@ diagnostics:
           project: obs4MIPs
         - dataset: ERA5
           project: native6
-          type: reanaly
           tier: 3
+          type: reanaly
           version: v1
     scripts:
       plot:

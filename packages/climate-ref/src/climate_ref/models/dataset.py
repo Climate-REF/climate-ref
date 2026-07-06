@@ -207,7 +207,51 @@ class CMIP6Dataset(Dataset):
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore
 
 
-class Obs4MIPsDataset(Dataset):
+class ReferenceDatasetMixin:
+    """
+    Shared metadata columns for reference (observational) dataset types.
+
+    obs4MIPs, PMP climatology and (in future) other reference dataset types each live in
+    their own table with their own version lineage. They are deliberately kept as separate
+    dataset types because they describe data drawn from different sources and may carry
+    different versions of what looks like the same data.
+
+    This mixin only removes the duplication in their column definitions; it does not merge
+    the types. Each concrete model still declares its own ``__tablename__``, primary-key
+    foreign key, and ``polymorphic_identity``.
+    """
+
+    activity_id: Mapped[str] = mapped_column()
+    frequency: Mapped[str] = mapped_column()
+    grid: Mapped[str] = mapped_column()
+    grid_label: Mapped[str] = mapped_column()
+    institution_id: Mapped[str] = mapped_column()
+    long_name: Mapped[str] = mapped_column()
+    nominal_resolution: Mapped[str] = mapped_column()
+    realm: Mapped[str] = mapped_column()
+    product: Mapped[str] = mapped_column()
+    source_id: Mapped[str] = mapped_column()
+    source_type: Mapped[str] = mapped_column()
+    units: Mapped[str] = mapped_column()
+    variable_id: Mapped[str] = mapped_column()
+    variant_label: Mapped[str] = mapped_column()
+    version: Mapped[str] = mapped_column()
+    """
+    Dataset version string.
+
+    Only write this through an ORM instance: the base-table ``version_key`` ordering key is
+    synced by the ``_sync_version_key`` mapper event, which Core-level updates bypass.
+    """
+    vertical_levels: Mapped[int] = mapped_column()
+    source_version_number: Mapped[str] = mapped_column()
+
+    instance_id: Mapped[str] = mapped_column()
+    """
+    Unique identifier for the dataset.
+    """
+
+
+class Obs4MIPsDataset(ReferenceDatasetMixin, Dataset):
     """
     Represents a obs4mips dataset
 
@@ -217,38 +261,10 @@ class Obs4MIPsDataset(Dataset):
     __tablename__ = "obs4mips_dataset"
     id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
 
-    activity_id: Mapped[str] = mapped_column()
-    frequency: Mapped[str] = mapped_column()
-    grid: Mapped[str] = mapped_column()
-    grid_label: Mapped[str] = mapped_column()
-    institution_id: Mapped[str] = mapped_column()
-    long_name: Mapped[str] = mapped_column()
-    nominal_resolution: Mapped[str] = mapped_column()
-    realm: Mapped[str] = mapped_column()
-    product: Mapped[str] = mapped_column()
-    source_id: Mapped[str] = mapped_column()
-    source_type: Mapped[str] = mapped_column()
-    units: Mapped[str] = mapped_column()
-    variable_id: Mapped[str] = mapped_column()
-    variant_label: Mapped[str] = mapped_column()
-    version: Mapped[str] = mapped_column()
-    """
-    Dataset version string.
-
-    Only write this through an ORM instance: the base-table ``version_key`` ordering key is
-    synced by the ``_sync_version_key`` mapper event, which Core-level updates bypass.
-    """
-    vertical_levels: Mapped[int] = mapped_column()
-    source_version_number: Mapped[str] = mapped_column()
-
-    instance_id: Mapped[str] = mapped_column()
-    """
-    Unique identifier for the dataset.
-    """
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.obs4MIPs}  # type: ignore
 
 
-class PMPClimatologyDataset(Dataset):
+class PMPClimatologyDataset(ReferenceDatasetMixin, Dataset):
     """
     Represents a climatology dataset from PMP
 
@@ -258,35 +274,59 @@ class PMPClimatologyDataset(Dataset):
     __tablename__ = "pmp_climatology_dataset"
     id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
 
-    activity_id: Mapped[str] = mapped_column()
-    frequency: Mapped[str] = mapped_column()
-    grid: Mapped[str] = mapped_column()
-    grid_label: Mapped[str] = mapped_column()
-    institution_id: Mapped[str] = mapped_column()
-    long_name: Mapped[str] = mapped_column()
-    nominal_resolution: Mapped[str] = mapped_column()
-    realm: Mapped[str] = mapped_column()
-    product: Mapped[str] = mapped_column()
-    source_id: Mapped[str] = mapped_column()
-    source_type: Mapped[str] = mapped_column()
-    units: Mapped[str] = mapped_column()
-    variable_id: Mapped[str] = mapped_column()
-    variant_label: Mapped[str] = mapped_column()
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.PMPClimatology}  # type: ignore
+
+
+class ESMValToolReferenceDataset(Dataset):
+    """
+    Represents a reference (observational/reanalysis) dataset used by ESMValTool.
+
+    Unlike obs4MIPs and PMP climatology datasets, ESMValTool reference data is *not*
+    CMOR/obs4MIPs compliant. It arrives in ESMValTool's own layout (``OBS``/``OBS6``,
+    ``native6`` and non-compliant ``obs4MIPs`` subtrees), so the available metadata is
+    limited to what the ESMValCore DRS path and filename encode. This model therefore
+    has its own, smaller column set rather than reusing :class:`ReferenceDatasetMixin`.
+
+    It is a deliberately separate dataset type: the data describes different sources and
+    may carry different versions to the obs4MIPs data of the same name.
+    """
+
+    __tablename__ = "esmvaltool_reference_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    project: Mapped[str] = mapped_column(index=True)
+    """ESMValCore project the data is loaded as: ``OBS``, ``OBS6``, ``native6`` or ``obs4MIPs``."""
+
+    source_id: Mapped[str] = mapped_column(index=True)
+    """Reference dataset name, e.g. ``CERES-EBAF``, ``ERA5``, ``OSI-450-nh``."""
+
+    variable_id: Mapped[str] = mapped_column(index=True)
+    """ESMValTool short name of the variable, e.g. ``tas``, ``sic``, ``rlut``."""
+
+    table_id: Mapped[str] = mapped_column()
+    """
+    MIP table (``OBS``/``OBS6``, e.g. ``Amon``) or the frequency (``native6``, e.g. ``mon``).
+
+    Always populated so it can act as a non-null part of the dataset identity/grouping key.
+    """
+
     version: Mapped[str] = mapped_column()
-    """
-    Dataset version string.
+    """Dataset version as encoded in the ESMValTool layout, e.g. ``v3``, ``Ed4.2``."""
 
-    Only write this through an ORM instance: the base-table ``version_key`` ordering key is
-    synced by the ``_sync_version_key`` mapper event, which Core-level updates bypass.
-    """
-    vertical_levels: Mapped[int] = mapped_column()
-    source_version_number: Mapped[str] = mapped_column()
+    data_type: Mapped[str] = mapped_column(nullable=True)
+    """ESMValTool observation type where available: ``reanaly``, ``sat``, ``ground``."""
 
-    instance_id: Mapped[str] = mapped_column()
+    tier: Mapped[int] = mapped_column(nullable=True)
+    """ESMValTool data tier (accessibility), where the layout encodes it."""
+
+    long_name: Mapped[str] = mapped_column(nullable=True)
+    units: Mapped[str] = mapped_column(nullable=True)
+
+    instance_id: Mapped[str] = mapped_column(index=True)
     """
     Unique identifier for the dataset.
     """
-    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.PMPClimatology}  # type: ignore
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.ESMValToolReference}  # type: ignore
 
 
 class CMIP7Dataset(Dataset):

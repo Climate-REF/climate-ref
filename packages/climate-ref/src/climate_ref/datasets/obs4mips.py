@@ -53,8 +53,8 @@ def parse_obs4mips(file: str, **kwargs: Any) -> dict[str, Any]:
 
     try:
         with netCDF4.Dataset(file, "r") as ds:
-            # obs4REF is the REF-specific observational product; it shares the
-            # obs4MIPs metadata conventions and is ingested through this adapter.
+            # obs4REF is the REF-specific observational product.
+            # it shares the obs4MIPs metadata conventions and is ingested through this adapter.
             if getattr(ds, "activity_id", "") not in ("obs4MIPs", "obs4REF"):
                 traceback_message = f"{file} is not an obs4MIPs or obs4REF dataset"
                 raise TypeError(traceback_message)

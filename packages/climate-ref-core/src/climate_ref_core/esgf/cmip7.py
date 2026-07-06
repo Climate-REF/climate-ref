@@ -115,14 +115,17 @@ def _convert_file_to_cmip7(
             # Apply lossy compression - these are converted files used for
             # verification only, so precision loss is acceptable.
             # gpp magnitudes (~1e-8 kg m-2 s-1) sit far below the fixed
-            # least_significant_digit=3 (~1e-3) precision floor, which would round the
-            # entire field to zero. Keep gpp lossless; other variables tolerate it.
+            # least_significant_digit=3 (~1e-3) precision floor, which would round the entire field to zero.
+            # Keep gpp lossless; other variables tolerate it.
             encoding: dict[str, dict[str, Any]] = {}
             for var in ds_cmip7.data_vars:
                 var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
-                if str(var) != "gpp":
+
+                lossless_variables = {"gpp"}
+                if str(var) not in lossless_variables:
                     var_encoding["least_significant_digit"] = 3
                 encoding[str(var)] = var_encoding
+
             ds_cmip7.to_netcdf(output_file, encoding=encoding)
         except PermissionError:
             # If we can't write but file exists (race condition or permission issue), use it

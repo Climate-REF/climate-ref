@@ -89,9 +89,9 @@ class _CoarsenSpatial(ILAMBTransform):
     Conservatively coarsen a very fine field before comparison.
 
     Some obs4MIPs references (e.g. ``NOAA-NCEI-LAI-AVHRR-5-0`` at ~0.05 degrees) are far finer
-    than any CMIP model, which makes ilamb3's regrid/scoring step intractable. This coarsens the
-    field to a common target resolution up front; fields already at or coarser than the target
-    (the models) are left untouched — ``coarsen_dataset`` raises before doing any work in that case.
+    than any CMIP model, which makes ilamb3's regrid/scoring step intractable.
+    This coarsens the field to a common target resolution, which ESM outputs are compared to.
+    Fields already at or coarser than the target (the models) are left untouched.
     """
 
     def __init__(self, variable_id: str, resolution: float = 0.5):
@@ -112,8 +112,8 @@ class _CoarsenSpatial(ILAMBTransform):
         if current >= self.resolution:
             # Already at or coarser than the target (e.g. model data); leave it lazy.
             return ds
-        # ``coarsen_dataset`` uses ``.where(..., drop=True)``, whose boolean indexer must be
-        # in memory; the reference is dask-backed (open_mfdataset), so materialise it first.
+        # ``coarsen_dataset`` uses ``.where(..., drop=True)``, whose boolean indexer must be in memory
+        # The reference is dask-backed ( open_mfdataset), so materialise it first.
         return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
 
 

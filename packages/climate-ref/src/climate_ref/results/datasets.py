@@ -16,7 +16,8 @@ from typing import Any
 
 import attrs
 import pandas as pd
-from sqlalchemy.orm import selectin_polymorphic, selectinload
+from sqlalchemy import Select, func, select
+from sqlalchemy.orm import Session, selectin_polymorphic, selectinload
 
 from climate_ref.database import Database
 from climate_ref.datasets import get_dataset_adapter
@@ -75,16 +76,32 @@ class DatasetView:
 
 @attrs.frozen(kw_only=True)
 class DatasetCollection:
-    """An immutable collection of datasets."""
+    """
+    An immutable page of datasets plus collection-level metadata.
 
-    datasets: tuple[DatasetView, ...]
-    """The datasets in this collection."""
+    ``total_count`` is the number of datasets matching the filter *before* pagination, so a caller
+    can tell there are more rows than the returned page. ``offset``/``limit`` echo back the
+    pagination applied to produce ``items`` (``limit`` is ``None`` when the whole result was
+    returned).
+    """
+
+    items: tuple[DatasetView, ...]
+    """The datasets on this page."""
+
+    total_count: int
+    """Total datasets matching the filter before ``offset``/``limit``."""
+
+    offset: int
+    """Rows skipped before this page."""
+
+    limit: int | None
+    """Page size requested, or ``None`` when the whole result was returned."""
 
     def __iter__(self) -> Iterator[DatasetView]:
-        return iter(self.datasets)
+        return iter(self.items)
 
     def __len__(self) -> int:
-        return len(self.datasets)
+        return len(self.items)
 
     def to_pandas(self) -> pd.DataFrame:
         """
@@ -97,7 +114,7 @@ class DatasetCollection:
         """
         base_columns = ["id", "slug", "dataset_type", "finalised", "created_at", "updated_at"]
         records = []
-        for ds in self.datasets:
+        for ds in self.items:
             rec: dict[str, Any] = {
                 "id": ds.id,
                 "slug": ds.slug,
@@ -111,6 +128,11 @@ class DatasetCollection:
         return pd.DataFrame.from_records(records, columns=base_columns if not records else None)
 
 
+def _dataset_subtypes() -> list[type[Dataset]]:
+    """Every concrete ``Dataset`` subclass, for polymorphic eager-loading."""
+    return [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
+
+
 class DatasetsReader:
     """
     Dataset read domain.
@@ -118,10 +140,21 @@ class DatasetsReader:
     Constructed from a [Database][climate_ref.database.Database], which owns the session.
 
     All read methods return detached DTOs that outlive the session.
+
+    ``list`` requires a ``DatasetFilter`` (with its required ``source_type``), so unlike the other
+    readers -- whose ``filters`` argument is optional and defaults to "everything" -- there is no
+    useful all-datasets default here. This is a deliberate, documented divergence from that shared
+    contract: dataset facet columns are per-type, so a typed listing has to choose the type. ``get``
+    keeps taking a bare slug, which is globally unique and needs no ``source_type``.
     """
 
     def __init__(self, database: Database) -> None:
         self._db = database
+
+    @property
+    def session(self) -> Session:
+        """The underlying database session."""
+        return self._db.session
 
     def _to_view(self, dataset: Dataset, *, include_files: bool) -> DatasetView:
         adapter = get_dataset_adapter(dataset.dataset_type.value)
@@ -147,41 +180,65 @@ class DatasetsReader:
             files=files,
         )
 
-    def datasets(
+    def _base_statement(self, filter: DatasetFilter) -> Select[Any]:  # noqa: A002
+        """
+        Build the (unpaginated, unordered) ``SELECT`` over the concrete entity for the filter.
+
+        Deduplication to the latest version happens in SQL via a ``RANK`` window keyed off the
+        concrete adapter's ``dataset_id_metadata`` (inert when ``filter.latest_only`` is ``False``).
+        """
+        adapter = get_dataset_adapter(filter.source_type.value)
+        return select_datasets(filter, latest_group_by=adapter.dataset_id_metadata)
+
+    def list(
         self,
-        filter: DatasetFilter | None = None,  # noqa: A002
+        filters: DatasetFilter,
         *,
+        offset: int = 0,
         limit: int | None = None,
         include_files: bool = False,
     ) -> DatasetCollection:
         """
-        Query datasets, optionally scoped to a source type, execution or diagnostic.
+        Query one source type's datasets, optionally scoped to an execution or diagnostic.
 
-        Deduplication to the latest version (when ``filter.latest_only``) happens in SQL via a
-        ``RANK`` window, keyed off the adapter's ``dataset_id_metadata``. ``limit`` is pushed into
-        the same statement, so it is applied after dedup, over the ordered, latest datasets --
-        matching ``adapter.load_catalog``'s dedup-then-limit ordering, and only fetching the rows
-        actually returned instead of the whole table.
+        ``filters`` is required (its ``source_type`` picks the concrete type and hence the facet
+        columns). Deduplication to the latest version (``filters.latest_only``, the default) happens
+        in SQL via a ``RANK`` window keyed off the adapter's ``dataset_id_metadata``, so the default
+        call returns exactly one row per dataset rather than every version.
+
+        Pagination (``offset``/``limit``) is applied in SQL after dedup, over rows ordered by
+        ``(slug, id)`` so paging is deterministic even when two datasets share a slug. ``total_count``
+        is computed from a separate unpaged count over the same deduplicated statement.
         """
-        filter = filter or DatasetFilter()  # noqa: A001
+        base_stmt = self._base_statement(filters)
+        count_stmt = select(func.count()).select_from(base_stmt.subquery())
+        total_count = self.session.execute(count_stmt).scalar_one()
 
-        adapter = get_dataset_adapter(filter.source_type.value) if filter.source_type else None
-        entity: type[Dataset] = adapter.dataset_cls if adapter else Dataset
-
-        latest_group_by = adapter.dataset_id_metadata if adapter is not None else None
-        stmt = select_datasets(filter, latest_group_by=latest_group_by)
-        if adapter is None:
-            # Mixed listing over the base ``Dataset`` entity: eager-load every polymorphic subtype
-            # table up front (one extra SELECT per subtype) so ``_to_view``'s ``getattr(dataset,
-            # k)`` subtype-facet reads don't lazy-load one row at a time (N+1).
-            subtypes = [m.class_ for m in Dataset.__mapper__.polymorphic_map.values()]
-            stmt = stmt.options(selectin_polymorphic(Dataset, subtypes))
+        stmt = base_stmt.order_by(None).order_by(Dataset.slug, Dataset.id)
         if include_files:
-            stmt = stmt.options(selectinload(entity.files))  # type: ignore[attr-defined]
+            stmt = stmt.options(selectinload(Dataset.files))  # type: ignore[attr-defined]
         if limit is not None:
-            stmt = stmt.limit(limit)
+            stmt = stmt.offset(offset).limit(limit)
+        elif offset:
+            stmt = stmt.offset(offset)
 
-        session = self._db.session
-        rows = list(session.execute(stmt).scalars().unique().all())
+        rows = list(self.session.execute(stmt).scalars().unique().all())
+        items = tuple(self._to_view(r, include_files=include_files) for r in rows)
 
-        return DatasetCollection(datasets=tuple(self._to_view(r, include_files=include_files) for r in rows))
+        return DatasetCollection(items=items, total_count=total_count, offset=offset, limit=limit)
+
+    def get(self, slug: str) -> DatasetView | None:
+        """
+        Fetch one dataset by slug, or ``None`` when no dataset has that slug.
+
+        When multiple rows share a slug (different versions), the latest is returned, ranked by
+        ``version_key`` then ``id`` so the choice is deterministic on a version tie.
+        """
+        stmt = (
+            select(Dataset)
+            .where(Dataset.slug == slug)
+            .order_by(Dataset.version_key.desc(), Dataset.id.desc())
+            .options(selectin_polymorphic(Dataset, _dataset_subtypes()))
+        )
+        dataset = self.session.execute(stmt).scalars().first()
+        return self._to_view(dataset, include_files=False) if dataset is not None else None

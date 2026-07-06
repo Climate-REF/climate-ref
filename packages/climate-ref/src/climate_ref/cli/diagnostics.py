@@ -19,14 +19,14 @@ def list_(  # noqa: PLR0913
     provider: Annotated[
         list[str] | None,
         typer.Option(
-            help="Filter by provider slug (substring match, case-insensitive)."
+            help="Filter by provider slug (substring match, case-insensitive). "
             "Multiple values can be provided."
         ),
     ] = None,
     diagnostic: Annotated[
         list[str] | None,
         typer.Option(
-            help="Filter by diagnostic slug (substring match, case-insensitive)."
+            help="Filter by diagnostic slug (substring match, case-insensitive). "
             "Multiple values can be provided."
         ),
     ] = None,
@@ -69,7 +69,7 @@ def list_(  # noqa: PLR0913
 
     if column:
         if not all(col in results_df.columns for col in column):
-            logger.error(f"Column not found in data catalog: {column}")
+            logger.error(f"Column not found: {column}")
             raise typer.Exit(code=1)
         results_df = results_df[column]
 

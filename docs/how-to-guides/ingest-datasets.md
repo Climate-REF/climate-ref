@@ -12,7 +12,6 @@ but we recommend using the [intake-esgf](https://github.com/esgf2-us/intake-esgf
 If you have access to a high-performance computing (HPC) system,
 you may have a local archive of CMIP6 data already available.
 
-
 ## What is Ingestion?
 
 When processing diagnostics, the REF needs to know the location of the datasets and various metadata.
@@ -38,7 +37,7 @@ and the type of the dataset being ingested (only cmip6 is currently supported).
 This will walk through the provided directory looking for datasets to ingest.
 Metadata will be extracted from each dataset and stored in the database.
 
-```
+```bash
 >>> ref --log-level INFO datasets ingest --source-type cmip6 /path/to/cmip6
 2024-12-05 12:00:05.979 | INFO     | climate_ref.database:__init__:77 - Connecting to database at sqlite:///.climate_ref/db/climate_ref.db
 2024-12-05 12:00:05.987 | INFO     | alembic.runtime.migration:__init__:215 - Context impl SQLiteImpl.
@@ -66,7 +65,6 @@ Metadata will be extracted from each dataset and stored in the database.
 2024-12-05 12:00:06.459 | INFO     | climate_ref.cli.datasets:ingest:131 - Processing dataset CMIP6.ScenarioMIP.CSIRO.ACCESS-ESM1-5.ssp126.r1i1p1f1.fx.areacella.gn
 ```
 
-
 ### Querying ingested datasets
 
 You can query the ingested datasets using the `ref datasets list` command.
@@ -74,7 +72,7 @@ This will display a list of datasets and their associated metadata.
 The `--column` flag allows you to specify which columns to display (defaults to all columns).
 See `ref datasets list-columns` for a list of available columns.
 
-```
+```bash
 >>> ref datasets list --column instance_id --column variable_id
 
   instance_id                                                             variable_id

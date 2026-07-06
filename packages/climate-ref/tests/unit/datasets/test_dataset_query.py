@@ -4,12 +4,12 @@ Covers:
 1. ``select_datasets(..., latest_group_by=...)`` returns the same survivor set as the old pandas
    ``filter_latest_versions`` path (numeric ties, non-conforming versions, combined with
    finalised/facet/relationship filters -- including ``diagnostic_slug`` + ``latest_only`` together).
-2. The base-entity (``source_type=None``) case stays a no-op.
-3. The non-nullability invariant that the SQL dedup depends on: every adapter's
+2. The non-nullability invariant that the SQL dedup depends on: every adapter's
    ``dataset_id_metadata`` columns are non-nullable and absent from ``columns_requiring_finalisation``.
 """
 
 import pytest
+from sqlalchemy import update
 from sqlalchemy.orm import selectinload
 
 from climate_ref.datasets import get_dataset_adapter
@@ -193,14 +193,10 @@ class TestSelectDatasetsLatestVersionDedup:
         assert db_with_versions.dq_ids["v2"] in ids
         assert db_with_versions.dq_ids["v10"] in ids
 
-    def test_base_entity_no_op(self, db_with_versions):
-        """``source_type=None`` stays a no-op even if a ``latest_group_by`` were (incorrectly) passed,
-        because there are no ``dataset_id_metadata`` columns on the base ``Dataset`` entity."""
-        stmt_no_dedup = select_datasets(DatasetFilter())
-        stmt_with_group_by = select_datasets(DatasetFilter(), latest_group_by=())
-        rows_a = db_with_versions.session.execute(stmt_no_dedup).scalars().unique().all()
-        rows_b = db_with_versions.session.execute(stmt_with_group_by).scalars().unique().all()
-        assert len(rows_a) == len(rows_b)
+    def test_source_type_is_required(self):
+        """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
+        with pytest.raises(TypeError):
+            DatasetFilter()  # type: ignore[call-arg]
 
 
 class TestDatasetIdMetadataNonNullabilityInvariant:
@@ -237,6 +233,49 @@ class TestDatasetIdMetadataNonNullabilityInvariant:
             f"{adapter_cls.__name__}: dataset_id_metadata columns {overlap} require finalisation, "
             "so they may be NA pre-finalisation, which would break the SQL latest-version window."
         )
+
+
+class TestVersionKeyOrmOnlyInvariant:
+    """Pin the documented ORM-only invariant for ``version_key``.
+
+    The ``_sync_version_key`` mapper event only fires on ORM inserts/updates. A Core-level
+    ``UPDATE`` to ``version`` bypasses it, leaving ``version_key`` stale. This is a known
+    limitation documented on the ``version``/``version_key`` column docstrings; the test
+    exists to pin that behaviour so a future change is a conscious one.
+    """
+
+    def test_orm_insert_syncs_version_key(self, db_seeded):
+        """Baseline: an ORM insert does keep ``version_key`` in sync."""
+        with db_seeded.session.begin():
+            ds = _make_cmip6(slug="vk.orm-insert.v10", version="v10")
+            db_seeded.session.add(ds)
+            db_seeded.session.flush()
+            assert ds.version_key == 10
+
+    def test_core_update_leaves_version_key_stale(self, db_seeded):
+        """A Core-level ``UPDATE`` to ``version`` does NOT re-sync ``version_key``.
+
+        This pins the known limitation: the mapper event never fires for a Core update, so
+        ``version_key`` keeps its old value (2) even though ``version`` is now ``v10``.
+        """
+        with db_seeded.session.begin():
+            ds = _make_cmip6(slug="vk.core-update.v2", version="v2")
+            db_seeded.session.add(ds)
+            db_seeded.session.flush()
+            assert ds.version_key == 2
+            ds_id = ds.id
+
+        # Core-level UPDATE on the subclass table, bypassing the ORM mapper event.
+        with db_seeded.session.begin():
+            db_seeded.session.execute(
+                update(CMIP6Dataset).where(CMIP6Dataset.id == ds_id).values(version="v10")
+            )
+
+        db_seeded.session.expire_all()
+        refreshed = db_seeded.session.get(CMIP6Dataset, ds_id)
+        assert refreshed.version == "v10"
+        # version_key is stale: still 2, not the 10 an ORM write would have produced.
+        assert refreshed.version_key == 2
 
 
 def test_get_dataset_adapter_covers_all_four_subclasses():

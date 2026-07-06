@@ -68,6 +68,11 @@ class Dataset(Base):
     Lives on the base table (not a subclass) so the SQL latest-version window function
     (``select_datasets(..., latest_group_by=...)``) can read it off any polymorphic row while
     partitioning on the subclass's ``dataset_id_metadata`` columns.
+
+    Core writes to ``version``
+    (``session.execute(update(...))``, ``connection.execute(...)``, ``bulk_update_mappings``)
+    bypass the event and leave ``version_key`` stale, silently corrupting latest-version dedup.
+    ALWAYS mutate ``version`` through an ORM instance.
     """
 
     def __repr__(self) -> str:
@@ -181,6 +186,12 @@ class CMIP6Dataset(Dataset):
     variant_label: Mapped[str] = mapped_column()
     vertical_levels: Mapped[int] = mapped_column(nullable=True)
     version: Mapped[str] = mapped_column()
+    """
+    Dataset version string (e.g. ``"v2"``).
+
+    Only write this through an ORM instance.
+    The base-table ``version_key`` ordering key is synced by the ``_sync_version_key`` mapper event.
+    """
 
     instance_id: Mapped[str] = mapped_column(index=True)
     """
@@ -221,6 +232,12 @@ class Obs4MIPsDataset(Dataset):
     variable_id: Mapped[str] = mapped_column()
     variant_label: Mapped[str] = mapped_column()
     version: Mapped[str] = mapped_column()
+    """
+    Dataset version string.
+
+    Only write this through an ORM instance: the base-table ``version_key`` ordering key is
+    synced by the ``_sync_version_key`` mapper event, which Core-level updates bypass.
+    """
     vertical_levels: Mapped[int] = mapped_column()
     source_version_number: Mapped[str] = mapped_column()
 
@@ -256,6 +273,12 @@ class PMPClimatologyDataset(Dataset):
     variable_id: Mapped[str] = mapped_column()
     variant_label: Mapped[str] = mapped_column()
     version: Mapped[str] = mapped_column()
+    """
+    Dataset version string.
+
+    Only write this through an ORM instance: the base-table ``version_key`` ordering key is
+    synced by the ``_sync_version_key`` mapper event, which Core-level updates bypass.
+    """
     vertical_levels: Mapped[int] = mapped_column()
     source_version_number: Mapped[str] = mapped_column()
 
@@ -309,7 +332,11 @@ class CMIP7Dataset(Dataset):
     """Template - e.g., "tavg-h2m-hxy-u" """
 
     version: Mapped[str] = mapped_column()
-    """Template - e.g., "v20250622" """
+    """Template - e.g., "v20250622".
+
+    Only write this through an ORM instance.
+    The base-table ``version_key`` ordering key is synced by the ``_sync_version_key`` mapper event.
+    """
 
     # Additional Mandatory Attributes
     mip_era: Mapped[str] = mapped_column()

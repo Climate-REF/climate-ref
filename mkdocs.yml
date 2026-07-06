@@ -28,6 +28,7 @@ nav:
   - How-to guides:
       - how-to-guides/index.md
       - how-to-guides/using-pre-computed-results.py
+      - how-to-guides/reading-results-locally.md
       - how-to-guides/executors.md
       - how-to-guides/hpc_executor.md
       - how-to-guides/control-memory-use.md

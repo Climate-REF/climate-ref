@@ -3,6 +3,7 @@
 import math
 
 import pytest
+from pandas.testing import assert_frame_equal as pd_assert_frame_equal
 
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
@@ -13,6 +14,8 @@ from climate_ref.results import (
     Reader,
 )
 from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results.frames import scalar_values_to_frame, series_values_to_frame
+from climate_ref.results.outliers import detect_scalar_outliers
 
 
 @pytest.fixture
@@ -180,6 +183,20 @@ class TestScalarValues:
         assert len(coll) == 3
         assert coll.total_count == 8
 
+    def test_pagination_deterministic_across_tied_timestamps(self, dal_db):
+        # Every scalar row here shares one execution (one created_at), so ordering must fall back to
+        # the value id. Two adjacent pages must partition the result with no overlap and no gap.
+        f = MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        ref = Reader(dal_db)
+        page_1 = ref.values.scalar_values(f, offset=0, limit=4)
+        page_2 = ref.values.scalar_values(f, offset=4, limit=4)
+        ids_1 = [v.id for v in page_1]
+        ids_2 = [v.id for v in page_2]
+        assert ids_1 == sorted(ids_1)
+        assert ids_2 == sorted(ids_2)
+        assert set(ids_1).isdisjoint(ids_2)  # no overlap
+        assert ids_1 + ids_2 == sorted(v.id for v in ref.values.scalar_values(f))  # no gap
+
     def test_dimension_filter(self, dal_db):
         ref = Reader(dal_db)
         coll = ref.values.scalar_values(
@@ -251,6 +268,35 @@ class TestSeriesValues:
             assert col in df.columns
 
 
+class TestFrameParity:
+    """Both frame doors -- the frames.py builders and the collections' ``to_pandas()`` -- must emit
+    identical columns and rows for the same DTOs, so no consumer sees a different scalar/series
+    frame shape depending on which door it came through."""
+
+    def test_scalar_columns_identical(self, dal_db):
+        coll = Reader(dal_db).values.scalar_values(
+            MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        )
+        via_collection = coll.to_pandas()
+        via_helper = scalar_values_to_frame(coll.items)
+        assert list(via_collection.columns) == list(via_helper.columns)
+        assert "kind" in via_helper.columns  # kind promoted out of the dimension columns
+        assert "type" not in via_helper.columns  # no legacy `type` marker column
+        pd_assert_frame_equal(via_collection, via_helper)
+
+    def test_series_columns_identical(self, dal_db):
+        coll = Reader(dal_db).values.series_values(
+            MetricValueFilter(execution_group_ids=[dal_db.execution_group_id])
+        )
+        for explode in (True, False):
+            via_collection = coll.to_pandas(explode=explode)
+            via_helper = series_values_to_frame(coll.items, explode=explode)
+            assert list(via_collection.columns) == list(via_helper.columns)
+            assert "kind" in via_helper.columns
+            assert "execution_group_id" in via_helper.columns
+            pd_assert_frame_equal(via_collection, via_helper)
+
+
 class TestKindSeparation:
     def test_kind_promoted_out_of_dimensions(self, db_seeded):
         # kind is a registered CV dimension, so it has its own column; the read layer promotes it
@@ -306,3 +352,77 @@ class TestLatestExecutionForGroup:
         latest = latest_execution_for_group(session, group_id)
         assert latest is not None
         assert latest.id == newer_id
+
+
+class _FakeScalar:
+    """Minimal stand-in exposing the attributes ``detect_scalar_outliers`` reads."""
+
+    def __init__(self, id_, value, dimensions):
+        self.id = id_
+        self.value = value
+        self.dimensions = dimensions
+
+
+def _flags(scalars, **policy_kwargs):
+    """Run detection and return a ``{id: is_outlier}`` mapping."""
+    annotated, _ = detect_scalar_outliers(scalars, OutlierPolicy(**policy_kwargs))
+    return {a.value.id: a.is_outlier for a in annotated}
+
+
+class TestDetectScalarOutliers:
+    def test_fallback_path_nan_does_not_disable_detection(self):
+        # No source_id -> fallback IQR over raw values. A single NaN must not poison the quantiles:
+        # the wild outlier among the finite values is still flagged, and the NaN is flagged non-finite.
+        scalars = [
+            *[_FakeScalar(i, v, {"metric": "tas"}) for i, v in enumerate([10.0, 10.5, 9.5, 10.2, 9.8])],
+            _FakeScalar(100, 1000.0, {"metric": "tas"}),  # wild outlier
+            _FakeScalar(200, math.nan, {"metric": "tas"}),  # non-finite
+        ]
+        flags = _flags(scalars, min_n=4)
+        assert flags[100] is True
+        assert flags[200] is True
+        assert all(flags[i] is False for i in range(5))
+
+    def test_per_source_all_nan_source_does_not_poison_bounds(self):
+        # A source whose values are all NaN yields a NaN mean; it must be dropped before the
+        # quantiles so the well-behaved sources are not all flagged, while the wild source is.
+        scalars = [
+            _FakeScalar(i, v, {"metric": "tas", "source_id": sid})
+            for i, (sid, v) in enumerate(
+                [("A", 10.0), ("B", 10.5), ("C", 9.5), ("D", 10.2), ("WILD", 1000.0)]
+            )
+        ]
+        scalars += [
+            _FakeScalar(500, math.nan, {"metric": "tas", "source_id": "BAD"}),
+            _FakeScalar(501, math.nan, {"metric": "tas", "source_id": "BAD"}),
+        ]
+        flags = _flags(scalars, min_n=4)
+        assert flags[4] is True  # WILD source
+        assert flags[500] is True and flags[501] is True  # non-finite always flagged
+        assert all(flags[i] is False for i in range(4))  # A-D not poisoned
+
+    def test_zero_iqr_flags_nothing_finite(self):
+        # Identical per-source means -> zero spread -> collapsed bounds must flag nothing, even for a
+        # value that differs by an epsilon. Genuinely non-finite values are still flagged.
+        scalars = [
+            _FakeScalar(i, 10.0, {"metric": "tas", "source_id": sid})
+            for i, sid in enumerate(["A", "B", "C", "D"])
+        ]
+        scalars.append(_FakeScalar(10, 10.0 + 1e-9, {"metric": "tas", "source_id": "E"}))
+        scalars.append(_FakeScalar(11, math.nan, {"metric": "tas", "source_id": "F"}))
+        flags = _flags(scalars, min_n=4)
+        assert flags[10] is False  # epsilon deviation not flagged under zero spread
+        assert flags[11] is True  # non-finite still flagged
+        assert all(flags[i] is False for i in range(4))
+
+    def test_min_n_counts_distinct_sources_not_rows(self):
+        # Many rows but only 3 distinct source_ids; with min_n=4 detection must not run, so the wild
+        # value is left unflagged despite the row count exceeding min_n.
+        scalars = [
+            _FakeScalar(i, v, {"metric": "tas", "source_id": sid})
+            for i, (sid, v) in enumerate(
+                [("A", 10.0), ("A", 10.1), ("B", 10.5), ("B", 9.9), ("C", 1000.0), ("C", 9.5)]
+            )
+        ]
+        flags = _flags(scalars, min_n=4)
+        assert all(v is False for v in flags.values())

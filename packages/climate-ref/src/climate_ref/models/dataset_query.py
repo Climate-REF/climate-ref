@@ -40,18 +40,15 @@ class DatasetFilter:
     """
     Declarative filter over datasets.
 
-    Every field is optional.
-    ``None`` means "do not constrain on this axis".
+    ``source_type`` is required.
+    It selects which which facet columns the query can target.
+    This limits our filtering to a single source type at a time to ensure that the files can be
+    collapsed into a dataframe.
 
-    ``source_type`` selects which concrete ``Dataset`` subclass
-    (and therefore which facet columns) the query targets.
-    When ``source_type=None``, the query stays on the base ``Dataset`` database table,
-    so only base columns are filterable via ``facets``
-    (``slug``, ``finalised``, ``dataset_type``, ``created_at``, ``updated_at``),
-    and ``latest_only`` is a no-op as there is no ``dataset_id_metadata`` to group by.
+    Every other field is optional with ``None`` meaning "do not constrain on this axis".
     """
 
-    source_type: SourceDatasetType | None = None
+    source_type: SourceDatasetType
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     finalised: bool | None = None
     execution_id: int | None = None
@@ -59,10 +56,8 @@ class DatasetFilter:
     latest_only: bool = True
 
 
-def _entity_for(source_type: SourceDatasetType | None) -> type[Dataset]:
+def _entity_for(source_type: SourceDatasetType) -> type[Dataset]:
     """Resolve a source type to its concrete ``Dataset`` subclass via the polymorphic map."""
-    if source_type is None:
-        return Dataset
     return cast(type[Dataset], Dataset.__mapper__.polymorphic_map[source_type].class_)
 
 
@@ -72,19 +67,20 @@ def select_datasets(
     latest_group_by: Sequence[str] | None = None,
 ) -> Select[Any]:
     """
-    Build the ``Select`` over the (optionally concrete) ``Dataset`` entity for the given filter.
+    Build the ``Select`` over the ``Dataset`` subclass for the given filter.
 
-    Any limit is deliberately not applied here; callers apply it so a numeric limit is not spent
-    on superseded versions.
+    Any limit is deliberately not applied here.
+    Callers should apply limits after filtering out superseded versions.
 
-    ``latest_group_by`` is the adapter's ``dataset_id_metadata`` -- the partition columns for the
-    latest-version window. It is optional because ``select_datasets`` lives in the models layer and
-    must not import the adapter registry, so it cannot look this up itself; callers pass it through.
+    ``latest_group_by`` is the adapter's ``dataset_id_metadata``,
+    which is used as the partition columns for the latest-version window.
+    It is optional because ``select_datasets`` lives in the models layer
+    and must not import the adapter registry, so it cannot look this up itself; callers pass it through.
 
-    ``filter.latest_only`` is INERT unless ``latest_group_by`` is also given (non-empty): passing
-    ``latest_only=True`` alone does NOT dedup. Both must be set together for SQL-side deduplication
-    to apply. When both are set, rows are deduplicated with a ``RANK() OVER (PARTITION BY
-    <latest_group_by> ORDER BY version_key DESC)`` window (applied after all other filters/joins),
+    ``filter.latest_only`` does not take effect unless ``latest_group_by`` is also given (non-empty).
+    When both are set, rows are deduplicated with a
+    ``RANK() OVER (PARTITION BY <latest_group_by> ORDER BY version_key DESC)`` window
+    (applied after all other filters/joins),
     keeping every row tied at the maximum ``version_key`` -- so ties are not silently dropped.
 
     Raises
@@ -94,9 +90,10 @@ def select_datasets(
     """
     entity = _entity_for(filter.source_type)
 
-    stmt = select(entity)
-    if filter.source_type is not None:
-        stmt = stmt.where(entity.dataset_type == filter.source_type)
+    if filter.latest_only and not latest_group_by:
+        raise ValueError("`latest_group_by` must be provided when `latest_only` is True")
+
+    stmt = select(entity).where(entity.dataset_type == filter.source_type)
 
     for facet, values in (filter.facets or {}).items():
         column = getattr(entity, facet, None)

@@ -34,7 +34,7 @@ from climate_ref.results._query import (
     select_series_values,
 )
 from climate_ref.results.executions import ExecutionsReader
-from climate_ref.results.frames import collect_facets
+from climate_ref.results.frames import collect_facets, scalar_values_to_frame, series_values_to_frame
 from climate_ref.results.outliers import OutlierPolicy, detect_scalar_outliers
 
 if TYPE_CHECKING:
@@ -189,22 +189,7 @@ class ScalarValueCollection:
     def to_pandas(self) -> pd.DataFrame:
         """Tidy DataFrame: one row per value, one column per CV dimension present, plus metadata."""
         detection_ran = any(v.is_outlier is not None for v in self.items)
-        records = []
-        for v in self.items:
-            rec: dict[str, Any] = dict(v.dimensions)
-            rec.update(
-                id=v.id,
-                execution_id=v.execution_id,
-                execution_group_id=v.execution_group_id,
-                kind=v.kind,
-                value=v.value,
-            )
-            if detection_ran:
-                rec.update(is_outlier=v.is_outlier, verification_status=v.verification_status)
-            if v.diagnostic_slug is not None:
-                rec.update(diagnostic_slug=v.diagnostic_slug, provider_slug=v.provider_slug)
-            records.append(rec)
-        return pd.DataFrame.from_records(records)
+        return scalar_values_to_frame(self.items, detection_ran=detection_ran)
 
 
 @attrs.frozen(kw_only=True)
@@ -244,28 +229,7 @@ class SeriesValueCollection:
         matching the API's CSV shape. With ``explode=False`` each series is one row with list-valued
         ``values``/``index`` cells.
         """
-        records = []
-        for v in self.items:
-            base: dict[str, Any] = dict(v.dimensions)
-            base.update(
-                id=v.id,
-                execution_id=v.execution_id,
-                execution_group_id=v.execution_group_id,
-                kind=v.kind,
-                index_name=v.index_name or "index",
-                reference_id=v.reference_id,
-            )
-            if explode:
-                idx = v.index
-                for i, value in enumerate(v.values):
-                    rec = dict(base)
-                    rec.update(value=value, index=idx[i] if idx is not None and i < len(idx) else i)
-                    records.append(rec)
-            else:
-                rec = dict(base)
-                rec.update(values=list(v.values), index=list(v.index) if v.index is not None else None)
-                records.append(rec)
-        return pd.DataFrame.from_records(records)
+        return series_values_to_frame(self.items, explode=explode)
 
 
 class ValuesReader:

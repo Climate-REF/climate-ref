@@ -90,10 +90,11 @@ class TestDiagnosticsList:
         assert "promoted_version" not in result.stdout
 
     def test_list_columns_missing(self, db_with_diagnostics, invoke_cli):
-        invoke_cli(
+        result = invoke_cli(
             ["diagnostics", "list", "--column", "diagnostic", "--column", "missing"],
             expected_exit_code=1,
         )
+        assert "Column not found: ['diagnostic', 'missing']" in result.stderr
 
     def test_list_json_empty(self, db_seeded, invoke_cli):
         result = invoke_cli(["diagnostics", "list", "--diagnostic", "nonexistent", "--format", "json"])

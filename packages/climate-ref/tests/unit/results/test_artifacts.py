@@ -71,3 +71,37 @@ class TestOutputFile:
         reader = ArtifactsReader(tmp_path)
         with pytest.raises(ValueError):
             reader.output_file("frag", "/etc/passwd")
+
+
+class TestSymlinkEscapeIsLexicalOnly:
+    """Pin the documented lexical-only containment contract.
+
+    ``_within`` normalises paths without touching the filesystem or resolving symlinks
+    (see the ``ArtifactsReader`` docstring). A symlink that lives *inside* the results root
+    but points *outside* it therefore passes the guard: the returned path is lexically
+    contained even though following it escapes on the filesystem. This is the documented
+    contract, not a bug -- the test exists so a future change to it is a conscious one.
+    """
+
+    def test_symlink_inside_root_pointing_outside_passes_guard(self, tmp_path):
+        results_root = tmp_path / "results"
+        results_root.mkdir()
+        outside = tmp_path / "outside"
+        outside.mkdir()
+        (outside / "secret.txt").write_text("secret")
+
+        # A symlink that lives inside the results root but targets a sibling outside it.
+        link = results_root / "link"
+        link.symlink_to(outside)
+
+        reader = ArtifactsReader(results_root)
+
+        # Lexical guard succeeds: the resolved path is textually under the results root.
+        resolved = reader.output_file("link", "secret.txt")
+        assert resolved == results_root / "link" / "secret.txt"
+
+        # But following the symlink on the filesystem escapes the root: the resolved real
+        # path is the outside file, and it is not contained under the results root.
+        real = resolved.resolve()
+        assert real == (outside / "secret.txt").resolve()
+        assert results_root.resolve() not in real.parents

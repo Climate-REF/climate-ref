@@ -21,6 +21,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import ExecutionGroup
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
+from climate_ref.results._stats import rows_to_execution_stats
 from climate_ref.results.executions import ExecutionStats, select_execution_statistics
 
 
@@ -139,16 +140,17 @@ class DiagnosticCollection:
         return pd.DataFrame.from_records(records, columns=columns)
 
 
-def select_diagnostics(filter: DiagnosticFilter | None = None) -> Select[Any]:  # noqa: A002
+def select_diagnostics(filters: DiagnosticFilter | None = None) -> Select[Any]:
     """
     Build the ``Select`` for diagnostics joined to their provider, with an execution-group count.
 
     ``execution_group_count`` counts every ``ExecutionGroup`` row for the diagnostic
     (all versions, not scoped to ``promoted_version``),
     so it reflects the diagnostic's full execution history.
-    Ordered by ``(Provider.slug, Diagnostic.slug)`` for stable output.
+    Ordered by ``(Provider.slug, Diagnostic.slug, Diagnostic.id)``.
+    The diagnostic primary key is the final tiebreak so SQL pagination is deterministic across pages.
     """
-    filter = filter or DiagnosticFilter()  # noqa: A001
+    filters = filters or DiagnosticFilter()
 
     group_count_subquery = (
         select(
@@ -169,13 +171,15 @@ def select_diagnostics(filter: DiagnosticFilter | None = None) -> Select[Any]:  
         )
         .join(Provider, Diagnostic.provider_id == Provider.id)
         .outerjoin(group_count_subquery, Diagnostic.id == group_count_subquery.c.diagnostic_id)
-        .order_by(Provider.slug, Diagnostic.slug)
+        .order_by(Provider.slug, Diagnostic.slug, Diagnostic.id)
     )
 
-    if filter.provider_contains:
-        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filter.provider_contains)))
-    if filter.diagnostic_contains:
-        stmt = stmt.where(or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filter.diagnostic_contains)))
+    if filters.provider_contains:
+        stmt = stmt.where(or_(*(Provider.slug.ilike(f"%{s.lower()}%") for s in filters.provider_contains)))
+    if filters.diagnostic_contains:
+        stmt = stmt.where(
+            or_(*(Diagnostic.slug.ilike(f"%{s.lower()}%") for s in filters.diagnostic_contains))
+        )
 
     return stmt
 
@@ -211,7 +215,7 @@ class DiagnosticsReader:
 
     def list(
         self,
-        filter: DiagnosticFilter | None = None,  # noqa: A002
+        filters: DiagnosticFilter | None = None,
         *,
         offset: int = 0,
         limit: int | None = None,
@@ -227,9 +231,9 @@ class DiagnosticsReader:
 
         Diagnostics with no execution groups at the promoted version get zeros.
         """
-        filter = filter or DiagnosticFilter()  # noqa: A001
+        filters = filters or DiagnosticFilter()
 
-        base_stmt = select_diagnostics(filter)
+        base_stmt = select_diagnostics(filters)
         count_stmt = select(func.count()).select_from(base_stmt.subquery())
         total_count = self.session.execute(count_stmt).scalar_one()
 
@@ -242,8 +246,8 @@ class DiagnosticsReader:
         rows = self.session.execute(stmt).all()
 
         stats = self.stats(
-            provider_contains=filter.provider_contains,
-            diagnostic_contains=filter.diagnostic_contains,
+            provider_contains=filters.provider_contains,
+            diagnostic_contains=filters.diagnostic_contains,
         )
         stats_by_key = {(s.provider, s.diagnostic): s for s in stats}
         items = tuple(self._to_view(row, stats_by_key) for row in rows)
@@ -268,17 +272,4 @@ class DiagnosticsReader:
         stmt = select_execution_statistics(
             diagnostic_contains=diagnostic_contains, provider_contains=provider_contains
         )
-        rows = self.session.execute(stmt).all()
-        return tuple(
-            ExecutionStats(
-                provider=row.provider,
-                diagnostic=row.diagnostic,
-                running=row.running,
-                failed=row.failed,
-                successful=row.successful,
-                not_started=row.not_started,
-                dirty=row.dirty,
-                total=row.total,
-            )
-            for row in rows
-        )
+        return rows_to_execution_stats(self.session.execute(stmt).all())

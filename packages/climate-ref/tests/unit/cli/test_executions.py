@@ -1438,10 +1438,87 @@ class TestExecutionValues:
         result = invoke_cli(["executions", "values", str(group_id), "--outliers"])
 
         assert result.exit_code == 0
-        assert "No scalar values found" in result.stdout
-        assert "1" in result.stdout
-        assert "outlier" in result.stdout
-        assert "--include-unverified" in result.stdout
+        assert "No scalar values found" in result.stderr
+        assert "1" in result.stderr
+        assert "outlier" in result.stderr
+        assert "--include-unverified" in result.stderr
+
+    def test_values_default_limit_caps_output(self, db_seeded, invoke_cli):
+        """Test that limit defaults to 100 and caps output when more rows exist."""
+        with db_seeded.session.begin():
+            diagnostic = db_seeded.session.query(Diagnostic).first()
+            assert diagnostic is not None
+            group = ExecutionGroup(key="biggroup", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag-big",
+                dataset_hash="bighash",
+                successful=True,
+            )
+            db_seeded.session.add(execution)
+            db_seeded.session.flush()
+            # Create 150 scalar values to exceed default limit of 100
+            for i in range(150):
+                db_seeded.session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=float(i),
+                        attributes=None,
+                        dimensions={"statistic": "mean", "metric": "tas", "source_id": f"MODEL-{i}"},
+                    )
+                )
+            db_seeded.session.flush()
+            group_id = group.id
+
+        result = invoke_cli(["executions", "values", str(group_id)])
+
+        assert result.exit_code == 0
+        # Should display 100 values by default
+        assert "Displaying 100 of 150" in result.stderr
+        assert "--limit / --offset" in result.stderr
+
+    def test_series_with_outlier_flags_warns(self, db_seeded, invoke_cli):
+        """Test that --outliers and --include-unverified warn when used with --kind series."""
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--kind", "series", "--outliers"])
+
+        assert result.exit_code == 0
+        assert "--outliers only apply to scalar values and were ignored." in result.stderr
+
+    def test_series_with_include_unverified_warns(self, db_seeded, invoke_cli):
+        """Test that --include-unverified warns when used with --kind series."""
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(
+            ["executions", "values", str(group_id), "--kind", "series", "--include-unverified"]
+        )
+
+        assert result.exit_code == 0
+        assert "--include-unverified only apply to scalar values and were ignored." in result.stderr
+
+    def test_series_with_both_flags_warns(self, db_seeded, invoke_cli):
+        """Test that both flags warn together when used with --kind series."""
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(
+            [
+                "executions",
+                "values",
+                str(group_id),
+                "--kind",
+                "series",
+                "--outliers",
+                "--include-unverified",
+            ]
+        )
+
+        assert result.exit_code == 0
+        assert "--outliers/--include-unverified only apply to scalar values and were ignored." in (
+            result.stderr
+        )
 
     def test_dimension_filter(self, db_seeded, invoke_cli):
         group_id, _ = self._setup(db_seeded)

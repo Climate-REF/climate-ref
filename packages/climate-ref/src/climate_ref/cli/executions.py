@@ -622,9 +622,9 @@ def values(  # noqa: PLR0913
         ),
     ] = False,
     limit: Annotated[
-        int | None,
+        int,
         typer.Option(help="Maximum number of values to display."),
-    ] = None,
+    ] = 100,
     offset: Annotated[
         int,
         typer.Option(help="Number of values to skip before displaying."),
@@ -700,6 +700,8 @@ def values(  # noqa: PLR0913
                 output_format=output_format,
                 offset=offset,
                 limit=limit,
+                outliers=outliers,
+                include_unverified=include_unverified,
             )
     except KeyError as e:
         # Raised by the filter when a --dimension key is not a registered CV dimension.
@@ -728,7 +730,7 @@ def _render_scalar_values(  # noqa: PLR0913
     )
     if not len(collection):
         if collection.had_outliers:
-            console.print(
+            logger.warning(
                 f"No scalar values found. {collection.outlier_count} value(s) were flagged as "
                 f"outliers and hidden. Use --include-unverified to show them."
             )
@@ -760,7 +762,18 @@ def _render_series_values(  # noqa: PLR0913
     output_format: OutputFormat,
     offset: int,
     limit: int | None,
+    outliers: bool = False,
+    include_unverified: bool = False,
 ) -> None:
+    # Warn if scalar-only flags are used with series values
+    ignored_flags = []
+    if outliers:
+        ignored_flags.append("--outliers")
+    if include_unverified:
+        ignored_flags.append("--include-unverified")
+    if ignored_flags:
+        logger.warning(f"{'/'.join(ignored_flags)} only apply to scalar values and were ignored.")
+
     collection = values.series_values(filters, offset=offset, limit=limit, with_facets=False)
     if not len(collection):
         console.print("No series values found.")

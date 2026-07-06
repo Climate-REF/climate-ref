@@ -6,9 +6,9 @@ Here, we introduce the [HPCExecutor][climate_ref.executor.hpc.HPCExecutor] for r
 
 You could use HPCExecutor if:
 
-  - The login nodes allow users to run a program for a long time like several hours with little computational resources (less than 25% of one CPU core and negligible memory).
-  - You want to run REF under the HPC workflow i.e., submitting batch jobs.
-  - The scheduler on your HPC is __slurm__ or __pbs__. We may include other schedules in the future if needed. Please make an [issue](https://github.com/Climate-REF/climate-ref/issues) describing your requirements.
+- The login nodes allow users to run a program for a long time like several hours with little computational resources (less than 25% of one CPU core and negligible memory).
+- You want to run REF under the HPC workflow i.e., submitting batch jobs.
+- The scheduler on your HPC is __slurm__ or __pbs__. We may include other schedules in the future if needed. Please make an [issue](https://github.com/Climate-REF/climate-ref/issues) describing your requirements.
 
 ## Pre-requirements
 
@@ -35,11 +35,14 @@ The HPCExecutor will use the slurm provider and srun launch from parsl to submit
 1. On the login nodes, if possible, open a `screen` or `tmux` session to keep the master process of HPCExecutor alive. Only the master process will be run on the login nodes with less than 10% of one CPU core and negligible memory, and real computations will be on compute nodes through the job submissions. If the HPC's queue time is short and the connection to the login nodes is stable, users can use the login nodes directly without using the sessions of `screen` and `tmux`.
 2. Edit the `ref.toml` under the config directory if not create one.
 3. Change the ref executor to HPCExecutor as follows:
+
 ```toml
 [executor]
 executor = "climate_ref.executor.HPCExecutor"
 ```
+
 4. Add the configuration or options for the HPCExecutor based on your system and your account. The example of configuration used in the DOE Perlmutter HPC is as follows:
+
 ```toml
 [executor.config]
 scheduler = "slurm"
@@ -52,7 +55,9 @@ scheduler_options = "#SBATCH -C cpu"
 cores_per_worker = 1
 max_workers_per_node = 64
 ```
+
 If you are using NCI Gadi, you can use the following configuration:
+
 ```toml
 [executor.config]
 scheduler = "pbs"
@@ -68,9 +73,9 @@ scheduler_options = ""
 cores_per_worker = 1
 max_workers_per_node = 64
 ```
-5. Run `ref solve` in the session of `screen` or `tmux` or directly on the login nodes. It will have a master process running on the login nodes to monitor and submit jobs to run the real diagnostics on compute nodes.
-6. Check the logs under the `runinfo` directory and `${REF_CONFIGURATION}/log` to see if there are any errors. Once the master process is done, please run `ref executions list-groups` to check the results or `ref executions inspect id` to see the error message from the providers.
 
+1. Run `ref solve` in the session of `screen` or `tmux` or directly on the login nodes. It will have a master process running on the login nodes to monitor and submit jobs to run the real diagnostics on compute nodes.
+2. Check the logs under the `runinfo` directory and `${REF_CONFIGURATION}/log` to see if there are any errors. Once the master process is done, please run `ref executions list-groups` to check the results or `ref executions inspect id` to see the error message from the providers.
 
 /// admonition | Note
 
@@ -93,7 +98,7 @@ The configurations of the __HPCExecutor__ for the slurm scheduler are validated 
 - `req_nodes: int`, requested node for the REF run
 - `validation: boolean`, true to validate the above options with pyslurm
 
-The following __HPCExecutor__ options are directly from parsl. Please refer to [link](https://parsl.readthedocs.io/en/stable/stubs/parsl.providers.SlurmProvider.html)
+The following __HPCExecutor__ options are directly from parsl. Please refer to [parsl.providers.SlurmProvider](https://parsl.readthedocs.io/en/stable/stubs/parsl.providers.SlurmProvider.html)
 
 - `log_dir: str`, default="run_info"
 - `cores_per_worker: int`, default=1

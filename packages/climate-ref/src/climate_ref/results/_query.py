@@ -158,9 +158,14 @@ def _apply_common(  # noqa: PLR0912
 
 
 def select_scalar_values(f: MetricValueFilter | None = None) -> Select[tuple[ScalarMetricValue]]:
-    """Build a ``Select`` over ``ScalarMetricValue`` for the given filter. No session required."""
+    """
+    Build a ``Select`` over ``ScalarMetricValue`` for the given filter.
+
+    Ordered by the value id ascending so SQL pagination is deterministic across pages.
+    """
     f = f or MetricValueFilter()
-    return _apply_common(select(ScalarMetricValue), ScalarMetricValue, f)
+    stmt = _apply_common(select(ScalarMetricValue), ScalarMetricValue, f)
+    return stmt.order_by(ScalarMetricValue.id)
 
 
 def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[SeriesMetricValue]]:
@@ -169,6 +174,7 @@ def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[Ser
 
     The shared index axis is eager-loaded via the model relationship (``lazy="joined"``), so
     ``.index`` / ``.index_name`` are safe to read for the returned rows.
+    Ordered by the value id ascending so SQL pagination is deterministic across pages.
     """
     f = f or MetricValueFilter()
     stmt = _apply_common(select(SeriesMetricValue), SeriesMetricValue, f)
@@ -176,7 +182,7 @@ def select_series_values(f: MetricValueFilter | None = None) -> Select[tuple[Ser
         stmt = stmt.where(SeriesMetricValue.reference_id.is_not(None))
     elif f.reference_only is False:
         stmt = stmt.where(SeriesMetricValue.reference_id.is_(None))
-    return stmt
+    return stmt.order_by(SeriesMetricValue.id)
 
 
 def count_values(session: Session, stmt: Select[Any]) -> int:
@@ -189,8 +195,7 @@ def latest_execution_for_group(session: Session, execution_group_id: int) -> Exe
     Return the most recent [Execution][climate_ref.models.execution.Execution] for a group.
 
     This is the read-side primitive behind the API's ``/executions/{group_id}/values`` behaviour
-    of defaulting to the latest execution when no ``execution_id`` is supplied. Centralising it
-    here means consumers stop re-deriving the "latest execution" lookup.
+    of defaulting to the latest execution when no ``execution_id`` is supplied.
     """
     return session.execute(
         select(Execution)

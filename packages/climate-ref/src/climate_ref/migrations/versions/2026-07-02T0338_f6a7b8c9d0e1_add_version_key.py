@@ -39,8 +39,14 @@ _SUBCLASS_TABLES = ("cmip6_dataset", "cmip7_dataset", "obs4mips_dataset", "pmp_c
 def _backfill() -> None:
     """Compute ``version_key`` in Python from each subclass table's ``version`` column.
 
-    Batches the ``UPDATE`` by distinct version value (there are typically few distinct versions
-    relative to the number of datasets), rather than issuing one ``UPDATE`` per row.
+    ``version_sort_key`` matches a leading ``v`` followed by digits and casts them to an int,
+    falling back to ``-1``.
+    That regex + int-cast has no expression that compiles portably across SQLite and PostgreSQL,
+    so the key is derived in Python and written with one ``UPDATE`` per distinct version value.
+
+    Worst case this is one ``UPDATE`` per row: date-versioned datasets are effectively all-distinct,
+    so the distinct-version count approaches the row count,
+    but only runs once.
     """
     bind = op.get_bind()
     metadata = sa.MetaData()
@@ -53,9 +59,8 @@ def _backfill() -> None:
         for version in distinct_versions:
             key = version_sort_key(version)
             # ``version`` is NOT NULL on every subclass table, so ``==`` is correct and portable.
-            # ``col.is_(value)`` would compile to ``version IS 'v10'``, which SQLite tolerates but
-            # PostgreSQL rejects (``IS`` only accepts NULL/boolean) -- and the unit tests are
-            # SQLite-only, so that would surface only on a populated Postgres upgrade.
+            # ``col.is_(value)`` would compile to ``version IS 'v10'``,
+            # which SQLite tolerates but PostgreSQL rejects (``IS`` only accepts NULL/boolean).
             id_subquery = sa.select(sub.c.id).where(sub.c.version == version)
             bind.execute(dataset.update().where(dataset.c.id.in_(id_subquery)).values(version_key=key))
 

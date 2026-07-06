@@ -15,6 +15,9 @@ Two write/recovery paths deliberately stay on the ORM helper instead of this rea
 - ``executor/reingest.py::get_executions_for_reingest``
     (needs ``include_superseded=True`` plus the *oldest* execution in a group,
     not this reader's "latest" definition).
+
+A common set of ordering (``created_at DESC, id DESC``) is used to ensure consistent ordering and tie breaks.
+
 """
 
 from collections.abc import Iterator, Mapping, Sequence
@@ -37,6 +40,7 @@ from climate_ref.models.execution import (
 from climate_ref.models.provider import Provider
 from climate_ref.results._converters import _as_str_tuple
 from climate_ref.results._query import latest_execution_for_group
+from climate_ref.results._stats import rows_to_execution_stats
 
 
 @attrs.frozen(kw_only=True)
@@ -46,9 +50,10 @@ class ExecutionGroupFilter:
 
     Every field is optional; ``None`` means "do not constrain on this axis".
     This mirrors exactly what [get_execution_group_and_latest_filtered]
-    [climate_ref.models.execution.get_execution_group_and_latest_filtered] supports today --
+    [climate_ref.models.execution.get_execution_group_and_latest_filtered] supports --
     ``diagnostic_contains``/``provider_contains`` are case-insensitive substring matches (OR-combined),
-    ``facets`` is the selector-facet map consumed by the helper's Python-side matching.
+    ``facets`` is the selector-facet map consumed by the helper's Python-side matching,
+    and ``successful`` vs ``latest_successful`` expose the helper's post-rank / pre-rank success filters.
 
     Exact-match ``diagnostic_slug``/``provider_slug`` are a documented follow-up,
     as the underlying helper only does substring matching today,
@@ -65,7 +70,26 @@ class ExecutionGroupFilter:
     """Constrain on the group's ``dirty`` flag."""
 
     successful: bool | None = None
-    """Constrain on the latest execution's ``successful`` status."""
+    """
+    Post-rank filter on the *winning* execution: keep a group only if its latest execution matches.
+
+    ``True`` keeps groups whose latest execution succeeded.
+    ``False`` keeps groups whose latest execution failed, is in progress, or does not exist yet.
+    This does not change which execution is considered latest -- contrast ``latest_successful``.
+    """
+
+    latest_successful: bool | None = None
+    """
+    Pre-rank population filter: change which execution is chosen as "latest" before ranking.
+
+    ``True`` ranks only over successful executions,
+    so a group's ``latest`` becomes its most recent *successful* run
+    (surfacing an earlier success even when a later run failed).
+    ``False`` ranks only over unsuccessful / in-progress runs.
+
+    ``None`` (default) ranks over all executions.
+    Composes with ``successful`` but answers a different question.
+    """
 
     facets: Mapping[str, tuple[str, ...]] | None = attrs.field(default=None, converter=_as_facets)
     """Selector-facet map matched against each group's ``selectors``."""
@@ -144,13 +168,8 @@ class ExecutionGroupView:
     """
     The group's most recent execution, or ``None`` if it has never been executed.
 
-    Reflects the helper's ``max(created_at)`` outer join
-    (models/execution.py::get_execution_group_and_latest),
-    which can duplicate a group on an exact ``created_at`` tie.
-    This may differ from ``ExecutionsReader.latest_execution()``, which
-    tie-breaks by ``created_at DESC, id DESC`` (``_query.latest_execution_for_group``).
-    Both behaviours are intentional for their respective consumers (``groups()`` vs ``latest_execution()``)
-    -- do not unify them.
+    These groups are ranked by ``created_at DESC, id DESC``.
+    This matches ``ExecutionsReader.latest_execution()`` and the ``statistics()`` aggregates.
     """
 
     @property
@@ -428,12 +447,18 @@ class ExecutionsReader:
         Query execution groups with their per-group latest execution.
 
         Wraps [get_execution_group_and_latest_filtered]
-        [climate_ref.models.execution.get_execution_group_and_latest_filtered] exactly: the full
-        filtered list is materialised, ``total_count`` is its length, and the page is a Python
-        slice (``all[offset:offset + limit]``). This preserves today's ``list-groups`` pagination
-        and ordering exactly -- no SQL-level pagination or additional ``order_by`` is introduced
-        here.
+        [climate_ref.models.execution.get_execution_group_and_latest_filtered],
+        which returns a materialised list.
+        The ``facets`` axis is matched in Python (against each group's ``selectors``),
+        and the helper materialises unconditionally,
+        so pagination here is a Python slice over the fully materialised list rather than SQL.
+
+        ``total_count`` is the post-filter length,
+        and the results are ordered by ``id`` ascending (the group primary key)
+        before slicing so paging is deterministic even when two groups share a ``created_at``.
         """
+        # Pushing SQL pagination through the helper would be wrong whenever ``facets`` is set,
+        # since the Python facet filter runs after the SQL query.
         filters = filters or ExecutionGroupFilter()
 
         all_results = get_execution_group_and_latest_filtered(
@@ -443,8 +468,10 @@ class ExecutionsReader:
             facet_filters={k: list(v) for k, v in filters.facets.items()} if filters.facets else None,
             dirty=filters.dirty,
             successful=filters.successful,
+            latest_successful=filters.latest_successful,
             include_superseded=filters.include_superseded,
         )
+        all_results = sorted(all_results, key=lambda pair: pair[0].id)
 
         total_count = len(all_results)
         page = all_results[offset : offset + limit] if limit is not None else all_results[offset:]
@@ -462,31 +489,34 @@ class ExecutionsReader:
         stmt = select_execution_statistics(
             diagnostic_contains=diagnostic_contains, provider_contains=provider_contains
         )
-        rows = self.session.execute(stmt).all()
-        return tuple(
-            ExecutionStats(
-                provider=row.provider,
-                diagnostic=row.diagnostic,
-                running=row.running,
-                failed=row.failed,
-                successful=row.successful,
-                not_started=row.not_started,
-                dirty=row.dirty,
-                total=row.total,
-            )
-            for row in rows
-        )
+        return rows_to_execution_stats(self.session.execute(stmt).all())
 
     def latest_execution(self, execution_group_id: int) -> ExecutionView | None:
         """
         Return the most recent execution for a group.
 
         Wraps [latest_execution_for_group][climate_ref.results._query.latest_execution_for_group],
-        which tie-breaks by ``created_at DESC, id DESC``. See the note on
-        [ExecutionGroupView.latest][climate_ref.results.executions.ExecutionGroupView] for how this
-        differs from the per-group latest returned by ``groups()`` on an exact timestamp tie.
+        which tie-breaks using the same ranking ``groups()`` and ``statistics()`` use
+        (``created_at DESC, id DESC``).
         """
         execution = latest_execution_for_group(self.session, execution_group_id)
+        return self._to_execution_view(execution) if execution is not None else None
+
+    def group(self, execution_group_id: int) -> ExecutionGroupView | None:
+        """
+        Fetch one execution group by id, with its latest execution resolved.
+
+        Returns ``None`` when no group has that id.
+        """
+        eg = self.session.get(ExecutionGroup, execution_group_id)
+        if eg is None:
+            return None
+        latest = latest_execution_for_group(self.session, execution_group_id)
+        return self._to_group_view(eg, latest)
+
+    def execution(self, execution_id: int) -> ExecutionView | None:
+        """Fetch one execution by id, or ``None`` when no execution has that id."""
+        execution = self.session.get(Execution, execution_id)
         return self._to_execution_view(execution) if execution is not None else None
 
     def outputs(self, execution_id: int) -> tuple[OutputView, ...]:

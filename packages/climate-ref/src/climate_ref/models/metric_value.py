@@ -247,9 +247,24 @@ class SeriesIndex(Base):
         Returns
         -------
             The shared axis id for every hash in ``axes_by_hash``.
+
+        Raises
+        ------
+        ValueError
+            If any key does not equal ``compute_hash(name, values)`` for the axis it maps to.
+            A mismatched key would otherwise insert a row whose stored ``hash`` does not match its content,
+            breaking deduplication.
         """
         if not axes_by_hash:
             return {}
+
+        for digest, (name, values) in axes_by_hash.items():
+            expected = cls.compute_hash(name, values)
+            if digest != expected:
+                raise ValueError(
+                    f"axes_by_hash key {digest!r} does not match compute_hash of its axis "
+                    f"(expected {expected!r})"
+                )
 
         id_by_hash: dict[str, int] = {
             digest: axis_id

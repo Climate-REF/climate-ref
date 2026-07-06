@@ -82,6 +82,41 @@ class TestDatasetsList:
             expected_exit_code=1,
         )
 
+    def test_list_only_latest_version(self, db_seeded, invoke_cli):
+        """``datasets list`` shows only the latest version of each dataset (v10 wins over v2)."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        base = {
+            "dataset_type": existing.dataset_type,
+            "activity_id": existing.activity_id,
+            "experiment_id": existing.experiment_id,
+            "institution_id": existing.institution_id,
+            "source_id": "LATEST-TEST",
+            "member_id": existing.member_id,
+            "table_id": existing.table_id,
+            "variable_id": existing.variable_id,
+            "grid_label": existing.grid_label,
+            "variant_label": existing.member_id,
+        }
+        for version in ("v2", "v10"):
+            slug = f"latest.test.{version}"
+            db_seeded.session.add(
+                CMIP6Dataset(slug=slug, instance_id=slug, version=version, finalised=True, **base)
+            )
+        db_seeded.session.commit()
+
+        result = invoke_cli(
+            ["datasets", "list", "--dataset-filter", "source_id=LATEST-TEST", "--column", "version"]
+        )
+        assert "v10" in result.stdout
+        assert "v2" not in result.stdout
+
+    def test_list_limit_warns_when_truncated(self, db_seeded, invoke_cli):
+        """A ``--limit`` smaller than the match count warns, matching the other list commands."""
+        total = db_seeded.session.query(CMIP6Dataset).count()
+        assert total > 1, "need multiple datasets for the warning to trigger"
+        result = invoke_cli(["datasets", "list", "--limit", "1"])
+        assert f"of {total} filtered results" in result.stderr
+
     def test_list_include_files_limit_bounds_files_not_datasets(self, db_seeded, invoke_cli):
         """``--limit`` bounds *files* (not datasets) when ``--include-files`` is set.
 

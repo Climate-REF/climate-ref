@@ -136,7 +136,7 @@ def db_with_datasets(db_seeded):
 class TestFacetFiltering:
     def test_or_within_facet(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"variable_id": ("tas", "pr")},
@@ -149,7 +149,7 @@ class TestFacetFiltering:
 
     def test_and_across_facets(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"variable_id": ("pr",), "source_id": ("OTHER-MODEL",)},
@@ -157,12 +157,12 @@ class TestFacetFiltering:
             )
         )
         assert len(coll) == 1
-        assert coll.datasets[0].facets["variable_id"] == "pr"
-        assert coll.datasets[0].facets["source_id"] == "OTHER-MODEL"
+        assert coll.items[0].facets["variable_id"] == "pr"
+        assert coll.items[0].facets["source_id"] == "OTHER-MODEL"
 
     def test_and_across_facets_no_match(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"variable_id": ("pr",), "source_id": ("TEST-MODEL",)},
@@ -174,27 +174,20 @@ class TestFacetFiltering:
     def test_unknown_facet_raises(self, db_with_datasets):
         reader = Reader(db_with_datasets)
         with pytest.raises(ValueError, match="Unknown facet"):
-            reader.datasets.datasets(
+            reader.datasets.list(
                 DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"nonexistent_facet": ("x",)})
             )
 
-    def test_unknown_facet_on_base_entity_raises(self, db_with_datasets):
-        reader = Reader(db_with_datasets)
-        with pytest.raises(ValueError, match="Unknown facet"):
-            reader.datasets.datasets(DatasetFilter(facets={"variable_id": ("tas",)}))
-
-    def test_facet_on_base_entity_matches_base_column(self, db_with_datasets):
-        reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(DatasetFilter(facets={"dataset_type": (SourceDatasetType.obs4MIPs,)}))
-        assert len(coll) > 0
-        assert all(d.dataset_type == SourceDatasetType.obs4MIPs for d in coll)
-        assert db_with_datasets.dataset_ids["obs4mips"] in {d.id for d in coll}
+    def test_source_type_is_required(self):
+        """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
+        with pytest.raises(TypeError):
+            DatasetFilter()  # type: ignore[call-arg]
 
 
 class TestFinalisedFilter:
     def test_finalised_true(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(source_type=SourceDatasetType.CMIP6, finalised=True, latest_only=False)
         )
         assert all(d.finalised for d in coll)
@@ -203,17 +196,17 @@ class TestFinalisedFilter:
 
     def test_finalised_false(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(source_type=SourceDatasetType.CMIP6, finalised=False, latest_only=False)
         )
         assert len(coll) == 1
-        assert coll.datasets[0].slug == "CMIP.TEST.OTHER-MODEL.historical.Amon.pr.gn.v1"
+        assert coll.items[0].slug == "CMIP.TEST.OTHER-MODEL.historical.Amon.pr.gn.v1"
 
 
 class TestLatestOnly:
     def test_keeps_newest_numeric_version(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"source_id": ("TEST-MODEL",), "variable_id": ("tas",)},
@@ -221,11 +214,11 @@ class TestLatestOnly:
         )
         # v10 must win over v2 numerically, not lexically ("v10" < "v2" as strings).
         assert len(coll) == 1
-        assert coll.datasets[0].id == db_with_datasets.dataset_ids["v10"]
+        assert coll.items[0].id == db_with_datasets.dataset_ids["v10"]
 
     def test_latest_only_false_keeps_both_versions(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"source_id": ("TEST-MODEL",), "variable_id": ("tas",)},
@@ -234,18 +227,21 @@ class TestLatestOnly:
         )
         assert len(coll) == 2
 
-    def test_latest_only_noop_when_source_type_none(self, db_with_datasets):
+    def test_latest_only_drops_versions_vs_all(self, db_with_datasets):
+        """The deduplicated listing is strictly smaller than the every-version listing."""
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(DatasetFilter(latest_only=True))
-        # All datasets (across types) present -- no dataset_id_metadata to group by.
-        all_coll = reader.datasets.datasets(DatasetFilter(latest_only=False))
-        assert len(coll) == len(all_coll)
+        deduped = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=True))
+        every_version = reader.datasets.list(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False)
+        )
+        assert len(deduped) < len(every_version)
+        assert deduped.total_count < every_version.total_count
 
 
 class TestExecutionIdJoin:
     def test_execution_id_scopes_to_linked_datasets(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 execution_id=db_with_datasets.execution_id,
@@ -253,11 +249,11 @@ class TestExecutionIdJoin:
             )
         )
         assert len(coll) == 1
-        assert coll.datasets[0].id == db_with_datasets.dataset_ids["v10"]
+        assert coll.items[0].id == db_with_datasets.dataset_ids["v10"]
 
     def test_execution_id_no_match(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(source_type=SourceDatasetType.CMIP6, execution_id=999999, latest_only=False)
         )
         assert len(coll) == 0
@@ -266,7 +262,7 @@ class TestExecutionIdJoin:
 class TestDiagnosticSlugJoin:
     def test_diagnostic_slug_scopes_to_linked_datasets(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 diagnostic_slug=db_with_datasets.diagnostic_slug,
@@ -274,11 +270,11 @@ class TestDiagnosticSlugJoin:
             )
         )
         assert len(coll) == 1
-        assert coll.datasets[0].id == db_with_datasets.dataset_ids["v10"]
+        assert coll.items[0].id == db_with_datasets.dataset_ids["v10"]
 
     def test_diagnostic_slug_no_match(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 diagnostic_slug="nonexistent-diagnostic",
@@ -291,7 +287,7 @@ class TestDiagnosticSlugJoin:
         # Both axes reach through ``execution_datasets``; setting both must not emit a duplicate,
         # unaliased self-join. This executes the query, so invalid SQL would raise here.
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 execution_id=db_with_datasets.execution_id,
@@ -300,20 +296,20 @@ class TestDiagnosticSlugJoin:
             )
         )
         assert len(coll) == 1
-        assert coll.datasets[0].id == db_with_datasets.dataset_ids["v10"]
+        assert coll.items[0].id == db_with_datasets.dataset_ids["v10"]
 
 
 class TestLimit:
     def test_limit_applied_after_latest_only(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(DatasetFilter(source_type=SourceDatasetType.CMIP6), limit=1)
+        coll = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6), limit=1)
         assert len(coll) == 1
 
 
 class TestIncludeFiles:
     def test_include_files_true_populates_files(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"source_id": ("TEST-MODEL",), "variable_id": ("tas",)},
@@ -321,7 +317,7 @@ class TestIncludeFiles:
             include_files=True,
         )
         assert len(coll) == 1
-        ds = coll.datasets[0]
+        ds = coll.items[0]
         assert len(ds.files) == 1
         assert ds.files[0].path == "tas_v10.nc"
         assert ds.files[0].start_time == "2000-01-01"
@@ -330,7 +326,7 @@ class TestIncludeFiles:
 
     def test_include_files_false_leaves_files_empty(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"source_id": ("TEST-MODEL",), "variable_id": ("tas",)},
@@ -338,22 +334,13 @@ class TestIncludeFiles:
             include_files=False,
         )
         assert len(coll) == 1
-        assert coll.datasets[0].files == ()
-
-
-class TestSourceTypeNonePolymorphic:
-    def test_base_query_returns_all_types(self, db_with_datasets):
-        reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(DatasetFilter(latest_only=False))
-        types = {d.dataset_type for d in coll}
-        assert SourceDatasetType.CMIP6 in types
-        assert SourceDatasetType.obs4MIPs in types
+        assert coll.items[0].files == ()
 
 
 class TestDetachment:
     def test_dto_fields_survive_session_close(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(
                 source_type=SourceDatasetType.CMIP6,
                 facets={"source_id": ("TEST-MODEL",), "variable_id": ("tas",)},
@@ -363,7 +350,7 @@ class TestDetachment:
         db_with_datasets.session.expunge_all()
 
         assert len(coll) == 1
-        ds = coll.datasets[0]
+        ds = coll.items[0]
         assert ds.slug == "CMIP.TEST.TEST-MODEL.historical.Amon.tas.gn.v10"
         assert ds.facets["variable_id"] == "tas"
         assert len(ds.files) == 1
@@ -372,7 +359,7 @@ class TestDetachment:
 class TestToPandas:
     def test_to_pandas_columns(self, db_with_datasets):
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False))
+        coll = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False))
         df = coll.to_pandas()
         for col in ("id", "slug", "dataset_type", "finalised", "created_at", "updated_at"):
             assert col in df.columns
@@ -381,7 +368,7 @@ class TestToPandas:
     def test_to_pandas_columns_when_empty(self, db_with_datasets):
         """An empty collection still emits the base columns, so callers can select on them."""
         reader = Reader(db_with_datasets)
-        coll = reader.datasets.datasets(
+        coll = reader.datasets.list(
             DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("NO-SUCH-MODEL",)})
         )
         assert len(coll) == 0
@@ -389,3 +376,102 @@ class TestToPandas:
         assert len(df) == 0
         for col in ("id", "slug", "dataset_type", "finalised", "created_at", "updated_at"):
             assert col in df.columns
+
+
+class TestCollectionContract:
+    def test_shape_fields(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        coll = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False))
+        assert isinstance(coll.items, tuple)
+        assert coll.offset == 0
+        assert coll.limit is None
+        assert coll.total_count == len(coll.items)
+        assert list(coll) == list(coll.items)
+
+    def test_total_count_reflects_dedup(self, db_with_datasets):
+        """``total_count`` is the deduplicated count, not the every-version count."""
+        reader = Reader(db_with_datasets)
+        deduped = reader.datasets.list(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)})
+        )
+        # Only v10 survives its group, so the count is 1 even though v2 exists in the DB.
+        assert deduped.total_count == 1
+
+
+class TestPagination:
+    def test_total_count_exceeds_page(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        coll = reader.datasets.list(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False), limit=1
+        )
+        assert len(coll) == 1
+        assert coll.limit == 1
+        assert coll.total_count > 1
+
+    def test_offset_limit_paginate_all_rows_without_overlap(self, db_with_datasets):
+        """Walking the pages with offset/limit yields every row exactly once, deterministically."""
+        reader = Reader(db_with_datasets)
+        full = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False))
+        total = full.total_count
+
+        seen: list[int] = []
+        page_size = 2
+        for offset in range(0, total, page_size):
+            page = reader.datasets.list(
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False),
+                offset=offset,
+                limit=page_size,
+            )
+            assert page.offset == offset
+            seen.extend(d.id for d in page)
+
+        assert len(seen) == total
+        assert len(set(seen)) == total  # no duplicates or gaps across pages
+
+    def test_paging_one_by_one_matches_full_order(self, db_with_datasets):
+        """Paging one row at a time yields the same order as one full fetch.
+
+        The deterministic ``(slug, id)`` ordering means the concatenation of single-row pages is
+        identical to the ordered single fetch -- so a page boundary never reorders, drops, or
+        repeats a row.
+        """
+        reader = Reader(db_with_datasets)
+        full = reader.datasets.list(DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False))
+        full_ids = [d.id for d in full]
+
+        paged_ids: list[int] = []
+        for offset in range(full.total_count):
+            page = reader.datasets.list(
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, latest_only=False),
+                offset=offset,
+                limit=1,
+            )
+            paged_ids.append(page.items[0].id)
+
+        assert paged_ids == full_ids
+
+
+class TestGet:
+    def test_get_hit(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        view = reader.datasets.get("CMIP.TEST.OTHER-MODEL.historical.Amon.pr.gn.v1")
+        assert view is not None
+        assert view.id == db_with_datasets.dataset_ids["unfinalised"]
+
+    def test_get_miss(self, db_with_datasets):
+        reader = Reader(db_with_datasets)
+        assert reader.datasets.get("no-such-slug") is None
+
+    def test_get_resolves_each_version_by_its_own_slug(self, db_with_datasets):
+        """Each version has a distinct (globally unique) slug, so ``get`` resolves each precisely.
+
+        ``get``'s ``version_key``-then-``id`` ordering is a defensive tiebreak; the unique-slug
+        schema means a slug never maps to more than one row, so both versions are individually
+        addressable.
+        """
+        reader = Reader(db_with_datasets)
+        v2 = reader.datasets.get("CMIP.TEST.TEST-MODEL.historical.Amon.tas.gn.v2")
+        v10 = reader.datasets.get("CMIP.TEST.TEST-MODEL.historical.Amon.tas.gn.v10")
+        assert v2 is not None and v10 is not None
+        assert v2.id == db_with_datasets.dataset_ids["v2"]
+        assert v10.id == db_with_datasets.dataset_ids["v10"]

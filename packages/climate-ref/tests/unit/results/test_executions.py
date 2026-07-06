@@ -238,6 +238,90 @@ class TestGroupsPagination:
         assert page.offset == 2
         assert page.limit == 2
 
+    def test_pagination_deterministic_across_tied_created_at(self, db_with_groups):
+        # Force every group onto one shared created_at so ordering must fall back to the group id.
+        session = db_with_groups.session
+        tied_at = datetime.datetime(2024, 1, 1, tzinfo=datetime.UTC)
+        with session.begin_nested() if session.in_transaction() else session.begin():
+            for eg in session.query(ExecutionGroup).all():
+                eg.created_at = tied_at
+
+        reader = Reader(db_with_groups)
+        full_ids = [g.id for g in reader.executions.groups()]
+        assert full_ids == sorted(full_ids)  # ordered by group id, the deterministic tiebreak
+
+        page_1 = [g.id for g in reader.executions.groups(offset=0, limit=3)]
+        page_2 = [g.id for g in reader.executions.groups(offset=3, limit=3)]
+        page_3 = [g.id for g in reader.executions.groups(offset=6, limit=3)]
+        assert set(page_1).isdisjoint(page_2)
+        assert set(page_2).isdisjoint(page_3)
+        assert page_1 + page_2 + page_3 == full_ids  # no overlap, no gap
+
+
+class TestGroupsLatestSuccessful:
+    def test_latest_successful_surfaces_earlier_success(self, db_with_groups):
+        # key3's only execution failed. Add an earlier successful run: successful=True (post-rank)
+        # still drops it, but latest_successful=True must surface the earlier success.
+        session = db_with_groups.session
+        group_id = db_with_groups.group_ids["key3"]
+        with session.begin_nested() if session.in_transaction() else session.begin():
+            session.add(
+                Execution(
+                    execution_group_id=group_id,
+                    successful=True,
+                    output_fragment="key3-ok",
+                    dataset_hash="key3-ok-hash",
+                    created_at=datetime.datetime(2020, 1, 1, tzinfo=datetime.UTC),
+                )
+            )
+
+        reader = Reader(db_with_groups)
+
+        post = reader.executions.groups(ExecutionGroupFilter(successful=True))
+        assert group_id not in {g.id for g in post}  # latest run still the failure
+
+        pre = reader.executions.groups(ExecutionGroupFilter(latest_successful=True))
+        view = next(g for g in pre if g.id == group_id)
+        assert view.latest is not None
+        assert view.latest.successful is True
+        assert view.latest.output_fragment == "key3-ok"
+
+
+class TestGroupAndExecutionById:
+    def test_group_hit_resolves_latest(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        group_id = db_with_groups.group_ids["key1"]
+        view = reader.executions.group(group_id)
+        assert view is not None
+        assert view.id == group_id
+        assert view.key == "key1"
+        assert view.latest is not None
+        assert view.latest.successful is True
+
+    def test_group_hit_with_no_executions(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        view = reader.executions.group(db_with_groups.group_ids["key6"])
+        assert view is not None
+        assert view.latest is None
+
+    def test_group_miss_returns_none(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        assert reader.executions.group(999_999) is None
+
+    def test_execution_hit(self, db_with_groups):
+        session = db_with_groups.session
+        group_id = db_with_groups.group_ids["key1"]
+        execution_id = session.query(Execution).filter_by(execution_group_id=group_id).one().id
+        reader = Reader(db_with_groups)
+        view = reader.executions.execution(execution_id)
+        assert view is not None
+        assert view.id == execution_id
+        assert view.execution_group_id == group_id
+
+    def test_execution_miss_returns_none(self, db_with_groups):
+        reader = Reader(db_with_groups)
+        assert reader.executions.execution(999_999) is None
+
 
 class TestGroupsToPandas:
     def test_to_pandas_columns(self, db_with_groups):

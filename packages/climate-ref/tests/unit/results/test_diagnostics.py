@@ -136,6 +136,21 @@ class TestDiagnosticsReaderList:
         providers = {d.provider_slug for d in coll}
         assert providers == {"esmvaltool"}
 
+    def test_filters_keyword(self, db_with_diagnostics):
+        # The list-style filter parameter is named `filters`, matching the rest of the contract.
+        reader = Reader(db_with_diagnostics)
+        coll = reader.diagnostics.list(filters=DiagnosticFilter(diagnostic_contains=["enso_tel"]))
+        assert {d.slug for d in coll} == {"enso_tel"}
+
+    def test_pagination_deterministic(self, db_with_diagnostics):
+        # Full listing is ordered by (provider, diagnostic, id); adjacent pages must partition it.
+        reader = Reader(db_with_diagnostics)
+        full = [(d.provider_slug, d.slug) for d in reader.diagnostics.list()]
+        page_1 = [(d.provider_slug, d.slug) for d in reader.diagnostics.list(offset=0, limit=2)]
+        page_2 = [(d.provider_slug, d.slug) for d in reader.diagnostics.list(offset=2, limit=2)]
+        assert set(page_1).isdisjoint(page_2)
+        assert page_1 + page_2 == full[:4]
+
     def test_pagination_offset_limit(self, db_with_diagnostics):
         reader = Reader(db_with_diagnostics)
         full = reader.diagnostics.list()

@@ -103,3 +103,9 @@ class DatasetResolutionError(TestCaseError):
     """Raised when datasets cannot be resolved for a test case."""
 
     pass
+
+
+class IgnoreDatasetsRefreshError(RefException):
+    """Raised when the ignore datasets file cannot be refreshed and no cached copy is available."""
+
+    pass

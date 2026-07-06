@@ -211,14 +211,25 @@ def data_catalog(
     }
 
 
-@pytest.fixture(scope="session")
-def solve_config() -> Config:
-    """Session-scoped Config that uses the local default_ignore_datasets.yaml"""
-    cfg = Config.default()
+def _use_local_ignore_datasets_file(cfg: Config) -> None:
+    """
+    Point the config at the in-tree default_ignore_datasets.yaml and disable fetching.
+
+    This keeps tests deterministic and offline:
+    they exercise the shipped default file rather than whatever copy happens to be cached on the host.
+    """
     local_ignore_file = Path(__file__).parents[4] / "default_ignore_datasets.yaml"
     if not local_ignore_file.is_file():
         raise ValueError(f"Could not find ignore file at {local_ignore_file}")
     cfg.ignore_datasets_file = local_ignore_file
+    cfg.ignore_datasets_url = ""
+
+
+@pytest.fixture(scope="session")
+def solve_config() -> Config:
+    """Session-scoped Config that uses the local default_ignore_datasets.yaml"""
+    cfg = Config.default()
+    _use_local_ignore_datasets_file(cfg)
     return cfg
 
 
@@ -236,6 +247,7 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
     cfg.paths.software = software_path
     cfg.diagnostic_providers = [DiagnosticProviderConfig(provider="climate_ref_example")]
     cfg.executor.executor = "climate_ref.executor.SynchronousExecutor"
+    _use_local_ignore_datasets_file(cfg)
     cfg.save()
 
     return cfg

@@ -5,10 +5,13 @@ This module provides:
 - Path resolution for package-local test data (catalogs, regression data)
 - Sample data fetching utilities
 - TestCaseRunner for executing diagnostics with test data
-- A drift-checking helper for test-case regression baselines
+- Drift-checking helpers for test-case regression baselines
+  (``assert_test_case_no_drift`` and the ``create_no_drift_test`` factory
+  used by every provider's integration test module)
 """
 
 import shutil
+from collections.abc import Callable
 from pathlib import Path
 
 from attrs import define
@@ -21,8 +24,9 @@ from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
+from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.regression import Manifest
-from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
+from climate_ref_core.testing import TestCasePaths, collect_test_case_params, load_datasets_from_yaml
 
 
 def _determine_test_directory() -> Path | None:
@@ -162,6 +166,63 @@ def assert_test_case_no_drift(
         f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}: committed bundle drift:\n"
         + "\n".join(failures)
     )
+
+
+def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
+    """
+    Build the standard per-provider integration test for committed-bundle drift.
+
+    Returns a pytest function parameterized with one case per diagnostic test case
+    (via :func:`climate_ref_core.testing.collect_test_case_params`),
+    marked ``slow`` and ``test_cases``.
+    Each case configures the provider,
+    resolves the package-local test-case paths,
+    skips when the fetched catalog or committed baseline is missing,
+    and delegates to :func:`assert_test_case_no_drift`.
+
+    Requires ``ref test-cases fetch --provider <slug>`` to have been run first.
+
+    Usage in a provider's ``tests/integration/test_diagnostics.py``::
+
+        from climate_ref_example import provider
+
+        from climate_ref.testing import create_no_drift_test
+
+        test_run_test_cases = create_no_drift_test(provider)
+
+    Parameters
+    ----------
+    provider
+        The diagnostic provider whose test cases should be exercised.
+    """
+    import pytest  # noqa: PLC0415
+
+    @pytest.mark.slow
+    @pytest.mark.test_cases
+    @pytest.mark.parametrize("diagnostic,test_case_name", collect_test_case_params(provider))
+    def test_run_test_cases(
+        diagnostic: Diagnostic,
+        test_case_name: str,
+        config: Config,
+        tmp_path: Path,
+    ) -> None:
+        """Execute the test case end-to-end and assert the committed bundle has not drifted."""
+        diagnostic.provider.configure(config)
+
+        paths = TestCasePaths.from_diagnostic(diagnostic, test_case_name)
+        if paths is None:
+            pytest.skip(f"No test-data directory for {diagnostic.slug} (not a development checkout)")
+        if not paths.catalog.exists():
+            pytest.skip(
+                f"No catalog file for {diagnostic.slug}/{test_case_name}. "
+                f"Run `ref test-cases fetch --provider {provider.slug}` first."
+            )
+        if not paths.manifest.exists() or not paths.regression.exists():
+            pytest.skip(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
+
+        assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)
+
+    return test_run_test_cases
 
 
 @define

@@ -9,6 +9,7 @@ import pytest
 
 from climate_ref.testing import (
     TestCaseRunner,
+    create_no_drift_test,
 )
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection
 from climate_ref_core.exceptions import (
@@ -182,14 +183,23 @@ class TestTestCaseRunnerClass:
             runner.run(mock_diagnostic, "default", output_dir=tmp_path)
 
 
-class TestTestCaseRunnerPytestFixture:
-    """Tests for the pytest fixture wrapper."""
+class TestCreateNoDriftTest:
+    """Tests for the per-provider drift-test factory."""
 
-    def test_run_no_test_data_spec_skips(self, run_test_case):
-        """Test that the fixture skips when diagnostic has no test_data_spec."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.test_data_spec = None
-        mock_diagnostic.slug = "test-diag"
+    def test_returns_marked_test(self, provider):
+        """The factory returns a test function carrying the standard marks."""
+        test_fn = create_no_drift_test(provider)
 
-        with pytest.raises(pytest.skip.Exception):
-            run_test_case.run(mock_diagnostic)
+        marks = {mark.name for mark in test_fn.pytestmark}
+        assert marks == {"slow", "test_cases", "parametrize"}
+
+    def test_collects_provider_cases(self, provider, mock_diagnostic):
+        """The parametrization contains one case per diagnostic test case."""
+        mock_diagnostic.test_data_spec = TestDataSpecification(
+            test_cases=(TestCase(name="default", description="Default case"),)
+        )
+
+        test_fn = create_no_drift_test(provider)
+
+        parametrize = next(mark for mark in test_fn.pytestmark if mark.name == "parametrize")
+        assert [param.id for param in parametrize.args[1]] == ["mock/default"]

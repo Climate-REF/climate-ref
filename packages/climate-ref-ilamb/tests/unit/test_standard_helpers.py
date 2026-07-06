@@ -7,9 +7,11 @@ import pandas as pd
 import pytest
 import xarray as xr
 from climate_ref_ilamb.standard import (
+    ILAMBStandard,
     _build_cmec_bundle,
     _build_series,
     _clean_units,
+    _CoarsenSpatial,
     _RelationshipTimeTransform,
 )
 
@@ -55,6 +57,50 @@ class TestRelationshipTimeTransform:
 
     def test_required_variables(self):
         assert _RelationshipTimeTransform("pr").required_variables() == ["pr"]
+
+
+class TestCoarsenSpatial:
+    def _dataset(self, spacing: float, extent: float = 2.0) -> xr.Dataset:
+        lat = np.arange(0, extent, spacing)
+        lon = np.arange(0, extent, spacing)
+        data = np.arange(len(lat) * len(lon), dtype=float).reshape(len(lat), len(lon))
+        return xr.Dataset(
+            {"tas": (("lat", "lon"), data)},
+            coords={"lat": lat, "lon": lon},
+        )
+
+    def test_required_variables(self):
+        assert _CoarsenSpatial("tas").required_variables() == ["tas"]
+
+    def test_missing_variable_returns_unchanged(self):
+        transform = _CoarsenSpatial("tas")
+        ds = xr.Dataset({"pr": (("lat", "lon"), [[1.0, 2.0], [3.0, 4.0]])})
+
+        result = transform(ds)
+
+        assert result.identical(ds)
+
+    def test_already_coarse_returns_unchanged(self):
+        # 1-degree spacing is already coarser than the default 0.5-degree target.
+        ds = self._dataset(spacing=1.0, extent=5.0)
+        transform = _CoarsenSpatial("tas")
+
+        result = transform(ds)
+
+        assert result.identical(ds)
+
+    def test_fine_field_is_coarsened(self):
+        # ~0.1-degree spacing is finer than the 0.5-degree target, so it gets coarsened.
+        ds = self._dataset(spacing=0.1, extent=2.0)
+        transform = _CoarsenSpatial("tas", resolution=0.5)
+
+        result = transform(ds)
+
+        assert result.sizes["lat"] < ds.sizes["lat"]
+        assert result.sizes["lon"] < ds.sizes["lon"]
+        original_spacing = float(np.diff(ds["lat"].values).mean())
+        coarsened_spacing = float(np.diff(result["lat"].values).mean())
+        assert coarsened_spacing > original_spacing
 
 
 class TestCleanUnits:
@@ -186,3 +232,24 @@ class TestBuildCmecBundle:
         # ILAMB scalars are model-vs-reference comparisons -> kind "model".
         assert list(bundle["DIMENSIONS"]["kind"]) == ["model"]
         assert list(bundle["DIMENSIONS"]["reference_source_id"]) == ["FLUXNET2015"]
+
+
+class TestVersionOverride:
+    def test_per_diagnostic_version_override(self):
+        diagnostic = ILAMBStandard(
+            registry_file="ilamb-test",
+            metric_name="test-ver",
+            sources={"tas": "ilamb/test/Site/tas.nc"},
+            version=3,
+        )
+
+        assert diagnostic.version == 3
+
+    def test_default_version_used_when_not_overridden(self):
+        diagnostic = ILAMBStandard(
+            registry_file="ilamb-test",
+            metric_name="test-ver-default",
+            sources={"tas": "ilamb/test/Site/tas.nc"},
+        )
+
+        assert diagnostic.version == ILAMBStandard.version

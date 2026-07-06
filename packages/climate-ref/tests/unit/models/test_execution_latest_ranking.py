@@ -23,13 +23,19 @@ _T0 = datetime.datetime(2024, 1, 1, 0, 0, 0)
 
 
 def _add_execution(
-    db: Database, group_id: int, *, successful: bool | None, offset: int, tag: str
+    db: Database,
+    group_id: int,
+    *,
+    successful: bool | None,
+    offset: int,
+    tag: str,
+    dataset_hash: str = "h",
 ) -> Execution:
     ex = Execution(
         execution_group_id=group_id,
         successful=successful,
         output_fragment=f"out-{tag}",
-        dataset_hash="h",
+        dataset_hash=dataset_hash,
         created_at=_T0 + datetime.timedelta(minutes=offset),
     )
     db.session.add(ex)
@@ -37,9 +43,9 @@ def _add_execution(
     return ex
 
 
-def _make_group(db: Database) -> ExecutionGroup:
+def _make_group(db: Database, *, key: str = "ranking-key") -> ExecutionGroup:
     diag = db.session.query(Diagnostic).first()
-    eg = ExecutionGroup(key="ranking-key", diagnostic_id=diag.id, selectors={}, dirty=False)
+    eg = ExecutionGroup(key=key, diagnostic_id=diag.id, selectors={}, dirty=False)
     db.session.add(eg)
     db.session.flush()
     return eg
@@ -96,3 +102,55 @@ def test_pre_rank_default_matches_latest_regardless_of_success(db_seeded: Databa
     rows = [(g, e) for g, e in get_execution_group_and_latest_filtered(db_seeded.session) if g.id == eg.id]
     assert len(rows) == 1
     assert rows[0][1].output_fragment == "out-fail"
+
+
+def test_executions_relationship_declares_id_tiebreak() -> None:
+    """The relationship ORDER BY must include Execution.id after created_at.
+
+    A backend-independent assertion on the configured ORDER BY: it fails without the
+    id tiebreak on any database. The behavioral tests below pass on SQLite regardless
+    (SQLite happens to return tied rows in rowid order), so this is the true guard.
+    """
+    order_by = ExecutionGroup.executions.property.order_by
+    names = [col.name for col in order_by]
+    assert names == ["created_at", "id"]
+
+
+def test_relationship_latest_tie_breaks_on_id(db_seeded: Database) -> None:
+    """On an identical created_at, executions[-1] must be the higher-id row."""
+    with db_seeded.session.begin():
+        eg = _make_group(db_seeded)
+        first = _add_execution(db_seeded, eg.id, successful=True, offset=0, tag="a")
+        second = _add_execution(db_seeded, eg.id, successful=False, offset=0, tag="b")
+
+    db_seeded.session.expire_all()
+    reloaded = db_seeded.session.get(ExecutionGroup, eg.id)
+    assert reloaded is not None
+    assert reloaded.executions[-1].id == max(first.id, second.id)
+    assert reloaded.executions[0].id == min(first.id, second.id)
+
+
+def test_should_run_reads_higher_id_execution_on_tie(db_seeded: Database) -> None:
+    """should_run must read the higher-id execution when created_at ties.
+
+    The latest run (higher id) owns the effective dataset_hash: if it already
+    matches, nothing is dirty and should_run is False; if it differs, should_run is True.
+    """
+    with db_seeded.session.begin():
+        clean = _make_group(db_seeded, key="clean-key")
+        _add_execution(db_seeded, clean.id, successful=True, offset=0, tag="old", dataset_hash="old")
+        _add_execution(db_seeded, clean.id, successful=True, offset=0, tag="new", dataset_hash="new")
+
+        dirty = _make_group(db_seeded, key="dirty-key")
+        _add_execution(db_seeded, dirty.id, successful=True, offset=0, tag="new", dataset_hash="new")
+        _add_execution(db_seeded, dirty.id, successful=True, offset=0, tag="old", dataset_hash="old")
+
+    db_seeded.session.expire_all()
+    clean_reloaded = db_seeded.session.get(ExecutionGroup, clean.id)
+    dirty_reloaded = db_seeded.session.get(ExecutionGroup, dirty.id)
+    assert clean_reloaded is not None
+    assert dirty_reloaded is not None
+    # clean: higher-id execution's hash is "new" -> matches -> no rerun needed.
+    assert clean_reloaded.should_run("new") is False
+    # dirty: higher-id execution's hash is "old" -> mismatch -> rerun needed.
+    assert dirty_reloaded.should_run("new") is True

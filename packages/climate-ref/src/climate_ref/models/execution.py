@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
 from sqlalchemy import Column, ForeignKey, Table, UniqueConstraint, func, or_
-from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
+from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 
 from climate_ref.models.base import Base
@@ -82,7 +82,7 @@ class ExecutionGroup(CreatedUpdatedMixin, Base):
 
     diagnostic: Mapped["Diagnostic"] = relationship(back_populates="execution_groups")
     executions: Mapped[list["Execution"]] = relationship(
-        back_populates="execution_group", order_by="Execution.created_at"
+        back_populates="execution_group", order_by="Execution.created_at, Execution.id"
     )
 
     def should_run(
@@ -500,8 +500,12 @@ def get_execution_group_and_latest(
     latest = _latest_execution_ids(session, among_executions)
 
     # Groups with no matching execution still appear (outer join, Execution=None).
+    # Every known caller (`cli/executions.py::delete_groups`, `ExecutionsReader.groups()`,
+    # `executor/reingest.py`) reads `eg.diagnostic.slug`/`eg.diagnostic.provider.slug` off the
+    # returned groups, so eager-load both relationships here to avoid an N+1 lazy-load per row.
     query = (
         session.query(ExecutionGroup, Execution)
+        .options(joinedload(ExecutionGroup.diagnostic).joinedload(Diagnostic.provider))
         .outerjoin(latest, latest.c.group_id == ExecutionGroup.id)
         .outerjoin(Execution, Execution.id == latest.c.execution_id)
     )

@@ -170,20 +170,16 @@ def list_groups(  # noqa: PLR0913
     total_count = session.query(ExecutionGroup).count()
 
     # Apply filters to query
-    try:
-        collection = reader.executions.groups(
-            ExecutionGroupFilter(
-                diagnostic_contains=diagnostic,
-                provider_contains=provider,
-                facets=facet_filters or None,
-                successful=successful,
-                dirty=dirty,
-            ),
-            limit=limit,
-        )
-    except Exception as e:  # pragma: no cover
-        logger.error(f"Error applying filters: {e}")
-        raise typer.Exit(code=1)
+    collection = reader.executions.groups(
+        ExecutionGroupFilter(
+            diagnostic_contains=diagnostic,
+            provider_contains=provider,
+            facets=facet_filters or None,
+            successful=successful,
+            dirty=dirty,
+        ),
+        limit=limit,
+    )
 
     # Check if any results found
     if len(collection) == 0:
@@ -216,7 +212,7 @@ def list_groups(  # noqa: PLR0913
 # Stays on `get_execution_group_and_latest_filtered` rather than `reader.executions.groups()` by design.
 # Revisit once a mutable query surface exists.
 @app.command()
-def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
+def delete_groups(  # noqa: PLR0912, PLR0913
     ctx: typer.Context,
     diagnostic: Annotated[
         list[str] | None,
@@ -295,18 +291,14 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
     logger.debug(f"Applying filters: {filters}")
 
     # Apply filters to query
-    try:
-        all_filtered_results = get_execution_group_and_latest_filtered(
-            session,
-            diagnostic_filters=filters.diagnostic,
-            provider_filters=filters.provider,
-            facet_filters=filters.facets,
-            successful=successful,
-            dirty=dirty,
-        )
-    except Exception as e:  # pragma: no cover
-        logger.error(f"Error applying filters: {e}")
-        raise typer.Exit(code=1)
+    all_filtered_results = get_execution_group_and_latest_filtered(
+        session,
+        diagnostic_filters=filters.diagnostic,
+        provider_filters=filters.provider,
+        facet_filters=filters.facets,
+        successful=successful,
+        dirty=dirty,
+    )
 
     # Check if any results found
     if not all_filtered_results:

@@ -464,6 +464,23 @@ class TestDeleteGroups:
 
         assert "THIS WILL DELETE ALL EXECUTION GROUPS IN THE DATABASE" in result.stderr
 
+    def test_delete_groups_backend_error_propagates(self, db_with_groups, invoke_cli):
+        """A genuine backend error must surface, not be relabelled 'Error applying filters'."""
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("db exploded")
+
+        with patch("climate_ref.cli.executions.get_execution_group_and_latest_filtered", _boom):
+            result = invoke_cli(
+                ["executions", "delete-groups", "--diagnostic", "enso", "--force"],
+                expected_exit_code=1,
+            )
+
+        assert "Error applying filters" not in result.stdout
+        assert "Error applying filters" not in result.stderr
+        assert isinstance(result.exception, RuntimeError)
+        assert str(result.exception) == "db exploded"
+
     def test_delete_groups_no_results_warning(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "delete-groups", "--filter", "source_id=NONEXISTENT", "--force"])
 

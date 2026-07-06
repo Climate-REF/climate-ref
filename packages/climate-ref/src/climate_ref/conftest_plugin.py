@@ -318,7 +318,7 @@ class MockDiagnostic(Diagnostic):
     slug = "mock"
     data_requirements = (DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),)
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """Run a no-op diagnostic that always succeeds."""
         return ExecutionResult(
             output_bundle_filename=definition.output_directory / "output.json",
@@ -335,7 +335,7 @@ class FailedDiagnostic(Diagnostic):
     slug = "failed"
     data_requirements = (DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),)
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """Run a diagnostic that always returns a failure result."""
         return ExecutionResult.build_from_failure(definition)
 

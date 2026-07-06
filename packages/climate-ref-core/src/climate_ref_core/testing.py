@@ -4,14 +4,12 @@ Test infrastructure for diagnostic testing.
 This module provides:
 - TestCase and TestDataSpecification for defining test scenarios
 - YAML serialization for dataset catalogs (with paths stored separately)
-- RegressionValidator for validating pre-stored outputs
-- Utilities for CMEC bundle validation
+- Utilities for CMEC bundle and series regression validation
 """
 
 from __future__ import annotations
 
 import json
-import shutil
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -27,10 +25,10 @@ from climate_ref_core.datasets import (
     Selector,
     SourceDatasetType,
 )
-from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
+from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
-from climate_ref_core.output_files import PlaceholderMap, ordered_replacements
+from climate_ref_core.output_files import ordered_replacements
 from climate_ref_core.paths import safe_path
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
@@ -649,93 +647,6 @@ def validate_series_regression(
         f"Diagnostic {slug} produced series that differ from the committed series.json. "
         f"Regenerate the regression data with `--force-regen`."
     )
-
-
-@frozen
-class RegressionValidator:
-    """
-    Validate diagnostic outputs from pre-stored regression data.
-
-    Loads regression outputs and validates CMEC bundles without
-    running the diagnostic. Suitable for fast CI validation.
-
-    The regression data is expected at:
-    test_data_dir/{diagnostic}/{test_case}/regression/
-    """
-
-    diagnostic: Diagnostic
-    test_case_name: str
-    test_data_dir: Path
-
-    @property
-    def paths(self) -> TestCasePaths:
-        """Get paths for this test case."""
-        return TestCasePaths.from_test_data_dir(self.test_data_dir, self.diagnostic.slug, self.test_case_name)
-
-    @property
-    def _baseline_placeholders(self) -> PlaceholderMap:
-        """
-        Base placeholder map for this verification context.
-
-        Declared once and reused by both :meth:`load_regression_definition` (hydrate) and
-        :meth:`validate` (series replacements) so the two sides cannot drift to different token sets.
-        This context does not know the shared-software root, so the map omits ``<SOFTWARE_ROOT_DIR>``;
-        each caller binds the per-execution ``<OUTPUT_DIR>`` via :meth:`PlaceholderMap.with_output`.
-        """
-        return PlaceholderMap.for_baseline(test_data_dir=self.test_data_dir)
-
-    def has_regression_data(self) -> bool:
-        """Check if regression data exists for this test case."""
-        regression_path = self.paths.regression
-        return regression_path.exists() and (regression_path / "diagnostic.json").exists()
-
-    def load_regression_definition(self, tmp_dir: Path) -> ExecutionDefinition:
-        """
-        Load regression data and create an ExecutionDefinition.
-
-        Copies regression data to tmp_dir and replaces path placeholders.
-        """
-        regression_path = self.paths.regression
-        catalog_path = self.paths.catalog
-
-        if not catalog_path.exists():
-            raise FileNotFoundError(
-                f"No catalog file at {catalog_path} for test case datasets. Run `ref test-cases fetch` first."
-            )
-        if not regression_path.exists():
-            raise FileNotFoundError(
-                f"No regression data at {regression_path}. Run 'ref test-cases run --force-regen' first."
-            )
-
-        output_dir = tmp_dir / "output"
-        output_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(regression_path, output_dir, dirs_exist_ok=True)
-
-        self._baseline_placeholders.with_output(output_dir).hydrate(output_dir)
-
-        datasets: ExecutionDatasetCollection = load_datasets_from_yaml(catalog_path)
-
-        return ExecutionDefinition(
-            diagnostic=self.diagnostic,
-            key=f"test-{self.test_case_name}",
-            datasets=datasets,
-            output_directory=output_dir,
-            root_directory=tmp_dir,
-        )
-
-    def validate(self, definition: ExecutionDefinition) -> None:
-        """Validate CMEC bundles and series in the regression output."""
-        result = self.diagnostic.build_execution_result(definition)
-        result.to_output_path("out.log").touch()  # Log file not tracked in regression
-        validate_cmec_bundles(self.diagnostic, result)
-        validate_series_regression(
-            expected_path=self.paths.regression / "series.json",
-            actual_path=definition.output_directory / "series.json",
-            slug=self.diagnostic.slug,
-            replacements=self._baseline_placeholders.with_output(
-                definition.output_directory
-            ).as_replacements(),
-        )
 
 
 def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:

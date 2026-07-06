@@ -5,7 +5,7 @@ This module provides:
 - Path resolution for package-local test data (catalogs, regression data)
 - Sample data fetching utilities
 - TestCaseRunner for executing diagnostics with test data
-- Result validation helpers
+- A drift-checking helper for test-case regression baselines
 """
 
 import shutil
@@ -16,17 +16,12 @@ from loguru import logger
 
 from climate_ref import SAMPLE_DATA_VERSION
 from climate_ref.config import Config
-from climate_ref.database import Database
-from climate_ref.executor.fragment import PLACEHOLDER_FRAGMENT, assign_execution_fragment
-from climate_ref.models import Execution, ExecutionGroup
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
-from climate_ref_core.testing import (
-    validate_cmec_bundles,
-)
+from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
 
 def _determine_test_directory() -> Path | None:
@@ -88,55 +83,80 @@ def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> Non
         fh.write(SAMPLE_DATA_VERSION)
 
 
-def validate_result(
-    diagnostic: Diagnostic, config: Config, result: ExecutionResult
-) -> None:  # pragma: no cover
+def assert_test_case_no_drift(
+    config: Config,
+    diagnostic: Diagnostic,
+    test_case_name: str,
+    paths: TestCasePaths,
+    work_dir: Path,
+) -> None:
     """
-    Asserts the correctness of the result of a diagnostic execution
+    Execute a diagnostic test case and assert its committed bundle has not drifted.
 
-    This should only be used by the test suite as it will create a fake
-    database entry for the diagnostic execution result.
+    Runs the diagnostic against the fetched catalog using the same execute/build stages as
+    ``ref test-cases run`` (see :mod:`climate_ref.cli.test_cases._stages`), rebuilds the committed
+    bundle from the fresh execution, and compares it to the tracked ``regression/`` baseline within
+    tolerance. Unlike ``ref test-cases replay`` this re-executes the diagnostic rather than replaying
+    stored native blobs, so it also proves the diagnostic still runs and emits a valid bundle.
+
+    Ingesting a committed bundle into the database is a separate concern, covered by the executor
+    result-handling tests (``packages/climate-ref/tests/unit/executor/test_result_handling.py`` and
+    friends); it is intentionally not re-checked here.
+
+    Parameters
+    ----------
+    config
+        The active configuration (provides the software root and results dir).
+    diagnostic
+        The diagnostic to run.
+    test_case_name
+        Name of the test case to run.
+    paths
+        Resolved paths for the test case (catalog + tracked regression baseline).
+    work_dir
+        A per-test scratch directory for the output slot and execution outputs.
+
+    Raises
+    ------
+    AssertionError
+        If the rebuilt committed bundle drifts from the tracked baseline.
     """
-    # TODO: Remove this function once we have moved to using RegressionValidator
-    # Add a fake execution/execution group in the Database
-    database = Database.from_config(config)
-    execution_group = ExecutionGroup(
-        diagnostic_id=1, key=result.definition.key, dirty=True, selectors=result.definition.datasets.selectors
+    from climate_ref.cli.test_cases._stages import (  # noqa: PLC0415
+        baseline_placeholders,
+        stage_build,
+        stage_compare,
+        stage_execute,
     )
-    database.session.add(execution_group)
-    database.session.flush()
+    from climate_ref_core.regression import Manifest  # noqa: PLC0415
 
-    execution = Execution(
-        execution_group_id=execution_group.id,
-        dataset_hash=result.definition.datasets.hash,
-        output_fragment=PLACEHOLDER_FRAGMENT,
+    if diagnostic.test_data_spec is None:
+        raise NoTestDataSpecError(f"Diagnostic {diagnostic.slug} has no test_data_spec")
+    tc = diagnostic.test_data_spec.get_case(test_case_name)
+    datasets = load_datasets_from_yaml(paths.catalog)
+
+    slot = work_dir / "slot"
+    slot.mkdir(parents=True, exist_ok=True)
+    placeholders = baseline_placeholders(paths, config)
+
+    # stage_execute runs the diagnostic (raising if it is not successful) and copies the curated
+    # native set into the slot; stage_build rebuilds the committed bundle from it.
+    source = stage_execute(
+        config=config,
+        diag=diagnostic,
+        tc=tc,
+        datasets=datasets,
+        slot=slot,
+        execution_dir=work_dir / "exec",
+        clean=True,
     )
-    database.session.add(execution)
+    stage_build(slot=slot, source=source, placeholders=placeholders)
 
-    assign_execution_fragment(
-        database.session,
-        execution,
-        provider_slug=diagnostic.provider.slug,
-        diagnostic_slug=diagnostic.slug,
-        selectors=result.definition.datasets.selectors,
-        group_id=execution_group.id,
+    expected = Manifest.load(paths.manifest).committed
+    failures, _ = stage_compare(slot=slot, paths=paths, slug=diagnostic.slug, expected=expected)
+    assert not failures, (
+        f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}: committed bundle drift:\n"
+        + "\n".join(failures)
     )
-
-    assert result.successful
-
-    # Validate CMEC bundles
-    validate_cmec_bundles(diagnostic, result)
-
-    # Create a fake log file if one doesn't exist
-    if not result.to_output_path("out.log").exists():
-        result.to_output_path("out.log").touch()
-
-    # Import late to avoid importing executors,
-    # some of which have on-import side effects, at package load time
-    from climate_ref.executor import handle_execution_result  # noqa: PLC0415
-
-    # Process and store the result
-    handle_execution_result(config, database=database, execution=execution, result=result)
 
 
 @define
@@ -231,8 +251,6 @@ class TestCaseRunner:
             root_directory=output_dir.parent,
         )
 
-        # Run the diagnostic.
-        # This mirrors ``Diagnostic.run`` but inserts the regression-capture hook before bundling.
-        diagnostic.execute(definition)
-        diagnostic.prepare_regression_output(definition)
-        return diagnostic.build_execution_result(definition)
+        # Run the diagnostic with the regression-capture hook enabled, so the native output is
+        # normalised (prepare_regression_output) before the bundle is built and captured.
+        return diagnostic.run(definition, capture_regression=True)

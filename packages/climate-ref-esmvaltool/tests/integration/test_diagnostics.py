@@ -3,13 +3,11 @@ from pathlib import Path
 import pytest
 from climate_ref_esmvaltool import provider
 
-from climate_ref.testing import TestCaseRunner, validate_result
+from climate_ref.testing import assert_test_case_no_drift
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.testing import (
-    RegressionValidator,
     TestCasePaths,
     collect_test_case_params,
-    load_datasets_from_yaml,
 )
 
 
@@ -23,48 +21,6 @@ def provider_test_data_dir() -> Path:
 test_case_params = collect_test_case_params(provider)
 
 
-@pytest.mark.skip(
-    reason="Parked: RegressionValidator replays the committed bundle offline, but native baselines "
-    "now live in the object store (Framework B), so build_execution_result cannot rebuild from the "
-    "repo alone. `ref test-cases replay` provides regression coverage via the store; this offline "
-    "path is retained (body intact) for local step-through debugging."
-)
-@pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
-def test_validate_test_case_regression(
-    diagnostic: Diagnostic,
-    test_case_name: str,
-    provider_test_data_dir: Path,
-    config,
-    tmp_path: Path,
-):
-    """
-    Validate pre-stored test case regression outputs as CMEC bundles.
-
-    Each diagnostic/test_case is a separate parameterized test.
-    """
-    diagnostic.provider.configure(config)
-
-    paths = TestCasePaths.from_test_data_dir(
-        provider_test_data_dir,
-        diagnostic.slug,
-        test_case_name,
-    )
-
-    if not paths.catalog.exists():
-        pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
-    if not paths.regression.exists():
-        pytest.skip(f"No regression data for {diagnostic.slug}/{test_case_name}")
-
-    validator = RegressionValidator(
-        diagnostic=diagnostic,
-        test_case_name=test_case_name,
-        test_data_dir=provider_test_data_dir,
-    )
-
-    definition = validator.load_regression_definition(tmp_path / diagnostic.slug / test_case_name)
-    validator.validate(definition)
-
-
 @pytest.mark.slow
 @pytest.mark.test_cases
 @pytest.mark.parametrize("diagnostic,test_case_name", test_case_params)
@@ -76,7 +32,17 @@ def test_run_test_cases(
     tmp_path: Path,
 ):
     """
-    Run diagnostic test cases end-to-end with ESGF data.
+    Execute each diagnostic test case end-to-end and assert the committed bundle has not drifted.
+
+    Runs the diagnostic against the fetched data using the same execute/build stages as
+    ``ref test-cases run``, then compares the freshly rebuilt committed bundle to the tracked
+    ``regression/`` baseline within tolerance. Unlike ``ref test-cases replay`` this re-executes
+    the diagnostic rather than replaying stored native blobs, so it also proves the diagnostic
+    still runs and emits a valid bundle.
+
+    Ingesting the committed bundles into the database is covered separately by the executor
+    result-handling tests (``packages/climate-ref/tests/unit/executor/test_result_handling.py``
+    and friends) and is intentionally not re-checked here.
 
     Requires: `ref test-cases fetch --provider esmvaltool` to have been run first.
     """
@@ -87,16 +53,9 @@ def test_run_test_cases(
         diagnostic.slug,
         test_case_name,
     )
-
     if not paths.catalog.exists():
         pytest.skip(f"No catalog file for {diagnostic.slug}/{test_case_name}")
+    if not paths.manifest.exists() or not paths.regression.exists():
+        pytest.skip(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
 
-    datasets = load_datasets_from_yaml(paths.catalog)
-
-    runner = TestCaseRunner(config=config, datasets=datasets)
-    output_dir = tmp_path / diagnostic.slug / test_case_name
-
-    result = runner.run(diagnostic, test_case_name, output_dir)
-
-    assert result.successful, f"Diagnostic {diagnostic.slug} failed"
-    validate_result(diagnostic, config, result)
+    assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)

@@ -619,6 +619,49 @@ class TestDeleteGroups:
         # Verify success message includes output directories
         assert "and their output directories" in result.stdout
 
+    def test_delete_groups_skips_escaping_output_fragment(self, db_with_groups, tmp_path, invoke_cli, config):
+        """An output_fragment that escapes the results root via '..' must not be deleted."""
+        results_path = tmp_path / "results"
+        results_path.mkdir()
+
+        # Mock config.paths.results to use tmp_path
+        config.paths.results = results_path
+        config.save()
+
+        # A directory outside the results root that a malicious/corrupt fragment would target.
+        outside_dir = tmp_path / "outside"
+        outside_dir.mkdir()
+        (outside_dir / "sentinel.txt").write_text("do not delete")
+
+        # Point the execution's output_fragment outside the results root.
+        eg = db_with_groups.session.query(ExecutionGroup).first()
+        execution = eg.executions[0]
+        execution.output_fragment = "../outside"
+        db_with_groups.session.commit()
+
+        # Run command with --remove-outputs
+        with patch("climate_ref.cli.executions.typer.confirm", return_value=True):
+            result = invoke_cli(
+                [
+                    "executions",
+                    "delete-groups",
+                    "--diagnostic",
+                    "enso",
+                    "--remove-outputs",
+                    "--force",
+                ]
+            )
+
+        # Assert success (the unsafe fragment is skipped, not fatal)
+        assert result.exit_code == 0
+
+        # Verify the directory outside the results root was NOT removed
+        assert outside_dir.exists()
+        assert (outside_dir / "sentinel.txt").exists()
+
+        # Verify database records were still deleted (only enso diagnostics: eg1 and eg3)
+        assert db_with_groups.session.query(ExecutionGroup).count() == 4
+
     def test_delete_groups_without_remove_outputs_flag(self, db_with_groups, tmp_path, invoke_cli, config):
         """Test that output directories are NOT removed when --remove-outputs flag is omitted"""
         # Create actual output directories in tmp_path

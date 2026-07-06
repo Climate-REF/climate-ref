@@ -44,6 +44,7 @@ from climate_ref.results import (
 from climate_ref.results.executions import OutputView
 from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.paths import safe_path
 
 app = typer.Typer(help=__doc__)
 
@@ -348,11 +349,12 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
         config = ctx.obj.config
         for eg, _ in all_filtered_results:
             for execution in eg.executions:
-                output_dir = config.paths.results / execution.output_fragment
-
-                # Safety check
-                if not output_dir.is_relative_to(config.paths.results):  # pragma: no cover
-                    logger.error(f"Skipping unsafe path: {output_dir}")
+                try:
+                    output_dir = safe_path(
+                        execution.output_fragment, base=config.paths.results, label="results"
+                    )
+                except ValueError:
+                    logger.error(f"Skipping unsafe output fragment: {execution.output_fragment!r}")
                     continue
 
                 if output_dir.exists():

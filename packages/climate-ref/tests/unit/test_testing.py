@@ -305,6 +305,16 @@ class TestAssertTestCaseNoDrift:
         with pytest.raises(NoTestDataSpecError, match="no test_data_spec"):
             assert_test_case_no_drift(config, diagnostic, "default", MagicMock(), tmp_path)
 
+    def test_raises_for_unknown_test_case(self, config, tmp_path):
+        """An unknown test case name raises a friendly error, not a bare StopIteration."""
+        diagnostic = MagicMock()
+        diagnostic.slug = "my-diag"
+        diagnostic.test_data_spec.has_case.return_value = False
+        diagnostic.test_data_spec.case_names = ["default"]
+
+        with pytest.raises(TestCaseNotFoundError, match="not found"):
+            assert_test_case_no_drift(config, diagnostic, "missing", MagicMock(), tmp_path)
+
     def _patch_stages(self, failures):
         """Patch the stage helpers and the manifest loader used by the drift assertion."""
         stages = "climate_ref.cli.test_cases._stages"

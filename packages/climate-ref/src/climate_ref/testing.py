@@ -126,6 +126,10 @@ def assert_test_case_no_drift(
 
     Raises
     ------
+    NoTestDataSpecError
+        If the diagnostic has no test_data_spec.
+    TestCaseNotFoundError
+        If the test case doesn't exist.
     AssertionError
         If the rebuilt committed bundle drifts from the tracked baseline.
     """
@@ -138,6 +142,11 @@ def assert_test_case_no_drift(
 
     if diagnostic.test_data_spec is None:
         raise NoTestDataSpecError(f"Diagnostic {diagnostic.slug} has no test_data_spec")
+
+    if not diagnostic.test_data_spec.has_case(test_case_name):
+        raise TestCaseNotFoundError(
+            f"Test case {test_case_name!r} not found. Available: {diagnostic.test_data_spec.case_names}"
+        )
 
     tc = diagnostic.test_data_spec.get_case(test_case_name)
     datasets = load_datasets_from_yaml(paths.catalog)

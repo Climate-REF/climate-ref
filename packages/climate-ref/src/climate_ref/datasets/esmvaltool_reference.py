@@ -54,7 +54,9 @@ def _parse_obs(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
     if len(tokens) < 6:  # noqa: PLR2004
         raise ValueError(f"unexpected OBS filename structure: {filename}")
     project, _, data_type, version, mip, short_name = tokens[:6]
-    timerange = tokens[6] if len(tokens) > 6 else None  # noqa: PLR2004
+    # The timerange is the trailing token; use ``tokens[-1]`` (matching ``_parse_obs4mips``)
+    # so an unexpected extra segment does not silently drop the date range.
+    timerange = tokens[-1] if len(tokens) > 6 else None  # noqa: PLR2004
     start_time, end_time = parse_drs_daterange(timerange) if timerange else (None, None)
     return {
         "project": project,
@@ -96,6 +98,8 @@ def _parse_obs4mips(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
     dataset, version = rel[1], rel[2]
     stem = filename[:-3] if filename.endswith(".nc") else filename
     tokens = stem.split("_")
+    if not tokens[0]:
+        raise ValueError(f"unexpected obs4MIPs filename structure: {filename}")
     short_name = tokens[0]
     timerange = tokens[-1] if len(tokens) > 1 else None
     start_time, end_time = parse_drs_daterange(timerange) if timerange else (None, None)

@@ -20,12 +20,28 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    # On PostgreSQL ``dataset_type`` is backed by a native ENUM, so the new value must be
-    # added to the type explicitly. SQLite stores the column as a plain VARCHAR (no CHECK
-    # constraint is emitted), so no enum change is needed there.
+    # ``dataset_type`` is a ``SourceDatasetType`` enum. On PostgreSQL it is backed by a native
+    # ENUM, so the new value must be added to the type explicitly. On SQLite the enum is stored
+    # as a VARCHAR sized to the longest member; ``ESMValToolReference`` (19 chars) is longer than
+    # the previous maximum ``PMPClimatology`` (14), so the column type must be widened to match.
     bind = op.get_bind()
     if bind.dialect.name == "postgresql":
         op.execute("ALTER TYPE sourcedatasettype ADD VALUE IF NOT EXISTS 'ESMValToolReference'")
+    else:
+        with op.batch_alter_table("dataset", schema=None) as batch_op:
+            batch_op.alter_column(
+                "dataset_type",
+                existing_type=sa.String(length=14),
+                type_=sa.Enum(
+                    "CMIP6",
+                    "CMIP7",
+                    "obs4MIPs",
+                    "PMPClimatology",
+                    "ESMValToolReference",
+                    name="sourcedatasettype",
+                ),
+                existing_nullable=False,
+            )
 
     op.create_table(
         "esmvaltool_reference_dataset",
@@ -68,6 +84,23 @@ def downgrade() -> None:
         batch_op.drop_index(batch_op.f("ix_esmvaltool_reference_dataset_instance_id"))
 
     op.drop_table("esmvaltool_reference_dataset")
-    # Note: the ``ESMValToolReference`` value is intentionally left in the PostgreSQL enum type.
-    # PostgreSQL does not support removing a value from an enum without recreating the type,
-    # and leaving it is harmless.
+
+    # On SQLite, narrow ``dataset_type`` back to the previous enum member set. On PostgreSQL the
+    # ``ESMValToolReference`` value is intentionally left in the enum type: PostgreSQL does not
+    # support removing a value from an enum without recreating the type, and leaving it is harmless.
+    bind = op.get_bind()
+    if bind.dialect.name != "postgresql":
+        with op.batch_alter_table("dataset", schema=None) as batch_op:
+            batch_op.alter_column(
+                "dataset_type",
+                existing_type=sa.Enum(
+                    "CMIP6",
+                    "CMIP7",
+                    "obs4MIPs",
+                    "PMPClimatology",
+                    "ESMValToolReference",
+                    name="sourcedatasettype",
+                ),
+                type_=sa.String(length=14),
+                existing_nullable=False,
+            )

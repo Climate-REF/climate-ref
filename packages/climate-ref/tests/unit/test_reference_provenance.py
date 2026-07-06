@@ -78,8 +78,10 @@ def test_resolve_matches_all_variables_of_a_dataset(db):
 
 
 def test_resolve_warns_and_returns_empty_when_nothing_ingested(db, caplog):
-    result = resolve_reference_dataset_ids(db, [_OSI])
+    with caplog.at_level("WARNING"):
+        result = resolve_reference_dataset_ids(db, [_OSI])
     assert result == []
+    assert "No ingested esmvaltool-reference datasets match reference selector" in caplog.text
 
 
 def test_link_records_reference_datasets_idempotently(db):

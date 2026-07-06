@@ -91,6 +91,12 @@ def test_parse_rejects_malformed_obs_filename():
     assert "INVALID_ASSET" in result
 
 
+def test_parse_rejects_empty_obs4mips_filename():
+    # An empty filename stem would otherwise yield an empty variable_id rather than being flagged.
+    result = parse_esmvaltool_reference("/root/ESMValTool/obs4MIPs/FOO/v1/.nc")
+    assert "INVALID_ASSET" in result
+
+
 def _touch(path: Path) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_bytes(b"")

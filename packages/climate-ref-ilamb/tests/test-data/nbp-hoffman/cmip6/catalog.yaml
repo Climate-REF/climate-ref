@@ -1,5 +1,5 @@
 _metadata:
-  hash: a3b462013078ead90d33c379eff1df6af603d023
+  hash: c64856a4599edc7799e3a85abd9e01071924fe94
 cmip6:
   slug_column: instance_id
   selector:
@@ -128,4 +128,36 @@ cmip6:
     variable_id: sftlf
     variant_label: r1i1p1f1
     version: v20190429
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gm
+    source_id: Hoffman-1-0
+    variable_id: nbp
+    version: v20251117
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2010-05-24 12:00:00'
+    filename: nbp_yr_Hoffman-1-0_REF_gm_1850-2010.nc
+    finalised: true
+    frequency: yr
+    grid: global mean data
+    grid_label: gm
+    instance_id: obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+    institution_id: UCI-ORNL
+    long_name: Carbon Mass Flux out of Atmosphere Due to Net Biospheric Production
+      on Land
+    nominal_resolution: site
+    product: derived
+    realm: land
+    source_id: Hoffman-1-0
+    source_type: stastical-estimate
+    source_version_number: '1.0'
+    start_time: '1850-07-02 12:00:00'
+    time_range: 1850-07-02 12:00:00-2010-05-24 12:00:00
+    units: Pg yr-1
+    variable_id: nbp
+    variant_label: REF
+    version: v20251117
     vertical_levels: 1

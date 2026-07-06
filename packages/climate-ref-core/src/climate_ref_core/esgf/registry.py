@@ -51,14 +51,16 @@ def _parse_obs4ref_key(key: str) -> dict[str, Any]:
     _, institution_id, _source_id, _frequency, _variable_id, _grid_label, version, filename = parts
 
     # Parse filename: {var}_{freq}_{source_id}_{inst_short}_{grid}_{time_range}.nc
-    # Handle source_ids with hyphens (e.g., "HadISST-1-1", "GPCP-Monthly-3-2")
+    # Handle source_ids with hyphens (e.g., "HadISST-1-1", "GPCP-Monthly-3-2"),
+    # climatology frequencies with a trailing capital (e.g. "monC"), and fixed-field
+    # time ranges that are a single year rather than a start-end pair (e.g. "2023").
     filename_pattern = re.compile(
         r"^(?P<variable_id>[a-zA-Z0-9]+)_"
-        r"(?P<frequency>[a-z]+)_"
+        r"(?P<frequency>[a-zA-Z]+)_"
         r"(?P<source_id>[A-Za-z0-9-]+)_"
         r"(?P<institution_short>[A-Za-z0-9-]+)_"
         r"(?P<grid_label>[a-zA-Z]+)_"
-        r"(?P<time_range>\d+-\d+)\.nc$"
+        r"(?P<time_range>\d+(?:-\d+)?)\.nc$"
     )
 
     match = filename_pattern.match(filename)

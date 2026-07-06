@@ -1,5 +1,5 @@
 _metadata:
-  hash: e51d4d5fb3e134312b40b2c705893dd6a715d629
+  hash: 534757a5b7620f9e0fe8cc4c907e201a176e8dfc
 cmip7:
   slug_column: instance_id
   selector:
@@ -40,7 +40,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/53bf326c-d643-45e4-9078-d6cc4a502d05
+    tracking_id: hdl:21.14107/f1ffaa8e-f80e-46e5-b2e9-b1a212b0372e
     units: m2
     variable_id: areacello
     variant_label: r1i1p1f1
@@ -77,7 +77,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/8ec21762-f4ad-47ba-bf1b-468fabeb350a
+    tracking_id: hdl:21.14107/1e7ad855-8c71-4e5d-999d-f94b6fbaa4a6
     units: '%'
     variable_id: sftof
     variant_label: r1i1p1f1
@@ -114,7 +114,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-1860-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/5d25993e-0b60-489b-8120-5ef0b627f405
+    tracking_id: hdl:21.14107/0b4bc32c-eeb1-4167-9f2f-5efe7d1c1322
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -151,7 +151,7 @@ cmip7:
     start_time: '1861-01-16 12:00:00'
     time_range: 1861-01-16 12:00:00-1870-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/442286e6-4e56-4eeb-be1e-3a3e4217f7e8
+    tracking_id: hdl:21.14107/e817bc9c-5f0b-4add-bf6b-c878e53a36d7
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -188,7 +188,7 @@ cmip7:
     start_time: '1871-01-16 12:00:00'
     time_range: 1871-01-16 12:00:00-1880-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/bd38e8d2-4a99-421f-916a-7bd44078755c
+    tracking_id: hdl:21.14107/77bd1d9e-85eb-4970-8c46-6312f405b6cc
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -225,7 +225,7 @@ cmip7:
     start_time: '1881-01-16 12:00:00'
     time_range: 1881-01-16 12:00:00-1890-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/07c408d2-e194-487c-a404-ed2cdc479832
+    tracking_id: hdl:21.14107/60dc6869-816b-42d9-8f8f-dfbdd78d96b3
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -262,7 +262,7 @@ cmip7:
     start_time: '1891-01-16 12:00:00'
     time_range: 1891-01-16 12:00:00-1900-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/c0b60a1d-07d0-476a-b4eb-7a33c7942401
+    tracking_id: hdl:21.14107/0ce383db-89da-4d1f-952c-0df11262536b
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -299,7 +299,7 @@ cmip7:
     start_time: '1901-01-16 12:00:00'
     time_range: 1901-01-16 12:00:00-1910-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/eb08b65a-fa69-4a3c-a592-281bccacb6cb
+    tracking_id: hdl:21.14107/5e57d9f2-a262-4439-9296-b9c17a2fe329
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -336,7 +336,7 @@ cmip7:
     start_time: '1911-01-16 12:00:00'
     time_range: 1911-01-16 12:00:00-1920-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/236b8f5b-d6b7-4c7c-b926-117e89624e9d
+    tracking_id: hdl:21.14107/0118ef92-ee67-4620-9772-9120f51271ae
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -373,7 +373,7 @@ cmip7:
     start_time: '1921-01-16 12:00:00'
     time_range: 1921-01-16 12:00:00-1930-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/75e8645f-585a-4b06-b31e-d38891176df8
+    tracking_id: hdl:21.14107/a6ffc9a4-ea01-455b-b2bc-49b02b245faf
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -410,7 +410,7 @@ cmip7:
     start_time: '1931-01-16 12:00:00'
     time_range: 1931-01-16 12:00:00-1940-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/684e8465-1f26-4e2a-9919-e9bf7841a168
+    tracking_id: hdl:21.14107/8ebfe8f6-bd85-4419-b538-1653af849533
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -447,7 +447,7 @@ cmip7:
     start_time: '1941-01-16 12:00:00'
     time_range: 1941-01-16 12:00:00-1950-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/1c6e6f27-f001-4260-8f72-8f6c18ac066b
+    tracking_id: hdl:21.14107/261409fd-ff34-4e10-8b29-aa587084a79e
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -484,7 +484,7 @@ cmip7:
     start_time: '1951-01-16 12:00:00'
     time_range: 1951-01-16 12:00:00-1960-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/b5afe1d2-0f45-4823-b0e2-44843726dac2
+    tracking_id: hdl:21.14107/a0ed044e-8508-4a49-9e10-6b59b1434773
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -521,7 +521,7 @@ cmip7:
     start_time: '1961-01-16 12:00:00'
     time_range: 1961-01-16 12:00:00-1970-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/e7712b16-0783-4251-bdc7-4505a487acd3
+    tracking_id: hdl:21.14107/4f360dc3-4986-47e4-b7c9-19459e7c529c
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -558,7 +558,7 @@ cmip7:
     start_time: '1971-01-16 12:00:00'
     time_range: 1971-01-16 12:00:00-1980-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/03b77075-b302-4437-b394-b73a5fb5b5c4
+    tracking_id: hdl:21.14107/2bfa11bb-315f-4f35-9d1c-a2eb333c0eff
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -595,7 +595,7 @@ cmip7:
     start_time: '1981-01-16 12:00:00'
     time_range: 1981-01-16 12:00:00-1990-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/88054906-b386-4910-aa18-4b94a9d71a9c
+    tracking_id: hdl:21.14107/a5e849b5-0a3e-4d2e-99d6-62369ec70870
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -632,7 +632,7 @@ cmip7:
     start_time: '1991-01-16 12:00:00'
     time_range: 1991-01-16 12:00:00-2000-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/73d6554b-ad21-4868-a09e-66c46204fba7
+    tracking_id: hdl:21.14107/15a11719-2613-430a-b15f-af417b06c0aa
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -669,7 +669,7 @@ cmip7:
     start_time: '2001-01-16 12:00:00'
     time_range: 2001-01-16 12:00:00-2010-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/cd97f013-6bf3-4f3f-9a17-16ab2b70d7b8
+    tracking_id: hdl:21.14107/40cd6610-e040-4d88-891c-006208137013
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -706,7 +706,7 @@ cmip7:
     start_time: '2011-01-16 12:00:00'
     time_range: 2011-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/834abd7c-6f26-4c68-a0c4-d37c5cdd8681
+    tracking_id: hdl:21.14107/991a096f-a28e-4717-bd83-6a9dd0ff9cb4
     units: degC
     variable_id: thetao
     variant_label: r1i1p1f1
@@ -743,8 +743,40 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/7ec2cc15-b899-4c18-b454-76a6186bbfb3
+    tracking_id: hdl:21.14107/7e1691ca-f17a-437d-8ac5-02ecb813d1ef
     units: degC
     variable_id: tos
     variant_label: r1i1p1f1
     version: v0
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: WOA-23
+    variable_id: thetao
+    version: v20251024
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '1988-12-15 00:00:00'
+    filename: thetao_monC_WOA-23_REF_gn_200501-202212.nc
+    finalised: true
+    frequency: monC
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
+    institution_id: NOAA-NCEI-OCL
+    long_name: Objectively analyzed mean fields for sea_water_temperature at standard
+      depth levels.
+    nominal_resolution: 1x1 degree
+    product: observations
+    realm: ocean
+    source_id: WOA-23
+    source_type: gridded_insitu
+    source_version_number: '1.0'
+    start_time: '1988-01-15 00:00:00'
+    time_range: 1988-01-15 00:00:00-1988-12-15 00:00:00
+    units: degC
+    variable_id: thetao
+    variant_label: REF
+    version: v20251024
+    vertical_levels: 57

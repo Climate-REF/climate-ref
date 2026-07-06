@@ -254,22 +254,6 @@
       },
       "filename": "Reference_tropical_mean.png",
       "long_name": "The period mean for the reference data over the Tropical climates region."
-    },
-    "nan_global_uncert.png": {
-      "description": "",
-      "dimensions": {
-        "region": "global"
-      },
-      "filename": "nan_global_uncert.png",
-      "long_name": ""
-    },
-    "nan_tropical_uncert.png": {
-      "description": "",
-      "dimensions": {
-        "region": "tropical"
-      },
-      "filename": "nan_tropical_uncert.png",
-      "long_name": ""
     }
   },
   "provenance": {

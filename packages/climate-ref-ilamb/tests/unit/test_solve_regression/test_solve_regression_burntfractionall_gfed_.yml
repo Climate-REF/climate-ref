@@ -1,96 +1,136 @@
-cmip6_historical_gn_r1i1p1f1_CESM2:
-  cmip6:
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190308
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.sftlf.gn.v20190308
-cmip6_historical_gn_r1i1p1f1_CESM2-FV2:
+cmip6_historical_gn_r1i1p1f1_CESM2-FV2__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.sftlf.gn.v20191120
-cmip6_historical_gn_r1i1p1f1_CESM2-WACCM:
-  cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190227
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.areacella.gn.v20190227
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.sftlf.gn.v20190227
-cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.sftlf.gn.v20191120
-cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_CESM2-WACCM__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190227
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.areacella.gn.v20190227
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.sftlf.gn.v20190227
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_CESM2__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.sftlf.gn.v20190308
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20200616
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.areacella.gn.v20200616
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.sftlf.gn.v20200616
-cmip6_historical_gn_r1i1p1f1_CMCC-ESM2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_CMCC-ESM2__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20210114
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.areacella.gn.v20210114
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.sftlf.gn.v20210114
-cmip6_historical_gn_r1i1p1f1_NorESM2-LM:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_NorESM2-LM__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20210818
   - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.fx.areacella.gn.v20190815
   - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.fx.sftlf.gn.v20191108
-cmip6_historical_gn_r1i1p1f1_NorESM2-MM:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gn_r1i1p1f1_NorESM2-MM__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.Lmon.burntFractionAll.gn.v20210818
   - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.fx.areacella.gn.v20191108
   - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.fx.sftlf.gn.v20191108
-cmip6_historical_gr_r1i1p1f1_EC-Earth3-CC:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gr_r1i1p1f1_EC-Earth3-CC__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.Lmon.burntFractionAll.gr.v20210113
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.fx.areacella.gr.v20210616
-cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.fx.areacella.gr.v20250328
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Lmon.burntFractionAll.gr.v20181206
-cmip7_historical_gn_CESM2-FV2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_CESM2-FV2_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20191120
-cmip7_historical_gn_CESM2-WACCM-FV2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_CESM2-WACCM-FV2_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20191120
-cmip7_historical_gn_CESM2-WACCM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_CESM2-WACCM_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190227
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190227
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20190227
-cmip7_historical_gn_CESM2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_CESM2_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190308
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190308
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20190308
-cmip7_historical_gn_CMCC-CM2-SR5_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_CMCC-CM2-SR5_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20200616
   - CMIP7.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20200616
   - CMIP7.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20200616
-cmip7_historical_gn_CMCC-ESM2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_CMCC-ESM2_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20210114
   - CMIP7.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20210114
   - CMIP7.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20210114
-cmip7_historical_gn_NorESM2-LM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_NorESM2-LM_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190815
   - CMIP7.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191108
   - CMIP7.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20210818
-cmip7_historical_gn_NorESM2-MM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gn_NorESM2-MM_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191108
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191108
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gn.v20210818
-cmip7_historical_gr_CNRM-ESM2-1_r1i1p1f2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gr_CNRM-ESM2-1_r1i1p1f2__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.glb.fx.areacella.ti-u-hxy-u.gr.v20250328
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.burntFractionAll.tavg-u-hxy-u.gr.v20181206
-cmip7_historical_gr_EC-Earth3-CC_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128
+cmip7_historical_gr_EC-Earth3-CC_r1i1p1f1__obs4mips_gr_GFED-5-0_burntFractionAll_v20260128:
   cmip7:
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20210616
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.glb.mon.burntFractionAll.tavg-u-hxy-u.gr.v20210113
+  obs4mips:
+  - obs4MIPs.obs4MIPs.NASA-NOSR.GFED-5-0.mon.burntFractionAll.25km.gr.v20260128

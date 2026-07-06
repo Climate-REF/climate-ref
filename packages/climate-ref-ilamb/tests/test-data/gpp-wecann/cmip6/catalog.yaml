@@ -1,5 +1,5 @@
 _metadata:
-  hash: 63308f56f55a8a6b7d3af0dc14f13161d5d5b84e
+  hash: bdd3a55a978ef71fbed1733e4ec86bcbaeadc3ea
 cmip6:
   slug_column: instance_id
   selector:
@@ -208,4 +208,36 @@ cmip6:
     variable_id: sftlf
     variant_label: r1i1p1f1
     version: v20190429
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: WECANN-1-0
+    variable_id: gpp
+    version: v20250902
+  datasets:
+  - activity_id: obs4REF
+    end_time: '2015-12-16 12:00:00'
+    filename: gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4REF.ColumbiaU.WECANN-1-0.mon.gpp.100km.gn.v20250902
+    institution_id: ColumbiaU
+    long_name: Carbon Mass Flux out of Atmosphere due to Gross Primary Production
+      on Land
+    nominal_resolution: 100 km
+    product: derived
+    realm: land
+    source_id: WECANN-1-0
+    source_type: satellite_retrieval
+    source_version_number: '1.0'
+    start_time: '2007-01-16 12:00:00'
+    time_range: 2007-01-16 12:00:00-2015-12-16 12:00:00
+    units: kg m-2 s-1
+    variable_id: gpp
+    variant_label: REF
+    version: v20250902
     vertical_levels: 1

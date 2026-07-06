@@ -18,7 +18,6 @@ Provided fixtures
 - ``test_data_dir`` / ``sample_data_dir`` -- data paths
 - ``sample_data`` -- session-scoped sample data fetch
 - ``cmip6_data_catalog`` / ``obs4mips_data_catalog`` / ``data_catalog`` -- data catalogs
-- ``run_test_case`` -- ``TestCaseRunner`` wrapper that converts errors to ``pytest.skip``
 - ``definition_factory`` -- create ``ExecutionDefinition`` instances
 - ``provider`` / ``mock_diagnostic`` -- mock diagnostic provider
 - ``solved_definition_factory`` -- build an ``ExecutionDefinition`` from the sample-data catalog
@@ -50,12 +49,10 @@ from climate_ref.solve_helpers import load_solve_catalog
 from climate_ref.solver import solve_executions
 from climate_ref.testing import (
     TEST_DATA_DIR,
-    TestCaseRunner,
     fetch_sample_data,
 )
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
-from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
 
@@ -176,31 +173,6 @@ def esgf_data_catalog_trimmed(
     return result
 
 
-@pytest.fixture
-def run_test_case(config: Config) -> object:
-    """
-    Fixture for running diagnostic test cases.
-
-    Wraps ``TestCaseRunner`` to convert ``TestCaseError`` into ``pytest.skip``.
-    """
-    runner = TestCaseRunner(config=config, datasets=None)
-
-    class PytestTestCaseRunner:
-        def run(
-            self,
-            diagnostic: Diagnostic,
-            test_case_name: str = "default",
-            output_dir: Path | None = None,
-        ) -> ExecutionResult:
-            try:
-                return runner.run(diagnostic, test_case_name, output_dir)
-            except TestCaseError as e:
-                pytest.skip(str(e))
-                raise  # unreachable, but keeps type checkers happy
-
-    return PytestTestCaseRunner()
-
-
 @pytest.fixture(scope="session")
 def sample_data() -> None:
     """Download sample data if not already present."""
@@ -318,7 +290,7 @@ class MockDiagnostic(Diagnostic):
     slug = "mock"
     data_requirements = (DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),)
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """Run a no-op diagnostic that always succeeds."""
         return ExecutionResult(
             output_bundle_filename=definition.output_directory / "output.json",
@@ -335,7 +307,7 @@ class FailedDiagnostic(Diagnostic):
     slug = "failed"
     data_requirements = (DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),)
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """Run a diagnostic that always returns a failure result."""
         return ExecutionResult.build_from_failure(definition)
 

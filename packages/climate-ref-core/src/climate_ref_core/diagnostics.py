@@ -621,9 +621,10 @@ class Diagnostic(AbstractDiagnostic):
         definition
             The configuration to run the diagnostic on.
         capture_regression
-            When True, call :meth:`prepare_regression_output` between execute and build so the
-            native output is normalised for deterministic regression capture. Used only by the
-            test-case runner; normal execution leaves this False.
+            When True, call :meth:`prepare_regression_output` between execute
+            and build so the native output is normalised for deterministic regression capture.
+
+            Used only by the test-case runner.
         """
         # Execute the diagnostic
         # This may be run in a separate process (or python environment)

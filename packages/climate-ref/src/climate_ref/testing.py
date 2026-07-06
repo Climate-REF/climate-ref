@@ -21,6 +21,7 @@ from climate_ref_core.datasets import ExecutionDatasetCollection
 from climate_ref_core.diagnostics import Diagnostic, ExecutionDefinition, ExecutionResult
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
+from climate_ref_core.regression import Manifest
 from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
 
@@ -94,14 +95,17 @@ def assert_test_case_no_drift(
     Execute a diagnostic test case and assert its committed bundle has not drifted.
 
     Runs the diagnostic against the fetched catalog using the same execute/build stages as
-    ``ref test-cases run`` (see :mod:`climate_ref.cli.test_cases._stages`), rebuilds the committed
-    bundle from the fresh execution, and compares it to the tracked ``regression/`` baseline within
-    tolerance. Unlike ``ref test-cases replay`` this re-executes the diagnostic rather than replaying
-    stored native blobs, so it also proves the diagnostic still runs and emits a valid bundle.
+    ``ref test-cases run`` (see :mod:`climate_ref.cli.test_cases._stages`),
+    rebuilds the committed bundle from the fresh execution,
+    and compares it to the tracked ``regression/`` baseline within tolerance.
 
-    Ingesting a committed bundle into the database is a separate concern, covered by the executor
-    result-handling tests (``packages/climate-ref/tests/unit/executor/test_result_handling.py`` and
-    friends); it is intentionally not re-checked here.
+    Unlike ``ref test-cases replay`` this re-executes the diagnostic rather than replaying,
+    so it also proves the diagnostic still runs and emits a valid bundle.
+
+    Ingesting a committed bundle into the database is a separate concern,
+    covered by the executor result-handling tests
+    (``packages/climate-ref/tests/unit/executor/test_result_handling.py`` and friends).
+    It is intentionally not re-checked here.
 
     Parameters
     ----------
@@ -127,10 +131,10 @@ def assert_test_case_no_drift(
         stage_compare,
         stage_execute,
     )
-    from climate_ref_core.regression import Manifest  # noqa: PLC0415
 
     if diagnostic.test_data_spec is None:
         raise NoTestDataSpecError(f"Diagnostic {diagnostic.slug} has no test_data_spec")
+
     tc = diagnostic.test_data_spec.get_case(test_case_name)
     datasets = load_datasets_from_yaml(paths.catalog)
 
@@ -138,8 +142,9 @@ def assert_test_case_no_drift(
     slot.mkdir(parents=True, exist_ok=True)
     placeholders = baseline_placeholders(paths, config)
 
-    # stage_execute runs the diagnostic (raising if it is not successful) and copies the curated
-    # native set into the slot; stage_build rebuilds the committed bundle from it.
+    # stage_execute runs the diagnostic (raising if it is not successful)
+    # and copies the curated native set into the slot
+    # stage_build rebuilds the committed bundle from it.
     source = stage_execute(
         config=config,
         diag=diagnostic,

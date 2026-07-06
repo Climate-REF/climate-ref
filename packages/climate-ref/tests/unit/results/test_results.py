@@ -370,6 +370,15 @@ def _flags(scalars, **policy_kwargs):
 
 
 class TestDetectScalarOutliers:
+    def test_outlier_policy_rejects_min_n_below_two(self):
+        with pytest.raises(ValueError):
+            OutlierPolicy(min_n=1)
+        with pytest.raises(ValueError):
+            OutlierPolicy(min_n=0)
+        # sanity: the safe boundary and default still construct
+        assert OutlierPolicy(min_n=2).min_n == 2
+        assert OutlierPolicy().min_n == 4
+
     def test_fallback_path_nan_does_not_disable_detection(self):
         # No source_id -> fallback IQR over raw values. A single NaN must not poison the quantiles:
         # the wild outlier among the finite values is still flagged, and the NaN is flagged non-finite.

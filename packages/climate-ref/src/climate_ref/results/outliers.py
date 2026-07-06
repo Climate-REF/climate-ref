@@ -49,7 +49,7 @@ class OutlierPolicy:
     factor: float = 10.0
     """Multiplier on the IQR to set the outlier bounds (``Q1 - factor*IQR``, ``Q3 + factor*IQR``)."""
 
-    min_n: int = 4
+    min_n: int = attrs.field(default=4, validator=attrs.validators.ge(2))
     """
     Minimum sample size required to run detection.
 

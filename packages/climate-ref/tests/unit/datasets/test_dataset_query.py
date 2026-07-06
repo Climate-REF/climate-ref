@@ -183,15 +183,13 @@ class TestSelectDatasetsLatestVersionDedup:
         assert db_with_versions.dq_ids["v2"] in ids
         assert db_with_versions.dq_ids["v10"] in ids
 
-    def test_latest_group_by_none_is_inert(self, db_with_versions):
-        """``latest_only=True`` alone (no ``latest_group_by``) must not dedup -- the two-flag API."""
-        stmt = select_datasets(
-            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)})
-        )
-        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
-        ids = {r.id for r in rows}
-        assert db_with_versions.dq_ids["v2"] in ids
-        assert db_with_versions.dq_ids["v10"] in ids
+    def test_latest_only_requires_latest_group_by(self):
+        """``latest_only=True`` (the default) with no ``latest_group_by`` is rejected: the two must be
+        supplied together, so a caller cannot silently receive an un-deduplicated result."""
+        with pytest.raises(ValueError, match="latest_group_by"):
+            select_datasets(
+                DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)})
+            )
 
     def test_source_type_is_required(self):
         """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""

@@ -74,19 +74,23 @@ def select_datasets(
 
     ``latest_group_by`` is the adapter's ``dataset_id_metadata``,
     which is used as the partition columns for the latest-version window.
-    It is optional because ``select_datasets`` lives in the models layer
-    and must not import the adapter registry, so it cannot look this up itself; callers pass it through.
+    It is passed in rather than looked up here because ``select_datasets`` lives in the models layer
+    and must not import the adapter registry, so it cannot resolve it itself; callers pass it through.
 
-    ``filter.latest_only`` does not take effect unless ``latest_group_by`` is also given (non-empty).
+    ``latest_group_by`` is required whenever ``filter.latest_only`` is True (the default):
+    passing ``latest_only=True`` without it raises ``ValueError`` rather than silently returning an
+    un-deduplicated result.
     When both are set, rows are deduplicated with a
     ``RANK() OVER (PARTITION BY <latest_group_by> ORDER BY version_key DESC)`` window
     (applied after all other filters/joins),
     keeping every row tied at the maximum ``version_key`` -- so ties are not silently dropped.
+    Set ``latest_only=False`` to list every version; ``latest_group_by`` is then ignored.
 
     Raises
     ------
     ValueError
-        If a key in ``filter.facets`` is not a mapped column on the target entity.
+        If ``filter.latest_only`` is True but ``latest_group_by`` is not provided,
+        or if a key in ``filter.facets`` is not a mapped column on the target entity.
     """
     entity = _entity_for(filter.source_type)
 

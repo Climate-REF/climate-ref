@@ -115,7 +115,11 @@ def list_(  # noqa: PLR0913
         data_catalog = data_catalog.head(limit)
 
     if column:
-        missing = set(column) - set(data_catalog.columns)
+        # Validate/select against a frame that includes base fields (id, slug, ...).
+        # For --include-files the file columns live only on the exploded frame, so use
+        # that; otherwise use the empty-safe base+facet frame from the collection.
+        selectable = data_catalog if include_files else collection.to_pandas()
+        missing = set(column) - set(selectable.columns)
         if missing:
 
             def format_(columns: Iterable[str]) -> str:
@@ -124,10 +128,10 @@ def list_(  # noqa: PLR0913
             logger.error(
                 f"Column{'s' if len(missing) > 1 else ''} "
                 f"{format_(missing)} not found in data catalog. "
-                f"Choose from: {format_(data_catalog.columns)}"
+                f"Choose from: {format_(selectable.columns)}"
             )
             raise typer.Exit(code=1)
-        data_catalog = data_catalog[column].sort_values(by=column)
+        data_catalog = selectable[column].sort_values(by=column)
 
     render_dataframe(data_catalog, console=console, output_format=output_format)
 

@@ -43,6 +43,19 @@ class TestDatasetsList:
     def test_list_column_invalid(self, db_seeded, invoke_cli):
         invoke_cli(["datasets", "list", "--column", "wrong"], expected_exit_code=1)
 
+    def test_list_column_base_field(self, db_seeded, invoke_cli):
+        """A base field (not a facet) is selectable, e.g. ``slug``."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        result = invoke_cli(["datasets", "list", "--column", "slug"])
+        assert existing.slug in result.stdout
+
+    def test_list_column_on_empty_result(self, db_seeded, invoke_cli):
+        """``--column`` on an empty result set exits 0 rather than erroring on a columnless frame."""
+        result = invoke_cli(
+            ["datasets", "list", "--dataset-filter", "source_id=DOES-NOT-EXIST", "--column", "slug"]
+        )
+        assert result.exit_code == 0
+
     def test_list_dataset_filter(self, db_seeded, invoke_cli):
         result = invoke_cli(
             ["datasets", "list", "--dataset-filter", "variable_id=tas", "--column", "variable_id"]

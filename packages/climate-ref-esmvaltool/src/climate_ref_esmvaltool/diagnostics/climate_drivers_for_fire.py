@@ -24,6 +24,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
     name = "Climate drivers for fire"
     slug = "climate-drivers-for-fire"
     base_recipe = "ref/recipe_ref_fire.yml"
+    version = 2
 
     data_requirements = (
         (
@@ -56,7 +57,7 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(2013, 1),
+                        start=PartialDateTime(1995, 1),
                         end=PartialDateTime(2014, 12),
                     ),
                     AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP6),
@@ -110,8 +111,8 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 constraints=(
                     RequireTimerange(
                         group_by=("instance_id",),
-                        start=PartialDateTime(2013, 1),
-                        end=PartialDateTime(2014, 12),
+                        start=PartialDateTime(2002, 1),
+                        end=PartialDateTime(2021, 12),
                     ),
                     AddSupplementaryDataset.from_defaults("sftlf", SourceDatasetType.CMIP7),
                     RequireFacets(
@@ -179,10 +180,14 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 name="cmip7",
                 description="Test with CMIP7 data.",
                 requests=(
+                    # The recipe runs CMIP7 over 2002-2021, but real CanESM5
+                    # `historical` data ends in 2014. We fetch the trailing 20 years
+                    # of real data and relabel its time axis via extend_historical_to
+                    # so the fabricated CMIP7 series ends 2021-12 and covers 2002-2021.
                     CMIP7Request(
                         slug="cmip7",
                         facets={
-                            "experiment_id": "historical",
+                            "experiment_id": ["historical"],
                             "source_id": "CanESM5",
                             "variable_id": [
                                 "cVeg",
@@ -194,22 +199,13 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                                 "treeFrac",
                                 "vegFrac",
                             ],
-                            "branded_variable": [
-                                "cVeg_tavg-u-hxy-lnd",
-                                "hurs_tavg-h2m-hxy-u",
-                                "pr_tavg-u-hxy-u",
-                                "sftlf_ti-u-hxy-u",
-                                "tas_tavg-h2m-hxy-u",
-                                "tas_tmaxavg-h2m-hxy-u",
-                                "treeFrac_tavg-u-hxy-u",
-                                "vegFrac_tavg-u-hxy-u",
-                            ],
                             "variant_label": "r1i1p1f1",
                             "frequency": ["fx", "mon"],
                             "region": "glb",
                         },
                         remove_ensembles=True,
-                        time_span=("2013", "2014"),
+                        time_span=("1995", "2014"),
+                        extend_historical_to=(2021, 12),
                     ),
                 ),
             ),
@@ -233,8 +229,12 @@ class ClimateDriversForFire(ESMValToolDiagnostic):
                 else:
                     short_name = cmip6_short_name
                 variable["short_name"] = short_name
-                variable["start_year"] = 2013
-                variable["end_year"] = 2014
+                if cmip_source == SourceDatasetType.CMIP7:
+                    variable["start_year"] = 2002
+                    variable["end_year"] = 2021
+                else:
+                    variable["start_year"] = 1995
+                    variable["end_year"] = 2014
                 datasets = recipe_variables[short_name]["additional_datasets"]
                 for dataset in datasets:
                     dataset.pop("timerange", None)

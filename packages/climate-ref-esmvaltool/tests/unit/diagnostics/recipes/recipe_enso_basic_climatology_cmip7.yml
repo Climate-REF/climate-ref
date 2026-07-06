@@ -147,7 +147,7 @@ diagnostics:
           institute: CSIRO
           mip: atmos
           region: glb
-          timerange: 18500116T120000/20141216T120000
+          timerange: 18500116T120000/20211216T120000
       eq_pr_bias:
         short_name: pr
         preprocessor: eq_bias
@@ -185,7 +185,7 @@ diagnostics:
           institute: CSIRO
           mip: ocean
           region: glb
-          timerange: 18500116T120000/20141216T120000
+          timerange: 18500116T120000/20211216T120000
       eq_tauu_bias:
         short_name: tauu
         preprocessor: eq_bias
@@ -211,7 +211,7 @@ diagnostics:
           institute: CSIRO
           mip: atmos
           region: glb
-          timerange: 18500116T120000/20141216T120000
+          timerange: 18500116T120000/20211216T120000
       pr_double_seacycle:
         short_name: pr
         preprocessor: ITCZ_sea_cycle

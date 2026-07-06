@@ -6,11 +6,13 @@ import dask.config
 import ilamb3
 import ilamb3.regions as ilr
 import ilamb3.transform
+import numpy as np
 import pandas as pd
 import pint
 import pooch
 import xarray as xr
 from ilamb3 import run
+from ilamb3.dataset import coarsen_dataset, get_dim_name
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
@@ -80,6 +82,42 @@ class _RelationshipTimeTransform(ILAMBTransform):
 
 
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_relationship_time", _RelationshipTimeTransform)
+
+
+class _CoarsenSpatial(ILAMBTransform):
+    """
+    Conservatively coarsen a very fine field before comparison.
+
+    Some obs4MIPs references (e.g. ``NOAA-NCEI-LAI-AVHRR-5-0`` at ~0.05 degrees) are far finer
+    than any CMIP model, which makes ilamb3's regrid/scoring step intractable.
+    This coarsens the field to a common target resolution, which ESM outputs are compared to.
+    Fields already at or coarser than the target (the models) are left untouched.
+    """
+
+    def __init__(self, variable_id: str, resolution: float = 0.5):
+        self.variable_id = variable_id
+        self.resolution = resolution
+
+    def required_variables(self) -> list[str]:
+        return [self.variable_id]
+
+    def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        if self.variable_id not in ds:
+            return ds
+        lat = ds[get_dim_name(ds, "lat")]
+        lon = ds[get_dim_name(ds, "lon")]
+        current = float(
+            np.sqrt(lat.diff(lat.name).mean().values ** 2 + lon.diff(lon.name).mean().values ** 2)
+        )
+        if current >= self.resolution:
+            # Already at or coarser than the target (e.g. model data); leave it lazy.
+            return ds
+        # ``coarsen_dataset`` uses ``.where(..., drop=True)``, whose boolean indexer must be in memory
+        # The reference is dask-backed ( open_mfdataset), so materialise it first.
+        return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+
+
+ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_coarsen_spatial", _CoarsenSpatial)
 
 
 def _get_branded_variable(
@@ -628,6 +666,11 @@ class ILAMBStandard(Diagnostic):
     """
 
     version = 2
+    """
+    Default version for ILAMB diagnostics.
+
+    Individual diagnostics can override this with a ``version`` key in their configuration entry.
+    """
 
     def __init__(
         self,
@@ -655,6 +698,10 @@ class ILAMBStandard(Diagnostic):
         # Allow per-diagnostic override of the test source_id
         # (not all variables are available from CanESM5)
         test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
+
+        diagnostic_version = ilamb_kwargs.pop("version", None)
+        if diagnostic_version is not None:
+            self.version = diagnostic_version
 
         self.ilamb_kwargs = ilamb_kwargs
 
@@ -809,6 +856,18 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+            # Relationship analyses (and any remaining legacy string-path sources)
+            # still refer to keys in the ILAMB/obs4REF registries.
+            # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so
+            # they remain resolvable when a diagnostic mixes obs4REF and registry data.
+            ref_datasets = pd.concat(
+                [
+                    ref_datasets,
+                    self.ilamb_data.datasets,
+                    registry_to_collection(dataset_registry_manager["obs4ref"]).datasets,
+                ],
+                ignore_index=True,
+            )
         else:
             # If the data is not ingested yet but in a registry, we concat the
             # obs4REF registries to the ilamb one so that any key may be used

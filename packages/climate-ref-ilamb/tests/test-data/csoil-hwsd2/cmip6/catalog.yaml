@@ -1,5 +1,5 @@
 _metadata:
-  hash: 2975e096658db0acea0b06a000ef607288fb7cc8
+  hash: 9d7163dec1fb5df3ee332ad6c38889fd21dfe4be
 cmip6:
   slug_column: instance_id
   selector:
@@ -127,4 +127,35 @@ cmip6:
     variable_id: sftlf
     variant_label: r1i1p1f1
     version: v20190429
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: HWSD-2-0
+    variable_id: cSoil
+    version: v20250903
+  datasets:
+  - activity_id: obs4REF
+    end_time: '1991-01-01 00:00:00'
+    filename: cSoil_fx_HWSD-2-0_REF_gn_2023.nc
+    finalised: true
+    frequency: fx
+    grid: 0.5x0.5 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4REF.IIASA-FAO.HWSD-2-0.fx.cSoil.0.5x0.5degree.gn.v20250903
+    institution_id: IIASA-FAO
+    long_name: Carbon Mass in Model Soil Pool
+    nominal_resolution: 0.5x0.5 degree
+    product: derived
+    realm: land
+    source_id: HWSD-2-0
+    source_type: gridded_insitu
+    source_version_number: '2.0'
+    start_time: '1991-01-01 00:00:00'
+    time_range: 1991-01-01 00:00:00-1991-01-01 00:00:00
+    units: kg m-2
+    variable_id: cSoil
+    variant_label: REF
+    version: v20250903
     vertical_levels: 1

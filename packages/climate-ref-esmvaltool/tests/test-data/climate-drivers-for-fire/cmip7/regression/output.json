@@ -1,9 +1,9 @@
 {
   "data": {
-    "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2013-2014.nc": {
+    "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2002-2021.nc": {
       "description": "",
       "dimensions": {},
-      "filename": "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2013-2014.nc",
+      "filename": "executions/recipe/work/fire_evaluation/fire_evaluation/tas_tavg-h2m-hxy-u_Amon_glb_gn_CanESM5_vpd_r1i1p1f1_2002-2021.nc",
       "long_name": ""
     }
   },
@@ -19,29 +19,29 @@
   "index": "<OUTPUT_DIR>/executions/recipe/index.html",
   "metrics": null,
   "plots": {
-    "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_CanESM5_historical_2013_2014.png": {
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_CanESM5_historical_2002_2021.png": {
       "description": "",
       "dimensions": {
         "statistic": "burnt fraction"
       },
-      "filename": "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_CanESM5_historical_2013_2014.png",
-      "long_name": "Burnt area fraction for the CanESM5 (CMIP7-historical) for the time period 2013/2014 as computed with the ConFire model (Jones et al., 2024)."
+      "filename": "executions/recipe/plots/fire_evaluation/fire_evaluation/burnt_fraction_CanESM5_historical_2002_2021.png",
+      "long_name": "Burnt area fraction for the CanESM5 (CMIP7-historical) for the time period 2002/2021 as computed with the ConFire model (Jones et al., 2024)."
     },
-    "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_CanESM5_historical_2013_2014.png": {
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_CanESM5_historical_2002_2021.png": {
       "description": "",
       "dimensions": {
         "statistic": "fire weather control"
       },
-      "filename": "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_CanESM5_historical_2013_2014.png",
-      "long_name": "Fire weather control for the CanESM5 (CMIP7-historical) for the time period 2013/2014 as computed with the ConFire model (Jones et al., 2024)."
+      "filename": "executions/recipe/plots/fire_evaluation/fire_evaluation/fire_weather_control_CanESM5_historical_2002_2021.png",
+      "long_name": "Fire weather control for the CanESM5 (CMIP7-historical) for the time period 2002/2021 as computed with the ConFire model (Jones et al., 2024)."
     },
-    "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_CanESM5_historical_2013_2014.png": {
+    "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_CanESM5_historical_2002_2021.png": {
       "description": "",
       "dimensions": {
         "statistic": "fuel load continuity control"
       },
-      "filename": "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_CanESM5_historical_2013_2014.png",
-      "long_name": "Fuel load continuity control for the CanESM5 (CMIP7-historical) for the time period 2013/2014 as computed with the ConFire model (Jones et al., 2024)."
+      "filename": "executions/recipe/plots/fire_evaluation/fire_evaluation/fuel_load_continuity_control_CanESM5_historical_2002_2021.png",
+      "long_name": "Fuel load continuity control for the CanESM5 (CMIP7-historical) for the time period 2002/2021 as computed with the ConFire model (Jones et al., 2024)."
     }
   },
   "provenance": {

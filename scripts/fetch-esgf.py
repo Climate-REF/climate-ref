@@ -283,6 +283,14 @@ requests: list[Request] = [
             experiment_id=["historical"],
         ),
     ),
+    # ILAMB lai reference
+    Obs4MIPsRequest(
+        id="ilamb-lai-obs4mips",
+        facets=dict(
+            source_id="NOAA-NCEI-LAI-AVHRR-5-0",
+            variable_id="lai",
+        ),
+    ),
     # IOMB data
     CMIP6Request(  # Already provided by the ESMValTool ENSO request.
         id="iomb-data",
@@ -342,9 +350,22 @@ def run_request(request: Request, remove_ensembles: bool = True):
     print("\n")
 
 
+_KIND_TYPES: dict[str, type[Request]] = {
+    "cmip6": CMIP6Request,
+    "obs4mips": Obs4MIPsRequest,
+}
+
+
 def main(
     request_id: str = typer.Option(
         None, help="ID of a specific request to run. If not provided, all requests will be run."
+    ),
+    kind: str = typer.Option(
+        "all",
+        help=(
+            "Category of data to fetch: 'all', 'cmip6', or 'obs4mips'. "
+            "Use --kind obs4mips to fetch only the observational reference data."
+        ),
     ),
     remove_ensembles: bool = typer.Option(
         True,
@@ -355,9 +376,10 @@ def main(
     ),
 ):
     """
-    Fetch CMIP6 datasets from ESGF.
+    Fetch CMIP6 and Obs4MIPs datasets from ESGF.
 
-    This script can either run all predefined requests or a specific request by ID.
+    This script can run all predefined requests, a single request by ID, or a category of
+    requests via --kind (e.g. --kind obs4mips for just the observational reference data).
     By default, only one ensemble member per model is fetched, but this can be changed
     with the --no-remove-ensembles flag.
     """
@@ -375,12 +397,21 @@ def main(
         if not remove_ensembles:
             logger.info("Fetching all ensemble members")
         run_request(matching_requests[0], remove_ensembles=remove_ensembles)
+        return
+
+    if kind == "all":
+        selected = requests
+    elif kind in _KIND_TYPES:
+        selected = [req for req in requests if isinstance(req, _KIND_TYPES[kind])]
     else:
-        logger.info("Running all requests...")
-        if not remove_ensembles:
-            logger.info("Fetching all ensemble members")
-        for request in requests:
-            run_request(request, remove_ensembles=remove_ensembles)
+        logger.info(f"Error: Unknown kind '{kind}'. Valid options: all, {', '.join(_KIND_TYPES)}")
+        raise typer.Exit(1)
+
+    logger.info(f"Running {len(selected)} '{kind}' requests...")
+    if not remove_ensembles:
+        logger.info("Fetching all ensemble members")
+    for request in selected:
+        run_request(request, remove_ensembles=remove_ensembles)
 
 
 # joblib.Parallel(n_jobs=2)(joblib.delayed(run_request)(request) for request in requests)

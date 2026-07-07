@@ -52,11 +52,7 @@ def config_cmip7_aft(config):
     return config
 
 
-@pytest.mark.skip(
-    reason="ilamb opens reference fields without dask chunks, so executing the CMIP7 AFT "
-    "diagnostics materialises multi-GiB ocean fields and runs for hours on the CI runner, "
-    "hitting the executor per-task timeout. Re-enable once ilamb3 loads references lazily."
-)
+@pytest.mark.skip(reason="Re-enable once ilamb3 loads references lazily.")
 @pytest.mark.slow
 def test_solve_cmip7_aft(
     sample_data_dir,

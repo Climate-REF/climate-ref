@@ -93,9 +93,12 @@ class LocalExecutor:
         self.config = config
 
         # Per-task wall-clock budget (default 6 hours, matching the Celery
-        # task_time_limit). Diagnostics that hang past this are considered lost
-        # so the pool can recycle the slot rather than blocking ``join`` forever.
-        # Set to ``0`` to disable.
+        # task_time_limit). This budgets *execution* time -- measured from when a
+        # worker starts the task, not from submission -- so a task that merely
+        # waits in the pool queue is never penalised for that wait. Diagnostics
+        # that hang past this while running are considered lost so the pool can
+        # recycle the slot rather than blocking ``join`` forever. Set to ``0`` to
+        # disable.
         self.task_timeout = task_timeout
 
         if pool is not None:
@@ -146,11 +149,13 @@ class LocalExecutor:
         Wait for all diagnostics to finish
 
         This will block until all diagnostics have completed or the timeout is reached.
-        Each individual execution is also bounded by ``self.task_timeout`` so that a
-        hung diagnostic cannot block the pool indefinitely. Outstanding executions
-        are always marked as failed-retryable before this method returns or raises,
-        so the next solve can pick them up rather than seeing them stuck with
-        ``successful=None``.
+        Each individual execution is also bounded by ``self.task_timeout``, measured
+        from when a worker starts running it, so that a hung diagnostic cannot block
+        the pool indefinitely. Tasks still waiting in the pool queue are never culled
+        by this budget -- only the overall ``timeout`` applies to them. Outstanding
+        executions are always marked as failed-retryable before this method returns
+        or raises, so the next solve can pick them up rather than seeing them stuck
+        with ``successful=None``.
 
         Parameters
         ----------
@@ -206,12 +211,21 @@ class LocalExecutor:
                         results.remove(result)
                         continue
 
-                    # Per-task timeout: a runaway diagnostic cannot block the pool
-                    # forever. Cancel its future and mark the row failed-retryable.
+                    # Record when a worker first picks the task up. ``submitted_at``
+                    # only marks enqueue time; budgeting the timeout against queue
+                    # wait would cull tasks that never actually ran (e.g. a large
+                    # backlog starved behind other providers).
+                    if result.started_at is None and result.future.running():
+                        result.started_at = now
+
+                    # Per-task timeout: a runaway *running* diagnostic cannot block
+                    # the pool forever. Cancel its future and mark the row
+                    # failed-retryable. Tasks still queued (``started_at is None``)
+                    # are left alone here; only the overall timeout reaps them.
                     if (
                         self.task_timeout > 0
-                        and result.submitted_at > 0
-                        and now - result.submitted_at > self.task_timeout
+                        and result.started_at is not None
+                        and now - result.started_at > self.task_timeout
                     ):
                         logger.error(
                             f"Execution {result.definition.execution_slug()!r} exceeded per-task "

@@ -67,6 +67,11 @@ class ExecutionFuture:
     definition: ExecutionDefinition
     execution_id: int | None = None
     submitted_at: float = 0.0
+    # Wall-clock time (``time.time()``) at which a worker was first observed
+    # running this future, or ``None`` while it is still queued. The per-task
+    # timeout is budgeted against this rather than ``submitted_at`` so that time
+    # spent waiting in the pool queue is not counted as execution time.
+    started_at: float | None = None
 
 
 def process_result(

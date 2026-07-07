@@ -20,6 +20,11 @@ This will:
 Note: it is normal for some executions to fail (e.g., due to missing data or configuration).
 You can re-run or inspect failures as needed.
 
+Because the local executor runs many diagnostics in parallel, it is worth
+tuning parallelism and thread limits (including the OpenMP/BLAS environment
+variables) before a large solve — see
+[How to control memory use and parallelism](../how-to-guides/control-memory-use.md).
+
 /// admonition | Tip
 
 To target a specific provider or diagnostic, use the `--provider` and `--diagnostic` flags:

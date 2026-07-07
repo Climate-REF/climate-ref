@@ -100,6 +100,7 @@ def _attach_future(
     future: Future,
     *,
     submitted_at: float | None = None,
+    started_at: float | None = None,
 ) -> None:
     executor._results.append(
         ExecutionFuture(
@@ -107,6 +108,7 @@ def _attach_future(
             definition=definition,
             execution_id=execution_id,
             submitted_at=submitted_at if submitted_at is not None else time.time(),
+            started_at=started_at,
         )
     )
 
@@ -173,9 +175,53 @@ class TestLocalExecutorFailureModes:
         execution_id, eg_id, _ = _seed_execution(
             db_with_provider, provider, "mock", config, key="per-task-timeout"
         )
-        # Submit-time pre-dated so the very first join iteration triggers the
-        # per-task timeout branch without depending on real wall clock.
+        # A *running* task whose execution start is pre-dated past the budget, so
+        # the very first join iteration triggers the per-task timeout branch
+        # without depending on real wall clock. ``set_running_or_notify_cancel``
+        # puts the future in the RUNNING state that production sees mid-execution.
         future: Future = Future()
+        future.set_running_or_notify_cancel()
+        _attach_future(
+            executor,
+            definition,
+            execution_id,
+            future,
+            submitted_at=time.time() - 60,
+            started_at=time.time() - 60,
+        )
+
+        executor.join(timeout=10)
+
+        assert executor._results == []
+        with db_with_provider.session.begin():
+            execution = db_with_provider.session.get(Execution, execution_id)
+            execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
+        assert execution.successful is False
+        assert execution_group.dirty is True
+
+    def test_queued_task_not_culled_by_per_task_timeout(
+        self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
+    ):
+        # Regression: a task submitted long ago but still queued (never started by a
+        # worker) must NOT be culled by the per-task budget -- that budget applies to
+        # execution time only. Previously the timeout keyed off ``submitted_at`` and
+        # would reap the whole backlog once it aged past ``task_timeout``, even for
+        # tasks that had never run.
+        executor = _build_executor(db_with_provider, config, thread_pool, task_timeout=0.05)
+        definition = definition_factory(diagnostic=mock_diagnostic)
+        execution_id, eg_id, _ = _seed_execution(
+            db_with_provider, provider, "mock", config, key="queued-not-culled"
+        )
+        # Pending future (``started_at`` stays None): submitted a minute ago, far
+        # past the 0.05s budget. It only resolves after join has begun polling, so
+        # if the per-task branch fired it would abandon the task before the result
+        # lands and leave the group dirty=True for retry.
+        future: Future = Future()
+        timer = threading.Timer(
+            0.3,
+            future.set_result,
+            args=[ExecutionResult.build_from_failure(definition, retryable=False)],
+        )
         _attach_future(
             executor,
             definition,
@@ -184,15 +230,22 @@ class TestLocalExecutorFailureModes:
             submitted_at=time.time() - 60,
         )
 
-        executor.join(timeout=10)
+        timer.start()
+        try:
+            # Indefinite overall timeout: the only way this returns is by collecting
+            # the result, proving the queued task was waited for, not culled.
+            executor.join(timeout=0)
+        finally:
+            timer.cancel()
 
-        assert future.cancelled() or future.done()
         assert executor._results == []
         with db_with_provider.session.begin():
             execution = db_with_provider.session.get(Execution, execution_id)
             execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
         assert execution.successful is False
-        assert execution_group.dirty is True
+        # Collected as a non-retryable logic failure -> group marked clean. Had the
+        # per-task timeout culled it, this would be dirty=True (retryable) instead.
+        assert execution_group.dirty is False
 
     def test_timeout_zero_waits_for_completion(
         self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool

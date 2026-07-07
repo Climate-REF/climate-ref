@@ -7,6 +7,13 @@
 # see docs/how-to-guides/control-memory-use.md) and raises the open-file limit,
 # which large solves routinely exceed.
 #
+# Provider setup (`ref providers setup`) is run first and is required, not
+# optional: besides creating the conda environments it fetches each provider's
+# reference data and ingests provider-specific datasets into the database (e.g.
+# the PMP climatology datasets). Skipping it leaves those references missing, so
+# the diagnostics that depend on them cannot run. The step is idempotent and
+# needs internet access.
+#
 # Configure via environment variables:
 #   REF_CONFIGURATION   REF configuration directory (required)
 #   REF_CMIP6_DATA      directory of CMIP6 datasets to ingest (required)
@@ -45,13 +52,18 @@ ulimit -n "$nofile" || echo "warning: could not raise open-file limit to $nofile
 echo "REF_CONFIGURATION=$REF_CONFIGURATION"
 echo "threads=$threads ulimit -n=$(ulimit -n) solve_timeout=$solve_timeout"
 
-# 1. Ingest CMIP6 model output.
+# 1. Set up every provider: create conda environments, fetch reference data, and
+#    ingest provider-specific datasets (e.g. PMP climatology) into the database.
+#    Required before solving; idempotent and needs internet access.
+ref providers setup
+
+# 2. Ingest CMIP6 model output.
 ref datasets ingest --source-type cmip6 --n-jobs 1 --chunk-size 5000 "$REF_CMIP6_DATA"
 
-# 2. Ingest obs4MIPs reference data.
+# 3. Ingest obs4MIPs reference data.
 ref datasets ingest --source-type obs4mips --n-jobs 1 "$REF_OBS4MIPS_DATA"
 
-# 3. Solve every applicable diagnostic across all configured providers.
+# 4. Solve every applicable diagnostic across all configured providers.
 ref --log-level INFO solve --timeout "$solve_timeout"
 
 echo "Full run complete."

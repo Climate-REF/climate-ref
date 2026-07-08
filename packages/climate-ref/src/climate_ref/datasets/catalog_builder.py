@@ -77,9 +77,8 @@ def _resolve_worker_count(n_jobs: int, n_assets: int) -> int:
     """
     Resolve ``n_jobs`` to a concrete worker count.
 
-    ``-1`` maps to all available CPUs. The count is never larger than the
-    number of assets, so a handful of files does not spawn a needless fleet
-    of worker processes.
+    ``-1`` maps to all available CPUs.
+    The count is limited to the number of assets to avoid unneeded workers.
 
     Parameters
     ----------
@@ -105,20 +104,21 @@ def parse_files(
     """
     Parse files using the given parsing function, optionally in parallel
 
-    Parsing opens netCDF files, so it is bound by (highly parallel) filesystem
-    I/O. Parallelism uses *processes* rather than threads: the netCDF4/HDF5 stack
-    is not thread-safe unless the underlying HDF5 library is compiled with
-    ``--enable-threadsafe`` (the wheels published on PyPI are not), so opening
-    files from multiple threads can segfault the interpreter. Processes also
-    sidestep the GIL, which otherwise serialises the pure-Python parsers.
+    Parsing opens netCDF files, so it is bound by (highly parallel) filesystem I/O.
+
+    Parallelism uses *processes* rather than threads as the netCDF4/HDF5 stack is not thread-safe
+    unless the underlying HDF5 library is compiled with ``--enable-threadsafe``
+    (the wheels published on PyPI are not),
+    so opening files from multiple threads can segfault the interpreter.
+    Processes also sidestep the GIL, which otherwise serialises the pure-Python parsers.
 
     Parameters
     ----------
     assets
         List of file paths to parse
     parsing_func
-        Function to extract metadata from each file. Must be importable by
-        reference (a module-level function) so it can be sent to worker processes.
+        Function to extract metadata from each file.
+        Must be importable by reference (a module-level function) so it can be sent to worker processes.
     n_jobs
         Number of parallel workers.
         ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
@@ -136,7 +136,7 @@ def parse_files(
     # Batch assets per task to amortise inter-process dispatch and result pickling.
     chunksize = max(1, len(assets) // (max_workers * 4))
     # "spawn" avoids forking an already multi-threaded parent (loguru sink, tqdm),
-    # which is deprecated on 3.12+ and can deadlock; it also matches the LocalExecutor.
+    # The downside is a slightly slower initialisation due to reimporting modules.
     with ProcessPoolExecutor(
         max_workers=max_workers,
         mp_context=mp.get_context("spawn"),

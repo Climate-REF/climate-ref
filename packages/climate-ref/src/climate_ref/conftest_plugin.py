@@ -58,9 +58,8 @@ from climate_ref_core.providers import DiagnosticProvider
 
 
 # Importable stub parsers for exercising the parallel catalog builder.
-# These must live in an installed module (not a test file) so that "spawn"/
-# "forkserver" worker processes can re-import them by reference when parsing
-# in parallel -- functions defined inside a test module cannot be pickled that way.
+# These must live in an installed module to be able to be pickled
+# so that "spawn"/"forkserver" worker processes can re-import them by reference when parsing in parallel
 def catalog_stub_parser(file: str, **kwargs: Any) -> dict[str, Any]:
     """Return trivial valid metadata for ``file`` without opening it."""
     return {"path": file, "name": Path(file).name}

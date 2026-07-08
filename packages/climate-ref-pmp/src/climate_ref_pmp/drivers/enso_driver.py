@@ -374,7 +374,6 @@ def update_dict_datasets(dict_datasets: dict, output_dir: str = ".") -> dict:
                 # Mapping of old observation names to new ones recognized by the ENSO package
                 observation_name_mapping = {
                     "GPCP-2-3": "GPCPv2.3",
-                    "ERA-INT": "ERA-Interim",
                     "ERA-5": "ERA5",
                     "AVISO-1-0": "AVISO",
                     "TropFlux-1-0": "Tropflux",

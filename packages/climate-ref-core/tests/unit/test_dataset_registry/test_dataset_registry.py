@@ -11,7 +11,9 @@ from climate_ref_core.dataset_registry import (
     validate_registry_cache,
 )
 
-NUM_OBS4REF_FILES = 83
+# Derived from the registry rather than hardcoded so this can't drift when
+# entries are added to or removed from obs4ref_reference.txt.
+NUM_OBS4REF_FILES = len(dataset_registry_manager["obs4ref"].registry)
 
 
 @pytest.fixture

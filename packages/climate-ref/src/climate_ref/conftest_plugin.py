@@ -121,7 +121,7 @@ def test_data_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def sample_data_dir(test_data_dir: Path) -> Path:
+def sample_data_dir(sample_data: None, test_data_dir: Path) -> Path:
     """Path to the sample data directory."""
     return test_data_dir / "sample-data"
 
@@ -238,7 +238,10 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
     """Per-test Config with isolated directories."""
     root_output_dir = Path(os.environ.get("REF_TEST_OUTPUT", tmp_path / "climate_ref"))
     dir_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", request.node.name)
-    ref_config_dir = root_output_dir / request.module.__name__ / dir_name
+    # Include the class name so two identically-named tests in different classes don't
+    # collide on a shared REF_TEST_OUTPUT dir (request.node.name omits the class).
+    class_segment = request.cls.__name__ if request.cls is not None else ""
+    ref_config_dir = root_output_dir / request.module.__name__ / class_segment / dir_name
 
     software_path = Config.default().paths.software
 

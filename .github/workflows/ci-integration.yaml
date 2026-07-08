@@ -9,9 +9,7 @@
 #
 # The ~/.esgf directory is also configured to point to a shared cache location downloaded ESGF datasets.
 #
-# Fetching is deliberately confined to the `populate-cache` job, which is the single
-# writer to the shared RWX cache. The `tests-slow` and `test-cases` jobs run after it
-# and are pure readers, so they can fan out in parallel without racing on downloads.
+# Fetching is deliberately confined to the `populate-cache` job which should pre-cache the required data.
 name: CI Integration Tests
 on:
   # Allow manual triggering of this workflow
@@ -27,9 +25,8 @@ on:
 permissions:
   contents: read
 
-# Serialise integration runs so only one `populate-cache` ever writes to the shared
-# ESGF/dataset cache at a time. Queue rather than cancel: a half-finished fetch is
-# the thing we're trying to avoid.
+# Serialise integration runs so only one `populate-cache` ever writes to the shared ESGF/dataset cache at a time.
+# Queue rather than cancel the in-flight run
 concurrency:
   group: ${{ github.workflow }}
   cancel-in-progress: false
@@ -59,19 +56,11 @@ jobs:
           uv run ref datasets fetch-data --registry obs4ref
           uv run ref providers setup
       # Warm the shared intake-esgf cache (~/.esgf) here, as the single writer, so the
-      # downstream test jobs only ever read from it. Deliberately not --only-missing:
-      # test-case catalogs are committed, so that flag would skip every fetch and leave
-      # the cache cold. A plain fetch is cheap on a warm cache (intake-esgf serves hits
-      # from ~/.esgf without touching the network).
+      # downstream test jobs only ever read from it.
       - name: Prefetch test-case data from ESGF
         timeout-minutes: 90
         run: |
           uv run ref test-cases fetch || echo "Some fetches failed"
-      # intake-esgf downloads to `<filename><8 random chars>` (tempfile.mkstemp with
-      # prefix=<filename>) and only renames into place after verifying the hash, so a
-      # killed transfer leaves an orphan rather than a corrupt cache entry. Sweep those
-      # up. Runs even when the fetch fails -- that is exactly when orphans exist. The
-      # workflow concurrency group guarantees no other job is writing to the cache here.
       - name: Prune orphaned ESGF download temp files
         if: always()
         run: |
@@ -133,9 +122,6 @@ jobs:
       - uses: ./.github/actions/setup
         with:
           python-version: "3.13"
-      # No fetch here: populate-cache has already warmed ~/.esgf, so every dataset
-      # resolves as a local cache hit. Each provider is an independent reader, which is
-      # why this can safely fan out.
       - name: Run test cases
         timeout-minutes: 60
         run: |

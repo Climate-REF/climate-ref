@@ -8,7 +8,7 @@ a small, pure-Python provider you install alongside Climate-REF,
 so there is no conda/mamba environment to create.
 You will fetch a small, curated set of sample data,
 run two diagnostics,
-and inspect the results.
+and inspect the results from the command line or in Python.
 
 When you are ready for a full assessment with the complete providers
 (ESMValTool, PMP, ILAMB) and the full reference data,
@@ -136,6 +136,10 @@ ref solve --provider example --diagnostic global-sst-bias
 
 ## 6. Observe the results (~20 s)
 
+You can read the results either from the command line or in Python.
+
+### From the command line
+
 List the execution groups and inspect one to see its metric values and output files:
 
 ```bash
@@ -162,6 +166,44 @@ and the **bias** between them, plus two figures:
 `surface_temperature_timeseries.png` (model and reference together) and `surface_temperature_bias.png` (the bias over time).
 Those three time series are also extracted as CMEC series values (`series.json`), so they are ingested into the REF
 database and can be queried and plotted alongside the scalar metrics.
+
+### In Python
+
+The same results are available programmatically through
+[`climate_ref.results`](../how-to-guides/reading-results-locally.md),
+a read layer over the REF database that returns plain pandas DataFrames,
+which is convenient for plotting or further analysis.
+
+Open the database read-only, hand it to a `Reader`,
+and pull the two scalars from the model-vs-observation diagnostic:
+
+```python
+from climate_ref.config import Config
+from climate_ref.database import Database
+from climate_ref.results import Reader, MetricValueFilter
+
+config = Config.default()   # reads $REF_CONFIGURATION
+
+with Database.from_config(config, read_only=True) as db:
+    bias = Reader(db).values.scalar_values(
+        filters=MetricValueFilter(diagnostic_slug="global-sst-bias", provider_slug="example"),
+    ).to_pandas()
+
+print(bias[["source_id", "reference_source_id", "statistic", "value"]])
+```
+
+This prints the `mean-bias` and `rmse` of the modelled global-mean surface temperature
+against the HadISST-1-1 observations (your exact values may differ slightly by platform):
+
+```
+       source_id reference_source_id  statistic     value
+0  ACCESS-ESM1-5         HadISST-1-1  mean-bias  0.531840
+1  ACCESS-ESM1-5         HadISST-1-1       rmse  0.556948
+```
+
+The same `Reader` also exposes execution groups, ingested datasets, diagnostics, series values, and output-file paths.
+See [Reading results locally with pandas](../how-to-guides/reading-results-locally.md)
+for the full read layer.
 
 ## Control and configuration options
 

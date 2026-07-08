@@ -1,12 +1,23 @@
 """Tests for climate_ref_core.esgf.base module."""
 
+import io
+import sys
 from unittest.mock import MagicMock, patch
 
+import intake_esgf.base
+import intake_esgf.catalog
 import pandas as pd
 import pytest
 
 from climate_ref_core.esgf import CMIP6Request, ESGFRequest
-from climate_ref_core.esgf.base import _deduplicate_datasets
+from climate_ref_core.esgf.base import _deduplicate_datasets, _EnvAwareTqdm
+
+
+class _Tty(io.StringIO):
+    """A stderr stand-in that reports itself as a terminal."""
+
+    def isatty(self) -> bool:
+        return True
 
 
 class TestESGFRequestProtocol:
@@ -284,3 +295,55 @@ class TestIntakeESGFMixin:
         call_kwargs = mock_cat.search.call_args.kwargs
         assert call_kwargs["variable_id"] == ["sftlf", "areacella"]
         assert isinstance(call_kwargs["variable_id"], list)
+
+
+class TestEnvAwareTqdm:
+    """intake-esgf's progress bars must stay silenceable from the environment."""
+
+    def test_patched_into_intake_esgf(self):
+        """Both intake-esgf modules that bind tqdm get the env-aware subclass."""
+        assert intake_esgf.base.tqdm is _EnvAwareTqdm
+        assert intake_esgf.catalog.tqdm is _EnvAwareTqdm
+
+    def test_explicit_disable_false_is_overridden_when_not_a_tty(self, monkeypatch):
+        """The hardcoded `disable=False` intake-esgf passes must not force a bar on."""
+        monkeypatch.delenv("TQDM_DISABLE", raising=False)
+        monkeypatch.setattr(sys, "stderr", io.StringIO())  # StringIO.isatty() is False
+
+        buf = io.StringIO()
+        with _EnvAwareTqdm(total=10, disable=False, file=buf) as bar:
+            bar.update(10)
+
+        assert buf.getvalue() == ""
+
+    def test_tqdm_disable_env_wins_even_on_a_tty(self, monkeypatch):
+        monkeypatch.setenv("TQDM_DISABLE", "1")
+        monkeypatch.setattr(sys, "stderr", _Tty())
+
+        buf = io.StringIO()
+        with _EnvAwareTqdm(total=10, disable=False, file=buf) as bar:
+            bar.update(10)
+
+        assert buf.getvalue() == ""
+
+    def test_caller_disable_true_is_never_re_enabled(self, monkeypatch):
+        """A bar the caller silenced (e.g. `quiet=True`) stays silent on a tty."""
+        monkeypatch.delenv("TQDM_DISABLE", raising=False)
+        monkeypatch.setattr(sys, "stderr", _Tty())
+
+        buf = io.StringIO()
+        with _EnvAwareTqdm(total=10, disable=True, file=buf) as bar:
+            bar.update(10)
+
+        assert buf.getvalue() == ""
+
+    def test_interactive_bar_still_renders(self, monkeypatch):
+        """On a tty with no override, an enabled bar is left alone."""
+        monkeypatch.delenv("TQDM_DISABLE", raising=False)
+        monkeypatch.setattr(sys, "stderr", _Tty())
+
+        buf = io.StringIO()
+        with _EnvAwareTqdm(total=10, disable=False, file=buf) as bar:
+            bar.update(10)
+
+        assert buf.getvalue() != ""

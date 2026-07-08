@@ -1,15 +1,29 @@
+import os
 from pathlib import Path
 from typing import Any
 
+import netCDF4
+import numpy as np
 import pandas as pd
 import pytest
 
+from climate_ref.conftest_plugin import (
+    catalog_pid_parser as _pid_parser,
+)
+from climate_ref.conftest_plugin import (
+    catalog_reject_txt_parser as _mixed_parser,
+)
+from climate_ref.conftest_plugin import (
+    catalog_stub_parser as _good_parser,
+)
 from climate_ref.datasets.catalog_builder import (
     build_catalog,
     discover_files,
     iter_built_catalogs,
     iter_discovered_chunks,
+    parse_files,
 )
+from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete
 
 
 @pytest.fixture
@@ -95,16 +109,34 @@ class TestDiscoverFiles:
         assert "root.txt" in names
 
 
-def _good_parser(file: str, **kwargs: Any) -> dict[str, Any]:
-    """Parser that returns valid metadata."""
-    return {"path": file, "name": Path(file).name}
+def _write_minimal_cmip_nc(path: Path) -> None:
+    """Write a tiny but real netCDF/HDF5 file the complete parser can open.
+
+    The complete parser opens the file with ``netCDF4`` and reads global
+    attributes plus the time coordinate, so the file must be a genuine HDF5
+    container -- which is exactly what makes concurrent parsing unsafe on
+    non-thread-safe HDF5 builds.
+    """
+    with netCDF4.Dataset(path, "w") as ds:
+        ds.createDimension("time", 3)
+        time = ds.createVariable("time", "f8", ("time",))
+        time.units = "days since 2000-01-01"
+        time.calendar = "noleap"
+        time[:] = np.array([0.0, 30.0, 60.0])
+        var = ds.createVariable("tas", "f4", ("time",))
+        var.units = "K"
+        var[:] = np.array([1.0, 2.0, 3.0], dtype="f4")
+        ds.variable_id = "tas"
+        ds.source_id = "TEST-MODEL"
+        ds.experiment_id = "historical"
+        ds.variant_label = "r1i1p1f1"
+        ds.table_id = "Amon"
+        ds.grid_label = "gn"
 
 
-def _mixed_parser(file: str, **kwargs: Any) -> dict[str, Any]:
-    """Parser that marks .txt files as invalid."""
-    if file.endswith(".txt"):
-        return {"INVALID_ASSET": file, "TRACEBACK": "not a netCDF file"}
-    return {"path": file, "name": Path(file).name}
+def _cmip_filename(year: int) -> str:
+    """A CMIP6-style filename that differs per ``year``."""
+    return f"tas_Amon_TEST-MODEL_historical_r1i1p1f1_gn_{year}01-{year}12.nc"
 
 
 class TestBuildCatalog:
@@ -177,6 +209,82 @@ class TestBuildCatalog:
                 depth=10,
             )
         assert df.empty
+
+
+class TestParallelParsingSafety:
+    """Guards for the process-based parallel parsing model.
+
+    Regression coverage for a segfault: parsing was previously threaded, but the
+    netCDF4/HDF5 stack is not thread-safe on the HDF5 builds shipped on PyPI, so
+    opening files from multiple threads crashed the interpreter (SIGSEGV/SIGBUS).
+    Parsing must therefore run in separate *processes* when ``n_jobs > 1``.
+    """
+
+    def test_parse_files_runs_in_worker_processes(self, tmp_path):
+        """n_jobs > 1 must execute the parser out-of-process, not in threads."""
+        root = _flat_tree(tmp_path, n=8)
+        assets = discover_files([str(root)], include_patterns=["*.nc"], depth=5)
+
+        results = parse_files(assets, _pid_parser, n_jobs=2)
+
+        assert len(results) == len(assets)
+        worker_pids = {r["pid"] for r in results}
+        # Every file was parsed in a child process, never the parent. Under the
+        # old ThreadPoolExecutor these would all equal the parent PID.
+        assert os.getpid() not in worker_pids
+
+    def test_parse_files_sequential_runs_in_process(self, tmp_path):
+        """n_jobs == 1 stays in-process (no pool overhead)."""
+        root = _flat_tree(tmp_path, n=4)
+        assets = discover_files([str(root)], include_patterns=["*.nc"], depth=5)
+
+        results = parse_files(assets, _pid_parser, n_jobs=1)
+
+        assert {r["pid"] for r in results} == {os.getpid()}
+
+    @pytest.mark.parametrize("n_jobs", [2, 4])
+    def test_complete_parser_parallel_does_not_crash(self, tmp_path, n_jobs):
+        """The file-opening complete parser must survive parallel parsing.
+
+        This exercises real concurrent HDF5 reads across worker processes. On the
+        previous threaded implementation this reliably segfaulted; with processes
+        each interpreter opens files single-threaded, so it is safe and correct.
+        """
+        root = tmp_path / "archive"
+        root.mkdir()
+        n_files = 16
+        for i in range(n_files):
+            _write_minimal_cmip_nc(root / _cmip_filename(2000 + i))
+
+        df = build_catalog(
+            paths=[str(root)],
+            parsing_func=parse_cmip6_complete,
+            include_patterns=["*.nc"],
+            depth=5,
+            n_jobs=n_jobs,
+        )
+
+        assert len(df) == n_files
+        assert set(df["variable_id"]) == {"tas"}
+        assert set(df["source_id"]) == {"TEST-MODEL"}
+
+    def test_complete_parser_parallel_matches_sequential(self, tmp_path):
+        """Parallel parsing yields the same catalog as sequential parsing."""
+        root = tmp_path / "archive"
+        root.mkdir()
+        for i in range(12):
+            _write_minimal_cmip_nc(root / _cmip_filename(2000 + i))
+
+        kwargs = dict(
+            paths=[str(root)],
+            parsing_func=parse_cmip6_complete,
+            include_patterns=["*.nc"],
+            depth=5,
+        )
+        sequential = build_catalog(n_jobs=1, **kwargs).sort_values("path").reset_index(drop=True)
+        parallel = build_catalog(n_jobs=4, **kwargs).sort_values("path").reset_index(drop=True)
+
+        pd.testing.assert_frame_equal(sequential, parallel)
 
 
 def _flat_tree(tmp_path: Path, n: int) -> Path:

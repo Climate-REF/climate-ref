@@ -57,6 +57,27 @@ from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
 
 
+# Importable stub parsers for exercising the parallel catalog builder.
+# These must live in an installed module (not a test file) so that "spawn"/
+# "forkserver" worker processes can re-import them by reference when parsing
+# in parallel -- functions defined inside a test module cannot be pickled that way.
+def catalog_stub_parser(file: str, **kwargs: Any) -> dict[str, Any]:
+    """Return trivial valid metadata for ``file`` without opening it."""
+    return {"path": file, "name": Path(file).name}
+
+
+def catalog_reject_txt_parser(file: str, **kwargs: Any) -> dict[str, Any]:
+    """Like :func:`catalog_stub_parser` but marks ``.txt`` files invalid."""
+    if file.endswith(".txt"):
+        return {"INVALID_ASSET": file, "TRACEBACK": "not a netCDF file"}
+    return {"path": file, "name": Path(file).name}
+
+
+def catalog_pid_parser(file: str, **kwargs: Any) -> dict[str, Any]:
+    """Record the PID of the process that parsed ``file`` (proves out-of-process runs)."""
+    return {"path": file, "pid": os.getpid()}
+
+
 def pytest_configure(config: pytest.Config) -> None:
     """Register custom markers."""
     config.addinivalue_line("markers", "slow: mark test as slow to run")

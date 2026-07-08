@@ -16,6 +16,7 @@ from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
 from climate_ref.cli.test_cases._common import _validate_provider_in_registry, _validate_requested_filters
 from climate_ref_core.exceptions import DatasetResolutionError
+from climate_ref_core.testing import TestCasePaths, is_test_case_excluded
 
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic
@@ -63,7 +64,6 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
         ref test-cases fetch --only-missing    # Skip test cases with existing catalogs
     """
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.testing import TestCasePaths
 
     config = ctx.obj.config
     db = ctx.obj.database
@@ -86,6 +86,12 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
             if diagnostic and diag.slug != diagnostic:
                 continue
             if diag.test_data_spec is None:
+                continue
+            if is_test_case_excluded(provider_instance.slug, diag.slug):
+                logger.info(
+                    f"Skipping excluded test-case diagnostic {provider_instance.slug}/{diag.slug} "
+                    "(REF_TEST_CASES_SKIP)"
+                )
                 continue
             diagnostics_to_process.append(diag)
 

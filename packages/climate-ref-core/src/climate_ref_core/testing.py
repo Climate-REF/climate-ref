@@ -10,6 +10,7 @@ This module provides:
 from __future__ import annotations
 
 import json
+import os
 import sys
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -25,7 +26,6 @@ from climate_ref_core.datasets import (
     Selector,
     SourceDatasetType,
 )
-from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.esgf.base import ESGFRequest
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.output_files import ordered_replacements
@@ -37,8 +37,25 @@ from climate_ref_core.regression.manifest import Manifest
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
 
-    from climate_ref_core.diagnostics import Diagnostic
+    from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
     from climate_ref_core.providers import DiagnosticProvider
+
+
+def excluded_test_case_diagnostics() -> set[str]:
+    """
+    Diagnostic identifiers to skip when fetching or running test cases.
+
+    Reads the ``REF_TEST_CASES_SKIP`` environment variable
+    as a comma-separated list of ``diagnostic`` slugs or ``provider/diagnostic`` pairs.
+    """
+    raw = os.environ.get("REF_TEST_CASES_SKIP", "")
+    return {token.strip() for token in raw.split(",") if token.strip()}
+
+
+def is_test_case_excluded(provider_slug: str, diagnostic_slug: str) -> bool:
+    """Return True if the diagnostic is excluded via ``REF_TEST_CASES_SKIP``."""
+    excluded = excluded_test_case_diagnostics()
+    return diagnostic_slug in excluded or f"{provider_slug}/{diagnostic_slug}" in excluded
 
 
 @frozen

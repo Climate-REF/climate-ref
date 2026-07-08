@@ -20,8 +20,10 @@ def test_provider():
 class TestILAMBProviderHooks:
     """Tests for ILAMBProvider lifecycle hooks."""
 
-    def test_get_data_path(self):
+    def test_get_data_path(self, monkeypatch):
         """Test that get_data_path returns the pooch cache path."""
+        monkeypatch.delenv("REF_DATASET_CACHE_DIR", raising=False)
+
         data_path = provider.get_data_path()
         assert data_path is not None
         assert isinstance(data_path, Path)

@@ -26,7 +26,12 @@ from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.regression import Manifest
-from climate_ref_core.testing import TestCasePaths, collect_test_case_params, load_datasets_from_yaml
+from climate_ref_core.testing import (
+    TestCasePaths,
+    collect_test_case_params,
+    is_test_case_excluded,
+    load_datasets_from_yaml,
+)
 
 
 def _determine_test_directory() -> Path | None:
@@ -216,6 +221,12 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
         tmp_path: Path,
     ) -> None:
         """Execute the test case end-to-end and assert the committed bundle has not drifted."""
+        if is_test_case_excluded(diagnostic.provider.slug, diagnostic.slug):
+            pytest.skip(
+                f"Test-case diagnostic {diagnostic.provider.slug}/{diagnostic.slug} "
+                "excluded via REF_TEST_CASES_SKIP"
+            )
+
         diagnostic.provider.configure(config)
 
         paths = TestCasePaths.from_diagnostic(diagnostic, test_case_name)

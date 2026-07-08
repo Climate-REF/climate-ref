@@ -64,9 +64,36 @@ class ExecutionFuture:
     """A container linking a submitted future to its execution metadata."""
 
     future: Future[ExecutionResult]
+    """
+    The future representing the asynchronous execution of this task.
+
+    This future has a base-class of ``concurrent.futures.Future``,
+    but the concrete class of the instance will depend on the executor.
+    """
+
     definition: ExecutionDefinition
+    """
+    The execution definition associated with this future.
+    """
+
     execution_id: int | None = None
+    """
+    The ID of the execution associated with this future, or ``None`` if not yet assigned.
+    """
+
     submitted_at: float = 0.0
+    """
+    Wall-clock time (``time.time()``) at which this future was submitted to the executor.
+    """
+
+    started_at: float | None = None
+    """
+    Wall-clock time (``time.time()``) at which a worker was first observed running this future,
+    or ``None`` while it is still queued.
+
+    The per-task timeout is budgeted against this rather than ``submitted_at``
+    so that time spent waiting in the pool queue is not counted as execution time.
+    """
 
 
 def process_result(

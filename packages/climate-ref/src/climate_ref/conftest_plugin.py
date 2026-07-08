@@ -26,6 +26,7 @@ Provided fixtures
 
 from __future__ import annotations
 
+import importlib.resources
 import os
 import re
 import tempfile
@@ -41,7 +42,7 @@ from loguru import logger
 from typer.testing import CliRunner
 
 from climate_ref import cli
-from climate_ref.config import Config, DiagnosticProviderConfig
+from climate_ref.config import DEFAULT_IGNORE_DATASETS_FILENAME, Config, DiagnosticProviderConfig
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models import Execution
@@ -231,17 +232,38 @@ def data_catalog(
     }
 
 
+def packaged_ignore_datasets_file() -> Path:
+    """
+    Locate the ``default_ignore_datasets.yaml`` shipped inside the ``climate_ref`` package.
+
+    Returns
+    -------
+    :
+        Path to the packaged ignore datasets file.
+
+    Raises
+    ------
+    ValueError
+        If the file is missing from the installed package.
+    """
+    resource = importlib.resources.files("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
+    local_ignore_file = Path(str(resource))
+    if not local_ignore_file.is_file():  # pragma: no cover - indicates a packaging error
+        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
+    return local_ignore_file
+
+
 def _use_local_ignore_datasets_file(cfg: Config) -> None:
     """
-    Point the config at the in-tree default_ignore_datasets.yaml and disable fetching.
+    Point the config at the packaged default_ignore_datasets.yaml and disable fetching.
 
     This keeps tests deterministic and offline:
     they exercise the shipped default file rather than whatever copy happens to be cached on the host.
+
+    The file is resolved from the installed package rather than the source tree,
+    so the fixtures also work for provider packages that depend on a released ``climate-ref`` wheel.
     """
-    local_ignore_file = Path(__file__).parents[4] / "default_ignore_datasets.yaml"
-    if not local_ignore_file.is_file():
-        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
-    cfg.ignore_datasets_file = local_ignore_file
+    cfg.ignore_datasets_file = packaged_ignore_datasets_file()
     cfg.ignore_datasets_url = ""
 
 

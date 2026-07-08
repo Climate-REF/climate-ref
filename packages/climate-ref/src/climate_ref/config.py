@@ -406,9 +406,8 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
 
 
 DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
-DEFAULT_IGNORE_DATASETS_URL = (
-    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/default_ignore_datasets.yaml"
-)
+DEFAULT_IGNORE_DATASETS_FILENAME = "default_ignore_datasets.yaml"
+DEFAULT_IGNORE_DATASETS_URL = f"https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/{DEFAULT_IGNORE_DATASETS_FILENAME}"
 
 
 def _get_default_ignore_datasets_file() -> Path:
@@ -423,7 +422,7 @@ def _get_default_ignore_datasets_file() -> Path:
     :
         Path to the ignore datasets file under the user cache directory.
     """
-    return platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
+    return platformdirs.user_cache_path("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
 
 
 def refresh_ignore_datasets_file(config: "Config") -> None:

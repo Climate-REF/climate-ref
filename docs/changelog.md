@@ -21,6 +21,118 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.16.0 (2026-07-08)
+
+### Features
+
+- Metric values now carry a first-class `kind` of either `model` or `reference`,
+  so model and reference (observation) values can be distinguished and filtered directly
+  rather than inferred from provider-specific conventions.
+  Reference series additionally record a stable `reference_id` content hash,
+  so an identical observation produced by different executions is recognised as the same value.
+  Series can also carry typed presentation metadata (`value_units`, `value_long_name`, `index_units`, and `calendar`). ([#772](https://github.com/Climate-REF/climate-ref/pull/772))
+- Every PMP scalar metric value now keys its reference identity on `reference_source_id`
+  and declares its role with the first-class `kind` of `model`.
+  The ENSO diagnostics previously keyed reference identity on `reference_datasets`,
+  so a consumer now reads reference identity the same way for every PMP diagnostic.
+  ENSO references that the metrics package scores against two observation datasets jointly
+  (for example `HadISST_GPCP-Monthly-3-2`) are kept as a single combined `reference_source_id` value,
+  because the score is one value that depends on both references and cannot be split per reference. ([#775](https://github.com/Climate-REF/climate-ref/pull/775))
+- ESMValTool series now carry an explicit `kind` of either `model` or `reference`,
+  so an observation curve can be distinguished from a model curve directly
+  rather than inferred from the presence of a reference source. ([#776](https://github.com/Climate-REF/climate-ref/pull/776))
+- ILAMB metric values now carry the shared `kind` field, distinguishing reference (observation) series from model series without the previous `"Reference"` sentinel.
+  Series units are presented in a clean CF form so a model series and its reference agree, the typed presentation fields (`value_units`, `value_long_name`, `index_units`, `calendar`) are populated, and comparison scalars record the reference they were scored against so they can be grouped by it. ([#777](https://github.com/Climate-REF/climate-ref/pull/777))
+- The obs4REF reference-data registry gained 33 new files covering 12 CEDA
+  `obs_for_ref_v2` observational datasets,
+  including cloud and radiation observations (ESACCI-CLOUD),
+  burnt-area (GFED-5-0), ozone (SAGE-CCI-OMPS), FLUXNET site fluxes,
+  soil carbon (HWSD-2-0), CALIPSO ice cloud, WOA-23 ocean biogeochemistry,
+  RAPID AMOC transport, snow cover (CCI-CryoClim), and ocean carbon fluxes (Hoffman).
+  Older WECANN and WOA2023 entries were replaced by their newer versions. ([#778](https://github.com/Climate-REF/climate-ref/pull/778))
+- Ten ILAMB standard diagnostics now evaluate models against the obs4REF reference datasets rather than the bundled ILAMB files.
+
+  This updates the version of:
+
+  - gross primary productivity (WECANN, FLUXNET2015)
+  - runoff (LORA)
+  - soil carbon (HWSD-2-0)
+  - net biome productivity (Hoffman)
+  - snow cover (CCI-CryoClim),
+  - burnt area (GFED-5-0)
+  - sea-surface temperature and salinity (WOA-23),
+  - RAPID Atlantic overturning transport.
+
+  ([#779](https://github.com/Climate-REF/climate-ref/pull/779))
+- Added `climate_ref.results`, a typed read layer for querying results from notebooks and other tools.
+  A single `Reader` exposes per-domain readers for metric values, executions, datasets, diagnostics, and output artifacts, each returning frozen objects that remain usable after the database session closes and can be turned into a pandas DataFrame.
+
+  Added a `ref diagnostics list` command that lists the registered diagnostics with their promoted version and per-diagnostic successful, in-flight, and total execution-group counts.
+  Metric values now expose a first-class `kind` (model or reference) field, and `ref datasets list` returns only the latest version of each dataset. ([#780](https://github.com/Climate-REF/climate-ref/pull/780))
+- Added `REF_TEST_CASES_SKIP`,
+  a comma-separated list of `diagnostic` slugs or `provider/diagnostic` pairs
+  that are excluded from both `ref test-cases fetch` and the per-provider no-drift test.
+  This keeps diagnostics whose full-resolution ESGF input cannot be fetched within CI limits
+  (for example `ilamb/thetao-woa2023-surface`, a 3D ocean field)
+  from being downloaded or executed.
+  ESGF fetching is now confined to the `populate-cache` CI job. ([#797](https://github.com/Climate-REF/climate-ref/pull/797))
+- The ESGF fetch script can now retrieve the obs4MIPs reference datasets used by the PMP diagnostics,
+  namely `GPCP-Monthly-3-2`, `TropFlux-1-0`, `CERES-EBAF-4-2`, `HadISST-1-1` and `20CR-V2`.
+  Previously these were only available through the obs4REF registry.
+
+  Note that the psl modes of variability diagnostics request `20CR`,
+  which ESGF publishes as `20CR-V2`,
+  so those diagnostics continue to source their reference data from the obs4REF registry. ([#799](https://github.com/Climate-REF/climate-ref/pull/799))
+
+### Improvements
+
+- Added a `register` argument to `ProviderRegistry.build_from_config`.
+  Registration is the only step that writes to the database, so read-only consumers such as the API can now build the registry with `register=False` and serve a database mounted read-only. ([#791](https://github.com/Climate-REF/climate-ref/pull/791))
+- Removed the ERA-20C and ERA-Interim reference datasets from the obs4REF and sample data registries,
+  reducing the volume of data fetched by `ref datasets fetch-data --registry obs4ref`.
+  No diagnostic used either dataset,
+  and neither is available from obs4MIPs.
+  The unrelated ERA-5 dataset is unaffected.
+
+  If you have already fetched the sample data,
+  re-fetch it with `fetch_sample_data(force_cleanup=True)` so that the removed files are cleared from your local copy. ([#799](https://github.com/Climate-REF/climate-ref/pull/799))
+
+### Bug Fixes
+
+- Made ECS diagnostic work with CMIP7 data. ([#671](https://github.com/Climate-REF/climate-ref/pull/671))
+- Made TCR diagnostic work with CMIP7 data. ([#686](https://github.com/Climate-REF/climate-ref/pull/686))
+- Widened the contiguous-timerange tolerance so monthly datasets split across multiple files are no longer dropped as false-positive gaps. ([#774](https://github.com/Climate-REF/climate-ref/pull/774))
+- Committed regression baselines no longer embed the machine-specific source-checkout path or the
+  host operating system in provider command-line provenance.
+  Both are now redacted to portable ``<SOURCE_DIR>`` and ``<OS>`` placeholders,
+  so a baseline minted on one platform (for example macOS) reproduces one re-derived on another
+  (for example Linux in CI) instead of drifting. ([#775](https://github.com/Climate-REF/climate-ref/pull/775))
+- Fixed execution listings duplicating an execution group when two of its executions shared the same timestamp; each group now resolves to exactly one latest execution. ([#786](https://github.com/Climate-REF/climate-ref/pull/786))
+- Decoupled fetching of the ignore datasets file from configuration loading;
+  the file is now fetched lazily at solve time rather than while the configuration is loaded,
+  so read-only commands no longer perform network I/O.
+  Added an `ignore_datasets_url` setting (env `REF_IGNORE_DATASETS_URL`)
+  whose empty-string value disables fetching entirely for offline and air-gapped deployments.
+  A failed download no longer creates an empty placeholder file;
+  an existing cached copy is reused unchanged,
+  and a solve with no cached copy fails loudly rather than running without ignore-dataset protections. ([#792](https://github.com/Climate-REF/climate-ref/pull/792))
+- Fixed the ``LocalExecutor`` per-task timeout counting time spent waiting in the process-pool queue as execution time. The budget is now measured from when a worker actually starts a task, so a large backlog of executions queued behind other work is no longer culled en masse once it ages past the timeout. ([#795](https://github.com/Climate-REF/climate-ref/pull/795))
+- Fixed ``ref datasets ingest --n-jobs`` greater than 1 crashing (SIGSEGV/SIGBUS) with the default``complete`` CMIP6 parser.
+  Parsing previously fanned out across threads, but the netCDF4/HDF5 wheels published on PyPI are not thread-safe.
+  Parsing now runs using a process pool. ([#796](https://github.com/Climate-REF/climate-ref/pull/796))
+- Fixed three integration-test failures caused by the self-hosted runner's shared cache
+  and stable output directory leaking into tests that assumed a clean, default environment. ([#797](https://github.com/Climate-REF/climate-ref/pull/797))
+- The ESGF fetch script now exits with a non-zero status if any request failed,
+  rather than reporting `0 datasets` and exiting successfully.
+  Transient ESGF access errors are retried with an exponential backoff,
+  configurable via `--max-attempts` and `--retry-delay`.
+  A request that matches no datasets is reported but is not treated as a failure. ([#799](https://github.com/Climate-REF/climate-ref/pull/799))
+
+### Trivial/Internal Changes
+
+- [#670](https://github.com/Climate-REF/climate-ref/pull/670), [#783](https://github.com/Climate-REF/climate-ref/pull/783), [#787](https://github.com/Climate-REF/climate-ref/pull/787), [#789](https://github.com/Climate-REF/climate-ref/pull/789), [#794](https://github.com/Climate-REF/climate-ref/pull/794)
+
+
 ## climate-ref 0.15.0 (2026-06-30)
 
 ### Breaking Changes

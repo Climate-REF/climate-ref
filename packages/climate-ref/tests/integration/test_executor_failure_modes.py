@@ -202,20 +202,16 @@ class TestLocalExecutorFailureModes:
     def test_queued_task_not_culled_by_per_task_timeout(
         self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
     ):
-        # Regression: a task submitted long ago but still queued (never started by a
-        # worker) must NOT be culled by the per-task budget -- that budget applies to
-        # execution time only. Previously the timeout keyed off ``submitted_at`` and
-        # would reap the whole backlog once it aged past ``task_timeout``, even for
-        # tasks that had never run.
+        """A queued task should not be culled by the per-task timeout."""
+
+        # A task submitted long ago but still queued (never started by a worker)
+        # must NOT be culled by the per-task budget.
+        # That budget applies to execution time only.
         executor = _build_executor(db_with_provider, config, thread_pool, task_timeout=0.05)
         definition = definition_factory(diagnostic=mock_diagnostic)
         execution_id, eg_id, _ = _seed_execution(
             db_with_provider, provider, "mock", config, key="queued-not-culled"
         )
-        # Pending future (``started_at`` stays None): submitted a minute ago, far
-        # past the 0.05s budget. It only resolves after join has begun polling, so
-        # if the per-task branch fired it would abandon the task before the result
-        # lands and leave the group dirty=True for retry.
         future: Future = Future()
         timer = threading.Timer(
             0.3,

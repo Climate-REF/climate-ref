@@ -34,34 +34,34 @@ set -euo pipefail
 : "${REF_OBS4MIPS_DATA:?set REF_OBS4MIPS_DATA to the obs4MIPs dataset directory to ingest}"
 export REF_CONFIGURATION
 
-threads="${REF_THREADS:-4}"
+num_threads="${REF_THREADS:-4}"
 nofile="${REF_NOFILE:-524288}"
 solve_timeout="${REF_SOLVE_TIMEOUT:-0}"
 
-# Cap the OpenMP / BLAS backends so worker processes do not oversubscribe the CPU.
-export OMP_NUM_THREADS="$threads"
-export OPENBLAS_NUM_THREADS="$threads"
-export MKL_NUM_THREADS="$threads"
-export NUMEXPR_NUM_THREADS="$threads"
-export VECLIB_MAXIMUM_THREADS="$threads"
-export BLIS_NUM_THREADS="$threads"
+# Cap the numerical backends so worker processes do not oversubscribe the CPU.
+export OMP_NUM_THREADS=${num_threads}
+export OPENBLAS_NUM_THREADS=${num_threads}
+export MKL_NUM_THREADS=${num_threads}
+export NUMEXPR_NUM_THREADS=${num_threads}
+export VECLIB_MAXIMUM_THREADS=${num_threads}
+export BLIS_NUM_THREADS=${num_threads}
 
 # Raise the open-file limit (best effort -- may be capped by the hard limit).
 ulimit -n "$nofile" || echo "warning: could not raise open-file limit to $nofile" >&2
 
 echo "REF_CONFIGURATION=$REF_CONFIGURATION"
-echo "threads=$threads ulimit -n=$(ulimit -n) solve_timeout=$solve_timeout"
+echo "threads=$num_threads ulimit -n=$(ulimit -n) solve_timeout=$solve_timeout"
 
-# 1. Set up every provider: create conda environments, fetch reference data, and
-#    ingest provider-specific datasets (e.g. PMP climatology) into the database.
-#    Required before solving; idempotent and needs internet access.
+# 1. Set up every provider
+#   Create conda environments, fetch reference data, and ingest provider-specific datasets (e.g. PMP climatology) into the database.
+#   Required before solving; idempotent and needs internet access.
 ref providers setup
 
 # 2. Ingest CMIP6 model output.
-ref datasets ingest --source-type cmip6 --n-jobs 1 --chunk-size 5000 "$REF_CMIP6_DATA"
+ref datasets ingest --source-type cmip6 --n-jobs 32 --chunk-size 5000 "$REF_CMIP6_DATA"
 
-# 3. Ingest obs4MIPs reference data.
-ref datasets ingest --source-type obs4mips --n-jobs 1 "$REF_OBS4MIPS_DATA"
+# 3. Ingest obs4MIPs reference data
+ref datasets ingest --source-type obs4mips "$REF_OBS4MIPS_DATA"
 
 # 4. Solve every applicable diagnostic across all configured providers.
 ref --log-level INFO solve --timeout "$solve_timeout"

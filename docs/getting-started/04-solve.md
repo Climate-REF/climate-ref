@@ -15,15 +15,14 @@ This will:
 - Query the catalog of ingested datasets (observations and model-output), completing any missing metadata as needed
 - Determine which diagnostics are applicable and how many different executions are needed
 - Execute each diagnostic in parallel on your machine
-- Use a timeout of 3600 seconds (1 hour) to complete the runs
+- Use a timeout of 3600 seconds (1 hour) to complete the runs (0 = no timeout)
 
 Note: it is normal for some executions to fail (e.g., due to missing data or configuration).
 You can re-run or inspect failures as needed.
 
 Because the local executor runs many diagnostics in parallel, it is worth
-tuning parallelism and thread limits (including the OpenMP/BLAS environment
-variables) before a large solve — see
-[How to control memory use and parallelism](../how-to-guides/control-memory-use.md).
+tuning parallelism and thread limits (including the OpenMP/BLAS environment variables) before a large solve.
+See [How to control memory use and parallelism](../how-to-guides/control-memory-use.md).
 
 /// admonition | Tip
 

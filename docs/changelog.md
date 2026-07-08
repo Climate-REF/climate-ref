@@ -21,6 +21,14 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.16.1 (2026-07-08)
+
+### Bug Fixes
+
+- `default_ignore_datasets.yaml` is now shipped inside the `climate_ref` package and resolved with `importlib.resources`.
+  The `config` and `solve_config` pytest fixtures previously located it relative to the monorepo source tree, so they raised `ValueError` for any project that installs `climate-ref` from a wheel. ([#800](https://github.com/Climate-REF/climate-ref/pull/800))
+
+
 ## climate-ref 0.16.0 (2026-07-08)
 
 ### Features

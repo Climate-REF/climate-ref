@@ -337,6 +337,46 @@ requests: list[Request] = [
             table_id="Amon",
         ),
     ),
+    # PMP ENSO reference data.
+    # One request per source_id: the ESGF search treats source_id and variable_id as an
+    # intersection, so a combined request would ask each source for variables it does not have.
+    Obs4MIPsRequest(
+        id="pmp-enso-gpcp-obs4mips",
+        facets=dict(
+            source_id="GPCP-Monthly-3-2",
+            variable_id="pr",
+        ),
+    ),
+    Obs4MIPsRequest(
+        id="pmp-enso-tropflux-obs4mips",
+        facets=dict(
+            source_id="TropFlux-1-0",
+            variable_id=["hfls", "hfss", "tauu", "ts"],
+        ),
+    ),
+    Obs4MIPsRequest(
+        id="pmp-enso-ceres-obs4mips",
+        facets=dict(
+            source_id="CERES-EBAF-4-2",
+            variable_id=["rlds", "rlus", "rsds", "rsus"],
+        ),
+    ),
+    # Shared by PMP ENSO, the PMP ts modes of variability, and the example global-sst-bias.
+    Obs4MIPsRequest(
+        id="pmp-hadisst-obs4mips",
+        facets=dict(
+            source_id="HadISST-1-1",
+            variable_id="ts",
+        ),
+    ),
+    # The PMP psl modes of variability request source_id "20CR", which is the obs4REF spelling.
+    Obs4MIPsRequest(
+        id="pmp-modes-20cr-obs4mips",
+        facets=dict(
+            source_id="20CR-V2",
+            variable_id="psl",
+        ),
+    ),
 ]
 
 

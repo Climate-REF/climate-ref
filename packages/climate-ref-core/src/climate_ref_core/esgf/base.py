@@ -20,20 +20,19 @@ class _EnvAwareTqdm(tqdm):  # type: ignore[type-arg]  # not subscriptable at run
     """
     A tqdm that can always be silenced by the environment.
 
-    intake-esgf passes ``disable=`` explicitly on every progress bar, which defeats tqdm's
-    own ``TQDM_DISABLE`` handling and its off-when-not-a-terminal default. Worse, its
-    ``quiet`` flag never reaches ``parallel_download``, so per-file download bars render
-    even when the caller asked for silence. Each bar emits an update ~10 times a second
-    and downloads run one bar per thread, which buries non-interactive logs.
+    intake-esgf passes ``disable=`` explicitly on every progress bar,
+    which defeats tqdm's own ``TQDM_DISABLE`` handling and its off-when-not-a-terminal default.
+    This results in millions of log lines when running in GitHub Actions, where stderr is not a terminal.
 
-    Only ever tighten the caller's choice: a bar the caller already disabled stays
-    disabled, and one it enabled is suppressed when ``TQDM_DISABLE`` is set or stderr is
-    not a terminal.
+
+    Only ever tighten the caller's choice: a bar the caller already disabled stays disabled,
+    and one it enabled is suppressed when ``TQDM_DISABLE`` is set or stderr is not a terminal.
     """
 
     def __init__(self, *args: Any, **kwargs: Any) -> None:
         suppress = bool(os.environ.get("TQDM_DISABLE")) or not sys.stderr.isatty()
         kwargs["disable"] = bool(kwargs.get("disable")) or suppress
+
         super().__init__(*args, **kwargs)
 
 

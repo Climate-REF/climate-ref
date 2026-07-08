@@ -768,7 +768,6 @@ dependencies = [
     { name = "attrs" },
     { name = "cattrs" },
     { name = "environs" },
-    { name = "fastprogress" },
     { name = "intake-esgf" },
     { name = "loguru" },
     { name = "numpy" },
@@ -799,13 +798,12 @@ requires-dist = [
     { name = "boto3", marker = "extra == 'aws'", specifier = ">=1.34" },
     { name = "cattrs", specifier = ">=24.1" },
     { name = "environs", specifier = ">=11" },
-    { name = "fastprogress", specifier = "==1.0.5" },
     { name = "intake-esgf", specifier = ">=2025.7.16" },
     { name = "loguru", specifier = ">=0.7.0" },
     { name = "numpy", specifier = ">=2.0.0" },
-    { name = "pandas", specifier = ">=2.1.0" },
+    { name = "pandas", specifier = ">=2.3.0" },
     { name = "pooch", specifier = ">=1.8.0,<2" },
-    { name = "pyarrow", specifier = ">=17.0.0" },
+    { name = "pyarrow", specifier = ">=23.0.1" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pyyaml", specifier = ">=6.0.2" },
     { name = "requests" },
@@ -1419,15 +1417,6 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/20/b5/23b216d9d985a956623b6bd12d4086b60f0059b27799f23016af04a74ea1/fastjsonschema-2.21.2.tar.gz", hash = "sha256:b1eb43748041c880796cd077f1a07c3d94e93ae84bba5ed36800a33554ae05de", size = 374130, upload-time = "2025-08-14T18:49:36.666Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/cb/a8/20d0723294217e47de6d9e2e40fd4a9d2f7c4b6ef974babd482a59743694/fastjsonschema-2.21.2-py3-none-any.whl", hash = "sha256:1c797122d0a86c5cace2e54bf4e819c36223b552017172f32c5c024a6b77e463", size = 24024, upload-time = "2025-08-14T18:49:34.776Z" },
-]
-
-[[package]]
-name = "fastprogress"
-version = "1.0.5"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/d8/f0/e9410610562ab95517230c2438cc80bbc97227b3930c02501d06323a533b/fastprogress-1.0.5.tar.gz", hash = "sha256:58ca16a981f0292804d905f2e0042ad608d788bf6cbe6ab96b71ec4b20453aef", size = 16385, upload-time = "2025-12-27T00:00:43.662Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/42/9e/2feab862288930fd5e2ced90c3ef3d8e422d228601f2045f0e3a17e4b366/fastprogress-1.0.5-py3-none-any.whl", hash = "sha256:a96b027a832dcf64036d2bd1576a6cbf4bcaf484579253dcb8f3379702c4363c", size = 13891, upload-time = "2025-12-27T00:00:42.355Z" },
 ]
 
 [[package]]
@@ -3071,16 +3060,16 @@ name = "parsl"
 version = "2026.2.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "dill", marker = "sys_platform != 'win32'" },
-    { name = "filelock", marker = "sys_platform != 'win32'" },
-    { name = "psutil", marker = "sys_platform != 'win32'" },
-    { name = "pyzmq", marker = "sys_platform != 'win32'" },
-    { name = "requests", marker = "sys_platform != 'win32'" },
-    { name = "setproctitle", marker = "sys_platform != 'win32'" },
-    { name = "sortedcontainers", marker = "sys_platform != 'win32'" },
-    { name = "tblib", marker = "sys_platform != 'win32'" },
-    { name = "typeguard", marker = "sys_platform != 'win32'" },
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "dill" },
+    { name = "filelock" },
+    { name = "psutil" },
+    { name = "pyzmq" },
+    { name = "requests" },
+    { name = "setproctitle" },
+    { name = "sortedcontainers" },
+    { name = "tblib" },
+    { name = "typeguard" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d6/ba/40228c8e434304d959eb4d47924d60967bdf490401720efb8af81dd52db2/parsl-2026.2.16.tar.gz", hash = "sha256:dc34015c07d8a05157f0e62b88eda42087be86856fe1fbc1f513109fcd38b7b8", size = 375580, upload-time = "2026-02-16T22:51:04.583Z" }
 wheels = [
@@ -3135,7 +3124,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -4695,7 +4684,7 @@ name = "typeguard"
 version = "4.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2b/e8/66e25efcc18542d58706ce4e50415710593721aae26e794ab1dec34fb66f/typeguard-4.5.1.tar.gz", hash = "sha256:f6f8ecbbc819c9bc749983cc67c02391e16a9b43b8b27f15dc70ed7c4a007274", size = 80121, upload-time = "2026-02-19T16:09:03.392Z" }
 wheels = [

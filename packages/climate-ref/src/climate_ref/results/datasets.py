@@ -61,6 +61,9 @@ class DatasetView:
     finalised: bool
     """Whether the dataset was registered via the complete (netCDF-opening) parser."""
 
+    retracted_at: Any
+    """When the dataset was retracted, or ``None`` while it is active."""
+
     created_at: Any
     """Timestamp the dataset was created."""
 
@@ -107,12 +110,13 @@ class DatasetCollection:
         """
         DataFrame with one row per dataset; columns are base fields plus the facet dict expanded.
 
-        The base columns (``id, slug, dataset_type, finalised, created_at, updated_at``) are
-        emitted explicitly even when the collection is empty, so callers can select columns /
-        build an empty table without special-casing. Facet columns are dynamic (they depend on
-        the source type queried) and so are only present when at least one row has them.
+        The base columns (``id, slug, dataset_type, finalised, retracted_at, created_at, updated_at``)
+        are emitted explicitly even when the collection is empty,
+        so callers can select columns / build an empty table without special-casing.
+        Facet columns are dynamic (they depend on the source type queried)
+        and so are only present when at least one row has them.
         """
-        base_columns = ["id", "slug", "dataset_type", "finalised", "created_at", "updated_at"]
+        base_columns = ["id", "slug", "dataset_type", "finalised", "retracted_at", "created_at", "updated_at"]
         records = []
         for ds in self.items:
             rec: dict[str, Any] = {
@@ -120,6 +124,7 @@ class DatasetCollection:
                 "slug": ds.slug,
                 "dataset_type": ds.dataset_type.value,
                 "finalised": ds.finalised,
+                "retracted_at": ds.retracted_at,
                 "created_at": ds.created_at,
                 "updated_at": ds.updated_at,
             }
@@ -174,6 +179,7 @@ class DatasetsReader:
             slug=dataset.slug,
             dataset_type=dataset.dataset_type,
             finalised=dataset.finalised,
+            retracted_at=dataset.retracted_at,
             created_at=dataset.created_at,
             updated_at=dataset.updated_at,
             facets=facets,

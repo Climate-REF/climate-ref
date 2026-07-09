@@ -75,6 +75,21 @@ class Dataset(Base):
     ALWAYS mutate ``version`` through an ORM instance.
     """
 
+    retracted_at: Mapped[datetime.datetime | None] = mapped_column(nullable=True, default=None)
+    """
+    When the dataset was retracted, or ``None`` while it is active.
+
+    Retraction exists because a dataset can never be hard-deleted once it has run
+    (``execution_datasets.dataset_id`` has no ``ondelete="CASCADE"``,
+    so removing the row would either violate the foreign key or destroy execution provenance).
+    A retracted dataset's row and files are left intact, but excluded from future solves.
+
+    ``select_datasets`` (``climate_ref.models.dataset_query``) excludes retracted rows by default
+    and only includes them when a caller passes ``DatasetFilter(include_retracted=True)``,
+    so provenance/history reads
+    (e.g. reconstructing what an existing execution used, or ``ref datasets list``) can still see them.
+    """
+
     def __repr__(self) -> str:
         return f"<Dataset slug={self.slug} dataset_type={self.dataset_type} >"
 

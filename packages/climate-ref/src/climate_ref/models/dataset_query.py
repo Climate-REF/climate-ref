@@ -54,6 +54,13 @@ class DatasetFilter:
     execution_id: int | None = None
     diagnostic_slug: str | None = None
     latest_only: bool = True
+    include_retracted: bool = False
+    """
+    Whether retracted datasets (``Dataset.retracted_at`` is not ``None``) are included.
+
+    Defaults to ``False`` so an unqualified query matches solve-time eligibility.
+    Provenance, history and inspection reads (e.g. ``ref datasets list``) pass ``True`` explicitly.
+    """
 
 
 def _entity_for(source_type: SourceDatasetType) -> type[Dataset]:
@@ -71,6 +78,9 @@ def select_datasets(
 
     Any limit is deliberately not applied here.
     Callers should apply limits after filtering out superseded versions.
+
+    Retracted datasets (``retracted_at is not None``) are excluded unless ``filter.include_retracted`` is set,
+    applied before the ``latest_only`` window so a retracted row never wins a latest-version tie either.
 
     ``latest_group_by`` is the adapter's ``dataset_id_metadata``,
     which is used as the partition columns for the latest-version window.
@@ -98,6 +108,9 @@ def select_datasets(
         raise ValueError("`latest_group_by` must be provided when `latest_only` is True")
 
     stmt = select(entity).where(entity.dataset_type == filter.source_type)
+
+    if not filter.include_retracted:
+        stmt = stmt.where(entity.retracted_at.is_(None))
 
     for facet, values in (filter.facets or {}).items():
         column = getattr(entity, facet, None)

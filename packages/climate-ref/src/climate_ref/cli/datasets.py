@@ -6,6 +6,7 @@ which executions are required for a given diagnostic without having to re-parse 
 
 """
 
+import datetime
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
@@ -33,13 +34,20 @@ def _collection_to_dataframe(collection: DatasetCollection, *, include_files: bo
     Without ``include_files`` this is one row per dataset with its facet columns.
     With ``include_files`` each dataset is exploded to one row per file,
     with the file columns (``path``, ``start_time``, ``end_time``) added.
+
+    Every row carries ``retracted_at`` (``None``/``NaT`` while active)
+    regardless of whether the caller queried with ``include_retracted=True``,
+    so retraction state is always visible when a retracted row does appear.
     """
     if not include_files:
-        return pd.DataFrame.from_records([dict(ds.facets) for ds in collection])
+        return pd.DataFrame.from_records(
+            [{**dict(ds.facets), "retracted_at": ds.retracted_at} for ds in collection]
+        )
 
     records = [
         {
             **dict(ds.facets),
+            "retracted_at": ds.retracted_at,
             "path": f.path,
             "start_time": f.start_time,
             "end_time": f.end_time,
@@ -58,6 +66,16 @@ def list_(  # noqa: PLR0913
     ] = SourceDatasetType.CMIP6.value,  # type: ignore
     column: Annotated[list[str] | None, typer.Option()] = None,
     include_files: bool = typer.Option(False, help="Include files in the output"),
+    include_retracted: bool = typer.Option(
+        False,
+        help=(
+            "Include retracted datasets in the output. Off by default, so the listing "
+            "matches solve-time eligibility (a retracted dataset is never shown masking the live "
+            "version that replaced it).Passing this flag also disables latest-only "
+            "deduplication (every version of every dataset is listed), since keeping it on "
+            "would let a retracted newer version outrank and hide a live older one."
+        ),
+    ),
     limit: int = typer.Option(
         100,
         help=(
@@ -84,7 +102,10 @@ def list_(  # noqa: PLR0913
 
     The data catalog is sorted by the date that the dataset was ingested (first = newest).
 
-    Only the latest version of each dataset is listed.
+    By default only the latest, non-retracted version of each dataset is listed, matching what
+    the solver would select. Pass ``--include-retracted`` to also see retracted datasets (see
+    the ``retracted_at`` column); this also disables latest-only deduplication so every version is
+    listed, since otherwise a retracted newer version could outrank -- and hide -- a live older one.
     """
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
@@ -101,7 +122,12 @@ def list_(  # noqa: PLR0913
         # so the SQL row limit is only pushed down in the dataset-per-row case.
         # Files are limited in Python after exploding, below.
         collection = reader.datasets.list(
-            DatasetFilter(source_type=source_type, facets=parsed_filters or None),
+            DatasetFilter(
+                source_type=source_type,
+                facets=parsed_filters or None,
+                include_retracted=include_retracted,
+                latest_only=not include_retracted,
+            ),
             limit=None if include_files else limit,
             include_files=include_files,
         )
@@ -160,6 +186,63 @@ def list_columns(
 
     for column in sorted(data_catalog.columns.to_list()):
         print(column)
+
+
+@app.command()
+def retract(ctx: typer.Context, slug: str) -> None:
+    """
+    Retract a dataset so it is excluded from future solve-time selection.
+
+    The dataset's row and files are left intact for provenance and historical execution
+    inspection -- only its eligibility to satisfy a diagnostic's data requirements changes.
+    There is no hard-delete path (a dataset that has ever run cannot be removed without either
+    violating a foreign key or destroying execution provenance), so this is the only way to stop
+    a superseded dataset (e.g. an old obs4MIPs row re-ingested under obs4REF) from continuing to
+    match diagnostics.
+
+    Retracting an already-retracted dataset is a no-op.
+    """
+    console = ctx.obj.console
+    db = ctx.obj.database
+
+    with db.session.begin():
+        dataset = db.session.query(Dataset).filter_by(slug=slug).one_or_none()
+        if dataset is None:
+            logger.error(f"No dataset found with slug {slug!r}")
+            raise typer.Exit(code=1)
+
+        if dataset.retracted_at is not None:
+            console.print(f"Dataset {slug!r} is already retracted (since {dataset.retracted_at}); no change.")
+            return
+
+        dataset.retracted_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+
+    console.print(f"Retracted dataset {slug!r}.")
+
+
+@app.command()
+def unretract(ctx: typer.Context, slug: str) -> None:
+    """
+    Restore a retracted dataset to solve-eligibility.
+
+    The inverse of ``retract``. Unretracting a dataset that is not currently retracted is a no-op.
+    """
+    console = ctx.obj.console
+    db = ctx.obj.database
+
+    with db.session.begin():
+        dataset = db.session.query(Dataset).filter_by(slug=slug).one_or_none()
+        if dataset is None:
+            logger.error(f"No dataset found with slug {slug!r}")
+            raise typer.Exit(code=1)
+
+        if dataset.retracted_at is None:
+            console.print(f"Dataset {slug!r} is not retracted; no change.")
+            return
+
+        dataset.retracted_at = None
+
+    console.print(f"Unretracted dataset {slug!r}.")
 
 
 @app.command()

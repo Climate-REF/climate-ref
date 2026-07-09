@@ -1,42 +1,42 @@
 {
   "catalog_hash": "8f3a4713d6af9bf6fbac2c17dfc468151d122fb5",
   "committed": {
-    "diagnostic.json": "e5cba91edcac578b6cdc59d22a22c003123bd94d9c6ff5eca736013c428fac65",
+    "diagnostic.json": "df3c2146e9a1e61fc6820a7a74cfc3a4a5413d0e0190389469529b16fef86023",
     "output.json": "a882dd976926ecf89e7fc7efbea9e0fd2ddd2280c45760a4cff284d6bbe73f62",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "EG_Spec_North_test_PDO_monthly_HadISST-1-1_1900-2005.png": {
       "sha256": "b39032778d59e47a7c3269e66aed9aadab04c887de0c19de65317350df53fe19",
       "size": 31168
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "a97f1fdd97a8f907089cecfcfa7eaaaf1478f10939676ebbb73c108f5e5b3429",
+      "sha256": "d656aaec8aaa9b24ccfc24215702b5ef78e241d51cad6ed3bf1a03757d8fcdc9",
       "size": 710422
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "5937060c6d16466f116d2e08a728bb7db1e951013f73b106f40d1e7c2729548e",
+      "sha256": "8f0b71a81ebc91162d5bc55840024dec581eaf8ccf69e4170d06212c1d5a571c",
       "size": 87118
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "d41f425855216cb5b3625723b4b836345766fbcc1b1e5eb30f5a33fd80525f4c",
+      "sha256": "728e97b40b38f3111ab6914455d848e6dbaf9f34672abdea503f9c4fdb3b0668",
       "size": 710123
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
-      "sha256": "c1c80f45405e7d77ad4e16266e1fc126b6db5476152a76addb0f880c87e3f332",
+      "sha256": "24e27f804ffc91122c0bdbb8e6bee290e5379f6ab8a6ae0b7fcc0f2f2e811187",
       "size": 87320
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
-      "sha256": "4290755fc3abc3e9f3019121de183e9acb05ead0a70614069f40ed6c02d1c2dc",
-      "size": 223728
+      "sha256": "d036e22d38bd15b39852b0589ca5ce505f6f16755f137535ac142443fa9283c9",
+      "size": 223729
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
       "sha256": "313b612ae6c8998d6c21ef02582e581c6ee2c740b35d6db0bdcfcebcda6e7f76",
       "size": 124267
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof1_compare_obs.png": {
-      "sha256": "7ad1cc92445348547136b3c7352e5d1d3341965c48441283298c2ad296db5d27",
+      "sha256": "5547cdfea04e408f30fc8c05af670426b470ee98b6db2f221aabc684f1227488",
       "size": 224169
     },
     "PDO_ts_EOF1_monthly_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
@@ -44,20 +44,20 @@
       "size": 124341
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.nc": {
-      "sha256": "41d3bfa2531e73c841c2273c523b88fee6c772fc55caedd7aace22d529f41fa5",
+      "sha256": "5934b4f22d11fe5f5a8a89f3a04d4ca429641276de48ceb7880eb1b0bf52ede6",
       "size": 1598768
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005.png": {
-      "sha256": "516065727b67c2ddc90d247c3beed055928710d50a22f57aacb02ac49236fe5b",
-      "size": 81954
+      "sha256": "dbbc368c6264a606a6e6fddc8395b668c7aab0c0b9d1f1b3c7c97647338cd51b",
+      "size": 81949
     },
     "PDO_ts_EOF1_monthly_obs_1900-2005_teleconnection.png": {
       "sha256": "ee31e852f53d44212c664a98fb4db13ff8dbba2cc9c2f5e6824ecb25fdf01a7f",
       "size": 120774
     },
     "diagnostic.json": {
-      "sha256": "13c1e632e58dd910ae7e89069cd30b8878b051b5a9c0b107a3b3411829852a2d",
-      "size": 3142
+      "sha256": "2f3d7a1e9d42cbb24c53af7faeccfe19da775a4d3e90c36faa1b4a4e10983255",
+      "size": 3318
     },
     "output.json": {
       "sha256": "7b145b622831ea31ec4e2743579d02112d4b38b009e16bcebd9401033baa95d8",
@@ -68,10 +68,10 @@
       "size": 2
     },
     "var_mode_PDO_EOF1_stat_cmip6_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
-      "sha256": "c8fc554568dbce7c6c5874d6930f7d7b6a3cdd050712fb72c839f2033ad8e5a6",
+      "sha256": "b3446dc43294696afa0df2d11e1d90dd67f5b6d03772a51476cc45da2697b6e0",
       "size": 4464
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

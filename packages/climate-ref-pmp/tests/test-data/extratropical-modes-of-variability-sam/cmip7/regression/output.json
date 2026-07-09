@@ -78,28 +78,28 @@
   "index": "index.html",
   "metrics": null,
   "plots": {
-    "EG_Spec_North_test_SAM_DJF_20CR_1950-2005.png": {
+    "EG_Spec_North_test_SAM_DJF_20CR-V2_1950-2005.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "EG_Spec_North_test_SAM_DJF_20CR_1950-2005.png",
+      "filename": "EG_Spec_North_test_SAM_DJF_20CR-V2_1950-2005.png",
       "long_name": "Plot"
     },
-    "EG_Spec_North_test_SAM_JJA_20CR_1950-2005.png": {
+    "EG_Spec_North_test_SAM_JJA_20CR-V2_1950-2005.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "EG_Spec_North_test_SAM_JJA_20CR_1950-2005.png",
+      "filename": "EG_Spec_North_test_SAM_JJA_20CR-V2_1950-2005.png",
       "long_name": "Plot"
     },
-    "EG_Spec_North_test_SAM_MAM_20CR_1950-2005.png": {
+    "EG_Spec_North_test_SAM_MAM_20CR-V2_1950-2005.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "EG_Spec_North_test_SAM_MAM_20CR_1950-2005.png",
+      "filename": "EG_Spec_North_test_SAM_MAM_20CR-V2_1950-2005.png",
       "long_name": "Plot"
     },
-    "EG_Spec_North_test_SAM_SON_20CR_1950-2005.png": {
+    "EG_Spec_North_test_SAM_SON_20CR-V2_1950-2005.png": {
       "description": "Plot produced by the diagnostic",
       "dimensions": null,
-      "filename": "EG_Spec_North_test_SAM_SON_20CR_1950-2005.png",
+      "filename": "EG_Spec_North_test_SAM_SON_20CR-V2_1950-2005.png",
       "long_name": "Plot"
     },
     "SAM_psl_EOF1_DJF_cmip7_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {

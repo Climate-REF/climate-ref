@@ -8,8 +8,10 @@ Covers:
    ``dataset_id_metadata`` columns are non-nullable and absent from ``columns_requiring_finalisation``.
 """
 
+import datetime
+
 import pytest
-from sqlalchemy import update
+from sqlalchemy import select, update
 from sqlalchemy.orm import selectinload
 
 from climate_ref.datasets import get_dataset_adapter
@@ -195,6 +197,64 @@ class TestSelectDatasetsLatestVersionDedup:
         """``DatasetFilter`` has no default ``source_type``: a typed listing must choose a type."""
         with pytest.raises(TypeError):
             DatasetFilter()  # type: ignore[call-arg]
+
+
+class TestRetractedFiltering:
+    """``DatasetFilter.include_retracted`` (default ``False``) excludes retracted rows."""
+
+    def _retract(self, db, dataset_id: int) -> None:
+        # ``retracted_at`` lives on the base ``dataset`` table.
+        # A Core ``update(CMIP6Dataset)`` cannot reach a parent-table column on SQLite
+        # (no multi-table UPDATE support), so set it through the ORM instance instead.
+        ds = db.session.get(Dataset, dataset_id)
+        ds.retracted_at = datetime.datetime(2026, 1, 1)
+        db.session.commit()
+
+    def test_default_excludes_retracted(self, db_with_versions):
+        """Retracting the latest version removes it from the default (exclude-retracted) query, and
+        the next-oldest version becomes the new survivor of the latest-version window.
+        The retracted-filter is applied before the ``RANK`` partition, not after."""
+        self._retract(db_with_versions, db_with_versions.dq_ids["v10"])
+
+        stmt = select_datasets(
+            DatasetFilter(source_type=SourceDatasetType.CMIP6, facets={"source_id": ("TEST-MODEL",)}),
+            latest_group_by=ID_COLS,
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        ids = {r.id for r in rows}
+        assert db_with_versions.dq_ids["v10"] not in ids
+        assert db_with_versions.dq_ids["v2"] in ids
+
+    def test_include_retracted_true_shows_it(self, db_with_versions):
+        self._retract(db_with_versions, db_with_versions.dq_ids["v10"])
+
+        stmt = select_datasets(
+            DatasetFilter(
+                source_type=SourceDatasetType.CMIP6,
+                facets={"source_id": ("TEST-MODEL",)},
+                include_retracted=True,
+            ),
+            latest_group_by=ID_COLS,
+        )
+        rows = db_with_versions.session.execute(stmt).scalars().unique().all()
+        assert db_with_versions.dq_ids["v10"] in {r.id for r in rows}
+
+    def test_retracted_dataset_execution_link_survives(self, db_with_versions):
+        """Retracting a dataset must not touch its ``execution_datasets`` links.
+        Only its eligibility for future solve-time selection changes."""
+        v10_id = db_with_versions.dq_ids["v10"]
+        self._retract(db_with_versions, v10_id)
+
+        linked = (
+            db_with_versions.session.execute(
+                select(execution_datasets.c.dataset_id).where(
+                    execution_datasets.c.execution_id == db_with_versions.dq_execution_id
+                )
+            )
+            .scalars()
+            .all()
+        )
+        assert v10_id in linked
 
 
 class TestDatasetIdMetadataNonNullabilityInvariant:

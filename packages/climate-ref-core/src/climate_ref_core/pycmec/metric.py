@@ -36,9 +36,13 @@ from pydantic.json_schema import GenerateJsonSchema, JsonSchemaMode, JsonSchemaV
 from pydantic_core import CoreSchema
 
 from climate_ref_core.env import env
-from climate_ref_core.metric_values import ScalarMetricValue
+from climate_ref_core.metric_values import MetricValueKind, ScalarMetricValue
 
 ALLOW_EXTRA_KEYS = env.bool("ALLOW_EXTRA_KEYS", default=True)
+
+# The CMEC dimension that carries a metric value's role. It is lifted out of the free
+# dimensions into ``ScalarMetricValue.kind`` (its own column) when a bundle declares it.
+_KIND_DIMENSION = "kind"
 
 
 class MetricCV(Enum):
@@ -535,6 +539,27 @@ class CMECMetric(BaseModel):
         yield from _walk_results(dimensions, self.RESULTS, {})
 
 
+def _build_scalar_value(metadata: dict[str, str], value: float, attributes: Any) -> ScalarMetricValue:
+    """
+    Build a scalar value, lifting ``kind`` out of the dimensions into its own field.
+
+    ``kind`` is carried as an ordinary CMEC dimension in the bundle so a producer can declare
+    a value's role inline, but on the value it is a first-class field with its own database
+    column. It is therefore removed from the free dimensions here. A bundle that does not carry
+    a ``kind`` dimension is unchanged: the field keeps its default, so existing baselines and
+    providers that predate the contract are unaffected.
+    """
+    kind = metadata.get(_KIND_DIMENSION)
+    dimensions = {k: v for k, v in metadata.items() if k != _KIND_DIMENSION}
+    if kind is None:
+        return ScalarMetricValue(dimensions=dimensions, value=value, attributes=attributes)
+    # ``kind`` comes from the untyped JSON dimensions; the model's Literal field still
+    # validates it at construction, so an unknown role is rejected rather than trusted.
+    return ScalarMetricValue(
+        dimensions=dimensions, value=value, kind=cast(MetricValueKind, kind), attributes=attributes
+    )
+
+
 def _walk_results(
     dimensions: list[str], results: dict[str, Any], metadata: dict[str, str]
 ) -> Generator[ScalarMetricValue]:
@@ -545,16 +570,12 @@ def _walk_results(
             continue
         metadata[dimension] = key
         if isinstance(value, float | int):
-            yield ScalarMetricValue(
-                dimensions=metadata, value=value, attributes=results.get(MetricCV.ATTRIBUTES.value)
-            )
+            yield _build_scalar_value(metadata, value, results.get(MetricCV.ATTRIBUTES.value))
         elif value is None:
             # Replace any None values with NaN
             # This translates null values in JSON to Python NaN's
             # Missing values are different from NaN values
-            yield ScalarMetricValue(
-                dimensions=metadata, value=np.nan, attributes=results.get(MetricCV.ATTRIBUTES.value)
-            )
+            yield _build_scalar_value(metadata, np.nan, results.get(MetricCV.ATTRIBUTES.value))
         else:
             yield from _walk_results(dimensions[1:], value, {**metadata})
 

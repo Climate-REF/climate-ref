@@ -334,42 +334,84 @@ ref test-cases run --provider my-provider --diagnostic my-diagnostic --output-di
 ref test-cases run --provider my-provider --diagnostic my-diagnostic --force-regen
 ```
 
-## Writing Pytest Tests
+## Pytest Integration
 
-The CLI provides a standard harness for running simple test cases.
-Sometimes additional custom tests maybe required which require writing tests via `pytest`.
+### The generated per-provider test
 
-### Using the `run_test_case` Fixture
+Every provider package wires its test cases into pytest with a single line in
+`tests/integration/test_diagnostics.py`:
 
-The `run_test_case` fixture automatically handles missing data by skipping tests:
+```python
+from climate_ref_example import provider
+
+from climate_ref.testing import create_no_drift_test
+
+test_run_test_cases = create_no_drift_test(provider)
+```
+
+`create_no_drift_test` generates one parameterized pytest case per test case,
+identified as `{diagnostic}/{test_case}` and marked `slow` and `test_cases`.
+Each case re-executes the diagnostic against the fetched catalog
+using the same execute/build stages as `ref test-cases run`,
+then asserts the freshly rebuilt committed bundle
+matches the tracked `regression/` baseline within tolerance.
+Cases are skipped when the fetched catalog or the committed baseline is missing,
+so the suite stays green for contributors who haven't fetched data for that provider.
+
+Run them with the `--slow` flag:
+
+```bash
+# All test cases for a provider
+uv run pytest packages/climate-ref-example/tests/integration/test_diagnostics.py --slow
+
+# A single test case, selected by its id
+uv run pytest --slow \
+    "packages/climate-ref-example/tests/integration/test_diagnostics.py::test_run_test_cases[global-mean-timeseries/default]"
+```
+
+### Writing custom tests
+
+For behaviour the standard drift check doesn't cover,
+run a test case directly with `TestCaseRunner`.
+The `config` fixture (an isolated per-test configuration)
+comes from the `climate_ref.conftest_plugin` pytest plugin,
+which is auto-discovered when `climate-ref` is installed.
 
 ```python
 import pytest
+from my_provider import provider
 
-def test_my_diagnostic(run_test_case):
-    from my_provider import MyDiagnostic
+from climate_ref.testing import TestCaseRunner
+from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
-    diagnostic = MyDiagnostic()
-    result = run_test_case.run(diagnostic, "default")
+
+@pytest.mark.slow
+def test_my_diagnostic(config, tmp_path):
+    diagnostic = provider.get("my-diagnostic")
+    diagnostic.provider.configure(config)
+
+    paths = TestCasePaths.from_diagnostic(diagnostic, "default")
+    if paths is None or not paths.catalog.exists():
+        pytest.skip("Test data not fetched; run `ref test-cases fetch` first")
+
+    runner = TestCaseRunner(config=config, datasets=load_datasets_from_yaml(paths.catalog))
+    result = runner.run(diagnostic, "default", output_dir=tmp_path / "output")
 
     assert result.successful
-    assert result.metric_bundle_filename is not None
 ```
 
-In future, tests will be generated for each of the test cases.
+### Markers
 
-### Marking Tests
-
-Use pytest markers for test categorization:
+Mark custom tests so they run in the right CI tier:
 
 ```python
 @pytest.mark.slow
-def test_full_resolution(run_test_case):
+def test_full_resolution(config):
     """Test with full-resolution ESGF data (slow)."""
     ...
 
 @pytest.mark.requires_esgf_data
-def test_requires_fetched_data(run_test_case):
+def test_requires_fetched_data(config):
     """Test that requires fetched ESGF data."""
     ...
 ```
@@ -379,6 +421,9 @@ Run specific test categories:
 ```bash
 # Include slow tests
 pytest --slow
+
+# Only the generated test-case drift tests
+pytest --slow -m test_cases
 
 # Skip tests requiring ESGF data
 pytest -m "not requires_esgf_data"
@@ -525,6 +570,62 @@ If you hold credentials locally, `ref test-cases mint` does the same from your m
    - Whether the `tests/` directory exists (required for dev checkout detection)
    - The derived test data directory path
    - Whether catalogs/regression directories are being created
+
+### Debugging a failing test case
+
+When a pytest drift test (or the CI replay gate) reports that a committed bundle has drifted,
+the fastest loop is usually through the CLI rather than pytest,
+because the outputs stay in a predictable place.
+
+1. **Re-run the test case via the CLI** and inspect what it produced:
+
+   ```bash
+   ref --verbose test-cases run --provider my-provider --diagnostic my-diagnostic
+   ```
+
+   Every run repopulates the gitignored `output/latest/` slot in the test case directory
+   with the executed native files and, under `output/latest/regression/`,
+   the rebuilt committed bundle.
+   Pass `--output-directory ./scratch` to also keep the raw execution directory
+   (logs, intermediate files) somewhere convenient.
+
+2. **Diff the rebuilt bundle against the tracked baseline**:
+
+   ```bash
+   cd packages/climate-ref-my-provider/tests/test-data/my-diagnostic/default
+   git diff --no-index regression/ output/latest/regression/
+   ```
+
+   The drift assertion also prints a per-file summary of what moved beyond tolerance.
+
+3. **Compare two runs side by side** using named output slots —
+   `latest` is overwritten on every run, but a named slot persists:
+
+   ```bash
+   ref test-cases run ... --label before
+   # ... change the code ...
+   ref test-cases run ... --label after
+   diff -r .../output/before/regression .../output/after/regression
+   ```
+
+4. **Separate "my code changed the results" from "the baseline is stale"** with
+   `ref test-cases replay --provider my-provider`.
+
+   Replay rebuilds the bundle from the stored native baseline *without executing the diagnostic*,
+   so if replay passes but `run` drifts, your change moved the results;
+   if replay also fails, the committed baseline itself is inconsistent
+   (regenerate with `run --force-regen` and bump `test_case_version`).
+
+5. **Debug through pytest** when you need a debugger at the point of failure:
+
+   ```bash
+   uv run pytest --slow --pdb \
+       "packages/climate-ref-my-provider/tests/integration/test_diagnostics.py::test_run_test_cases[my-diagnostic/default]"
+   ```
+
+   The pytest run works in the test's `tmp_path`
+   (retained for the most recent runs under `/tmp/pytest-of-<user>/`):
+   the execution directory is `exec/` and the rebuilt bundle is `slot/regression/`.
 
 ## Other useful links
 

@@ -7,6 +7,8 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
+      "reference_source_id",
       "experiment_id",
       "source_id",
       "member_id",
@@ -15,11 +17,17 @@
       "metric",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
     "metric": {
       "nbp": {}
+    },
+    "reference_source_id": {
+      "Hoffman": {}
     },
     "region": {
       "None": {
@@ -54,16 +62,20 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "historical": {
-      "CanESM5": {
-        "r1i1p1f1": {
-          "gn": {
-            "None": {
-              "nbp": {
-                "Difference Score": 0.9833516,
-                "Trajectory Score": 0.1040304,
-                "diff(2010)": 1.450615,
-                "nbp(2010)": -0.0
+    "model": {
+      "Hoffman": {
+        "historical": {
+          "CanESM5": {
+            "r1i1p1f1": {
+              "gn": {
+                "None": {
+                  "nbp": {
+                    "Difference Score": 0.9833516,
+                    "Trajectory Score": 0.1040304,
+                    "diff(2010)": 1.450615,
+                    "nbp(2010)": -0.0
+                  }
+                }
               }
             }
           }

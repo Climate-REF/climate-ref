@@ -1,5 +1,5 @@
 _metadata:
-  hash: 0aebe00291d920fefa3945cada2221f9ae52122c
+  hash: 533c94f4ee1c53c15b0b8a44bffd83a243ecf7be
 cmip7:
   slug_column: instance_id
   selector:
@@ -40,7 +40,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/53bf326c-d643-45e4-9078-d6cc4a502d05
+    tracking_id: hdl:21.14107/f1ffaa8e-f80e-46e5-b2e9-b1a212b0372e
     units: m2
     variable_id: areacello
     variant_label: r1i1p1f1
@@ -77,7 +77,7 @@ cmip7:
     start_time: null
     time_range: null
     time_units: null
-    tracking_id: hdl:21.14107/8ec21762-f4ad-47ba-bf1b-468fabeb350a
+    tracking_id: hdl:21.14107/1e7ad855-8c71-4e5d-999d-f94b6fbaa4a6
     units: '%'
     variable_id: sftof
     variant_label: r1i1p1f1
@@ -114,7 +114,7 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-1860-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/ab66bc59-b18f-4c31-b238-79398f1213f6
+    tracking_id: hdl:21.14107/ddf233f6-444f-4c51-b676-c0e9c9be54cc
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -151,7 +151,7 @@ cmip7:
     start_time: '1861-01-16 12:00:00'
     time_range: 1861-01-16 12:00:00-1870-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/928502c3-e196-4e66-95cd-ee4bca17a2dd
+    tracking_id: hdl:21.14107/67051023-abb9-4018-a56f-5633c2176d41
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -188,7 +188,7 @@ cmip7:
     start_time: '1871-01-16 12:00:00'
     time_range: 1871-01-16 12:00:00-1880-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/16bc7bee-3dcb-421c-8e6c-bc87c79ecb6f
+    tracking_id: hdl:21.14107/2977318e-5090-434a-88c2-cacb9eb708a9
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -225,7 +225,7 @@ cmip7:
     start_time: '1881-01-16 12:00:00'
     time_range: 1881-01-16 12:00:00-1890-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/61768073-04b9-4ca6-9526-4f9536cb8d0e
+    tracking_id: hdl:21.14107/822c0ff1-1d20-45d4-a6ee-ddf82637a1c0
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -262,7 +262,7 @@ cmip7:
     start_time: '1891-01-16 12:00:00'
     time_range: 1891-01-16 12:00:00-1900-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/23dd6ae2-ccbc-4a6f-adb0-c006d7332d28
+    tracking_id: hdl:21.14107/d61d609e-d074-40ef-b6a2-6ed0416abe68
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -299,7 +299,7 @@ cmip7:
     start_time: '1901-01-16 12:00:00'
     time_range: 1901-01-16 12:00:00-1910-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/a00d800a-1c21-4664-9531-3ffb34242856
+    tracking_id: hdl:21.14107/122c4367-3c35-4489-bcbf-aff34be3759e
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -336,7 +336,7 @@ cmip7:
     start_time: '1911-01-16 12:00:00'
     time_range: 1911-01-16 12:00:00-1920-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/80d9377c-135f-46aa-9658-cdeb4a0d333f
+    tracking_id: hdl:21.14107/9075300a-95f3-4d86-adb6-06283bd7a2e0
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -373,7 +373,7 @@ cmip7:
     start_time: '1921-01-16 12:00:00'
     time_range: 1921-01-16 12:00:00-1930-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/51da1330-f0b1-49a8-8017-a5e95a44b0d5
+    tracking_id: hdl:21.14107/65122b1d-b475-4b00-a303-80c8e94c5d1d
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -410,7 +410,7 @@ cmip7:
     start_time: '1931-01-16 12:00:00'
     time_range: 1931-01-16 12:00:00-1940-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/33fd716e-41f0-4d93-8214-75126943c453
+    tracking_id: hdl:21.14107/6fcb627b-463e-4986-8377-6c4b257f921f
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -447,7 +447,7 @@ cmip7:
     start_time: '1941-01-16 12:00:00'
     time_range: 1941-01-16 12:00:00-1950-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/99fa0319-7314-4987-ada0-d8be2366cec5
+    tracking_id: hdl:21.14107/eae50444-f83b-40ee-b44c-7806353ba2aa
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -484,7 +484,7 @@ cmip7:
     start_time: '1951-01-16 12:00:00'
     time_range: 1951-01-16 12:00:00-1960-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/e83c47fa-b9ca-4235-bf01-cb7f9556d1b4
+    tracking_id: hdl:21.14107/ccfd9294-7d51-4f43-a122-c40e7cb159c0
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -521,7 +521,7 @@ cmip7:
     start_time: '1961-01-16 12:00:00'
     time_range: 1961-01-16 12:00:00-1970-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/dc693abf-c5c8-4654-b8b2-b861fbe59c57
+    tracking_id: hdl:21.14107/8f8b0397-1f12-4d78-876a-f2b9b8243b39
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -558,7 +558,7 @@ cmip7:
     start_time: '1971-01-16 12:00:00'
     time_range: 1971-01-16 12:00:00-1980-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/2f0e2e3a-c604-4572-9c84-dae3264719ba
+    tracking_id: hdl:21.14107/84a82036-297b-487e-8554-00d521ba93b0
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -595,7 +595,7 @@ cmip7:
     start_time: '1981-01-16 12:00:00'
     time_range: 1981-01-16 12:00:00-1990-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/74967fe5-c261-432f-85e8-99e779779e7d
+    tracking_id: hdl:21.14107/929f76a8-91a1-4eec-a9a5-ddce99f2fe96
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -632,7 +632,7 @@ cmip7:
     start_time: '1991-01-16 12:00:00'
     time_range: 1991-01-16 12:00:00-2000-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/b0a10f21-656e-4369-91af-84e47cb644b3
+    tracking_id: hdl:21.14107/1d35bdca-a3be-4fc6-a6c4-e2df97074556
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -669,7 +669,7 @@ cmip7:
     start_time: '2001-01-16 12:00:00'
     time_range: 2001-01-16 12:00:00-2010-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/521d60aa-8beb-424b-821d-ccf577158058
+    tracking_id: hdl:21.14107/6703d9aa-adb2-47ee-9a85-c282c3d0b01a
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -706,7 +706,7 @@ cmip7:
     start_time: '2011-01-16 12:00:00'
     time_range: 2011-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/3f2f2493-5967-4609-b427-4928dd012b2d
+    tracking_id: hdl:21.14107/92e530c1-364f-40ef-81a5-c9fceec68188
     units: '0.001'
     variable_id: so
     variant_label: r1i1p1f1
@@ -743,8 +743,40 @@ cmip7:
     start_time: '1850-01-16 12:00:00'
     time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
     time_units: days since 1850-01-01
-    tracking_id: hdl:21.14107/35f3c596-e247-47d4-88bd-b20ea4b9c9e1
+    tracking_id: hdl:21.14107/819dc5c8-59ba-4e8e-8f1b-36788fef01c9
     units: '0.001'
     variable_id: sos
     variant_label: r1i1p1f1
     version: v0
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: WOA-23
+    variable_id: so
+    version: v20251024
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '1988-12-15 00:00:00'
+    filename: so_monC_WOA-23_REF_gn_200501-202212.nc
+    finalised: true
+    frequency: monC
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI-OCL.WOA-23.monC.so.1x1degree.gn.v20251024
+    institution_id: NOAA-NCEI-OCL
+    long_name: Objectively analyzed mean fields for sea_water_practical_salinity at
+      standard depth levels.
+    nominal_resolution: 1x1 degree
+    product: observations
+    realm: ocean
+    source_id: WOA-23
+    source_type: gridded_insitu
+    source_version_number: '1.0'
+    start_time: '1988-01-15 00:00:00'
+    time_range: 1988-01-15 00:00:00-1988-12-15 00:00:00
+    units: psu
+    variable_id: so
+    variant_label: REF
+    version: v20251024
+    vertical_levels: 57

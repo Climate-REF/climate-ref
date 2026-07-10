@@ -4,6 +4,7 @@
       "historical": {}
     },
     "json_structure": [
+      "kind",
       "mip_id",
       "source_id",
       "member_id",
@@ -14,6 +15,9 @@
       "method",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -28,7 +32,7 @@
       "NAO": {}
     },
     "reference_source_id": {
-      "20CR": {}
+      "20CR-V2": {}
     },
     "season": {
       "DJF": {},
@@ -60,170 +64,172 @@
   "NOTES": null,
   "PROVENANCE": {},
   "RESULTS": {
-    "cmip6": {
-      "ACCESS-ESM1-5": {
-        "r1i1p1f1": {
-          "historical": {
-            "20CR": {
-              "NAO": {
-                "DJF": {
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "historical": {
+              "20CR-V2": {
+                "NAO": {
+                  "DJF": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 1,
+                      "best_matching_model_eofs__rms": 1,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                      "period": "1900-2005"
+                    },
+                    "cbf": {
+                      "bias": -0.003535963,
+                      "bias_glo": 0.2481177,
+                      "cor": 0.9478816,
+                      "cor_glo": 0.9001196,
+                      "frac": 0.3573224,
+                      "frac_cbf_regrid": 0.3059213,
+                      "mean": -1.645665e-15,
+                      "mean_glo": 0.04235658,
+                      "rms": 0.7344817,
+                      "rms_glo": 0.451817,
+                      "rmsc": 0.3228572,
+                      "rmsc_glo": 0.4469461,
+                      "stdv_pc": 1.476155,
+                      "stdv_pc_ratio_to_obs": 0.7316155
+                    },
+                    "eof1": {
+                      "bias": -0.001796009,
+                      "bias_glo": 0.3021184,
+                      "cor": 0.9019265,
+                      "cor_glo": 0.8612123,
+                      "frac": 0.3724301,
+                      "mean": -3.412502e-15,
+                      "mean_glo": 0.09635729,
+                      "rms": 0.9123797,
+                      "rms_glo": 0.530953,
+                      "rmsc": 0.4428848,
+                      "rmsc_glo": 0.5268542,
+                      "stdv_pc": 1.597582,
+                      "stdv_pc_ratio_to_obs": 0.7917977
+                    }
+                  },
+                  "JJA": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 1,
+                      "best_matching_model_eofs__rms": 1,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                      "period": "1900-2005"
+                    },
+                    "cbf": {
+                      "bias": -0.002315951,
+                      "bias_glo": -0.02235276,
+                      "cor": 0.9632798,
+                      "cor_glo": 0.5855201,
+                      "frac": 0.3417913,
+                      "frac_cbf_regrid": 0.2978093,
+                      "mean": -2.537862e-16,
+                      "mean_glo": 0.005801833,
+                      "rms": 0.2074231,
+                      "rms_glo": 0.3532361,
+                      "rmsc": 0.2709989,
+                      "rmsc_glo": 0.9104723,
+                      "stdv_pc": 0.7321769,
+                      "stdv_pc_ratio_to_obs": 0.9519071
+                    },
+                    "eof1": {
+                      "bias": -0.002576195,
+                      "bias_glo": -0.02333224,
+                      "cor": 0.9208113,
+                      "cor_glo": 0.5694428,
+                      "frac": 0.3527152,
+                      "mean": -3.138675e-16,
+                      "mean_glo": 0.004822357,
+                      "rms": 0.3066624,
+                      "rms_glo": 0.3606522,
+                      "rmsc": 0.3979665,
+                      "rmsc_glo": 0.9279625,
+                      "stdv_pc": 0.7768803,
+                      "stdv_pc_ratio_to_obs": 1.010026
+                    }
+                  },
+                  "MAM": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 1,
+                      "best_matching_model_eofs__rms": 1,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                      "period": "1900-2005"
+                    },
+                    "cbf": {
+                      "bias": -0.002489892,
+                      "bias_glo": 0.0231904,
+                      "cor": 0.9270912,
+                      "cor_glo": 0.8614613,
+                      "frac": 0.3074101,
+                      "frac_cbf_regrid": 0.2702566,
+                      "mean": 2.278849e-15,
+                      "mean_glo": -0.06388833,
+                      "rms": 0.4534006,
+                      "rms_glo": 0.2799566,
+                      "rmsc": 0.3818607,
+                      "rmsc_glo": 0.5263814,
+                      "stdv_pc": 1.05355,
+                      "stdv_pc_ratio_to_obs": 0.8715333
+                    },
+                    "eof1": {
+                      "bias": -0.003358771,
+                      "bias_glo": 0.01344627,
+                      "cor": 0.8521499,
+                      "cor_glo": 0.8228065,
+                      "frac": 0.3288034,
+                      "mean": 2.725351e-15,
+                      "mean_glo": -0.07363245,
+                      "rms": 0.6493032,
+                      "rms_glo": 0.3324537,
+                      "rmsc": 0.5437833,
+                      "rmsc_glo": 0.5953041,
+                      "stdv_pc": 1.180007,
+                      "stdv_pc_ratio_to_obs": 0.9761427
+                    }
+                  },
+                  "SON": {
+                    "attributes": {
+                      "best_matching_model_eofs__cor": 1,
+                      "best_matching_model_eofs__rms": 1,
+                      "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
+                      "period": "1900-2005"
+                    },
+                    "cbf": {
+                      "bias": -0.0009616066,
+                      "bias_glo": -0.06049223,
+                      "cor": 0.9631301,
+                      "cor_glo": 0.832207,
+                      "frac": 0.2797529,
+                      "frac_cbf_regrid": 0.2401756,
+                      "mean": -2.349425e-15,
+                      "mean_glo": 0.05979275,
+                      "rms": 0.2613694,
+                      "rms_glo": 0.2297715,
+                      "rmsc": 0.2715508,
+                      "rmsc_glo": 0.5792979,
+                      "stdv_pc": 0.9343373,
+                      "stdv_pc_ratio_to_obs": 0.9852872
+                    },
+                    "eof1": {
+                      "bias": -0.002291456,
+                      "bias_glo": -0.1315455,
+                      "cor": 0.8355018,
+                      "cor_glo": 0.6730703,
+                      "frac": 0.2983196,
+                      "mean": 5.450703e-16,
+                      "mean_glo": -0.01126055,
+                      "rms": 0.5621296,
+                      "rms_glo": 0.3547179,
+                      "rmsc": 0.573582,
+                      "rmsc_glo": 0.8086157,
+                      "stdv_pc": 1.008613,
+                      "stdv_pc_ratio_to_obs": 1.063613
+                    }
+                  },
                   "attributes": {
-                    "best_matching_model_eofs__cor": 1,
-                    "best_matching_model_eofs__rms": 1,
-                    "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                    "period": "1900-2005"
-                  },
-                  "cbf": {
-                    "bias": -0.003535991,
-                    "bias_glo": 0.2481177,
-                    "cor": 0.9478816,
-                    "cor_glo": 0.9001196,
-                    "frac": 0.3573224,
-                    "frac_cbf_regrid": 0.3059213,
-                    "mean": -1.629923e-15,
-                    "mean_glo": 0.0423566,
-                    "rms": 0.7344818,
-                    "rms_glo": 0.451817,
-                    "rmsc": 0.3228572,
-                    "rmsc_glo": 0.4469461,
-                    "stdv_pc": 1.476155,
-                    "stdv_pc_ratio_to_obs": 0.7316154
-                  },
-                  "eof1": {
-                    "bias": -0.001796032,
-                    "bias_glo": 0.3021184,
-                    "cor": 0.9019265,
-                    "cor_glo": 0.8612123,
-                    "frac": 0.3724301,
-                    "mean": -3.451251e-15,
-                    "mean_glo": 0.09635729,
-                    "rms": 0.9123797,
-                    "rms_glo": 0.530953,
-                    "rmsc": 0.4428848,
-                    "rmsc_glo": 0.5268542,
-                    "stdv_pc": 1.597582,
-                    "stdv_pc_ratio_to_obs": 0.7917977
+                    "target_model_eofs": 1
                   }
-                },
-                "JJA": {
-                  "attributes": {
-                    "best_matching_model_eofs__cor": 1,
-                    "best_matching_model_eofs__rms": 1,
-                    "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                    "period": "1900-2005"
-                  },
-                  "cbf": {
-                    "bias": -0.002315952,
-                    "bias_glo": -0.02235276,
-                    "cor": 0.9632798,
-                    "cor_glo": 0.5855201,
-                    "frac": 0.3417913,
-                    "frac_cbf_regrid": 0.2978093,
-                    "mean": -2.575098e-16,
-                    "mean_glo": 0.005801836,
-                    "rms": 0.2074231,
-                    "rms_glo": 0.3532361,
-                    "rmsc": 0.2709989,
-                    "rmsc_glo": 0.9104723,
-                    "stdv_pc": 0.7321769,
-                    "stdv_pc_ratio_to_obs": 0.9519071
-                  },
-                  "eof1": {
-                    "bias": -0.0025762,
-                    "bias_glo": -0.02333224,
-                    "cor": 0.9208113,
-                    "cor_glo": 0.5694428,
-                    "frac": 0.3527152,
-                    "mean": -2.221613e-16,
-                    "mean_glo": 0.004822357,
-                    "rms": 0.3066624,
-                    "rms_glo": 0.3606522,
-                    "rmsc": 0.3979665,
-                    "rmsc_glo": 0.9279625,
-                    "stdv_pc": 0.7768803,
-                    "stdv_pc_ratio_to_obs": 1.010026
-                  }
-                },
-                "MAM": {
-                  "attributes": {
-                    "best_matching_model_eofs__cor": 1,
-                    "best_matching_model_eofs__rms": 1,
-                    "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                    "period": "1900-2005"
-                  },
-                  "cbf": {
-                    "bias": -0.00248991,
-                    "bias_glo": 0.0231904,
-                    "cor": 0.9270912,
-                    "cor_glo": 0.8614613,
-                    "frac": 0.3074101,
-                    "frac_cbf_regrid": 0.2702566,
-                    "mean": 2.361029e-15,
-                    "mean_glo": -0.06388831,
-                    "rms": 0.4534005,
-                    "rms_glo": 0.2799566,
-                    "rmsc": 0.3818607,
-                    "rmsc_glo": 0.5263814,
-                    "stdv_pc": 1.05355,
-                    "stdv_pc_ratio_to_obs": 0.8715333
-                  },
-                  "eof1": {
-                    "bias": -0.00335879,
-                    "bias_glo": 0.01344627,
-                    "cor": 0.8521499,
-                    "cor_glo": 0.8228065,
-                    "frac": 0.3288034,
-                    "mean": 2.864848e-15,
-                    "mean_glo": -0.07363245,
-                    "rms": 0.6493031,
-                    "rms_glo": 0.3324537,
-                    "rmsc": 0.5437833,
-                    "rmsc_glo": 0.5953041,
-                    "stdv_pc": 1.180007,
-                    "stdv_pc_ratio_to_obs": 0.9761427
-                  }
-                },
-                "SON": {
-                  "attributes": {
-                    "best_matching_model_eofs__cor": 1,
-                    "best_matching_model_eofs__rms": 1,
-                    "best_matching_model_eofs__tcor_cbf_vs_eof_pc": 1,
-                    "period": "1900-2005"
-                  },
-                  "cbf": {
-                    "bias": -0.0009616269,
-                    "bias_glo": -0.06049222,
-                    "cor": 0.9631301,
-                    "cor_glo": 0.832207,
-                    "frac": 0.2797529,
-                    "frac_cbf_regrid": 0.2401756,
-                    "mean": -2.355964e-15,
-                    "mean_glo": 0.05979277,
-                    "rms": 0.2613694,
-                    "rms_glo": 0.2297715,
-                    "rmsc": 0.2715508,
-                    "rmsc_glo": 0.5792979,
-                    "stdv_pc": 0.9343373,
-                    "stdv_pc_ratio_to_obs": 0.9852872
-                  },
-                  "eof1": {
-                    "bias": -0.002291474,
-                    "bias_glo": -0.1315455,
-                    "cor": 0.8355018,
-                    "cor_glo": 0.6730703,
-                    "frac": 0.2983196,
-                    "mean": 3.487416e-16,
-                    "mean_glo": -0.01126055,
-                    "rms": 0.5621296,
-                    "rms_glo": 0.3547179,
-                    "rmsc": 0.573582,
-                    "rmsc_glo": 0.8086157,
-                    "stdv_pc": 1.008613,
-                    "stdv_pc_ratio_to_obs": 1.063613
-                  }
-                },
-                "attributes": {
-                  "target_model_eofs": 1
                 }
               }
             }

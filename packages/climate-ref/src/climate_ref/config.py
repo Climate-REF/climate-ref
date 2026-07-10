@@ -42,7 +42,7 @@ from climate_ref._config_helpers import (
 from climate_ref.constants import CONFIG_FILENAME
 from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.env import env
-from climate_ref_core.exceptions import InvalidExecutorException
+from climate_ref_core.exceptions import IgnoreDatasetsRefreshError, InvalidExecutorException
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
 
 if TYPE_CHECKING:
@@ -406,51 +406,87 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
 
 
 DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
-DEFAULT_IGNORE_DATASETS_URL = (
-    "https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/default_ignore_datasets.yaml"
-)
+DEFAULT_IGNORE_DATASETS_FILENAME = "default_ignore_datasets.yaml"
+DEFAULT_IGNORE_DATASETS_URL = f"https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/{DEFAULT_IGNORE_DATASETS_FILENAME}"
 
 
 def _get_default_ignore_datasets_file() -> Path:
     """
-    Get the path to the ignore datasets file
+    Return the default location of the ignore datasets file.
+
+    This is a pure path computation with no filesystem or network access.
+    The file itself is fetched lazily at solve time via `refresh_ignore_datasets_file`.
+
+    Returns
+    -------
+    :
+        Path to the ignore datasets file under the user cache directory.
     """
-    cache_dir = platformdirs.user_cache_path("climate_ref")
-    ignore_datasets_file = cache_dir / "default_ignore_datasets.yaml"
+    return platformdirs.user_cache_path("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
+
+
+def refresh_ignore_datasets_file(config: "Config") -> None:
+    """
+    Refresh the cached ignore datasets file from `config.ignore_datasets_url`.
+
+    This is called at solve time so that configuration loading never performs network I/O.
+    The download happens at most once every `DEFAULT_IGNORE_DATASETS_MAX_AGE`;
+    a fresh cached file is reused untouched.
+
+    If `config.ignore_datasets_url` is empty the function returns immediately
+    without touching the filesystem,
+    which supports offline and air-gapped deployments that manage the file manually.
+
+    On download failure an existing cached copy is reused unchanged
+    (its content and modification time are preserved,
+    so a transient failure does not extend the cache window).
+    If no cached copy exists an `IgnoreDatasetsRefreshError` is raised
+    so the solver fails loudly rather than silently running without ignore-dataset protections.
+
+    Parameters
+    ----------
+    config
+        The configuration providing `ignore_datasets_file` and `ignore_datasets_url`.
+
+    Raises
+    ------
+    IgnoreDatasetsRefreshError
+        If the URL is set, the download fails, and no cached file exists.
+    """
+    path = config.ignore_datasets_file
+    url = config.ignore_datasets_url
+
+    if not url:
+        return
+
+    if path.is_dir():
+        raise IgnoreDatasetsRefreshError(f"The ignore datasets file path {path} is a directory, not a file.")
+
+    if path.is_file():
+        modification_time = datetime.datetime.fromtimestamp(path.stat().st_mtime)
+        age = datetime.datetime.now() - modification_time
+        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+            return
 
     try:
-        cache_dir.mkdir(parents=True, exist_ok=True)
-
-        download = True
-        if ignore_datasets_file.exists():
-            # Only update if the ignore datasets file is older than `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
-            modification_time = datetime.datetime.fromtimestamp(ignore_datasets_file.stat().st_mtime)
-            age = datetime.datetime.now() - modification_time
-            if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
-                download = False
-
-        if download:
-            logger.info(
-                f"Downloading default ignore datasets file from {DEFAULT_IGNORE_DATASETS_URL} "
-                f"to {ignore_datasets_file}"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        logger.info(f"Downloading default ignore datasets file from {url} to {path}")
+        response = requests.get(url, timeout=120)
+        response.raise_for_status()
+    except (requests.RequestException, OSError) as exc:
+        if path.is_file():
+            logger.warning(
+                f"Failed to refresh ignore datasets file from {url}; using cached copy at {path}: {exc}"
             )
-            try:
-                response = requests.get(DEFAULT_IGNORE_DATASETS_URL, timeout=120)
-                response.raise_for_status()
-            except requests.RequestException as exc:
-                logger.warning(f"Failed to download default ignore datasets file: {exc}")
-                ignore_datasets_file.touch(exist_ok=True)
-            else:
-                with ignore_datasets_file.open(mode="wb") as file:
-                    file.write(response.content)
-    except OSError as exc:
-        # Acquiring the default ignore datasets file is a best-effort optimisation.
-        # If the cache directory cannot be created or written to
-        # (e.g. a read-only or otherwise restricted environment),
-        # fall back to the (possibly missing) path rather than breaking configuration loading.
-        logger.warning(f"Unable to prepare default ignore datasets file at {ignore_datasets_file}: {exc}")
-
-    return ignore_datasets_file
+            return
+        raise IgnoreDatasetsRefreshError(
+            f"Failed to download the ignore datasets file from {url} and no cached copy exists at {path}. "
+            "Point `ignore_datasets_file` (or `REF_IGNORE_DATASETS_FILE`) at a writable location "
+            "or a manually seeded file, or set `REF_IGNORE_DATASETS_URL=` (empty) to opt out of fetching."
+        ) from exc
+    else:
+        with path.open(mode="wb") as file:
+            file.write(response.content)
 
 
 @define(auto_attribs=True)
@@ -495,7 +531,11 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
-    ignore_datasets_file: Path = field(factory=_get_default_ignore_datasets_file)
+    ignore_datasets_file: Path = env_field(  # noqa: RUF009
+        "IGNORE_DATASETS_FILE",
+        factory=_get_default_ignore_datasets_file,
+        converter=Path,
+    )
     """
     Path to the file containing the ignore datasets
 
@@ -510,9 +550,22 @@ class Config:
           - another_facet: [another_value1, another_value2]
     ```
 
-    If this is not specified, a default ignore datasets file will be used.
-    The default file is downloaded from the Climate-REF GitHub repository
-    if it does not exist or is older than 6 hours.
+    Defaults to a path under the user cache directory.
+    The file is fetched lazily from `ignore_datasets_url` at solve time
+    if it is missing or older than 6 hours,
+    so this location must be writable unless the file is seeded manually.
+    """
+
+    ignore_datasets_url: str = env_field("IGNORE_DATASETS_URL", default=DEFAULT_IGNORE_DATASETS_URL)
+    """
+    URL to fetch the ignore datasets file from at solve time.
+
+    The download happens during solving only, at most once every 6 hours,
+    and never during configuration loading.
+
+    Set to an empty string (e.g. `REF_IGNORE_DATASETS_URL=`) to disable fetching entirely;
+    in that case the solver uses whatever file already exists at `ignore_datasets_file`,
+    which supports offline and air-gapped deployments.
     """
 
     paths: PathConfig = Factory(PathConfig)
@@ -565,6 +618,29 @@ class Config:
         config._raw = raw
         config._config_file = config_file
         return config
+
+    @classmethod
+    def collect_validation_errors(cls, config_file: Path) -> list[str]:
+        """
+        Collect strict validation errors for a configuration file.
+
+        Parameters
+        ----------
+        config_file
+            Path to the configuration file to validate.
+
+        Returns
+        -------
+        :
+            A list of validation errors. An empty list means the file is valid.
+        """
+        try:
+            with config_file.open() as fh:
+                doc = tomlkit.load(fh)
+            _converter_defaults.structure(doc, cls)
+        except Exception as exc:
+            return transform_error(exc, format_exception=_format_exception)
+        return []
 
     def refresh(self) -> "Config":
         """

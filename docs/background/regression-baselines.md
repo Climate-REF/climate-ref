@@ -27,13 +27,21 @@ A baseline is split into two layers with very different trust and portability pr
 
 The two layers are bound by a **`manifest.json`** alongside the bundle, which records:
 
-- `schema` — integer schema version for the manifest format itself (currently `1`).
+- `schema` — integer schema version for the manifest format itself (currently `2`).
   The loader rejects manifests whose `schema` does not match the current `SCHEMA_VERSION`,
   so format migrations are detected immediately rather than silently misread.
 - `test_case_version` — a monotonic, author-bumped integer that *authorises* a new baseline.
+- `diagnostic_version` — the author-declared `Diagnostic.version` captured at mint time,
+  coupling the baseline to the diagnostic code that produced it.
 - `committed` — sha256 digests of the committed JSON artefacts, over the exact placeholder-substituted bytes on disk.
 - `native` — sha256 + size of each curated native file (empty `{}` until minted).
 - `catalog_hash` — the hash of the test case's input `catalog.yaml`, coupling the baseline to the inputs that produced it.
+
+These give the manifest **two orthogonal version axes**:
+`test_case_version` is per-case and mint-authored (it authorises a new committed baseline),
+while `diagnostic_version` is per-diagnostic and author-authored (it declares that the
+diagnostic's *results* changed). `test_case_version` remains monotonic, and `diagnostic_version`
+may move backwards only for an authorised revert. The gate consults each for a different purpose.
 
 !!! note "An empty native set is a permanent, valid state"
     Fork contributors cannot mint
@@ -67,6 +75,7 @@ flowchart LR
 | `sync` | public read | Fetch the native blobs referenced by the manifest into the local store cache. |
 | `replay` | public read | Materialise the native baseline into a slot, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
 | `check-store` | write | Preflight the writable native store (credentials + bucket) without uploading anything. Run this before a slow `mint` to confirm credentials are correct. |
+| `migrate-manifests` | none | One-shot, idempotent maintenance command that rewrites every committed `manifest.json` at the current `SCHEMA_VERSION`, stamping each case's `diagnostic_version` from the diagnostic's in-code `Diagnostic.version`. |
 
 ### Output slots
 
@@ -172,7 +181,7 @@ because an empty native set is legitimate, a missing native baseline downgrades 
 - **`skip`** — nothing relevant to this case changed, or the case is not under regression management.
 - **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
 - **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline *and* no native baseline exists to replay against.
-- **`fail`** — an unauthorised or unverifiable change (committed bundle edited without a version bump, version moved backwards, bundle drifted from its manifest, or catalog changed without regenerating the baseline).
+- **`fail`** — an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
 
 ### Decision flow
 
@@ -190,17 +199,24 @@ flowchart TD
     committedOk -->|yes| catalogOk{catalog.yaml<br/>matches manifest<br/>catalog_hash?}
     catalogOk -->|no| failCatalog[["FAIL<br/>inputs changed without<br/>regenerating baseline"]]
 
-    catalogOk -->|yes| seeding{newly added<br/>this branch?}
+    catalogOk -->|yes| staleVersion{code Diagnostic.version<br/>vs baseline<br/>diagnostic_version}
+    staleVersion -->|"code &gt; baseline"| failStale[["FAIL<br/>stale baseline<br/>re-mint required"]]
+    staleVersion -->|"code &lt; baseline"| failDowngrade[["FAIL<br/>illegal downgrade<br/>lower code AND re-mint"]]
+
+    staleVersion -->|equal| seeding{newly added<br/>this branch?}
     seeding -->|yes| seedNative{native<br/>non-empty?}
     seedNative -->|yes| replaySeed[["REPLAY<br/>seed against committed"]]
     seedNative -->|no| skipSeed[["SKIP<br/>committed-only baseline"]]
 
-    seeding -->|no| versionCmp{version vs base}
+    seeding -->|no| versionCmp{test_case_version<br/>vs base}
     versionCmp -->|decreased| failVersion[["FAIL<br/>version not monotonic"]]
-    versionCmp -->|bumped| bumpNative{native<br/>present?}
+    versionCmp -->|"unchanged or bumped"| diagVersionCmp{diagnostic_version<br/>decreased vs base?}
+    diagVersionCmp -->|"yes, committed unchanged"| failBareDowngrade[["FAIL<br/>bare downgrade<br/>re-mint required"]]
+    diagVersionCmp -->|"no, or committed re-minted"| versionBumped{test_case_version<br/>bumped?}
+    versionBumped -->|yes| bumpNative{native<br/>present?}
     bumpNative -->|yes| replayBump[["REPLAY<br/>verify new baseline<br/>reproduces from native"]]
     bumpNative -->|no| execute[["EXECUTE<br/>full re-run<br/>(no native to replay)"]]
-    versionCmp -->|unchanged| committedChanged{committed<br/>changed?}
+    versionBumped -->|no| committedChanged{committed<br/>changed?}
 
     committedChanged -->|yes| failUnauthorised[["FAIL<br/>baseline changed without<br/>version bump"]]
     committedChanged -->|no| nativeChanged{native<br/>changed?}
@@ -224,6 +240,16 @@ and maps the changed-file list onto each case:
 - **`extraction_changed`** is coarse and errs toward `replay` (cheap, credential-free):
   any change under the diagnostic's provider package,
   or under the core regression package, counts for every case in that provider.
+  It is a *path-based* heuristic, so it cannot tell an execution change from an extraction change.
+- **`diagnostic_version`** is the *author-declared* execution-change signal: when a diagnostic's
+  results change the author bumps `Diagnostic.version`, and the gate fails any baseline whose
+  recorded `diagnostic_version` no longer matches the in-code value until it is re-minted.
+  This closes the **replay blind-spot** that `extraction_changed` alone leaves open:
+  an execution-affecting change with no extraction-path edit (the #671 ECS case) would otherwise
+  route to a green replay against a stale bundle.
+  A `diagnostic_version` decrease is permitted only as an **authorised revert**: the author lowers
+  the code version *and* re-mints, so the committed bundle changes and the gate recognises the
+  revert structurally rather than via a flag.
 - **`committed_integrity_ok`** recomputes the committed digests from the working tree
   and compares them to `manifest.committed`.
 - **`catalog_integrity_ok`** recomputes the input catalog hash

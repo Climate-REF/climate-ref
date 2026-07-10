@@ -6,10 +6,13 @@ import dask.config
 import ilamb3
 import ilamb3.regions as ilr
 import ilamb3.transform
+import numpy as np
 import pandas as pd
+import pint
 import pooch
 import xarray as xr
 from ilamb3 import run
+from ilamb3.dataset import coarsen_dataset, get_dim_name
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
@@ -25,7 +28,7 @@ from climate_ref_core.diagnostics import (
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
-from climate_ref_core.metric_values.typing import SeriesMetricValue
+from climate_ref_core.metric_values.typing import MetricValueKind, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_core.testing import TestCase, TestDataSpecification
@@ -79,6 +82,42 @@ class _RelationshipTimeTransform(ILAMBTransform):
 
 
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_relationship_time", _RelationshipTimeTransform)
+
+
+class _CoarsenSpatial(ILAMBTransform):
+    """
+    Conservatively coarsen a very fine field before comparison.
+
+    Some obs4MIPs references (e.g. ``NOAA-NCEI-LAI-AVHRR-5-0`` at ~0.05 degrees) are far finer
+    than any CMIP model, which makes ilamb3's regrid/scoring step intractable.
+    This coarsens the field to a common target resolution, which ESM outputs are compared to.
+    Fields already at or coarser than the target (the models) are left untouched.
+    """
+
+    def __init__(self, variable_id: str, resolution: float = 0.5):
+        self.variable_id = variable_id
+        self.resolution = resolution
+
+    def required_variables(self) -> list[str]:
+        return [self.variable_id]
+
+    def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        if self.variable_id not in ds:
+            return ds
+        lat = ds[get_dim_name(ds, "lat")]
+        lon = ds[get_dim_name(ds, "lon")]
+        current = float(
+            np.sqrt(lat.diff(lat.name).mean().values ** 2 + lon.diff(lon.name).mean().values ** 2)
+        )
+        if current >= self.resolution:
+            # Already at or coarser than the target (e.g. model data); leave it lazy.
+            return ds
+        # ``coarsen_dataset`` uses ``.where(..., drop=True)``, whose boolean indexer must be in memory
+        # The reference is dask-backed ( open_mfdataset), so materialise it first.
+        return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+
+
+ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_coarsen_spatial", _CoarsenSpatial)
 
 
 def _get_branded_variable(
@@ -212,6 +251,113 @@ def format_cmec_output_bundle(
     return {"DIMENSIONS": {"json_structure": list(dimensions), **dimensions_dict}, "RESULTS": results}
 
 
+def _clean_units(units: str) -> str:
+    """
+    Normalise a units string to a clean CF/UDUNITS form.
+
+    Model traces hold a pint repr (``"kg / meter ** 2 / second"``) while references keep
+    CF units (``"kg m-2 s-1"``); parsing through the ilamb3 pint registry and re-emitting
+    symbols gives both the same form. Unparseable and dimensionless strings pass through.
+    """
+    if not units:
+        return units
+    ureg = pint.get_application_registry()  # type: ignore[no-untyped-call]
+    try:
+        unit = ureg.Unit(units)
+    except Exception:
+        # Not something pint understands (e.g. "months since 1980"); leave it as-is.
+        return units
+    parts = []
+    # Positive (and zero) exponents first, then negatives; alphabetical within each group.
+    for name, exponent in sorted(unit._units.items(), key=lambda item: (item[1] < 0, item[0])):
+        symbol = ureg.get_symbol(name)
+        power = int(exponent) if exponent == int(exponent) else exponent
+        parts.append(symbol if power == 1 else f"{symbol}{power}")
+    return " ".join(parts) or units
+
+
+def _build_series(
+    output_directory: Path,
+    dataset_source: str,
+    common_dimensions: Mapping[str, str],
+) -> list[SeriesMetricValue]:
+    """
+    Build series metric values from the 1-d time traces in the output directory.
+
+    A ``Reference.nc`` trace is a reference series carrying only the reference identity;
+    every other trace is a model series that also keeps the reference it was scored
+    against so the two group together. Units are normalised to a clean CF form.
+    """
+    series: list[SeriesMetricValue] = []
+    for ncfile in sorted(output_directory.glob("*.nc")):
+        time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
+        ds = xr.open_dataset(ncfile, decode_times=time_coder)
+        for name, da in sorted(ds.items()):
+            # Only create series for 1d DataArray's with these dimensions
+            if not (da.ndim == 1 and set(da.dims).intersection(["time", "month"])):
+                continue
+            str_name = str(name)
+            index_name = str(da.dims[0])
+            raw_index = ds[index_name].values.tolist()
+            # Capture the calendar from the cftime index before converting it to
+            # ISO strings (afterwards the values are plain strings with no calendar).
+            calendar = raw_index[0].calendar if hasattr(raw_index[0], "calendar") else None
+            if hasattr(raw_index[0], "isoformat"):
+                index = [v.isoformat() for v in raw_index]
+            else:
+                index = raw_index
+
+            # Presentation metadata; units normalised so model and reference agree.
+            value_units = _clean_units(da.attrs.get("units", ""))
+            value_long_name = da.attrs.get("long_name", str_name)
+            index_units = ds[index_name].attrs.get("units") or None
+            attrs: dict[str, str | float | int | None] = {
+                "units": value_units,
+                "long_name": value_long_name,
+                "standard_name": da.attrs.get("standard_name", ""),
+            }
+            if calendar is not None:
+                attrs["calendar"] = calendar
+
+            # Parse out some dimensions
+            kind: MetricValueKind
+            if ncfile.stem == "Reference":
+                # Reference series carry the reference identity only; drop the
+                # "Reference" source_id sentinel (model identity is for comparisons).
+                kind = "reference"
+                dimensions = {
+                    "reference_source_id": dataset_source,
+                    "metric": str_name,
+                }
+            else:
+                kind = "model"
+                dimensions = {"metric": str_name, **common_dimensions}
+
+            # Split the metric into metric and region if possible
+            if "_" in str_name:
+                metric_name, region_name = str_name.split("_", maxsplit=1)
+                dimensions["metric"] = metric_name
+                dimensions["region"] = region_name
+            else:
+                dimensions["region"] = "None"
+
+            series.append(
+                SeriesMetricValue(
+                    kind=kind,
+                    dimensions=dimensions,
+                    values=da.values.tolist(),
+                    index=index,
+                    index_name=index_name,
+                    value_units=value_units,
+                    value_long_name=value_long_name,
+                    index_units=index_units,
+                    calendar=calendar,
+                    attributes=attrs,
+                )
+            )
+    return series
+
+
 def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
     """
     Build a CMEC bundle from information in the dataframe.
@@ -235,7 +381,22 @@ def _build_cmec_bundle(df: pd.DataFrame) -> dict[str, Any]:
     # Convert the value column to numeric, coercing errors to NaN
     model_df = model_df.assign(value=pd.to_numeric(model_df["value"], errors="coerce").astype("float64"))
 
-    dimensions = ["experiment_id", "source_id", "member_id", "grid_label", "region", "metric", "statistic"]
+    # Scalars are model-vs-reference comparisons: kind "model", keeping both identities.
+    model_df["kind"] = "model"
+
+    # kind and reference_source_id are constant, so they go outermost and wrap uniformly;
+    # statistic stays terminal since metrics expose different (ragged) statistic sets.
+    dimensions = [
+        "kind",
+        "reference_source_id",
+        "experiment_id",
+        "source_id",
+        "member_id",
+        "grid_label",
+        "region",
+        "metric",
+        "statistic",
+    ]
     attributes = ["type", "units"]
     for dimension in dimensions:
         model_df[dimension] = model_df[dimension].where(model_df[dimension].notna(), "None")
@@ -505,6 +666,11 @@ class ILAMBStandard(Diagnostic):
     """
 
     version = 2
+    """
+    Default version for ILAMB diagnostics.
+
+    Individual diagnostics can override this with a ``version`` key in their configuration entry.
+    """
 
     def __init__(
         self,
@@ -532,6 +698,10 @@ class ILAMBStandard(Diagnostic):
         # Allow per-diagnostic override of the test source_id
         # (not all variables are available from CanESM5)
         test_source_id = ilamb_kwargs.pop("test_source_id", "CanESM5")
+
+        diagnostic_version = ilamb_kwargs.pop("version", None)
+        if diagnostic_version is not None:
+            self.version = diagnostic_version
 
         self.ilamb_kwargs = ilamb_kwargs
 
@@ -686,6 +856,18 @@ class ILAMBStandard(Diagnostic):
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+            # Relationship analyses (and any remaining legacy string-path sources)
+            # still refer to keys in the ILAMB/obs4REF registries.
+            # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so
+            # they remain resolvable when a diagnostic mixes obs4REF and registry data.
+            ref_datasets = pd.concat(
+                [
+                    ref_datasets,
+                    self.ilamb_data.datasets,
+                    registry_to_collection(dataset_registry_manager["obs4ref"]).datasets,
+                ],
+                ignore_index=True,
+            )
         else:
             # If the data is not ingested yet but in a registry, we concat the
             # obs4REF registries to the ilamb one so that any key may be used
@@ -793,55 +975,7 @@ class ILAMBStandard(Diagnostic):
 
         # Add series to the output based on the time traces we find in the
         # output files
-        series = []
-        for ncfile in sorted(definition.output_directory.glob("*.nc")):
-            time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
-            ds = xr.open_dataset(ncfile, decode_times=time_coder)
-            for name, da in sorted(ds.items()):
-                # Only create series for 1d DataArray's with these dimensions
-                if not (da.ndim == 1 and set(da.dims).intersection(["time", "month"])):
-                    continue
-                # Convert dimension values
-                attrs = {
-                    "units": da.attrs.get("units", ""),
-                    "long_name": da.attrs.get("long_name", str(name)),
-                    "standard_name": da.attrs.get("standard_name", ""),
-                }
-                str_name = str(name)
-                index_name = str(da.dims[0])
-                index = ds[index_name].values.tolist()
-                if hasattr(index[0], "isoformat"):
-                    index = [v.isoformat() for v in index]
-                if hasattr(index[0], "calendar"):
-                    attrs["calendar"] = index[0].calendar
-
-                # Parse out some dimensions
-                if ncfile.stem == "Reference":
-                    dimensions = {
-                        "source_id": "Reference",
-                        "reference_source_id": dataset_source,
-                        "metric": str_name,
-                    }
-                else:
-                    dimensions = {"metric": str_name, **common_dimensions}
-
-                # Split the metric into metric and region if possible
-                if "_" in str_name:
-                    metric_name, region_name = str_name.split("_", maxsplit=1)
-                    dimensions["metric"] = metric_name
-                    dimensions["region"] = region_name
-                else:
-                    dimensions["region"] = "None"
-
-                series.append(
-                    SeriesMetricValue(
-                        dimensions=dimensions,
-                        values=da.values.tolist(),
-                        index=index,
-                        index_name=index_name,
-                        attributes=attrs,
-                    )
-                )
+        series = _build_series(definition.output_directory, dataset_source, common_dimensions)
 
         return ExecutionResult.build_from_output_bundle(
             definition, cmec_output_bundle=output_bundle, cmec_metric_bundle=metric_bundle, series=series
@@ -909,9 +1043,10 @@ def _caption_from_filename(filename: Path, common_dimensions: dict[str, str]) ->
         if plot_option is not None:
             figure_dimensions["statistic"] += f"|{plot_option}"
 
-    # If the source is the reference we don't need some dimensions as they are not applicable
+    # Reference plots carry the reference identity, not a model source_id.
     if source == "Reference":
-        figure_dimensions["source_id"] = "Reference"
+        figure_dimensions["kind"] = "reference"
+        figure_dimensions["reference_source_id"] = common_dimensions.get("reference_source_id", "None")
     else:
         figure_dimensions = {**common_dimensions, **figure_dimensions}
 

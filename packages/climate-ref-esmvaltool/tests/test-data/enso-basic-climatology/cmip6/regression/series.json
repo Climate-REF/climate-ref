@@ -50,6 +50,7 @@
       14.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       0.8117609,
       0.9348878,
@@ -134,6 +135,7 @@
       14.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       0.4165757,
       0.3797182,
@@ -218,6 +220,7 @@
       14.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       1.640816,
       1.671181,
@@ -392,6 +395,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       1.553391,
       1.584454,
@@ -656,6 +660,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       0.4707869,
       0.448114,
@@ -920,6 +925,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       14.90164,
       16.3394,
@@ -1184,6 +1190,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       8.117987,
       8.118301,
@@ -1448,6 +1455,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       1.553391,
       1.584454,
@@ -1712,6 +1720,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       0.4707869,
       0.448114,
@@ -1976,6 +1985,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       14.90164,
       16.3394,
@@ -2240,6 +2250,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       29.65842,
       29.57058,
@@ -2504,6 +2515,7 @@
       269.5
     ],
     "index_name": "lon",
+    "kind": "reference",
     "values": [
       -4.569511,
       -5.326211,

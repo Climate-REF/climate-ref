@@ -10,8 +10,9 @@ This is useful for local testing and debugging.
 """
 
 import pathlib
+from collections.abc import Sequence
 from concurrent.futures import Future
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, get_args
 
 from attrs import define
 from loguru import logger
@@ -23,6 +24,8 @@ from climate_ref.models.execution import Execution, ExecutionOutput, ResultOutpu
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult, ensure_relative_path
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.metric_values import MetricValueKind
+from climate_ref_core.metric_values import ScalarMetricValue as TScalar
 from climate_ref_core.metric_values import SeriesMetricValue as TSeries
 from climate_ref_core.output_files import copy_execution_outputs, copy_output_file
 from climate_ref_core.pycmec.controlled_vocabulary import CV
@@ -32,15 +35,65 @@ from climate_ref_core.pycmec.output import CMECOutput, OutputDict
 if TYPE_CHECKING:
     from climate_ref.config import Config
 
+# The role of every metric value must be one of these at ingest. This is enforced
+# hard (not warn-only) because ``kind`` is the authoritative role signal: a missing
+# or unexpected value cannot be silently defaulted without misclassifying the value.
+# Derived from the single source of truth so it cannot drift from the model field.
+_VALID_KINDS = frozenset(get_args(MetricValueKind))
+
+
+def _validated_kind_and_dimensions(value: "TScalar | TSeries") -> tuple[str, dict[str, str]]:
+    """
+    Return the value's validated ``kind`` and its dimensions with ``kind`` removed.
+
+    ``kind`` is persisted in its own column, so it is dropped from the free dimensions
+    in case a producer also carried it there. Rejects an unknown role hard rather than
+    silently defaulting it.
+    """
+    kind = value.kind
+    if kind not in _VALID_KINDS:
+        raise ResultValidationError(
+            f"Invalid metric-value kind {kind!r}; expected one of {sorted(_VALID_KINDS)}"
+        )
+    dimensions = {k: v for k, v in value.dimensions.items() if k != "kind"}
+    return kind, dimensions
+
 
 @define
 class ExecutionFuture:
     """A container linking a submitted future to its execution metadata."""
 
     future: Future[ExecutionResult]
+    """
+    The future representing the asynchronous execution of this task.
+
+    This future has a base-class of ``concurrent.futures.Future``,
+    but the concrete class of the instance will depend on the executor.
+    """
+
     definition: ExecutionDefinition
+    """
+    The execution definition associated with this future.
+    """
+
     execution_id: int | None = None
+    """
+    The ID of the execution associated with this future, or ``None`` if not yet assigned.
+    """
+
     submitted_at: float = 0.0
+    """
+    Wall-clock time (``time.time()``) at which this future was submitted to the executor.
+    """
+
+    started_at: float | None = None
+    """
+    Wall-clock time (``time.time()``) at which a worker was first observed running this future,
+    or ``None`` while it is still queued.
+
+    The per-task timeout is budgeted against this rather than ``submitted_at``
+    so that time spent waiting in the pool queue is not counted as execution time.
+    """
 
 
 def process_result(
@@ -124,12 +177,14 @@ def ingest_scalar_values(
 
     new_values = []
     for metric_result in cmec_metric_bundle.iter_results():
+        kind, dimensions = _validated_kind_and_dimensions(metric_result)
         new_values.append(
             {
                 "execution_id": execution.id,
                 "value": metric_result.value,
                 "attributes": metric_result.attributes,
-                **metric_result.dimensions,
+                "kind": kind,
+                **dimensions,
             }
         )
 
@@ -177,28 +232,39 @@ def ingest_series_values(
             "Diagnostic series values do not conform with the controlled vocabulary", exc_info=True
         )
 
-    # Resolve (deduplicate) the shared index axes for this batch first,
-    # so each distinct index is stored once in ``index_axis`` and referenced by id rather
-    # than duplicated on every series row.
-    axis_id_by_hash: dict[str, int] = {}
-    for series_result in series_values:
-        digest = SeriesIndex.compute_hash(series_result.index_name, series_result.index)
-        if digest not in axis_id_by_hash:
-            axis = SeriesIndex.get_or_create(database.session, series_result.index_name, series_result.index)
-            axis_id_by_hash[digest] = axis.id
+    # Resolve (deduplicate) the shared index axes for this batch up front,
+    # so each distinct index is stored once in ``index_axis``
+    # and referenced by id rather than duplicated on every series row.
+    digest_by_series = [
+        SeriesIndex.compute_hash(series_result.index_name, series_result.index)
+        for series_result in series_values
+    ]
+    axis_payload_by_hash: dict[str, tuple[str | None, Sequence[float | int | str]]] = {}
+    for series_result, digest in zip(series_values, digest_by_series, strict=True):
+        axis_payload_by_hash.setdefault(digest, (series_result.index_name, series_result.index))
+
+    axis_id_by_hash = SeriesIndex.bulk_get_or_create(database.session, axis_payload_by_hash)
 
     new_values = []
-    for series_result in series_values:
-        digest = SeriesIndex.compute_hash(series_result.index_name, series_result.index)
-        new_values.append(
-            {
-                "execution_id": execution.id,
-                "values": series_result.values,
-                "attributes": series_result.attributes,
-                "index_id": axis_id_by_hash[digest],
-                **series_result.dimensions,
-            }
-        )
+    for series_result, digest in zip(series_values, digest_by_series, strict=True):
+        kind, dimensions = _validated_kind_and_dimensions(series_result)
+        row = {
+            "execution_id": execution.id,
+            "values": series_result.values,
+            "attributes": series_result.attributes,
+            "index_id": axis_id_by_hash[digest],
+            "kind": kind,
+            **dimensions,
+        }
+        if kind == "reference":
+            # Stable content hash so an identical observation ingested by different
+            # executions deduplicates to the same reference_id.
+            row["reference_id"] = SeriesMetricValue.compute_reference_id(
+                series_result.values,
+                series_result.index,
+                dimensions.get("reference_source_id"),
+            )
+        new_values.append(row)
 
     logger.debug(f"Ingesting {len(new_values)} series values for execution {execution.id}")
 

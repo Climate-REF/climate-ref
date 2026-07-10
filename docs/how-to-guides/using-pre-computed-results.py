@@ -22,6 +22,10 @@
 #
 # This Jupyter notebook shows how to use this API to download pre-computed results and use those to do
 # your own analyses.
+#
+# If you instead have a local REF database (e.g. from running diagnostics yourself),
+# you can read those results straight into pandas without a server using the `climate_ref.results` read layer.
+# See [Reading results locally with pandas](reading-results-locally.md).
 
 # %% [markdown]
 # ## Generate and install

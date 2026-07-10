@@ -7,6 +7,8 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
+      "reference_source_id",
       "experiment_id",
       "source_id",
       "member_id",
@@ -15,6 +17,9 @@
       "metric",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -24,6 +29,9 @@
       "Relationship pr": {},
       "Relationship tas": {},
       "Spatial Distribution": {}
+    },
+    "reference_source_id": {
+      "WECANN": {}
     },
     "region": {
       "global": {
@@ -43,7 +51,7 @@
     "statistic": {
       "Bias": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "Bias Score": {
         "type": "score",
@@ -59,11 +67,11 @@
       },
       "Period Mean": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "RMSE": {
         "type": "scalar",
-        "units": "g d-1 m-2"
+        "units": "kg m-2 s-1"
       },
       "RMSE Score": {
         "type": "score",
@@ -87,52 +95,56 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "historical": {
-      "CanESM5": {
-        "r1i1p1f1": {
-          "gn": {
-            "global": {
-              "Bias": {
-                "Bias": 0.7111356916211374,
-                "Bias Score": 0.4763392713337563,
-                "Period Mean": 3.0346447224515662
-              },
-              "RMSE": {
-                "RMSE": 1.9151286126593603,
-                "RMSE Score": 0.3551712984549456
-              },
-              "Relationship pr": {
-                "Relationship Score pr": 0.4758795641964789
-              },
-              "Relationship tas": {
-                "Relationship Score tas": 0.5501582221494062
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.8709317891709268,
-                "Normalized Standard Deviation": 1.4735988673363951,
-                "Spatial Distribution Score": 0.8078278533662464
-              }
-            },
-            "tropical": {
-              "Bias": {
-                "Bias": 1.539485587605515,
-                "Bias Score": 0.3472815566533462,
-                "Period Mean": 6.7071584701427875
-              },
-              "RMSE": {
-                "RMSE": 3.0207356978019804,
-                "RMSE Score": 0.2914812293962558
-              },
-              "Relationship pr": {
-                "Relationship Score pr": 0.5546037599052827
-              },
-              "Relationship tas": {
-                "Relationship Score tas": 0.5200937813795461
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.3174619887792373,
-                "Normalized Standard Deviation": 1.5455180331005305,
-                "Spatial Distribution Score": 0.548111567951591
+    "model": {
+      "WECANN": {
+        "historical": {
+          "CanESM5": {
+            "r1i1p1f1": {
+              "gn": {
+                "global": {
+                  "Bias": {
+                    "Bias": 8.230737e-09,
+                    "Bias Score": 0.4763393,
+                    "Period Mean": 3.51232e-08
+                  },
+                  "RMSE": {
+                    "RMSE": 2.216584e-08,
+                    "RMSE Score": 0.3551713
+                  },
+                  "Relationship pr": {
+                    "Relationship Score pr": 0.4758796
+                  },
+                  "Relationship tas": {
+                    "Relationship Score tas": 0.5501582
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.8709318,
+                    "Normalized Standard Deviation": 1.473599,
+                    "Spatial Distribution Score": 0.8078279
+                  }
+                },
+                "tropical": {
+                  "Bias": {
+                    "Bias": 1.781812e-08,
+                    "Bias Score": 0.3472816,
+                    "Period Mean": 7.762915e-08
+                  },
+                  "RMSE": {
+                    "RMSE": 3.496222e-08,
+                    "RMSE Score": 0.2914812
+                  },
+                  "Relationship pr": {
+                    "Relationship Score pr": 0.5546038
+                  },
+                  "Relationship tas": {
+                    "Relationship Score tas": 0.5200938
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.317462,
+                    "Normalized Standard Deviation": 1.545518,
+                    "Spatial Distribution Score": 0.5481116
+                  }
+                }
               }
             }
           }

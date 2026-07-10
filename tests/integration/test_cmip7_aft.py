@@ -52,6 +52,7 @@ def config_cmip7_aft(config):
     return config
 
 
+@pytest.mark.skip(reason="Re-enable once ilamb3 loads references lazily.")
 @pytest.mark.slow
 def test_solve_cmip7_aft(
     sample_data_dir,

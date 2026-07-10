@@ -84,6 +84,22 @@ class TestMetricSolver:
         assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
         assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
 
+    def test_build_from_db_refreshes_ignore_datasets(self, config, db_seeded, mocker):
+        refresh_mock = mocker.patch("climate_ref.solver.refresh_ignore_datasets_file")
+
+        ExecutionSolver.build_from_db(config, db_seeded)
+
+        refresh_mock.assert_called_once_with(config)
+
+    def test_build_from_db_no_network_when_url_empty(self, config, db_seeded, mocker):
+        # The `config` fixture already sets ignore_datasets_url="", so the refresh
+        # must not attempt any network I/O.
+        get_mock = mocker.patch("climate_ref.config.requests.get")
+
+        ExecutionSolver.build_from_db(config, db_seeded)
+
+        get_mock.assert_not_called()
+
 
 class TestExtractCoveredDatasetsWithDataCatalog:
     """Test that extract_covered_datasets triggers finalisation when given a DataCatalog."""

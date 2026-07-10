@@ -198,6 +198,60 @@ class TestCommandLineDiagnostic:
         assert result == diagnostic_result
 
 
+class TestDiagnosticRun:
+    """Tests for ``Diagnostic.run`` and its ``capture_regression`` hook."""
+
+    def _make_diagnostic(self):
+        class RunDiagnostic(Diagnostic):
+            name = "run-diagnostic"
+            slug = "run-diagnostic"
+            data_requirements = (
+                DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),
+            )
+
+            def execute(self, definition):
+                """No-op execute."""
+
+            def build_execution_result(self, definition):
+                """Unused; patched per-test."""
+
+        return RunDiagnostic()
+
+    def test_run_default_skips_regression_hook(self, mocker):
+        """The default ``run`` executes then builds, without the regression hook."""
+        diagnostic = self._make_diagnostic()
+        execute = mocker.patch.object(diagnostic, "execute")
+        prepare = mocker.patch.object(diagnostic, "prepare_regression_output")
+        build = mocker.patch.object(diagnostic, "build_execution_result", return_value=mocker.sentinel.result)
+        definition = mocker.sentinel.definition
+
+        result = diagnostic.run(definition)
+
+        execute.assert_called_once_with(definition)
+        prepare.assert_not_called()
+        build.assert_called_once_with(definition)
+        assert result is mocker.sentinel.result
+
+    def test_run_capture_regression_calls_hook_between_execute_and_build(self, mocker):
+        """With ``capture_regression=True`` the hook runs after execute and before build."""
+        diagnostic = self._make_diagnostic()
+        manager = mocker.Mock()
+        manager.attach_mock(mocker.patch.object(diagnostic, "execute"), "execute")
+        manager.attach_mock(mocker.patch.object(diagnostic, "prepare_regression_output"), "prepare")
+        manager.attach_mock(
+            mocker.patch.object(diagnostic, "build_execution_result", return_value=mocker.sentinel.result),
+            "build",
+        )
+        definition = mocker.sentinel.definition
+
+        result = diagnostic.run(definition, capture_regression=True)
+
+        assert result is mocker.sentinel.result
+        # Ordering matters: normalise the native output only after execute, before build.
+        assert [call[0] for call in manager.mock_calls] == ["execute", "prepare", "build"]
+        manager.prepare.assert_called_once_with(definition)
+
+
 class TestExecutionResult:
     def test_build_from_output_bundle(
         self,

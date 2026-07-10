@@ -1,332 +1,480 @@
-cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5:
+cmip6_historical_gn_r1i1p1f1_ACCESS-ESM1-5__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.Lmon.nbp.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.areacella.gn.v20191115
   - CMIP6.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.fx.sftlf.gn.v20191115
-cmip6_historical_gn_r1i1p1f1_CESM2:
-  cmip6:
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.nbp.gn.v20190308
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
-  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.sftlf.gn.v20190308
-cmip6_historical_gn_r1i1p1f1_CESM2-FV2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CESM2-FV2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.Lmon.nbp.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.fx.sftlf.gn.v20191120
-cmip6_historical_gn_r1i1p1f1_CESM2-WACCM:
-  cmip6:
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Lmon.nbp.gn.v20190227
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.areacella.gn.v20190227
-  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.sftlf.gn.v20190227
-cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CESM2-WACCM-FV2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.Lmon.nbp.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.areacella.gn.v20191120
   - CMIP6.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.fx.sftlf.gn.v20191120
-cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CESM2-WACCM__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.Lmon.nbp.gn.v20190227
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.areacella.gn.v20190227
+  - CMIP6.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.fx.sftlf.gn.v20190227
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CESM2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
+  cmip6:
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.Lmon.nbp.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.areacella.gn.v20190308
+  - CMIP6.CMIP.NCAR.CESM2.historical.r1i1p1f1.fx.sftlf.gn.v20190308
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CMCC-CM2-SR5__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.Lmon.nbp.gn.v20200616
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.areacella.gn.v20200616
   - CMIP6.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.fx.sftlf.gn.v20200616
-cmip6_historical_gn_r1i1p1f1_CMCC-ESM2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CMCC-ESM2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.Lmon.nbp.gn.v20210114
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.areacella.gn.v20210114
   - CMIP6.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.fx.sftlf.gn.v20210114
-cmip6_historical_gn_r1i1p1f1_CanESM5:
-  cmip6:
-  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Lmon.nbp.gn.v20190429
-  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
-  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.sftlf.gn.v20190429
-cmip6_historical_gn_r1i1p1f1_CanESM5-1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CanESM5-1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.Lmon.nbp.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.fx.areacella.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.fx.sftlf.gn.v20190429
-cmip6_historical_gn_r1i1p1f1_GISS-E2-1-G:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_CanESM5__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
-  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.historical.r1i1p1f1.Lmon.nbp.gn.v20181015
-cmip6_historical_gn_r1i1p1f1_GISS-E2-1-G-CC:
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Lmon.nbp.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
+  - CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.sftlf.gn.v20190429
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_GISS-E2-1-G-CC__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G-CC.historical.r1i1p1f1.Lmon.nbp.gn.v20190815
-cmip6_historical_gn_r1i1p1f1_GISS-E2-1-H:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_GISS-E2-1-G__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
+  cmip6:
+  - CMIP6.CMIP.NASA-GISS.GISS-E2-1-G.historical.r1i1p1f1.Lmon.nbp.gn.v20181015
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_GISS-E2-1-H__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NASA-GISS.GISS-E2-1-H.historical.r1i1p1f1.Lmon.nbp.gn.v20190403
-cmip6_historical_gn_r1i1p1f1_GISS-E2-2-G:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_GISS-E2-2-G__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NASA-GISS.GISS-E2-2-G.historical.r1i1p1f1.Lmon.nbp.gn.v20191120
-cmip6_historical_gn_r1i1p1f1_GISS-E2-2-H:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_GISS-E2-2-H__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NASA-GISS.GISS-E2-2-H.historical.r1i1p1f1.Lmon.nbp.gn.v20191120
-cmip6_historical_gn_r1i1p1f1_MPI-ESM-1-2-HAM:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_MPI-ESM-1-2-HAM__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.Lmon.nbp.gn.v20190627
   - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.fx.areacella.gn.v20190627
   - CMIP6.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.fx.sftlf.gn.v20190627
-cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-LR:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_MPI-ESM1-2-LR__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.Lmon.nbp.gn.v20190710
   - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.fx.areacella.gn.v20190710
   - CMIP6.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.fx.sftlf.gn.v20190710
-cmip6_historical_gn_r1i1p1f1_NorCPM1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_NorCPM1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.Lmon.nbp.gn.v20200724
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.fx.areacella.gn.v20200724
   - CMIP6.CMIP.NCC.NorCPM1.historical.r1i1p1f1.fx.sftlf.gn.v20200724
-cmip6_historical_gn_r1i1p1f1_NorESM2-LM:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_NorESM2-LM__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.Lmon.nbp.gn.v20190917
   - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.fx.areacella.gn.v20190815
   - CMIP6.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.fx.sftlf.gn.v20191108
-cmip6_historical_gn_r1i1p1f1_NorESM2-MM:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_NorESM2-MM__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.Lmon.nbp.gn.v20191108
   - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.fx.areacella.gn.v20191108
   - CMIP6.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.fx.sftlf.gn.v20191108
-cmip6_historical_gn_r1i1p1f1_SAM0-UNICON:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_SAM0-UNICON__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.Lmon.nbp.gn.v20190323
   - CMIP6.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.fx.areacella.gn.v20190323
   - CMIP6.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.fx.sftlf.gn.v20190323
-cmip6_historical_gn_r1i1p1f1_TaiESM1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f1_TaiESM1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.Lmon.nbp.gn.v20200624
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.fx.areacella.gn.v20200624
   - CMIP6.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.fx.sftlf.gn.v20200624
-cmip6_historical_gn_r1i1p1f2_MIROC-ES2L:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f2_MIROC-ES2L__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.Lmon.nbp.gn.v20190823
   - CMIP6.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.fx.areacella.gn.v20190823
   - CMIP6.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.fx.sftlf.gn.v20190823
-cmip6_historical_gn_r1i1p1f2_UKESM1-0-LL:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f2_UKESM1-0-LL__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.Lmon.nbp.gn.v20190627
-cmip6_historical_gn_r1i1p1f2_UKESM1-1-LL:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p1f2_UKESM1-1-LL__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.Lmon.nbp.gn.v20220512
-cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gn_r1i1p2f1_CanESM5-CanOE__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.Lmon.nbp.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.fx.areacella.gn.v20190429
   - CMIP6.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.fx.sftlf.gn.v20190429
-cmip6_historical_gr1_r1i1p1f1_GFDL-ESM4:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr1_r1i1p1f1_GFDL-ESM4__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.Lmon.nbp.gr1.v20190726
   - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.fx.areacella.gr1.v20190726
   - CMIP6.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.fx.sftlf.gr1.v20190726
-cmip6_historical_gr1_r1i1p1f1_INM-CM4-8:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr1_r1i1p1f1_INM-CM4-8__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.INM.INM-CM4-8.1pctCO2.r1i1p1f1.fx.areacella.gr1.v20190530
   - CMIP6.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.Lmon.nbp.gr1.v20190530
   - CMIP6.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.fx.sftlf.gr1.v20190528
-cmip6_historical_gr1_r1i1p1f1_INM-CM5-0:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr1_r1i1p1f1_INM-CM5-0__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.Lmon.nbp.gr1.v20190610
   - CMIP6.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.fx.areacella.gr1.v20190610
   - CMIP6.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.fx.sftlf.gr1.v20190610
-cmip6_historical_gr_r1i1p1f1_E3SM-1-1:
-  cmip6:
-  - CMIP6.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.Lmon.nbp.gr.v20220127
-  - CMIP6.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.fx.areacella.gr.v20191212
-  - CMIP6.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.fx.sftlf.gr.v20201015
-cmip6_historical_gr_r1i1p1f1_E3SM-1-1-ECA:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_E3SM-1-1-ECA__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.E3SM-Project.E3SM-1-1-ECA.historical.r1i1p1f1.Lmon.nbp.gr.v20220127
   - CMIP6.CMIP.E3SM-Project.E3SM-1-1-ECA.historical.r1i1p1f1.fx.areacella.gr.v20200116
   - CMIP6.CMIP.E3SM-Project.E3SM-1-1-ECA.historical.r1i1p1f1.fx.sftlf.gr.v20201015
-cmip6_historical_gr_r1i1p1f1_EC-Earth3-CC:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_E3SM-1-1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
+  cmip6:
+  - CMIP6.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.Lmon.nbp.gr.v20220127
+  - CMIP6.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.fx.areacella.gr.v20191212
+  - CMIP6.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.fx.sftlf.gr.v20201015
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_EC-Earth3-CC__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.Lmon.nbp.gr.v20210113
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.fx.areacella.gr.v20210616
-cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg:
-  cmip6:
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Lmon.nbp.gr.v20211207
-  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.fx.sftlf.gr.v20211207
-cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg-LR:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg-LR__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.Lmon.nbp.gr.v20201116
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.fx.areacella.gr.v20200217
   - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.fx.sftlf.gr.v20200217
-cmip6_historical_gr_r1i1p1f1_IPSL-CM5A2-INCA:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_EC-Earth3-Veg__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
+  cmip6:
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.fx.areacella.gr.v20230203
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.Lmon.nbp.gr.v20211207
+  - CMIP6.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.fx.sftlf.gr.v20211207
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_IPSL-CM5A2-INCA__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.Lmon.nbp.gr.v20200729
   - CMIP6.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.fx.areacella.gr.v20200729
-cmip6_historical_gr_r1i1p1f1_IPSL-CM6A-LR:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_IPSL-CM6A-LR-INCA__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
+  cmip6:
+  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR-INCA.historical.r1i1p1f1.Lmon.nbp.gr.v20210216
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f1_IPSL-CM6A-LR__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.Lmon.nbp.gr.v20180803
   - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.fx.areacella.gr.v20180803
   - CMIP6.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.fx.sftlf.gr.v20180803
-cmip6_historical_gr_r1i1p1f1_IPSL-CM6A-LR-INCA:
-  cmip6:
-  - CMIP6.CMIP.IPSL.IPSL-CM6A-LR-INCA.historical.r1i1p1f1.Lmon.nbp.gr.v20210216
-cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip6_historical_gr_r1i1p1f2_CNRM-ESM2-1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip6:
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.fx.areacella.gr.v20250328
   - CMIP6.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.Lmon.nbp.gr.v20181206
-cmip7_historical_gn_ACCESS-ESM1-5_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_ACCESS-ESM1-5_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191115
   - CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191115
   - CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20191115
-cmip7_historical_gn_CESM2-FV2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CESM2-FV2_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-FV2.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20191120
-cmip7_historical_gn_CESM2-WACCM-FV2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CESM2-WACCM-FV2_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191120
   - CMIP7.CMIP.NCAR.CESM2-WACCM-FV2.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20191120
-cmip7_historical_gn_CESM2-WACCM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CESM2-WACCM_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190227
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190227
   - CMIP7.CMIP.NCAR.CESM2-WACCM.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190227
-cmip7_historical_gn_CESM2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CESM2_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190308
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190308
   - CMIP7.CMIP.NCAR.CESM2.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190308
-cmip7_historical_gn_CMCC-CM2-SR5_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CMCC-CM2-SR5_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20200616
   - CMIP7.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20200616
   - CMIP7.CMIP.CMCC.CMCC-CM2-SR5.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20200616
-cmip7_historical_gn_CMCC-ESM2_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CMCC-ESM2_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20210114
   - CMIP7.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20210114
   - CMIP7.CMIP.CMCC.CMCC-ESM2.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20210114
-cmip7_historical_gn_CanESM5-1_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CanESM5-1_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-1.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190429
-cmip7_historical_gn_CanESM5-CanOE_r1i1p2f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CanESM5-CanOE_r1i1p2f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190429
   - CMIP7.CMIP.CCCma.CanESM5-CanOE.historical.r1i1p2f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190429
-cmip7_historical_gn_CanESM5_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_CanESM5_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190429
   - CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190429
   - CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190429
-cmip7_historical_gn_GISS-E2-1-G-CC_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_GISS-E2-1-G-CC_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NASA-GISS.GISS-E2-1-G-CC.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190815
-cmip7_historical_gn_GISS-E2-1-G_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_GISS-E2-1-G_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NASA-GISS.GISS-E2-1-G.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20181015
-cmip7_historical_gn_GISS-E2-1-H_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_GISS-E2-1-H_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NASA-GISS.GISS-E2-1-H.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190403
-cmip7_historical_gn_GISS-E2-2-G_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_GISS-E2-2-G_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NASA-GISS.GISS-E2-2-G.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20191120
-cmip7_historical_gn_GISS-E2-2-H_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_GISS-E2-2-H_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NASA-GISS.GISS-E2-2-H.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20191120
-cmip7_historical_gn_MIROC-ES2L_r1i1p1f2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_MIROC-ES2L_r1i1p1f2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.fx.areacella.ti-u-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.fx.sftlf.ti-u-hxy-u.gn.v20190823
   - CMIP7.CMIP.MIROC.MIROC-ES2L.historical.r1i1p1f2.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190823
-cmip7_historical_gn_MPI-ESM-1-2-HAM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_MPI-ESM-1-2-HAM_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190627
   - CMIP7.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190627
   - CMIP7.CMIP.HAMMOZ-Consortium.MPI-ESM-1-2-HAM.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190627
-cmip7_historical_gn_MPI-ESM1-2-LR_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_MPI-ESM1-2-LR_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190710
   - CMIP7.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190710
   - CMIP7.CMIP.MPI-M.MPI-ESM1-2-LR.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190710
-cmip7_historical_gn_NorCPM1_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_NorCPM1_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCC.NorCPM1.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20200724
   - CMIP7.CMIP.NCC.NorCPM1.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20200724
   - CMIP7.CMIP.NCC.NorCPM1.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20200724
-cmip7_historical_gn_NorESM2-LM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_NorESM2-LM_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190815
   - CMIP7.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191108
   - CMIP7.CMIP.NCC.NorESM2-LM.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190917
-cmip7_historical_gn_NorESM2-MM_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_NorESM2-MM_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20191108
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20191108
   - CMIP7.CMIP.NCC.NorESM2-MM.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20191108
-cmip7_historical_gn_SAM0-UNICON_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_SAM0-UNICON_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20190323
   - CMIP7.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20190323
   - CMIP7.CMIP.SNU.SAM0-UNICON.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190323
-cmip7_historical_gn_TaiESM1_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_TaiESM1_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v20200624
   - CMIP7.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gn.v20200624
   - CMIP7.CMIP.AS-RCEC.TaiESM1.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20200624
-cmip7_historical_gn_UKESM1-0-LL_r1i1p1f2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_UKESM1-0-LL_r1i1p1f2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.MOHC.UKESM1-0-LL.historical.r1i1p1f2.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20190627
-cmip7_historical_gn_UKESM1-1-LL_r1i1p1f2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gn_UKESM1-1-LL_r1i1p1f2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.MOHC.UKESM1-1-LL.historical.r1i1p1f2.glb.mon.nbp.tavg-u-hxy-lnd.gn.v20220512
-cmip7_historical_gr1_GFDL-ESM4_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr1_GFDL-ESM4_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr1.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr1.v20190726
   - CMIP7.CMIP.NOAA-GFDL.GFDL-ESM4.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr1.v20190726
-cmip7_historical_gr1_INM-CM4-8_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr1_INM-CM4-8_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr1.v20190528
   - CMIP7.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr1.v20190528
   - CMIP7.CMIP.INM.INM-CM4-8.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr1.v20190530
-cmip7_historical_gr1_INM-CM5-0_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr1_INM-CM5-0_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr1.v20190610
   - CMIP7.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr1.v20190610
   - CMIP7.CMIP.INM.INM-CM5-0.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr1.v20190610
-cmip7_historical_gr_CNRM-ESM2-1_r1i1p1f2:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_CNRM-ESM2-1_r1i1p1f2__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r13i1p1f2.glb.fx.areacella.ti-u-hxy-u.gr.v20250328
   - CMIP7.CMIP.CNRM-CERFACS.CNRM-ESM2-1.historical.r1i1p1f2.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20181206
-cmip7_historical_gr_E3SM-1-1-ECA_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_E3SM-1-1-ECA_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.E3SM-Project.E3SM-1-1-ECA.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20200116
   - CMIP7.CMIP.E3SM-Project.E3SM-1-1-ECA.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr.v20201015
   - CMIP7.CMIP.E3SM-Project.E3SM-1-1-ECA.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20220127
-cmip7_historical_gr_E3SM-1-1_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_E3SM-1-1_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20191212
   - CMIP7.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr.v20201015
   - CMIP7.CMIP.E3SM-Project.E3SM-1-1.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20220127
-cmip7_historical_gr_EC-Earth3-CC_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_EC-Earth3-CC_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20210616
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-CC.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20210113
-cmip7_historical_gr_EC-Earth3-Veg-LR_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_EC-Earth3-Veg-LR_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20200217
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr.v20200217
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-Veg-LR.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20201116
-cmip7_historical_gr_EC-Earth3-Veg_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_EC-Earth3-Veg_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r11i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20230203
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr.v20211207
   - CMIP7.CMIP.EC-Earth-Consortium.EC-Earth3-Veg.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20211207
-cmip7_historical_gr_IPSL-CM5A2-INCA_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_IPSL-CM5A2-INCA_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20200729
   - CMIP7.CMIP.IPSL.IPSL-CM5A2-INCA.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20200729
-cmip7_historical_gr_IPSL-CM6A-LR-INCA_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_IPSL-CM6A-LR-INCA_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR-INCA.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20210216
-cmip7_historical_gr_IPSL-CM6A-LR_r1i1p1f1:
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117
+cmip7_historical_gr_IPSL-CM6A-LR_r1i1p1f1__obs4mips_gm_Hoffman-1-0_nbp_v20251117:
   cmip7:
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gr.v20180803
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.glb.fx.sftlf.ti-u-hxy-u.gr.v20180803
   - CMIP7.CMIP.IPSL.IPSL-CM6A-LR.historical.r1i1p1f1.glb.mon.nbp.tavg-u-hxy-lnd.gr.v20180803
+  obs4mips:
+  - obs4MIPs.obs4MIPs.UCI-ORNL.Hoffman-1-0.yr.nbp.site.gm.v20251117

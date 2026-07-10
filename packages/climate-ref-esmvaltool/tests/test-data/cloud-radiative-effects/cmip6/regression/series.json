@@ -200,6 +200,7 @@
       89.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       -1.102461,
       -0.6439076,
@@ -584,6 +585,7 @@
       89.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       -2.597448,
       -2.985919,
@@ -968,6 +970,7 @@
       89.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       6.785992,
       7.329451,
@@ -1352,6 +1355,7 @@
       89.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       -9.128001,
       -8.946151,
@@ -1736,6 +1740,7 @@
       89.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       5.890097,
       5.866584,
@@ -2120,6 +2125,7 @@
       89.5
     ],
     "index_name": "lat",
+    "kind": "reference",
     "values": [
       -0.5029026,
       -0.4262416,

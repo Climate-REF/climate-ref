@@ -18,7 +18,6 @@ Provided fixtures
 - ``test_data_dir`` / ``sample_data_dir`` -- data paths
 - ``sample_data`` -- session-scoped sample data fetch
 - ``cmip6_data_catalog`` / ``obs4mips_data_catalog`` / ``data_catalog`` -- data catalogs
-- ``run_test_case`` -- ``TestCaseRunner`` wrapper that converts errors to ``pytest.skip``
 - ``definition_factory`` -- create ``ExecutionDefinition`` instances
 - ``provider`` / ``mock_diagnostic`` -- mock diagnostic provider
 - ``solved_definition_factory`` -- build an ``ExecutionDefinition`` from the sample-data catalog
@@ -27,6 +26,7 @@ Provided fixtures
 
 from __future__ import annotations
 
+import importlib.resources
 import os
 import re
 import tempfile
@@ -42,7 +42,7 @@ from loguru import logger
 from typer.testing import CliRunner
 
 from climate_ref import cli
-from climate_ref.config import Config, DiagnosticProviderConfig
+from climate_ref.config import DEFAULT_IGNORE_DATASETS_FILENAME, Config, DiagnosticProviderConfig
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models import Execution
@@ -50,14 +50,32 @@ from climate_ref.solve_helpers import load_solve_catalog
 from climate_ref.solver import solve_executions
 from climate_ref.testing import (
     TEST_DATA_DIR,
-    TestCaseRunner,
     fetch_sample_data,
 )
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic, ExecutionDefinition, ExecutionResult
-from climate_ref_core.exceptions import TestCaseError
 from climate_ref_core.logging import add_log_handler, remove_log_handler
 from climate_ref_core.providers import DiagnosticProvider
+
+
+# Importable stub parsers for exercising the parallel catalog builder.
+# These must live in an installed module to be able to be pickled
+# so that "spawn"/"forkserver" worker processes can re-import them by reference when parsing in parallel
+def catalog_stub_parser(file: str, **kwargs: Any) -> dict[str, Any]:
+    """Return trivial valid metadata for ``file`` without opening it."""
+    return {"path": file, "name": Path(file).name}
+
+
+def catalog_reject_txt_parser(file: str, **kwargs: Any) -> dict[str, Any]:
+    """Like :func:`catalog_stub_parser` but marks ``.txt`` files invalid."""
+    if file.endswith(".txt"):
+        return {"INVALID_ASSET": file, "TRACEBACK": "not a netCDF file"}
+    return {"path": file, "name": Path(file).name}
+
+
+def catalog_pid_parser(file: str, **kwargs: Any) -> dict[str, Any]:
+    """Record the PID of the process that parsed ``file`` (proves out-of-process runs)."""
+    return {"path": file, "pid": os.getpid()}
 
 
 def pytest_configure(config: pytest.Config) -> None:
@@ -124,7 +142,7 @@ def test_data_dir() -> Path:
 
 
 @pytest.fixture(scope="session")
-def sample_data_dir(test_data_dir: Path) -> Path:
+def sample_data_dir(sample_data: None, test_data_dir: Path) -> Path:
     """Path to the sample data directory."""
     return test_data_dir / "sample-data"
 
@@ -176,31 +194,6 @@ def esgf_data_catalog_trimmed(
     return result
 
 
-@pytest.fixture
-def run_test_case(config: Config) -> object:
-    """
-    Fixture for running diagnostic test cases.
-
-    Wraps ``TestCaseRunner`` to convert ``TestCaseError`` into ``pytest.skip``.
-    """
-    runner = TestCaseRunner(config=config, datasets=None)
-
-    class PytestTestCaseRunner:
-        def run(
-            self,
-            diagnostic: Diagnostic,
-            test_case_name: str = "default",
-            output_dir: Path | None = None,
-        ) -> ExecutionResult:
-            try:
-                return runner.run(diagnostic, test_case_name, output_dir)
-            except TestCaseError as e:
-                pytest.skip(str(e))
-                raise  # unreachable, but keeps type checkers happy
-
-    return PytestTestCaseRunner()
-
-
 @pytest.fixture(scope="session")
 def sample_data() -> None:
     """Download sample data if not already present."""
@@ -239,14 +232,46 @@ def data_catalog(
     }
 
 
+def packaged_ignore_datasets_file() -> Path:
+    """
+    Locate the ``default_ignore_datasets.yaml`` shipped inside the ``climate_ref`` package.
+
+    Returns
+    -------
+    :
+        Path to the packaged ignore datasets file.
+
+    Raises
+    ------
+    ValueError
+        If the file is missing from the installed package.
+    """
+    resource = importlib.resources.files("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
+    local_ignore_file = Path(str(resource))
+    if not local_ignore_file.is_file():  # pragma: no cover - indicates a packaging error
+        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
+    return local_ignore_file
+
+
+def _use_local_ignore_datasets_file(cfg: Config) -> None:
+    """
+    Point the config at the packaged default_ignore_datasets.yaml and disable fetching.
+
+    This keeps tests deterministic and offline:
+    they exercise the shipped default file rather than whatever copy happens to be cached on the host.
+
+    The file is resolved from the installed package rather than the source tree,
+    so the fixtures also work for provider packages that depend on a released ``climate-ref`` wheel.
+    """
+    cfg.ignore_datasets_file = packaged_ignore_datasets_file()
+    cfg.ignore_datasets_url = ""
+
+
 @pytest.fixture(scope="session")
 def solve_config() -> Config:
     """Session-scoped Config that uses the local default_ignore_datasets.yaml"""
     cfg = Config.default()
-    local_ignore_file = Path(__file__).parents[4] / "default_ignore_datasets.yaml"
-    if not local_ignore_file.is_file():
-        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
-    cfg.ignore_datasets_file = local_ignore_file
+    _use_local_ignore_datasets_file(cfg)
     return cfg
 
 
@@ -255,7 +280,10 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
     """Per-test Config with isolated directories."""
     root_output_dir = Path(os.environ.get("REF_TEST_OUTPUT", tmp_path / "climate_ref"))
     dir_name = re.sub(r"[^a-zA-Z0-9_.-]", "_", request.node.name)
-    ref_config_dir = root_output_dir / request.module.__name__ / dir_name
+    # Include the class name so two identically-named tests in different classes don't
+    # collide on a shared REF_TEST_OUTPUT dir (request.node.name omits the class).
+    class_segment = request.cls.__name__ if request.cls is not None else ""
+    ref_config_dir = root_output_dir / request.module.__name__ / class_segment / dir_name
 
     software_path = Config.default().paths.software
 
@@ -264,6 +292,7 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
     cfg.paths.software = software_path
     cfg.diagnostic_providers = [DiagnosticProviderConfig(provider="climate_ref_example")]
     cfg.executor.executor = "climate_ref.executor.SynchronousExecutor"
+    _use_local_ignore_datasets_file(cfg)
     cfg.save()
 
     return cfg
@@ -318,7 +347,7 @@ class MockDiagnostic(Diagnostic):
     slug = "mock"
     data_requirements = (DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),)
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """Run a no-op diagnostic that always succeeds."""
         return ExecutionResult(
             output_bundle_filename=definition.output_directory / "output.json",
@@ -335,7 +364,7 @@ class FailedDiagnostic(Diagnostic):
     slug = "failed"
     data_requirements = (DataRequirement(source_type=SourceDatasetType.CMIP6, filters=(), group_by=None),)
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """Run a diagnostic that always returns a failure result."""
         return ExecutionResult.build_from_failure(definition)
 

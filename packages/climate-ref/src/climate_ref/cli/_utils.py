@@ -195,7 +195,10 @@ def render_dataframe(
         (e.g. complete IDs and paths) and is suitable for scripting.
     """
     if output_format == OutputFormat.json:
-        records = df.to_dict(orient="records")
+        # Coerce pandas nulls
+        # (``NaT`` in datetime columns such as ``retracted_at``,
+        # ``NaN`` in numeric columns) to ``None`` so they serialise as JSON ``null``.
+        records = df.astype(object).where(df.notna(), None).to_dict(orient="records")  # type: ignore[arg-type]
         print(json.dumps(records, default=str, indent=2))
     else:
         pretty_print_df(df, console=console)

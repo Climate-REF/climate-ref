@@ -1,268 +1,269 @@
 {
-  "catalog_hash": "97fbf6c3eafe72779d017d41744a0f69504f6128",
+  "catalog_hash": "6e80219d01556498a74ddaf4409fd314936d7b2c",
   "committed": {
-    "diagnostic.json": "8b265dfd6e608ecc19d25e5df3c17e59aa9398f2374925e4837fbf51c1aa6b2f",
-    "output.json": "bf0dedc8a6242551d92ae91c1bcc8424341c46cec150edb7600f58783ec49108",
+    "diagnostic.json": "502ccc30dec6ce2cf579ebcb073dfd342637231754256f647c353390af26d471",
+    "output.json": "46522e3b90a60c2ac827a0a251b8bc1128bcfffda8f40cccb799718316da256d",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 3,
   "native": {
-    "EG_Spec_North_test_NPO_DJF_20CR_1900-2005.png": {
-      "sha256": "cd7d18a767f9e3563783b655ab9a248b6d61bc3ac25e7a075bb631fca29d75bf",
-      "size": 31040
+    "EG_Spec_North_test_NPO_DJF_20CR-V2_1900-2005.png": {
+      "sha256": "e1c1ce2915621ff07e8d00b7c7d2fe74bd85b8d3e2e2493e051f672c2d5c17c5",
+      "size": 32188
     },
-    "EG_Spec_North_test_NPO_JJA_20CR_1900-2005.png": {
-      "sha256": "cf7995fadddb90d1245f0fadcf3e6e0713acd2398a872601dd2d95921f9f05e2",
-      "size": 29820
+    "EG_Spec_North_test_NPO_JJA_20CR-V2_1900-2005.png": {
+      "sha256": "8633d8e3920d3d891f2dfa0e067a98cd3c080b5755405a0b9312fb5d24b3ecca",
+      "size": 30830
     },
-    "EG_Spec_North_test_NPO_MAM_20CR_1900-2005.png": {
-      "sha256": "82a6ed7186107443ec9488bac0961584b303b3110df9ed6888f4bd65f40298bb",
-      "size": 30913
+    "EG_Spec_North_test_NPO_MAM_20CR-V2_1900-2005.png": {
+      "sha256": "264acc82026379d74043ee1d82776242255e3637264c0ed8a711b500b642cd32",
+      "size": 31813
     },
-    "EG_Spec_North_test_NPO_SON_20CR_1900-2005.png": {
-      "sha256": "6cd35ef196533c6f725431ca0bcdd3370f33532bb4d03f92fe3630456e0f9afc",
-      "size": 30656
+    "EG_Spec_North_test_NPO_SON_20CR-V2_1900-2005.png": {
+      "sha256": "d74975436164c49132cac1d8f9541d6965fd464d5f887344625c7592b88ee8c8",
+      "size": 31465
     },
     "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "54b182a0e5fd73ef68f0732f70675b7dbcb7bfc0ec6ded59ccde9b80ef5d23de",
+      "sha256": "ac8c2e1560cdaac9a999279a3d089d0ca56751c1bbe1e9e3ac0934b6812989c6",
       "size": 690880
     },
     "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "2468e5e4a6eb521920c19b331158cf09578dda9d310d7ca285b153d8d1b978d1",
-      "size": 93893
+      "sha256": "62a35a349988014c58b118f307b73bc9a7b3fe2850f4e8064db27435ec57abc1",
+      "size": 93900
     },
     "NPO_psl_EOF1_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "1ce31ce3754ae27db8191136aa056e504d06e3b811692ec29a4408f034c23019",
       "size": 118144
     },
     "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "2bc02195166e11443dc4a814396774567914ecde16c59131a026636d76475dc9",
+      "sha256": "483877231ec7e74cfb2e936b36f4692667860db13316b0d19e96c980ad13bd2f",
       "size": 690880
     },
     "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "5ccb6891881031204d8aebb01d7332ea5ae48cf857e888a3a991e1719919b0b4",
-      "size": 90618
+      "sha256": "e9d2fc698f88b57dd0945031fda2c3991777504c14278fc4b0eaee3f6524cdc5",
+      "size": 90615
     },
     "NPO_psl_EOF1_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "60e8ef439a4400a7d794a82a8e051a35b72bea9f979f3d7bfeb195045ec26391",
       "size": 119100
     },
     "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "b1cc93abc48ed08f098042d521ed88369a92e2aee9450d8e8a975f2fc6a848fc",
+      "sha256": "c1954d560a28d010847bc5ccd1fbd88b978d5086ee9c9cd614096795b7cd64ad",
       "size": 690880
     },
     "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "25e0b05a3e5bf4e6c86c0c2d1a2b6e422d43dd96ee60d2e7cc88cf884d3d003a",
-      "size": 92630
+      "sha256": "c30f72711e46f71917baf1910bc75ad41da4f20411274b170c992ae7b79806ca",
+      "size": 92610
     },
     "NPO_psl_EOF1_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "330485dc227500bc748f5341c741037057cfd54a2ed2cec18554272c5a7f2b16",
       "size": 119950
     },
     "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "eea1d6aaf98fead6c863b9e5e758e58c3680660957071af0f1938ae02139023a",
+      "sha256": "43a281da31efb8ee11fc8c50fee644529ae62c4339e39aeb926c870c07a1a572",
       "size": 690880
     },
     "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "579fa066218e42935b78e3338646661415e9b75f354f71b893c20022b9baeec7",
-      "size": 92122
+      "sha256": "a2203c5a6e28f784718f67a28ca72a036da9537d401c569579dbda51c40f68ea",
+      "size": 92095
     },
     "NPO_psl_EOF1_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "0f1e0e3b7c83ec1a65c6f35ee53a42bc63d372963dcaf04be0a0de35e9b20125",
       "size": 118606
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "9d0cbd015d52d8d952b598e5313072ffb8cf559e55d7a5fc893b471ff6f7cbb6",
+      "sha256": "21d953cf1b0e11133ae4ad449fa3e8be5559fbcb8afcdc7d94ca835985065fb0",
       "size": 690880
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "6ac81ef6863bd3f02afbc0f18937ba3af0be9e5a4af8b871e4ef4061a9f2551c",
-      "size": 91818
+      "sha256": "bb929591b9da17b67ae630eb41863f5c249658e93d455bc39d97e88f97a93c89",
+      "size": 91809
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "f0d849e9defdabf15131d1e2e6df39ba0962b15c32f24521f4e9fe662218c7df",
+      "sha256": "5cba88b688618a165031e1ced63f938bed09d7728890dbe3eb01c2911a31b9ad",
       "size": 690631
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
-      "sha256": "31cf774f8908c50a6998ef31d9187217e1d20f13a7c1bc9e33daa87527fad6a1",
-      "size": 91594
+      "sha256": "8ef1b4943dc355cf6b91effa045c695f5bfeb8ced938f52f3f8aa9ae1b0bb872",
+      "size": 91588
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
-      "sha256": "b6afdc57245eba23e329b4f433254f74bd6613a52b7733fc433f902d5172abe5",
-      "size": 215562
+      "sha256": "c09f5bfe1c7f46b7f7b642a11c8d5570c2e24283f620591970ea1f1ea122b9cd",
+      "size": 215976
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
       "sha256": "8b74380fac799342187156918a31291f807c0966048fc7fbd1ebf1e6fb78184a",
       "size": 121808
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
-      "sha256": "9062d2a05e438827f3dffb753dd975bed10004019a680a729e1f28c584badef6",
-      "size": 217818
+      "sha256": "6ae65f3b0543af73b71759ea3a2f73816e5fb539ddbf30151d1c88e14abcf909",
+      "size": 218194
     },
     "NPO_psl_EOF2_DJF_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "3705767837dc364aaa656c151b693354eca8f443b2d8c04e8d908ee24ad127ec",
       "size": 121804
     },
     "NPO_psl_EOF2_DJF_obs_1900-2005.nc": {
-      "sha256": "c6c4415a50f625390642b94812f15875f89b0305be04e9584dae48baa8b52049",
+      "sha256": "949e5023ec2622cadf220f63d3b0a34819e2514be8eac1d5ac4b47423b21d488",
       "size": 415707
     },
     "NPO_psl_EOF2_DJF_obs_1900-2005.png": {
-      "sha256": "2c852195adbe5159bd1462e7cbe26b50fa8982d66725267729c1576b98c2e8c5",
-      "size": 86144
+      "sha256": "aad36b2f5537032918b1ca2000193d7a8c9dbf12dd8cc4753a3dd692359454bc",
+      "size": 86567
     },
     "NPO_psl_EOF2_DJF_obs_1900-2005_teleconnection.png": {
-      "sha256": "4d0e20cb28c11fcb7666851768b4e405e7314c1704630b55288bb60655d2269a",
-      "size": 112470
+      "sha256": "fdfac007a8687d9bc0f12133310621af1160450cd6f49c16237863bd7537b88f",
+      "size": 112927
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "7a68cfaed75a941566dc36ecec2604426de80a611e8c50231b08bbee1f48f88e",
+      "sha256": "d2b734e925506701b20c49229c2e305d477c13bf5195c19cc5b22da4783202a3",
       "size": 690880
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "03e503c24809376f754058cba5213a6fe2cd82bcb968c000b0f104138d06db21",
+      "sha256": "1ad957dcb5bf20ccf2a4b68e3ce8ae31ad59715fa1d71792905ed659fc0991ee",
       "size": 89661
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "c12a626461579cf620347d769de1c51406285192f198e26148e485f140d6c128",
+      "sha256": "789766e956c5a9553ef3b31af85cdea80128a2e16083099b1b8e4f1d0081001e",
       "size": 690631
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
-      "sha256": "ca1ce30dd06d37b826c557478c29cd63f2968e89e092f58620ed4019251a102a",
-      "size": 91163
+      "sha256": "fdcd3eb877adae8e30a336985e9275b4303713ee9d7613ca2c9bd9aae8808211",
+      "size": 91160
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
-      "sha256": "558b0ab936d2799e0ac63303aaefbede7e7cc470a2946167a4c12751c4590e04",
-      "size": 212576
+      "sha256": "49cb5823a58f204d8d9ed5d34518a5ad5d4f498199cbca8eb2ba5838ef7645c5",
+      "size": 212956
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
       "sha256": "ab56a46fd7c6ee5e5324521a4bd2fc339068775319e35d9945251b63fdd17f94",
       "size": 119323
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
-      "sha256": "479952fe7bbe7ca50ebb454fa168c0d39ef7eacf03cffcdca9f135b54fe27e10",
-      "size": 217414
+      "sha256": "6b9f7d7e46634e43e484d9e7d78a60fd8f1e7e98eefb3e7ce5463dba24d03512",
+      "size": 217761
     },
     "NPO_psl_EOF2_JJA_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "d12f9d9b7a046d523f6e85cf8e27110ba6e19dc3ed3b682c29d0ee47da67183a",
       "size": 120023
     },
     "NPO_psl_EOF2_JJA_obs_1900-2005.nc": {
-      "sha256": "0ca1f1cd63c54e7945828b1bb8de24e0e5e5f8acb841bc361b132594c035bb83",
+      "sha256": "ccc50ef7ecc00b4d2b690a12555e9b1964b530212014ad6f5b395bfb279bf012",
       "size": 415707
     },
     "NPO_psl_EOF2_JJA_obs_1900-2005.png": {
-      "sha256": "54d531918905051525f293af262ddb4e97df200ca2dfd3a2d416dad176b6383c",
-      "size": 85642
+      "sha256": "198aae0859197d983395dc3c4242b32f5fbabf7e6fb99be3c55e50d65ec46bc5",
+      "size": 86063
     },
     "NPO_psl_EOF2_JJA_obs_1900-2005_teleconnection.png": {
-      "sha256": "984b00a512f16e525b97891ba5275b5462890730cc3ace39922de962c203196e",
-      "size": 113026
+      "sha256": "7d887580f32755071ac95f26a1bba2ef68e7307fe55c27548694166e7575d061",
+      "size": 113483
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "1272ade441a1cef36d0210b0aca31568a271aa6f0ce648d6fcd6ed3df35f1994",
+      "sha256": "8322a59eae3ce83ecabc1d22ef613dc358fe51af09016cdf2c35267312cdb1b5",
       "size": 690880
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "2714760ce08b5f77974cee5d4ace1839b2f2fae35ff1e0236feb14e1c44d404f",
-      "size": 91125
+      "sha256": "0e6e5d37c116a6b03136e28e65d9a34487d098e72fd9f99978cb9b446b7a3878",
+      "size": 91116
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "6042fe9b91d35d045e6f23f795d52af8e21ff3fe5137f140ce2305b0a69fd811",
+      "sha256": "5f2d80bed10056d4ef27020b219ede0cefefddf684006174545ef78e9f0f8ca0",
       "size": 690631
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
-      "sha256": "dd64f52dbf241fc91a93d83e009e48678a3c9190c80edda452ebcf07b618d98a",
-      "size": 90833
+      "sha256": "f45ee59429e5a23be420b26674fc7cb1995ce59e8b30f0973c25f104d436c444",
+      "size": 90835
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
-      "sha256": "3675d3820dc97cf489d91e3e9e6914c44164cd40fe42bd2eb800a3974b1b7633",
-      "size": 218786
+      "sha256": "c4be6546c01af0fc96d12c9a0ee439f108cb638076df0d900738d82727abc146",
+      "size": 219201
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
       "sha256": "4406d3d91847f8794cc58cacd7fa7c9d2f3fcd3932076e8eacbdee2f6dafcd89",
       "size": 120246
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
-      "sha256": "f0f0246e45de796724cf3e02d3e07472043a4040ef86c90adf9bbba8521d6c38",
-      "size": 220531
+      "sha256": "618d8b30d962c75460733f1b962320eb27caa6421c4bb70a9a4320f177af7298",
+      "size": 220934
     },
     "NPO_psl_EOF2_MAM_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "fcb96e523c11f65120300f0dafda3ac90e4f8d84b9af8fdf581e14ba7182cd8f",
       "size": 119537
     },
     "NPO_psl_EOF2_MAM_obs_1900-2005.nc": {
-      "sha256": "d4ea7adbd49796bafedfc97a4e3e8c4c6872949b93e8cd7b160d635ba18a25a8",
+      "sha256": "2ed7bd022e6cbddf70745aca0ef9636e77cea1d26e16f43bb3a4bbb5ec757bc5",
       "size": 415707
     },
     "NPO_psl_EOF2_MAM_obs_1900-2005.png": {
-      "sha256": "4c7a37f5d9110a31ed6882cb3de06b92c5f2b65aeb9a23400e6f5f78fd69c4c1",
-      "size": 86500
+      "sha256": "355f34ea464c6eff0c0024046f138430e56dc2876fd5c0969d56ae91b2da5e5c",
+      "size": 86942
     },
     "NPO_psl_EOF2_MAM_obs_1900-2005_teleconnection.png": {
-      "sha256": "e16b9d919f3ca50de17b4c815e0d838471976fa0e517fb950a609e79d8595a63",
-      "size": 116390
+      "sha256": "3021467e41bf146603b7a478c8bc61be370d48b4822796a8c8b2a1a7964a03bf",
+      "size": 116843
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.nc": {
-      "sha256": "49f09ad3582a39be50035ec7f50b4a402bd050c285d55a5e27db51169dd67221",
+      "sha256": "8c03398fdcd6b9c94a88746e8ab4e3d785a4eabd883781358050c724deb8cd71",
       "size": 690880
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005.png": {
-      "sha256": "7e5d49c0f6b7ab33949de134061dd53103c9ca95e3d2a29b27116dbc9b6f664e",
-      "size": 91096
+      "sha256": "d590a328ed8b0bb935076b1b4e5ade3b1cd3d318b4b7bb5c6fd5e8241dad6ce6",
+      "size": 91101
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.nc": {
-      "sha256": "9aaf879366ebc6263e704f28faedd1a0e850a80a0309021f06ff0a8b4f8be74e",
+      "sha256": "9733cf253f04840c0d237da5cd811fa61819619750567209bc30e817210d8980",
       "size": 690631
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf.png": {
-      "sha256": "6a9009dfc475f8cdc9c721f3abe20ffb6490dcad3ccc2247457328bf1a251417",
-      "size": 91052
+      "sha256": "b5de2b6bd270b4e777cefe9baff066f1079da7a949bd23e0fd6e9d82339d79de",
+      "size": 91051
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_compare_obs.png": {
-      "sha256": "256fc1e6b09368d5e8e91418292cbcb63ac1efc683b510f99b92a76fb39bc0c3",
-      "size": 214171
+      "sha256": "dfb8b3d5c6d4976daf73b191d077ac7be4c2d82bbe564bc9732cfcbb8c96259a",
+      "size": 214592
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_cbf_teleconnection.png": {
       "sha256": "36a5b065c522198175056861d4536ad8a33887bdad50b7dfd59021e7d3606ec6",
       "size": 117689
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_eof2_compare_obs.png": {
-      "sha256": "be172de8e6bb482098d03f9fc90e4c48b270e63ac4b0485612e1f99b8d29194a",
-      "size": 216553
+      "sha256": "0ee9ad47817385560d4e7fca5fa8f2ba2385715165fd618f602a174fa8725bad",
+      "size": 216914
     },
     "NPO_psl_EOF2_SON_cmip6_ACCESS-ESM1-5_historical_r1i1p1f1_mo_atm_1900-2005_teleconnection.png": {
       "sha256": "1fb2ec31b2e0c694fe2dab14fcb0bba7b596c2cf74e440d59301d062f0ccdd80",
       "size": 118879
     },
     "NPO_psl_EOF2_SON_obs_1900-2005.nc": {
-      "sha256": "fb93f341844ff0287746936278ea16a3f2e39f13fed785c9197e0e855469a3dd",
+      "sha256": "9100c57cebee45a815632a547024521a525dd16da4fb177065f4d38e612f8351",
       "size": 415707
     },
     "NPO_psl_EOF2_SON_obs_1900-2005.png": {
-      "sha256": "7a6b31814a47eac4f310da3c0faacafa5eee0cb21778a48c1c74de2fd8badaf1",
-      "size": 86144
+      "sha256": "e7de233194e82452904a0a660ecf0ba67e130b56ef1ef5f0964e22c52bff4618",
+      "size": 86581
     },
     "NPO_psl_EOF2_SON_obs_1900-2005_teleconnection.png": {
-      "sha256": "773891137bc1c94715d421f310275abb9d9ec2a19a381e269e4536ebd8c40a63",
-      "size": 113623
+      "sha256": "6db258d56acd164f0ea3b1686a560d22ad85c213cad90c43234b6a79ab36456a",
+      "size": 114077
     },
     "diagnostic.json": {
-      "sha256": "8b89e2e29731608a2a430d676ed58f3398aac0d96d2eb965c627d5744f765472",
-      "size": 11506
+      "sha256": "f5f947e7824e5b2f7ccb75de75d00029b9ceaf2eb2d778d77a7fe9b1c72c0a0e",
+      "size": 12042
     },
     "output.json": {
-      "sha256": "246c3f773fa4088d26d4dd50e4df66e181a3e5e0457d33725227719fd252520b",
-      "size": 17921
+      "sha256": "ebf5049fd253d46991f2930f3bf793dddd7e0a53b1d82a7e08d28515350cfc97",
+      "size": 17945
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
       "size": 2
     },
     "var_mode_NPO_EOF2_stat_cmip6_historical_mo_atm_ACCESS-ESM1-5_r1i1p1f1_1900-2005_cmec.json": {
-      "sha256": "4454187aa3e334e77013057267398db771a70b942f4db77c1009ee22fd5446b5",
-      "size": 16243
+      "sha256": "b2b3cc2148b53ec52e5649ed98dd5a0652e4e2de0e5ca78e58f08bd2833cd7f4",
+      "size": 16226
     }
   },
-  "schema": 1,
-  "test_case_version": 1
+  "schema": 2,
+  "test_case_version": 3
 }

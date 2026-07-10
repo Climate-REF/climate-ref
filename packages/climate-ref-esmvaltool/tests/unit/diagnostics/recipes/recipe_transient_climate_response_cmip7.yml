@@ -11,26 +11,9 @@ documentation:
   - schlund_manuel
   references:
   - gregory08jgr
-  projects:
-  - crescendo
-preprocessors:
-  spatial_mean:
-    area_statistics:
-      operator: mean
-diagnostics:
-  tcr:
-    description: Calculate TCR.
-    variables:
-      tas:
-        preprocessor: spatial_mean
-    scripts:
-      calculate:
-        script: climate_metrics/tcr.py
-        calculate_mmm: false
 datasets:
 - project: CMIP7
   activity: CMIP
-  branding_suffix: tavg-h2m-hxy-u
   dataset: ACCESS-ESM1-5
   ensemble: r1i1p1f1
   exp: 1pctCO2
@@ -42,7 +25,6 @@ datasets:
   timerange: 0101/0240
 - project: CMIP7
   activity: CMIP
-  branding_suffix: tavg-h2m-hxy-u
   dataset: ACCESS-ESM1-5
   ensemble: r1i1p1f1
   exp: piControl
@@ -52,3 +34,18 @@ datasets:
   mip: atmos
   region: glb
   timerange: 0101/0240
+preprocessors:
+  spatial_mean:
+    area_statistics:
+      operator: mean
+diagnostics:
+  tcr:
+    description: Calculate TCR.
+    variables:
+      tas:
+        branding_suffix: tavg-h2m-hxy-u
+        preprocessor: spatial_mean
+    scripts:
+      calculate:
+        script: climate_metrics/tcr.py
+        calculate_mmm: false

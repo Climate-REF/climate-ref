@@ -10,6 +10,8 @@
 # The ~/.esgf directory is also configured to point to a shared cache location downloaded ESGF datasets.
 #
 # Fetching is deliberately confined to the `populate-cache` job which should pre-cache the required data.
+# That job also writes the test-case `catalog.paths.yaml` sidecars under $REF_DATASET_CACHE_DIR/test-case-paths.
+# They live in the shared cache rather than the checkout so the `test-cases` jobs can still resolve inputs.
 name: CI Integration Tests
 on:
   # Allow manual triggering of this workflow
@@ -61,6 +63,15 @@ jobs:
         timeout-minutes: 90
         run: |
           uv run ref test-cases fetch || echo "Some fetches failed"
+      - name: Verify paths sidecars were written to the shared cache
+        run: |
+          sidecar_root="${REF_DATASET_CACHE_DIR:?REF_DATASET_CACHE_DIR is not set on this runner}/test-case-paths"
+          count=$(find "$sidecar_root" -name catalog.paths.yaml 2>/dev/null | wc -l)
+          echo "Found $count paths sidecar(s) under $sidecar_root"
+          if [ "$count" -eq 0 ]; then
+            echo "::error::No catalog.paths.yaml written, so the test-cases jobs cannot resolve datasets."
+            exit 1
+          fi
       - name: Prune orphaned ESGF download temp files
         if: always()
         run: |

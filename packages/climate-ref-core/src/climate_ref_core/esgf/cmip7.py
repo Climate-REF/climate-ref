@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import pandas as pd
-import platformdirs
 import xarray as xr
 from loguru import logger
 
@@ -25,14 +24,14 @@ from climate_ref_core.cmip6_to_cmip7 import (
     shift_time_axis_end,
     suppress_bounds_coordinates,
 )
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 
 def _get_cmip7_cache_dir() -> Path:
     """Get the cache directory for converted CMIP7 files."""
-    # Use platform-appropriate cache directory for climate-ref
-    # This avoids polluting the intake-esgf cache with converted files
-    cache_dir = Path(platformdirs.user_cache_dir("climate_ref")) / "cmip7-converted"
+    # Kept out of the intake-esgf cache so converted files don't mix with downloads.
+    cache_dir = resolve_cache_dir("cmip7-converted")
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
 

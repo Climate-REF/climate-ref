@@ -24,6 +24,11 @@ from climate_ref_core.testing import (
 )
 
 
+def _paths_file(catalog: Path) -> Path:
+    """Sidecar location for tests that keep the catalog and its paths side by side."""
+    return catalog.with_suffix(".paths.yaml")
+
+
 class TestTestCase:
     """Tests for TestCase class."""
 
@@ -121,26 +126,45 @@ class TestTestCasePaths:
 
     def test_from_test_data_dir(self, tmp_path):
         """Test creating from explicit test data dir."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
 
         assert paths.root == tmp_path / "my-diag" / "default"
         assert paths.catalog == tmp_path / "my-diag" / "default" / "catalog.yaml"
-        assert paths.catalog_paths == tmp_path / "my-diag" / "default" / "catalog.paths.yaml"
         assert paths.regression == tmp_path / "my-diag" / "default" / "regression"
+
+    def test_catalog_paths_lives_under_the_dataset_cache(self, tmp_path, monkeypatch):
+        """The paths sidecar tracks the cache, not the checkout."""
+        cache = tmp_path / "cache"
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(cache))
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
+
+        assert paths.catalog_paths == (
+            cache / "test-case-paths" / "my-provider" / "my-diag" / "default" / "catalog.paths.yaml"
+        )
+        # It must not sit in the package tree, or a fresh checkout loses it.
+        assert paths.root not in paths.catalog_paths.parents
+
+    def test_catalog_paths_namespaced_by_provider(self, tmp_path, monkeypatch):
+        """Diagnostic slugs are only unique within a provider, so sidecars must not collide."""
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
+        a = TestCasePaths.from_test_data_dir(tmp_path, "example", "default", "provider-a")
+        b = TestCasePaths.from_test_data_dir(tmp_path, "example", "default", "provider-b")
+
+        assert a.catalog_paths != b.catalog_paths
 
     def test_test_data_dir_property(self, tmp_path):
         """Test that test_data_dir returns the base directory."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         assert paths.test_data_dir == tmp_path
 
     def test_exists_false_when_not_created(self, tmp_path):
         """Test exists returns False when directory doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         assert not paths.exists()
 
     def test_create_makes_directory(self, tmp_path):
         """Test create makes the test case directory."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         assert not paths.root.exists()
 
         paths.create()
@@ -150,8 +174,8 @@ class TestTestCasePaths:
 
     def test_different_test_cases(self, tmp_path):
         """Test different test case names produce different paths."""
-        default = TestCasePaths.from_test_data_dir(tmp_path, "diag", "default")
-        custom = TestCasePaths.from_test_data_dir(tmp_path, "diag", "custom")
+        default = TestCasePaths.from_test_data_dir(tmp_path, "diag", "default", "my-provider")
+        custom = TestCasePaths.from_test_data_dir(tmp_path, "diag", "custom", "my-provider")
 
         assert default.root != custom.root
         assert default.regression != custom.regression
@@ -182,12 +206,12 @@ class TestYamlSerialization:
 
         # Save to YAML
         yaml_path = tmp_path / "test_datasets.yaml"
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         assert yaml_path.exists()
 
         # Load from YAML
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         # Verify
         assert SourceDatasetType.CMIP6 in loaded
@@ -227,7 +251,7 @@ class TestYamlSerialization:
 
         # Save to YAML
         yaml_path = tmp_path / "test_datasets.yaml"
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         # Check that paths file has 3 entries with composite keys
         paths_file = yaml_path.with_suffix(".paths.yaml")
@@ -242,7 +266,7 @@ class TestYamlSerialization:
         assert "CMIP6.test.dataset1::tas_1890-1909.nc" in paths_map
 
         # Load from YAML
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         # Verify all 3 rows are preserved
         loaded_collection = loaded[SourceDatasetType.CMIP6]
@@ -264,7 +288,7 @@ class TestYamlSerialization:
         yaml_path = tmp_path / "nested" / "deep" / "test.yaml"
         assert not yaml_path.parent.exists()
 
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         assert yaml_path.exists()
         assert yaml_path.parent.exists()
@@ -281,21 +305,46 @@ class TestYamlSerialization:
 
         yaml_path = tmp_path / "catalog.yaml"
         paths_file = yaml_path.with_suffix(".paths.yaml")
-        assert save_datasets_to_yaml(datasets, yaml_path) is True
+        assert save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path)) is True
         assert paths_file.exists()
 
-        # Simulate a fresh checkout: committed catalog present, gitignored paths file absent.
+        # Simulate a cold cache: committed catalog present, paths sidecar absent.
         catalog_bytes_before = yaml_path.read_bytes()
         paths_file.unlink()
 
         # Unchanged catalog → returns False (catalog not rewritten) but the paths file is restored.
-        assert save_datasets_to_yaml(datasets, yaml_path) is False
+        assert save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path)) is False
         assert paths_file.exists()
         # The version-controlled catalog must be byte-identical (no spurious diff).
         assert yaml_path.read_bytes() == catalog_bytes_before
         # And the regenerated paths must round-trip.
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
         assert loaded[SourceDatasetType.CMIP6].datasets["path"].tolist() == ["/path/to/file.nc"]
+
+    def test_paths_resolve_across_workspaces(self, tmp_path):
+        """A sidecar written by one checkout must resolve a catalog read from another.
+
+        This is the CI failure: ``populate-cache`` wrote the sidecar into its own ephemeral
+        workspace, then the ``test-cases`` jobs checked out fresh trees and found no paths.
+        Holding the sidecar outside the tree is what makes the two halves meet.
+        """
+        df = pd.DataFrame({"instance_id": ["CMIP6.test.ds"], "path": ["/data/cache/file.nc"]})
+        collection = DatasetCollection(datasets=df, slug_column="instance_id", selector=())
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        # The writer job: catalog in its workspace, sidecar in the shared cache.
+        writer_catalog = tmp_path / "writer-workspace" / "catalog.yaml"
+        sidecar = tmp_path / "shared-cache" / "catalog.paths.yaml"
+        save_datasets_to_yaml(datasets, writer_catalog, sidecar)
+
+        # The reader job: same committed catalog, brand new workspace, no sibling sidecar.
+        reader_catalog = tmp_path / "reader-workspace" / "catalog.yaml"
+        reader_catalog.parent.mkdir(parents=True)
+        reader_catalog.write_bytes(writer_catalog.read_bytes())
+        assert not reader_catalog.with_suffix(".paths.yaml").exists()
+
+        loaded = load_datasets_from_yaml(reader_catalog, sidecar)
+        assert loaded[SourceDatasetType.CMIP6].datasets["path"].tolist() == ["/data/cache/file.nc"]
 
     def test_load_with_selector(self, tmp_path):
         """Test loading YAML with selector information."""
@@ -312,7 +361,7 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         collection = loaded[SourceDatasetType.CMIP6]
         # Selector is stored as sorted tuple of tuples
@@ -339,7 +388,7 @@ obs4mips:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         assert SourceDatasetType.CMIP6 in loaded
         assert SourceDatasetType.obs4MIPs in loaded
@@ -355,7 +404,7 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         collection = loaded[SourceDatasetType.CMIP6]
         assert len(collection.datasets) == 0
@@ -377,7 +426,7 @@ cmip6:
         paths_file = tmp_path / "test.paths.yaml"
         assert not paths_file.exists()
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         collection = loaded[SourceDatasetType.CMIP6]
         assert len(collection.datasets) == 1
@@ -398,7 +447,7 @@ cmip6:
         datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
 
         yaml_path = tmp_path / "test.yaml"
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         # Check hash is stored
         with open(yaml_path) as f:
@@ -422,14 +471,14 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
 
         # First write
-        result1 = save_datasets_to_yaml(datasets, yaml_path)
+        result1 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
         assert result1 is True
 
         # Get modification time
         mtime1 = yaml_path.stat().st_mtime
 
         # Second write with same data should skip
-        result2 = save_datasets_to_yaml(datasets, yaml_path)
+        result2 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
         assert result2 is False
 
         # File should not have been modified
@@ -459,15 +508,15 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
 
         # First write
-        result1 = save_datasets_to_yaml(datasets1, yaml_path)
+        result1 = save_datasets_to_yaml(datasets1, yaml_path, _paths_file(yaml_path))
         assert result1 is True
 
         # Second write with different data should write
-        result2 = save_datasets_to_yaml(datasets2, yaml_path)
+        result2 = save_datasets_to_yaml(datasets2, yaml_path, _paths_file(yaml_path))
         assert result2 is True
 
         # Verify the new data is in the file
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
         assert "CMIP6.test.dataset2" in loaded[SourceDatasetType.CMIP6].datasets["instance_id"].values
 
     def test_save_force_overwrites_even_when_unchanged(self, tmp_path):
@@ -484,11 +533,11 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
 
         # First write
-        result1 = save_datasets_to_yaml(datasets, yaml_path)
+        result1 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
         assert result1 is True
 
         # Force write with same data
-        result2 = save_datasets_to_yaml(datasets, yaml_path, force=True)
+        result2 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path), force=True)
         assert result2 is True
 
     def test_load_ignores_metadata_section(self, tmp_path):
@@ -507,7 +556,7 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         # Should only have cmip6, not _metadata
         assert SourceDatasetType.CMIP6 in loaded
@@ -573,7 +622,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_no_regression_exists(self, tmp_path):
         """Test returns True when regression directory doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
 
@@ -582,7 +631,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_no_manifest(self, tmp_path):
         """Test returns True when manifest.json doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
         paths.regression.mkdir(parents=True)
@@ -593,7 +642,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_manifest_has_no_catalog_hash(self, tmp_path):
         """Test returns True for a legacy manifest with no recorded catalog hash."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
         self._seed_manifest(paths, catalog_hash=None)
@@ -603,7 +652,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_no_catalog_file(self, tmp_path):
         """Test returns True when catalog file doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         self._seed_manifest(paths, catalog_hash="abc123")
         # No catalog file
@@ -613,7 +662,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_hash_differs(self, tmp_path):
         """Test returns True when catalog hash differs from the manifest hash."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: new_hash_456\ncmip6:\n  datasets: []\n")
         self._seed_manifest(paths, catalog_hash="old_hash_123")
@@ -623,7 +672,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_false_when_hash_matches(self, tmp_path):
         """Test returns False when catalog hash matches the manifest hash."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: same_hash_789\ncmip6:\n  datasets: []\n")
         self._seed_manifest(paths, catalog_hash="same_hash_789")

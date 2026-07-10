@@ -208,8 +208,13 @@ class TestFetchAndBuildCatalog:
         ):
             _, written = _fetch_and_build_catalog(mock_diagnostic, mock_test_case)
 
-        # Catalog is saved to paths.catalog with force=False by default
-        mock_save.assert_called_once_with(mock_datasets, test_case_dir / "catalog.yaml", force=False)
+        # Catalog is saved to paths.catalog, sidecar to paths.catalog_paths, force=False by default
+        mock_save.assert_called_once_with(
+            mock_datasets,
+            test_case_dir / "catalog.yaml",
+            mock_paths.catalog_paths,
+            force=False,
+        )
         assert written is True
 
     def test_obs4mips_data_returned(self, mock_diagnostic, mock_test_case):
@@ -543,10 +548,10 @@ class TestListCasesCommand:
         mock_provider.diagnostics.return_value = [mock_diag]
         mock_registry = MagicMock(providers=[mock_provider])
 
-        catalog_only = TestCasePaths(root=tmp_path / "catalog-only")
+        catalog_only = TestCasePaths(root=tmp_path / "catalog-only", provider_slug="example")
         catalog_only.root.mkdir()
         catalog_only.catalog.touch()
-        regression_only = TestCasePaths(root=tmp_path / "regression-only")
+        regression_only = TestCasePaths(root=tmp_path / "regression-only", provider_slug="example")
         regression_only.root.mkdir()
         regression_only.regression.mkdir()
 
@@ -846,7 +851,7 @@ class TestRunTestCaseCommand:
 
         from climate_ref_core.testing import TestCasePaths
 
-        real_paths = TestCasePaths(root=test_case_dir)
+        real_paths = TestCasePaths(root=test_case_dir, provider_slug="example")
 
         mock_definition = MagicMock()
         mock_definition.output_directory = output_dir
@@ -1184,7 +1189,9 @@ class TestFetchAndBuildCatalogSourceTypes:
         ):
             _fetch_and_build_catalog(mock_diagnostic, mock_test_case, force=True)
 
-        mock_save.assert_called_once_with(mock_datasets, mock_paths.catalog, force=True)
+        mock_save.assert_called_once_with(
+            mock_datasets, mock_paths.catalog, mock_paths.catalog_paths, force=True
+        )
 
     def test_mixed_source_types(self, mock_diagnostic, mock_test_case):
         """Test with mixed CMIP6 and obs4MIPs data."""
@@ -1449,7 +1456,7 @@ def _setup_real_run(mocker, tmp_path, *, runner_result="success", regression_fil
     # ExecutionDatasetCollection. The slot stages load the catalog directly (via the stages
     # module's own binding), so patching only climate_ref_core.testing would not reach them.
     (test_case_dir / "catalog.yaml").write_text("_metadata:\n  hash: abc123\n")
-    paths = TestCasePaths(root=test_case_dir)
+    paths = TestCasePaths(root=test_case_dir, provider_slug="example")
 
     if regression_files is not None:
         paths.regression.mkdir(parents=True)
@@ -1518,7 +1525,7 @@ class TestSyncCommand:
 
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         Manifest(
             schema=2,
             test_case_version=1,
@@ -1547,7 +1554,7 @@ class TestSyncCommand:
         store = LocalFilesystemStore(root=tmp_path / "store")  # empty store
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         Manifest(
             schema=2,
             test_case_version=1,
@@ -1617,7 +1624,7 @@ class TestStageCompare:
 
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         paths.regression.mkdir(parents=True)
         slot = tmp_path / "slot"
         (slot / "regression").mkdir(parents=True)
@@ -1785,7 +1792,7 @@ class TestReplayCommand:
 
         (regression_dir / "diagnostic.json").write_text("{}")
         digests = compute_committed_digests(regression_dir)
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         Manifest(schema=2, test_case_version=1, diagnostic_version=1, committed=digests, native={}).dump(
             paths.manifest
         )
@@ -1870,7 +1877,7 @@ class TestReplayCommand:
         regression_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
         (regression_dir / "diagnostic.json").write_text("{}")
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         # Committed digest deliberately wrong -> integrity mismatch (now a warning, not a gate).
         Manifest(
             schema=2,
@@ -1922,7 +1929,7 @@ class TestReplayCommand:
         (case_dir / "catalog.yaml").touch()
         for name in ("series.json", "diagnostic.json", "output.json"):
             (regression_dir / name).write_text("{}")
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         # Wrong committed digest -> integrity warns; native present -> passes the mint guard.
         Manifest(
             schema=2,
@@ -2095,7 +2102,7 @@ class TestMintCommand:
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         # A scratch execution holding the curated bundle + a native data file.
         scratch_root = tmp_path / "scratch"
@@ -2208,7 +2215,7 @@ class TestMintCommand:
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         stored_native = {"output.json": NativeEntry(sha256="aa" * 32, size=10)}
         Manifest(
             schema=2,
@@ -2269,7 +2276,7 @@ class TestMintCommand:
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
         stored_native = {"output.json": NativeEntry(sha256="aa" * 32, size=10)}
         Manifest(
             schema=2,
@@ -2522,7 +2529,7 @@ class TestCIGateCommand:
 
         case_dir = tmp_path / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         committed_digests: dict[str, str] = {}
         if current_version is not None:
@@ -2886,7 +2893,7 @@ class TestMigrateManifestsCommand:
 
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",

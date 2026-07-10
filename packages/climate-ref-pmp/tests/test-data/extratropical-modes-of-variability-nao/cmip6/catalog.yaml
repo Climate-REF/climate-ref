@@ -1,33 +1,33 @@
 _metadata:
-  hash: 97fbf6c3eafe72779d017d41744a0f69504f6128
+  hash: 6e80219d01556498a74ddaf4409fd314936d7b2c
 obs4mips:
   slug_column: instance_id
   selector:
-    source_id: 20CR
+    source_id: 20CR-V2
     variable_id: psl
   datasets:
   - activity_id: obs4MIPs
     end_time: '2012-12-16 12:00:00'
-    filename: psl_mon_20CR_PCMDI_gn_187101-201212.nc
+    filename: psl_mon_20CR-V2_PCMDI_gn_187101-201212.nc
     finalised: true
     frequency: mon
-    grid: 2.0x2.0 degree latitude x longitude
+    grid: 2x2 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR.mon.psl.250km.gn.v20210727
+    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR-V2.mon.psl.250km.gn.v20250415
     institution_id: NOAA-ESRL-PSD
     long_name: Sea Level Pressure
     nominal_resolution: 250 km
     product: observations
     realm: atmos
-    source_id: 20CR
+    source_id: 20CR-V2
     source_type: reanalysis
-    source_version_number: N/A
+    source_version_number: V2
     start_time: '1871-01-16 12:00:00'
     time_range: 1871-01-16 12:00:00-2012-12-16 12:00:00
     units: Pa
     variable_id: psl
     variant_label: PCMDI
-    version: v20210727
+    version: v20250415
     vertical_levels: 1
 cmip6:
   slug_column: instance_id

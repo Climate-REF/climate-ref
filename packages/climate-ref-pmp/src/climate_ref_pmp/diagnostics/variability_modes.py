@@ -14,6 +14,7 @@ from climate_ref_core.diagnostics import (
     ExecutionResult,
 )
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
+from climate_ref_core.esgf.obs4mips import Obs4MIPsRequest
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_pmp.pmp_driver import (
     PMP_RECONSTRUCTION_INPUTS,
@@ -39,7 +40,7 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
-    version = 2
+    version = 3
 
     facets = (
         "kind",
@@ -165,18 +166,18 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
             )
         elif self.mode_id in self.psl_modes:
             self.parameter_file = "pmp_param_MoV-psl.py"
-            self.data_requirements = _get_data_requirements("20CR", "psl", "psl", extra_experiments=("amip",))
+            self.data_requirements = _get_data_requirements(
+                "20CR-V2", "psl", "psl", extra_experiments=("amip",)
+            )
             self.test_data_spec = TestDataSpecification(
                 test_cases=(
                     TestCase(
                         name="cmip6",
-                        description=f"Test {self.mode_id} with CMIP6 psl data and 20CR obs",
+                        description=f"Test {self.mode_id} with CMIP6 psl data and 20CR-V2 obs",
                         requests=(
-                            RegistryRequest(
-                                registry_name="obs4ref",
-                                source_type="obs4MIPs",
+                            Obs4MIPsRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs",
-                                facets={"source_id": "20CR", "variable_id": "psl"},
+                                facets={"source_id": "20CR-V2", "variable_id": "psl"},
                             ),
                             CMIP6Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip6",
@@ -195,11 +196,9 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
                         name="cmip7",
                         description=f"CMIP7 test case for {self.mode_id}",
                         requests=(
-                            RegistryRequest(
-                                registry_name="obs4ref",
-                                source_type="obs4MIPs",
+                            Obs4MIPsRequest(
                                 slug=f"mov-{self.mode_id.lower()}-obs-cmip7",
-                                facets={"source_id": "20CR", "variable_id": "psl"},
+                                facets={"source_id": "20CR-V2", "variable_id": "psl"},
                             ),
                             CMIP7Request(
                                 slug=f"mov-{self.mode_id.lower()}-cmip7",

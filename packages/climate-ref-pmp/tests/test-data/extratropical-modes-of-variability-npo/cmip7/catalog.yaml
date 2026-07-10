@@ -1,33 +1,33 @@
 _metadata:
-  hash: d8fe04e12ce8e9b2a628bc79d539f17e62478ab1
+  hash: 711cd5b3388d0f1f1754eeb749df36d9bc705800
 obs4mips:
   slug_column: instance_id
   selector:
-    source_id: 20CR
+    source_id: 20CR-V2
     variable_id: psl
   datasets:
   - activity_id: obs4MIPs
     end_time: '2012-12-16 12:00:00'
-    filename: psl_mon_20CR_PCMDI_gn_187101-201212.nc
+    filename: psl_mon_20CR-V2_PCMDI_gn_187101-201212.nc
     finalised: true
     frequency: mon
-    grid: 2.0x2.0 degree latitude x longitude
+    grid: 2x2 degree latitude x longitude
     grid_label: gn
-    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR.mon.psl.250km.gn.v20210727
+    instance_id: obs4MIPs.obs4MIPs.NOAA-ESRL-PSD.20CR-V2.mon.psl.250km.gn.v20250415
     institution_id: NOAA-ESRL-PSD
     long_name: Sea Level Pressure
     nominal_resolution: 250 km
     product: observations
     realm: atmos
-    source_id: 20CR
+    source_id: 20CR-V2
     source_type: reanalysis
-    source_version_number: N/A
+    source_version_number: V2
     start_time: '1871-01-16 12:00:00'
     time_range: 1871-01-16 12:00:00-2012-12-16 12:00:00
     units: Pa
     variable_id: psl
     variant_label: PCMDI
-    version: v20210727
+    version: v20250415
     vertical_levels: 1
 cmip7:
   slug_column: instance_id
@@ -38,39 +38,39 @@ cmip7:
     variant_label: r1i1p1f1
   datasets:
   - activity_id: CMIP
-    branch_time_in_child: null
-    branch_time_in_parent: null
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 21915.0
     branded_variable: psl_tavg-u-hxy-u
     branding_suffix: tavg-u-hxy-u
-    calendar: null
-    end_time: '2014-12-30 00:00:00'
+    calendar: proleptic_gregorian
+    end_time: '2014-12-16 12:00:00'
     experiment_id: historical
-    external_variables: null
+    external_variables: areacella
     filename: psl_tavg-u-hxy-u_mon_glb_gn_ACCESS-ESM1-5_historical_r1i1p1f1_185001-201412.nc
-    finalised: false
+    finalised: true
     frequency: mon
     grid_label: gn
     instance_id: CMIP7.CMIP.CSIRO.ACCESS-ESM1-5.historical.r1i1p1f1.glb.mon.psl.tavg-u-hxy-u.gn.v0
     institution_id: CSIRO
-    license_id: null
-    long_name: null
+    license_id: CC-BY-4.0
+    long_name: Sea Level Pressure
     mip_era: CMIP7
-    nominal_resolution: null
-    parent_activity_id: null
-    parent_experiment_id: null
-    parent_mip_era: null
-    parent_source_id: null
-    parent_time_units: null
-    parent_variant_label: null
-    realm: null
+    nominal_resolution: 250 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: ACCESS-ESM1-5
+    parent_time_units: days since 0101-1-1
+    parent_variant_label: r1i1p1f1
+    realm: atmos
     region: glb
     source_id: ACCESS-ESM1-5
-    standard_name: null
-    start_time: '1850-01-01 00:00:00'
-    time_range: 185001-201412
-    time_units: null
-    tracking_id: null
-    units: null
+    standard_name: air_pressure_at_mean_sea_level
+    start_time: '1850-01-16 12:00:00'
+    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/7ee0192a-7e67-42f6-ac9c-2a72d1b7c72f
+    units: Pa
     variable_id: psl
     variant_label: r1i1p1f1
     version: v0

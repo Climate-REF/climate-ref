@@ -70,10 +70,11 @@ def list_(  # noqa: PLR0913
         False,
         help=(
             "Include retracted datasets in the output. Off by default, so the listing "
-            "matches solve-time eligibility (a retracted dataset is never shown masking the live "
-            "version that replaced it).Passing this flag also disables latest-only "
-            "deduplication (every version of every dataset is listed), since keeping it on "
-            "would let a retracted newer version outrank and hide a live older one."
+            "matches solve-time eligibility, and a retracted dataset is never shown masking "
+            "the live version that replaced it. Passing this flag also disables latest-only "
+            "deduplication, so every version of every dataset is listed. Keeping the "
+            "deduplication on would let a retracted newer version outrank and hide a live "
+            "older one."
         ),
     ),
     limit: int = typer.Option(

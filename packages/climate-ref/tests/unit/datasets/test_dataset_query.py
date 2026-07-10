@@ -203,9 +203,9 @@ class TestRetractedFiltering:
     """``DatasetFilter.include_retracted`` (default ``False``) excludes retracted rows."""
 
     def _retract(self, db, dataset_id: int) -> None:
-        # ``retracted_at`` lives on the base ``dataset`` table; a Core ``update(CMIP6Dataset)``
-        # cannot reach a parent-table column on SQLite (no multi-table UPDATE support), so set
-        # it through the ORM instance instead.
+        # ``retracted_at`` lives on the base ``dataset`` table.
+        # A Core ``update(CMIP6Dataset)`` cannot reach a parent-table column on SQLite
+        # (no multi-table UPDATE support), so set it through the ORM instance instead.
         ds = db.session.get(Dataset, dataset_id)
         ds.retracted_at = datetime.datetime(2026, 1, 1)
         db.session.commit()

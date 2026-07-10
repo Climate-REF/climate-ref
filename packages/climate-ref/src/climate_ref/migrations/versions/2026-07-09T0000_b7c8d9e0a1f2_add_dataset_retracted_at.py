@@ -6,7 +6,7 @@ hard-deleted once they have run (``execution_datasets.dataset_id`` has no ``onde
 so removing a row that has an execution link either violates the foreign key or destroys execution
 provenance). Non-null means retracted.
 
-This is plain DDL -- one nullable column, no default beyond ``NULL`` -- and needs no dialect
+This is plain DDL (one nullable column, no default beyond ``NULL``) and needs no dialect
 branching: SQLite and PostgreSQL both handle ``ADD COLUMN ... NULL`` identically here.
 
 Revision ID: b7c8d9e0a1f2

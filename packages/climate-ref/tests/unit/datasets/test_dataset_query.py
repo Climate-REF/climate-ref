@@ -212,8 +212,8 @@ class TestRetractedFiltering:
 
     def test_default_excludes_retracted(self, db_with_versions):
         """Retracting the latest version removes it from the default (exclude-retracted) query, and
-        the next-oldest version becomes the new survivor of the latest-version window -- the
-        retracted-filter is applied before the ``RANK`` partition, not after."""
+        the next-oldest version becomes the new survivor of the latest-version window.
+        The retracted-filter is applied before the ``RANK`` partition, not after."""
         self._retract(db_with_versions, db_with_versions.dq_ids["v10"])
 
         stmt = select_datasets(
@@ -240,8 +240,8 @@ class TestRetractedFiltering:
         assert db_with_versions.dq_ids["v10"] in {r.id for r in rows}
 
     def test_retracted_dataset_execution_link_survives(self, db_with_versions):
-        """Retracting a dataset must not touch its ``execution_datasets`` links -- only its
-        eligibility for future solve-time selection changes."""
+        """Retracting a dataset must not touch its ``execution_datasets`` links.
+        Only its eligibility for future solve-time selection changes."""
         v10_id = db_with_versions.dq_ids["v10"]
         self._retract(db_with_versions, v10_id)
 

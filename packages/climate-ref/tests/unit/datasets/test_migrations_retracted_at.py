@@ -1,7 +1,7 @@
 """Tests for the ``dataset.retracted_at`` migration (dataset retraction).
 
 Covers:
-1. Upgrade adds the nullable ``retracted_at`` column; downgrade drops it (SQLite roundtrip).
+1. Upgrade adds the nullable ``retracted_at`` column. Downgrade drops it (SQLite roundtrip).
 2. A row inserted through the ORM after upgrading defaults to ``retracted_at is None``.
 
 Driven in-test via ``database.alembic_config(...)`` + ``command.upgrade``/``downgrade``,

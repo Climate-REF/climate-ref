@@ -146,6 +146,13 @@ requests: list[Request] = [
             table_id="Amon",
         ),
     ),
+    Obs4MIPsRequest(
+        id="esmvaltool-cloud-radiative-effects-obs4mips",
+        facets=dict(
+            source_id="CERES-EBAF-4-2-1",
+            variable_id=["rlut", "rlutcs", "rsut", "rsutcs"],
+        ),
+    ),
     # ESMValTool cloud scatterplots
     CMIP6Request(
         id="esmvaltool-cloud-scatterplots-cmip6",

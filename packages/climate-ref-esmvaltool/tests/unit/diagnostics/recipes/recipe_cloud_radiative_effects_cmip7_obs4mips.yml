@@ -10,14 +10,17 @@ documentation:
   maintainer:
   - bock_lisa
 datasets:
-- project: CMIP6
+- project: CMIP7
   activity: CMIP
+  branding_suffix: tavg-u-hxy-u
   dataset: ACCESS-ESM1-5
   ensemble: r1i1p1f1
-  institute: CSIRO
   exp: historical
+  frequency: mon
   grid: gn
-  mip: Amon
+  institute: CSIRO
+  mip: atmos
+  region: glb
 timerange_for_models:
   timerange: 2002/2021
 preprocessors:
@@ -41,12 +44,12 @@ diagnostics:
     variables:
       lwcre:
         timerange: 2002/2021
-        mip: Amon
+        mip: atmos
         preprocessor: full_climatology
         derive: true
       swcre:
         timerange: 2002/2021
-        mip: Amon
+        mip: atmos
         preprocessor: full_climatology
         derive: true
     additional_datasets:
@@ -71,12 +74,12 @@ diagnostics:
     variables:
       lwcre:
         timerange: 2002/2021
-        mip: Amon
+        mip: atmos
         preprocessor: zonal_mean
         derive: true
       swcre:
         timerange: 2002/2021
-        mip: Amon
+        mip: atmos
         preprocessor: zonal_mean
         derive: true
     additional_datasets:

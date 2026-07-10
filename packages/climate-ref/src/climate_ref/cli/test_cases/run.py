@@ -166,7 +166,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
             logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
             return False
         logger.info(f"Loading catalog from {paths.catalog}")
-        datasets = load_datasets_from_yaml(paths.catalog)
+        datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
 
     paths.create()
     slot = prepare_slot(paths, label)

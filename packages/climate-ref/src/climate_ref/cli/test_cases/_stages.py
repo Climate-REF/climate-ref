@@ -188,7 +188,7 @@ def stage_rebuild_from_slot(
     from climate_ref_core.testing import load_datasets_from_yaml
 
     placeholders.with_output(slot).hydrate(slot)
-    datasets = load_datasets_from_yaml(paths.catalog)
+    datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
     definition = ExecutionDefinition(
         diagnostic=diag,
         key=f"test-{tc.name}",

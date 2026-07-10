@@ -40,9 +40,6 @@ class ExtratropicalModesOfVariability(CommandLineDiagnostic):
     ts_modes = ("PDO", "NPGO", "AMO")
     psl_modes = ("NAO", "NAM", "PNA", "NPO", "SAM")
 
-    # Bumped to 3 when the psl modes moved from the obs4REF ``20CR`` reference to the
-    # obs4MIPs ``20CR-V2`` reference. The ts modes share this class and re-mint to
-    # identical baselines under the new version.
     version = 3
 
     facets = (

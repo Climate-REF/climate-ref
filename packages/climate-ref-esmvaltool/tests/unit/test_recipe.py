@@ -3,7 +3,12 @@ from pathlib import Path
 import cftime
 import pandas as pd
 import pytest
-from climate_ref_esmvaltool.recipe import as_facets, get_child_and_parent_dataset, prepare_climate_data
+from climate_ref_esmvaltool.recipe import (
+    as_facets,
+    get_child_and_parent_dataset,
+    prepare_climate_data,
+    rewrite_mip_for_cmip7,
+)
 
 
 def test_get_child_and_parent_dataset():
@@ -285,3 +290,92 @@ def test_prepare_climate_data(tmp_path, datasets, expected):
     for source_path, symlink in zip(datasets["path"], expected):
         assert Path(symlink).is_symlink()
         assert Path(symlink).resolve() == Path(source_path).resolve()
+
+
+def _cmip7_recipe(diagnostic):
+    return {"datasets": [{"project": "CMIP7"}], "diagnostics": {"diag": diagnostic}}
+
+
+def test_rewrite_mip_for_cmip7_pins_variable_level_reference():
+    recipe = _cmip7_recipe(
+        {
+            "variables": {
+                "tas": {
+                    "mip": "Amon",
+                    "additional_datasets": [{"project": "obs4MIPs", "dataset": "ERA-5"}],
+                }
+            }
+        }
+    )
+
+    rewrite_mip_for_cmip7(recipe)
+
+    variable = recipe["diagnostics"]["diag"]["variables"]["tas"]
+    assert variable["mip"] == "atmos"
+    assert variable["additional_datasets"][0]["mip"] == "Amon"
+
+
+def test_rewrite_mip_for_cmip7_pins_diagnostic_level_reference():
+    recipe = _cmip7_recipe(
+        {
+            "variables": {
+                "lwcre": {"mip": "Amon"},
+                "swcre": {"mip": "Amon"},
+            },
+            "additional_datasets": [{"project": "obs4MIPs", "dataset": "CERES-EBAF-4-2-1"}],
+        }
+    )
+
+    rewrite_mip_for_cmip7(recipe)
+
+    diagnostic = recipe["diagnostics"]["diag"]
+    assert diagnostic["variables"]["lwcre"]["mip"] == "atmos"
+    # The reference is still CMOR-ised the CMIP6 way, so it keeps the table.
+    assert diagnostic["additional_datasets"][0]["mip"] == "Amon"
+
+
+def test_rewrite_mip_for_cmip7_leaves_diagnostic_level_reference_when_mips_disagree():
+    recipe = _cmip7_recipe(
+        {
+            "variables": {
+                "tas": {"mip": "Amon"},
+                "cVeg": {"mip": "Lmon"},
+            },
+            "additional_datasets": [{"project": "obs4MIPs", "dataset": "ERA-5"}],
+        }
+    )
+
+    rewrite_mip_for_cmip7(recipe)
+
+    assert "mip" not in recipe["diagnostics"]["diag"]["additional_datasets"][0]
+
+
+def test_rewrite_mip_for_cmip7_respects_an_explicit_reference_mip():
+    recipe = _cmip7_recipe(
+        {
+            "variables": {"toz": {"mip": "AERmon"}},
+            "additional_datasets": [{"project": "obs4MIPs", "dataset": "C3S", "mip": "Amon"}],
+        }
+    )
+
+    rewrite_mip_for_cmip7(recipe)
+
+    assert recipe["diagnostics"]["diag"]["additional_datasets"][0]["mip"] == "Amon"
+
+
+def test_rewrite_mip_for_cmip7_is_a_no_op_without_cmip7_data():
+    recipe = {
+        "datasets": [{"project": "CMIP6"}],
+        "diagnostics": {
+            "diag": {
+                "variables": {"tas": {"mip": "Amon"}},
+                "additional_datasets": [{"project": "obs4MIPs", "dataset": "ERA-5"}],
+            }
+        },
+    }
+
+    rewrite_mip_for_cmip7(recipe)
+
+    diagnostic = recipe["diagnostics"]["diag"]
+    assert diagnostic["variables"]["tas"]["mip"] == "Amon"
+    assert "mip" not in diagnostic["additional_datasets"][0]

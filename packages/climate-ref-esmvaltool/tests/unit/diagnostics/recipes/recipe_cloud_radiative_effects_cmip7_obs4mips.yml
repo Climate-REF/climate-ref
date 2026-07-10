@@ -59,6 +59,7 @@ diagnostics:
       start_year: 2002
       end_year: 2021
       reference_for_monitor_diags: true
+      mip: Amon
     scripts:
       plot:
         script: monitor/multi_datasets.py
@@ -89,6 +90,7 @@ diagnostics:
       start_year: 2002
       end_year: 2021
       reference_for_monitor_diags: true
+      mip: Amon
     scripts:
       plot:
         script: monitor/multi_datasets.py

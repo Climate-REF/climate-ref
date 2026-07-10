@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterator
+from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
@@ -161,22 +161,44 @@ def _iter_recipe_datasets(recipe: Recipe) -> Iterator[dict[str, Any]]:
                 yield from var_settings.get("additional_datasets", [])
 
 
+def _pin_reference_mip(datasets: Iterable[dict[str, Any]], old_mip: str) -> None:
+    """Pin the original CMIP6 table onto reference datasets that don't carry one.
+
+    CMIP7 replaces the MIP table with a realm, but reference datasets (e.g. OBS,
+    obs4MIPs) are still CMOR-ised the CMIP6 way and are checked against a table.
+    Without this they would inherit the realm, which names no table at all.
+    """
+    for ds in datasets:
+        if ds.get("project") != "CMIP7" and "mip" not in ds:
+            ds["mip"] = old_mip
+
+
 def _rewrite_variable_mip(var_settings: dict[str, Any]) -> None:
     """Rewrite the mip for a single variable from a CMIP6 table name to a CMIP7 realm.
 
-    Before overwriting the variable-level mip, the original CMIP6 value is
-    pinned onto any non-CMIP7 ``additional_datasets`` (e.g. OBS) that don't
-    already carry an explicit mip so they keep resolving correctly.
+    The variable's own reference datasets are pinned to the original table first.
     """
     old_mip = var_settings.get("mip")
     if old_mip is None or old_mip not in CMIP6_MIP_TO_CMIP7_REALM:
         return
 
-    for ds in var_settings.get("additional_datasets", []):
-        if ds.get("project") != "CMIP7" and "mip" not in ds:
-            ds["mip"] = old_mip
+    _pin_reference_mip(var_settings.get("additional_datasets", []), old_mip)
 
     var_settings["mip"] = CMIP6_MIP_TO_CMIP7_REALM[old_mip]
+
+
+def _shared_variable_mip(variables: Iterable[dict[str, Any]]) -> str | None:
+    """Return the CMIP6 table shared by every variable, if they agree on one.
+
+    Reference datasets declared at the diagnostic level apply to all of the
+    diagnostic's variables, so they can only be pinned to a single table when
+    the variables agree. Returns ``None`` when they don't.
+    """
+    mips = {v.get("mip") for v in variables if isinstance(v, dict)}
+    shared = {str(mip) for mip in mips if mip in CMIP6_MIP_TO_CMIP7_REALM}
+    if len(shared) == 1:
+        return shared.pop()
+    return None
 
 
 def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
@@ -187,6 +209,9 @@ def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
     uses CMIP7 data, these must be rewritten to CMIP7 realm names
     (e.g. ``atmos``, ``land``).
 
+    Reference datasets are pinned to the original table, whether they are declared
+    against a single variable or against the diagnostic as a whole.
+
     Parameters
     ----------
     recipe
@@ -196,7 +221,13 @@ def rewrite_mip_for_cmip7(recipe: Recipe) -> None:
         return
 
     for diag in recipe.get("diagnostics", {}).values():
-        for var_settings in diag.get("variables", {}).values():
+        variables = list(diag.get("variables", {}).values())
+
+        shared_mip = _shared_variable_mip(variables)
+        if shared_mip is not None:
+            _pin_reference_mip(diag.get("additional_datasets", []), shared_mip)
+
+        for var_settings in variables:
             if isinstance(var_settings, dict):
                 _rewrite_variable_mip(var_settings)
 

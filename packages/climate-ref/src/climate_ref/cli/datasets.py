@@ -105,8 +105,8 @@ def list_(  # noqa: PLR0913
 
     By default only the latest, non-retracted version of each dataset is listed, matching what
     the solver would select. Pass ``--include-retracted`` to also see retracted datasets (see
-    the ``retracted_at`` column); this also disables latest-only deduplication so every version is
-    listed, since otherwise a retracted newer version could outrank -- and hide -- a live older one.
+    the ``retracted_at`` column). This also disables latest-only deduplication so every version is
+    listed, since otherwise a retracted newer version could outrank and hide a live older one.
     """
     console = ctx.obj.console
     reader = Reader(ctx.obj.database)
@@ -195,7 +195,7 @@ def retract(ctx: typer.Context, slug: str) -> None:
     Retract a dataset so it is excluded from future solve-time selection.
 
     The dataset's row and files are left intact for provenance and historical execution
-    inspection -- only its eligibility to satisfy a diagnostic's data requirements changes.
+    inspection. Only its eligibility to satisfy a diagnostic's data requirements changes.
     There is no hard-delete path (a dataset that has ever run cannot be removed without either
     violating a foreign key or destroying execution provenance), so this is the only way to stop
     a superseded dataset (e.g. an old obs4MIPs row re-ingested under obs4REF) from continuing to
@@ -213,7 +213,7 @@ def retract(ctx: typer.Context, slug: str) -> None:
             raise typer.Exit(code=1)
 
         if dataset.retracted_at is not None:
-            console.print(f"Dataset {slug!r} is already retracted (since {dataset.retracted_at}); no change.")
+            console.print(f"Dataset {slug!r} is already retracted (since {dataset.retracted_at}). No change.")
             return
 
         dataset.retracted_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
@@ -238,7 +238,7 @@ def unretract(ctx: typer.Context, slug: str) -> None:
             raise typer.Exit(code=1)
 
         if dataset.retracted_at is None:
-            console.print(f"Dataset {slug!r} is not retracted; no change.")
+            console.print(f"Dataset {slug!r} is not retracted. No change.")
             return
 
         dataset.retracted_at = None

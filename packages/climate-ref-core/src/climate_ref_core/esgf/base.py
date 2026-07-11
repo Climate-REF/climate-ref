@@ -9,6 +9,9 @@ from typing import Any, Protocol, runtime_checkable
 
 import pandas as pd
 from intake_esgf import ESGFCatalog
+from intake_esgf.exceptions import NoSearchResults
+
+from climate_ref_core.exceptions import DatasetResolutionError
 
 
 @runtime_checkable
@@ -109,7 +112,14 @@ class IntakeESGFMixin:
         # so pin the legacy object-string behaviour for the intake-esgf interaction.
         with pd.option_context("future.infer_string", False):
             cat = ESGFCatalog()  # type: ignore[no-untyped-call]
-            cat.search(**facets)
+            # A dataset disappearing from the index must not crash the whole prefetch,
+            # so translate intake-esgf's NoSearchResults into the per-test-case error
+            # that callers already log and skip.
+            try:
+                cat.search(**facets)
+            except NoSearchResults:
+                msg = f"ESGF search returned no results for facets: {facets}"
+                raise DatasetResolutionError(msg) from None
 
             if self.remove_ensembles:
                 cat.remove_ensembles()

@@ -148,7 +148,7 @@ are rounded to **7 significant figures** at write time.
 This keeps the committed bytes stable and human-reviewable across machines (local developer run vs. CI mint),
 where tiny floating-point differences would otherwise produce noisy diffs on every baseline update.
 
-Seven significant figures is deliberately one digit finer than the `rtol=1e-6`
+Seven significant figures is deliberately two digits finer than the `rtol=1e-5`
 tolerance used by the coupling gate's tolerant comparison,
 so rounding at write time can never flip a gate verdict:
 a value that rounds identically on all machines will always compare within tolerance.

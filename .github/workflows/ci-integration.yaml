@@ -59,10 +59,13 @@ jobs:
           uv run ref providers setup
       # Warm the shared intake-esgf cache (~/.esgf) here, as the single writer, so the
       # downstream test jobs only ever read from it.
+      # Per-test-case failures are logged and skipped inside the command,
+      # so a non-zero exit here means the fetch crashed and the sidecars are incomplete.
+      # Failing fast beats the confusing DatasetResolutionError cascade in the test-cases jobs.
       - name: Prefetch test-case data from ESGF
         timeout-minutes: 90
         run: |
-          uv run ref test-cases fetch || echo "Some fetches failed"
+          uv run ref test-cases fetch
       - name: Verify paths sidecars were written to the shared cache
         run: |
           sidecar_root="${REF_DATASET_CACHE_DIR:?REF_DATASET_CACHE_DIR is not set on this runner}/test-case-paths"
@@ -123,6 +126,10 @@ jobs:
       fail-fast: false
       matrix:
         provider: [example, esmvaltool, ilamb, pmp]
+        include:
+          # PMP has 21 slow cases at roughly 5 minutes each, so 60 minutes is not enough.
+          - provider: pmp
+            timeout: 120
     name: test-cases (${{ matrix.provider }})
     defaults:
       run:
@@ -134,7 +141,7 @@ jobs:
         with:
           python-version: "3.13"
       - name: Run test cases
-        timeout-minutes: 60
+        timeout-minutes: ${{ matrix.timeout || 60 }}
         run: |
           uv sync
           uv run pytest packages/climate-ref-${{ matrix.provider }} -m test_cases --slow -v -r a

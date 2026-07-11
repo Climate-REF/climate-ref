@@ -3,33 +3,33 @@
   "committed": {
     "diagnostic.json": "f3ede4762bd0b55ec0b7f172a7433ec45fd9dc241789ea44f9f150a970742a57",
     "output.json": "3fe2b84a2d7c0b7c5332657ccd49b6dfdbb6634d8d48902e883da35cd74ad9d4",
-    "series.json": "3428ff5e5721babeff3dc23cbaec3ed9c3e3fa3960168d86e4d6e973cea3e4c3"
+    "series.json": "6f1b2aac1595c40319c9c8c21d9504aeb779bdfc150d9f468ded020cfe4d2ab5"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
-      "sha256": "73ba96882f0ceffbd0ece0d7f1ce75275ab57e8b0ebab530ec2442bbdf35d43b",
-      "size": 943
+      "sha256": "60461b8b5af304c1e3eb6b06521eb0c55895ab25ae2decfcbf8bb4a580562d2b",
+      "size": 942
     },
     "global_mean_surface_temperature.nc": {
-      "sha256": "6e877e9dde10b3022c29376a65baf98652ecb7e9a85c946df294685b78f65bff",
-      "size": 20325
+      "sha256": "2243768a2c6cf0a9036b3c3897cce49fdd0818d3fcb0de7f8a47586ae600d841",
+      "size": 22171
     },
     "output.json": {
       "sha256": "7e2ba5fae787a6c1ee6b61365f8010ec2d940e9c70f7bb4000dc5de8b3c21fcc",
       "size": 1127
     },
     "series.json": {
-      "sha256": "398821ffdf19f01911d004c6a73b2d59eda43e70f2bd7e67326bb9573dbb525a",
-      "size": 17501
+      "sha256": "1c17d13cfa82ab1683794ce61629af3f1fe07f00e8b822361b2b167f2626db77",
+      "size": 17522
     },
     "surface_temperature_bias.png": {
-      "sha256": "38d64d87ae3ab6e7c61b2b0f2396a509a005a82772723278657ca4fdb806eab7",
-      "size": 55400
+      "sha256": "8727bbc09f824aff9b63a8b9f2442de683ef85af46716bab1ebb2666d47e4957",
+      "size": 55340
     },
     "surface_temperature_timeseries.png": {
-      "sha256": "a9214ab367dfa8daf4398262f644b52531cd73e5246095d0bab0d119dfc9441b",
-      "size": 67393
+      "sha256": "1bf5eb4477faeb6e6e290aa20665d7285bea58b13eb3afbc9ab42a8fdbaf5beb",
+      "size": 67440
     }
   },
   "schema": 2,

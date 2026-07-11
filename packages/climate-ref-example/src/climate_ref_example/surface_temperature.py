@@ -58,7 +58,10 @@ def _global_mean_series(da: xr.DataArray, weights: xr.DataArray) -> xr.DataArray
         Annual global mean, indexed by integer calendar ``year``.
     """
     spatial_dims = [dim for dim in da.dims if dim != "time"]
-    spatial_mean = da.weighted(weights.fillna(0)).mean(dim=spatial_dims, keep_attrs=True)
+    # Accumulate in float64 so the reduction is stable across platforms.
+    # float32 sums can differ by ~1e-6 relative between SIMD implementations,
+    # which is enough to trip the regression gate's tolerance.
+    spatial_mean = da.astype("float64").weighted(weights.fillna(0)).mean(dim=spatial_dims, keep_attrs=True)
     # Grouping by integer year keeps the model and reference series alignable even when
     # their calendars differ. Materialise with ``.load()`` so it survives closing the file.
     annual_mean = spatial_mean.groupby("time.year").mean().load()
@@ -312,6 +315,9 @@ class GlobalMeanSurfaceTemperatureBias(Diagnostic):
 
     name = "Global Mean SST Bias"
     slug = "global-sst-bias"
+    # version 2: the global-mean reduction accumulates in float64,
+    # so the committed series values changed at the 1e-6 level.
+    version = 2
 
     # Each option is an AND-group: a model requirement combined with the observational
     # reference requirement. The diagnostic runs if either the CMIP6 or the CMIP7 model

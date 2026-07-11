@@ -7,8 +7,21 @@ using the intake-esgf package.
 
 from typing import Any, Protocol, runtime_checkable
 
+import intake_esgf
 import pandas as pd
 from intake_esgf import ESGFCatalog
+
+
+def enable_ceda_solr_index() -> None:
+    """
+    Enable the CEDA Solr index as an additional ESGF search index.
+
+    The obs4MIPs record for C3S-GTO-ECV-9-0 (the ozone reference) is missing
+    from the default ESGF2-US-1.5-Catalog index but is still served by the
+    CEDA Solr index, so search that index as well.
+    Remove once the record returns to the 1.5 catalog.
+    """
+    intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] = True
 
 
 @runtime_checkable
@@ -107,6 +120,8 @@ class IntakeESGFMixin:
         # intake-esgf assigns Python lists into individual DataFrame cells, which only works for object dtype.
         # Pandas >= 3.0 defaults strings to the pyarrow-backed dtype, where that assignment raises,
         # so pin the legacy object-string behaviour for the intake-esgf interaction.
+        enable_ceda_solr_index()
+
         with pd.option_context("future.infer_string", False):
             cat = ESGFCatalog()  # type: ignore[no-untyped-call]
             cat.search(**facets)

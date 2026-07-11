@@ -4,9 +4,11 @@ from unittest.mock import MagicMock, patch
 
 import pandas as pd
 import pytest
+from intake_esgf.exceptions import NoSearchResults
 
 from climate_ref_core.esgf import CMIP6Request, ESGFRequest
 from climate_ref_core.esgf.base import _deduplicate_datasets
+from climate_ref_core.exceptions import DatasetResolutionError
 
 
 class TestESGFRequestProtocol:
@@ -253,6 +255,24 @@ class TestIntakeESGFMixin:
 
         with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
             with pytest.raises(ValueError, match="No datasets found"):
+                request.fetch_datasets()
+
+    def test_fetch_datasets_no_search_results(self):
+        """
+        Regression: a dataset that has been de-indexed from ESGF makes the search
+        raise NoSearchResults, which must surface as the per-test-case
+        DatasetResolutionError instead of crashing the whole prefetch.
+        """
+        request = CMIP6Request(
+            slug="test",
+            facets={"source_id": "C3S-GTO-ECV-9-0"},
+        )
+
+        mock_cat = MagicMock()
+        mock_cat.search.side_effect = NoSearchResults()
+
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
+            with pytest.raises(DatasetResolutionError, match="no results"):
                 request.fetch_datasets()
 
     def test_fetch_datasets_converts_tuples_to_lists(self):

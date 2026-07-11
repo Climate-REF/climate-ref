@@ -112,9 +112,6 @@ class IntakeESGFMixin:
         # so pin the legacy object-string behaviour for the intake-esgf interaction.
         with pd.option_context("future.infer_string", False):
             cat = ESGFCatalog()  # type: ignore[no-untyped-call]
-            # A dataset disappearing from the index must not crash the whole prefetch,
-            # so translate intake-esgf's NoSearchResults into the per-test-case error
-            # that callers already log and skip.
             try:
                 cat.search(**facets)
             except NoSearchResults:

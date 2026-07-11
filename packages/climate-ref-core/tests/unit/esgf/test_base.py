@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock, patch
 
+import intake_esgf
 import pandas as pd
 import pytest
 from intake_esgf.exceptions import NoSearchResults
@@ -226,6 +227,31 @@ class TestIntakeESGFMixin:
             request.fetch_datasets()
 
         mock_cat.remove_ensembles.assert_called_once()
+
+    def test_fetch_datasets_enables_ceda_solr_index(self):
+        """
+        The CEDA Solr index must be enabled as a fallback while the ozone reference
+        C3S-GTO-ECV-9-0 is missing from the default ESGF2-US-1.5-Catalog index.
+        """
+        request = CMIP6Request(
+            slug="test",
+            facets={"source_id": "ACCESS-ESM1-5"},
+        )
+
+        mock_cat = MagicMock()
+        mock_cat.df = pd.DataFrame(
+            {
+                "key": ["ds1"],
+                "source_id": ["ACCESS-ESM1-5"],
+            }
+        )
+        mock_cat.to_path_dict.return_value = {"ds1": ["/path/to/file.nc"]}
+
+        intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] = False
+        with patch("climate_ref_core.esgf.base.ESGFCatalog", return_value=mock_cat):
+            request.fetch_datasets()
+
+        assert intake_esgf.conf["solr_indices"]["esgf.ceda.ac.uk"] is True
 
     def test_fetch_datasets_empty_result(self):
         """Test fetch_datasets raises error when no datasets found."""

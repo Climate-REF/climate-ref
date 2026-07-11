@@ -24,6 +24,8 @@ from intake_esgf.exceptions import (
 )
 from loguru import logger
 
+from climate_ref_core.esgf import enable_ceda_solr_index
+
 PathDict = dict[str, list[Path]]
 
 TRANSIENT_ERRORS = (DatasetLoadError, StalledDownload, GlobusTransferError)
@@ -630,4 +632,5 @@ def main(
 # joblib.Parallel(n_jobs=2)(joblib.delayed(run_request)(request) for request in requests)
 
 if __name__ == "__main__":
+    enable_ceda_solr_index()
     typer.run(main)

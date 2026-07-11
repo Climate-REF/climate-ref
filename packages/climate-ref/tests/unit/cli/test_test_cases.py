@@ -15,6 +15,7 @@ from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.provider_registry import ProviderRegistry
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
+    InvalidDiagnosticException,
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
@@ -378,6 +379,7 @@ class TestFetchTestDataCommand:
         [
             DatasetResolutionError("No datasets found for tc1"),
             ValueError("No valid executions found for diagnostic test-diag"),
+            InvalidDiagnosticException("test-diag", "No data catalog matches the data requirements"),
         ],
     )
     def test_fetch_continues_on_test_case_failure(self, invoke_cli, mocker, exception):
@@ -387,6 +389,9 @@ class TestFetchTestDataCommand:
         ``pd.concat([])`` (or an empty solver result) to crash the entire
         ``ref test-cases fetch`` command instead of moving on to the next
         test case.
+        ``InvalidDiagnosticException`` covers the solver finding no matching
+        source types (seen with ilamb amoc-RAPID in CI),
+        which previously aborted the loop and left later diagnostics without sidecars.
         """
         tc_bad = MagicMock(name="bad", description="bad", requests=[MagicMock()])
         tc_bad.name = "bad"

@@ -299,6 +299,7 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
     name = "Ozone Diagnostics"
     slug = "ozone-zonal"
     base_recipe = "ref/recipe_ref_ozone.yml"
+    version = 2
 
     data_requirements = (
         DataRequirement(

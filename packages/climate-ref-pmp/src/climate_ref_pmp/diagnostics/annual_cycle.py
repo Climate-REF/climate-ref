@@ -1,4 +1,3 @@
-import datetime
 import json
 from pathlib import Path
 from typing import Any
@@ -291,7 +290,7 @@ class AnnualCycle(CommandLineDiagnostic):
         "statistic",
         "season",
     )
-    version = 3
+    version = 4
 
     _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
@@ -454,13 +453,15 @@ class AnnualCycle(CommandLineDiagnostic):
         data_name = f"{source_id}_{experiment_id}_{member_id}"
         data_path = model_files
 
-        date_stamp = datetime.datetime.now().strftime("%Y%m%d")
+        # PMP stamps this into the climatology filename, which leaks into the bundle provenance.
+        # Derived from the diagnostic version rather than the run date so reruns are reproducible.
+        clim_version = f"v{self.version}"
 
         params = {
             "vars": variable_id,
             "infile": data_path,
             "outfile": f"{output_directory_path}/{variable_id}_{data_name}_clims.nc",
-            "version": f"v{date_stamp}",
+            "version": clim_version,
         }
 
         cmds.append(
@@ -513,7 +514,7 @@ class AnnualCycle(CommandLineDiagnostic):
             "test_data_path": output_directory_path,
             "test_data_set": source_id,
             "realization": member_id,
-            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date_stamp}.nc",
+            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.{clim_version}.nc",
             "metrics_output_path": output_directory_path,
             "cmec": "",
         }

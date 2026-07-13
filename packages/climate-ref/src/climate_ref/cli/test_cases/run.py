@@ -36,6 +36,7 @@ from climate_ref.cli.test_cases._stages import (
     write_source_stamp,
 )
 from climate_ref.config import Config
+from climate_ref.testing import ResourceSnapshot, log_resource_usage
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     InvalidDiagnosticException,
@@ -423,6 +424,8 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
         )
 
     for diag, tc in test_cases_to_run:
+        case_id = f"{provider}/{diag.slug}/{tc.name}"
+        resources_before = ResourceSnapshot.capture()
         success = _run_single_test_case(
             config=config,
             console=console,
@@ -435,11 +438,12 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
             clean=clean,
             label=label,
         )
+        log_resource_usage(case_id, resources_before)
         if success:
             successes += 1
         else:
             failures += 1
-            failed_cases.append(f"{provider}/{diag.slug}/{tc.name}")
+            failed_cases.append(case_id)
 
     # Print summary
     console.print()

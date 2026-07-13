@@ -1204,7 +1204,7 @@
   {
     "attributes": {
       "calendar": "standard",
-      "long_name": "trace_global",
+      "long_name": "Carbon Mass Flux out of Atmosphere Due to Gross Primary Production on Land",
       "standard_name": "gross_primary_productivity",
       "units": "g d-1 m-2"
     },
@@ -1506,7 +1506,7 @@
     ],
     "index_name": "time",
     "kind": "reference",
-    "value_long_name": "trace_global",
+    "value_long_name": "Carbon Mass Flux out of Atmosphere Due to Gross Primary Production on Land",
     "value_units": "g d-1 m-2",
     "values": [
       0.463951,
@@ -1802,7 +1802,7 @@
   {
     "attributes": {
       "calendar": "standard",
-      "long_name": "trace_tropical",
+      "long_name": "Carbon Mass Flux out of Atmosphere Due to Gross Primary Production on Land",
       "standard_name": "gross_primary_productivity",
       "units": "g d-1 m-2"
     },
@@ -2104,7 +2104,7 @@
     ],
     "index_name": "time",
     "kind": "reference",
-    "value_long_name": "trace_tropical",
+    "value_long_name": "Carbon Mass Flux out of Atmosphere Due to Gross Primary Production on Land",
     "value_units": "g d-1 m-2",
     "values": [
       null,

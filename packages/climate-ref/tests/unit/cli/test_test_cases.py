@@ -788,6 +788,19 @@ class TestRunTestCaseCommand:
         # The slot holds the rebuilt committed bundle even when the baseline is untouched.
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
 
+    def test_run_reports_resource_usage(self, invoke_cli, mocker, tmp_path):
+        """Each executed test case logs wall clock, CPU time, and peak RSS."""
+        _setup_real_run(mocker, tmp_path, regression_files={})
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
+        )
+
+        assert result.exit_code == 0
+        assert "Resources for example/test-diag/default: wall " in result.stderr
+        assert "peak RSS self " in result.stderr
+        assert "subprocesses " in result.stderr
+
     def test_run_output_directory_logs_scratch_and_slot_semantics(self, invoke_cli, mocker, tmp_path):
         """--output-directory is explained as scratch output, not the only written location."""
         paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path, regression_files={})

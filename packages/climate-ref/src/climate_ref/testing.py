@@ -10,9 +10,14 @@ This module provides:
   used by every provider's integration test module)
 """
 
+import os
+import resource
 import shutil
+import sys
+import time
 from collections.abc import Callable
 from pathlib import Path
+from typing import NamedTuple
 
 from attrs import define
 from loguru import logger
@@ -45,6 +50,66 @@ def _determine_test_directory() -> Path | None:
 TEST_DATA_DIR = _determine_test_directory()
 """Path to the centralised test data directory (for sample data)."""
 # SAMPLE_DATA_VERSION is imported from climate_ref to avoid circular imports
+
+
+def _maxrss_bytes(who: int) -> int:
+    """
+    Peak RSS high-water mark for ``who`` in bytes.
+
+    ``ru_maxrss`` is reported in kilobytes on Linux and in bytes on macOS.
+    """
+    peak = resource.getrusage(who).ru_maxrss
+    return peak if sys.platform == "darwin" else peak * 1024
+
+
+class ResourceSnapshot(NamedTuple):
+    """Point-in-time resource counters used to report per test case usage."""
+
+    wall: float
+    cpu: os.times_result
+    self_peak_rss: int
+    children_peak_rss: int
+
+    @classmethod
+    def capture(cls) -> "ResourceSnapshot":
+        """Capture the current wall clock, CPU, and peak RSS counters."""
+        return cls(
+            wall=time.monotonic(),
+            cpu=os.times(),
+            self_peak_rss=_maxrss_bytes(resource.RUSAGE_SELF),
+            children_peak_rss=_maxrss_bytes(resource.RUSAGE_CHILDREN),
+        )
+
+
+def log_resource_usage(case_id: str, start: ResourceSnapshot) -> None:
+    """
+    Log wall clock, CPU time, and peak memory for a completed test case.
+
+    The peak RSS values are process-lifetime high-water marks,
+    so they never decrease over a multi-case run.
+    A case that pushes a mark higher is flagged,
+    which identifies the memory-hungry case in a sequential run.
+    """
+    from climate_ref.cli._utils import format_size  # noqa: PLC0415
+
+    end = ResourceSnapshot.capture()
+    wall = end.wall - start.wall
+    self_cpu = (end.cpu.user - start.cpu.user) + (end.cpu.system - start.cpu.system)
+    children_cpu = (end.cpu.children_user - start.cpu.children_user) + (
+        end.cpu.children_system - start.cpu.children_system
+    )
+
+    def _mark(before: int, after: int) -> str:
+        note = " (raised by this case)" if after > before else ""
+        return f"{format_size(after)}{note}"
+
+    logger.info(
+        f"Resources for {case_id}: "
+        f"wall {wall:.1f}s, cpu {self_cpu + children_cpu:.1f}s "
+        f"(self {self_cpu:.1f}s, subprocesses {children_cpu:.1f}s), "
+        f"peak RSS self {_mark(start.self_peak_rss, end.self_peak_rss)}, "
+        f"subprocesses {_mark(start.children_peak_rss, end.children_peak_rss)}"
+    )
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:
@@ -240,7 +305,14 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
         if not paths.manifest.exists() or not paths.regression.exists():
             pytest.skip(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
 
-        assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)
+        resources_before = ResourceSnapshot.capture()
+        try:
+            assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)
+        finally:
+            log_resource_usage(
+                f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}",
+                resources_before,
+            )
 
     return test_run_test_cases
 

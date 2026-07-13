@@ -1,3 +1,5 @@
+import hashlib
+import os
 from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
@@ -18,7 +20,7 @@ from loguru import logger
 
 from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
-from climate_ref_core.dataset_registry import dataset_registry_manager
+from climate_ref_core.dataset_registry import dataset_registry_manager, resolve_cache_dir
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import (
     DataRequirement,
@@ -92,7 +94,15 @@ class _CoarsenSpatial(ILAMBTransform):
     than any CMIP model, which makes ilamb3's regrid/scoring step intractable.
     This coarsens the field to a common target resolution, which ESM outputs are compared to.
     Fields already at or coarser than the target (the models) are left untouched.
+
+    The coarsened reference is the same for every model comparison in a solve, so the result
+    is cached to disk keyed on the source data and resolution. The first execution computes it,
+    later ones read the cached file. Set ``REF_ILAMB_COARSEN_NO_CACHE`` to disable the cache.
     """
+
+    # Bump when the coarsening algorithm changes so stale cache entries are ignored.
+    _CACHE_VERSION = 1
+    _CACHE_NAME = "ilamb-coarsened"
 
     def __init__(self, variable_id: str, resolution: float = 0.5):
         self.variable_id = variable_id
@@ -112,9 +122,110 @@ class _CoarsenSpatial(ILAMBTransform):
         if current >= self.resolution:
             # Already at or coarser than the target (e.g. model data); leave it lazy.
             return ds
-        # ``coarsen_dataset`` uses ``.where(..., drop=True)``, whose boolean indexer must be in memory
-        # The reference is dask-backed ( open_mfdataset), so materialise it first.
-        return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+
+        cache_path = self._cache_path(ds)
+        if cache_path is not None and cache_path.exists():
+            logger.debug(f"Reusing cached coarsened reference {cache_path}")
+            return xr.open_dataset(cache_path).load()
+
+        coarse = self._coarsen(ds)
+        if cache_path is not None:
+            self._write_cache(coarse, cache_path)
+        return coarse
+
+    # Time steps coarsened per pass. One pass of the ~0.05 degree AVHRR LAI reference is
+    # about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB, well within a CI runner.
+    _TIME_CHUNK = 12
+
+    def _coarsen(self, ds: xr.Dataset) -> xr.Dataset:
+        """
+        Coarsen the fine reference without materialising the whole cube.
+
+        The reference is opened dask-backed and chunked over time (``open_mfdataset`` in ilamb3).
+        Coarsening the whole field at once needs the entire cube in memory
+        (the AVHRR LAI reference is ~0.05 degrees, roughly 100 GB as float64, and the
+        conservative weighting makes several copies of it).
+        ``coarsen_dataset`` also cannot run on a lazy field, because its nan-masking indexes with
+        a boolean array that must be concrete. So the field is coarsened one time block at a time,
+        materialising only that block, and the small coarse blocks are concatenated.
+        """
+        if "time" not in ds.dims:
+            # A single 2D slice is small enough to coarsen in one pass.
+            return coarsen_dataset(ds.compute(), self.variable_id, res=self.resolution)
+
+        ntime = ds.sizes["time"]
+        blocks = [
+            coarsen_dataset(
+                ds.isel(time=slice(start, start + self._TIME_CHUNK)).compute(),
+                self.variable_id,
+                res=self.resolution,
+            )
+            for start in range(0, ntime, self._TIME_CHUNK)
+        ]
+        if len(blocks) == 1:
+            return blocks[0]
+        # ``data_vars="minimal"`` concatenates only the time-varying field, so the time-invariant
+        # ``cell_measures`` is kept once rather than broadcast across every block.
+        return xr.concat(blocks, dim="time", data_vars="minimal", coords="minimal", compat="override")
+
+    def _cache_path(self, ds: xr.Dataset) -> Path | None:
+        if os.environ.get("REF_ILAMB_COARSEN_NO_CACHE"):
+            return None
+        fingerprint = self._source_fingerprint(ds)
+        if fingerprint is None:
+            return None
+        digest = hashlib.sha256(fingerprint.encode()).hexdigest()[:32]
+        return resolve_cache_dir(self._CACHE_NAME) / f"{self.variable_id}_{digest}.nc"
+
+    def _source_fingerprint(self, ds: xr.Dataset) -> str | None:
+        """
+        Build a stable identity for the source data behind a cached coarsening.
+
+        Prefers the on-disk source files (path, size, mtime) recorded in the dataset encoding.
+        Falls back to the grid and identifying attributes when no source path is available.
+        Returns ``None`` only when nothing stable can be derived, which skips the cache.
+        """
+        parts = [f"v{self._CACHE_VERSION}", self.variable_id, f"{self.resolution:g}"]
+
+        sources = set()
+        for candidate in (ds, ds.get(self.variable_id)):
+            source = getattr(candidate, "encoding", {}).get("source")
+            if isinstance(source, str):
+                sources.add(source)
+        if sources:
+            for source in sorted(sources):
+                try:
+                    stat = os.stat(source)
+                    parts.append(f"{source}:{stat.st_size}:{stat.st_mtime_ns}")
+                except OSError:
+                    parts.append(source)
+            return "|".join(parts)
+
+        # No source path (merged or in-memory dataset): fall back to grid + identity attrs.
+        try:
+            for dim in ("time", "lat", "lon"):
+                name = get_dim_name(ds, dim) if dim in ("lat", "lon") else dim
+                if name in ds.coords:
+                    values = np.asarray(ds[name].values)
+                    parts.append(f"{name}:{values.shape}:{values.dtype}")
+                    parts.append(hashlib.sha256(np.ascontiguousarray(values).tobytes()).hexdigest())
+        except Exception:  # pragma: no cover - defensive; skip caching if the grid is unreadable
+            return None
+        for attr in ("tracking_id", "source_id", "activity_id", "version", "variable_id"):
+            if attr in ds.attrs:
+                parts.append(f"{attr}={ds.attrs[attr]}")
+        return "|".join(parts)
+
+    def _write_cache(self, coarse: xr.Dataset, cache_path: Path) -> None:
+        """Write the coarsened reference atomically so concurrent executions never read a partial file."""
+        try:
+            cache_path.parent.mkdir(parents=True, exist_ok=True)
+            tmp_path = cache_path.with_name(f"{cache_path.stem}.{os.getpid()}.tmp{cache_path.suffix}")
+            coarse.to_netcdf(tmp_path)
+            os.replace(tmp_path, cache_path)
+            logger.debug(f"Cached coarsened reference {cache_path}")
+        except Exception as exc:  # pragma: no cover - a cache write failure must not fail the run
+            logger.warning(f"Could not cache coarsened reference {cache_path}: {exc}")
 
 
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_coarsen_spatial", _CoarsenSpatial)

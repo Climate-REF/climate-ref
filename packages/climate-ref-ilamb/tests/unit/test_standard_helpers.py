@@ -14,6 +14,7 @@ from climate_ref_ilamb.standard import (
     _CoarsenSpatial,
     _RelationshipTimeTransform,
 )
+from ilamb3.dataset import coarsen_dataset
 
 
 class TestRelationshipTimeTransform:
@@ -101,6 +102,62 @@ class TestCoarsenSpatial:
         original_spacing = float(np.diff(ds["lat"].values).mean())
         coarsened_spacing = float(np.diff(result["lat"].values).mean())
         assert coarsened_spacing > original_spacing
+
+    def _timed_dataset(self, spacing: float = 0.1, extent: float = 2.0, ntime: int = 4) -> xr.Dataset:
+        lat = np.arange(0, extent, spacing)
+        lon = np.arange(0, extent, spacing)
+        time = pd.date_range("2000-01-01", periods=ntime, freq="MS")
+        rng = np.random.default_rng(0)
+        data = rng.random((ntime, len(lat), len(lon)))
+        return xr.Dataset(
+            {"tas": (("time", "lat", "lon"), data)},
+            coords={"time": time, "lat": lat, "lon": lon},
+        )
+
+    def test_streaming_matches_eager_coarsen(self):
+        # The chunked (streaming) coarsen must produce the same numbers as coarsening the
+        # whole materialised cube in one pass.
+        ds = self._timed_dataset()
+        expected = coarsen_dataset(ds.compute(), "tas", res=0.5)
+
+        transform = _CoarsenSpatial("tas", resolution=0.5)
+        result = transform._coarsen(ds)
+
+        xr.testing.assert_allclose(result["tas"], expected["tas"])
+
+    def test_result_is_cached_and_reused(self, tmp_path, monkeypatch):
+        # First call computes and writes the cache; a second call reads it back rather
+        # than recomputing. Proven by overwriting the cached file with a sentinel value.
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
+        monkeypatch.delenv("REF_ILAMB_COARSEN_NO_CACHE", raising=False)
+        ds = self._timed_dataset()
+        transform = _CoarsenSpatial("tas", resolution=0.5)
+
+        first = transform(ds)
+        cache_path = transform._cache_path(ds)
+        assert cache_path is not None
+        assert cache_path.exists()
+
+        with xr.open_dataset(cache_path) as cached:
+            sentinel = cached.load()
+        sentinel["tas"] = sentinel["tas"] * 0.0 + 42.0
+        sentinel.to_netcdf(cache_path)
+
+        second = transform(ds)
+        assert float(second["tas"].mean()) == 42.0
+        # The uncached compute is unchanged and still available.
+        assert not np.allclose(first["tas"].values, 42.0)
+
+    def test_cache_disabled_by_env(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
+        monkeypatch.setenv("REF_ILAMB_COARSEN_NO_CACHE", "1")
+        ds = self._timed_dataset()
+        transform = _CoarsenSpatial("tas", resolution=0.5)
+
+        transform(ds)
+
+        assert transform._cache_path(ds) is None
+        assert not list(tmp_path.rglob("*.nc"))
 
 
 class TestCleanUnits:

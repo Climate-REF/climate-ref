@@ -165,6 +165,36 @@ def test_as_facets_uses_activity_from_instance_id():
     assert facets["dataset"] == "ACCESS-ESM1-5"
 
 
+def test_as_facets_missing_column():
+    """A catalog built from unfinalised CMIP7 datasets lacks the realm column.
+
+    as_facets must raise an error naming the missing column and the fix
+    instead of a bare pandas KeyError.
+    """
+    group = pd.DataFrame(
+        {
+            "instance_id": [
+                "CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.tas.tavg-h2m-hxy-u.gn.v0",
+            ],
+            "activity_id": ["CMIP"],
+            "branding_suffix": ["tavg-h2m-hxy-u"],
+            "source_id": ["CanESM5"],
+            "variant_label": ["r1i1p1f1"],
+            "institution_id": ["CCCma"],
+            "experiment_id": ["historical"],
+            "frequency": ["mon"],
+            "grid_label": ["gn"],
+            "region": ["glb"],
+            "variable_id": ["tas"],
+            "start_time": [pd.Timestamp("1850-01-16")],
+            "end_time": [pd.Timestamp("1989-12-16")],
+        }
+    )
+
+    with pytest.raises(KeyError, match=r"realm.*REF_CMIP7_PARSER=complete"):
+        as_facets(group)
+
+
 def test_get_child_and_parent_dataset_multi_file_start_time():
     """child_start must be the earliest start_time across all file entries.
 

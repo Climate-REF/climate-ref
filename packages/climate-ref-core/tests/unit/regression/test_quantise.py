@@ -111,8 +111,11 @@ def test_round_floats_custom_sig_figs():
 )
 def test_round_floats_stays_within_compare_tolerance(value):
     """
-    Rounding error stays an order of magnitude under the regression compare tolerance
-    (``rtol=1e-6``/``atol=1e-8``), so it can never flip a boundary gate verdict.
+    Rounding error stays well under the regression compare tolerance
+    (``rtol=1e-5``/``atol=1e-8``), so it can never flip a boundary gate verdict.
+
+    The assertion uses ``rel_tol=1e-6``, ten times tighter than the gate tolerance,
+    to prove the margin rather than just the boundary.
     """
     rounded = round_floats(value)
     assert math.isclose(value, rounded, rel_tol=1e-6, abs_tol=1e-8)

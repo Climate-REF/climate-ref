@@ -3,7 +3,7 @@ Test infrastructure for diagnostic testing.
 
 This module provides:
 - TestCase and TestDataSpecification for defining test scenarios
-- YAML serialization for dataset catalogs (with paths stored separately)
+- YAML serialization for dataset catalogs (with local paths stored separately, under the cache)
 - Utilities for CMEC bundle and series regression validation
 """
 
@@ -20,6 +20,7 @@ import yaml
 from attrs import field, frozen
 from loguru import logger
 
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,
@@ -142,16 +143,24 @@ class TestCasePaths:
 
     Provides access to all paths within a test case directory:
     - catalog.yaml: Dataset metadata (tracked in git)
-    - catalog.paths.yaml: Local file paths (gitignored)
     - regression/: Regression outputs (tracked in git)
+
+    The local-paths sidecar (``catalog.paths.yaml``) is the exception: it lives under the
+    dataset cache rather than in the package tree. The paths it records are machine-specific
+    and point into the various caches (the dataset cache, the intake-esgf cache), so the
+    sidecar belongs with those caches rather than with a checkout. It is shared by every
+    checkout on the machine, and a fresh checkout cannot lose it.
 
     Can be constructed from:
     - A diagnostic + test case name (auto-resolves provider's test-data dir)
-    - An explicit test_data_dir + diagnostic slug + test case name
+    - An explicit test_data_dir + provider slug + diagnostic slug + test case name
     """
 
     root: Path
     """The test case directory (test_data_dir / diagnostic_slug / test_case_name)."""
+
+    provider_slug: str
+    """Slug of the provider owning the diagnostic, used to namespace the paths sidecar."""
 
     @classmethod
     def from_diagnostic(cls, diagnostic: Diagnostic, test_case: str) -> TestCasePaths | None:
@@ -171,7 +180,10 @@ class TestCasePaths:
         test_data_dir = _get_provider_test_data_dir(diagnostic)
         if test_data_dir is None:
             return None
-        return cls(root=test_data_dir / diagnostic.slug / test_case)
+        return cls(
+            root=test_data_dir / diagnostic.slug / test_case,
+            provider_slug=diagnostic.provider.slug,
+        )
 
     @classmethod
     def from_test_data_dir(
@@ -179,6 +191,7 @@ class TestCasePaths:
         test_data_dir: Path,
         diagnostic_slug: str,
         test_case: str,
+        provider_slug: str,
     ) -> TestCasePaths:
         """
         Create from an explicit test data directory.
@@ -194,8 +207,10 @@ class TestCasePaths:
             The diagnostic slug
         test_case
             Test case name (e.g., 'default')
+        provider_slug
+            The provider slug, used to namespace the paths sidecar
         """
-        return cls(root=test_data_dir / diagnostic_slug / test_case)
+        return cls(root=test_data_dir / diagnostic_slug / test_case, provider_slug=provider_slug)
 
     @property
     def catalog(self) -> Path:
@@ -204,8 +219,20 @@ class TestCasePaths:
 
     @property
     def catalog_paths(self) -> Path:
-        """Path to catalog.paths.yaml (gitignored, contains local file paths)."""
-        return self.root / "catalog.paths.yaml"
+        """
+        Path to catalog.paths.yaml, under the dataset cache rather than the package tree.
+
+        The sidecar maps each dataset to its local file, so it is a property of the machine,
+        not of the checkout. Namespaced by provider because diagnostic slugs are only unique
+        within a provider.
+        """
+        return (
+            resolve_cache_dir("test-case-paths")
+            / self.provider_slug
+            / self.root.parent.name
+            / self.root.name
+            / "catalog.paths.yaml"
+        )
 
     @property
     def regression(self) -> Path:
@@ -298,12 +325,7 @@ def _get_provider_test_data_dir(diag: Diagnostic) -> Path | None:
     return test_data_dir
 
 
-def _get_paths_file(catalog_path: Path) -> Path:
-    """Get the paths file path for a catalog file."""
-    return catalog_path.with_suffix(".paths.yaml")
-
-
-def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
+def load_datasets_from_yaml(path: Path, paths_file: Path) -> ExecutionDatasetCollection:
     """
     Load ExecutionDatasetCollection from a YAML file.
 
@@ -321,16 +343,21 @@ def load_datasets_from_yaml(path: Path) -> ExecutionDatasetCollection:
           # ... other metadata
     ```
 
-    Paths are loaded from a separate `.paths.yaml` file if it exists,
-    allowing the main catalog to be version-controlled while paths
-    remain user-specific. Multi-file datasets have multiple rows with
-    paths keyed by `{instance_id}::{filename}`.
+    Paths are loaded from ``paths_file`` if it exists, allowing the main catalog to be
+    version-controlled while paths remain machine-specific. Multi-file datasets have
+    multiple rows with paths keyed by `{instance_id}::{filename}`.
+
+    Parameters
+    ----------
+    path
+        Path to the catalog YAML file
+    paths_file
+        Path to the local-paths sidecar (see :attr:`TestCasePaths.catalog_paths`).
+        If it does not exist, the loaded datasets carry no ``path`` column.
     """
     with open(path) as f:
         data = yaml.safe_load(f)
 
-    # Load paths from separate file if it exists
-    paths_file = _get_paths_file(path)
     paths_map: dict[str, str] = {}
     if paths_file.exists():
         with open(paths_file) as f:
@@ -456,7 +483,8 @@ def _serialise_datasets(
     Returns a ``(data, paths_map)`` tuple: ``data`` is the catalog content (metadata plus
     per-source records with local paths stripped out), and ``paths_map`` maps
     ``{instance_id}::{filename}`` to each local file path. The two are written to
-    ``catalog.yaml`` and the gitignored ``catalog.paths.yaml`` respectively.
+    ``catalog.yaml`` (in the package tree) and ``catalog.paths.yaml`` (under the dataset
+    cache) respectively.
     """
     data: dict[str, Any] = {
         "_metadata": {"hash": datasets.hash},
@@ -496,7 +524,7 @@ def _serialise_datasets(
 
 
 def _write_paths_file(paths_file: Path, paths_map: dict[str, str]) -> None:
-    """Write the gitignored local-paths sidecar (``catalog.paths.yaml``)."""
+    """Write the local-paths sidecar (``catalog.paths.yaml``, under the dataset cache)."""
     paths_file.parent.mkdir(parents=True, exist_ok=True)
     with open(paths_file, "w") as f:
         yaml.dump(paths_map, f, default_flow_style=False, sort_keys=False)
@@ -505,14 +533,15 @@ def _write_paths_file(paths_file: Path, paths_map: dict[str, str]) -> None:
 def save_datasets_to_yaml(
     datasets: ExecutionDatasetCollection,
     path: Path,
+    paths_file: Path,
     *,
     force: bool = False,
 ) -> bool:
     """
     Save ExecutionDatasetCollection to a YAML file.
 
-    Paths are saved to a separate `.paths.yaml` file to allow the main
-    catalog to be version-controlled while paths remain user-specific.
+    Paths are saved to a separate sidecar file to allow the main catalog to be
+    version-controlled while paths remain machine-specific.
 
     Multi-file datasets (e.g., time-chunked data) are stored as multiple rows,
     one per file. Paths are keyed by `{instance_id}::{filename}` to support
@@ -521,11 +550,11 @@ def save_datasets_to_yaml(
     By default, the catalog is only written if the content has changed
     (detected via hash comparison). Use `force=True` to always write.
 
-    The gitignored `.paths.yaml` sidecar is (re)generated whenever it is **missing**, even
-    when the catalog content is unchanged: on a fresh checkout the version-controlled
-    `catalog.yaml` exists but the local paths file does not, and `run`/`mint` need it to
-    resolve inputs. In that case the catalog itself is left untouched (so a plain
-    `ref test-cases fetch` is enough — no `--force` required) and only the paths file is written.
+    The paths sidecar is (re)generated whenever it is **missing**, even when the catalog
+    content is unchanged: on a machine with a cold cache the version-controlled
+    `catalog.yaml` exists but the sidecar does not, and `run`/`mint` need it to resolve
+    inputs. In that case the catalog itself is left untouched (so a plain
+    `ref test-cases fetch` is enough, no `--force` required) and only the sidecar is written.
 
     Parameters
     ----------
@@ -533,6 +562,8 @@ def save_datasets_to_yaml(
         The datasets to save
     path
         Path to write the YAML file
+    paths_file
+        Path to write the local-paths sidecar (see :attr:`TestCasePaths.catalog_paths`)
     force
         If True, always write the catalog even if unchanged
 
@@ -543,11 +574,10 @@ def save_datasets_to_yaml(
         (the paths sidecar may still have been regenerated).
     """
     new_hash = datasets.hash
-    paths_file = _get_paths_file(path)
 
     if not force and get_catalog_hash(path) == new_hash:
-        # Catalog content is unchanged. Still regenerate the gitignored paths sidecar if it
-        # is missing (e.g. a fresh checkout) so run/mint can resolve inputs, but leave the
+        # Catalog content is unchanged. Still regenerate the paths sidecar if it is missing
+        # (e.g. a cold dataset cache) so run/mint can resolve inputs, but leave the
         # version-controlled catalog untouched to avoid spurious diffs.
         if paths_file.exists():
             logger.info(f"Catalog unchanged, skipping write: {path}")

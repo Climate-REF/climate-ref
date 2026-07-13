@@ -338,7 +338,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
                 )
                 source_kind = "materialise"
             else:
-                datasets = load_datasets_from_yaml(paths.catalog)
+                datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
                 source = stage_execute(
                     config=config,
                     diag=diag,

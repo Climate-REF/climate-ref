@@ -178,6 +178,7 @@ def _leaky_provenance(software_root: Path, output_dir: Path) -> dict:
         "date": "2026-06-24 12:30:54",
         "userId": "jared",
         "platform": {"Name": "gus", "OS": "Linux", "Version": "6.12.88+deb13-amd64"},
+        "conda": {"Platform": "osx-64"},
     }
 
 
@@ -222,6 +223,7 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
         assert "jared" not in text
         assert "gus" not in text  # hostname (platform.Name) redacted
         assert "6.12.88+deb13-amd64" not in text  # kernel version (platform.Version) redacted
+        assert "osx-64" not in text  # conda platform (conda.Platform) redacted
         assert str(software_root) not in text
         assert str(output_dir) not in text
         assert "2026-06-24 12:30:54" not in text
@@ -236,6 +238,7 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
     assert diag["PROVENANCE"]["platform"]["Name"] == "<HOSTNAME>"
     assert diag["PROVENANCE"]["platform"]["Version"] == "<HOST_VERSION>"
     assert diag["PROVENANCE"]["platform"]["OS"] == "<OS>"
+    assert diag["PROVENANCE"]["conda"]["Platform"] == "<CONDA_PLATFORM>"
     assert diag["RESULTS"]["score"] == 1.234568
 
     # output.json is re-dumped canonically (sorted keys); every provenance key is still present.

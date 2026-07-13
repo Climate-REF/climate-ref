@@ -68,6 +68,12 @@ _REDACTED_PROVENANCE_PLATFORM_FIELDS: dict[str, str] = {
     "OS": "<OS>",
 }
 
+# ``conda`` sub-block fields, redacted for the same reason
+# (an ``osx-64`` mint must match a ``linux-64`` CI execute).
+_REDACTED_PROVENANCE_CONDA_FIELDS: dict[str, str] = {
+    "Platform": "<CONDA_PLATFORM>",
+}
+
 _SOURCE_DIR_PLACEHOLDER = "<SOURCE_DIR>"
 
 # Matches the machine-specific prefix before ``/packages/climate-ref-<pkg>/`` in in-repo paths.
@@ -96,7 +102,8 @@ def _redact_provenance_fields(obj: object) -> bool:
 
     Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block,
     overwrites the fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders,
-    and the host fields in :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform``.
+    the host fields in :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform``,
+    and the fields in :data:`_REDACTED_PROVENANCE_CONDA_FIELDS` inside its nested ``conda``.
 
     Returns
     -------
@@ -111,6 +118,9 @@ def _redact_provenance_fields(obj: object) -> bool:
                 platform = value.get("platform")
                 if isinstance(platform, dict):
                     changed |= _redact_fields(platform, _REDACTED_PROVENANCE_PLATFORM_FIELDS)
+                conda = value.get("conda")
+                if isinstance(conda, dict):
+                    changed |= _redact_fields(conda, _REDACTED_PROVENANCE_CONDA_FIELDS)
             elif _redact_provenance_fields(value):
                 changed = True
     elif isinstance(obj, list):

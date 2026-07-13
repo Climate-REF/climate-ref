@@ -154,7 +154,7 @@ def assert_test_case_no_drift(
         )
 
     tc = diagnostic.test_data_spec.get_case(test_case_name)
-    datasets = load_datasets_from_yaml(paths.catalog)
+    datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
 
     slot = work_dir / "slot"
     slot.mkdir(parents=True, exist_ok=True)

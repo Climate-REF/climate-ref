@@ -538,7 +538,7 @@ class TestExampleSmokeRoundTrip:
 
         from climate_ref_core.testing import load_datasets_from_yaml  # noqa: PLC0415
 
-        datasets = load_datasets_from_yaml(paths.catalog)
+        datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
         for src_type, collection in datasets.items():
             if len(collection.datasets) > 0 and "path" not in collection.datasets.columns:
                 pytest.skip(
@@ -850,7 +850,7 @@ class TestCliMintSyncReplay:
         case_dir = tmp_path / "td" / diag.slug / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         datasets = _build_synthetic_datasets()
 
@@ -901,7 +901,7 @@ class TestCliMintSyncReplay:
         case_dir = tmp_path / "td" / diag.slug / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         datasets = _build_synthetic_datasets()
 

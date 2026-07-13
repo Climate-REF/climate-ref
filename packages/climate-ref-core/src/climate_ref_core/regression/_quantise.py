@@ -8,9 +8,9 @@ producing noisy, unreviewable diffs in the committed bundle.
 
 Rounding every float to a fixed number of significant figures at write time gives
 stable, reviewable committed bytes.
-We round to seven significant figures: one digit finer than the regression compare tolerance
-(``rtol=1e-6`` in :mod:`climate_ref_core.regression.compare`),
-so the rounding error stays an order of magnitude under tolerance and can never flip a boundary gate verdict.
+We round to seven significant figures: two digits finer than the regression compare tolerance
+(``rtol=1e-5`` in :mod:`climate_ref_core.regression.compare`),
+so the rounding error stays well under tolerance and can never flip a boundary gate verdict.
 
 This affects only the committed bundle.
 The native blobs (``.nc`` / ``.png``) and their content-addressed digests are never touched.
@@ -21,7 +21,7 @@ from typing import Any
 DEFAULT_SIG_FIGS: int = 7
 """Default significant figures for committed-bundle floats.
 
-Deliberately one digit finer than the ``rtol=1e-6`` regression compare tolerance,
+Deliberately two digits finer than the ``rtol=1e-5`` regression compare tolerance,
 so rounding never flips a boundary gate verdict.
 """
 

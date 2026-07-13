@@ -2,44 +2,44 @@
   "catalog_hash": "b613fa1005fc988c79aa0fbf950bc77cdabfa48c",
   "committed": {
     "diagnostic.json": "7ab48ab04e69764ede371f1fccc138b0fbda081bb7c8467d5bd1f0e290751a98",
-    "output.json": "7c0d866622e63bcf810bb7f031ef682f8a4c0eb5b228ff16ade1a03533e6d23c",
-    "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
+    "output.json": "e1dd1235434cecfbafce398569bcea49ca13bd12a1e91f27b2bddf05dbcfd33c",
+    "series.json": "b9fa8c422920a79713d7099109895ff0517132ce69e744ce50fa90da13a1a195"
   },
-  "diagnostic_version": 2,
+  "diagnostic_version": 3,
   "native": {
     "diagnostic.json": {
       "sha256": "0afbce145a1ba1dfe5fba69d3c49102d63d9b859722644a449accd7ea4f57fb6",
       "size": 604
     },
     "executions/recipe/index.html": {
-      "sha256": "7656e2996f85e939b1dd58ada0bc462ad1939030d50ce72485a26ac7bec6d668",
-      "size": 14552
+      "sha256": "1c62c1b064cda409351eed28c4aaf19a5df536f3582742b3890931566c3c0621",
+      "size": 14390
     },
-    "executions/recipe/plots/tcre/calculate_tcre/tcre.png": {
-      "sha256": "d50c684a93bc6b05eaa2dfe174010cb5d0a0fa1338ac4f08b604197772a9236e",
-      "size": 118352
+    "executions/recipe/plots/tcre/calculate/tcre.png": {
+      "sha256": "6145f02a740c3e1ac90cf2f809cc701a5d0e173e06ca982e3e7953b8f8ce0f40",
+      "size": 111737
     },
-    "executions/recipe/run/tcre/calculate_tcre/diagnostic_provenance.yml": {
-      "sha256": "e0081c8edf06b3915ec7770cad980aa0d5fbbb935728c7a7c9ac24c3c165d4fe",
-      "size": 2796
+    "executions/recipe/run/tcre/calculate/diagnostic_provenance.yml": {
+      "sha256": "343266f6eb2f8fce3fa2a1c8e356e51c49338faeb2f0d7ffc6e75dda67b0b0b7",
+      "size": 2645
     },
-    "executions/recipe/work/tcre/calculate_tcre/MPI-ESM1-2-LR.nc": {
-      "sha256": "be68ffe328a684bae7e80b3bb1ed10a55ddc00706201b93183981617fa7bb0ec",
-      "size": 28689
+    "executions/recipe/work/tcre/calculate/MPI-ESM1-2-LR.nc": {
+      "sha256": "5072c7ef38ca520f9dbe290d016dfb5fba0a8cc457e64d0b880017d2123cf685",
+      "size": 28705
     },
-    "executions/recipe/work/tcre/calculate_tcre/tcre.nc": {
-      "sha256": "98fa45761c1aecd1d9ac403f0d9bc87f1c0fbefe43a77d3897f824376f8db132",
-      "size": 9154
+    "executions/recipe/work/tcre/calculate/tcre.nc": {
+      "sha256": "83b852855e229a0982207e72fc19ffa80c58e3140e3b7be3eebb6ff0b4d614d5",
+      "size": 9232
     },
     "output.json": {
-      "sha256": "af500a387f982ae97975d4fbc33873507660ef58ca48bd20ad50e4a40f8d6605",
-      "size": 2151
+      "sha256": "e391a64ec1d0a7099b9301f77d465012027c26eb28425482799d4c6abb13843e",
+      "size": 2138
     },
     "series.json": {
-      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "size": 2
+      "sha256": "46dfb1c1dd0dfb16ece7e53ffcb15257509093519fa76aec8d1a3fce7bca87c3",
+      "size": 4257
     }
   },
   "schema": 2,
-  "test_case_version": 2
+  "test_case_version": 3
 }

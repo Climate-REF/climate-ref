@@ -1,17 +1,19 @@
 {
   "data": {
-    "executions/recipe/work/tcre/calculate_tcre/MPI-ESM1-2-LR.nc": {
+    "executions/recipe/work/tcre/calculate/MPI-ESM1-2-LR.nc": {
       "description": "",
-      "dimensions": {},
-      "filename": "executions/recipe/work/tcre/calculate_tcre/MPI-ESM1-2-LR.nc",
-      "long_name": "Global annual mean near-surface air temperature anomaly ΔT vs.\nglobal annual cumulative CO2 emissions E of the emission-driven 1%\nCO2 increase per year experiment for model MPI-ESM1-2-LR (ensemble\nmember r1i1p1f1). The transient climate response to cumulative CO2\nEmissions (TCRE) is defined as the 20-year average ΔT centered at\nthe time where cumulative CO2 emissions E reach 1000 PgC.\n"
+      "dimensions": {
+        "statistic": "global annual mean anomaly of tas vs cumulative fco2antt"
+      },
+      "filename": "executions/recipe/work/tcre/calculate/MPI-ESM1-2-LR.nc",
+      "long_name": "Global annual mean near-surface air temperature anomaly ΔT vs. global annual cumulative CO2 emissions E of the emission-driven 1% CO2 increase per year experiment. The transient climate response to cumulative CO2 Emissions (TCRE) is defined as the 20-year average ΔT centered at the time where cumulative CO2 emissions E reach 1000 PgC (i.e., after 55 years)."
     },
-    "executions/recipe/work/tcre/calculate_tcre/tcre.nc": {
+    "executions/recipe/work/tcre/calculate/tcre.nc": {
       "description": "",
       "dimensions": {
         "metric": "tcre"
       },
-      "filename": "executions/recipe/work/tcre/calculate_tcre/tcre.nc",
+      "filename": "executions/recipe/work/tcre/calculate/tcre.nc",
       "long_name": "Transient Climate Response to Cumulative CO2 Emissions (TCRE) for multiple datasets."
     }
   },
@@ -27,13 +29,13 @@
   "index": "<OUTPUT_DIR>/executions/recipe/index.html",
   "metrics": null,
   "plots": {
-    "executions/recipe/plots/tcre/calculate_tcre/tcre.png": {
+    "executions/recipe/plots/tcre/calculate/tcre.png": {
       "description": "",
       "dimensions": {
         "statistic": "tcre"
       },
-      "filename": "executions/recipe/plots/tcre/calculate_tcre/tcre.png",
-      "long_name": "Global annual mean near-surface air temperature anomaly ΔT vs.\nglobal annual cumulative CO2 emissions E of the emission-driven 1%\nCO2 increase per year experiment for model MPI-ESM1-2-LR (ensemble\nmember r1i1p1f1). The transient climate response to cumulative CO2\nEmissions (TCRE) is defined as the 20-year average ΔT centered at\nthe time where cumulative CO2 emissions E reach 1000 PgC.\n"
+      "filename": "executions/recipe/plots/tcre/calculate/tcre.png",
+      "long_name": "Global annual mean near-surface air temperature anomaly ΔT vs. global annual cumulative CO2 emissions E of the emission-driven 1% CO2 increase per year experiment. The transient climate response to cumulative CO2 Emissions (TCRE) is defined as the 20-year average ΔT centered at the time where cumulative CO2 emissions E reach 1000 PgC (i.e., after 55 years)."
     }
   },
   "provenance": {

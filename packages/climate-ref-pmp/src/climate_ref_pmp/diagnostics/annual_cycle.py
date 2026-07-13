@@ -1,4 +1,3 @@
-import datetime
 import json
 from pathlib import Path
 from typing import Any
@@ -280,6 +279,7 @@ class AnnualCycle(CommandLineDiagnostic):
     name = "Annual Cycle"
     slug = "annual-cycle"
     facets = (
+        "kind",
         "mip_id",
         "source_id",
         "member_id",
@@ -290,7 +290,7 @@ class AnnualCycle(CommandLineDiagnostic):
         "statistic",
         "season",
     )
-    version = 2
+    version = 4
 
     _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
@@ -413,7 +413,7 @@ class AnnualCycle(CommandLineDiagnostic):
         """
         model_source_type = get_model_source_type(definition)
         input_datasets = definition.datasets[model_source_type]
-        reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
+        reference_collection = definition.datasets[SourceDatasetType.PMPClimatology]
 
         source_id = input_datasets["source_id"].unique()[0]
         experiment_id = input_datasets["experiment_id"].unique()[0]
@@ -435,10 +435,10 @@ class AnnualCycle(CommandLineDiagnostic):
         logger.debug(f"input_datasets: {input_datasets}")
         logger.debug(f"input_datasets.keys(): {input_datasets.keys()}")
 
-        reference_dataset_name = reference_datasets["source_id"].unique()[0]
-        reference_dataset_path = reference_datasets.datasets.iloc[0]["path"]
+        reference_dataset_name = reference_collection["source_id"].unique()[0]
+        reference_dataset_path = reference_collection.datasets.iloc[0]["path"]
 
-        logger.debug(f"reference_dataset.datasets: {reference_datasets.datasets}")
+        logger.debug(f"reference_dataset.datasets: {reference_collection.datasets}")
         logger.debug(f"reference_dataset_name: {reference_dataset_name}")
         logger.debug(f"reference_dataset_path: {reference_dataset_path}")
 
@@ -453,13 +453,15 @@ class AnnualCycle(CommandLineDiagnostic):
         data_name = f"{source_id}_{experiment_id}_{member_id}"
         data_path = model_files
 
-        date_stamp = datetime.datetime.now().strftime("%Y%m%d")
+        # PMP stamps this into the climatology filename, which leaks into the bundle provenance.
+        # Derived from the diagnostic version rather than the run date so reruns are reproducible.
+        clim_version = f"v{self.version}"
 
         params = {
             "vars": variable_id,
             "infile": data_path,
             "outfile": f"{output_directory_path}/{variable_id}_{data_name}_clims.nc",
-            "version": f"v{date_stamp}",
+            "version": clim_version,
         }
 
         cmds.append(
@@ -512,7 +514,7 @@ class AnnualCycle(CommandLineDiagnostic):
             "test_data_path": output_directory_path,
             "test_data_set": source_id,
             "realization": member_id,
-            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.v{date_stamp}.nc",
+            "filename_template": f"%(variable)_{data_name}_clims.198101-200512.AC.{clim_version}.nc",
             "metrics_output_path": output_directory_path,
             "cmec": "",
         }
@@ -583,14 +585,17 @@ class AnnualCycle(CommandLineDiagnostic):
 
         # Add missing dimensions to the output
         member_id_col = "variant_label" if model_source_type == SourceDatasetType.CMIP7 else "member_id"
-        reference_datasets = definition.datasets[SourceDatasetType.PMPClimatology]
+        reference_collection = definition.datasets[SourceDatasetType.PMPClimatology]
         cmec_metric_bundle = cmec_metric_bundle.prepend_dimensions(
             {
+                # PMP scalars are model-performance scores against a reference, not reference
+                # (observation) values, so every value's role is ``model``.
+                "kind": "model",
                 "source_id": input_datasets["source_id"].unique()[0],
                 "member_id": input_datasets[member_id_col].unique()[0],
                 "experiment_id": input_datasets["experiment_id"].unique()[0],
                 "variable_id": input_datasets["variable_id"].unique()[0],
-                "reference_source_id": reference_datasets["source_id"].unique()[0],
+                "reference_source_id": reference_collection["source_id"].unique()[0],
             }
         )
 

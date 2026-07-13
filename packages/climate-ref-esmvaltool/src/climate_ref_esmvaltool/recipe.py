@@ -138,6 +138,13 @@ def as_facets(
             activities = group["instance_id"].apply(lambda x: x.split(".")[1]).unique().tolist()
             facets[esmvaltool_name] = activities if len(activities) > 1 else activities[0]
         else:
+            if ref_name not in group:
+                raise KeyError(
+                    f"Column '{ref_name}' needed for ESMValTool facet '{esmvaltool_name}' "
+                    f"is missing from the {project} datasets. This usually means the "
+                    "catalog was built from unfinalised datasets. Regenerate it with the "
+                    "complete parser (REF_CMIP7_PARSER=complete)."
+                )
             values = group[ref_name].unique().tolist()
             facets[esmvaltool_name] = values if len(values) > 1 else values[0]
     timerange = as_timerange(group)

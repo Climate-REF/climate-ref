@@ -1,10 +1,11 @@
 {
   "catalog_hash": "a0d4fb8b825319f85055f6cb440e6accec4b1424",
   "committed": {
-    "diagnostic.json": "798eb29959ef9add47cfddab4c2b74c00ca1dec34bbb0750dffd3dbef82dcbc5",
-    "output.json": "e5f199fbf35da8f9f4e2608474e8c711e93a8b2b429abfafc9e3c5b04a221efd",
+    "diagnostic.json": "6b3216f2ce39e309e18f1f64f844be2c1b6019451ef36a759147a78301ee58b1",
+    "output.json": "d185c5a92362b4d068a6397a96650eb945ef0ebd6a607bafebede6a745cc2cf6",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 2,
   "native": {
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_BiasSstLonRmse.nc": {
       "sha256": "bb8f6c971556094b55f6b1adcc111cee0f504ed7c1564364c431dcd73aca7462",
@@ -127,22 +128,22 @@
       "size": 55379
     },
     "ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1_cmec.json": {
-      "sha256": "9f54ceee477b75ab1e5eb09a7708d5ed534142f3b293ead91237e73d334284a3",
-      "size": 8480
+      "sha256": "f35827359b9075c1e95a30439ec03e32d3e633d439fcb518d607e21dbd5b870c",
+      "size": 8486
     },
     "diagnostic.json": {
-      "sha256": "eb3119ee6e8b51add10bbde4e3c25320b46c658aff35a65a08a9f6135928f56a",
-      "size": 3015
+      "sha256": "eb364e73f2d921a6a2245607dd7a72f317885b79ef7fa2cdf609674bcf17d561",
+      "size": 3169
     },
     "output.json": {
-      "sha256": "86729f2822c4296ec9c0c7ade2235b266623279bab69ceaaef07b61ce8d070b7",
-      "size": 10367
+      "sha256": "8d22f59cfa1c0e5d0d978bd92836b00eb82a33a9a61e190afd7e9f385df9ada2",
+      "size": 10371
     },
     "series.json": {
       "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
       "size": 2
     }
   },
-  "schema": 1,
-  "test_case_version": 1
+  "schema": 2,
+  "test_case_version": 3
 }

@@ -52,6 +52,15 @@ class TestCMIP6Adapter:
         assert target_ds not in latest_instance_ids
         assert new_instance_id in latest_instance_ids
 
+        # The limit is applied AFTER deduplicating to the latest version, so it bounds the number of
+        # datasets actually returned. The target now has three versions in the DB; a limit equal to the
+        # deduplicated dataset count must still return every dataset (a limit applied before dedup would
+        # spend slots on the target's superseded versions and silently drop other datasets).
+        n_datasets = len(adapter.load_catalog(db_seeded, include_files=False))
+        limited = adapter.load_catalog(db_seeded, include_files=False, limit=n_datasets)
+        assert len(limited) == n_datasets
+        assert new_instance_id in limited.instance_id.tolist()
+
 
 class TestCMIP6IterLocalDatasets:
     def test_streaming_matches_whole_tree(self, sample_data, sample_data_dir):

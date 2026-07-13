@@ -140,6 +140,23 @@ def parse_cftime_dates(
     )
 
 
+def coerce_catalog_times(catalog: pd.DataFrame) -> pd.DataFrame:
+    """
+    Coerce a catalog's stored ``start_time``/``end_time`` strings to cftime objects.
+
+    A no-op when the catalog has no ``start_time`` column (dataset-level catalogs). Each of
+    ``start_time``/``end_time`` is coerced independently, so a catalog with only one of the two
+    columns present does not raise a ``KeyError``. Each row's ``calendar`` is used when present,
+    otherwise ``"standard"``. Mutates and returns ``catalog``.
+    """
+    if "start_time" in catalog.columns or "end_time" in catalog.columns:
+        cal = catalog["calendar"] if "calendar" in catalog.columns else "standard"
+        for column in ("start_time", "end_time"):
+            if column in catalog.columns:
+                catalog[column] = parse_cftime_dates(catalog[column], cal)
+    return catalog
+
+
 def clean_branch_time(branch_time: pd.Series[str]) -> pd.Series[float]:
     """
     Clean branch time values, handling missing values and EC-Earth3 suffixes.
@@ -150,6 +167,124 @@ def clean_branch_time(branch_time: pd.Series[str]) -> pd.Series[float]:
     treating any missing or malformed entries as NaN.
     """
     return pd.to_numeric(branch_time.astype(str).str.replace("D", ""), errors="coerce")
+
+
+# CMIP6 CMOR table -> CMIP6 ``frequency`` CV value.
+#
+# ESMValTool's ``OBS``/``OBS6`` layouts encode the MIP table (e.g. ``Amon``) rather than the
+# frequency, while ``native6`` encodes the frequency directly (e.g. ``mon``). Reference datasets
+# store only ``frequency``, so the table has to be reduced to its frequency at parse time.
+#
+# A CMOR table name is a realm prefix plus a frequency suffix, but the reduction is not a plain
+# suffix strip: ``Oclim`` is a monthly climatology (``monC``), ``E1hrClimMon`` is ``1hrCM``, the
+# zonal-mean tables (``AERmonZ``, ``EmonZ``, ``EdayZ``, ``E6hrZ``) keep the frequency of their
+# non-zonal counterpart, and the ``Pt`` (point-sampled) tables map to distinct ``*Pt``
+# frequencies. So the mapping is enumerated rather than derived.
+_MIP_TABLE_FREQUENCIES: dict[str, str] = {
+    "3hr": "3hr",
+    "6hrLev": "6hr",
+    "6hrPlev": "6hr",
+    "6hrPlevPt": "6hrPt",
+    "AERday": "day",
+    "AERhr": "1hr",
+    "AERmon": "mon",
+    "AERmonZ": "mon",
+    "Amon": "mon",
+    "CF3hr": "3hr",
+    "CFday": "day",
+    "CFmon": "mon",
+    "CFsubhr": "subhrPt",
+    "day": "day",
+    "E1hr": "1hr",
+    "E1hrClimMon": "1hrCM",
+    "E3hr": "3hr",
+    "E3hrPt": "3hrPt",
+    "E6hrZ": "6hr",
+    "Eday": "day",
+    "EdayZ": "day",
+    "Efx": "fx",
+    "Emon": "mon",
+    "EmonZ": "mon",
+    "Esubhr": "subhrPt",
+    "Eyr": "yr",
+    "IfxAnt": "fx",
+    "IfxGre": "fx",
+    "ImonAnt": "mon",
+    "ImonGre": "mon",
+    "IyrAnt": "yr",
+    "IyrGre": "yr",
+    "LImon": "mon",
+    "Lmon": "mon",
+    "Oclim": "monC",
+    "Oday": "day",
+    "Odec": "dec",
+    "Ofx": "fx",
+    "Omon": "mon",
+    "Oyr": "yr",
+    "SIday": "day",
+    "SImon": "mon",
+    "fx": "fx",
+}
+
+# The CMIP6 ``frequency`` CV. Values already in this set pass through ``frequency_from_mip_table``
+# untouched, which is what lets the ``native6`` layout (which stores a frequency, not a table)
+# use the same call site.
+_FREQUENCIES: frozenset[str] = frozenset(
+    {
+        "1hr",
+        "1hrCM",
+        "1hrPt",
+        "3hr",
+        "3hrPt",
+        "6hr",
+        "6hrPt",
+        "day",
+        "dec",
+        "fx",
+        "mon",
+        "monC",
+        "monPt",
+        "subhrPt",
+        "yr",
+        "yrPt",
+    }
+)
+
+
+def frequency_from_mip_table(value: str) -> str:
+    """
+    Reduce a CMOR MIP table name to its CMIP6 ``frequency`` CV value.
+
+    Reference datasets record ``frequency`` and not the MIP table, because ESMValTool's
+    ``native6`` layout never carries a table in the first place. This maps the ``OBS``/``OBS6``
+    table (e.g. ``Amon`` -> ``mon``) onto the same axis.
+
+    A value that is already a valid frequency is returned unchanged, so a caller parsing a
+    ``native6`` path (which yields ``mon``, ``day``, ...) can use this without branching.
+    ``day`` and ``fx`` are both a table name and a frequency, and map to themselves either way.
+
+    Parameters
+    ----------
+    value
+        A CMOR MIP table name (``Amon``, ``Omon``, ``SIday``) or an existing frequency (``mon``).
+
+    Returns
+    -------
+    :
+        The corresponding CMIP6 frequency.
+
+    Raises
+    ------
+    ValueError
+        If the value is neither a known MIP table nor a known frequency. Failing loudly is
+        deliberate: silently defaulting would let a mis-parsed path collapse two datasets that
+        differ only by frequency onto one ``instance_id``.
+    """
+    if value in _MIP_TABLE_FREQUENCIES:
+        return _MIP_TABLE_FREQUENCIES[value]
+    if value in _FREQUENCIES:
+        return value
+    raise ValueError(f"Unknown MIP table or frequency: {value!r}")
 
 
 _VERSION_SEGMENT_RE = re.compile(r"^v\d{8}$|^v\d+$")

@@ -1,3 +1,5 @@
+import datetime
+import json
 from pathlib import Path
 
 import pytest
@@ -43,6 +45,19 @@ class TestDatasetsList:
     def test_list_column_invalid(self, db_seeded, invoke_cli):
         invoke_cli(["datasets", "list", "--column", "wrong"], expected_exit_code=1)
 
+    def test_list_column_base_field(self, db_seeded, invoke_cli):
+        """A base field (not a facet) is selectable, e.g. ``slug``."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        result = invoke_cli(["datasets", "list", "--column", "slug"])
+        assert existing.slug in result.stdout
+
+    def test_list_column_on_empty_result(self, db_seeded, invoke_cli):
+        """``--column`` on an empty result set exits 0 rather than erroring on a columnless frame."""
+        result = invoke_cli(
+            ["datasets", "list", "--dataset-filter", "source_id=DOES-NOT-EXIST", "--column", "slug"]
+        )
+        assert result.exit_code == 0
+
     def test_list_dataset_filter(self, db_seeded, invoke_cli):
         result = invoke_cli(
             ["datasets", "list", "--dataset-filter", "variable_id=tas", "--column", "variable_id"]
@@ -81,6 +96,127 @@ class TestDatasetsList:
             ["datasets", "list", "--dataset-filter", "nonexistent_facet=value"],
             expected_exit_code=1,
         )
+
+    def test_list_only_latest_version(self, db_seeded, invoke_cli):
+        """``datasets list`` shows only the latest version of each dataset (v10 wins over v2)."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        base = {
+            "dataset_type": existing.dataset_type,
+            "activity_id": existing.activity_id,
+            "experiment_id": existing.experiment_id,
+            "institution_id": existing.institution_id,
+            "source_id": "LATEST-TEST",
+            "member_id": existing.member_id,
+            "table_id": existing.table_id,
+            "variable_id": existing.variable_id,
+            "grid_label": existing.grid_label,
+            "variant_label": existing.member_id,
+        }
+        for version in ("v2", "v10"):
+            slug = f"latest.test.{version}"
+            db_seeded.session.add(
+                CMIP6Dataset(slug=slug, instance_id=slug, version=version, finalised=True, **base)
+            )
+        db_seeded.session.commit()
+
+        result = invoke_cli(
+            ["datasets", "list", "--dataset-filter", "source_id=LATEST-TEST", "--column", "version"]
+        )
+        assert "v10" in result.stdout
+        assert "v2" not in result.stdout
+
+    def test_list_limit_warns_when_truncated(self, db_seeded, invoke_cli):
+        """A ``--limit`` smaller than the match count warns, matching the other list commands."""
+        total = db_seeded.session.query(CMIP6Dataset).count()
+        assert total > 1, "need multiple datasets for the warning to trigger"
+        result = invoke_cli(["datasets", "list", "--limit", "1"])
+        assert f"of {total} filtered results" in result.stderr
+
+    def test_list_include_files_limit_bounds_files_not_datasets(self, db_seeded, invoke_cli):
+        """``--limit`` bounds *files* (not datasets) when ``--include-files`` is set.
+
+        Add a second file to one of the seeded datasets so at least one dataset has >1 file,
+        then confirm ``--limit`` set to fewer than the total file count still returns that many file rows
+        (i.e. the limit was not spent solely on datasets).
+        """
+        dataset = db_seeded.session.query(CMIP6Dataset).first()
+        db_seeded.session.add(
+            DatasetFile(
+                dataset_id=dataset.id,
+                path="extra-file-for-limit-test.nc",
+                start_time="2000-01-01",
+                end_time="2000-12-31",
+            )
+        )
+        db_seeded.session.commit()
+
+        total_files = db_seeded.session.query(DatasetFile).count()
+        assert total_files >= 2, "need at least 2 files in the DB for this test to be meaningful"
+
+        result = invoke_cli(["datasets", "list", "--include-files", "--limit", "1", "--column", "path"])
+        data_lines = [line for line in result.stdout.strip().split("\n")[2:] if line.strip()]
+        assert len(data_lines) == 1
+
+    def test_list_excludes_retracted_by_default(self, db_seeded, invoke_cli):
+        """Default ``datasets list`` matches solve-time eligibility: a retracted dataset is hidden."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        slug = existing.slug
+        existing.retracted_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        db_seeded.session.commit()
+
+        result = invoke_cli(["datasets", "list", "--column", "slug"])
+        assert slug not in result.stdout
+
+    def test_list_include_retracted_does_not_mask_live_row(self, db_seeded, invoke_cli):
+        """``--include-retracted`` must show both the retracted row and the live row sharing its partition."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        base = {
+            "dataset_type": existing.dataset_type,
+            "activity_id": existing.activity_id,
+            "experiment_id": existing.experiment_id,
+            "institution_id": existing.institution_id,
+            "source_id": "RETRACT-MASK-TEST",
+            "member_id": existing.member_id,
+            "table_id": existing.table_id,
+            "variable_id": existing.variable_id,
+            "grid_label": existing.grid_label,
+            "variant_label": existing.member_id,
+        }
+        live = CMIP6Dataset(
+            slug="retract.mask.v2", instance_id="retract.mask.v2", version="v2", finalised=True, **base
+        )
+        retracted = CMIP6Dataset(
+            slug="retract.mask.v10", instance_id="retract.mask.v10", version="v10", finalised=True, **base
+        )
+        db_seeded.session.add_all([live, retracted])
+        db_seeded.session.commit()
+        retracted.retracted_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+        db_seeded.session.commit()
+
+        result = invoke_cli(
+            [
+                "datasets",
+                "list",
+                "--include-retracted",
+                "--dataset-filter",
+                "source_id=RETRACT-MASK-TEST",
+                "--column",
+                "version",
+            ]
+        )
+        assert "v2" in result.stdout
+        assert "v10" in result.stdout
+
+    def test_list_retracted_at_column_present(self, db_seeded, invoke_cli):
+        """The ``retracted_at`` column is present in the output frame regardless of
+        ``--include-retracted``, so retraction state is visible whenever a retracted row does show."""
+        result = invoke_cli(["datasets", "list", "--format", "json"])
+        payload = json.loads(result.stdout)
+        assert "retracted_at" in payload[0]
+
+        result = invoke_cli(["datasets", "list", "--include-retracted", "--format", "json"])
+        payload = json.loads(result.stdout)
+        assert "retracted_at" in payload[0]
 
 
 class TestDatasetsStats:
@@ -142,6 +278,92 @@ class TestDatasetsListColumns:
             sorted(CMIP6DatasetAdapter().load_catalog(db_seeded, include_files=True).columns.to_list())
         )
         assert "start_time" in result.stdout
+
+
+class TestDatasetsRetract:
+    def test_retract_marks_dataset_retracted(self, db_seeded, invoke_cli):
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        slug = existing.slug
+
+        result = invoke_cli(["datasets", "retract", slug])
+        assert f"Retracted dataset {slug!r}" in result.stdout
+
+        db_seeded.session.expire_all()
+        refreshed = db_seeded.session.query(CMIP6Dataset).filter_by(slug=slug).one()
+        assert refreshed.retracted_at is not None
+
+    def test_retract_missing_slug_exits_1(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "retract", "no-such-slug"], expected_exit_code=1)
+        assert "No dataset found with slug" in result.stderr
+
+    def test_retract_is_idempotent(self, db_seeded, invoke_cli):
+        """Retracting an already-retracted dataset is a no-op, not an error."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        slug = existing.slug
+
+        invoke_cli(["datasets", "retract", slug])
+        db_seeded.session.expire_all()
+        first_retracted_at = db_seeded.session.query(CMIP6Dataset).filter_by(slug=slug).one().retracted_at
+
+        result = invoke_cli(["datasets", "retract", slug])
+        assert result.exit_code == 0
+        assert "already retracted" in result.stdout
+
+        db_seeded.session.expire_all()
+        second_retracted_at = db_seeded.session.query(CMIP6Dataset).filter_by(slug=slug).one().retracted_at
+        assert first_retracted_at == second_retracted_at
+
+    def test_unretract_restores_solve_eligibility(self, db_seeded, invoke_cli):
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        slug = existing.slug
+
+        invoke_cli(["datasets", "retract", slug])
+        result = invoke_cli(["datasets", "unretract", slug])
+        assert f"Unretracted dataset {slug!r}" in result.stdout
+
+        db_seeded.session.expire_all()
+        refreshed = db_seeded.session.query(CMIP6Dataset).filter_by(slug=slug).one()
+        assert refreshed.retracted_at is None
+
+    def test_unretract_not_retracted_is_noop(self, db_seeded, invoke_cli):
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        slug = existing.slug
+
+        result = invoke_cli(["datasets", "unretract", slug])
+        assert result.exit_code == 0
+        assert "is not retracted" in result.stdout
+
+    def test_unretract_missing_slug_exits_1(self, db_seeded, invoke_cli):
+        result = invoke_cli(["datasets", "unretract", "no-such-slug"], expected_exit_code=1)
+        assert "No dataset found with slug" in result.stderr
+
+    def test_list_surfaces_retraction_state(self, db_seeded, invoke_cli):
+        """``ref datasets list --include-retracted`` includes retracted rows, flagged via ``retracted_at``."""
+        existing = db_seeded.session.query(CMIP6Dataset).first()
+        slug = existing.slug
+        invoke_cli(["datasets", "retract", slug])
+
+        result = invoke_cli(
+            [
+                "datasets",
+                "list",
+                "--include-retracted",
+                "--format",
+                "json",
+                "--column",
+                "slug",
+                "--column",
+                "retracted_at",
+            ]
+        )
+        payload = json.loads(result.stdout)
+
+        retracted_row = next(r for r in payload if r["slug"] == slug)
+        assert retracted_row["retracted_at"] is not None
+
+        other_rows = [r for r in payload if r["slug"] != slug]
+        assert other_rows
+        assert all(r["retracted_at"] is None for r in other_rows)
 
 
 class TestIngest:

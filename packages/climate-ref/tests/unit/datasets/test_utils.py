@@ -9,10 +9,73 @@ import pytest
 from climate_ref.datasets.utils import (
     build_instance_id,
     clean_branch_time,
+    coerce_catalog_times,
+    frequency_from_mip_table,
     parse_cftime_dates,
     parse_drs_daterange,
     validate_path,
 )
+
+
+class TestFrequencyFromMipTable:
+    """``Amon`` -> ``mon``, for ESMValTool OBS/OBS6 reference data."""
+
+    @pytest.mark.parametrize(
+        "mip_table, expected",
+        [
+            # The common monthly tables across realms.
+            ("Amon", "mon"),
+            ("Omon", "mon"),
+            ("Lmon", "mon"),
+            ("LImon", "mon"),
+            ("SImon", "mon"),
+            ("AERmon", "mon"),
+            ("Emon", "mon"),
+            # Daily.
+            ("day", "day"),
+            ("Oday", "day"),
+            ("SIday", "day"),
+            ("CFday", "day"),
+            # Sub-daily, including the point-sampled variants.
+            ("3hr", "3hr"),
+            ("E3hrPt", "3hrPt"),
+            ("6hrLev", "6hr"),
+            ("6hrPlevPt", "6hrPt"),
+            ("AERhr", "1hr"),
+            # Fixed fields and yearly.
+            ("fx", "fx"),
+            ("Ofx", "fx"),
+            ("Oyr", "yr"),
+            ("IyrGre", "yr"),
+            # The irregular ones the enumeration exists for.
+            ("Oclim", "monC"),
+            ("E1hrClimMon", "1hrCM"),
+            ("Esubhr", "subhrPt"),
+            # Zonal-mean tables keep the frequency of their non-zonal counterpart.
+            ("AERmonZ", "mon"),
+            ("EdayZ", "day"),
+            ("E6hrZ", "6hr"),
+        ],
+    )
+    def test_maps_mip_table_to_frequency(self, mip_table, expected):
+        assert frequency_from_mip_table(mip_table) == expected
+
+    @pytest.mark.parametrize("frequency", ["mon", "day", "fx", "yr", "3hr", "subhrPt"])
+    def test_existing_frequency_passes_through(self, frequency):
+        """``native6`` paths already carry a frequency, so the same call site handles them."""
+        assert frequency_from_mip_table(frequency) == frequency
+
+    @pytest.mark.parametrize("value", ["day", "fx"])
+    def test_names_that_are_both_table_and_frequency_are_idempotent(self, value):
+        assert frequency_from_mip_table(value) == value
+        assert frequency_from_mip_table(frequency_from_mip_table(value)) == value
+
+    @pytest.mark.parametrize("value", ["Amonthly", "", "monthly", "Xmon", "AMON"])
+    def test_unknown_value_raises(self, value):
+        """Failing loudly beats defaulting: a silent fallback would collapse two datasets that
+        differ only by frequency onto one ``instance_id``."""
+        with pytest.raises(ValueError, match="Unknown MIP table or frequency"):
+            frequency_from_mip_table(value)
 
 
 @pytest.mark.parametrize(
@@ -254,3 +317,30 @@ class TestBuildInstanceId:
         original = df.copy()
         build_instance_id(df, self.drs_items, prefix="CMIP6")
         pd.testing.assert_frame_equal(df, original)
+
+
+class TestCoerceCatalogTimes:
+    def test_no_time_columns_is_noop(self):
+        catalog = pd.DataFrame({"instance_id": ["a"]})
+        result = coerce_catalog_times(catalog)
+        assert "start_time" not in result.columns
+        assert "end_time" not in result.columns
+
+    def test_both_columns_present(self):
+        catalog = pd.DataFrame({"start_time": ["2000-01-01"], "end_time": ["2000-12-31"]})
+        result = coerce_catalog_times(catalog)
+        assert isinstance(result["start_time"].iloc[0], cftime.datetime)
+        assert isinstance(result["end_time"].iloc[0], cftime.datetime)
+
+    def test_start_time_without_end_time_does_not_raise(self):
+        """A catalog with only ``start_time`` must not KeyError looking up ``end_time``."""
+        catalog = pd.DataFrame({"start_time": ["2000-01-01"]})
+        result = coerce_catalog_times(catalog)
+        assert isinstance(result["start_time"].iloc[0], cftime.datetime)
+        assert "end_time" not in result.columns
+
+    def test_end_time_without_start_time_does_not_raise(self):
+        catalog = pd.DataFrame({"end_time": ["2000-12-31"]})
+        result = coerce_catalog_times(catalog)
+        assert isinstance(result["end_time"].iloc[0], cftime.datetime)
+        assert "start_time" not in result.columns

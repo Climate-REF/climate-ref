@@ -14,6 +14,7 @@ from climate_ref_core.output_files import (
 )
 from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
+    _redact_source_paths,
     build_native_snapshot,
     capture_execution,
     materialise_native,
@@ -177,6 +178,7 @@ def _leaky_provenance(software_root: Path, output_dir: Path) -> dict:
         "date": "2026-06-24 12:30:54",
         "userId": "jared",
         "platform": {"Name": "gus", "OS": "Linux", "Version": "6.12.88+deb13-amd64"},
+        "conda": {"Platform": "osx-64"},
     }
 
 
@@ -221,6 +223,7 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
         assert "jared" not in text
         assert "gus" not in text  # hostname (platform.Name) redacted
         assert "6.12.88+deb13-amd64" not in text  # kernel version (platform.Version) redacted
+        assert "osx-64" not in text  # conda platform (conda.Platform) redacted
         assert str(software_root) not in text
         assert str(output_dir) not in text
         assert "2026-06-24 12:30:54" not in text
@@ -231,10 +234,11 @@ def test_write_committed_bundle_redacts_and_placeholders_provenance(tmp_path):
     diag = json.loads((regression_dir / "diagnostic.json").read_text())
     assert diag["PROVENANCE"]["userId"] == "<USER>"
     assert diag["PROVENANCE"]["date"] == "<DATE>"
-    # Host fields redacted; coarse OS kept as portable context.
+    # Host and platform fields redacted so a baseline stays portable across machines and OSes.
     assert diag["PROVENANCE"]["platform"]["Name"] == "<HOSTNAME>"
     assert diag["PROVENANCE"]["platform"]["Version"] == "<HOST_VERSION>"
-    assert diag["PROVENANCE"]["platform"]["OS"] == "Linux"
+    assert diag["PROVENANCE"]["platform"]["OS"] == "<OS>"
+    assert diag["PROVENANCE"]["conda"]["Platform"] == "<CONDA_PLATFORM>"
     assert diag["RESULTS"]["score"] == 1.234568
 
     # output.json is re-dumped canonically (sorted keys); every provenance key is still present.
@@ -267,6 +271,28 @@ def test_redaction_leaves_clean_provenance_untouched(tmp_path):
     # The committed file is valid canonical JSON with sorted keys.
     out = json.loads(text)
     assert list(out.keys()) == sorted(out.keys())
+
+
+def test_redact_source_paths_is_checkout_agnostic():
+    # A committed baseline minted on one machine and re-derived on another must redact the in-repo
+    # driver/param path prefix to the same token regardless of the checkout root.
+    suffix = "packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --mc ENSO"
+    mac = f"python /Users/jane/code/climate-ref/{suffix}"
+    linux = f"python /home/ci/work/climate-ref/{suffix}"
+    expected = f"python <SOURCE_DIR>/{suffix}"
+    assert _redact_source_paths(mac) == expected
+    assert _redact_source_paths(linux) == expected
+
+
+def test_redact_source_paths_leaves_other_tokens_untouched():
+    # Already-portable placeholders (conda software root, test data, output dir) are not in-repo
+    # package paths and must survive the source-path redaction unchanged.
+    for token_path in (
+        "<SOFTWARE_ROOT_DIR>/conda/pmp-abc/bin/mean_climate_driver",
+        "<TEST_DATA_DIR>/enso_tel/cmip6/regression",
+        "<OUTPUT_DIR>/input_ENSO.json",
+    ):
+        assert _redact_source_paths(token_path) == token_path
 
 
 def test_build_native_snapshot_digests_relpaths(tmp_path):

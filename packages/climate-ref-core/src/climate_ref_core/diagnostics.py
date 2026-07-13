@@ -610,7 +610,7 @@ class Diagnostic(AbstractDiagnostic):
     def provider(self, value: DiagnosticProvider) -> None:
         self._provider = value
 
-    def run(self, definition: ExecutionDefinition) -> ExecutionResult:
+    def run(self, definition: ExecutionDefinition, *, capture_regression: bool = False) -> ExecutionResult:
         """
         Run the diagnostic on the given configuration.
 
@@ -620,10 +620,18 @@ class Diagnostic(AbstractDiagnostic):
         ----------
         definition
             The configuration to run the diagnostic on.
+        capture_regression
+            When True, call :meth:`prepare_regression_output` between execute
+            and build so the native output is normalised for deterministic regression capture.
+
+            Used only by the test-case runner.
         """
         # Execute the diagnostic
         # This may be run in a separate process (or python environment)
         self.execute(definition)
+
+        if capture_regression:
+            self.prepare_regression_output(definition)
 
         # Build the result from the output bundle
         return self.build_execution_result(definition)
@@ -632,12 +640,12 @@ class Diagnostic(AbstractDiagnostic):
         """
         Normalise native output for deterministic regression capture.
 
-        Hook called by the test-case regression runner *between*
+        Hook called by :meth:`run` (only when ``capture_regression=True``) *between*
         :meth:`execute` and :meth:`build_execution_result`,
         allowing a provider to remove avoidable non-determinism (e.g. timestamped directory names)
         before the output bundle is built and captured as a baseline.
 
-        This is **not** called during normal execution (:meth:`run`),
+        Normal execution (``capture_regression=False``, the default) does not call it,
         so it must only be used for regression-capture concerns.
 
         The default implementation does nothing.

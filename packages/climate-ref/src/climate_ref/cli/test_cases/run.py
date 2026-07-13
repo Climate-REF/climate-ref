@@ -166,7 +166,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
             logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
             return False
         logger.info(f"Loading catalog from {paths.catalog}")
-        datasets = load_datasets_from_yaml(paths.catalog)
+        datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
 
     paths.create()
     slot = prepare_slot(paths, label)
@@ -222,6 +222,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
             _write_test_case_manifest(
                 paths,
                 test_case_version=previous.test_case_version,
+                diagnostic_version=previous.diagnostic_version,
                 committed=committed,
                 native=previous.native,
                 schema=previous.schema,
@@ -232,7 +233,13 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
                     "re-mint with `ref test-cases mint` (or `mint --from-replay`)"
                 )
         else:
-            _write_test_case_manifest(paths, test_case_version=1, committed=committed, native={})
+            _write_test_case_manifest(
+                paths,
+                test_case_version=1,
+                diagnostic_version=diag.version,
+                committed=committed,
+                native={},
+            )
         logger.info(f"Updated regression baseline: {paths.regression}")
         _print_regression_summary(console, paths.regression, size_threshold)
     else:

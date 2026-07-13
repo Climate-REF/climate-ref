@@ -5,7 +5,8 @@
     "output.json": "6f71c80892ecb575a43c0ee25a77769ad779162ae4da22fc1585ee869a1d3857",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 1,
   "native": {},
-  "schema": 1,
+  "schema": 2,
   "test_case_version": 1
 }

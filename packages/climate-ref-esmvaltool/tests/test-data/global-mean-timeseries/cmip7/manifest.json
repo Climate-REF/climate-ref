@@ -5,7 +5,37 @@
     "output.json": "9a8ff885fbf13c06d1974834210da71f48f83fa1700f335fce5813bf5c0535b2",
     "series.json": "30b664467549cef4af8a5cb11736fa8aa7b8c1042ea0401192bf6d7c03a9ac0b"
   },
-  "native": {},
-  "schema": 1,
-  "test_case_version": 1
+  "diagnostic_version": 1,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "b3279883f9e05c7755b58ba248e02fdb87026bc35da2e1e5cdf30f581026004c",
+      "size": 13389
+    },
+    "executions/recipe/plots/timeseries/script1/png/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.png": {
+      "sha256": "14afa7cab9cbb8d18da6068bc4141985c4d8a6c9e7cbdbc9a9be55e64d4b7cef",
+      "size": 37100
+    },
+    "executions/recipe/run/timeseries/script1/diagnostic_provenance.yml": {
+      "sha256": "688723e7d4bd1b9a0f3f2a5df65fa80c50ff1d76ec208877201c09d91e4f134a",
+      "size": 1090
+    },
+    "executions/recipe/work/timeseries/script1/tas_tavg-h2m-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_18500116T120000-20141216T120000.nc": {
+      "sha256": "39c5891e4f94911f0c926a63063e33ed7da50aa4620a8fabdf8c28eece27b919",
+      "size": 31009
+    },
+    "output.json": {
+      "sha256": "3576872e709a4b08970db33e4f8da695e04eaebd86599dd32f42aa57e4377a78",
+      "size": 1662
+    },
+    "series.json": {
+      "sha256": "7a610fb1ab0d59df354e137f4f630fa3841ab821f3174ca852c1e363486b2892",
+      "size": 8800
+    }
+  },
+  "schema": 2,
+  "test_case_version": 2
 }

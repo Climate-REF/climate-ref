@@ -5,6 +5,7 @@
     "output.json": "c3ad14429dfae8653c4ee2a86e24c5c8b49fa7f5ec4e7b13f3183aaf719fb75a",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -19,20 +20,20 @@
       "size": 79743
     },
     "executions/recipe/run/zonal_mean_profiles/plot/diagnostic_provenance.yml": {
-      "sha256": "6e9939996bc7956093fc96683135c6ca7015ffd2f91b053ac92a7f8977ace112",
-      "size": 1909
+      "sha256": "114746df92372f01af72a8872a344693f40ddd24bf43080234393a8484d0f92f",
+      "size": 1939
     },
     "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_bottom.nc": {
-      "sha256": "eca31581f93f63f0267c6b48384f58ce88bd2d969143312de1f676e66e168814",
-      "size": 30522
+      "sha256": "8bb0f116872d71f680119c8b9bd5bac8712bdaec95b0520c621fc5aa3030ed89",
+      "size": 32222
     },
     "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_top_left.nc": {
-      "sha256": "9ea28bfe65bb83f739aca5e65129c838da1930310161a9689a5a7ea03c0272dc",
-      "size": 29830
+      "sha256": "2de7365b959297407d7182df2b6ef9e42ebce550ef3f34c4ecadf637930d32b7",
+      "size": 29928
     },
     "executions/recipe/work/zonal_mean_profiles/plot/zonal_mean_profile_o3_GFDL-ESM4_historical_top_right.nc": {
-      "sha256": "997363d3ba582440de4fb7cac86b6f58dcef2bed14341545dd09bfb44cc910a5",
-      "size": 25094
+      "sha256": "15da3676fafaabda2cbd74f7694fe84801da8c9bfe30e82beace05eeaf43f9ca",
+      "size": 25598
     },
     "output.json": {
       "sha256": "2e4a87a330ad8514d0c2878646d65809a0c7e9092ade03ec703ef36ce740fefd",
@@ -43,6 +44,6 @@
       "size": 2
     }
   },
-  "schema": 1,
-  "test_case_version": 1
+  "schema": 2,
+  "test_case_version": 2
 }

@@ -1,0 +1,37 @@
+{
+  "catalog_hash": "a16659110546b6f7fd904b0b26331bc14e6ffabd",
+  "committed": {
+    "diagnostic.json": "f970bdf3a6f5b945d5c3ea796a597066e370b8ba7317928a907015d276b9a165",
+    "output.json": "3fe2b84a2d7c0b7c5332657ccd49b6dfdbb6634d8d48902e883da35cd74ad9d4",
+    "series.json": "87768b13ba73e19f63ba9af89972b12bb381b0658bb010b66834c9a5a2c500b9"
+  },
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "1ac53a6676c65d7efef9d7d5c36744ee7021778c9278af4e641f3e22c24e64d3",
+      "size": 942
+    },
+    "global_mean_surface_temperature.nc": {
+      "sha256": "45084400f91903c6a4a84aa09a63cf24a814c24aa05b195fd88ee18c2d737d4e",
+      "size": 22171
+    },
+    "output.json": {
+      "sha256": "7e2ba5fae787a6c1ee6b61365f8010ec2d940e9c70f7bb4000dc5de8b3c21fcc",
+      "size": 1127
+    },
+    "series.json": {
+      "sha256": "22587d0877dcb65b400c8c96d3034dc4b64a82c954f578f4f1b7dcabaa57e48b",
+      "size": 17493
+    },
+    "surface_temperature_bias.png": {
+      "sha256": "60fdb66903652535446b1e40d4b27e48bb4cb1aa565a126c9e70a43f59135887",
+      "size": 55354
+    },
+    "surface_temperature_timeseries.png": {
+      "sha256": "83b9edfdc44496570d58809087a1262994a0f0c950e1929b651e02dd022b55ad",
+      "size": 67450
+    }
+  },
+  "schema": 2,
+  "test_case_version": 2
+}

@@ -67,7 +67,7 @@ in that directory, e.g. `~/.config/esmvaltool-ref/dask.yaml` with the settings
 described above.
 ///
 
-# Configuring PMP and ILAMB/IOMB
+## Configuring PMP and ILAMB/IOMB
 
 Both [ILAMB/IOMB](https://ilamb3.readthedocs.io) and
 [PMP](https://pcmdi.github.io/pcmdi_metrics/) use Dask through Xarray, but they
@@ -97,4 +97,44 @@ running a PMP diagnostic will use the resources specified above.
 
 /// note | ILAMB/IOMB diagnostics
 The ILAMB/IOMB diagnostics are currently [restricted to the synchronous scheduler](https://github.com/Climate-REF/climate-ref/blob/24ada711091f6821793c5b3034e615c50dad68df/packages/climate-ref-ilamb/src/climate_ref_ilamb/standard.py#L651), so they will not respect the global Dask settings.
+///
+
+## Limiting OpenMP and BLAS threads
+
+Independently of Dask, the numerical libraries underneath the diagnostics
+(NumPy, SciPy, and the BLAS/LAPACK backends they link against, such as OpenBLAS or MKL) spin up their own thread pools.
+By default each of these pools grows to the number of CPU cores on the machine.
+Because the REF runs many diagnostic executions in parallel
+(the [`LocalExecutor`](executors.md) launches up to `n` worker processes),
+an unconfigured numerical backend multiplies out to `n_processes * n_cores` threads,
+which oversubscribes the CPUs and causes heavy context-switching that slows the whole run down.
+
+Cap the per-process thread count by exporting the following environment variables before running `ref solve`
+(a small number such as `4` is a good starting point, but tune it against the executor's `n` and your core count):
+
+```bash
+export OMP_NUM_THREADS=4
+export OPENBLAS_NUM_THREADS=4
+export MKL_NUM_THREADS=4
+export NUMEXPR_NUM_THREADS=4
+export VECLIB_MAXIMUM_THREADS=4
+export BLIS_NUM_THREADS=4
+```
+
+Each variable targets a different backend,
+so it is safest to set all of them:
+
+- `OMP_NUM_THREADS` (OpenMP)
+- `OPENBLAS_NUM_THREADS` (OpenBLAS)
+- `MKL_NUM_THREADS` (Intel MKL)
+- `NUMEXPR_NUM_THREADS` (NumExpr)
+- `VECLIB_MAXIMUM_THREADS` (Apple Accelerate/vecLib)
+- `BLIS_NUM_THREADS` (BLIS)
+
+They must be set in the environment *before* NumPy is imported, so
+export them in the shell (or your job script) that launches the solve rather than from within Python.
+
+/// note
+As a rough guide, keep `n * OMP_NUM_THREADS` at or below the number of physical cores so the executor's worker processes
+and the BLAS threads do not compete for the same CPUs.
 ///

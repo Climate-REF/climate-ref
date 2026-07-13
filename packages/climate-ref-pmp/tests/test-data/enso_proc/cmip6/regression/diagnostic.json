@@ -7,14 +7,18 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
       "mip_id",
       "source_id",
       "member_id",
       "grid_label",
       "experiment_id",
       "metric",
-      "reference_datasets"
+      "reference_source_id"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -30,7 +34,7 @@
     "mip_id": {
       "cmip6": {}
     },
-    "reference_datasets": {
+    "reference_source_id": {
       "HadISST": {},
       "HadISST_Tropflux": {},
       "Tropflux": {},
@@ -43,9 +47,9 @@
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": {
-    "commandLine": "/home/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_proc --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_proc --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_proc_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
     "conda": {
-      "Platform": "linux-64"
+      "Platform": "<CONDA_PLATFORM>"
     },
     "date": "<DATE>",
     "openGL": {
@@ -71,43 +75,45 @@
     },
     "platform": {
       "Name": "<HOSTNAME>",
-      "OS": "Linux",
+      "OS": "<OS>",
       "Version": "<HOST_VERSION>"
     },
     "userId": "<USER>"
   },
   "RESULTS": {
-    "cmip6": {
-      "ACCESS-ESM1-5": {
-        "r1i1p1f1": {
-          "gn": {
-            "historical": {
-              "BiasSstLonRmse": {
-                "HadISST": 0.5024881,
-                "Tropflux": 0.5861183
-              },
-              "BiasTauxLonRmse": {
-                "Tropflux": 7.546285
-              },
-              "EnsoAmpl": {
-                "HadISST": 4.523476,
-                "Tropflux": 11.96119
-              },
-              "EnsoFbSstTaux": {
-                "HadISST_Tropflux": 72.75427,
-                "Tropflux_Tropflux": 71.91334
-              },
-              "EnsoSeasonality": {
-                "HadISST": 32.72831,
-                "Tropflux": 45.59915
-              },
-              "EnsoSstLonRmse": {
-                "HadISST": 0.2041643,
-                "Tropflux": 0.2053258
-              },
-              "EnsoSstSkew": {
-                "HadISST": 217.1324,
-                "Tropflux": 223.0274
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "gn": {
+              "historical": {
+                "BiasSstLonRmse": {
+                  "HadISST": 0.5024881,
+                  "Tropflux": 0.5861183
+                },
+                "BiasTauxLonRmse": {
+                  "Tropflux": 7.546285
+                },
+                "EnsoAmpl": {
+                  "HadISST": 4.523476,
+                  "Tropflux": 11.96119
+                },
+                "EnsoFbSstTaux": {
+                  "HadISST_Tropflux": 72.75427,
+                  "Tropflux_Tropflux": 71.91334
+                },
+                "EnsoSeasonality": {
+                  "HadISST": 32.72831,
+                  "Tropflux": 45.59915
+                },
+                "EnsoSstLonRmse": {
+                  "HadISST": 0.2041643,
+                  "Tropflux": 0.2053258
+                },
+                "EnsoSstSkew": {
+                  "HadISST": 217.1324,
+                  "Tropflux": 223.0274
+                }
               }
             }
           }

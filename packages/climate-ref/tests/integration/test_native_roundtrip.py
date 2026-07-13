@@ -28,7 +28,9 @@ from unittest.mock import MagicMock
 import pandas as pd
 import pytest
 
+from climate_ref.cli.test_cases._common import _iter_test_cases
 from climate_ref.config import Config
+from climate_ref.provider_registry import ProviderRegistry
 from climate_ref.testing import TEST_DATA_DIR, TestCaseRunner
 from climate_ref_core.datasets import (
     DatasetCollection,
@@ -54,6 +56,8 @@ from climate_ref_core.regression import (
     capture_execution,
     materialise_native,
 )
+from climate_ref_core.regression.gate import Action, decide_coupling
+from climate_ref_core.regression.manifest import SCHEMA_VERSION
 from climate_ref_core.testing import (
     TestCase,
     TestCasePaths,
@@ -368,8 +372,9 @@ class TestSyntheticNestedRoundTrip:
             assert digest == entry.sha256, "store digest must equal the captured digest"
 
         manifest = Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed=committed_digests,
             native=native,
         )
@@ -533,7 +538,7 @@ class TestExampleSmokeRoundTrip:
 
         from climate_ref_core.testing import load_datasets_from_yaml  # noqa: PLC0415
 
-        datasets = load_datasets_from_yaml(paths.catalog)
+        datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
         for src_type, collection in datasets.items():
             if len(collection.datasets) > 0 and "path" not in collection.datasets.columns:
                 pytest.skip(
@@ -575,8 +580,9 @@ class TestExampleSmokeRoundTrip:
             assert digest == entry.sha256
 
         manifest = Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed=committed_digests,
             native=native,
         )
@@ -723,8 +729,9 @@ class TestNegativeMissingBlob:
             store.put(base_dir / relpath)
 
         manifest = Manifest(
-            schema=1,
+            schema=2,
             test_case_version=1,
+            diagnostic_version=1,
             committed=committed_digests,
             native=native,
         )
@@ -843,7 +850,7 @@ class TestCliMintSyncReplay:
         case_dir = tmp_path / "td" / diag.slug / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         datasets = _build_synthetic_datasets()
 
@@ -894,7 +901,7 @@ class TestCliMintSyncReplay:
         case_dir = tmp_path / "td" / diag.slug / "default"
         case_dir.mkdir(parents=True)
         (case_dir / "catalog.yaml").touch()
-        paths = TestCasePaths(root=case_dir)
+        paths = TestCasePaths(root=case_dir, provider_slug="example")
 
         datasets = _build_synthetic_datasets()
 
@@ -1141,3 +1148,63 @@ class TestReconstructionInputRoundTrip:
         )
         with pytest.raises((FileNotFoundError, OSError)):
             diag.build_execution_result(replay_definition)
+
+
+class TestManifestSchemaMigration:
+    """Every committed manifest is migrated to the current schema and stamped correctly."""
+
+    def test_all_committed_manifests_are_schema_2(self, config, db) -> None:
+        """For every iterated case with a manifest, it parses at schema 2 with the code's version.
+
+        The case universe is derived from the same ``_iter_test_cases`` the gate and the
+        migration verb use (iterator parity), never a hardcoded count. A schema-1 manifest left
+        behind by a partial backfill would raise on load and red this test.
+        """
+        registry = ProviderRegistry.build_from_config(config, db)
+        checked = 0
+        for diag, tc in _iter_test_cases(registry):
+            paths = TestCasePaths.from_diagnostic(diag, tc.name)
+            if paths is None or not paths.manifest.exists():
+                continue
+            manifest = Manifest.load(paths.manifest)
+            assert manifest.schema == SCHEMA_VERSION, (
+                f"{diag.provider.slug}/{diag.slug}/{tc.name} is not at schema {SCHEMA_VERSION}"
+            )
+            assert manifest.diagnostic_version == diag.version, (
+                f"{diag.provider.slug}/{diag.slug}/{tc.name} records diagnostic_version "
+                f"{manifest.diagnostic_version} but the code declares {diag.version}"
+            )
+            checked += 1
+        # The branch ships committed manifests, so the iterator must have reached at least one.
+        assert checked > 0
+
+    def test_schema_1_base_manifest_is_treated_as_seeding(self) -> None:
+        """A schema-1 base manifest is rejected by ``loads`` and falls back to seeding.
+
+        This pins the one-cycle transition window: the schema-2 ``loads`` deliberately
+        rejects the base-branch copy (suppressed via the ci_gate ``try/except``), so the case
+        is treated as newly added rather than crashing the gate.
+        """
+        # A full schema-1 base manifest text (no diagnostic_version) is rejected by loads().
+        schema_1_text = json.dumps(
+            {
+                "schema": 1,
+                "test_case_version": 1,
+                "committed": {"output.json": "a" * 64},
+                "native": {},
+            }
+        )
+        with pytest.raises(ValueError):
+            Manifest.loads(schema_1_text)
+
+        # The ci_gate path catches that ValueError and passes base_manifest=None (seeding).
+        current = Manifest(
+            schema=2,
+            test_case_version=1,
+            diagnostic_version=1,
+            committed={"output.json": "a" * 64},
+            native={"data.nc": NativeEntry("a" * 64, 10)},
+        )
+        decision = decide_coupling(current, None, code_diagnostic_version=1)
+        assert decision.action is Action.REPLAY
+        assert "seeding" in decision.reason

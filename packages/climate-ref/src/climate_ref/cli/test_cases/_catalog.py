@@ -168,11 +168,12 @@ def _fetch_and_build_catalog(
     # Solve for datasets
     datasets = _solve_test_case(diag, data_catalog)
 
-    # Write catalog YAML to package-local test case directory
+    # Write the catalog to the package-local test case directory,
+    # and the local-paths sidecar to the dataset cache.
     catalog_written = False
     paths = TestCasePaths.from_diagnostic(diag, tc.name)
     if paths:
         paths.create()
-        catalog_written = save_datasets_to_yaml(datasets, paths.catalog, force=force)
+        catalog_written = save_datasets_to_yaml(datasets, paths.catalog, paths.catalog_paths, force=force)
 
     return datasets, catalog_written

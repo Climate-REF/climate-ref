@@ -1,5 +1,5 @@
 _metadata:
-  hash: e147acfae21866fb18c82724161dd3b30c3e8797
+  hash: 472aa8a681181bdd879307194cfd4702d24fc5d8
 cmip6:
   slug_column: instance_id
   selector:
@@ -127,4 +127,35 @@ cmip6:
     variable_id: sftlf
     variant_label: r1i1p1f1
     version: v20190429
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: CCI-CryoClim-FSC-1
+    variable_id: snc
+    version: v20250519
+  datasets:
+  - activity_id: obs4REF
+    end_time: '2019-06-15 00:00:00'
+    filename: snc_mon_CCI-CryoClim-FSC-1_BE_gn_198201-201906.nc
+    finalised: true
+    frequency: mon
+    grid: 0.5x0.5 degree
+    grid_label: gn
+    instance_id: obs4MIPs.obs4REF.ESACCI.CCI-CryoClim-FSC-1.mon.snc.0.5x0.5degree.gn.v20250519
+    institution_id: ESACCI
+    long_name: Fractional Snow Cover
+    nominal_resolution: 0.5x0.5 degree
+    product: observations
+    realm: land
+    source_id: CCI-CryoClim-FSC-1
+    source_type: satellite_retrieval
+    source_version_number: '1'
+    start_time: '1982-01-15 00:00:00'
+    time_range: 1982-01-15 00:00:00-2019-06-15 00:00:00
+    units: percent
+    variable_id: snc
+    variant_label: REF
+    version: v20250519
     vertical_levels: 1

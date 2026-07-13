@@ -21,6 +21,230 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.16.1 (2026-07-08)
+
+### Bug Fixes
+
+- `default_ignore_datasets.yaml` is now shipped inside the `climate_ref` package and resolved with `importlib.resources`.
+  The `config` and `solve_config` pytest fixtures previously located it relative to the monorepo source tree, so they raised `ValueError` for any project that installs `climate-ref` from a wheel. ([#800](https://github.com/Climate-REF/climate-ref/pull/800))
+
+
+## climate-ref 0.16.0 (2026-07-08)
+
+### Features
+
+- Metric values now carry a first-class `kind` of either `model` or `reference`,
+  so model and reference (observation) values can be distinguished and filtered directly
+  rather than inferred from provider-specific conventions.
+  Reference series additionally record a stable `reference_id` content hash,
+  so an identical observation produced by different executions is recognised as the same value.
+  Series can also carry typed presentation metadata (`value_units`, `value_long_name`, `index_units`, and `calendar`). ([#772](https://github.com/Climate-REF/climate-ref/pull/772))
+- Every PMP scalar metric value now keys its reference identity on `reference_source_id`
+  and declares its role with the first-class `kind` of `model`.
+  The ENSO diagnostics previously keyed reference identity on `reference_datasets`,
+  so a consumer now reads reference identity the same way for every PMP diagnostic.
+  ENSO references that the metrics package scores against two observation datasets jointly
+  (for example `HadISST_GPCP-Monthly-3-2`) are kept as a single combined `reference_source_id` value,
+  because the score is one value that depends on both references and cannot be split per reference. ([#775](https://github.com/Climate-REF/climate-ref/pull/775))
+- ESMValTool series now carry an explicit `kind` of either `model` or `reference`,
+  so an observation curve can be distinguished from a model curve directly
+  rather than inferred from the presence of a reference source. ([#776](https://github.com/Climate-REF/climate-ref/pull/776))
+- ILAMB metric values now carry the shared `kind` field, distinguishing reference (observation) series from model series without the previous `"Reference"` sentinel.
+  Series units are presented in a clean CF form so a model series and its reference agree, the typed presentation fields (`value_units`, `value_long_name`, `index_units`, `calendar`) are populated, and comparison scalars record the reference they were scored against so they can be grouped by it. ([#777](https://github.com/Climate-REF/climate-ref/pull/777))
+- The obs4REF reference-data registry gained 33 new files covering 12 CEDA
+  `obs_for_ref_v2` observational datasets,
+  including cloud and radiation observations (ESACCI-CLOUD),
+  burnt-area (GFED-5-0), ozone (SAGE-CCI-OMPS), FLUXNET site fluxes,
+  soil carbon (HWSD-2-0), CALIPSO ice cloud, WOA-23 ocean biogeochemistry,
+  RAPID AMOC transport, snow cover (CCI-CryoClim), and ocean carbon fluxes (Hoffman).
+  Older WECANN and WOA2023 entries were replaced by their newer versions. ([#778](https://github.com/Climate-REF/climate-ref/pull/778))
+- Ten ILAMB standard diagnostics now evaluate models against the obs4REF reference datasets rather than the bundled ILAMB files.
+
+  This updates the version of:
+
+  - gross primary productivity (WECANN, FLUXNET2015)
+  - runoff (LORA)
+  - soil carbon (HWSD-2-0)
+  - net biome productivity (Hoffman)
+  - snow cover (CCI-CryoClim),
+  - burnt area (GFED-5-0)
+  - sea-surface temperature and salinity (WOA-23),
+  - RAPID Atlantic overturning transport.
+
+  ([#779](https://github.com/Climate-REF/climate-ref/pull/779))
+- Added `climate_ref.results`, a typed read layer for querying results from notebooks and other tools.
+  A single `Reader` exposes per-domain readers for metric values, executions, datasets, diagnostics, and output artifacts, each returning frozen objects that remain usable after the database session closes and can be turned into a pandas DataFrame.
+
+  Added a `ref diagnostics list` command that lists the registered diagnostics with their promoted version and per-diagnostic successful, in-flight, and total execution-group counts.
+  Metric values now expose a first-class `kind` (model or reference) field, and `ref datasets list` returns only the latest version of each dataset. ([#780](https://github.com/Climate-REF/climate-ref/pull/780))
+- Added `REF_TEST_CASES_SKIP`,
+  a comma-separated list of `diagnostic` slugs or `provider/diagnostic` pairs
+  that are excluded from both `ref test-cases fetch` and the per-provider no-drift test.
+  This keeps diagnostics whose full-resolution ESGF input cannot be fetched within CI limits
+  (for example `ilamb/thetao-woa2023-surface`, a 3D ocean field)
+  from being downloaded or executed.
+  ESGF fetching is now confined to the `populate-cache` CI job. ([#797](https://github.com/Climate-REF/climate-ref/pull/797))
+- The ESGF fetch script can now retrieve the obs4MIPs reference datasets used by the PMP diagnostics,
+  namely `GPCP-Monthly-3-2`, `TropFlux-1-0`, `CERES-EBAF-4-2`, `HadISST-1-1` and `20CR-V2`.
+  Previously these were only available through the obs4REF registry.
+
+  Note that the psl modes of variability diagnostics request `20CR`,
+  which ESGF publishes as `20CR-V2`,
+  so those diagnostics continue to source their reference data from the obs4REF registry. ([#799](https://github.com/Climate-REF/climate-ref/pull/799))
+
+### Improvements
+
+- Added a `register` argument to `ProviderRegistry.build_from_config`.
+  Registration is the only step that writes to the database, so read-only consumers such as the API can now build the registry with `register=False` and serve a database mounted read-only. ([#791](https://github.com/Climate-REF/climate-ref/pull/791))
+- Removed the ERA-20C and ERA-Interim reference datasets from the obs4REF and sample data registries,
+  reducing the volume of data fetched by `ref datasets fetch-data --registry obs4ref`.
+  No diagnostic used either dataset,
+  and neither is available from obs4MIPs.
+  The unrelated ERA-5 dataset is unaffected.
+
+  If you have already fetched the sample data,
+  re-fetch it with `fetch_sample_data(force_cleanup=True)` so that the removed files are cleared from your local copy. ([#799](https://github.com/Climate-REF/climate-ref/pull/799))
+
+### Bug Fixes
+
+- Made ECS diagnostic work with CMIP7 data. ([#671](https://github.com/Climate-REF/climate-ref/pull/671))
+- Made TCR diagnostic work with CMIP7 data. ([#686](https://github.com/Climate-REF/climate-ref/pull/686))
+- Widened the contiguous-timerange tolerance so monthly datasets split across multiple files are no longer dropped as false-positive gaps. ([#774](https://github.com/Climate-REF/climate-ref/pull/774))
+- Committed regression baselines no longer embed the machine-specific source-checkout path or the
+  host operating system in provider command-line provenance.
+  Both are now redacted to portable ``<SOURCE_DIR>`` and ``<OS>`` placeholders,
+  so a baseline minted on one platform (for example macOS) reproduces one re-derived on another
+  (for example Linux in CI) instead of drifting. ([#775](https://github.com/Climate-REF/climate-ref/pull/775))
+- Fixed execution listings duplicating an execution group when two of its executions shared the same timestamp; each group now resolves to exactly one latest execution. ([#786](https://github.com/Climate-REF/climate-ref/pull/786))
+- Decoupled fetching of the ignore datasets file from configuration loading;
+  the file is now fetched lazily at solve time rather than while the configuration is loaded,
+  so read-only commands no longer perform network I/O.
+  Added an `ignore_datasets_url` setting (env `REF_IGNORE_DATASETS_URL`)
+  whose empty-string value disables fetching entirely for offline and air-gapped deployments.
+  A failed download no longer creates an empty placeholder file;
+  an existing cached copy is reused unchanged,
+  and a solve with no cached copy fails loudly rather than running without ignore-dataset protections. ([#792](https://github.com/Climate-REF/climate-ref/pull/792))
+- Fixed the ``LocalExecutor`` per-task timeout counting time spent waiting in the process-pool queue as execution time. The budget is now measured from when a worker actually starts a task, so a large backlog of executions queued behind other work is no longer culled en masse once it ages past the timeout. ([#795](https://github.com/Climate-REF/climate-ref/pull/795))
+- Fixed ``ref datasets ingest --n-jobs`` greater than 1 crashing (SIGSEGV/SIGBUS) with the default``complete`` CMIP6 parser.
+  Parsing previously fanned out across threads, but the netCDF4/HDF5 wheels published on PyPI are not thread-safe.
+  Parsing now runs using a process pool. ([#796](https://github.com/Climate-REF/climate-ref/pull/796))
+- Fixed three integration-test failures caused by the self-hosted runner's shared cache
+  and stable output directory leaking into tests that assumed a clean, default environment. ([#797](https://github.com/Climate-REF/climate-ref/pull/797))
+- The ESGF fetch script now exits with a non-zero status if any request failed,
+  rather than reporting `0 datasets` and exiting successfully.
+  Transient ESGF access errors are retried with an exponential backoff,
+  configurable via `--max-attempts` and `--retry-delay`.
+  A request that matches no datasets is reported but is not treated as a failure. ([#799](https://github.com/Climate-REF/climate-ref/pull/799))
+
+### Trivial/Internal Changes
+
+- [#670](https://github.com/Climate-REF/climate-ref/pull/670), [#783](https://github.com/Climate-REF/climate-ref/pull/783), [#787](https://github.com/Climate-REF/climate-ref/pull/787), [#789](https://github.com/Climate-REF/climate-ref/pull/789), [#794](https://github.com/Climate-REF/climate-ref/pull/794)
+
+
+## climate-ref 0.15.0 (2026-06-30)
+
+### Breaking Changes
+
+- The hash that identifies a diagnostic's input datasets is now computed deterministically across pandas versions and platforms.
+  It previously relied on `pandas.util.hash_pandas_object`, whose output changes between pandas releases and platforms.
+
+  Because the underlying hash values change, the committed regression `catalog_hash` values have been regenerated,
+  and existing databases will re-run each execution once on first use after upgrading. ([#741](https://github.com/Climate-REF/climate-ref/pull/741))
+- The minimum supported Python version is now 3.12; Python 3.11 is no longer supported.
+  Update your environment to Python 3.12 or newer before upgrading. ([#745](https://github.com/Climate-REF/climate-ref/pull/745))
+- Removed the legacy central regression-testing framework in favour of the native baselines managed by `ref test-cases`.
+  The `DiagnosticValidator` and `ExecutionRegression` helpers, the `diagnostic_validation`, `execution_regression`, and `regression_data_dir` pytest fixtures (from `climate_ref.conftest_plugin`), the central `tests/test-data/regression/` baseline tree, and the per-provider `test_diagnostics` / `test_build_results` tests have all been removed.
+
+  Provider regression baselines are now recorded and verified entirely through the `ref test-cases` CLI and the per-package committed bundles (see [Regression baselines](background/regression-baselines.md)). ([#757](https://github.com/Climate-REF/climate-ref/pull/757))
+
+### Features
+
+- Added `ref test-cases mint`, `replay`, and `sync` commands for managing native regression baselines.
+  `mint` records a test case's native outputs into the baseline store,
+  `replay` regenerates a bundle from the stored outputs and checks it against the committed copy,
+  and `sync` downloads the native outputs referenced by committed baselines into the local cache. ([#724](https://github.com/Climate-REF/climate-ref/pull/724))
+- Added the `ref test-cases ci-gate` command, which decides how CI should verify each
+  test case's regression baseline against the base branch: skip it, replay the cached
+  native baseline, re-run the diagnostic in full, or fail an unauthorised change.
+  Baselines are now coupled to their input catalogs, so changing a test case's inputs
+  without regenerating its baseline is reported as a failure rather than passing silently. ([#727](https://github.com/Climate-REF/climate-ref/pull/727))
+- Added a Cloudflare R2 object-store backend for diagnostic regression baselines, so `ref test-cases mint` can publish a test case's native outputs to the shared baseline store rather than only a local directory.
+  The store endpoint and bucket are configured through the `REF_NATIVE_STORE_*` settings (defaulting to the project's public baseline bucket), and write credentials are supplied via the environment or a named AWS/R2 profile, never the persisted configuration.
+
+  Minting is also easier to get right.
+  `ref test-cases mint` now checks the store credentials and bucket up front and stops with a clear message when they are misconfigured, the new `ref test-cases check-store` command verifies store connectivity without minting, `ref test-cases mint --dry-run` previews what would be minted, and `ref test-cases fetch` restores a missing local paths file on its own so a fresh checkout no longer needs `--force`. ([#732](https://github.com/Climate-REF/climate-ref/pull/732))
+- Regression baselines are now verified automatically in CI.
+  Every pull request runs the coupling gate and replays each test case's cached native baseline, a nightly job re-checks every baseline for silent drift, and a manually gated workflow mints new baselines to the shared object store behind required reviewers — so write credentials never run on untrusted pull-request code.
+
+  The diagnostic testing guide also gained a "pull request workflow" section explaining what the gate decides for each change and how to publish a new baseline. ([#733](https://github.com/Climate-REF/climate-ref/pull/733))
+- ILAMB regression baselines are migrated to the per-package Framework B layout, starting with the `mrsos-wangmao`, `gpp-fluxnet2015` and `lai-avh15c1` cmip6 test cases. Each carries a committed CMEC bundle and a manifest; native blobs are published separately through the gated mint workflow. ILAMB executions now also declare their scalar CSV and netCDF outputs in the CMEC output bundle so they are persisted with the results and can be replayed. ([#738](https://github.com/Climate-REF/climate-ref/pull/738))
+- Extended the ILAMB cmip6 regression-baseline migration to the per-package Framework B layout with nine more test cases:
+  `gpp-wecann`, `mrro-lora`, `csoil-hwsd2`, `nbp-hoffman`, `snc-esacci`, `burntfractionall-gfed`, `emp-gleamgpcp2.3`, `thetao-woa2023-surface` and `so-woa2023-surface`. ([#743](https://github.com/Climate-REF/climate-ref/pull/743))
+- `ref test-cases` runs now materialise their outputs into an inspectable, gitignored output slot
+  (`<case>/output/<label>/`) holding the curated native files, the rebuilt committed bundle, and a source stamp,
+  so you can see and diff exactly what a run produced.
+  Added a `build` verb that rebuilds the committed bundle from an existing slot without re-executing the diagnostic,
+  a `mint --from-replay` option that re-authors a baseline from the stored native instead of re-running it,
+  and a `--label` option that keeps several runs side by side for comparison. ([#748](https://github.com/Climate-REF/climate-ref/pull/748))
+- Added a `--format json` option to `ref datasets list`, `ref providers list`, `ref executions list-groups`, and `ref config list` for machine-readable output with full, untruncated identifiers and paths. ([#765](https://github.com/Climate-REF/climate-ref/pull/765))
+- Added `ref config init`, `get`, `set`, `unset`, `edit`, and `validate` commands to make configuration onboarding and management easier from the CLI. ([#768](https://github.com/Climate-REF/climate-ref/pull/768))
+- Added a five-minute [Quick Start](getting-started/quickstart.md) guide
+  and a new model-vs-observation diagnostic to the example provider,
+  `global-sst-bias`,
+  which compares modelled global-mean sea surface temperature (`tos`, area-weighted by `areacello`)
+  against the HadISST-1-1 observations and emits scalar metrics, the model/reference/bias time series, and figures.
+  A curated `quickstart` data registry provides the single reference dataset it needs,
+  avoiding the multi-gigabyte obs4REF download. ([#769](https://github.com/Climate-REF/climate-ref/pull/769))
+- The CI coupling gate now couples each regression baseline to its diagnostic's `Diagnostic.version`.
+  A test case fails the gate when the diagnostic's in-code version no longer matches the version recorded
+  when its baseline was minted, so an execution-affecting change can no longer slip through as a green replay
+  against a stale committed bundle.
+  The new author-declared `diagnostic_version` field lives in the test case `manifest.json` (schema version 2),
+  and the new `ref test-cases migrate-manifests` command backfills it across existing baselines.
+  A legitimate revert is still permitted: lower the diagnostic version and re-mint the baseline. ([#770](https://github.com/Climate-REF/climate-ref/pull/770))
+
+### Improvements
+
+- ILAMB reference (observational) series are now tagged with their source via the existing
+  `reference_source_id` dimension (for example `reference_source_id="WangMao"`),
+  so a reference series is self-identifying without adding a new schema field. ([#743](https://github.com/Climate-REF/climate-ref/pull/743))
+- Committed regression baseline bundles (`series.json` and `diagnostic.json`) now round floating-point values to seven significant figures when written, giving stable, reviewable bytes that no longer churn between local and CI runs while staying well within the regression comparison tolerance. ([#744](https://github.com/Climate-REF/climate-ref/pull/744))
+- Reduced database size by deduplicating the index of series metric values into a shared `index_axis` table, referenced by each series rather than stored inline on every row.
+  A database migration backfills existing data losslessly; on SQLite, run `VACUUM` afterwards to release the freed space on disk. ([#747](https://github.com/Climate-REF/climate-ref/pull/747))
+- Sped up `ref executions reingest` by eager-loading datasets and batching the database writes, so bulk reingests now scale with the number of executions rather than the number of data files. ([#750](https://github.com/Climate-REF/climate-ref/pull/750))
+
+### Bug Fixes
+
+- Regression `series.json` baselines are now written with a stable, dimension-sorted order. Previously a diagnostic could emit its series in a platform-dependent order, causing a committed bundle minted on one platform to falsely fail the regression gate on another even when every value matched within tolerance. ([#738](https://github.com/Climate-REF/climate-ref/pull/738))
+- Selecting the latest dataset version now compares version numbers numerically, so versions like v10 are correctly preferred over v2 (previously the older version could be chosen). ([#739](https://github.com/Climate-REF/climate-ref/pull/739))
+- Fixed a bug where a diagnostic whose results failed to ingest was incorrectly recorded as successful with no metric values; such executions are now marked failed and retried on the next solve. ([#740](https://github.com/Climate-REF/climate-ref/pull/740))
+- ILAMB regression `output.json` bundles are now written with a stable, sorted block order
+  (the plot and data sections are sorted by filename),
+  so a baseline regenerated on one machine reproduces byte-for-byte on another
+  instead of reordering and producing a spurious diff. ([#743](https://github.com/Climate-REF/climate-ref/pull/743))
+- Fixed `ref executions reingest` reporting a reingest as successful when the result failed to re-ingest; a failed re-ingestion is now rolled back (leaving no orphaned execution row or output directory) and reported as a failure instead. ([#749](https://github.com/Climate-REF/climate-ref/pull/749))
+- ILAMB metric bundles now always report the `units` attribute as a string (for example `"1"` for dimensionless metrics) instead of sometimes emitting the number `1`,
+  keeping the metric schema consistent across diagnostics and stable for regression comparison. ([#755](https://github.com/Climate-REF/climate-ref/pull/755))
+- PMP climatology reference datasets whose institution identifier contains a hyphen (for example the `GPCP-3-3` precipitation climatology from `NASA-GISS`) are now resolved by the registry instead of being silently skipped, so diagnostics that depend on them no longer fail with "No datasets found matching facets". ([#761](https://github.com/Climate-REF/climate-ref/pull/761))
+- Committed regression baselines are now reproducible from their stored native blobs on any machine: native outputs are rewritten to portable placeholders (`<OUTPUT_DIR>` / `<TEST_DATA_DIR>` / `<SOFTWARE_ROOT_DIR>`) before snapshotting, so re-minting on a different host yields identical digests instead of churning the baseline store. Diagnostics can also declare `reconstruction_inputs` — extra output globs such as ESMValTool `diagnostic_provenance.yml` or the PMP driver `*_cmec.json` — that are persisted into the baseline, so `ref test-cases replay` rebuilds the bundle by re-running `build_execution_result` against the captured inputs. ([#761](https://github.com/Climate-REF/climate-ref/pull/761))
+- Fixed minting of the ESMValTool ECS, TCR, TCRE and ZEC diagnostics, which failed with `can only concatenate str (not "datetime.timedelta") to str` when their datasets were loaded from a committed catalog. `get_child_and_parent_dataset` now parses the YAML-serialised string `start_time` back to a calendar-aware cftime datetime before deriving the parent timerange. ([#764](https://github.com/Climate-REF/climate-ref/pull/764))
+- `ref --quiet --help` no longer prints debug log messages to stderr, and successful solves no longer log a spurious `ERROR` when an optional dataset source type (such as CMIP7) is not present in the data catalog. ([#765](https://github.com/Climate-REF/climate-ref/pull/765))
+- `ref solve --dry-run` is now a read-only preview and no longer creates execution groups in the database.
+  It still reports execution groups with stale, abandoned in-progress executions as runnable, matching what the next real solve would pick up.
+
+  `ref solve` now exits with an error and remediation advice when no diagnostic providers are configured, or when a `--provider` filter matches none of the configured providers, instead of exiting successfully without doing anything. ([#766](https://github.com/Climate-REF/climate-ref/pull/766))
+
+### Improved Documentation
+
+- Corrected and expanded the regression-testing documentation, fixing inaccuracies in the diagnostic testing guide and filling gaps in the regression baselines reference. ([#744](https://github.com/Climate-REF/climate-ref/pull/744))
+- Consolidated the *In a Nutshell*, *Basic Concepts*, and *Explanation* documentation into a single *Concepts* page, and corrected the documented default dataset parser (the complete parser is the default, not the DRS parser). ([#751](https://github.com/Climate-REF/climate-ref/pull/751))
+- Corrected command examples in the documentation and package READMEs that used invalid flags (for example `---output-directory` and `--output directory`) or linked to a renamed helper script (`fetch-esgf.py`). ([#765](https://github.com/Climate-REF/climate-ref/pull/765))
+
+### Trivial/Internal Changes
+
+- [#742](https://github.com/Climate-REF/climate-ref/pull/742), [#744](https://github.com/Climate-REF/climate-ref/pull/744), [#745](https://github.com/Climate-REF/climate-ref/pull/745), [#748](https://github.com/Climate-REF/climate-ref/pull/748), [#755](https://github.com/Climate-REF/climate-ref/pull/755), [#761](https://github.com/Climate-REF/climate-ref/pull/761), [#762](https://github.com/Climate-REF/climate-ref/pull/762), [#764](https://github.com/Climate-REF/climate-ref/pull/764), [#767](https://github.com/Climate-REF/climate-ref/pull/767)
+
+
 ## climate-ref 0.14.7 (2026-06-18)
 
 ### Bug Fixes

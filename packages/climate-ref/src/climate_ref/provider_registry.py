@@ -123,6 +123,7 @@ class ProviderRegistry:
         db: Database,
         *,
         configure: bool = True,
+        register: bool = True,
     ) -> "ProviderRegistry":
         """
         Create a ProviderRegistry instance using information from the database.
@@ -136,6 +137,13 @@ class ProviderRegistry:
         configure
             Whether to call each provider's ``configure`` hook.
             Metadata-only commands can disable this to avoid setup side effects such as conda bootstrap.
+        register
+            Whether to upsert provider and diagnostic rows into the database.
+
+            Registration is the only step here that writes to the database.
+            Read-only consumers (e.g. the API serving a database mounted read-only)
+            must set this to ``False``; the provider and diagnostic rows they need
+            are written by the CLI (``ref providers setup``) and the workers.
 
         Returns
         -------
@@ -149,8 +157,9 @@ class ProviderRegistry:
                 provider.configure(config)
             providers.append(provider)
 
-        with db.session.begin():
-            for provider in providers:
-                _register_provider(db, provider)
+        if register:
+            with db.session.begin():
+                for provider in providers:
+                    _register_provider(db, provider)
 
         return ProviderRegistry(providers=providers)

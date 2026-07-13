@@ -30,6 +30,8 @@ class SourceDatasetType(enum.Enum):
     CMIP7 = "cmip7"
     obs4MIPs = "obs4mips"
     PMPClimatology = "pmp-climatology"
+    obs4REF = "obs4ref"
+    ESMValToolReference = "esmvaltool-reference"
 
     @classmethod
     @functools.lru_cache(maxsize=1)

@@ -5,18 +5,20 @@ View execution groups and their results
 import pathlib
 import shutil
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Annotated
 from urllib.parse import quote
 
 import typer
 from loguru import logger
-from rich.console import Group
+from rich.console import Console, Group
 from rich.filesize import decimal
 from rich.markup import escape
 from rich.panel import Panel
+from rich.table import Table
 from rich.text import Text
 from rich.tree import Tree
-from sqlalchemy import case, func, or_
+from sqlalchemy import or_
 
 from climate_ref.cli._utils import (
     OutputFormat,
@@ -28,9 +30,21 @@ from climate_ref.cli._utils import (
 from climate_ref.config import Config
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.diagnostic import Diagnostic
-from climate_ref.models.execution import execution_datasets, get_execution_group_and_latest_filtered
+from climate_ref.models.execution import (
+    execution_datasets,
+    get_execution_group_and_latest_filtered,
+)
 from climate_ref.models.provider import Provider
+from climate_ref.results import (
+    ExecutionGroupFilter,
+    MetricValueFilter,
+    OutlierPolicy,
+    Reader,
+)
+from climate_ref.results.executions import OutputView
+from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
+from climate_ref_core.paths import safe_path
 
 app = typer.Typer(help=__doc__)
 
@@ -47,6 +61,13 @@ class ListGroupsFilterOptions:
 
     facets: dict[str, list[str]] | None = None
     """Filter by facet key-value pairs (AND across keys, OR within key)"""
+
+
+class ValueKind(StrEnum):
+    """Which kind of metric value the ``values`` command should show."""
+
+    scalar = "scalar"
+    series = "series"
 
 
 # Default columns for the ``list-groups`` table.
@@ -107,7 +128,10 @@ def list_groups(  # noqa: PLR0913
     ] = None,
     output_format: Annotated[
         OutputFormat,
-        typer.Option("--format", help="Output format: 'table' (default) or machine-readable 'json'."),
+        typer.Option(
+            "--format",
+            help="Output format: 'table' (default) or machine-readable 'json'.",
+        ),
     ] = OutputFormat.table,
 ) -> None:
     """
@@ -123,10 +147,9 @@ def list_groups(  # noqa: PLR0913
 
     The output is a table by default, or machine-readable JSON with ``--format json``.
     """
-    import pandas as pd
-
     session = ctx.obj.database.session
     console = ctx.obj.console
+    reader = Reader(ctx.obj.database)
 
     # Parse facet filters
     try:
@@ -147,53 +170,22 @@ def list_groups(  # noqa: PLR0913
     total_count = session.query(ExecutionGroup).count()
 
     # Apply filters to query
-    try:
-        all_filtered_results = get_execution_group_and_latest_filtered(
-            session,
-            diagnostic_filters=filters.diagnostic,
-            provider_filters=filters.provider,
-            facet_filters=filters.facets,
+    collection = reader.executions.groups(
+        ExecutionGroupFilter(
+            diagnostic_contains=diagnostic,
+            provider_contains=provider,
+            facets=facet_filters or None,
             successful=successful,
             dirty=dirty,
-        )
-        execution_groups_results = all_filtered_results[:limit]
-    except Exception as e:  # pragma: no cover
-        logger.error(f"Error applying filters: {e}")
-        raise typer.Exit(code=1)
+        ),
+        limit=limit,
+    )
 
     # Check if any results found
-    if not execution_groups_results:
+    if len(collection) == 0:
         emit_no_results_warning(filters, total_count)
-        results_df = pd.DataFrame(
-            columns=[
-                "id",
-                "key",
-                "provider",
-                "diagnostic",
-                "dirty",
-                "successful",
-                "created_at",
-                "updated_at",
-                "selectors",
-            ]
-        )
-    else:
-        results_df = pd.DataFrame(
-            [
-                {
-                    "id": eg.id,
-                    "key": eg.key,
-                    "provider": eg.diagnostic.provider.slug,
-                    "diagnostic": eg.diagnostic.slug,
-                    "dirty": eg.dirty,
-                    "successful": result.successful if result else None,
-                    "created_at": eg.created_at,
-                    "updated_at": eg.updated_at,
-                    "selectors": eg.selectors,
-                }
-                for eg, result in execution_groups_results
-            ]
-        )
+
+    results_df = collection.to_pandas()
 
     # Select columns to display.
     if column:
@@ -209,7 +201,7 @@ def list_groups(  # noqa: PLR0913
     render_dataframe(results_df, console=console, output_format=output_format)
 
     # Show limit warning if applicable
-    filtered_count = len(all_filtered_results)
+    filtered_count = collection.total_count
     if filtered_count > limit:
         logger.warning(
             f"Displaying {limit} of {filtered_count} filtered results. "
@@ -217,8 +209,10 @@ def list_groups(  # noqa: PLR0913
         )
 
 
+# Stays on `get_execution_group_and_latest_filtered` rather than `reader.executions.groups()` by design.
+# Revisit once a mutable query surface exists.
 @app.command()
-def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
+def delete_groups(  # noqa: PLR0912, PLR0913
     ctx: typer.Context,
     diagnostic: Annotated[
         list[str] | None,
@@ -257,7 +251,9 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
         ),
     ] = None,
     remove_outputs: bool = typer.Option(
-        False, "--remove-outputs", help="Also remove output directories from the filesystem"
+        False,
+        "--remove-outputs",
+        help="Also remove output directories from the filesystem",
     ),
     force: bool = typer.Option(False, help="Skip confirmation prompt"),
 ) -> None:
@@ -295,18 +291,14 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
     logger.debug(f"Applying filters: {filters}")
 
     # Apply filters to query
-    try:
-        all_filtered_results = get_execution_group_and_latest_filtered(
-            session,
-            diagnostic_filters=filters.diagnostic,
-            provider_filters=filters.provider,
-            facet_filters=filters.facets,
-            successful=successful,
-            dirty=dirty,
-        )
-    except Exception as e:  # pragma: no cover
-        logger.error(f"Error applying filters: {e}")
-        raise typer.Exit(code=1)
+    all_filtered_results = get_execution_group_and_latest_filtered(
+        session,
+        diagnostic_filters=filters.diagnostic,
+        provider_filters=filters.provider,
+        facet_filters=filters.facets,
+        successful=successful,
+        dirty=dirty,
+    )
 
     # Check if any results found
     if not all_filtered_results:
@@ -349,11 +341,12 @@ def delete_groups(  # noqa: PLR0912, PLR0913, PLR0915
         config = ctx.obj.config
         for eg, _ in all_filtered_results:
             for execution in eg.executions:
-                output_dir = config.paths.results / execution.output_fragment
-
-                # Safety check
-                if not output_dir.is_relative_to(config.paths.results):  # pragma: no cover
-                    logger.error(f"Skipping unsafe path: {output_dir}")
+                try:
+                    output_dir = safe_path(
+                        execution.output_fragment, base=config.paths.results, label="results"
+                    )
+                except ValueError:
+                    logger.error(f"Skipping unsafe output fragment: {execution.output_fragment!r}")
                     continue
 
                 if output_dir.exists():
@@ -448,7 +441,11 @@ def _datasets_panel(result: Execution) -> Panel:
 
     datasets_df = pd.DataFrame(
         [
-            {"id": dataset.id, "slug": dataset.slug, "dataset_type": dataset.dataset_type}
+            {
+                "id": dataset.id,
+                "slug": dataset.slug,
+                "dataset_type": dataset.dataset_type,
+            }
             for dataset in datasets
         ]
     )
@@ -457,6 +454,30 @@ def _datasets_panel(result: Execution) -> Panel:
         df_to_table(datasets_df),
         title=f"Datasets hash: {result.dataset_hash}",
     )
+
+
+def _outputs_panel(outputs: tuple[OutputView, ...], output_fragment: str, reader: Reader) -> Panel:
+    if not outputs:
+        return Panel(Text("No registered outputs.", "bold red"), title="Outputs")
+
+    table = Table("output_type", "short_name", "long_name", "filename")
+    for out in outputs:
+        if out.filename is None:
+            filename_cell: Text | str = ""
+        else:
+            try:
+                output_path = reader.artifacts.output_file(output_fragment, out.filename)
+                filename_cell = Text(out.filename, style=f"link file://{output_path}")
+            except ValueError:
+                filename_cell = out.filename
+        table.add_row(
+            out.output_type,
+            out.short_name or "",
+            out.long_name or "",
+            filename_cell,
+        )
+
+    return Panel(table, title="Outputs")
 
 
 def _results_directory_panel(result_directory: pathlib.Path) -> Panel:
@@ -536,6 +557,7 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
     config: Config = ctx.obj.config
     session = ctx.obj.database.session
     console = ctx.obj.console
+    reader = Reader(ctx.obj.database, results=config.paths.results)
 
     execution_group = session.get(ExecutionGroup, execution_id)
 
@@ -550,11 +572,223 @@ def inspect(ctx: typer.Context, execution_id: int) -> None:
         return
 
     result: Execution = execution_group.executions[-1]
-    result_directory = config.paths.results / result.output_fragment
+    output_dir = reader.artifacts.output_directory(result.output_fragment)
 
     console.print(_datasets_panel(result))
-    console.print(_results_directory_panel(result_directory))
-    console.print(_log_panel(result_directory))
+    console.print(_outputs_panel(reader.executions.outputs(result.id), result.output_fragment, reader))
+    console.print(_results_directory_panel(output_dir))
+    console.print(_log_panel(output_dir))
+
+
+@app.command()
+def values(  # noqa: PLR0913
+    ctx: typer.Context,
+    group_id: Annotated[int, typer.Argument(help="Execution group ID to show metric values for.")],
+    kind: Annotated[
+        ValueKind,
+        typer.Option(help="Which kind of value to show: scalar (default) or series."),
+    ] = ValueKind.scalar,
+    execution_id: Annotated[
+        int | None,
+        typer.Option(help="Show values for a specific execution instead of the latest one in the group."),
+    ] = None,
+    dimension: Annotated[
+        list[str] | None,
+        typer.Option(
+            "--dimension",
+            "-d",
+            help="Filter by CV dimension key=value (exact match). Repeat for AND across keys; "
+            "repeat the same key for OR within a key.",
+        ),
+    ] = None,
+    outliers: Annotated[
+        bool,
+        typer.Option(
+            "--outliers/--no-outliers",
+            help="Run source-id-aware IQR outlier detection (scalar values only).",
+        ),
+    ] = False,
+    include_unverified: Annotated[
+        bool,
+        typer.Option(
+            "--include-unverified",
+            help="Include values flagged as outliers (only meaningful with --outliers).",
+        ),
+    ] = False,
+    limit: Annotated[
+        int,
+        typer.Option(help="Maximum number of values to display."),
+    ] = 100,
+    offset: Annotated[
+        int,
+        typer.Option(help="Number of values to skip before displaying."),
+    ] = 0,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: table (default) or json."),
+    ] = OutputFormat.table,
+) -> None:
+    """
+    Show computed metric values for an execution group.
+
+    By default this shows the scalar values from the latest execution in the group.
+    Use --kind series for 1-d series, --execution-id to target a specific execution,
+    and --dimension key=value to filter by controlled-vocabulary dimensions.
+
+    Values are read through the shared climate_ref.results layer, so the same filtering
+    is applied here as in the API.
+    """
+    database = ctx.obj.database
+    console = ctx.obj.console
+    reader = Reader(database)
+
+    group = database.session.get(ExecutionGroup, group_id)
+    if group is None:
+        logger.error(f"Execution group not found: {group_id}")
+        raise typer.Exit(code=1)
+
+    if execution_id is None:
+        latest = reader.executions.latest_execution(group_id)
+        if latest is None:
+            logger.error(f"No executions found for group {group_id}.")
+            raise typer.Exit(code=1)
+        execution_id = latest.id
+    else:
+        execution = database.session.get(Execution, execution_id)
+        if execution is None or execution.execution_group_id != group_id:
+            logger.error(f"Execution {execution_id} does not belong to group {group_id}.")
+            raise typer.Exit(code=1)
+
+    try:
+        dimensions = parse_facet_filters(dimension)
+    except ValueError as e:
+        logger.error(str(e))
+        raise typer.Exit(code=1)
+
+    # Scope to the concrete execution: promotion/retraction gating would otherwise hide the
+    # values the user explicitly asked to inspect.
+    filters = MetricValueFilter(
+        execution_ids=[execution_id],
+        dimensions=dimensions or None,
+        promoted_only=False,
+        include_retracted=True,
+    )
+
+    try:
+        if kind == ValueKind.scalar:
+            _render_scalar_values(
+                reader.values,
+                filters,
+                console=console,
+                output_format=output_format,
+                outliers=outliers,
+                include_unverified=include_unverified,
+                offset=offset,
+                limit=limit,
+            )
+        else:
+            _render_series_values(
+                reader.values,
+                filters,
+                console=console,
+                output_format=output_format,
+                offset=offset,
+                limit=limit,
+                outliers=outliers,
+                include_unverified=include_unverified,
+            )
+    except KeyError as e:
+        # Raised by the filter when a --dimension key is not a registered CV dimension.
+        logger.error(f"Unknown dimension: {e}")
+        raise typer.Exit(code=1)
+
+
+def _render_scalar_values(  # noqa: PLR0913
+    values: ValuesReader,
+    filters: MetricValueFilter,
+    *,
+    console: Console,
+    output_format: OutputFormat,
+    outliers: bool,
+    include_unverified: bool,
+    offset: int,
+    limit: int | None,
+) -> None:
+    collection = values.scalar_values(
+        filters,
+        outliers=OutlierPolicy() if outliers else None,
+        include_unverified=include_unverified,
+        offset=offset,
+        limit=limit,
+        with_facets=False,
+    )
+    if not len(collection):
+        if collection.had_outliers:
+            logger.warning(
+                f"No scalar values found. {collection.outlier_count} value(s) were flagged as "
+                f"outliers and hidden. Use --include-unverified to show them."
+            )
+        else:
+            console.print("No scalar values found.")
+        return
+
+    render_dataframe(collection.to_pandas(), console=console, output_format=output_format)
+
+    if collection.had_outliers:
+        state = "shown" if include_unverified else "hidden"
+        logger.warning(
+            f"{collection.outlier_count} value(s) flagged as outliers ({state}). "
+            f"Use --include-unverified to show them."
+        )
+    displayed = offset + len(collection)
+    if displayed < collection.total_count:
+        logger.warning(
+            f"Displaying {len(collection)} of {collection.total_count} values. "
+            f"Use --limit / --offset to see more."
+        )
+
+
+def _render_series_values(  # noqa: PLR0913
+    values: ValuesReader,
+    filters: MetricValueFilter,
+    *,
+    console: Console,
+    output_format: OutputFormat,
+    offset: int,
+    limit: int | None,
+    outliers: bool = False,
+    include_unverified: bool = False,
+) -> None:
+    # Warn if scalar-only flags are used with series values
+    ignored_flags = []
+    if outliers:
+        ignored_flags.append("--outliers")
+    if include_unverified:
+        ignored_flags.append("--include-unverified")
+    if ignored_flags:
+        logger.warning(f"{'/'.join(ignored_flags)} only apply to scalar values and were ignored.")
+
+    collection = values.series_values(filters, offset=offset, limit=limit, with_facets=False)
+    if not len(collection):
+        console.print("No series values found.")
+        return
+
+    if output_format == OutputFormat.json:
+        # Full long-form data for scripting.
+        render_dataframe(collection.to_pandas(explode=True), output_format=output_format)
+    else:
+        # Compact one-row-per-series summary for the terminal; the raw arrays are too wide.
+        df = collection.to_pandas(explode=False)
+        df["n_points"] = df["values"].apply(len)
+        df = df.drop(columns=["values", "index"])
+        render_dataframe(df, console=console, output_format=output_format)
+
+    displayed = offset + len(collection)
+    if displayed < collection.total_count:
+        logger.warning(
+            f"Displaying {len(collection)} of {collection.total_count} series. "
+            f"Use --limit / --offset to see more."
+        )
 
 
 @app.command()
@@ -684,64 +918,12 @@ def stats(
     """
     import pandas as pd
 
-    session = ctx.obj.database.session
     console = ctx.obj.console
+    reader = Reader(ctx.obj.database)
 
-    # Subquery to get the latest execution per execution group
-    latest_exec_subquery = (
-        session.query(
-            Execution.execution_group_id,
-            func.max(Execution.created_at).label("latest_created_at"),
-        )
-        .group_by(Execution.execution_group_id)
-        .subquery()
-    )
+    stats_rows = reader.executions.statistics(diagnostic_contains=diagnostic, provider_contains=provider)
 
-    # Build query: join ExecutionGroup -> Diagnostic -> Provider, and optionally latest Execution
-    query = (
-        session.query(
-            Provider.slug.label("provider"),
-            Diagnostic.slug.label("diagnostic"),
-            func.count().label("total"),
-            func.sum(
-                case(
-                    (Execution.successful.is_(None) & Execution.id.isnot(None), 1),
-                    else_=0,
-                )
-            ).label("running"),
-            func.sum(case((Execution.successful.is_(False), 1), else_=0)).label("failed"),
-            func.sum(case((Execution.successful.is_(True), 1), else_=0)).label("successful"),
-            func.sum(case((Execution.id.is_(None), 1), else_=0)).label("not_started"),
-            func.sum(case((ExecutionGroup.dirty.is_(True), 1), else_=0)).label("dirty"),
-        )
-        .join(Diagnostic, ExecutionGroup.diagnostic_id == Diagnostic.id)
-        .filter(ExecutionGroup.diagnostic_version == Diagnostic.promoted_version)
-        .join(Provider, Diagnostic.provider_id == Provider.id)
-        .outerjoin(latest_exec_subquery, ExecutionGroup.id == latest_exec_subquery.c.execution_group_id)
-        .outerjoin(
-            Execution,
-            (Execution.execution_group_id == ExecutionGroup.id)
-            & (Execution.created_at == latest_exec_subquery.c.latest_created_at),
-        )
-        .group_by(Provider.slug, Diagnostic.slug)
-        .order_by(Provider.slug, Diagnostic.slug)
-    )
-
-    # Apply diagnostic filter
-    if diagnostic:
-        diagnostic_conditions = [
-            Diagnostic.slug.ilike(f"%{filter_value.lower()}%") for filter_value in diagnostic
-        ]
-        query = query.filter(or_(*diagnostic_conditions))
-
-    # Apply provider filter
-    if provider:
-        provider_conditions = [Provider.slug.ilike(f"%{filter_value.lower()}%") for filter_value in provider]
-        query = query.filter(or_(*provider_conditions))
-
-    results = query.all()
-
-    if not results:
+    if not stats_rows:
         console.print("No execution groups found.")
         return
 
@@ -756,7 +938,7 @@ def stats(
             "dirty": row.dirty,
             "total": row.total,
         }
-        for row in results
+        for row in stats_rows
     ]
 
     results_df = pd.DataFrame(rows)
@@ -772,6 +954,11 @@ def stats(
     pretty_print_df(results_df, console=console)
 
 
+# `get_executions_for_reingest` stays on the ORM helper by design.
+# it passes`include_superseded=True` and selects `eg.executions[0]`
+# (the oldest / original execution in the group),
+# which is a different "latest" than `reader.executions` definition.
+# Revisit once a mutable query surface exists.
 @app.command()
 def reingest(  # noqa: PLR0913
     ctx: typer.Context,

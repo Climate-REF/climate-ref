@@ -83,6 +83,14 @@ class TestSeedV1:
         m = Manifest.seed_v1(digests)
         assert m.committed == digests
 
+    def test_diagnostic_version_defaults_to_1(self) -> None:
+        m = Manifest.seed_v1({})
+        assert m.diagnostic_version == 1
+
+    def test_diagnostic_version_override(self) -> None:
+        m = Manifest.seed_v1({}, diagnostic_version=3)
+        assert m.diagnostic_version == 3
+
 
 class TestDumpLoad:
     """dump then load must be byte-identical and stable."""
@@ -91,6 +99,7 @@ class TestDumpLoad:
         return Manifest(
             schema=SCHEMA_VERSION,
             test_case_version=2,
+            diagnostic_version=3,
             committed={"output.json": "cc" * 32, "series.json": "dd" * 32},
             native={"foo/bar.nc": NativeEntry(sha256="ee" * 32, size=1024)},
         )
@@ -102,6 +111,7 @@ class TestDumpLoad:
         loaded = Manifest.load(p)
         assert loaded.schema == original.schema
         assert loaded.test_case_version == original.test_case_version
+        assert loaded.diagnostic_version == original.diagnostic_version
         assert loaded.committed == original.committed
         assert loaded.native == original.native
 
@@ -133,6 +143,7 @@ class TestDumpLoad:
         m = Manifest(
             schema=SCHEMA_VERSION,
             test_case_version=1,
+            diagnostic_version=1,
             committed={},
             native={"path/to/file.nc": entry},
         )
@@ -141,17 +152,67 @@ class TestDumpLoad:
         loaded = Manifest.load(p)
         assert loaded.native["path/to/file.nc"] == entry
 
+    def test_dump_emits_unconditional_null_catalog_hash(self, tmp_path: Path) -> None:
+        # dump always serialises catalog_hash (as null when unset) for byte-stability.
+        p = tmp_path / "manifest.json"
+        self._make_manifest().dump(p)
+        data = json.loads(p.read_text(encoding="utf-8"))
+        assert "catalog_hash" in data
+        assert data["catalog_hash"] is None
+        assert data["diagnostic_version"] == 3
+
     def test_load_missing_keys_raises_value_error(self, tmp_path: Path) -> None:
         p = tmp_path / "manifest.json"
         p.write_text(json.dumps({"schema": SCHEMA_VERSION, "committed": {}}), encoding="utf-8")
-        with pytest.raises(ValueError, match=r"missing required keys \['test_case_version', 'native'\]"):
+        with pytest.raises(
+            ValueError,
+            match=r"missing required keys \['test_case_version', 'diagnostic_version', 'native'\]",
+        ):
             Manifest.load(p)
+
+    def test_load_missing_diagnostic_version_raises_value_error(self, tmp_path: Path) -> None:
+        # A schema-2 payload missing diagnostic_version is rejected post-bump.
+        p = tmp_path / "manifest.json"
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": 1,
+            "committed": {},
+            "native": {},
+        }
+        p.write_text(json.dumps(payload), encoding="utf-8")
+        with pytest.raises(ValueError, match="missing required keys"):
+            Manifest.load(p)
+
+    @pytest.mark.parametrize("bad_value", [0, -1, "1", True, 1.0])
+    def test_load_rejects_invalid_diagnostic_version(self, bad_value: object) -> None:
+        payload = {
+            "schema": SCHEMA_VERSION,
+            "test_case_version": 1,
+            "diagnostic_version": bad_value,
+            "committed": {},
+            "native": {},
+        }
+        with pytest.raises(ValueError, match="diagnostic_version"):
+            Manifest.loads(json.dumps(payload))
+
+    def test_load_rejects_schema_1_text(self) -> None:
+        # A schema-1 manifest carrying diagnostic_version is still rejected by the schema check.
+        payload = {
+            "schema": 1,
+            "test_case_version": 1,
+            "diagnostic_version": 1,
+            "committed": {},
+            "native": {},
+        }
+        with pytest.raises(ValueError, match="unsupported schema"):
+            Manifest.loads(json.dumps(payload))
 
     def test_load_malformed_native_entry_raises_value_error(self, tmp_path: Path) -> None:
         p = tmp_path / "manifest.json"
         payload = {
             "schema": SCHEMA_VERSION,
             "test_case_version": 1,
+            "diagnostic_version": 1,
             "committed": {},
             "native": {"file.nc": {"sha256": "aa" * 32}},  # missing "size"
         }
@@ -168,6 +229,7 @@ class TestDumpLoad:
         payload = {
             "schema": SCHEMA_VERSION,
             "test_case_version": 1,
+            "diagnostic_version": 1,
             "committed": {},
             "native": {bad_relpath: {"sha256": "aa" * 32, "size": 1}},
         }
@@ -184,6 +246,7 @@ class TestDumpLoad:
         payload = {
             "schema": SCHEMA_VERSION,
             "test_case_version": 1,
+            "diagnostic_version": 1,
             "committed": {},
             "native": {"file.nc": {"sha256": bad_digest, "size": 1}},
         }
@@ -191,11 +254,12 @@ class TestDumpLoad:
         with pytest.raises(ValueError, match="Invalid sha256 digest"):
             Manifest.load(p)
 
-    @pytest.mark.parametrize("bad_schema", [2, 0, "1", True, 1.0])
+    @pytest.mark.parametrize("bad_schema", [3, 0, "1", True, 1.0])
     def test_load_rejects_unknown_schema(self, bad_schema: object) -> None:
         payload = {
             "schema": bad_schema,
             "test_case_version": 1,
+            "diagnostic_version": 1,
             "committed": {},
             "native": {},
         }
@@ -207,6 +271,7 @@ class TestDumpLoad:
         payload = {
             "schema": SCHEMA_VERSION,
             "test_case_version": 1,
+            "diagnostic_version": 1,
             "committed": {},
             "native": {"file.nc": {"sha256": "aa" * 32, "size": bad_size}},
         }

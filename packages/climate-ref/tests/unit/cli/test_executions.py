@@ -1,5 +1,7 @@
 import datetime
+import json
 import pathlib
+from typing import ClassVar
 from unittest.mock import patch
 
 import pytest
@@ -7,13 +9,15 @@ from climate_ref_esmvaltool import provider as esmvaltool_provider
 from climate_ref_pmp import provider as pmp_provider
 from rich.console import Console
 
-from climate_ref.cli.executions import _results_directory_panel
+from climate_ref.cli.executions import _outputs_panel, _results_directory_panel
 from climate_ref.models import Execution, ExecutionGroup
 from climate_ref.models.dataset import CMIP6Dataset
 from climate_ref.models.diagnostic import Diagnostic
 from climate_ref.models.execution import ExecutionOutput, ResultOutputType, execution_datasets
-from climate_ref.models.metric_value import ScalarMetricValue
+from climate_ref.models.metric_value import ScalarMetricValue, SeriesIndex, SeriesMetricValue
 from climate_ref.provider_registry import _register_provider
+from climate_ref.results import Reader
+from climate_ref.results.executions import OutputView
 from climate_ref_core.datasets import SourceDatasetType
 
 
@@ -460,6 +464,23 @@ class TestDeleteGroups:
 
         assert "THIS WILL DELETE ALL EXECUTION GROUPS IN THE DATABASE" in result.stderr
 
+    def test_delete_groups_backend_error_propagates(self, db_with_groups, invoke_cli):
+        """A genuine backend error must surface, not be relabelled 'Error applying filters'."""
+
+        def _boom(*args, **kwargs):
+            raise RuntimeError("db exploded")
+
+        with patch("climate_ref.cli.executions.get_execution_group_and_latest_filtered", _boom):
+            result = invoke_cli(
+                ["executions", "delete-groups", "--diagnostic", "enso", "--force"],
+                expected_exit_code=1,
+            )
+
+        assert "Error applying filters" not in result.stdout
+        assert "Error applying filters" not in result.stderr
+        assert isinstance(result.exception, RuntimeError)
+        assert str(result.exception) == "db exploded"
+
     def test_delete_groups_no_results_warning(self, db_with_groups, invoke_cli):
         result = invoke_cli(["executions", "delete-groups", "--filter", "source_id=NONEXISTENT", "--force"])
 
@@ -614,6 +635,49 @@ class TestDeleteGroups:
 
         # Verify success message includes output directories
         assert "and their output directories" in result.stdout
+
+    def test_delete_groups_skips_escaping_output_fragment(self, db_with_groups, tmp_path, invoke_cli, config):
+        """An output_fragment that escapes the results root via '..' must not be deleted."""
+        results_path = tmp_path / "results"
+        results_path.mkdir()
+
+        # Mock config.paths.results to use tmp_path
+        config.paths.results = results_path
+        config.save()
+
+        # A directory outside the results root that a malicious/corrupt fragment would target.
+        outside_dir = tmp_path / "outside"
+        outside_dir.mkdir()
+        (outside_dir / "sentinel.txt").write_text("do not delete")
+
+        # Point the execution's output_fragment outside the results root.
+        eg = db_with_groups.session.query(ExecutionGroup).first()
+        execution = eg.executions[0]
+        execution.output_fragment = "../outside"
+        db_with_groups.session.commit()
+
+        # Run command with --remove-outputs
+        with patch("climate_ref.cli.executions.typer.confirm", return_value=True):
+            result = invoke_cli(
+                [
+                    "executions",
+                    "delete-groups",
+                    "--diagnostic",
+                    "enso",
+                    "--remove-outputs",
+                    "--force",
+                ]
+            )
+
+        # Assert success (the unsafe fragment is skipped, not fatal)
+        assert result.exit_code == 0
+
+        # Verify the directory outside the results root was NOT removed
+        assert outside_dir.exists()
+        assert (outside_dir / "sentinel.txt").exists()
+
+        # Verify database records were still deleted (only enso diagnostics: eg1 and eg3)
+        assert db_with_groups.session.query(ExecutionGroup).count() == 4
 
     def test_delete_groups_without_remove_outputs_flag(self, db_with_groups, tmp_path, invoke_cli, config):
         """Test that output directories are NOT removed when --remove-outputs flag is omitted"""
@@ -854,6 +918,121 @@ class TestExecutionInspect:
     def test_inspect_missing(self, invoke_cli):
         result = invoke_cli(["executions", "inspect", "999"], expected_exit_code=1)
         assert "Execution not found: 999" in result.stderr
+
+    def test_inspect_outputs_panel(self, sample_data_dir, db_seeded, invoke_cli, config):
+        # Real on-disk results root so the directory-tree / log panels keep their existing behaviour.
+        results_path = config.paths.results
+        results_path.mkdir(parents=True, exist_ok=True)
+
+        execution_group = ExecutionGroup(
+            key="key1",
+            diagnostic_id=1,
+            created_at=datetime.datetime(2021, 1, 1),
+            updated_at=datetime.datetime(2021, 2, 1),
+        )
+        with db_seeded.session.begin():
+            db_seeded.session.add(execution_group)
+            db_seeded.session.flush()
+
+            execution = Execution(
+                execution_group_id=execution_group.id,
+                successful=True,
+                output_fragment="output",
+                dataset_hash="hash",
+            )
+            db_seeded.session.add(execution)
+            db_seeded.session.flush()
+
+            output_dir = results_path / execution.output_fragment
+            output_dir.mkdir(parents=True, exist_ok=True)
+            (output_dir / "plot.png").write_text("fake plot")
+
+            db_seeded.session.add(
+                ExecutionOutput(
+                    execution_id=execution.id,
+                    output_type=ResultOutputType.Plot,
+                    filename="plot.png",
+                    short_name="plot-short",
+                    long_name="Plot long name",
+                )
+            )
+            # A metadata-only row with no filename must not emit a bogus file link/path.
+            db_seeded.session.add(
+                ExecutionOutput(
+                    execution_id=execution.id,
+                    output_type=ResultOutputType.HTML,
+                    filename=None,
+                    short_name="html-short",
+                    long_name="HTML long name",
+                )
+            )
+
+        result = invoke_cli(["executions", "inspect", str(execution_group.id)])
+
+        assert "Outputs" in result.stdout
+        assert "plot-short" in result.stdout
+        assert "plot.png" in result.stdout
+        assert "html-short" in result.stdout
+
+        # Directory-tree / log panels still render (regression).
+        assert "File Tree" in result.stdout
+        assert "Execution Logs" in result.stdout
+        assert "plot.png (9 bytes)" in result.stdout
+
+    def test_inspect_no_results_skips_outputs_panel(self, sample_data_dir, db_seeded, invoke_cli):
+        metric_execution_group = ExecutionGroup(key="key1", diagnostic_id=1)
+        with db_seeded.session.begin():
+            db_seeded.session.add(metric_execution_group)
+
+        result = invoke_cli(["executions", "inspect", str(metric_execution_group.id)])
+
+        assert result.exit_code == 0
+        assert "not-started" in result.stdout
+        assert "Outputs" not in result.stdout
+
+    def test_outputs_panel_no_outputs(self, db_seeded, tmp_path):
+        reader = Reader(db_seeded, results=tmp_path)
+        panel = _outputs_panel((), "frag", reader)
+
+        console = Console()
+        with console.capture() as capture:
+            console.print(panel)
+
+        assert "No registered outputs." in capture.get()
+
+    def test_outputs_panel_links_filename_rows_only(self, db_seeded, tmp_path):
+        outputs = (
+            OutputView(
+                execution_id=1,
+                output_type="plot",
+                filename="plot.png",
+                short_name="plot-short",
+                long_name="Plot long name",
+                description=None,
+                dimensions={},
+            ),
+            OutputView(
+                execution_id=1,
+                output_type="html",
+                filename=None,
+                short_name="html-short",
+                long_name="HTML long name",
+                description=None,
+                dimensions={},
+            ),
+        )
+        reader = Reader(db_seeded, results=tmp_path)
+        panel = _outputs_panel(outputs, "frag", reader)
+
+        # `force_terminal=True` so rich emits the OSC 8 hyperlink escape sequence to inspect.
+        console = Console(force_terminal=True)
+        with console.capture() as capture:
+            console.print(panel)
+        rendered = capture.get()
+
+        assert f"file://{tmp_path / 'frag' / 'plot.png'}" in rendered
+        assert "html-short" in rendered
+        assert "file://" not in rendered.split("html-short")[1]
 
     def test_results_directory_panel(self, tmp_path):
         tmp_path = tmp_path / "inner"
@@ -1186,3 +1365,277 @@ class TestReingestCLI:
         assert result.exit_code == 0
         assert "1 succeeded" in result.stdout
         assert "0 skipped" in result.stdout
+
+
+class TestExecutionValues:
+    """The ``executions values`` command, backed by the shared ``climate_ref.results`` layer."""
+
+    _MODELS: ClassVar[dict[str, float]] = {
+        "ACCESS-CM2": 10.0,
+        "CESM3": 10.5,
+        "MIROC6": 9.5,
+        "MPI-ESM": 10.2,
+        "NorESM": 9.8,
+    }
+
+    def _setup(self, db):
+        """Seed one group / execution with six scalar tas values (one wild) and one series."""
+        with db.session.begin():
+            diagnostic = db.session.query(Diagnostic).first()
+            assert diagnostic is not None
+            group = ExecutionGroup(key="valkey", diagnostic_id=diagnostic.id, selectors={})
+            db.session.add(group)
+            db.session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag",
+                dataset_hash="valhash",
+                successful=True,
+            )
+            db.session.add(execution)
+            db.session.flush()
+
+            for source_id, value in self._MODELS.items():
+                db.session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=value,
+                        attributes=None,
+                        dimensions={"statistic": "mean", "metric": "tas", "source_id": source_id},
+                    )
+                )
+            db.session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution.id,
+                    value=1000.0,  # wild outlier
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "WILD"},
+                )
+            )
+
+            axis = SeriesIndex.get_or_create(db.session, "time", [0, 1, 2])
+            db.session.add(
+                SeriesMetricValue.build(
+                    execution_id=execution.id,
+                    values=[1.0, 2.0, 3.0],
+                    index_axis=axis,
+                    dimensions={"source_id": "ACCESS-CM2", "metric": "tas"},
+                    attributes=None,
+                )
+            )
+            db.session.flush()
+            group_id = group.id
+            execution_id = execution.id
+        return group_id, execution_id
+
+    def test_scalar_table(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id)])
+
+        assert result.exit_code == 0
+        # Dimension columns and the raw values are rendered; outliers shown by default.
+        assert "source_id" in result.stdout
+        assert "WILD" in result.stdout
+        assert "1000.0" in result.stdout
+
+    def test_scalar_json(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--format", "json"])
+
+        assert result.exit_code == 0
+        records = json.loads(result.stdout)
+        assert len(records) == len(self._MODELS) + 1  # models + wild
+        assert any(r["value"] == 1000.0 for r in records)
+
+    def test_scalar_outliers_hidden(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--outliers"])
+
+        assert result.exit_code == 0
+        assert "WILD" not in result.stdout
+        assert "flagged as outliers" in result.stderr
+
+    def test_scalar_outliers_shown(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--outliers", "--include-unverified"])
+
+        assert result.exit_code == 0
+        assert "WILD" in result.stdout
+
+    def test_scalar_all_outliers_hidden_reports_outlier_count(self, db_seeded, invoke_cli):
+        """When every value is flagged as an outlier the empty-page message must still surface
+        that outliers exist, instead of silently reporting "No scalar values found."."""
+        with db_seeded.session.begin():
+            diagnostic = db_seeded.session.query(Diagnostic).first()
+            assert diagnostic is not None
+            group = ExecutionGroup(key="allwild", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag-wild",
+                dataset_hash="wildhash",
+                successful=True,
+            )
+            db_seeded.session.add(execution)
+            db_seeded.session.flush()
+            # A non-finite value is always flagged as an outlier, regardless of group size.
+            db_seeded.session.add(
+                ScalarMetricValue.build(
+                    execution_id=execution.id,
+                    value=float("nan"),
+                    attributes=None,
+                    dimensions={"statistic": "mean", "metric": "tas", "source_id": "ONLY-MODEL"},
+                )
+            )
+            db_seeded.session.flush()
+            group_id = group.id
+
+        result = invoke_cli(["executions", "values", str(group_id), "--outliers"])
+
+        assert result.exit_code == 0
+        assert "No scalar values found" in result.stderr
+        assert "1" in result.stderr
+        assert "outlier" in result.stderr
+        assert "--include-unverified" in result.stderr
+
+    def test_values_default_limit_caps_output(self, db_seeded, invoke_cli):
+        """Test that limit defaults to 100 and caps output when more rows exist."""
+        with db_seeded.session.begin():
+            diagnostic = db_seeded.session.query(Diagnostic).first()
+            assert diagnostic is not None
+            group = ExecutionGroup(key="biggroup", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+            execution = Execution(
+                execution_group_id=group.id,
+                output_fragment="frag-big",
+                dataset_hash="bighash",
+                successful=True,
+            )
+            db_seeded.session.add(execution)
+            db_seeded.session.flush()
+            # Create 150 scalar values to exceed default limit of 100
+            for i in range(150):
+                db_seeded.session.add(
+                    ScalarMetricValue.build(
+                        execution_id=execution.id,
+                        value=float(i),
+                        attributes=None,
+                        dimensions={"statistic": "mean", "metric": "tas", "source_id": f"MODEL-{i}"},
+                    )
+                )
+            db_seeded.session.flush()
+            group_id = group.id
+
+        result = invoke_cli(["executions", "values", str(group_id)])
+
+        assert result.exit_code == 0
+        # Should display 100 values by default
+        assert "Displaying 100 of 150" in result.stderr
+        assert "--limit / --offset" in result.stderr
+
+    def test_series_with_outlier_flags_warns(self, db_seeded, invoke_cli):
+        """Test that --outliers and --include-unverified warn when used with --kind series."""
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--kind", "series", "--outliers"])
+
+        assert result.exit_code == 0
+        assert "--outliers only apply to scalar values and were ignored." in result.stderr
+
+    def test_series_with_include_unverified_warns(self, db_seeded, invoke_cli):
+        """Test that --include-unverified warns when used with --kind series."""
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(
+            ["executions", "values", str(group_id), "--kind", "series", "--include-unverified"]
+        )
+
+        assert result.exit_code == 0
+        assert "--include-unverified only apply to scalar values and were ignored." in result.stderr
+
+    def test_series_with_both_flags_warns(self, db_seeded, invoke_cli):
+        """Test that both flags warn together when used with --kind series."""
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(
+            [
+                "executions",
+                "values",
+                str(group_id),
+                "--kind",
+                "series",
+                "--outliers",
+                "--include-unverified",
+            ]
+        )
+
+        assert result.exit_code == 0
+        assert "--outliers/--include-unverified only apply to scalar values and were ignored." in (
+            result.stderr
+        )
+
+    def test_dimension_filter(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "-d", "source_id=WILD"])
+
+        assert result.exit_code == 0
+        assert "WILD" in result.stdout
+        assert "ACCESS-CM2" not in result.stdout
+
+    def test_unknown_dimension(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(
+            ["executions", "values", str(group_id), "-d", "not_a_dim=1"], expected_exit_code=1
+        )
+
+        assert "Unknown dimension" in result.stderr
+
+    def test_series(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--kind", "series"])
+
+        assert result.exit_code == 0
+        # The terminal shows a compact per-series summary rather than raw arrays.
+        assert "n_points" in result.stdout
+        assert "3" in result.stdout
+
+    def test_series_json(self, db_seeded, invoke_cli):
+        group_id, _ = self._setup(db_seeded)
+
+        result = invoke_cli(["executions", "values", str(group_id), "--kind", "series", "--format", "json"])
+
+        assert result.exit_code == 0
+        # JSON output is the long-form, exploded shape: one record per (series, index point).
+        records = json.loads(result.stdout)
+        assert len(records) == 3
+        assert all(r["source_id"] == "ACCESS-CM2" for r in records)
+        assert [r["value"] for r in records] == [1.0, 2.0, 3.0]
+
+    def test_specific_execution_wrong_group(self, db_seeded, invoke_cli):
+        _group_id, execution_id = self._setup(db_seeded)
+        with db_seeded.session.begin():
+            other = ExecutionGroup(key="othergroup", diagnostic_id=1)
+            db_seeded.session.add(other)
+            db_seeded.session.flush()
+            other_id = other.id
+
+        result = invoke_cli(
+            ["executions", "values", str(other_id), "--execution-id", str(execution_id)],
+            expected_exit_code=1,
+        )
+
+        assert "does not belong" in result.stderr
+
+    def test_missing_group(self, db_seeded, invoke_cli):
+        result = invoke_cli(["executions", "values", "99999"], expected_exit_code=1)
+
+        assert "Execution group not found" in result.stderr

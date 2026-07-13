@@ -15,7 +15,8 @@ from rich.table import Table
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
 from climate_ref.cli.test_cases._common import _validate_provider_in_registry, _validate_requested_filters
-from climate_ref_core.exceptions import DatasetResolutionError
+from climate_ref_core.exceptions import DatasetResolutionError, InvalidDiagnosticException
+from climate_ref_core.testing import TestCasePaths, is_test_case_excluded
 
 if TYPE_CHECKING:
     from climate_ref_core.diagnostics import Diagnostic
@@ -63,7 +64,6 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
         ref test-cases fetch --only-missing    # Skip test cases with existing catalogs
     """
     from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.testing import TestCasePaths
 
     config = ctx.obj.config
     db = ctx.obj.database
@@ -86,6 +86,12 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
             if diagnostic and diag.slug != diagnostic:
                 continue
             if diag.test_data_spec is None:
+                continue
+            if is_test_case_excluded(provider_instance.slug, diag.slug):
+                logger.info(
+                    f"Skipping excluded test-case diagnostic {provider_instance.slug}/{diag.slug} "
+                    "(REF_TEST_CASES_SKIP)"
+                )
                 continue
             diagnostics_to_process.append(diag)
 
@@ -117,7 +123,10 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                             logger.info(f"    Request: {req.slug} ({req.source_type})")
         return
 
-    # Process each diagnostic test case
+    # Process each diagnostic test case.
+    # A failure for one test case must not abort the loop,
+    # because later diagnostics would be left without catalogs and paths sidecars.
+    failed_cases: list[str] = []
     for diag in diagnostics_to_process:  # pragma: no cover
         logger.info(f"Fetching data for: {diag.provider.slug}/{diag.slug}")
         if diag.test_data_spec:
@@ -140,8 +149,14 @@ def fetch_test_data(  # noqa: PLR0912, PLR0913, PLR0915
                         _, catalog_written = _fetch_and_build_catalog(diag, tc, force=force)
                         if not catalog_written:
                             logger.info(f"  Catalog unchanged for {tc.name}")
-                    except (DatasetResolutionError, ValueError) as e:
+                    except (DatasetResolutionError, InvalidDiagnosticException, ValueError) as e:
+                        failed_cases.append(f"{diag.provider.slug}/{diag.slug}/{tc.name}")
                         logger.warning(f"  Could not build catalog for {tc.name}: {e}")
+
+    if failed_cases:  # pragma: no cover
+        logger.warning(
+            f"Could not build catalogs for {len(failed_cases)} test case(s): {', '.join(failed_cases)}"
+        )
 
 
 @app.command(name="list")

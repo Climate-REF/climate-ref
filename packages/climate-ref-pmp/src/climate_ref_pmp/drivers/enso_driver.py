@@ -140,11 +140,11 @@ def write_CMEC_json(json_file):
     ref_datasets_dict = {ref: {} for ref in ref_datasets}
 
     dimensions_dict = {
-        "json_structure": ["model", "realization", "metric", "reference_datasets"],
+        "json_structure": ["model", "realization", "metric", "reference_source_id"],
         "model": {mod: {}},
         "realization": {run: {}},
         "metric": metrics_dict,
-        "reference_datasets": ref_datasets_dict,
+        "reference_source_id": ref_datasets_dict,
     }
 
     results_dict = {}
@@ -374,7 +374,6 @@ def update_dict_datasets(dict_datasets: dict, output_dir: str = ".") -> dict:
                 # Mapping of old observation names to new ones recognized by the ENSO package
                 observation_name_mapping = {
                     "GPCP-2-3": "GPCPv2.3",
-                    "ERA-INT": "ERA-Interim",
                     "ERA-5": "ERA5",
                     "AVISO-1-0": "AVISO",
                     "TropFlux-1-0": "Tropflux",

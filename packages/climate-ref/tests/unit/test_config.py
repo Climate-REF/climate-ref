@@ -12,14 +12,16 @@ from cattrs import IterableValidationError
 
 import climate_ref.config
 from climate_ref.config import (
+    DEFAULT_IGNORE_DATASETS_URL,
     DEFAULT_LOG_FORMAT,
     Config,
     PathConfig,
     _get_default_ignore_datasets_file,
+    refresh_ignore_datasets_file,
     transform_error,
 )
 from climate_ref_core.dataset_registry import resolve_cache_dir
-from climate_ref_core.exceptions import InvalidExecutorException
+from climate_ref_core.exceptions import IgnoreDatasetsRefreshError, InvalidExecutorException
 from climate_ref_core.executor import Executor
 
 
@@ -52,22 +54,21 @@ class TestConfig:
         loaded = Config.default()
         assert loaded.paths.scratch == Path("data").resolve()
 
-    def test_default_missing_file_unwritable_cache(self, tmp_path, monkeypatch, mocker):
-        # Regression: Config.default() must not fail when no config file exists and the
-        # ignore-datasets cache directory cannot be written. Previously the OSError raised by the
-        # ignore_datasets_file factory surfaced as a misleading "Error loading configuration".
+    def test_default_no_network(self, tmp_path, monkeypatch, mocker):
+        # Config.default() must not perform any network I/O or filesystem writes when
+        # resolving the ignore datasets file; the fetch is deferred to solve time.
         monkeypatch.setenv("REF_CONFIGURATION", str(tmp_path / "climate_ref"))
         assert not (tmp_path / "climate_ref" / "ref.toml").exists()
 
-        blocker = tmp_path / "blocker"
-        blocker.write_text("not a directory", encoding="utf-8")
-        mocker.patch.object(
-            climate_ref.config.platformdirs, "user_cache_path", return_value=blocker / "climate_ref"
-        )
+        cache_dir = tmp_path / "cache" / "climate_ref"
+        mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=cache_dir)
+        get_mock = mocker.patch.object(climate_ref.config.requests, "get")
 
         loaded = Config.default()
 
-        assert loaded.ignore_datasets_file == blocker / "climate_ref" / "default_ignore_datasets.yaml"
+        get_mock.assert_not_called()
+        assert not cache_dir.exists()
+        assert loaded.ignore_datasets_file == cache_dir / "default_ignore_datasets.yaml"
         assert loaded.paths.scratch == tmp_path / "climate_ref" / "scratch"
 
     def test_load(self, config, tmp_path):
@@ -171,6 +172,7 @@ filename = "sqlite://climate_ref.db"
             "ignore_datasets_file": str(
                 platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
             ),
+            "ignore_datasets_url": DEFAULT_IGNORE_DATASETS_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -183,6 +185,7 @@ filename = "sqlite://climate_ref.db"
             "ignore_datasets_file": str(
                 platformdirs.user_cache_path("climate_ref") / "default_ignore_datasets.yaml"
             ),
+            "ignore_datasets_url": DEFAULT_IGNORE_DATASETS_URL,
             "log_level": "INFO",
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
@@ -230,6 +233,25 @@ filename = "sqlite://climate_ref.db"
         assert config_new.paths.log == Path("/my/test/logs")
         assert config_new.paths.results == Path("/my/test/executions")
         assert config_new.cmip6_parser == "drs"
+
+    def test_ignore_datasets_env_variables(self, monkeypatch, config):
+        monkeypatch.setenv("REF_IGNORE_DATASETS_FILE", "/my/test/ignore_datasets.yaml")
+        monkeypatch.setenv("REF_IGNORE_DATASETS_URL", "")
+
+        config_new = config.refresh()
+
+        # Env overrides for ignore_datasets_file must be coerced to Path so callers
+        # can rely on `.is_file()` / `.read_text()` rather than getting a bare str.
+        assert config_new.ignore_datasets_file == Path("/my/test/ignore_datasets.yaml")
+        assert isinstance(config_new.ignore_datasets_file, Path)
+        assert config_new.ignore_datasets_url == ""
+
+    def test_ignore_datasets_url_env_override(self, monkeypatch, config):
+        monkeypatch.setenv("REF_IGNORE_DATASETS_URL", "https://example.invalid/fork.yaml")
+
+        config_new = config.refresh()
+
+        assert config_new.ignore_datasets_url == "https://example.invalid/fork.yaml"
 
     def test_custom_env_variable(self, monkeypatch, tmp_path, config):
         monkeypatch.setenv("ABC", "/my")
@@ -290,69 +312,102 @@ def test_transform_error():
     assert transform_error(err, "test") == ["invalid value @ test", "required field missing @ test"]
 
 
-@pytest.mark.parametrize("status", ["fresh", "stale", "missing"])
-def test_get_default_ignore_datasets_file(mocker, tmp_path, status):
+def test_get_default_ignore_datasets_file(mocker, tmp_path):
+    """The factory is a pure path computation with no filesystem or network access."""
     mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+    get_mock = mocker.patch.object(climate_ref.config.requests, "get")
+
+    path = _get_default_ignore_datasets_file()
+
+    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert not path.exists()
+    get_mock.assert_not_called()
+
+
+def _refresh_config(tmp_path, url=DEFAULT_IGNORE_DATASETS_URL, filename="default_ignore_datasets.yaml"):
+    config = Config()
+    config.ignore_datasets_file = tmp_path / filename
+    config.ignore_datasets_url = url
+    return config
+
+
+@pytest.mark.parametrize("status", ["fresh", "stale", "missing"])
+def test_refresh_ignore_datasets_file(mocker, tmp_path, status):
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
         return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
     )
-    expected_path = tmp_path / "default_ignore_datasets.yaml"
+    config = _refresh_config(tmp_path / "nested")
+    target = config.ignore_datasets_file
     if status != "missing":
-        expected_path.write_text("existing", encoding="utf-8")
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text("existing", encoding="utf-8")
     if status == "stale":
         mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
 
-    path = climate_ref.config._get_default_ignore_datasets_file()
+    refresh_ignore_datasets_file(config)
 
-    assert path == tmp_path / "default_ignore_datasets.yaml"
+    assert target.parent.exists()
     if status == "fresh":
-        assert path.read_text(encoding="utf-8") == "existing"
+        assert target.read_text(encoding="utf-8") == "existing"
     else:
-        assert path.read_text(encoding="utf-8") == "downloaded"
+        assert target.read_text(encoding="utf-8") == "downloaded"
 
 
-def test_get_default_ignore_datasets_file_fail(mocker, tmp_path):
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
+def test_refresh_ignore_datasets_file_disabled_by_empty_url(mocker, tmp_path):
+    """An empty URL disables fetching entirely, even when the file is missing."""
+    get_mock = mocker.patch.object(climate_ref.config.requests, "get")
+    config = _refresh_config(tmp_path, url="")
+
+    refresh_ignore_datasets_file(config)
+
+    get_mock.assert_not_called()
+    assert not config.ignore_datasets_file.exists()
+
+
+def test_refresh_ignore_datasets_file_fail_no_cache(mocker, tmp_path):
+    """A download failure with no cached copy must raise rather than create an empty placeholder."""
     result = mocker.MagicMock(status_code=404, content=b"{}")
     result.raise_for_status.side_effect = requests.RequestException
     mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
+    config = _refresh_config(tmp_path)
 
-    path = _get_default_ignore_datasets_file()
-    assert path == tmp_path / "default_ignore_datasets.yaml"
-    assert path.parent.exists()
-    assert path.read_text(encoding="utf-8") == ""
+    with pytest.raises(IgnoreDatasetsRefreshError, match="no cached copy"):
+        refresh_ignore_datasets_file(config)
 
-
-def test_get_default_ignore_datasets_file_unwritable_cache(mocker, tmp_path, caplog):
-    """A non-writable cache directory must degrade gracefully rather than raise."""
-    # A regular file standing where the cache directory should be makes mkdir() raise an OSError,
-    # mimicking a read-only or otherwise restricted environment (e.g. an HPC login node).
-    blocker = tmp_path / "blocker"
-    blocker.write_text("not a directory", encoding="utf-8")
-    unwritable_cache = blocker / "climate_ref"
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=unwritable_cache)
-
-    with caplog.at_level(logging.WARNING):
-        path = _get_default_ignore_datasets_file()
-
-    assert path == unwritable_cache / "default_ignore_datasets.yaml"
-    assert not path.exists()
-    assert any("Unable to prepare default ignore datasets file" in r.message for r in caplog.records)
+    assert not config.ignore_datasets_file.exists()
 
 
-def test_get_default_ignore_datasets_file_network_error(mocker, tmp_path):
-    """Test that network errors during requests.get() are handled gracefully."""
-    mocker.patch.object(climate_ref.config.platformdirs, "user_cache_path", return_value=tmp_path)
-    # Simulate network error (e.g., no network access in offline/HPC environment)
+def test_refresh_ignore_datasets_file_network_error_no_cache(mocker, tmp_path):
+    """Network errors with no cached copy must raise (fail-safe)."""
     mocker.patch.object(
         climate_ref.config.requests,
         "get",
         side_effect=requests.exceptions.ConnectionError("Network unreachable"),
     )
+    config = _refresh_config(tmp_path)
 
-    path = _get_default_ignore_datasets_file()
-    assert path == tmp_path / "default_ignore_datasets.yaml"
-    assert path.parent.exists()
-    assert path.read_text(encoding="utf-8") == ""
+    with pytest.raises(IgnoreDatasetsRefreshError):
+        refresh_ignore_datasets_file(config)
+
+    assert not config.ignore_datasets_file.exists()
+
+
+def test_refresh_ignore_datasets_file_fail_uses_stale_cache(mocker, tmp_path, caplog):
+    """A download failure must preserve and reuse an existing cached copy without touching it."""
+    result = mocker.MagicMock(status_code=500, content=b"{}")
+    result.raise_for_status.side_effect = requests.RequestException
+    mocker.patch.object(climate_ref.config.requests, "get", return_value=result)
+    config = _refresh_config(tmp_path)
+    target = config.ignore_datasets_file
+    target.write_text("cached", encoding="utf-8")
+    original_mtime = target.stat().st_mtime
+    mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
+
+    with caplog.at_level(logging.WARNING):
+        refresh_ignore_datasets_file(config)
+
+    assert target.read_text(encoding="utf-8") == "cached"
+    assert target.stat().st_mtime == original_mtime
+    assert any("using cached copy" in r.message for r in caplog.records)

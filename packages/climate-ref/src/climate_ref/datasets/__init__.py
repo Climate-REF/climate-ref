@@ -13,7 +13,8 @@ from climate_ref.database import Database, ModelState
 from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
-from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
+from climate_ref.datasets.esmvaltool_reference import ESMValToolReferenceDatasetAdapter
+from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDatasetAdapter
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
 from climate_ref_core.datasets import SourceDatasetType
 
@@ -23,6 +24,8 @@ SLUG_COLUMN_BY_SOURCE_TYPE: dict[SourceDatasetType, str] = {
     SourceDatasetType.CMIP6: "instance_id",
     SourceDatasetType.CMIP7: "instance_id",
     SourceDatasetType.obs4MIPs: "instance_id",
+    SourceDatasetType.obs4REF: "instance_id",
+    SourceDatasetType.ESMValToolReference: "instance_id",
     SourceDatasetType.PMPClimatology: "instance_id",
 }
 
@@ -245,6 +248,10 @@ def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
         return CMIP7DatasetAdapter(**kwargs)
     elif source_type.lower() == SourceDatasetType.obs4MIPs.value.lower():
         return Obs4MIPsDatasetAdapter(**kwargs)
+    elif source_type.lower() == SourceDatasetType.obs4REF.value.lower():
+        return Obs4REFDatasetAdapter(**kwargs)
+    elif source_type.lower() == SourceDatasetType.ESMValToolReference.value.lower():
+        return ESMValToolReferenceDatasetAdapter(**kwargs)
     elif source_type.lower() == SourceDatasetType.PMPClimatology.value.lower():
         return PMPClimatologyDatasetAdapter(**kwargs)
     else:
@@ -256,8 +263,10 @@ __all__ = [
     "CMIP6DatasetAdapter",
     "CMIP7DatasetAdapter",
     "DatasetAdapter",
+    "ESMValToolReferenceDatasetAdapter",
     "IngestionStats",
     "Obs4MIPsDatasetAdapter",
+    "Obs4REFDatasetAdapter",
     "PMPClimatologyDatasetAdapter",
     "get_dataset_adapter",
     "get_slug_column",

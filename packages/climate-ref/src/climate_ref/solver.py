@@ -22,6 +22,7 @@ from climate_ref.datasets import (
     CMIP6DatasetAdapter,
     CMIP7DatasetAdapter,
     Obs4MIPsDatasetAdapter,
+    Obs4REFDatasetAdapter,
     PMPClimatologyDatasetAdapter,
     get_slug_column,
 )
@@ -492,6 +493,7 @@ class ExecutionSolver:
                 SourceDatasetType.PMPClimatology: DataCatalog(
                     database=db, adapter=PMPClimatologyDatasetAdapter()
                 ),
+                SourceDatasetType.obs4REF: DataCatalog(database=db, adapter=Obs4REFDatasetAdapter()),
             },
         )
 

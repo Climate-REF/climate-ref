@@ -108,7 +108,8 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
     Load parquet catalog files from a directory.
 
     Looks for ``cmip6_catalog.parquet``, ``cmip7_catalog.parquet``,
-    ``obs4mips_catalog.parquet``, and ``pmp_climatology_catalog.parquet``.
+    ``obs4mips_catalog.parquet``, ``pmp_climatology_catalog.parquet``,
+    and ``obs4ref_catalog.parquet``.
 
     Parameters
     ----------
@@ -128,6 +129,7 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
         SourceDatasetType.CMIP7: "cmip7_catalog.parquet",
         SourceDatasetType.obs4MIPs: "obs4mips_catalog.parquet",
         SourceDatasetType.PMPClimatology: "pmp_climatology_catalog.parquet",
+        SourceDatasetType.obs4REF: "obs4ref_catalog.parquet",
     }
 
     result: dict[SourceDatasetType, pd.DataFrame] = {}

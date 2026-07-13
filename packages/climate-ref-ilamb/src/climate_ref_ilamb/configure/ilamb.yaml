@@ -16,7 +16,7 @@ gpp-WECANN:
   variable_cmap: Greens
 
 gpp-FLUXNET2015:
-  version: 3
+  version: 4
   sources:
     # Referenced by exact registry key rather than ingested facets
     # this file's source_id is spelled three different ways (https://github.com/Climate-REF/climate-ref/issues/784)
@@ -57,7 +57,9 @@ cSoil-HWSD2:
   variable_cmap: viridis
 
 lai-AVH15C1:
-  version: 3
+  # This case needs a lot of memory.
+  # ILAMB scores the coarsened 0.5 degree reference over its full monthly record, which peaks around 30 GB per execution.
+  version: 4
   sources:
     lai:
       obs_source: obs4mips

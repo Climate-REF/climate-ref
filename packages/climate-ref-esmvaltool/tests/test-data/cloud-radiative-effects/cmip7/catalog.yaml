@@ -1,212 +1,197 @@
 _metadata:
-  hash: ee38a53200d5918181c4d08ecd0e705d07eee395
-cmip6:
+  hash: 0785449fa584248e1d89ab12e46ea24b4030e0ec
+cmip7:
   slug_column: instance_id
   selector:
     grid_label: gn
-    member_id: r1i1p1f1
     source_id: CanESM5
+    variant_label: r1i1p1f1
   datasets:
   - activity_id: CMIP
-    branch_method: Spin-up documentation
     branch_time_in_child: 0.0
     branch_time_in_parent: 1223115.0
-    calendar: 365_day
-    end_time: '2014-12-16 12:00:00'
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
-    filename: rlut_Amon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
-    finalised: true
-    frequency: mon
-    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
-      49 levels; top level 1 hPa
-    grid_label: gn
-    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.rlut.gn.v20190429
-    institution_id: CCCma
-    long_name: TOA Outgoing Longwave Radiation
-    member_id: r1i1p1f1
-    nominal_resolution: 500 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: atmos
-    source_id: CanESM5
-    source_type: AOGCM
-    standard_name: toa_outgoing_longwave_flux
-    start_time: '1850-01-16 12:00:00'
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Amon
-    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
-    time_units: days since 1850-01-01 0:0:0.0
-    units: W m-2
-    variable_id: rlut
-    variant_label: r1i1p1f1
-    version: v20190429
-    vertical_levels: 1
-  - activity_id: CMIP
-    branch_method: Spin-up documentation
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
-    calendar: 365_day
-    end_time: '2014-12-16 12:00:00'
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
-    filename: rlutcs_Amon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
-    finalised: true
-    frequency: mon
-    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
-      49 levels; top level 1 hPa
-    grid_label: gn
-    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.rlutcs.gn.v20190429
-    institution_id: CCCma
-    long_name: TOA Outgoing Clear-Sky Longwave Radiation
-    member_id: r1i1p1f1
-    nominal_resolution: 500 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: atmos
-    source_id: CanESM5
-    source_type: AOGCM
-    standard_name: toa_outgoing_longwave_flux_assuming_clear_sky
-    start_time: '1850-01-16 12:00:00'
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Amon
-    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
-    time_units: days since 1850-01-01 0:0:0.0
-    units: W m-2
-    variable_id: rlutcs
-    variant_label: r1i1p1f1
-    version: v20190429
-    vertical_levels: 1
-  - activity_id: CMIP
-    branch_method: Spin-up documentation
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
-    calendar: 365_day
-    end_time: '2014-12-16 12:00:00'
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
-    filename: rsut_Amon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
-    finalised: true
-    frequency: mon
-    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
-      49 levels; top level 1 hPa
-    grid_label: gn
-    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.rsut.gn.v20190429
-    institution_id: CCCma
-    long_name: TOA Outgoing Shortwave Radiation
-    member_id: r1i1p1f1
-    nominal_resolution: 500 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: atmos
-    source_id: CanESM5
-    source_type: AOGCM
-    standard_name: toa_outgoing_shortwave_flux
-    start_time: '1850-01-16 12:00:00'
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Amon
-    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
-    time_units: days since 1850-01-01 0:0:0.0
-    units: W m-2
-    variable_id: rsut
-    variant_label: r1i1p1f1
-    version: v20190429
-    vertical_levels: 1
-  - activity_id: CMIP
-    branch_method: Spin-up documentation
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
-    calendar: 365_day
-    end_time: '2014-12-16 12:00:00'
-    experiment: all-forcing simulation of the recent past
-    experiment_id: historical
-    filename: rsutcs_Amon_CanESM5_historical_r1i1p1f1_gn_185001-201412.nc
-    finalised: true
-    frequency: mon
-    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
-      49 levels; top level 1 hPa
-    grid_label: gn
-    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.Amon.rsutcs.gn.v20190429
-    institution_id: CCCma
-    long_name: TOA Outgoing Clear-Sky Shortwave Radiation
-    member_id: r1i1p1f1
-    nominal_resolution: 500 km
-    parent_activity_id: CMIP
-    parent_experiment_id: piControl
-    parent_source_id: CanESM5
-    parent_time_units: days since 1850-01-01 0:0:0.0
-    parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: atmos
-    source_id: CanESM5
-    source_type: AOGCM
-    standard_name: toa_outgoing_shortwave_flux_assuming_clear_sky
-    start_time: '1850-01-16 12:00:00'
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: Amon
-    time_range: 1850-01-16 12:00:00-2014-12-16 12:00:00
-    time_units: days since 1850-01-01 0:0:0.0
-    units: W m-2
-    variable_id: rsutcs
-    variant_label: r1i1p1f1
-    version: v20190429
-    vertical_levels: 1
-  - activity_id: CMIP
-    branch_method: Spin-up documentation
-    branch_time_in_child: 0.0
-    branch_time_in_parent: 1223115.0
+    branded_variable: areacella_ti-u-hxy-u
+    branding_suffix: ti-u-hxy-u
     calendar: null
     end_time: null
-    experiment: all-forcing simulation of the recent past
     experiment_id: historical
-    filename: areacella_fx_CanESM5_historical_r1i1p1f1_gn.nc
+    external_variables: null
+    filename: areacella_ti-u-hxy-u_fx_glb_gn_CanESM5_historical_r1i1p1f1.nc
     finalised: true
     frequency: fx
-    grid: T63L49 native atmosphere, T63 Linear Gaussian Grid; 128 x 64 longitude/latitude;
-      49 levels; top level 1 hPa
     grid_label: gn
-    instance_id: CMIP6.CMIP.CCCma.CanESM5.historical.r1i1p1f1.fx.areacella.gn.v20190429
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.fx.areacella.ti-u-hxy-u.gn.v0
     institution_id: CCCma
+    license_id: CC-BY-4.0
     long_name: Grid-Cell Area for Atmospheric Grid Variables
-    member_id: r1i1p1f1
+    mip_era: CMIP7
     nominal_resolution: 500 km
     parent_activity_id: CMIP
     parent_experiment_id: piControl
+    parent_mip_era: CMIP6
     parent_source_id: CanESM5
     parent_time_units: days since 1850-01-01 0:0:0.0
     parent_variant_label: r1i1p1f1
-    product: model-output
-    realm: atmos
+    realm: atmos land
+    region: glb
     source_id: CanESM5
-    source_type: AOGCM
     standard_name: cell_area
     start_time: null
-    sub_experiment: none
-    sub_experiment_id: none
-    table_id: fx
     time_range: null
     time_units: null
+    tracking_id: hdl:21.14107/28755f83-74b9-4422-bead-9225ddb7a57e
     units: m2
     variable_id: areacella
     variant_label: r1i1p1f1
-    version: v20190429
-    vertical_levels: 1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: rlut_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2021-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: rlut_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185701-202112.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rlut.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: TOA Outgoing Longwave Radiation
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: toa_outgoing_longwave_flux
+    start_time: '1857-01-16 12:00:00'
+    time_range: 1857-01-16 12:00:00-2021-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/4e548a95-a5ea-4e5f-8774-123c884c6437
+    units: W m-2
+    variable_id: rlut
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: rlutcs_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2021-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: rlutcs_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185701-202112.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rlutcs.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: TOA Outgoing Clear-Sky Longwave Radiation
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: toa_outgoing_longwave_flux_assuming_clear_sky
+    start_time: '1857-01-16 12:00:00'
+    time_range: 1857-01-16 12:00:00-2021-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/33d7f3bb-f08d-479a-b3ea-4493dcc1183d
+    units: W m-2
+    variable_id: rlutcs
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: rsut_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2021-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: rsut_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185701-202112.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rsut.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: TOA Outgoing Shortwave Radiation
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: toa_outgoing_shortwave_flux
+    start_time: '1857-01-16 12:00:00'
+    time_range: 1857-01-16 12:00:00-2021-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/a56b4e19-ac38-451f-a374-ef00e6e52500
+    units: W m-2
+    variable_id: rsut
+    variant_label: r1i1p1f1
+    version: v0
+  - activity_id: CMIP
+    branch_time_in_child: 0.0
+    branch_time_in_parent: 1223115.0
+    branded_variable: rsutcs_tavg-u-hxy-u
+    branding_suffix: tavg-u-hxy-u
+    calendar: 365_day
+    end_time: '2021-12-16 12:00:00'
+    experiment_id: historical
+    external_variables: areacella
+    filename: rsutcs_tavg-u-hxy-u_mon_glb_gn_CanESM5_historical_r1i1p1f1_185701-202112.nc
+    finalised: true
+    frequency: mon
+    grid_label: gn
+    instance_id: CMIP7.CMIP.CCCma.CanESM5.historical.r1i1p1f1.glb.mon.rsutcs.tavg-u-hxy-u.gn.v0
+    institution_id: CCCma
+    license_id: CC-BY-4.0
+    long_name: TOA Outgoing Clear-Sky Shortwave Radiation
+    mip_era: CMIP7
+    nominal_resolution: 500 km
+    parent_activity_id: CMIP
+    parent_experiment_id: piControl
+    parent_mip_era: CMIP6
+    parent_source_id: CanESM5
+    parent_time_units: days since 1850-01-01 0:0:0.0
+    parent_variant_label: r1i1p1f1
+    realm: atmos
+    region: glb
+    source_id: CanESM5
+    standard_name: toa_outgoing_shortwave_flux_assuming_clear_sky
+    start_time: '1857-01-16 12:00:00'
+    time_range: 1857-01-16 12:00:00-2021-12-16 12:00:00
+    time_units: days since 1850-01-01
+    tracking_id: hdl:21.14107/25bd661b-2adf-40f2-88ef-5d6893f5da7b
+    units: W m-2
+    variable_id: rsutcs
+    variant_label: r1i1p1f1
+    version: v0
 obs4mips:
   slug_column: instance_id
   selector:

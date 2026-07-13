@@ -3,9 +3,9 @@
   "committed": {
     "diagnostic.json": "44c0de2ba1a41f05298ed3aeac8d52d895da8056f292f9f07cf2e80e7ebaf363",
     "output.json": "20a28ce451d250fce7e27df05118f2ae2aebf2284252e59e07fc4dc59b4b7f69",
-    "series.json": "bff8ba1f76563a179dec1f4065c81b66cb394ade736780d6d45f4eac606ef654"
+    "series.json": "3dd543990fcbeb15d9fcbd78102df3aa758812e206b774e1d591f326a9d4f64a"
   },
-  "diagnostic_version": 3,
+  "diagnostic_version": 4,
   "native": {
     "CanESM5.csv": {
       "sha256": "7c9c53ab8b43ef37864d05161d968510c7089f13cac8dca7383bf80597eace95",
@@ -72,8 +72,8 @@
       "size": 101108
     },
     "Reference.nc": {
-      "sha256": "8348afb5da6fb5a4e11de9d5939ed33fd5d0714b3ac76f5fc20a6bec33927545",
-      "size": 42254
+      "sha256": "fe5f757418a8b88c8cc76d0844673094ee5f2b17a2baaf91793d71a71bcf2bdd",
+      "size": 44884
     },
     "Reference_global_mean.png": {
       "sha256": "bc49127734e68b89016015186f5bf70df1ac037c5f00c5d79b2a3c50081a331e",
@@ -96,10 +96,10 @@
       "size": 8457
     },
     "series.json": {
-      "sha256": "c153e93511ca4e3f1813a4ec0c6202a3825d799e02478cbec06b7d7120cb3c78",
-      "size": 62572
+      "sha256": "0488eff61a31a69249bc8ea0d00a3084efeb316db47a175fbadf16448528c739",
+      "size": 62816
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

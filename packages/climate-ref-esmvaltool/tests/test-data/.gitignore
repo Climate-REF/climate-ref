@@ -1,0 +1,16 @@
+# Ignore fetched data, execution output slots and host-specific paths by default.
+# Explicitly keep this file and the committed regression baselines tracked,
+# so baselines no longer need `git add -f`.
+*
+!.gitignore
+!*/
+!catalog.yaml
+!manifest.json
+!diagnostic.json
+!output.json
+!series.json
+
+# Execution slots and resolved paths stay ignored, even though they hold files
+# with the same names as the baselines.
+output/
+catalog.paths.yaml

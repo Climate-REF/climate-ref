@@ -120,6 +120,7 @@ diagnostics:
       timerange: 1996/2021
       alias: GTO-ECV
       frequency: mon
+      mip: AERmon
     scripts:
       plot:
         script: monitor/multi_datasets.py

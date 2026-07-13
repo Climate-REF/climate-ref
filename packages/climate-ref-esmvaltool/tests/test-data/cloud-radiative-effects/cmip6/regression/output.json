@@ -25,7 +25,7 @@
         "variable_id": "lwcre"
       },
       "filename": "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_Amon_top_right.nc",
-      "long_name": "Map plot of TOA Longwave Cloud Radiative Effect of dataset OBS."
+      "long_name": "Map plot of TOA Longwave Cloud Radiative Effect of dataset obs4MIPs."
     },
     "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_Amon_bottom.nc": {
       "description": "",
@@ -52,7 +52,7 @@
         "variable_id": "swcre"
       },
       "filename": "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_Amon_top_right.nc",
-      "long_name": "Map plot of TOA Shortwave Cloud Radiative Effect of dataset OBS."
+      "long_name": "Map plot of TOA Shortwave Cloud Radiative Effect of dataset obs4MIPs."
     },
     "executions/recipe/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_Amon.nc": {
       "description": "",

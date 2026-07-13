@@ -1,4 +1,4 @@
-"""A module for defining and fetching ILAMB/IOMB datasets"""
+"""A module for defining and fetching ILAMB datasets"""
 
 from pathlib import Path
 
@@ -10,7 +10,7 @@ from climate_ref_core.datasets import DatasetCollection
 
 def registry_to_collection(registry: pooch.Pooch) -> DatasetCollection:
     """
-    Convert a ILAMB/IOMB registry to a DatasetCollection for use in REF.
+    Convert an ILAMB registry to a DatasetCollection for use in REF.
 
     Parameters
     ----------

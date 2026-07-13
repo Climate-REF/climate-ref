@@ -1,5 +1,6 @@
 """Tests for the ESMValTool reference dataset adapter and its custom-format parser."""
 
+import importlib.resources
 from pathlib import Path
 
 import pytest
@@ -161,3 +162,18 @@ def test_ingest_is_idempotent(reference_tree, db):
     assert stats.datasets_created == 0
     assert stats.datasets_unchanged == 4
     assert stats.files_added == 0
+
+
+def test_bundled_data_registry_fully_parses():
+    """Every path in the ESMValTool ``data.txt`` registry parses with no ``INVALID_ASSET`` drops.
+
+    The registry is annotated as ``esmvaltool-reference``, so its whole contents are meant to
+    ingest. This guards against a new MIP table silently dropping files at ingest, the way the
+    CMIP5-era ``OImon`` (OSI-450 sea ice) did before it was added to the frequency map.
+    """
+    data_txt = importlib.resources.files("climate_ref_esmvaltool.dataset_registry") / "data.txt"
+    paths = [line.split()[0] for line in data_txt.read_text().splitlines() if line.strip()]
+    assert paths, "data.txt registry is empty"
+
+    invalid = [p for p in paths if "INVALID_ASSET" in parse_esmvaltool_reference(p)]
+    assert not invalid, f"{len(invalid)} of {len(paths)} registry entries failed to parse: {invalid[:5]}"

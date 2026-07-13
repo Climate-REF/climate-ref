@@ -13,12 +13,14 @@ from loguru import logger
 
 from climate_ref_core.dataset_registry import (
     DATASET_URL,
+    RegistryUseCase,
     dataset_registry_manager,
     fetch_all_files,
     resolve_cache_dir,
     validate_registry_cache,
 )
 from climate_ref_core.providers import CondaDiagnosticProvider
+from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_pmp.diagnostics import ENSO, AnnualCycle, ExtratropicalModesOfVariability
 
 if TYPE_CHECKING:
@@ -143,4 +145,6 @@ dataset_registry_manager.register(
     base_url=DATASET_URL,
     package="climate_ref_pmp.dataset_registry",
     resource="pmp_climatology.txt",
+    source_type=SourceDatasetType.PMPClimatology,
+    use_case=RegistryUseCase.reference,
 )

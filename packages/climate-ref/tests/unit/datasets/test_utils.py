@@ -36,6 +36,9 @@ class TestFrequencyFromMipTable:
             ("Oday", "day"),
             ("SIday", "day"),
             ("CFday", "day"),
+            # CMIP5-era sea-ice tables (used by ESMValTool OBS data, e.g. OSI-450 sic).
+            ("OImon", "mon"),
+            ("OIday", "day"),
             # Sub-daily, including the point-sampled variants.
             ("3hr", "3hr"),
             ("E3hrPt", "3hrPt"),

@@ -84,6 +84,11 @@ class TestMetricSolver:
         assert isinstance(solver.data_catalog[SourceDatasetType.CMIP6], DataCatalog)
         assert len(solver.data_catalog[SourceDatasetType.CMIP6].to_frame())
 
+    def test_solver_build_from_db_includes_obs4ref(self, solver):
+        """A6: ``build_from_db`` must wire up obs4REF, or it is a silently dead type."""
+        assert SourceDatasetType.obs4REF in solver.data_catalog
+        assert isinstance(solver.data_catalog[SourceDatasetType.obs4REF], DataCatalog)
+
     def test_build_from_db_refreshes_ignore_datasets(self, config, db_seeded, mocker):
         refresh_mock = mocker.patch("climate_ref.solver.refresh_ignore_datasets_file")
 
@@ -862,6 +867,40 @@ def test_solve_metric_executions(solver, mock_diagnostic, provider, variable, ex
     }
     executions = solve_executions(data_catalog, metric, provider)
     assert len(list(executions)) == expected
+
+
+def test_solve_metric_executions_obs4ref(solver, mock_diagnostic, provider):
+    """A6: a diagnostic with an obs4REF ``DataRequirement`` resolves against the catalog.
+
+    Guards ``solver.py``/``solve_helpers.py``/``_catalog.py``'s A6 wiring: if obs4REF were
+    dropped from ``ExecutionSolver.build_from_db``'s data_catalog dict, this would silently
+    solve to zero executions rather than raising.
+    """
+    metric = mock_diagnostic
+    metric.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.obs4REF,
+            filters=(FacetFilter(facets={"variable_id": "ts"}),),
+            group_by=("variable_id", "source_id"),
+        ),
+    )
+
+    data_catalog = {
+        SourceDatasetType.obs4REF: pd.DataFrame(
+            {
+                "variable_id": ["ts", "ts", "pr"],
+                "source_id": ["REF-OBS-A", "REF-OBS-B", "REF-OBS-C"],
+                "frequency": ["mon", "mon", "mon"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+    assert len(executions) == 2
+    # Selector tuples are sorted by facet key ("source_id" < "variable_id").
+    assert {dict(e.datasets[SourceDatasetType.obs4REF].selector)["source_id"] for e in executions} == {
+        "REF-OBS-A",
+        "REF-OBS-B",
+    }
 
 
 def test_solve_metric_executions_multiple_sets(solver, mock_diagnostic, provider):

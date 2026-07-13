@@ -267,7 +267,12 @@ class TestDatasetIdMetadataNonNullabilityInvariant:
 
     @pytest.mark.parametrize(
         "adapter_cls",
-        [CMIP6DatasetAdapter, CMIP7DatasetAdapter, Obs4MIPsDatasetAdapter, PMPClimatologyDatasetAdapter],
+        [
+            CMIP6DatasetAdapter,
+            CMIP7DatasetAdapter,
+            Obs4MIPsDatasetAdapter,
+            PMPClimatologyDatasetAdapter,
+        ],
     )
     def test_dataset_id_metadata_columns_are_non_nullable(self, adapter_cls):
         adapter = adapter_cls()
@@ -282,7 +287,12 @@ class TestDatasetIdMetadataNonNullabilityInvariant:
 
     @pytest.mark.parametrize(
         "adapter_cls",
-        [CMIP6DatasetAdapter, CMIP7DatasetAdapter, Obs4MIPsDatasetAdapter, PMPClimatologyDatasetAdapter],
+        [
+            CMIP6DatasetAdapter,
+            CMIP7DatasetAdapter,
+            Obs4MIPsDatasetAdapter,
+            PMPClimatologyDatasetAdapter,
+        ],
     )
     def test_dataset_id_metadata_disjoint_from_finalisation_columns(self, adapter_cls):
         adapter = adapter_cls()

@@ -1,4 +1,5 @@
-registry: ilamb
+realm: land
+region_masks: ilamb-regions
 
 gpp-WECANN:
   version: 3
@@ -10,8 +11,7 @@ gpp-WECANN:
       grid_label: gn
       version: v20250902
   relationships:
-    pr: ilamb/pr/GPCPv2.3/pr.nc
-    # pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
+    pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
     tas: ilamb/tas/CRU4.02/tas.nc
   variable_cmap: Greens
 

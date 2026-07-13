@@ -2,6 +2,7 @@
 Unit tests for the helpers in the standard module.
 """
 
+import ilamb3
 import numpy as np
 import pandas as pd
 import pytest
@@ -13,8 +14,11 @@ from climate_ref_ilamb.standard import (
     _clean_units,
     _CoarsenSpatial,
     _RelationshipTimeTransform,
+    _set_ilamb3_options,
 )
 from ilamb3.dataset import coarsen_dataset
+
+from climate_ref_core.dataset_registry import dataset_registry_manager
 
 
 class TestRelationshipTimeTransform:
@@ -294,9 +298,10 @@ class TestBuildCmecBundle:
 class TestVersionOverride:
     def test_per_diagnostic_version_override(self):
         diagnostic = ILAMBStandard(
-            registry_file="ilamb-test",
+            realm="land",
             metric_name="test-ver",
             sources={"tas": "ilamb/test/Site/tas.nc"},
+            ilamb_registry="ilamb-test",
             version=3,
         )
 
@@ -304,9 +309,69 @@ class TestVersionOverride:
 
     def test_default_version_used_when_not_overridden(self):
         diagnostic = ILAMBStandard(
-            registry_file="ilamb-test",
+            realm="land",
             metric_name="test-ver-default",
             sources={"tas": "ilamb/test/Site/tas.nc"},
+            ilamb_registry="ilamb-test",
         )
 
         assert diagnostic.version == ILAMBStandard.version
+
+
+class TestRealmMaskDecoupling:
+    """
+    Proves mask-loading is independent of realm, not just "is land".
+
+    ``ilamb-test`` is a land-realm registry that carries no region masks, so a
+    land diagnostic built against it must not attempt to load any.
+    """
+
+    def test_land_realm_without_region_masks_loads_no_masks(self):
+        diagnostic = ILAMBStandard(
+            realm="land",
+            metric_name="test-land-no-masks",
+            sources={"tas": "ilamb/test/Site/tas.nc"},
+            ilamb_registry="ilamb-test",
+        )
+
+        assert diagnostic.realm == "land"
+        assert diagnostic.region_masks is None
+
+        _set_ilamb3_options(None)
+        assert ilamb3.conf["regions"] == [None]
+
+    def test_land_realm_with_region_masks_loads_masks(self):
+        diagnostic = ILAMBStandard(
+            realm="land",
+            metric_name="test-land-with-masks",
+            sources={"tas": "ilamb/tas/CRU4.02/tas.nc"},
+            region_masks="ilamb-regions",
+        )
+
+        assert diagnostic.region_masks == "ilamb-regions"
+
+        _set_ilamb3_options(dataset_registry_manager[diagnostic.region_masks])
+        assert set(["global", "tropical"]).issubset(ilamb3.conf["regions"])
+
+    def test_ocean_realm_has_empty_ilamb_data(self):
+        diagnostic = ILAMBStandard(
+            realm="ocean",
+            metric_name="test-ocean-empty",
+            sources={
+                "thetao": {
+                    "obs_source": "obs4ref",
+                    "source_id": "WOA-23",
+                    "variable_id": "thetao",
+                    "grid_label": "gn",
+                    "version": "v20251024",
+                }
+            },
+        )
+
+        assert diagnostic.region_masks is None
+        assert diagnostic.ilamb_registry is None
+        assert diagnostic.ilamb_data.datasets.empty
+        assert list(diagnostic.ilamb_data.datasets.columns) == ["key", "path"]
+        # The merge in `execute()` must not crash on an empty ILAMB side.
+        merged = diagnostic.ilamb_data.datasets.set_index(diagnostic.ilamb_data.slug_column)
+        assert merged.empty

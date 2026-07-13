@@ -36,12 +36,12 @@ class TestILAMBProviderHooks:
 
         provider.fetch_data(mock_config)
 
-        # Should be called once for each registry (ilamb-test, ilamb, iomb)
+        # Should be called once for each registry (ilamb-test, ilamb, ilamb-regions)
         assert mock_fetch.call_count == 3
         registry_names = [call[0][1] for call in mock_fetch.call_args_list]
         assert "ilamb-test" in registry_names
         assert "ilamb" in registry_names
-        assert "iomb" in registry_names
+        assert "ilamb-regions" in registry_names
 
     def test_validate_setup_all_valid(self, mocker):
         """Test validate_setup returns True when all data is valid."""

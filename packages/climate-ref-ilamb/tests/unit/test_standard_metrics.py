@@ -10,7 +10,10 @@ from climate_ref_core.datasets import DatasetCollection, SourceDatasetType
 
 def test_standard_site(cmip6_data_catalog, definition_factory):
     diagnostic = ILAMBStandard(
-        registry_file="ilamb-test", metric_name="test-site-tas", sources={"tas": "ilamb/test/Site/tas.nc"}
+        realm="land",
+        metric_name="test-site-tas",
+        sources={"tas": "ilamb/test/Site/tas.nc"},
+        ilamb_registry="ilamb-test",
     )
     _, ds = next(
         iter(
@@ -57,10 +60,11 @@ def test_standard_site(cmip6_data_catalog, definition_factory):
 
 def test_standard_grid(cmip6_data_catalog, definition_factory):
     diagnostic = ILAMBStandard(
-        registry_file="ilamb-test",
+        realm="land",
         metric_name="test-grid-gpp",
         sources={"gpp": "ilamb/test/Grid/gpp.nc"},
         relationships={"pr": "ilamb/test/Grid/pr.nc"},
+        ilamb_registry="ilamb-test",
     )
     _, ds = next(
         iter(
@@ -107,15 +111,21 @@ def test_standard_grid(cmip6_data_catalog, definition_factory):
 
 
 def test_options():
-    _set_ilamb3_options(dataset_registry_manager["ilamb"], "ilamb")
+    _set_ilamb3_options(dataset_registry_manager["ilamb-regions"])
     assert set(["global", "tropical"]).issubset(ilamb3.conf["regions"])
+
+
+def test_options_without_masks_registry():
+    _set_ilamb3_options(None)
+    assert ilamb3.conf["regions"] == [None]
 
 
 def test_expected_executions():
     diagnostic = ILAMBStandard(
-        registry_file="ilamb",
+        realm="land",
         metric_name="lai-AVH15C1",
         sources={"lai": "ilamb/lai/AVH15C1/lai.nc"},
+        region_masks="ilamb-regions",
     )
 
     # No Obs4MIPs datasets are used yet

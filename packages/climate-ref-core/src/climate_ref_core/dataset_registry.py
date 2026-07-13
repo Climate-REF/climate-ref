@@ -6,19 +6,65 @@ The CMIP7 Assessment Fas Track REF requires that reference datasets are openly l
 before it is included in any published data catalogs.
 """
 
+import enum
 import importlib.resources
 import os
 import pathlib
 import shutil
+from collections.abc import Iterator
 
 import pooch
 import pooch.hashes
+from attrs import frozen
 from loguru import logger
 from rich.progress import track
 
 from climate_ref_core.env import env
+from climate_ref_core.source_types import SourceDatasetType
 
 DATASET_URL = env.str("REF_DATASET_URL", default="https://obs4ref.climate-ref.org")
+
+
+class RegistryUseCase(enum.Enum):
+    """
+    Whether a registry's contents are catalog-ingestable or fetch-only.
+    """
+
+    reference = "reference"
+    """
+    Contents are catalog-ingestable reference data.
+
+    The registry declares exactly one target source type,
+    which is used to select the parsing adapter during ingest.
+    """
+
+    support = "support"
+    """
+    Contents are fetch-only support files (e.g. region masks, recipes).
+
+    These are never entered into the catalog.
+    """
+
+
+@frozen
+class RegistryEntry:
+    """
+    A dataset registry together with its ingest metadata.
+    """
+
+    registry: pooch.Pooch
+    """The underlying Pooch registry."""
+
+    source_type: SourceDatasetType | None
+    """
+    The target source type used to select the parsing adapter.
+
+    Required for ``reference`` registries.
+    ``None`` for ``support`` registries, since fetch-only content is never parsed.
+    """
+
+    use_case: RegistryUseCase
+    """Whether the registry's contents are catalog-ingestable or fetch-only."""
 
 
 def resolve_cache_dir(cache_name: str) -> pathlib.Path:
@@ -216,11 +262,17 @@ class DatasetRegistryManager:
     """
 
     def __init__(self) -> None:
-        self._registries: dict[str, pooch.Pooch] = {}
+        self._registries: dict[str, RegistryEntry] = {}
 
     def __getitem__(self, item: str) -> pooch.Pooch:
         """
         Get a registry by name
+        """
+        return self._registries[item].registry
+
+    def entry(self, item: str) -> RegistryEntry:
+        """
+        Get the full registry entry (registry, source type and use-case) by name
         """
         return self._registries[item]
 
@@ -275,6 +327,8 @@ class DatasetRegistryManager:
         cache_name: str | None = None,
         version: str | None = None,
         legacy_cache_dirs: list[pathlib.Path] | None = None,
+        source_type: SourceDatasetType | None = None,
+        use_case: RegistryUseCase = RegistryUseCase.support,
     ) -> None:
         """
         Register a new dataset registry
@@ -310,6 +364,19 @@ class DatasetRegistryManager:
             If provided, any files that exist in a legacy directory but not in
             the current cache will be moved to the new location. This avoids
             re-downloading data after a cache layout change.
+        source_type
+            The target source type used to select the parsing adapter.
+
+            Required for ``reference`` registries.
+            Leave as ``None`` for ``support`` registries,
+            or for registries whose contents span more than one source type
+            (which cannot be catalogued by registry-driven ingest at all).
+        use_case
+            Whether the registry's contents are catalog-ingestable (``reference``)
+            or fetch-only (``support``).
+
+            Defaults to ``support`` so that an unannotated registry is never
+            catalogued by registry-driven ingest.
         """
         if cache_name is None:
             cache_name = name
@@ -336,7 +403,39 @@ class DatasetRegistryManager:
         if cache_path != default_legacy:
             self._migrate_cache(registry, all_legacy_dirs)
 
-        self._registries[name] = registry
+        self._registries[name] = RegistryEntry(
+            registry=registry,
+            source_type=source_type,
+            use_case=use_case,
+        )
 
 
 dataset_registry_manager = DatasetRegistryManager()
+
+
+def iter_reference_registries(
+    manager: DatasetRegistryManager,
+) -> Iterator[tuple[pooch.Pooch, SourceDatasetType]]:
+    """
+    Yield the ``(registry, source_type)`` pairs for all catalog-ingestable registries.
+
+    Registries whose ``use_case`` is not ``reference``, or whose ``source_type`` is
+    ``None`` (e.g. registries that mix source types and so cannot be catalogued as
+    a whole), are skipped.
+    A later ingest driver can pass the yielded ``source_type`` to
+    :func:`climate_ref.datasets.get_dataset_adapter` to select the parsing adapter.
+
+    Parameters
+    ----------
+    manager
+        The registry manager to read entries from.
+
+    Returns
+    -------
+    :
+        An iterator of ``(registry, source_type)`` pairs.
+    """
+    for name in manager.keys():
+        entry = manager.entry(name)
+        if entry.use_case is RegistryUseCase.reference and entry.source_type is not None:
+            yield entry.registry, entry.source_type

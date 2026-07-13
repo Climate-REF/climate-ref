@@ -5,11 +5,15 @@ import pytest
 
 from climate_ref_core.dataset_registry import (
     DatasetRegistryManager,
+    RegistryEntry,
+    RegistryUseCase,
     _verify_hash_matches,
     dataset_registry_manager,
     fetch_all_files,
+    iter_reference_registries,
     validate_registry_cache,
 )
+from climate_ref_core.source_types import SourceDatasetType
 
 # Derived from the registry rather than hardcoded so this can't drift when
 # entries are added to or removed from obs4ref_reference.txt.
@@ -51,9 +55,35 @@ class TestDatasetRegistry:
         registry.register(name, base_url, package, resource)
 
         assert name in registry._registries
-        r = registry._registries[name]
+        entry = registry.entry(name)
+        assert entry.source_type is None
+        assert entry.use_case is RegistryUseCase.support
+        r = entry.registry
         assert r.base_url == base_url + "/"
         assert len(r.registry_files) == 2
+
+    def test_register_with_metadata(self, fake_registry_file):
+        registry = DatasetRegistryManager()
+        name = "test_registry"
+        base_url = "http://example.com"
+
+        package, resource = self.setup_registry_file(fake_registry_file)
+
+        registry.register(
+            name,
+            base_url,
+            package,
+            resource,
+            source_type=SourceDatasetType.obs4MIPs,
+            use_case=RegistryUseCase.reference,
+        )
+
+        entry = registry.entry(name)
+        assert isinstance(entry, RegistryEntry)
+        assert entry.source_type is SourceDatasetType.obs4MIPs
+        assert entry.use_case is RegistryUseCase.reference
+        # __getitem__ still returns the underlying Pooch registry
+        assert registry[name] is entry.registry
 
     def test_register_invalid(self, fake_registry_file):
         registry = DatasetRegistryManager()
@@ -446,3 +476,48 @@ class TestValidateRegistryCache:
 
         errors = validate_registry_cache(mock_registry, "test-registry")
         assert errors == []
+
+
+class TestIterReferenceRegistries:
+    """Tests for the ``iter_reference_registries`` read helper."""
+
+    def _register(self, manager, fake_registry_file, name, **kwargs):
+        registry_path, package, resource = fake_registry_file
+        with registry_path.open("w") as f:
+            f.write("file1.txt sha256:checksum1\n")
+        manager.register(name, "http://example.com", package, resource, **kwargs)
+
+    def test_skips_support_registries(self, fake_registry_file):
+        manager = DatasetRegistryManager()
+        self._register(manager, fake_registry_file, "support-no-type")
+
+        assert list(iter_reference_registries(manager)) == []
+
+    def test_skips_reference_registries_without_source_type(self, fake_registry_file):
+        manager = DatasetRegistryManager()
+        self._register(
+            manager,
+            fake_registry_file,
+            "reference-no-type",
+            use_case=RegistryUseCase.reference,
+        )
+
+        assert list(iter_reference_registries(manager)) == []
+
+    def test_yields_reference_registries_with_source_type(self, fake_registry_file):
+        manager = DatasetRegistryManager()
+        self._register(
+            manager,
+            fake_registry_file,
+            "reference-obs4mips",
+            source_type=SourceDatasetType.obs4MIPs,
+            use_case=RegistryUseCase.reference,
+        )
+        self._register(manager, fake_registry_file, "support-registry")
+
+        results = list(iter_reference_registries(manager))
+
+        assert len(results) == 1
+        registry, source_type = results[0]
+        assert source_type is SourceDatasetType.obs4MIPs
+        assert registry is manager["reference-obs4mips"]

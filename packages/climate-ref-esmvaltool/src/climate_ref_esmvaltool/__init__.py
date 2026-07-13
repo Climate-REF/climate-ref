@@ -13,12 +13,14 @@ from loguru import logger
 import climate_ref_esmvaltool.diagnostics
 from climate_ref_core.dataset_registry import (
     DATASET_URL,
+    RegistryUseCase,
     dataset_registry_manager,
     fetch_all_files,
     resolve_cache_dir,
     validate_registry_cache,
 )
 from climate_ref_core.providers import CondaDiagnosticProvider
+from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_esmvaltool._version import __version__
 from climate_ref_esmvaltool.diagnostics.base import _DATASETS_REGISTRY_NAME
 from climate_ref_esmvaltool.recipe import (
@@ -78,13 +80,21 @@ for _diagnostic_cls_name in climate_ref_esmvaltool.diagnostics.__all__:
     _diagnostic_cls = getattr(climate_ref_esmvaltool.diagnostics, _diagnostic_cls_name)
     provider.register(_diagnostic_cls())
 
-# Register OBS, OBS6, and raw data
+# Register OBS, OBS6, and raw data as ESMValTool reference datasets.
+#
+# data.txt mixes OBS/OBS6 Tier2/3, native6 raw ERA5 and an obs4MIPs GPCP-V2.3 subset. The
+# ESMValCore-DRS adapter (`ESMValToolReferenceDatasetAdapter`) reads metadata from the DRS path
+# rather than the file contents, so the whole registry ingests as the `esmvaltool-reference`
+# source type. Ingestion records these datasets for provenance. Solve-time selection is a
+# separate follow-up.
 dataset_registry_manager.register(
     name=_DATASETS_REGISTRY_NAME,
     base_url=DATASET_URL,
     package="climate_ref_esmvaltool.dataset_registry",
     resource="data.txt",
     cache_name=_DATASETS_REGISTRY_NAME.replace("-", "/"),
+    source_type=SourceDatasetType.ESMValToolReference,
+    use_case=RegistryUseCase.reference,
 )
 # Register the ESMValTool recipes.
 dataset_registry_manager.register(
@@ -97,4 +107,5 @@ dataset_registry_manager.register(
         # As of v0.12.3, cached under pooch.os_cache("climate_ref_esmvaltool").
         Path(pooch.os_cache("climate_ref_esmvaltool"))
     ],
+    use_case=RegistryUseCase.support,
 )

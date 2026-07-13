@@ -17,6 +17,7 @@ from loguru import logger
 
 from climate_ref_core.dataset_registry import (
     DATASET_URL,
+    RegistryUseCase,
     dataset_registry_manager,
     fetch_all_files,
     resolve_cache_dir,
@@ -31,7 +32,7 @@ if TYPE_CHECKING:
 __version__ = importlib.metadata.version("climate-ref-ilamb")
 
 # Registry names used by ILAMB
-_REGISTRY_NAMES = ("ilamb-test", "ilamb", "iomb")
+_REGISTRY_NAMES = ("ilamb-test", "ilamb", "ilamb-regions")
 
 
 class ILAMBProvider(DiagnosticProvider):
@@ -63,8 +64,12 @@ class ILAMBProvider(DiagnosticProvider):
 
     def get_data_path(self) -> Path | None:
         """Get the path where ILAMB data is cached."""
-        # All ILAMB registries use the same cache
-        # TODO: There are more than one registry
+        # The "ilamb-regions" registry is registered with cache_name="ilamb" so its
+        # files (region masks) land in the same cache directory as the "ilamb"
+        # registry (reference obs).
+        # Together those two registries are the data an ingest or `ref providers setup` run cares about,
+        # so this single path covers them both. The small "ilamb-test" fixture registry keeps
+        # its own "ilamb-test" cache directory and is intentionally not reported here.
         return resolve_cache_dir("ilamb")
 
 
@@ -82,18 +87,32 @@ dataset_registry_manager.register(
     base_url=DATASET_URL,
     package="climate_ref_ilamb.dataset_registry",
     resource="ilamb.txt",
+    # A plain fetch registry, with no source type (its use case defaults to ``support``), so it
+    # is not a reference source type. It holds the few reference observations that ILAMB still
+    # needs but that are not yet published to obs4MIPs/obs4REF (currently WangMao, GLEAMv3 and
+    # CRU4.02). The provider fetches these at execute time via registry_to_collection; they are
+    # not ingested. As each dataset is published, it moves to the obs4ref registry and drops out
+    # of ilamb.txt.
 )
 dataset_registry_manager.register(
-    "iomb",
+    "ilamb-regions",
     base_url=DATASET_URL,
     package="climate_ref_ilamb.dataset_registry",
-    resource="iomb.txt",
+    resource="ilamb_regions.txt",
+    # Shares the "ilamb" cache directory: these masks were fetched under it
+    # before the registry was split, and the two registries are covered
+    # together by get_data_path() above.
+    cache_name="ilamb",
+    use_case=RegistryUseCase.support,
 )
 
 # Dynamically register ILAMB diagnostics
 for yaml_file in importlib.resources.files("climate_ref_ilamb.configure").iterdir():
     with open(str(yaml_file)) as fin:
         metrics = yaml.safe_load(fin)
-    registry_filename = metrics.pop("registry")
+    realm = metrics.pop("realm")
+    region_masks = metrics.pop("region_masks", None)
     for metric, options in metrics.items():
-        provider.register(ILAMBStandard(registry_filename, metric, options.pop("sources"), **options))
+        provider.register(
+            ILAMBStandard(realm, metric, options.pop("sources"), region_masks=region_masks, **options)
+        )

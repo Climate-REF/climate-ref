@@ -6,7 +6,7 @@ import pytest
 
 from climate_ref.config import Config
 from climate_ref.database import Database, ModelState
-from climate_ref.datasets import IngestionStats, get_dataset_adapter, ingest_datasets
+from climate_ref.datasets import IngestionStats, get_dataset_adapter, get_slug_column, ingest_datasets
 from climate_ref.datasets import base as base_module
 from climate_ref.datasets.base import DatasetAdapter, _is_na
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
@@ -100,6 +100,7 @@ def test_validate_data_catalog_metadata_variance(caplog):
         (SourceDatasetType.CMIP6.value, "climate_ref.datasets.cmip6.CMIP6DatasetAdapter"),
         (SourceDatasetType.CMIP7.value, "climate_ref.datasets.cmip7.CMIP7DatasetAdapter"),
         (SourceDatasetType.obs4MIPs.value, "climate_ref.datasets.obs4mips.Obs4MIPsDatasetAdapter"),
+        (SourceDatasetType.obs4REF.value, "climate_ref.datasets.obs4mips.Obs4REFDatasetAdapter"),
     ],
 )
 def test_get_dataset_adapter_valid(source_type, expected_adapter):
@@ -110,6 +111,14 @@ def test_get_dataset_adapter_valid(source_type, expected_adapter):
 def test_get_dataset_adapter_invalid():
     with pytest.raises(ValueError, match="Unknown source type: INVALID_TYPE"):
         get_dataset_adapter("INVALID_TYPE")
+
+
+@pytest.mark.parametrize(
+    "source_type",
+    list(SourceDatasetType),
+)
+def test_get_slug_column_resolves_for_every_source_type(source_type):
+    assert get_slug_column(source_type) == "instance_id"
 
 
 @pytest.fixture

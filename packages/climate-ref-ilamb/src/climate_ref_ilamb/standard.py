@@ -21,7 +21,12 @@ from loguru import logger
 from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
 from climate_ref_core.dataset_registry import dataset_registry_manager, resolve_cache_dir
-from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
+from climate_ref_core.datasets import (
+    DatasetCollection,
+    ExecutionDatasetCollection,
+    FacetFilter,
+    SourceDatasetType,
+)
 from climate_ref_core.diagnostics import (
     DataRequirement,
     Diagnostic,
@@ -232,27 +237,27 @@ ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_coarsen_spatial", _Coars
 
 def _get_branded_variable(
     variable_ids: tuple[str, ...],
-    registry_file: str,
+    realm: str,
 ) -> tuple[str, ...]:
     """
     Look up CMIP7 branded variable names for a set of CMIP6 variable IDs.
 
-    Tries the most relevant CMIP6 tables based on registry type (land vs ocean).
+    Tries the most relevant CMIP6 tables based on realm (land vs ocean).
     Variables without a Data Request mapping are silently skipped.
 
     Parameters
     ----------
     variable_ids
         CMIP6 variable IDs to look up
-    registry_file
-        ILAMB registry name ("ilamb", "ilamb-test", or "iomb")
+    realm
+        Diagnostic realm, ``"land"`` or ``"ocean"``
 
     Returns
     -------
     :
         Branded variable names found in the Data Request
     """
-    tables = _LAND_TABLES if registry_file in ("ilamb", "ilamb-test") else _OCEAN_TABLES
+    tables = _LAND_TABLES if realm == "land" else _OCEAN_TABLES
 
     branded: list[str] = []
     for var_id in variable_ids:
@@ -609,7 +614,7 @@ def _build_cmip_data_requirement(  # noqa: PLR0913
 
 def _build_test_data_spec(  # noqa: PLR0913
     all_variable_ids: tuple[str, ...],
-    registry_file: str,
+    realm: str,
     test_source_id: str,
     is_land: bool,
     obs_filters: Mapping[str, tuple[str, ...]],
@@ -622,8 +627,8 @@ def _build_test_data_spec(  # noqa: PLR0913
     ----------
     all_variable_ids
         All variable IDs used by the diagnostic (primary + alternate + related + relationships)
-    registry_file
-        ILAMB registry name ("ilamb", "ilamb-test", or "iomb")
+    realm
+        Diagnostic realm, ``"land"`` or ``"ocean"``
     test_source_id
         CMIP source_id to use in test cases (e.g. "CanESM5")
     is_land
@@ -651,7 +656,7 @@ def _build_test_data_spec(  # noqa: PLR0913
         set(
             _get_branded_variable(
                 tuple(test_variable_ids),
-                registry_file,
+                realm,
             )
         )
     )
@@ -720,15 +725,22 @@ def _build_test_data_spec(  # noqa: PLR0913
     )
 
 
-def _set_ilamb3_options(registry: pooch.Pooch, registry_file: str) -> None:
+def _set_ilamb3_options(masks_registry: pooch.Pooch | None) -> None:
     """
-    Set options for ILAMB based on which registry file is being used.
+    Set options for ILAMB, optionally loading region masks from a registry.
+
+    Parameters
+    ----------
+    masks_registry
+        Pooch registry holding the ``ilamb/regions/*.nc`` mask files (typically the
+        ``ilamb-regions`` registry), or ``None`` if this diagnostic does not use
+        region masks.
     """
     ilamb3.conf.reset()  # type: ignore
-    ilamb_regions = ilr.Regions()
-    if registry_file == "ilamb":
-        ilamb_regions.add_netcdf(registry.fetch("ilamb/regions/GlobalLand.nc"))
-        ilamb_regions.add_netcdf(registry.fetch("ilamb/regions/Koppen_coarse.nc"))
+    if masks_registry is not None:
+        ilamb_regions = ilr.Regions()
+        ilamb_regions.add_netcdf(masks_registry.fetch("ilamb/regions/GlobalLand.nc"))
+        ilamb_regions.add_netcdf(masks_registry.fetch("ilamb/regions/Koppen_coarse.nc"))
         ilamb3.conf.set(regions=["global", "tropical"])
     # REF's data requirement correctly will add measure data from another
     # ensemble, but internally I also groupby. Since REF is only giving 1
@@ -782,13 +794,45 @@ class ILAMBStandard(Diagnostic):
     Individual diagnostics can override this with a ``version`` key in their configuration entry.
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0915, PLR0912
         self,
-        registry_file: str,
+        realm: str,
         metric_name: str,
         sources: dict[str, str | dict[str, str]],
+        region_masks: str | None = None,
+        ilamb_registry: str | None = None,
         **ilamb_kwargs: Any,
     ):
+        """
+        Set up an ILAMB standard diagnostic.
+
+        Parameters
+        ----------
+        realm
+            Diagnostic realm, ``"land"`` or ``"ocean"``.
+            Drives the CMIP6 table set / CMIP7 branded-variable lookup and the
+            supplementary land vs ocean ancillary variables.
+        metric_name
+            Name of the ILAMB diagnostic, used to build the REF slug.
+        sources
+            ILAMB source specification (string-form registry keys or dict-form
+            REF data requirement filters).
+        region_masks
+            Name of the registry holding the ``ilamb/regions/*.nc`` mask files
+            (typically ``"ilamb-regions"``), or ``None`` if this diagnostic does
+            not need region masks. Deliberately independent of ``realm``,
+            because a land diagnostic may still not need masks
+            (e.g. ``ilamb-test`` fixtures).
+        ilamb_registry
+            Name of the registry that resolves this diagnostic's string-form
+            reference sources. Defaults to ``"ilamb"`` for land diagnostics and
+            to ``None`` (no ILAMB registry data, e.g. ocean diagnostics whose
+            sources are all dict-form obs4REF requests) otherwise. Tests may
+            override this to point at the small ``"ilamb-test"`` fixture
+            registry instead of the real reference data.
+        """
+        if ilamb_registry is None:
+            ilamb_registry = "ilamb" if realm == "land" else None
         # Setup the diagnostic
         self.variable_id = ilamb_kwargs.get("analysis_variable", next(iter(sources.keys())))
         if "sources" not in ilamb_kwargs:  # pragma: no cover
@@ -835,10 +879,10 @@ class ILAMBStandard(Diagnostic):
         )
 
         # Look up CMIP7 branded variable names
-        branded_variables = _get_branded_variable(all_variable_ids, registry_file)
+        branded_variables = _get_branded_variable(all_variable_ids, realm)
 
-        # Determine realm/region for CMIP7 filter based on registry
-        is_land = registry_file in ("ilamb", "ilamb-test")
+        # Determine realm/region for CMIP7 filter
+        is_land = realm == "land"
 
         relationship_variable_ids = tuple(ilamb_kwargs.get("relationships", {}).keys())
 
@@ -931,7 +975,7 @@ class ILAMBStandard(Diagnostic):
 
         self.test_data_spec = _build_test_data_spec(
             all_variable_ids=all_variable_ids,
-            registry_file=registry_file,
+            realm=realm,
             test_source_id=test_source_id,
             is_land=is_land,
             obs_filters=filters,
@@ -939,17 +983,25 @@ class ILAMBStandard(Diagnostic):
         )
 
         # Setup ILAMB data and options
-        self.registry_file = registry_file
-        self.registry = dataset_registry_manager[self.registry_file]
-        self.ilamb_data = registry_to_collection(
-            dataset_registry_manager[self.registry_file],
-        )
+        self.realm = realm
+        self.region_masks = region_masks
+        self.ilamb_registry = ilamb_registry
+        if self.ilamb_registry is not None:
+            self.ilamb_data = registry_to_collection(dataset_registry_manager[self.ilamb_registry])
+        else:
+            # No ILAMB registry backs this diagnostic (e.g. an ocean diagnostic
+            # whose sources are all dict-form obs4REF requests). Degrade to an
+            # empty collection with the columns downstream code expects, rather
+            # than crashing on a missing registry.
+            self.ilamb_data = DatasetCollection(pd.DataFrame(columns=["key", "path"]), "key")
 
     def execute(self, definition: ExecutionDefinition) -> None:
         """
         Run the ILAMB standard analysis.
         """
-        _set_ilamb3_options(self.registry, self.registry_file)
+        _set_ilamb3_options(
+            dataset_registry_manager[self.region_masks] if self.region_masks is not None else None
+        )
         # Temporary hack of the ilamb3 inputs while we still need to refer to
         # data not yet available in obs4{MIPs,REF}. This logic allows for
         # DataRequirement filters to be added as a 'source' in the ilamb
@@ -1039,7 +1091,9 @@ class ILAMBStandard(Diagnostic):
         -------
             An execution result object
         """
-        _set_ilamb3_options(self.registry, self.registry_file)
+        _set_ilamb3_options(
+            dataset_registry_manager[self.region_masks] if self.region_masks is not None else None
+        )
         # In ILAMB, scalars are saved in CSV files in the output directory. To
         # be compatible with the REF system we will need to add the metadata
         # that is associated with the execution group, called the selector.

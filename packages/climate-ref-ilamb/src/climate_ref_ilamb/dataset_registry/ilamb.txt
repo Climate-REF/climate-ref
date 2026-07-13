@@ -1,6 +1,3 @@
 ilamb/mrsol/WangMao/mrsol_olc.nc sha1:24cbc9df69569bed3a39c20e499cfe4f911bd30e
-ilamb/regions/GlobalLand.nc sha1:2f987d44fdba6ad0e72d14d6a2fecb7e8df2a9c5
-ilamb/regions/Koppen_coarse.nc sha1:e464030db49f0295a6a22a81ca602b0f3c499b72
-ilamb/pr/GPCPv2.3/pr.nc sha1:e1b942863ec76a75aa972b6d75e2e08646741259
 ilamb/tas/CRU4.02/tas.nc sha1:2674da18a1a93483b50b1626e7a7ab741bf53d09
 ilamb/evspsbl/GLEAMv3.3a/et.nc sha1:5aaf73949af8c6b509ef16f684aa8efeccd983e2

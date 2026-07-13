@@ -207,13 +207,22 @@ class TestCMIP7Request:
 class TestGetCmip7CacheDir:
     """Tests for _get_cmip7_cache_dir function."""
 
-    def test_returns_path(self):
+    def test_returns_path(self, tmp_path, monkeypatch):
         """Test that function returns a Path object."""
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
         result = _get_cmip7_cache_dir()
         assert isinstance(result, Path)
 
-    def test_path_contains_climate_ref(self):
-        """Test that path contains climate-ref identifier."""
+    def test_honours_dataset_cache_dir(self, tmp_path, monkeypatch):
+        """Converted files land under the configured dataset cache, not the OS default."""
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
+        result = _get_cmip7_cache_dir()
+        assert result == tmp_path / "cmip7-converted"
+        assert result.is_dir()
+
+    def test_falls_back_to_os_cache(self, monkeypatch):
+        """With no override the path stays under the platform cache for climate_ref."""
+        monkeypatch.delenv("REF_DATASET_CACHE_DIR", raising=False)
         result = _get_cmip7_cache_dir()
         assert "climate_ref" in str(result)
         assert "cmip7-converted" in str(result)

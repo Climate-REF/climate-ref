@@ -1,11 +1,12 @@
 import datetime
 from typing import Any, ClassVar
 
-from sqlalchemy import ColumnElement, ForeignKey, func
+from sqlalchemy import BigInteger, ColumnElement, ForeignKey, event, func
 from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from climate_ref.models.base import Base
+from climate_ref_core.datasets import version_sort_key
 from climate_ref_core.source_types import SourceDatasetType
 
 
@@ -56,10 +57,54 @@ class Dataset(Base):
     For other dataset types (e.g., obs4MIPs, PMP climatology), this should be True upon creation.
     """
 
+    version_key: Mapped[int] = mapped_column(BigInteger, default=-1, server_default="-1", nullable=False)
+    """
+    Numeric ordering key for the subclass's ``version`` column,
+    computed by :func:`climate_ref_core.datasets.version_sort_key`.
+
+    Kept in sync by the ``_sync_version_key`` mapper event.
+    Rows with no ``version`` attribute (base-table-only inserts) keep the ``-1`` backstop.
+
+    Lives on the base table (not a subclass) so the SQL latest-version window function
+    (``select_datasets(..., latest_group_by=...)``) can read it off any polymorphic row while
+    partitioning on the subclass's ``dataset_id_metadata`` columns.
+
+    Core writes to ``version``
+    (``session.execute(update(...))``, ``connection.execute(...)``, ``bulk_update_mappings``)
+    bypass the event and leave ``version_key`` stale, silently corrupting latest-version dedup.
+    ALWAYS mutate ``version`` through an ORM instance.
+    """
+
+    retracted_at: Mapped[datetime.datetime | None] = mapped_column(nullable=True, default=None)
+    """
+    When the dataset was retracted, or ``None`` while it is active.
+
+    Retraction exists because a dataset can never be hard-deleted once it has run
+    (``execution_datasets.dataset_id`` has no ``ondelete="CASCADE"``,
+    so removing the row would either violate the foreign key or destroy execution provenance).
+    A retracted dataset's row and files are left intact, but excluded from future solves.
+
+    ``select_datasets`` (``climate_ref.models.dataset_query``) excludes retracted rows by default
+    and only includes them when a caller passes ``DatasetFilter(include_retracted=True)``,
+    so provenance/history reads
+    (e.g. reconstructing what an existing execution used, or ``ref datasets list``) can still see them.
+    """
+
     def __repr__(self) -> str:
         return f"<Dataset slug={self.slug} dataset_type={self.dataset_type} >"
 
     __mapper_args__: ClassVar[Any] = {"polymorphic_on": dataset_type}  # type: ignore
+
+
+@event.listens_for(Dataset, "before_insert", propagate=True)
+@event.listens_for(Dataset, "before_update", propagate=True)
+def _sync_version_key(mapper: Any, connection: Any, target: Dataset) -> None:
+    """Keep ``version_key`` numerically in sync with the subclass's ``version`` column.
+
+    ``propagate=True`` fires this for every ``Dataset`` subclass,
+    reading the final attribute value on the instance so it is write path independent.
+    """
+    target.version_key = version_sort_key(getattr(target, "version", None))
 
 
 class DatasetFile(Base):
@@ -156,6 +201,12 @@ class CMIP6Dataset(Dataset):
     variant_label: Mapped[str] = mapped_column()
     vertical_levels: Mapped[int] = mapped_column(nullable=True)
     version: Mapped[str] = mapped_column()
+    """
+    Dataset version string (e.g. ``"v2"``).
+
+    Only write this through an ORM instance.
+    The base-table ``version_key`` ordering key is synced by the ``_sync_version_key`` mapper event.
+    """
 
     instance_id: Mapped[str] = mapped_column(index=True)
     """
@@ -171,15 +222,14 @@ class CMIP6Dataset(Dataset):
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.CMIP6}  # type: ignore
 
 
-class Obs4MIPsDataset(Dataset):
+class ReferenceDatasetMixin:
     """
-    Represents a obs4mips dataset
+    Shared column block for reference/observational dataset types.
 
-    TODO: Should the metadata fields be part of the file or dataset?
+    These datasets look like obs4MIPs datasets (they share its metadata conventions),
+    but are stored in separate polymorphic subtype tables.
+
     """
-
-    __tablename__ = "obs4mips_dataset"
-    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
 
     activity_id: Mapped[str] = mapped_column()
     frequency: Mapped[str] = mapped_column()
@@ -196,6 +246,12 @@ class Obs4MIPsDataset(Dataset):
     variable_id: Mapped[str] = mapped_column()
     variant_label: Mapped[str] = mapped_column()
     version: Mapped[str] = mapped_column()
+    """
+    Dataset version string.
+
+    Only write this through an ORM instance: the base-table ``version_key`` ordering key is
+    synced by the ``_sync_version_key`` mapper event, which Core-level updates bypass.
+    """
     vertical_levels: Mapped[int] = mapped_column()
     source_version_number: Mapped[str] = mapped_column()
 
@@ -203,10 +259,20 @@ class Obs4MIPsDataset(Dataset):
     """
     Unique identifier for the dataset.
     """
+
+
+class Obs4MIPsDataset(ReferenceDatasetMixin, Dataset):
+    """
+    Represents a obs4mips dataset
+    """
+
+    __tablename__ = "obs4mips_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
     __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.obs4MIPs}  # type: ignore
 
 
-class PMPClimatologyDataset(Dataset):
+class PMPClimatologyDataset(ReferenceDatasetMixin, Dataset):
     """
     Represents a climatology dataset from PMP
 
@@ -216,29 +282,77 @@ class PMPClimatologyDataset(Dataset):
     __tablename__ = "pmp_climatology_dataset"
     id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
 
-    activity_id: Mapped[str] = mapped_column()
-    frequency: Mapped[str] = mapped_column()
-    grid: Mapped[str] = mapped_column()
-    grid_label: Mapped[str] = mapped_column()
-    institution_id: Mapped[str] = mapped_column()
-    long_name: Mapped[str] = mapped_column()
-    nominal_resolution: Mapped[str] = mapped_column()
-    realm: Mapped[str] = mapped_column()
-    product: Mapped[str] = mapped_column()
-    source_id: Mapped[str] = mapped_column()
-    source_type: Mapped[str] = mapped_column()
-    units: Mapped[str] = mapped_column()
-    variable_id: Mapped[str] = mapped_column()
-    variant_label: Mapped[str] = mapped_column()
-    version: Mapped[str] = mapped_column()
-    vertical_levels: Mapped[int] = mapped_column()
-    source_version_number: Mapped[str] = mapped_column()
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.PMPClimatology}  # type: ignore
 
-    instance_id: Mapped[str] = mapped_column()
+
+class Obs4REFDataset(ReferenceDatasetMixin, Dataset):
+    """
+    Represents an obs4REF dataset
+
+    obs4REF is REF-curated observational data that shares the obs4MIPs metadata
+    conventions but is not published to the obs4MIPs ESGF archive.
+
+    The format of this table may change as there isn't an official standard for obs4REF datasets yet.
+    The current columns are based on the obs4MIPs metadata conventions.
+    """
+
+    __tablename__ = "obs4ref_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.obs4REF}  # type: ignore
+
+
+class ESMValToolReferenceDataset(Dataset):
+    """
+    Represents a reference (observational/reanalysis) dataset used by ESMValTool.
+
+    Unlike obs4MIPs and PMP climatology datasets,
+    ESMValTool reference data is not strictly CMOR/obs4MIPs compliant.
+    The data are stored in ESMValTool's own layout
+    (``OBS``/``OBS6``, ``native6`` and non-compliant ``obs4MIPs``),
+    so the available metadata is limited to what the path and filename encode.
+    This model therefore has a smaller column set than :class:`ReferenceDatasetMixin`.
+
+    It is a deliberately separate dataset type:
+    the data describes different sources
+    and may carry different versions to the obs4MIPs data of the same name,
+    but will have a different ``instance_id``.
+    """
+
+    __tablename__ = "esmvaltool_reference_dataset"
+    id: Mapped[int] = mapped_column(ForeignKey("dataset.id"), primary_key=True)
+
+    project: Mapped[str] = mapped_column(index=True)
+    """ESMValCore project the data is loaded as: ``OBS``, ``OBS6``, ``native6`` or ``obs4MIPs``."""
+
+    source_id: Mapped[str] = mapped_column(index=True)
+    """Reference dataset name, e.g. ``CERES-EBAF``, ``ERA5``, ``OSI-450-nh``."""
+
+    variable_id: Mapped[str] = mapped_column(index=True)
+    """ESMValTool short name of the variable, e.g. ``tas``, ``sic``, ``rlut``."""
+
+    frequency: Mapped[str] = mapped_column(index=True)
+    """
+    Temporal resolution, as a CMIP6 ``frequency`` CV value, e.g. ``mon``, ``day``, ``fx``.
+    """
+
+    version: Mapped[str] = mapped_column()
+    """Dataset version as encoded in the ESMValTool layout, e.g. ``v3``, ``Ed4.2``."""
+
+    data_type: Mapped[str] = mapped_column(nullable=True)
+    """ESMValTool observation type where available: ``reanaly``, ``sat``, ``ground``."""
+
+    tier: Mapped[int] = mapped_column(nullable=True)
+    """ESMValTool data tier (accessibility), where the layout encodes it."""
+
+    long_name: Mapped[str] = mapped_column(nullable=True)
+    units: Mapped[str] = mapped_column(nullable=True)
+
+    instance_id: Mapped[str] = mapped_column(index=True)
     """
     Unique identifier for the dataset.
     """
-    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.PMPClimatology}  # type: ignore
+    __mapper_args__: ClassVar[Any] = {"polymorphic_identity": SourceDatasetType.ESMValToolReference}  # type: ignore
 
 
 class CMIP7Dataset(Dataset):
@@ -284,7 +398,11 @@ class CMIP7Dataset(Dataset):
     """Template - e.g., "tavg-h2m-hxy-u" """
 
     version: Mapped[str] = mapped_column()
-    """Template - e.g., "v20250622" """
+    """Template - e.g., "v20250622".
+
+    Only write this through an ORM instance.
+    The base-table ``version_key`` ordering key is synced by the ``_sync_version_key`` mapper event.
+    """
 
     # Additional Mandatory Attributes
     mip_era: Mapped[str] = mapped_column()

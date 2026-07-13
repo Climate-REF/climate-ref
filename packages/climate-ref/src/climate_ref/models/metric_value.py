@@ -4,7 +4,7 @@ import json
 from collections.abc import Mapping, Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
-from sqlalchemy import ForeignKey, event, select
+from sqlalchemy import ForeignKey, event, insert, select
 from sqlalchemy.orm import Mapped, Session, mapped_column, relationship
 
 from climate_ref.models.base import Base
@@ -12,6 +12,18 @@ from climate_ref.models.mixins import CreatedUpdatedMixin, DimensionMixin
 
 if TYPE_CHECKING:
     from climate_ref.models.execution import Execution
+
+
+def _content_hash(payload: list[Any]) -> str:
+    """
+    Hash a JSON-serialisable payload into a stable content digest.
+
+    The serialisation is fixed (compact separators, ``ensure_ascii=False``) so the digest
+    is reproducible across platforms and runs. Keep it stable: the same serialisation is
+    relied on by the series-index migration backfill.
+    """
+    serialised = json.dumps(payload, separators=(",", ":"), ensure_ascii=False)
+    return hashlib.sha256(serialised.encode()).hexdigest()
 
 
 class MetricValueType(enum.Enum):
@@ -181,8 +193,7 @@ class SeriesIndex(Base):
         The hash covers both the name and the ordered values,
         so two axes are only shared when they are genuinely identical.
         """
-        payload = json.dumps([name, list(values)], separators=(",", ":"), ensure_ascii=False)
-        return hashlib.sha256(payload.encode()).hexdigest()
+        return _content_hash([name, list(values)])
 
     @classmethod
     def get_or_create(
@@ -213,6 +224,76 @@ class SeriesIndex(Base):
         session.flush()
         return axis
 
+    @classmethod
+    def bulk_get_or_create(
+        cls,
+        session: Session,
+        axes_by_hash: Mapping[str, tuple[str | None, Sequence[float | int | str]]],
+    ) -> dict[str, int]:
+        """
+        Resolve many axes at once, returning a ``{hash: id}`` map.
+
+        Existing axes are fetched in a single query and any missing axes are bulk-inserted,
+        so a batch of series values costs two queries rather than one ``get_or_create`` per row.
+
+        Parameters
+        ----------
+        session
+            Active database session.
+        axes_by_hash
+            Content hash (see [compute_hash][climate_ref.models.metric_value.SeriesIndex.compute_hash])
+            mapped to the axis ``(name, values)`` it represents.
+
+        Returns
+        -------
+            The shared axis id for every hash in ``axes_by_hash``.
+
+        Raises
+        ------
+        ValueError
+            If any key does not equal ``compute_hash(name, values)`` for the axis it maps to.
+            A mismatched key would otherwise insert a row whose stored ``hash`` does not match its content,
+            breaking deduplication.
+        """
+        if not axes_by_hash:
+            return {}
+
+        for digest, (name, values) in axes_by_hash.items():
+            expected = cls.compute_hash(name, values)
+            if digest != expected:
+                raise ValueError(
+                    f"axes_by_hash key {digest!r} does not match compute_hash of its axis "
+                    f"(expected {expected!r})"
+                )
+
+        id_by_hash: dict[str, int] = {
+            digest: axis_id
+            for digest, axis_id in session.execute(select(cls.hash, cls.id).where(cls.hash.in_(axes_by_hash)))
+        }
+        missing = [digest for digest in axes_by_hash if digest not in id_by_hash]
+        if missing:
+            session.execute(
+                insert(cls),
+                [
+                    {
+                        "hash": digest,
+                        "name": axes_by_hash[digest][0],
+                        "values": list(axes_by_hash[digest][1]),
+                        "length": len(axes_by_hash[digest][1]),
+                    }
+                    for digest in missing
+                ],
+            )
+            id_by_hash.update(
+                {
+                    digest: axis_id
+                    for digest, axis_id in session.execute(
+                        select(cls.hash, cls.id).where(cls.hash.in_(missing))
+                    )
+                }
+            )
+        return id_by_hash
+
 
 class SeriesMetricValue(MetricValue):
     """
@@ -230,6 +311,32 @@ class SeriesMetricValue(MetricValue):
 
     index_id: Mapped[int | None] = mapped_column(ForeignKey("index_axis.id"), nullable=True, index=True)
     index_axis: Mapped["SeriesIndex | None"] = relationship(lazy="joined")
+
+    reference_id: Mapped[str | None] = mapped_column(nullable=True, index=True)
+    """
+    Content hash of the reference payload, for reference (observation) series only.
+
+    Two reference series with an identical payload share the same ``reference_id``,
+    so observations can be deduplicated deterministically across executions.
+    It is ``None`` for model series. See
+    [compute_reference_id][climate_ref.models.metric_value.SeriesMetricValue.compute_reference_id].
+    """
+
+    @staticmethod
+    def compute_reference_id(
+        values: Sequence[float | int],
+        index: Sequence[float | int | str] | None,
+        reference_source_id: str | None,
+    ) -> str:
+        """
+        Compute the content hash that deduplicates an identical reference payload.
+
+        The hash covers the values, the index and the reference source,
+        so two reference series are only treated as the same observation
+        when their payloads are genuinely identical.
+        Keep this payload stable: it is the deduplication key used downstream.
+        """
+        return _content_hash([list(values), list(index) if index is not None else None, reference_source_id])
 
     @property
     def index(self) -> list[float | int | str] | None:

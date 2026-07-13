@@ -6,22 +6,56 @@ which executions are required for a given diagnostic without having to re-parse 
 
 """
 
+import datetime
 import shutil
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Annotated
 
+import pandas as pd
 import typer
 from loguru import logger
 
 from climate_ref.cli._utils import OutputFormat, parse_facet_filters, pretty_print_df, render_dataframe
 from climate_ref.datasets import get_dataset_adapter
 from climate_ref.models import Dataset
-from climate_ref.solver import apply_dataset_filters
+from climate_ref.results import DatasetFilter, Reader
+from climate_ref.results.datasets import DatasetCollection
 from climate_ref_core.dataset_registry import dataset_registry_manager, fetch_all_files
 from climate_ref_core.source_types import SourceDatasetType
 
 app = typer.Typer(help=__doc__)
+
+
+def _collection_to_dataframe(collection: DatasetCollection, *, include_files: bool) -> pd.DataFrame:
+    """
+    Build the ``datasets list`` DataFrame from a dataset collection.
+
+    Without ``include_files`` this is one row per dataset with its facet columns.
+    With ``include_files`` each dataset is exploded to one row per file,
+    with the file columns (``path``, ``start_time``, ``end_time``) added.
+
+    Every row carries ``retracted_at`` (``None``/``NaT`` while active)
+    regardless of whether the caller queried with ``include_retracted=True``,
+    so retraction state is always visible when a retracted row does appear.
+    """
+    if not include_files:
+        return pd.DataFrame.from_records(
+            [{**dict(ds.facets), "retracted_at": ds.retracted_at} for ds in collection]
+        )
+
+    records = [
+        {
+            **dict(ds.facets),
+            "retracted_at": ds.retracted_at,
+            "path": f.path,
+            "start_time": f.start_time,
+            "end_time": f.end_time,
+        }
+        for ds in collection
+        for f in ds.files
+    ]
+    return pd.DataFrame.from_records(records)
 
 
 @app.command(name="list")
@@ -32,6 +66,17 @@ def list_(  # noqa: PLR0913
     ] = SourceDatasetType.CMIP6.value,  # type: ignore
     column: Annotated[list[str] | None, typer.Option()] = None,
     include_files: bool = typer.Option(False, help="Include files in the output"),
+    include_retracted: bool = typer.Option(
+        False,
+        help=(
+            "Include retracted datasets in the output. Off by default, so the listing "
+            "matches solve-time eligibility, and a retracted dataset is never shown masking "
+            "the live version that replaced it. Passing this flag also disables latest-only "
+            "deduplication, so every version of every dataset is listed. Keeping the "
+            "deduplication on would let a retracted newer version outrank and hide a live "
+            "older one."
+        ),
+    ),
     limit: int = typer.Option(
         100,
         help=(
@@ -57,31 +102,51 @@ def list_(  # noqa: PLR0913
     List the datasets that have been ingested
 
     The data catalog is sorted by the date that the dataset was ingested (first = newest).
+
+    By default only the latest, non-retracted version of each dataset is listed, matching what
+    the solver would select. Pass ``--include-retracted`` to also see retracted datasets (see
+    the ``retracted_at`` column). This also disables latest-only deduplication so every version is
+    listed, since otherwise a retracted newer version could outrank and hide a live older one.
     """
-    database = ctx.obj.database
+    console = ctx.obj.console
+    reader = Reader(ctx.obj.database)
 
-    adapter = get_dataset_adapter(source_type.value)
-    data_catalog = adapter.load_catalog(database, include_files=include_files, limit=limit)
-
+    parsed_filters: dict[str, list[str]] = {}
     if dataset_filter:
         try:
             parsed_filters = parse_facet_filters(dataset_filter)
         except ValueError as e:
             raise typer.BadParameter(str(e), param_hint="--dataset-filter")
 
-        for facet in parsed_filters:
-            if facet not in data_catalog.columns:
-                logger.error(
-                    f"Filter facet '{facet}' not found in data catalog. "
-                    f"Choose from: {', '.join(sorted(data_catalog.columns))}"
-                )
-                raise typer.Exit(code=1)
+    try:
+        # ``--include-files`` bounds *files* (not datasets),
+        # so the SQL row limit is only pushed down in the dataset-per-row case.
+        # Files are limited in Python after exploding, below.
+        collection = reader.datasets.list(
+            DatasetFilter(
+                source_type=source_type,
+                facets=parsed_filters or None,
+                include_retracted=include_retracted,
+                latest_only=not include_retracted,
+            ),
+            limit=None if include_files else limit,
+            include_files=include_files,
+        )
+    except ValueError as e:
+        # Unknown facet on the target entity: mirror the previous exit-1 behaviour.
+        logger.error(str(e))
+        raise typer.Exit(code=1)
 
-        filtered = apply_dataset_filters({source_type: data_catalog}, parsed_filters)
-        data_catalog = filtered[source_type]  # type: ignore[assignment]  # input is DataFrame
+    data_catalog = _collection_to_dataframe(collection, include_files=include_files)
+    if include_files:
+        data_catalog = data_catalog.head(limit)
 
     if column:
-        missing = set(column) - set(data_catalog.columns)
+        # Validate/select against a frame that includes base fields (id, slug, ...).
+        # For --include-files the file columns live only on the exploded frame, so use
+        # that; otherwise use the empty-safe base+facet frame from the collection.
+        selectable = data_catalog if include_files else collection.to_pandas()
+        missing = set(column) - set(selectable.columns)
         if missing:
 
             def format_(columns: Iterable[str]) -> str:
@@ -90,12 +155,18 @@ def list_(  # noqa: PLR0913
             logger.error(
                 f"Column{'s' if len(missing) > 1 else ''} "
                 f"{format_(missing)} not found in data catalog. "
-                f"Choose from: {format_(data_catalog.columns)}"
+                f"Choose from: {format_(selectable.columns)}"
             )
             raise typer.Exit(code=1)
-        data_catalog = data_catalog[column].sort_values(by=column)
+        data_catalog = selectable[column].sort_values(by=column)
 
-    render_dataframe(data_catalog, console=ctx.obj.console, output_format=output_format)
+    render_dataframe(data_catalog, console=console, output_format=output_format)
+
+    if not include_files and collection.total_count > limit:
+        logger.warning(
+            f"Displaying {limit} of {collection.total_count} filtered results. "
+            f"Use the `--limit` option to display more."
+        )
 
 
 @app.command()
@@ -116,6 +187,63 @@ def list_columns(
 
     for column in sorted(data_catalog.columns.to_list()):
         print(column)
+
+
+@app.command()
+def retract(ctx: typer.Context, slug: str) -> None:
+    """
+    Retract a dataset so it is excluded from future solve-time selection.
+
+    The dataset's row and files are left intact for provenance and historical execution
+    inspection. Only its eligibility to satisfy a diagnostic's data requirements changes.
+    There is no hard-delete path (a dataset that has ever run cannot be removed without either
+    violating a foreign key or destroying execution provenance), so this is the only way to stop
+    a superseded dataset (e.g. an old obs4MIPs row re-ingested under obs4REF) from continuing to
+    match diagnostics.
+
+    Retracting an already-retracted dataset is a no-op.
+    """
+    console = ctx.obj.console
+    db = ctx.obj.database
+
+    with db.session.begin():
+        dataset = db.session.query(Dataset).filter_by(slug=slug).one_or_none()
+        if dataset is None:
+            logger.error(f"No dataset found with slug {slug!r}")
+            raise typer.Exit(code=1)
+
+        if dataset.retracted_at is not None:
+            console.print(f"Dataset {slug!r} is already retracted (since {dataset.retracted_at}). No change.")
+            return
+
+        dataset.retracted_at = datetime.datetime.now(datetime.UTC).replace(tzinfo=None)
+
+    console.print(f"Retracted dataset {slug!r}.")
+
+
+@app.command()
+def unretract(ctx: typer.Context, slug: str) -> None:
+    """
+    Restore a retracted dataset to solve-eligibility.
+
+    The inverse of ``retract``. Unretracting a dataset that is not currently retracted is a no-op.
+    """
+    console = ctx.obj.console
+    db = ctx.obj.database
+
+    with db.session.begin():
+        dataset = db.session.query(Dataset).filter_by(slug=slug).one_or_none()
+        if dataset is None:
+            logger.error(f"No dataset found with slug {slug!r}")
+            raise typer.Exit(code=1)
+
+        if dataset.retracted_at is None:
+            console.print(f"Dataset {slug!r} is not retracted. No change.")
+            return
+
+        dataset.retracted_at = None
+
+    console.print(f"Unretracted dataset {slug!r}.")
 
 
 @app.command()

@@ -11,6 +11,6 @@ Not all metrics are useful for all variables or should be used with every observ
 Each metric may be converted into a performance score.
 """
 
-from .typing import ScalarMetricValue, SeriesMetricValue
+from .typing import MetricValueKind, ScalarMetricValue, SeriesMetricValue
 
-__all__ = ["ScalarMetricValue", "SeriesMetricValue"]
+__all__ = ["MetricValueKind", "ScalarMetricValue", "SeriesMetricValue"]

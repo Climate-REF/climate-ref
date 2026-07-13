@@ -1,0 +1,85 @@
+{
+  "catalog_hash": "0785449fa584248e1d89ab12e46ea24b4030e0ec",
+  "committed": {
+    "diagnostic.json": "183d82f3963ad19b5a556b8025e6990c444f292adda1d464e12136d05a5ef3b3",
+    "output.json": "097d07332e39889ab51b9c55a9f03e4d3dc6a442a7f1693aa15d59bba50d7086",
+    "series.json": "bb5f92524671be619ac30d8aad69c45744e333389d8fc02081944ea445dacbcc"
+  },
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "6143c716e14beb7af00b11114889ff0e041a53e86c0720291be8a0b07ab1c0cc",
+      "size": 22125
+    },
+    "executions/recipe/plots/plot_maps/plot/map_lwcre_CanESM5_atmos.png": {
+      "sha256": "8fd12bec85f5941118c49478a76f19f6d0615de5c43ae1dc7597ad4b881e4ea1",
+      "size": 559519
+    },
+    "executions/recipe/plots/plot_maps/plot/map_swcre_CanESM5_atmos.png": {
+      "sha256": "c5a8894e2d90bf041087ad813e35d2eda34dc701c6f612a850feb6e32353dd3f",
+      "size": 419286
+    },
+    "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_ambiguous_mip.png": {
+      "sha256": "f2d0d8c56184e5f1671c1eeff1612b349e7c3bf6073e833aaaa5f42932537128",
+      "size": 162036
+    },
+    "executions/recipe/plots/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_ambiguous_mip.png": {
+      "sha256": "628b66e16d91d262d2fc5d4a97734f8a2f058a809df874f86a22c66a9b1a4cb7",
+      "size": 129570
+    },
+    "executions/recipe/run/plot_maps/plot/diagnostic_provenance.yml": {
+      "sha256": "32560c73cc12c1825891364a6d703020512cb80c24e297d52e09495d66df4ef9",
+      "size": 3682
+    },
+    "executions/recipe/run/plot_profiles/plot/diagnostic_provenance.yml": {
+      "sha256": "97ead21e04b280cb4b733c68f4130e5e63e6fe858beb00cd6b92852d8c92b489",
+      "size": 1422
+    },
+    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_bottom.nc": {
+      "sha256": "50948828bb1dd3fe053325b7860b4170dc81c83a8006b162cfbc539c74fb0a31",
+      "size": 299088
+    },
+    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_top_left.nc": {
+      "sha256": "7d8d5a3098695ec265def4098e88c144d80d5b221b8f1b26407841d5e301b131",
+      "size": 296682
+    },
+    "executions/recipe/work/plot_maps/plot/map_lwcre_CanESM5_atmos_top_right.nc": {
+      "sha256": "daeda7c33146d0979fa2523545f03c13ee0a275c04a17eae896e14d7e1d08096",
+      "size": 293881
+    },
+    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_bottom.nc": {
+      "sha256": "982b3b16bfecbd2e04ee0ead4b59a4f079e7eab0e664f4ce6d1b072bc7e5d62c",
+      "size": 299278
+    },
+    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_top_left.nc": {
+      "sha256": "d3366e9e8aedfba8d8cebb6fff5547b4769abe524b7939cd08e95a76c3f46652",
+      "size": 296966
+    },
+    "executions/recipe/work/plot_maps/plot/map_swcre_CanESM5_atmos_top_right.nc": {
+      "sha256": "5c1cabc02f9d451f07b15005730f29205bfebd1a5cca46ade1c584d1e652153c",
+      "size": 293881
+    },
+    "executions/recipe/work/plot_profiles/plot/variable_vs_lat_lwcre_ambiguous_dataset_ambiguous_mip.nc": {
+      "sha256": "8cd9444fffdee52dfe0de2eec7454329552ee2557e4e979c6594b285de503e19",
+      "size": 12976
+    },
+    "executions/recipe/work/plot_profiles/plot/variable_vs_lat_swcre_ambiguous_dataset_ambiguous_mip.nc": {
+      "sha256": "9bb4e5162adbbc284b35d32f6fa2382d9ddf9e66982a0020245c938f074977f8",
+      "size": 12978
+    },
+    "output.json": {
+      "sha256": "64e93ece3b9dc2b2bc8127681fd4c8a292cc3df8602f7ef5c9e208da6f5bb558",
+      "size": 5532
+    },
+    "series.json": {
+      "sha256": "28fa10d62a913c9c420cc8112fca5a815c0de7d81bf2355c89a61f3f68cac9a5",
+      "size": 25525
+    }
+  },
+  "schema": 2,
+  "test_case_version": 1
+}

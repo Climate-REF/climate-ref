@@ -11,7 +11,6 @@ from climate_ref_core.diagnostics import ExecutionResult
 from climate_ref_core.metric_values.typing import SeriesMetricValue
 from climate_ref_core.regression.manifest import Manifest
 from climate_ref_core.testing import (
-    RegressionValidator,
     TestCase,
     TestCasePaths,
     TestDataSpecification,
@@ -23,6 +22,11 @@ from climate_ref_core.testing import (
     validate_cmec_bundles,
     validate_series_regression,
 )
+
+
+def _paths_file(catalog: Path) -> Path:
+    """Sidecar location for tests that keep the catalog and its paths side by side."""
+    return catalog.with_suffix(".paths.yaml")
 
 
 class TestTestCase:
@@ -122,26 +126,45 @@ class TestTestCasePaths:
 
     def test_from_test_data_dir(self, tmp_path):
         """Test creating from explicit test data dir."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
 
         assert paths.root == tmp_path / "my-diag" / "default"
         assert paths.catalog == tmp_path / "my-diag" / "default" / "catalog.yaml"
-        assert paths.catalog_paths == tmp_path / "my-diag" / "default" / "catalog.paths.yaml"
         assert paths.regression == tmp_path / "my-diag" / "default" / "regression"
+
+    def test_catalog_paths_lives_under_the_dataset_cache(self, tmp_path, monkeypatch):
+        """The paths sidecar tracks the cache, not the checkout."""
+        cache = tmp_path / "cache"
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(cache))
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
+
+        assert paths.catalog_paths == (
+            cache / "test-case-paths" / "my-provider" / "my-diag" / "default" / "catalog.paths.yaml"
+        )
+        # It must not sit in the package tree, or a fresh checkout loses it.
+        assert paths.root not in paths.catalog_paths.parents
+
+    def test_catalog_paths_namespaced_by_provider(self, tmp_path, monkeypatch):
+        """Diagnostic slugs are only unique within a provider, so sidecars must not collide."""
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
+        a = TestCasePaths.from_test_data_dir(tmp_path, "example", "default", "provider-a")
+        b = TestCasePaths.from_test_data_dir(tmp_path, "example", "default", "provider-b")
+
+        assert a.catalog_paths != b.catalog_paths
 
     def test_test_data_dir_property(self, tmp_path):
         """Test that test_data_dir returns the base directory."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         assert paths.test_data_dir == tmp_path
 
     def test_exists_false_when_not_created(self, tmp_path):
         """Test exists returns False when directory doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         assert not paths.exists()
 
     def test_create_makes_directory(self, tmp_path):
         """Test create makes the test case directory."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         assert not paths.root.exists()
 
         paths.create()
@@ -151,8 +174,8 @@ class TestTestCasePaths:
 
     def test_different_test_cases(self, tmp_path):
         """Test different test case names produce different paths."""
-        default = TestCasePaths.from_test_data_dir(tmp_path, "diag", "default")
-        custom = TestCasePaths.from_test_data_dir(tmp_path, "diag", "custom")
+        default = TestCasePaths.from_test_data_dir(tmp_path, "diag", "default", "my-provider")
+        custom = TestCasePaths.from_test_data_dir(tmp_path, "diag", "custom", "my-provider")
 
         assert default.root != custom.root
         assert default.regression != custom.regression
@@ -183,12 +206,12 @@ class TestYamlSerialization:
 
         # Save to YAML
         yaml_path = tmp_path / "test_datasets.yaml"
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         assert yaml_path.exists()
 
         # Load from YAML
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         # Verify
         assert SourceDatasetType.CMIP6 in loaded
@@ -228,7 +251,7 @@ class TestYamlSerialization:
 
         # Save to YAML
         yaml_path = tmp_path / "test_datasets.yaml"
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         # Check that paths file has 3 entries with composite keys
         paths_file = yaml_path.with_suffix(".paths.yaml")
@@ -243,7 +266,7 @@ class TestYamlSerialization:
         assert "CMIP6.test.dataset1::tas_1890-1909.nc" in paths_map
 
         # Load from YAML
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         # Verify all 3 rows are preserved
         loaded_collection = loaded[SourceDatasetType.CMIP6]
@@ -265,7 +288,7 @@ class TestYamlSerialization:
         yaml_path = tmp_path / "nested" / "deep" / "test.yaml"
         assert not yaml_path.parent.exists()
 
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         assert yaml_path.exists()
         assert yaml_path.parent.exists()
@@ -282,21 +305,46 @@ class TestYamlSerialization:
 
         yaml_path = tmp_path / "catalog.yaml"
         paths_file = yaml_path.with_suffix(".paths.yaml")
-        assert save_datasets_to_yaml(datasets, yaml_path) is True
+        assert save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path)) is True
         assert paths_file.exists()
 
-        # Simulate a fresh checkout: committed catalog present, gitignored paths file absent.
+        # Simulate a cold cache: committed catalog present, paths sidecar absent.
         catalog_bytes_before = yaml_path.read_bytes()
         paths_file.unlink()
 
         # Unchanged catalog → returns False (catalog not rewritten) but the paths file is restored.
-        assert save_datasets_to_yaml(datasets, yaml_path) is False
+        assert save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path)) is False
         assert paths_file.exists()
         # The version-controlled catalog must be byte-identical (no spurious diff).
         assert yaml_path.read_bytes() == catalog_bytes_before
         # And the regenerated paths must round-trip.
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
         assert loaded[SourceDatasetType.CMIP6].datasets["path"].tolist() == ["/path/to/file.nc"]
+
+    def test_paths_resolve_across_workspaces(self, tmp_path):
+        """A sidecar written by one checkout must resolve a catalog read from another.
+
+        This is the CI failure: ``populate-cache`` wrote the sidecar into its own ephemeral
+        workspace, then the ``test-cases`` jobs checked out fresh trees and found no paths.
+        Holding the sidecar outside the tree is what makes the two halves meet.
+        """
+        df = pd.DataFrame({"instance_id": ["CMIP6.test.ds"], "path": ["/data/cache/file.nc"]})
+        collection = DatasetCollection(datasets=df, slug_column="instance_id", selector=())
+        datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
+
+        # The writer job: catalog in its workspace, sidecar in the shared cache.
+        writer_catalog = tmp_path / "writer-workspace" / "catalog.yaml"
+        sidecar = tmp_path / "shared-cache" / "catalog.paths.yaml"
+        save_datasets_to_yaml(datasets, writer_catalog, sidecar)
+
+        # The reader job: same committed catalog, brand new workspace, no sibling sidecar.
+        reader_catalog = tmp_path / "reader-workspace" / "catalog.yaml"
+        reader_catalog.parent.mkdir(parents=True)
+        reader_catalog.write_bytes(writer_catalog.read_bytes())
+        assert not reader_catalog.with_suffix(".paths.yaml").exists()
+
+        loaded = load_datasets_from_yaml(reader_catalog, sidecar)
+        assert loaded[SourceDatasetType.CMIP6].datasets["path"].tolist() == ["/data/cache/file.nc"]
 
     def test_load_with_selector(self, tmp_path):
         """Test loading YAML with selector information."""
@@ -313,7 +361,7 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         collection = loaded[SourceDatasetType.CMIP6]
         # Selector is stored as sorted tuple of tuples
@@ -340,7 +388,7 @@ obs4mips:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         assert SourceDatasetType.CMIP6 in loaded
         assert SourceDatasetType.obs4MIPs in loaded
@@ -356,7 +404,7 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         collection = loaded[SourceDatasetType.CMIP6]
         assert len(collection.datasets) == 0
@@ -378,7 +426,7 @@ cmip6:
         paths_file = tmp_path / "test.paths.yaml"
         assert not paths_file.exists()
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         collection = loaded[SourceDatasetType.CMIP6]
         assert len(collection.datasets) == 1
@@ -399,7 +447,7 @@ cmip6:
         datasets = ExecutionDatasetCollection({SourceDatasetType.CMIP6: collection})
 
         yaml_path = tmp_path / "test.yaml"
-        save_datasets_to_yaml(datasets, yaml_path)
+        save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
 
         # Check hash is stored
         with open(yaml_path) as f:
@@ -423,14 +471,14 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
 
         # First write
-        result1 = save_datasets_to_yaml(datasets, yaml_path)
+        result1 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
         assert result1 is True
 
         # Get modification time
         mtime1 = yaml_path.stat().st_mtime
 
         # Second write with same data should skip
-        result2 = save_datasets_to_yaml(datasets, yaml_path)
+        result2 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
         assert result2 is False
 
         # File should not have been modified
@@ -460,15 +508,15 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
 
         # First write
-        result1 = save_datasets_to_yaml(datasets1, yaml_path)
+        result1 = save_datasets_to_yaml(datasets1, yaml_path, _paths_file(yaml_path))
         assert result1 is True
 
         # Second write with different data should write
-        result2 = save_datasets_to_yaml(datasets2, yaml_path)
+        result2 = save_datasets_to_yaml(datasets2, yaml_path, _paths_file(yaml_path))
         assert result2 is True
 
         # Verify the new data is in the file
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
         assert "CMIP6.test.dataset2" in loaded[SourceDatasetType.CMIP6].datasets["instance_id"].values
 
     def test_save_force_overwrites_even_when_unchanged(self, tmp_path):
@@ -485,11 +533,11 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
 
         # First write
-        result1 = save_datasets_to_yaml(datasets, yaml_path)
+        result1 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path))
         assert result1 is True
 
         # Force write with same data
-        result2 = save_datasets_to_yaml(datasets, yaml_path, force=True)
+        result2 = save_datasets_to_yaml(datasets, yaml_path, _paths_file(yaml_path), force=True)
         assert result2 is True
 
     def test_load_ignores_metadata_section(self, tmp_path):
@@ -508,7 +556,7 @@ cmip6:
         yaml_path = tmp_path / "test.yaml"
         yaml_path.write_text(yaml_content)
 
-        loaded = load_datasets_from_yaml(yaml_path)
+        loaded = load_datasets_from_yaml(yaml_path, _paths_file(yaml_path))
 
         # Should only have cmip6, not _metadata
         assert SourceDatasetType.CMIP6 in loaded
@@ -574,7 +622,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_no_regression_exists(self, tmp_path):
         """Test returns True when regression directory doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
 
@@ -583,7 +631,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_no_manifest(self, tmp_path):
         """Test returns True when manifest.json doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
         paths.regression.mkdir(parents=True)
@@ -594,7 +642,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_manifest_has_no_catalog_hash(self, tmp_path):
         """Test returns True for a legacy manifest with no recorded catalog hash."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: abc123\ncmip6:\n  datasets: []\n")
         self._seed_manifest(paths, catalog_hash=None)
@@ -604,7 +652,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_no_catalog_file(self, tmp_path):
         """Test returns True when catalog file doesn't exist."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         self._seed_manifest(paths, catalog_hash="abc123")
         # No catalog file
@@ -614,7 +662,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_true_when_hash_differs(self, tmp_path):
         """Test returns True when catalog hash differs from the manifest hash."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: new_hash_456\ncmip6:\n  datasets: []\n")
         self._seed_manifest(paths, catalog_hash="old_hash_123")
@@ -624,7 +672,7 @@ class TestCatalogChangedSinceRegression:
 
     def test_returns_false_when_hash_matches(self, tmp_path):
         """Test returns False when catalog hash matches the manifest hash."""
-        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default")
+        paths = TestCasePaths.from_test_data_dir(tmp_path, "my-diag", "default", "my-provider")
         paths.create()
         paths.catalog.write_text("_metadata:\n  hash: same_hash_789\ncmip6:\n  datasets: []\n")
         self._seed_manifest(paths, catalog_hash="same_hash_789")
@@ -782,162 +830,6 @@ class TestValidateCmecBundles:
 
         with pytest.raises(AssertionError, match="are not a subset of diagnostic facets"):
             validate_cmec_bundles(mock_diagnostic, mock_result)
-
-
-class TestRegressionValidator:
-    """Tests for RegressionValidator class."""
-
-    def test_paths_property(self, tmp_path):
-        """Test paths property returns correct TestCasePaths."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.slug = "my-diag"
-
-        validator = RegressionValidator(
-            diagnostic=mock_diagnostic,
-            test_case_name="default",
-            test_data_dir=tmp_path,
-        )
-
-        paths = validator.paths
-        assert paths.root == tmp_path / "my-diag" / "default"
-
-    def test_has_regression_data_false_when_missing(self, tmp_path):
-        """Test has_regression_data returns False when no regression data."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.slug = "my-diag"
-
-        validator = RegressionValidator(
-            diagnostic=mock_diagnostic,
-            test_case_name="default",
-            test_data_dir=tmp_path,
-        )
-
-        assert validator.has_regression_data() is False
-
-    def test_has_regression_data_true_when_present(self, tmp_path):
-        """Test has_regression_data returns True when regression data exists."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.slug = "my-diag"
-
-        # Create regression directory with diagnostic.json
-        regression_dir = tmp_path / "my-diag" / "default" / "regression"
-        regression_dir.mkdir(parents=True)
-        (regression_dir / "diagnostic.json").write_text("{}")
-
-        validator = RegressionValidator(
-            diagnostic=mock_diagnostic,
-            test_case_name="default",
-            test_data_dir=tmp_path,
-        )
-
-        assert validator.has_regression_data() is True
-
-    def test_load_regression_definition_missing_data(self, tmp_path):
-        """Test load_regression_definition raises FileNotFoundError when no data."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.slug = "my-diag"
-
-        validator = RegressionValidator(
-            diagnostic=mock_diagnostic,
-            test_case_name="default",
-            test_data_dir=tmp_path,
-        )
-
-        with pytest.raises(FileNotFoundError, match="No catalog file"):
-            validator.load_regression_definition(tmp_path / "tmp")
-
-    def test_load_regression_definition_success(self, tmp_path):
-        """Test load_regression_definition copies data and replaces placeholders."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.slug = "my-diag"
-
-        metric_bundle = {
-            "DIMENSIONS": {"json_structure": []},
-            "RESULTS": {},
-            "path": "<OUTPUT_DIR>/result.nc",
-            "data_path": "<TEST_DATA_DIR>/input.nc",
-        }
-
-        validator = RegressionValidator(
-            diagnostic=mock_diagnostic,
-            test_case_name="default",
-            test_data_dir=tmp_path,
-        )
-
-        # Create regression data
-        validator.paths.create()
-        validator.paths.catalog.write_text("{}")
-        regression_dir = validator.paths.regression
-        regression_dir.mkdir(parents=True)
-        (regression_dir / "diagnostic.json").write_text(json.dumps(metric_bundle))
-        (regression_dir / "output.json").write_text('{"html": {}}')
-
-        work_dir = tmp_path / "work"
-        definition = validator.load_regression_definition(work_dir)
-
-        assert definition.diagnostic == mock_diagnostic
-        assert definition.key == "test-default"
-        assert definition.output_directory == work_dir / "output"
-
-        # Check placeholders were replaced
-        loaded_content = (work_dir / "output" / "diagnostic.json").read_text()
-        assert "<OUTPUT_DIR>" not in loaded_content
-        assert "<TEST_DATA_DIR>" not in loaded_content
-        assert str(work_dir / "output") in loaded_content
-        assert str(tmp_path) in loaded_content
-
-    def test_validate_calls_validate_cmec_bundles(self, tmp_path):
-        """Test validate method calls validate_cmec_bundles."""
-        mock_diagnostic = MagicMock()
-        mock_diagnostic.slug = "my-diag"
-        mock_diagnostic.facets = ("source_id", "metric", "statistic")
-
-        # Create output directory with valid bundles
-        output_dir = tmp_path / "output"
-        output_dir.mkdir()
-
-        # Create mock result with spec and proper attributes
-        mock_result = MagicMock(spec=ExecutionResult)
-        mock_result.successful = True
-        mock_result.metric_bundle_filename = Path("diagnostic.json")
-        mock_result.output_bundle_filename = Path("output.json")
-        mock_result.to_output_path = lambda f: output_dir / f
-        mock_diagnostic.build_execution_result.return_value = mock_result
-
-        # Create mock definition
-        mock_definition = MagicMock()
-        mock_definition.to_output_path = lambda f: output_dir / f if f else output_dir
-
-        # Create valid CMEC bundles (RESULTS needs nested dicts with scalars at leaf)
-        metric_bundle = {
-            "DIMENSIONS": {
-                "json_structure": ["source_id", "metric", "statistic"],
-                "source_id": {"M1": {}},
-                "metric": {"rmse": {}},
-                "statistic": {"value": {}},
-            },
-            "RESULTS": {"M1": {"rmse": {"value": 0.5}}},
-        }
-        output_bundle = {
-            "data": {},
-            "plots": {},
-            "metrics": {},
-            "provenance": {"environment": {}, "modeldata": "", "obsdata": "", "log": ""},
-        }
-        (output_dir / "diagnostic.json").write_text(json.dumps(metric_bundle))
-        (output_dir / "output.json").write_text(json.dumps(output_bundle))
-        (output_dir / "out.log").touch()  # Create log file that validate touches
-
-        validator = RegressionValidator(
-            diagnostic=mock_diagnostic,
-            test_case_name="default",
-            test_data_dir=tmp_path,
-        )
-
-        validator.validate(mock_definition)
-
-        # Verify build_execution_result was called
-        mock_diagnostic.build_execution_result.assert_called_once_with(mock_definition)
 
 
 def _series(value: float, *, dim: str = "M1", index_name: str = "year", attrs=None) -> SeriesMetricValue:

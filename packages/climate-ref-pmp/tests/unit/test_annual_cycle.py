@@ -1,5 +1,3 @@
-import datetime
-
 import pandas as pd
 import pytest
 from climate_ref_pmp import AnnualCycle
@@ -130,7 +128,8 @@ def test_annual_cycle_diagnostic(
     parameter_file = _get_resource(
         "climate_ref_pmp.params", "pmp_param_annualcycle_1-clims.py", use_resources=True
     )
-    date_stamp = datetime.datetime.now().strftime("%Y%m%d")
+    # Pinned to the diagnostic version so reruns produce identical commands
+    clim_version = f"v{diagnostic.version}"
 
     definition.output_directory.mkdir(parents=True)
 
@@ -151,7 +150,7 @@ def test_annual_cycle_diagnostic(
         "--outfile",
         f"{output_dir}/{variable_id}_{source_id}_historical_{member_id}_clims.nc",
         "--version",
-        f"v{date_stamp}",
+        clim_version,
     ]
 
     # Check the second command
@@ -174,7 +173,7 @@ def test_annual_cycle_diagnostic(
         "--realization",
         member_id,
         "--filename_template",
-        f"%(variable)_{source_id}_historical_{member_id}_clims.198101-200512.AC.v{date_stamp}.nc",
+        f"%(variable)_{source_id}_historical_{member_id}_clims.198101-200512.AC.{clim_version}.nc",
         "--metrics_output_path",
         str(output_dir),
         "--cmec",

@@ -25,7 +25,7 @@ TOL = Tolerance()
 class TestTolerance:
     def test_defaults(self) -> None:
         t = Tolerance()
-        assert t.rtol == 1e-6
+        assert t.rtol == 1e-5
         assert t.atol == 1e-8
 
     def test_custom_values(self) -> None:
@@ -213,8 +213,9 @@ class TestAssertBundleRegressionBasic:
         expected = tmp_path / "expected.json"
         actual = tmp_path / "actual.json"
         _write_json(expected, {"score": 1.0})
-        # Within rtol=1e-6
-        _write_json(actual, {"score": 1.0000005})
+        # Within rtol=1e-5 but beyond the old 1e-6 default,
+        # so this exercises the widened tolerance rather than the old one.
+        _write_json(actual, {"score": 1.000005})
         assert_bundle_regression(expected, actual, slug="test-diag", tol=TOL, replacements={})
 
     def test_assertion_error_contains_slug(self, tmp_path: Path) -> None:

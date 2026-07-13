@@ -122,6 +122,55 @@ If this is set, then the sample data won't be updated.
 Path where the test output is stored.
 This is used to store the output of the tests that are run in the test suite for later inspection.
 
+## Grey list
+
+The REF maintains a grey list:
+datasets that are known to cause problems for particular diagnostics
+and should be excluded from solving until the underlying issues are resolved.
+The grey list is a YAML file listing facets to exclude per provider, diagnostic and source type.
+
+!!! note "Naming"
+
+    The configuration values below are currently named `ignore_datasets_*` for historical reasons.
+    They will be renamed to `grey_list_*` in a future release;
+    the old names will continue to work for a deprecation period.
+
+Two configuration values control this behaviour:
+
+* `ignore_datasets_file` (env `REF_IGNORE_DATASETS_FILE`) —
+  the path to the grey list file.
+  It defaults to a location under the user cache directory
+  and is coerced to a filesystem path.
+* `ignore_datasets_url` (env `REF_IGNORE_DATASETS_URL`) —
+  the URL the grey list is fetched from.
+  It defaults to the copy shipped in the Climate-REF repository.
+
+The grey list is fetched lazily during solving,
+not while the configuration is loaded.
+Read-only commands such as `ref providers list` and `ref datasets list` never perform network I/O.
+When a solve runs,
+the cached file is refreshed from `ignore_datasets_url` only if it is missing or older than six hours,
+so at most one download happens per six-hour window.
+
+If the download fails and a cached copy already exists,
+the cached copy is reused unchanged and a warning is logged.
+If the download fails and no cached copy exists,
+the solve fails with an error
+rather than silently running without the grey list protections.
+
+### Offline and air-gapped deployments
+
+On systems without outbound network access (for example an air-gapped HPC cluster),
+seed the grey list manually and disable fetching:
+
+1. Copy `default_ignore_datasets.yaml` to a writable location on the target system.
+2. Point `ignore_datasets_file` at that copy,
+   for example `REF_IGNORE_DATASETS_FILE=/shared/config/default_ignore_datasets.yaml`.
+3. Set `REF_IGNORE_DATASETS_URL=` (an empty string) to disable fetching entirely.
+
+With an empty URL the solver never touches the network
+and uses whatever grey list already exists at `ignore_datasets_file`.
+
 ## Configuration Options
 
 <!-- This file is appended to by gen_config_stubs.py -->

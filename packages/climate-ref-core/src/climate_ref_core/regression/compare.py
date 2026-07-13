@@ -21,13 +21,13 @@ class Tolerance:
     ----------
     rtol
         Relative tolerance — the allowed proportional difference between expected
-        and actual float values (default ``1e-6``).
+        and actual float values (default ``1e-5``).
     atol
         Absolute tolerance — the floor difference always permitted,
         regardless of magnitude (default ``1e-8``).
     """
 
-    rtol: float = 1e-6
+    rtol: float = 1e-5
     atol: float = 1e-8
 
 

@@ -1,5 +1,5 @@
 _metadata:
-  hash: d07fdf9856c054308f5b93e722ce8fa52370169d
+  hash: ee38a53200d5918181c4d08ecd0e705d07eee395
 cmip6:
   slug_column: instance_id
   selector:
@@ -206,4 +206,101 @@ cmip6:
     variable_id: areacella
     variant_label: r1i1p1f1
     version: v20190429
+    vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    source_id: CERES-EBAF-4-2-1
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '2025-09-15 00:00:00'
+    filename: rlut_mon_CERES-EBAF-4-2-1_NASA-GISS_gn_200003-202509.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlut.100km.gn.v20260220
+    institution_id: NASA-LaRC
+    long_name: TOA Outgoing Longwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2-1
+    source_type: satellite_blended
+    source_version_number: 4.2.1
+    start_time: '2000-03-15 00:00:00'
+    time_range: 2000-03-15 00:00:00-2025-09-15 00:00:00
+    units: W m-2
+    variable_id: rlut
+    variant_label: NASA-GISS
+    version: v20260220
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2025-09-15 00:00:00'
+    filename: rlutcs_mon_CERES-EBAF-4-2-1_NASA-GISS_gn_200003-202509.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rlutcs.100km.gn.v20260220
+    institution_id: NASA-LaRC
+    long_name: TOA Outgoing Clear-Sky Longwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2-1
+    source_type: satellite_blended
+    source_version_number: 4.2.1
+    start_time: '2000-03-15 00:00:00'
+    time_range: 2000-03-15 00:00:00-2025-09-15 00:00:00
+    units: W m-2
+    variable_id: rlutcs
+    variant_label: NASA-GISS
+    version: v20260220
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2025-09-15 00:00:00'
+    filename: rsut_mon_CERES-EBAF-4-2-1_NASA-GISS_gn_200003-202509.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsut.100km.gn.v20260220
+    institution_id: NASA-LaRC
+    long_name: TOA Outgoing Shortwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2-1
+    source_type: satellite_blended
+    source_version_number: 4.2.1
+    start_time: '2000-03-15 00:00:00'
+    time_range: 2000-03-15 00:00:00-2025-09-15 00:00:00
+    units: W m-2
+    variable_id: rsut
+    variant_label: NASA-GISS
+    version: v20260220
+    vertical_levels: 1
+  - activity_id: obs4MIPs
+    end_time: '2025-09-15 00:00:00'
+    filename: rsutcs_mon_CERES-EBAF-4-2-1_NASA-GISS_gn_200003-202509.nc
+    finalised: true
+    frequency: mon
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NASA-LaRC.CERES-EBAF-4-2-1.mon.rsutcs.100km.gn.v20260220
+    institution_id: NASA-LaRC
+    long_name: TOA Outgoing Clear-Sky Shortwave Radiation
+    nominal_resolution: 100 km
+    product: observations
+    realm: atmos
+    source_id: CERES-EBAF-4-2-1
+    source_type: satellite_blended
+    source_version_number: 4.2.1
+    start_time: '2000-03-15 00:00:00'
+    time_range: 2000-03-15 00:00:00-2025-09-15 00:00:00
+    units: W m-2
+    variable_id: rsutcs
+    variant_label: NASA-GISS
+    version: v20260220
     vertical_levels: 1

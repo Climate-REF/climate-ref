@@ -11,7 +11,6 @@ from pathlib import Path
 from typing import Any, ClassVar
 
 import pandas as pd
-import platformdirs
 import xarray as xr
 from loguru import logger
 
@@ -22,21 +21,26 @@ from climate_ref_core.cmip6_to_cmip7 import (
     format_cmip7_time_range,
     get_dreq_entry,
     get_frequency_from_table,
+    shift_time_axis_end,
     suppress_bounds_coordinates,
 )
+from climate_ref_core.dataset_registry import resolve_cache_dir
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 
 def _get_cmip7_cache_dir() -> Path:
     """Get the cache directory for converted CMIP7 files."""
-    # Use platform-appropriate cache directory for climate-ref
-    # This avoids polluting the intake-esgf cache with converted files
-    cache_dir = Path(platformdirs.user_cache_dir("climate_ref")) / "cmip7-converted"
+    # Kept out of the intake-esgf cache so converted files don't mix with downloads.
+    cache_dir = resolve_cache_dir("cmip7-converted")
     cache_dir.mkdir(parents=True, exist_ok=True)
     return cache_dir
 
 
-def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Path:
+def _convert_file_to_cmip7(
+    cmip6_path: Path,
+    cmip7_facets: dict[str, Any],
+    extend_historical_to: tuple[int, int] | None = None,
+) -> Path:
     """
     Convert a CMIP6 file to CMIP7 format.
 
@@ -46,6 +50,10 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
         Path to the CMIP6 NetCDF file
     cmip7_facets
         CMIP7 facets for the output path
+    extend_historical_to
+        Opt-in ``(end_year, end_month)`` passed to :func:`convert_cmip6_dataset`
+        to relabel the time axis so historical coverage reaches that month.
+        Defaults to ``None`` (time axis untouched).
 
     Returns
     -------
@@ -77,15 +85,22 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
 
     time_coder = xr.coders.CFDatetimeCoder(use_cftime=True)
     with xr.open_dataset(cmip6_path, decode_times=time_coder) as ds:
+        # When fabricating extended historical coverage, relabel the time axis first
+        # so both the filename time range and the written data reflect the new dates.
+        source_ds = ds
+        if extend_historical_to is not None:
+            end_year, end_month = extend_historical_to
+            source_ds = shift_time_axis_end(ds, end_year=end_year, end_month=end_month)
+
         frequency = str(cmip7_facets.get("frequency", "mon"))
-        time_range = format_cmip7_time_range(ds, frequency)
+        time_range = format_cmip7_time_range(source_ds, frequency)
         output_file = drs_path / create_cmip7_filename(cmip7_facets, time_range=time_range)
 
         if output_file.exists():
             logger.debug(f"Using cached CMIP7 file: {output_file}")
             return output_file
 
-        ds_cmip7 = convert_cmip6_dataset(ds)
+        ds_cmip7 = convert_cmip6_dataset(source_ds)
 
         # Ensure version and sanitized activity_id are in the file attributes
         # so that parse_cmip7_file can extract them for instance_id construction
@@ -98,10 +113,18 @@ def _convert_file_to_cmip7(cmip6_path: Path, cmip7_facets: dict[str, Any]) -> Pa
 
             # Apply lossy compression - these are converted files used for
             # verification only, so precision loss is acceptable.
-            encoding = {
-                var: {"zlib": True, "complevel": 5, "least_significant_digit": 3}
-                for var in ds_cmip7.data_vars
-            }
+            # gpp magnitudes (~1e-8 kg m-2 s-1) sit far below the fixed
+            # least_significant_digit=3 (~1e-3) precision floor, which would round the entire field to zero.
+            # Keep gpp lossless; other variables tolerate it.
+            encoding: dict[str, dict[str, Any]] = {}
+            for var in ds_cmip7.data_vars:
+                var_encoding: dict[str, Any] = {"zlib": True, "complevel": 5}
+
+                lossless_variables = {"gpp"}
+                if str(var) not in lossless_variables:
+                    var_encoding["least_significant_digit"] = 3
+                encoding[str(var)] = var_encoding
+
             ds_cmip7.to_netcdf(output_file, encoding=encoding)
         except PermissionError:
             # If we can't write but file exists (race condition or permission issue), use it
@@ -160,6 +183,7 @@ class CMIP7Request:
         facets: dict[str, Any],
         remove_ensembles: bool = False,
         time_span: tuple[str, str] | None = None,
+        extend_historical_to: tuple[int, int] | None = None,
     ):
         """
         Initialize a CMIP7 request.
@@ -174,11 +198,18 @@ class CMIP7Request:
             If True, keep only one ensemble member per model
         time_span
             Optional time range filter (start, end) in YYYY-MM format
+        extend_historical_to
+            Opt-in ``(end_year, end_month)``. When set, each converted CMIP7 file has
+            its time axis relabelled so historical coverage ends on that month, letting
+            us fabricate CMIP7 data for years without real CMIP6 source data (e.g. the
+            fire diagnostic's 2002-2021 window). Defaults to ``None`` (time axis
+            untouched), so other CMIP7 conversions are unchanged.
         """
         self.slug = slug
         self.facets = facets
         self.remove_ensembles = remove_ensembles
         self.time_span = time_span
+        self.extend_historical_to = extend_historical_to
 
         # Create corresponding CMIP6 facets
         self._cmip6_facets = self._convert_to_cmip6_facets(facets)
@@ -277,7 +308,9 @@ class CMIP7Request:
                 cmip6_path = Path(file_path)
                 if cmip6_path.exists():
                     try:
-                        cmip7_path = _convert_file_to_cmip7(cmip6_path, cmip7_row)
+                        cmip7_path = _convert_file_to_cmip7(
+                            cmip6_path, cmip7_row, extend_historical_to=self.extend_historical_to
+                        )
                         converted_files.append(str(cmip7_path))
                     except Exception as e:
                         logger.exception(f"Failed to convert {cmip6_path.name}: {e}")

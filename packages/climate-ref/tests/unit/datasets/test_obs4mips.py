@@ -87,7 +87,7 @@ def test_empty_dir():
                 "TRACEBACK": str(TEST_DATA_DIR)
                 + "/sample-data/CMIP6/CMIP/CSIRO/ACCESS-ESM1-5/historical/r1i1p1f1/Amon/tas/gn/v20191115/"
                 + "tas_Amon_ACCESS-ESM1-5_historical_r1i1p1f1_gn_185001-201412.nc"
-                + " is not an obs4MIPs dataset",
+                + " is not an obs4MIPs or obs4REF dataset",
             },
         ),
     ),

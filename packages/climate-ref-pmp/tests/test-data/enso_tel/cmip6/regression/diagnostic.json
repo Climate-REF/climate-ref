@@ -7,14 +7,18 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
       "mip_id",
       "source_id",
       "member_id",
       "grid_label",
       "experiment_id",
       "metric",
-      "reference_datasets"
+      "reference_source_id"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -32,7 +36,7 @@
     "mip_id": {
       "cmip6": {}
     },
-    "reference_datasets": {
+    "reference_source_id": {
       "HadISST": {},
       "HadISST_GPCP-Monthly-3-2": {},
       "Tropflux": {},
@@ -45,9 +49,9 @@
   "DISCLAIMER": null,
   "NOTES": null,
   "PROVENANCE": {
-    "commandLine": "/home/jared/code/climate-ref/climate-ref/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
+    "commandLine": "<SOURCE_DIR>/packages/climate-ref-pmp/src/climate_ref_pmp/drivers/enso_driver.py --metrics_collection ENSO_tel --experiment_id historical --input_json_path <OUTPUT_DIR>/input_ENSO_tel_ACCESS-ESM1-5_historical_r1i1p1f1.json --output_directory <OUTPUT_DIR>",
     "conda": {
-      "Platform": "linux-64"
+      "Platform": "<CONDA_PLATFORM>"
     },
     "date": "<DATE>",
     "openGL": {
@@ -73,52 +77,54 @@
     },
     "platform": {
       "Name": "<HOSTNAME>",
-      "OS": "Linux",
+      "OS": "<OS>",
       "Version": "<HOST_VERSION>"
     },
     "userId": "<USER>"
   },
   "RESULTS": {
-    "cmip6": {
-      "ACCESS-ESM1-5": {
-        "r1i1p1f1": {
-          "gn": {
-            "historical": {
-              "EnsoAmpl": {
-                "HadISST": 4.523476,
-                "Tropflux": 11.96119
-              },
-              "EnsoPrMapDjfCorr": {
-                "HadISST_GPCP-Monthly-3-2": 0.4519817,
-                "Tropflux_GPCP-Monthly-3-2": 0.4513125
-              },
-              "EnsoPrMapDjfRmse": {
-                "HadISST_GPCP-Monthly-3-2": 0.2905137,
-                "Tropflux_GPCP-Monthly-3-2": 0.2843175
-              },
-              "EnsoPrMapDjfStd": {
-                "HadISST_GPCP-Monthly-3-2": 0.8674358,
-                "Tropflux_GPCP-Monthly-3-2": 0.8962471
-              },
-              "EnsoPrMapJjaCorr": {
-                "HadISST_GPCP-Monthly-3-2": 0.6199641,
-                "Tropflux_GPCP-Monthly-3-2": 0.6203502
-              },
-              "EnsoPrMapJjaRmse": {
-                "HadISST_GPCP-Monthly-3-2": 0.3951534,
-                "Tropflux_GPCP-Monthly-3-2": 0.3815532
-              },
-              "EnsoPrMapJjaStd": {
-                "HadISST_GPCP-Monthly-3-2": 0.8849127,
-                "Tropflux_GPCP-Monthly-3-2": 0.9411801
-              },
-              "EnsoSeasonality": {
-                "HadISST": 32.72831,
-                "Tropflux": 45.59915
-              },
-              "EnsoSstLonRmse": {
-                "HadISST": 0.2041643,
-                "Tropflux": 0.2053258
+    "model": {
+      "cmip6": {
+        "ACCESS-ESM1-5": {
+          "r1i1p1f1": {
+            "gn": {
+              "historical": {
+                "EnsoAmpl": {
+                  "HadISST": 4.523476,
+                  "Tropflux": 11.96119
+                },
+                "EnsoPrMapDjfCorr": {
+                  "HadISST_GPCP-Monthly-3-2": 0.4519817,
+                  "Tropflux_GPCP-Monthly-3-2": 0.4513125
+                },
+                "EnsoPrMapDjfRmse": {
+                  "HadISST_GPCP-Monthly-3-2": 0.2905137,
+                  "Tropflux_GPCP-Monthly-3-2": 0.2843175
+                },
+                "EnsoPrMapDjfStd": {
+                  "HadISST_GPCP-Monthly-3-2": 0.8674358,
+                  "Tropflux_GPCP-Monthly-3-2": 0.8962471
+                },
+                "EnsoPrMapJjaCorr": {
+                  "HadISST_GPCP-Monthly-3-2": 0.6199641,
+                  "Tropflux_GPCP-Monthly-3-2": 0.6203502
+                },
+                "EnsoPrMapJjaRmse": {
+                  "HadISST_GPCP-Monthly-3-2": 0.3951534,
+                  "Tropflux_GPCP-Monthly-3-2": 0.3815532
+                },
+                "EnsoPrMapJjaStd": {
+                  "HadISST_GPCP-Monthly-3-2": 0.8849127,
+                  "Tropflux_GPCP-Monthly-3-2": 0.9411801
+                },
+                "EnsoSeasonality": {
+                  "HadISST": 32.72831,
+                  "Tropflux": 45.59915
+                },
+                "EnsoSstLonRmse": {
+                  "HadISST": 0.2041643,
+                  "Tropflux": 0.2053258
+                }
               }
             }
           }

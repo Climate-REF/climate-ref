@@ -5,10 +5,11 @@ Catalog builder for discovering and parsing dataset files into a DataFrame
 from __future__ import annotations
 
 import fnmatch
+import multiprocessing as mp
 import os
 import warnings
 from collections.abc import Iterator
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
 from typing import Any
 
@@ -72,6 +73,29 @@ def discover_files(
     return sorted(set(assets))
 
 
+def _resolve_worker_count(n_jobs: int, n_assets: int) -> int:
+    """
+    Resolve ``n_jobs`` to a concrete worker count.
+
+    ``-1`` maps to all available CPUs.
+    The count is limited to the number of assets to avoid unneeded workers.
+
+    Parameters
+    ----------
+    n_jobs
+        Requested parallelism (``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many).
+    n_assets
+        Number of files to parse.
+
+    Returns
+    -------
+    :
+        Number of worker processes to use (``>= 1``).
+    """
+    requested = (os.cpu_count() or 1) if n_jobs == -1 else n_jobs
+    return max(1, min(requested, n_assets))
+
+
 def parse_files(
     assets: list[str],
     parsing_func: DatasetParsingFunction,
@@ -80,31 +104,50 @@ def parse_files(
     """
     Parse files using the given parsing function, optionally in parallel
 
-    Parsing is I/O-bound (opening netCDF files), so threads are used
-    rather than processes.
+    Parsing opens netCDF files, so it is bound by (highly parallel) filesystem I/O.
+
+    Parallelism uses *processes* rather than threads as the netCDF4/HDF5 stack is not thread-safe
+    unless the underlying HDF5 library is compiled with ``--enable-threadsafe``
+    (the wheels published on PyPI are not),
+    so opening files from multiple threads can segfault the interpreter.
+    Processes also sidestep the GIL, which otherwise serialises the pure-Python parsers.
 
     Parameters
     ----------
     assets
         List of file paths to parse
     parsing_func
-        Function to extract metadata from each file
+        Function to extract metadata from each file.
+        Must be importable by reference (a module-level function) so it can be sent to worker processes.
     n_jobs
         Number of parallel workers.
-        ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many threads.
+        ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
 
     Returns
     -------
     :
         List of parsed metadata dictionaries, in the same order as ``assets``.
     """
-    if n_jobs == 1:
+    max_workers = _resolve_worker_count(n_jobs, len(assets)) if n_jobs != 1 else 1
+
+    if max_workers == 1:
         return [parsing_func(asset) for asset in tqdm(assets, desc="Parsing files", unit="file")]
 
-    max_workers = None if n_jobs == -1 else n_jobs
-    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+    # Batch assets per task to amortise inter-process dispatch and result pickling.
+    chunksize = max(1, len(assets) // (max_workers * 4))
+    # "spawn" avoids forking an already multi-threaded parent (loguru sink, tqdm),
+    # The downside is a slightly slower initialisation due to reimporting modules.
+    with ProcessPoolExecutor(
+        max_workers=max_workers,
+        mp_context=mp.get_context("spawn"),
+    ) as executor:
         return list(
-            tqdm(executor.map(parsing_func, assets), total=len(assets), desc="Parsing files", unit="file")
+            tqdm(
+                executor.map(parsing_func, assets, chunksize=chunksize),
+                total=len(assets),
+                desc="Parsing files",
+                unit="file",
+            )
         )
 
 

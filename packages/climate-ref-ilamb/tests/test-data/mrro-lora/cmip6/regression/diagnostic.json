@@ -7,6 +7,8 @@
       "gn": {}
     },
     "json_structure": [
+      "kind",
+      "reference_source_id",
       "experiment_id",
       "source_id",
       "member_id",
@@ -15,6 +17,9 @@
       "metric",
       "statistic"
     ],
+    "kind": {
+      "model": {}
+    },
     "member_id": {
       "r1i1p1f1": {}
     },
@@ -22,6 +27,9 @@
       "Bias": {},
       "RMSE": {},
       "Spatial Distribution": {}
+    },
+    "reference_source_id": {
+      "LORA": {}
     },
     "region": {
       "global": {
@@ -77,40 +85,44 @@
   "NOTES": null,
   "PROVENANCE": null,
   "RESULTS": {
-    "historical": {
-      "CanESM5": {
-        "r1i1p1f1": {
-          "gn": {
-            "global": {
-              "Bias": {
-                "Bias": 6.315167548955852e-07,
-                "Bias Score": 0.7707581901542176,
-                "Period Mean": 9.76737601304236e-06
-              },
-              "RMSE": {
-                "RMSE": 1.934035777211103e-05,
-                "RMSE Score": 0.3748440860781104
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.4270005058645078,
-                "Normalized Standard Deviation": 1.1703556201250525,
-                "Spatial Distribution Score": 0.6961314336890165
-              }
-            },
-            "tropical": {
-              "Bias": {
-                "Bias": 1.1072918892912617e-06,
-                "Bias Score": 0.6224831723450448,
-                "Period Mean": 2.0841060276667588e-05
-              },
-              "RMSE": {
-                "RMSE": 4.1358110151889616e-05,
-                "RMSE Score": 0.2641989223030694
-              },
-              "Spatial Distribution": {
-                "Correlation": 0.2396069662594949,
-                "Normalized Standard Deviation": 1.4644056975885555,
-                "Spatial Distribution Score": 0.5376975184821815
+    "model": {
+      "LORA": {
+        "historical": {
+          "CanESM5": {
+            "r1i1p1f1": {
+              "gn": {
+                "global": {
+                  "Bias": {
+                    "Bias": 6.32929e-07,
+                    "Bias Score": 0.5274992,
+                    "Period Mean": 1.066049e-05
+                  },
+                  "RMSE": {
+                    "RMSE": 1.934036e-05,
+                    "RMSE Score": 0.2136211
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.4270535,
+                    "Normalized Standard Deviation": 1.170585,
+                    "Spatial Distribution Score": 0.6961147
+                  }
+                },
+                "tropical": {
+                  "Bias": {
+                    "Bias": 1.107082e-06,
+                    "Bias Score": 0.3987789,
+                    "Period Mean": 2.146356e-05
+                  },
+                  "RMSE": {
+                    "RMSE": 4.135811e-05,
+                    "RMSE Score": 0.1693322
+                  },
+                  "Spatial Distribution": {
+                    "Correlation": 0.2396274,
+                    "Normalized Standard Deviation": 1.464569,
+                    "Spatial Distribution Score": 0.5376628
+                  }
+                }
               }
             }
           }

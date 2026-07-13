@@ -1,10 +1,14 @@
 registry: ilamb
 
 gpp-WECANN:
+  version: 3
   sources:
-      # TODO: Update to use the obs4REF equiv
-    gpp: ilamb/gpp/WECANN/gpp.nc
-    # gpp: obs4REF/ColumbiaU/WECANN-1-0/mon/gpp/gn/20250516/gpp_mon_WECANN-1-0_REF_gn_200701-201512.nc
+    gpp:
+      obs_source: obs4ref
+      source_id: WECANN-1-0
+      variable_id: gpp
+      grid_label: gn
+      version: v20250902
   relationships:
     pr: ilamb/pr/GPCPv2.3/pr.nc
     # pr: obs4REF/NOAA-NCEI/GPCP-2-3/mon/pr/gn/v20210727/pr_mon_GPCP-2-3_PCMDI_gn_197901-201907.nc
@@ -12,17 +16,22 @@ gpp-WECANN:
   variable_cmap: Greens
 
 gpp-FLUXNET2015:
+  version: 4
   sources:
-    gpp: ilamb/gpp/FLUXNET2015/gpp.nc
+    # Referenced by exact registry key rather than ingested facets
+    # this file's source_id is spelled three different ways (https://github.com/Climate-REF/climate-ref/issues/784)
+    gpp: obs4REF/Fluxnet/FLUXNET2015-1-0/mon/gpp/site/v20260202/gpp_mon_Fluxnet-2015-1-0_REF_site_19910101-20141231.nc
   variable_cmap: Greens
 
 mrro-LORA:
+  version: 3
   sources:
-     # TODO: Update to use the obs4REF equiv
-    mrro: ilamb/mrro/LORA/LORA.nc
-    # mrro:
-    #   obs_source: obs4ref
-    #   source_id: LORA-1-1
+    mrro:
+      obs_source: obs4ref
+      source_id: LORA-1-0
+      variable_id: mrro
+      grid_label: gn
+      version: v20250902
   variable_cmap: Blues
 
 mrsos-WangMao:
@@ -37,42 +46,70 @@ mrsos-WangMao:
   variable_cmap: Blues
 
 cSoil-HWSD2:
+  version: 3
   sources:
-    cSoil: ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc
+    cSoil:
+      obs_source: obs4ref
+      source_id: HWSD-2-0
+      variable_id: cSoil
+      grid_label: gn
+      version: v20250903
   variable_cmap: viridis
 
 lai-AVH15C1:
-  # TODO: Update to use the obs4REF equiv
+  # This case needs a lot of memory.
+  # ILAMB scores the coarsened 0.5 degree reference over its full monthly record, which peaks around 30 GB per execution.
+  version: 4
   sources:
-    lai: ilamb/lai/AVH15C1/lai.nc
-    # lai:
-    #   obs_source: obs4mips
-    #   source_id: NOAA-NCEI-LAI-AVHRR-5-0
+    lai:
+      obs_source: obs4mips
+      # No `version`: obs4mips fetches from ESGF, whose version facet is unprefixed
+      # (e.g. 20260110), while the solve fixture stores it v-prefixed.
+      # Omitting it lets the ESGF search resolve the latest and the solver match on source_id/variable_id/grid_label.
+      source_id: NOAA-NCEI-LAI-AVHRR-5-0
+      variable_id: lai
+      grid_label: gn
+  transforms:
+  # NOAA-NCEI-LAI-AVHRR-5-0 is ~0.05 deg (5 km)
+  # Coarsen the reference to a common grid before comparison.
+  - climate_ref_coarsen_spatial:
+      variable_id: lai
   variable_cmap: Greens
 
 nbp-Hoffman:
+  version: 3
   analyses:
   - nbp
   sources:
-    # TODO: Update to use the obs4REF equiv
-    nbp: ilamb/nbp/HOFFMAN/nbp_1850-2010.nc
-    # nbp:
-    #   obs_source: obs4ref
-    #   variable_id: nbp
-    #   source_id: Hoffman
+    nbp:
+      obs_source: obs4ref
+      source_id: Hoffman-1-0
+      variable_id: nbp
+      grid_label: gm
+      version: v20251117
   transforms:
   - integrate_space:
       varname: nbp
 
 snc-ESACCI:
+  version: 3
   sources:
-    snc: ilamb/snc/Snow-cci/snc_mon_Snow-cci_BE_gn_198201-201906.nc
+    snc:
+      obs_source: obs4ref
+      source_id: CCI-CryoClim-FSC-1
+      variable_id: snc
+      grid_label: gn
+      version: v20250519
 
 burntFractionAll-GFED:
+  version: 3
   sources:
-    burntArea: ilamb/burntFractionAll/GFED/burntArea.nc
-  alternate_vars:
-  - burntFractionAll
+    burntFractionAll:
+      obs_source: obs4ref
+      source_id: GFED-5-0
+      variable_id: burntFractionAll
+      grid_label: gr
+      version: v20260128
   test_source_id: CESM2
 
 emp-GLEAMGPCP2.3:

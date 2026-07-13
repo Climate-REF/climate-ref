@@ -114,17 +114,17 @@ def test_options():
 def test_expected_executions():
     diagnostic = ILAMBStandard(
         registry_file="ilamb",
-        metric_name="cSoil-HWSD2",
-        sources={"cSoil": "ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc"},
+        metric_name="lai-AVH15C1",
+        sources={"lai": "ilamb/lai/AVH15C1/lai.nc"},
     )
 
     # No Obs4MIPs datasets are used yet
     data_catalog = {
         SourceDatasetType.CMIP6: pd.DataFrame(
             [
-                ["cSoil", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "gn", "Amon", "v20191115"],
-                ["cSoil", "ACCESS-ESM1-5", "ssp119", "r1i1p1f1", "mon", "gn", "Amon", "v20191115"],
-                ["cSoil", "ACCESS-ESM1-5", "historical", "r2i1p1f1", "mon", "gn", "Amon", "v20191115"],
+                ["lai", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "gn", "Lmon", "v20191115"],
+                ["lai", "ACCESS-ESM1-5", "ssp119", "r1i1p1f1", "mon", "gn", "Lmon", "v20191115"],
+                ["lai", "ACCESS-ESM1-5", "historical", "r2i1p1f1", "mon", "gn", "Lmon", "v20191115"],
                 ["ts", "ACCESS-ESM1-5", "historical", "r1i1p1f1", "mon", "gn", "Amon", "v20191115"],
                 ["areacella", "ACCESS-ESM1-5", "fx", "r1i1p1f1", "mon", "gn", "Amon", "v20191115"],
             ],
@@ -149,7 +149,7 @@ def test_expected_executions():
         ("source_id", "ACCESS-ESM1-5"),
     )
     assert executions[0].datasets[SourceDatasetType.CMIP6].datasets["variable_id"].tolist() == [
-        "cSoil",
+        "lai",
         "areacella",
     ]
     assert executions[0].datasets[SourceDatasetType.CMIP6].datasets["member_id"].tolist() == [

@@ -1,5 +1,5 @@
 _metadata:
-  hash: 31e7ad829b757a4eabe7bd576520e109f622bf1e
+  hash: e21f11151dd5df6ba988a4382cda6edddeb44be0
 cmip6:
   slug_column: instance_id
   selector:
@@ -828,3 +828,35 @@ cmip6:
     variant_label: r1i1p1f1
     version: v20190429
     vertical_levels: 1
+obs4mips:
+  slug_column: instance_id
+  selector:
+    grid_label: gn
+    source_id: WOA-23
+    variable_id: thetao
+    version: v20251024
+  datasets:
+  - activity_id: obs4MIPs
+    end_time: '1988-12-15 00:00:00'
+    filename: thetao_monC_WOA-23_REF_gn_200501-202212.nc
+    finalised: true
+    frequency: monC
+    grid: 1x1 degree latitude x longitude
+    grid_label: gn
+    instance_id: obs4MIPs.obs4MIPs.NOAA-NCEI-OCL.WOA-23.monC.thetao.1x1degree.gn.v20251024
+    institution_id: NOAA-NCEI-OCL
+    long_name: Objectively analyzed mean fields for sea_water_temperature at standard
+      depth levels.
+    nominal_resolution: 1x1 degree
+    product: observations
+    realm: ocean
+    source_id: WOA-23
+    source_type: gridded_insitu
+    source_version_number: '1.0'
+    start_time: '1988-01-15 00:00:00'
+    time_range: 1988-01-15 00:00:00-1988-12-15 00:00:00
+    units: degC
+    variable_id: thetao
+    variant_label: REF
+    version: v20251024
+    vertical_levels: 57

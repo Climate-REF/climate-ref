@@ -1,3 +1,4 @@
+import json
 import shutil
 
 import pytest
@@ -83,6 +84,40 @@ def test_pdo_metric(data_catalog, config, mocker, pdo_example_dir, provider):
     assert result.successful
     assert metric_bundle_path.exists()
     assert metric_bundle_path.is_file()
+
+
+def test_pdo_bundle_carries_kind_and_reference_source_id(
+    data_catalog, config, mocker, pdo_example_dir, provider
+):
+    # The Layer A contract: every PMP scalar keys its reference identity on
+    # ``reference_source_id`` and declares its role via ``kind`` (always ``model`` for these
+    # model-performance scores). Both must appear in the emitted metric bundle.
+    diagnostic = ExtratropicalModesOfVariability("PDO")
+    diagnostic.provider = provider
+
+    execution = next(
+        solve_executions(
+            data_catalog=data_catalog,
+            diagnostic=diagnostic,
+            provider=diagnostic.provider,
+        )
+    )
+    definition = execution.build_execution_definition(output_root=config.paths.scratch)
+
+    def mock_run_fn(cmd, *args, **kwargs):
+        shutil.copytree(pdo_example_dir, definition.output_directory)
+
+    mocker.patch.object(provider, "run", autospec=True, spec_set=True, side_effect=mock_run_fn)
+    result = diagnostic.run(definition)
+    assert result.successful
+
+    bundle = json.loads((definition.output_directory / result.metric_bundle_filename).read_text())
+    json_structure = bundle["DIMENSIONS"]["json_structure"]
+
+    assert "kind" in json_structure
+    assert "reference_source_id" in json_structure
+    assert "reference_datasets" not in json_structure
+    assert list(bundle["DIMENSIONS"]["kind"]) == ["model"]
 
 
 def test_mode_id_valid():

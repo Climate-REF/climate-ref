@@ -3,8 +3,9 @@ import re
 from pathlib import Path
 
 import pytest
+from pydantic import ValidationError
 
-from climate_ref_core.metric_values.typing import SeriesMetricValue
+from climate_ref_core.metric_values.typing import ScalarMetricValue, SeriesMetricValue
 
 
 class TestSeriesMetricValue:
@@ -129,3 +130,79 @@ class TestSeriesMetricValue:
 
         with pytest.raises(ValueError, match="Expected a list of series values, got <class 'dict'>"):
             SeriesMetricValue.load_from_json(path)
+
+    def test_kind_defaults_to_model(self):
+        value = SeriesMetricValue(
+            dimensions={"source_id": "test"},
+            values=[1.0],
+            index=[0],
+            index_name="time",
+        )
+        assert value.kind == "model"
+        assert value.reference_id is None
+
+    def test_kind_accepts_reference(self):
+        value = SeriesMetricValue(
+            dimensions={"source_id": "test"},
+            kind="reference",
+            values=[1.0],
+            index=[0],
+            index_name="time",
+        )
+        assert value.kind == "reference"
+
+    def test_kind_rejects_unknown_value(self):
+        with pytest.raises(ValidationError):
+            SeriesMetricValue(
+                dimensions={"source_id": "test"},
+                kind="bogus",
+                values=[1.0],
+                index=[0],
+                index_name="time",
+            )
+
+    def test_presentation_attrs_round_trip(self, tmp_path: Path):
+        series = [
+            SeriesMetricValue(
+                dimensions={"source_id": "test"},
+                kind="reference",
+                values=[1.0, 2.0],
+                index=[0, 1],
+                index_name="time",
+                value_units="K",
+                value_long_name="Near-Surface Air Temperature",
+                index_units="days since 1850-01-01",
+                calendar="360_day",
+            )
+        ]
+        path = tmp_path / "series.json"
+        SeriesMetricValue.dump_to_json(path, series)
+        loaded = SeriesMetricValue.load_from_json(path)
+
+        assert loaded == series
+        assert loaded[0].value_units == "K"
+        assert loaded[0].value_long_name == "Near-Surface Air Temperature"
+        assert loaded[0].index_units == "days since 1850-01-01"
+        assert loaded[0].calendar == "360_day"
+
+    def test_presentation_attrs_default_to_none(self):
+        value = SeriesMetricValue(
+            dimensions={"source_id": "test"},
+            values=[1.0],
+            index=[0],
+            index_name="time",
+        )
+        assert value.value_units is None
+        assert value.value_long_name is None
+        assert value.index_units is None
+        assert value.calendar is None
+
+
+class TestScalarMetricValue:
+    def test_kind_defaults_to_model(self):
+        value = ScalarMetricValue(dimensions={"source_id": "test"}, value=1.0)
+        assert value.kind == "model"
+
+    def test_kind_rejects_unknown_value(self):
+        with pytest.raises(ValidationError):
+            ScalarMetricValue(dimensions={"source_id": "test"}, kind="bogus", value=1.0)

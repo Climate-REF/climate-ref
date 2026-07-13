@@ -1,9 +1,15 @@
 registry: iomb
 
 thetao-WOA2023-surface:
+  version: 3
   sources:
-    # NOTE: obs4REF equiv starts beyond historical, cannot use for CMIP6
-    thetao: ilamb/WOA/thetao_mon_WOA_A5B4_gn_200501-201412.nc
+    # WOA-23 monthly climatology (2005-2022); surface field via select_depth.
+    thetao:
+      obs_source: obs4ref
+      source_id: WOA-23
+      variable_id: thetao
+      grid_label: gn
+      version: v20251024
   variable_cmap: Reds
   transforms:
   - select_depth:
@@ -12,9 +18,15 @@ thetao-WOA2023-surface:
   - tos
 
 so-WOA2023-surface:
+  version: 3
   sources:
-    # NOTE: obs4REF equiv starts beyond historical, cannot use for CMIP6
-    so: ilamb/WOA/so_mon_WOA_A5B4_gn_200501-201412.nc
+    # WOA-23 monthly climatology (2005-2022); surface field via select_depth.
+    so:
+      obs_source: obs4ref
+      source_id: WOA-23
+      variable_id: so
+      grid_label: gn
+      version: v20251024
   transforms:
   - select_depth:
       value: 0
@@ -23,6 +35,7 @@ so-WOA2023-surface:
   - sos
 
 amoc-RAPID:
+  version: 3
   analyses:
   - timeseries
   related_vars:
@@ -30,5 +43,10 @@ amoc-RAPID:
   transforms:
   - msftmz_to_rapid
   sources:
-    # obs4REF equiv does not work
-    amoc: ilamb/RAPID/amoc_mon_RAPID_BE_NA_200404-202302.nc
+    # RAPID-2023-1a obs4REF provides raw msftmz; msftmz_to_rapid derives the AMOC index.
+    msftmz:
+      obs_source: obs4ref
+      source_id: RAPID-2023-1a
+      variable_id: msftmz
+      grid_label: gm
+      version: v20250902

@@ -1,12 +1,21 @@
 import json
 from collections.abc import Sequence
 from pathlib import Path
-from typing import Any, Self
+from typing import Any, Literal, Self
 
 import numpy as np
 from pydantic import BaseModel, field_validator, model_validator
 
 Value = float | int
+
+MetricValueKind = Literal["model", "reference"]
+"""The role of a metric value: a model value or a reference (observation) value."""
+
+# Series fields that are omitted from the serialised JSON when left at their default.
+# A series that does not set them then serialises identically to one from before these
+# fields were added, so existing committed regression baselines stay valid without a
+# re-mint; a series that does set them serialises the value.
+_OMIT_WHEN_DEFAULT = ("kind", "reference_id", "value_units", "value_long_name", "index_units", "calendar")
 
 
 class FileDefinition(BaseModel):
@@ -52,6 +61,21 @@ class SeriesMetricValue(BaseModel):
 
     These values are used for a faceted search of the metric values.
     """
+    kind: MetricValueKind = "model"
+    """
+    Whether the series is a model value or a reference (observation) value.
+
+    This is the first-class signal for the role of the value
+    and replaces provider-specific conventions for distinguishing the two.
+    """
+    reference_id: str | None = None
+    """
+    Content hash identifying the reference payload of the series.
+
+    Stable across executions for an identical reference payload,
+    so reference series can be deduplicated deterministically.
+    It is ``None`` for model series and is populated at ingest for reference series.
+    """
     values: Sequence[Value]
     """
     A 1-d array of values
@@ -69,6 +93,31 @@ class SeriesMetricValue(BaseModel):
     The name of the index.
 
     This is used for presentation purposes and is not used in the controlled vocabulary.
+    """
+
+    value_units: str | None = None
+    """
+    Units of the series values (e.g. ``"K"``).
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
+    """
+    value_long_name: str | None = None
+    """
+    Human-readable name of the series values (e.g. ``"Near-Surface Air Temperature"``).
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
+    """
+    index_units: str | None = None
+    """
+    Units of the index (e.g. ``"days since 1850-01-01"``).
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
+    """
+    calendar: str | None = None
+    """
+    Calendar of a time index (e.g. ``"360_day"``), when the index is temporal.
+
+    Presentation metadata. Optional for now; falls back to ``attributes`` when absent.
     """
 
     attributes: dict[str, str | Value | None] | None = None
@@ -115,24 +164,37 @@ class SeriesMetricValue(BaseModel):
         series
             The series values to dump.
         """
-        # Sort the series by their dimensions before serialising so the order is
-        # deterministic across platforms and runs. Diagnostics may emit series in an
-        # implementation-defined order (e.g. set or dict iteration that differs by
-        # platform), which otherwise produces spurious diffs and breaks the positional
-        # regression comparator. ``dimensions`` uniquely identifies a series; ``index_name``
-        # is a stable tie-breaker.
+        # Sort the series before serialising so the order is deterministic across platforms
+        # and runs. Diagnostics may emit series in an implementation-defined order (e.g. set or
+        # dict iteration that differs by platform), which otherwise produces spurious diffs and
+        # breaks the positional regression comparator. ``dimensions`` and ``kind`` together
+        # identify a series (``kind`` lives outside ``dimensions``); ``index_name`` is a stable
+        # tie-breaker.
         ordered = sorted(
             series,
-            key=lambda s: (json.dumps(s.dimensions, sort_keys=True), s.index_name),
+            key=lambda s: (json.dumps(s.dimensions, sort_keys=True), s.kind, s.index_name),
         )
         with open(path, "w") as f:
             json.dump(
-                [s.model_dump(mode="json") for s in ordered],
+                [s._dump_for_json() for s in ordered],
                 f,
                 indent=2,
                 allow_nan=False,
                 sort_keys=True,
             )
+
+    def _dump_for_json(self) -> dict[str, Any]:
+        """
+        Serialise to a JSON-ready dict, omitting the added fields left at their default.
+
+        See [_OMIT_WHEN_DEFAULT][climate_ref_core.metric_values.typing._OMIT_WHEN_DEFAULT].
+        """
+        data = self.model_dump(mode="json")
+        fields = type(self).model_fields
+        for field in _OMIT_WHEN_DEFAULT:
+            if data.get(field) == fields[field].default:
+                data.pop(field, None)
+        return data
 
     @classmethod
     def load_from_json(
@@ -166,6 +228,13 @@ class ScalarMetricValue(BaseModel):
     Key, value pairs that identify the dimensions of the metric
 
     These values are used for a faceted search of the metric values.
+    """
+    kind: MetricValueKind = "model"
+    """
+    Whether the value is a model value or a reference (observation) value.
+
+    This is the first-class signal for the role of the value
+    and replaces provider-specific conventions for distinguishing the two.
     """
     value: Value
     """

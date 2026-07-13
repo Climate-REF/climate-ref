@@ -128,7 +128,7 @@ def test_import_emits_no_debug_logs_without_celery():
 
 @pytest.fixture()
 def expected_groups() -> set[str]:
-    return {"config", "datasets", "db", "executions", "providers", "celery", "test-cases"}
+    return {"config", "datasets", "db", "diagnostics", "executions", "providers", "celery", "test-cases"}
 
 
 def test_build_app(expected_groups):

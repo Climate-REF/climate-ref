@@ -21,6 +21,7 @@ It produces two things:
 from __future__ import annotations
 
 import json
+import re
 import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
@@ -53,22 +54,36 @@ _COMMITTED_JSON_DUMP_KWARGS: dict[str, object] = {
 # output bundle's lowercase ``provenance`` block; series.json never carries one.
 _PROVENANCE_BLOCK_KEYS: frozenset[str] = frozenset({"PROVENANCE", "provenance"})
 
-# Provenance fields redacted to stable placeholders so the committed bundle stays portable
-# (machine-independent) and reproducible: ``userId`` is the minting user and ``date`` is a
-# non-reproducible wall-clock timestamp. Absolute paths in ``commandLine`` are made portable
-# by path placeholdering (``<OUTPUT_DIR>`` / ``<SOFTWARE_ROOT_DIR>``), not by redaction.
+# Redacted to stable placeholders so committed bundles are machine-independent.
 _REDACTED_PROVENANCE_FIELDS: dict[str, str] = {
     "userId": "<USER>",
     "date": "<DATE>",
 }
 
-# Host fields in the provenance ``platform`` sub-block: ``Name`` (hostname) and ``Version`` (kernel)
-# leak host identity and churn the committed digest across machines, so they are redacted; the coarse
-# ``OS`` carries no host identity and is kept.
+# ``platform`` sub-block fields, redacted so a baseline is portable across hosts and OSes
+# (a ``Darwin`` mint must match a ``Linux`` CI execute).
 _REDACTED_PROVENANCE_PLATFORM_FIELDS: dict[str, str] = {
     "Name": "<HOSTNAME>",
     "Version": "<HOST_VERSION>",
+    "OS": "<OS>",
 }
+
+# ``conda`` sub-block fields, redacted for the same reason
+# (an ``osx-64`` mint must match a ``linux-64`` CI execute).
+_REDACTED_PROVENANCE_CONDA_FIELDS: dict[str, str] = {
+    "Platform": "<CONDA_PLATFORM>",
+}
+
+_SOURCE_DIR_PLACEHOLDER = "<SOURCE_DIR>"
+
+# Matches the machine-specific prefix before ``/packages/climate-ref-<pkg>/`` in in-repo paths.
+# Checkout-agnostic, so Linux and macOS checkouts redact to identical bytes.
+_SOURCE_PATH_RE = re.compile(r'(?:/[^\s"]*?)/packages/(climate-ref-[A-Za-z0-9_.-]+/)')
+
+
+def _redact_source_paths(text: str) -> str:
+    """Redact the checkout-root prefix of in-repo package paths (e.g. a provenance ``commandLine``)."""
+    return _SOURCE_PATH_RE.sub(rf"{_SOURCE_DIR_PLACEHOLDER}/packages/\1", text)
 
 
 def _redact_fields(block: dict[str, object], fields: dict[str, str]) -> bool:
@@ -87,7 +102,8 @@ def _redact_provenance_fields(obj: object) -> bool:
 
     Walks the parsed bundle and, for each ``PROVENANCE`` / ``provenance`` block,
     overwrites the fields in :data:`_REDACTED_PROVENANCE_FIELDS` with their placeholders,
-    and the host fields in :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform``.
+    the host fields in :data:`_REDACTED_PROVENANCE_PLATFORM_FIELDS` inside its nested ``platform``,
+    and the fields in :data:`_REDACTED_PROVENANCE_CONDA_FIELDS` inside its nested ``conda``.
 
     Returns
     -------
@@ -102,6 +118,9 @@ def _redact_provenance_fields(obj: object) -> bool:
                 platform = value.get("platform")
                 if isinstance(platform, dict):
                     changed |= _redact_fields(platform, _REDACTED_PROVENANCE_PLATFORM_FIELDS)
+                conda = value.get("conda")
+                if isinstance(conda, dict):
+                    changed |= _redact_fields(conda, _REDACTED_PROVENANCE_CONDA_FIELDS)
             elif _redact_provenance_fields(value):
                 changed = True
     elif isinstance(obj, list):
@@ -118,7 +137,8 @@ def _canonicalise_committed_bundle(regression_dir: Path) -> None:
     For each file in :data:`COMMITTED_BUNDLE_FILES` that is present:
     round floats to a stable precision (:func:`~climate_ref_core.regression._quantise.round_floats`),
     redact host/user CMEC provenance (:func:`_redact_provenance_fields`),
-    then re-serialise with :data:`_COMMITTED_JSON_DUMP_KWARGS`.
+    re-serialise with :data:`_COMMITTED_JSON_DUMP_KWARGS`,
+    then redact the checkout-root prefix of in-repo command-line paths (:func:`_redact_source_paths`).
 
     The same transform runs on every file so the committed files are deterministic
     regardless of how the diagnostic originally serialised them,
@@ -137,10 +157,9 @@ def _canonicalise_committed_bundle(regression_dir: Path) -> None:
         _redact_provenance_fields(data)
         # Terminate with a newline so the committed bytes match the manifest serialisation
         # (Manifest.save) and satisfy POSIX/end-of-file-fixer conventions.
-        path.write_text(
-            json.dumps(data, **_COMMITTED_JSON_DUMP_KWARGS) + "\n",  # type: ignore[arg-type]
-            encoding="utf-8",
-        )
+        serialised = json.dumps(data, **_COMMITTED_JSON_DUMP_KWARGS) + "\n"  # type: ignore[arg-type]
+        # Text pass: the paths live inside string values, not their own JSON fields.
+        path.write_text(_redact_source_paths(serialised), encoding="utf-8")
 
 
 def write_committed_bundle(

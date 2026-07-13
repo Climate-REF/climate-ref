@@ -1,14 +1,6 @@
-ilamb/cSoil/HWSD2/cSoil_fx_HWSD2_19600101-20220101.nc sha1:7138b0b53aa600878adf95e6aef65f4322a8e287
-ilamb/gpp/FLUXNET2015/gpp.nc sha1:16fd177e007caef2565687e2cd32884e20ef16e5
-ilamb/gpp/WECANN/gpp.nc sha1:6e864a6ae201195cdf995a3a81720188af441e13
-ilamb/lai/AVH15C1/lai.nc sha1:ccace4f84912d63acbb9ee09ee7b743412207a0d
-ilamb/mrro/LORA/LORA.nc sha1:72bb16787877591d0c54a36d74697d0d208f985a
 ilamb/mrsol/WangMao/mrsol_olc.nc sha1:24cbc9df69569bed3a39c20e499cfe4f911bd30e
 ilamb/regions/GlobalLand.nc sha1:2f987d44fdba6ad0e72d14d6a2fecb7e8df2a9c5
 ilamb/regions/Koppen_coarse.nc sha1:e464030db49f0295a6a22a81ca602b0f3c499b72
 ilamb/pr/GPCPv2.3/pr.nc sha1:e1b942863ec76a75aa972b6d75e2e08646741259
 ilamb/tas/CRU4.02/tas.nc sha1:2674da18a1a93483b50b1626e7a7ab741bf53d09
-ilamb/nbp/HOFFMAN/nbp_1850-2010.nc sha1:8350af00614d6afc6b70ad314aa499a9ece80ec2
-ilamb/snc/Snow-cci/snc_mon_Snow-cci_BE_gn_198201-201906.nc sha1:c0bfecd2f8b886e9301428d28bb6ff0507601be2
-ilamb/burntFractionAll/GFED/burntArea.nc sha1:cf9d73c6a8bfc594737c9ba6ca4df613df4a28ab
 ilamb/evspsbl/GLEAMv3.3a/et.nc sha1:5aaf73949af8c6b509ef16f684aa8efeccd983e2

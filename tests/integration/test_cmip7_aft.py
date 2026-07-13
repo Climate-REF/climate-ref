@@ -7,6 +7,7 @@ import pytest
 from climate_ref.config import DiagnosticProviderConfig
 from climate_ref.database import Database
 from climate_ref.models import ExecutionGroup
+from climate_ref_core.testing import excluded_test_case_diagnostics
 
 
 def create_execution_dataframe(execution_groups: Iterable[ExecutionGroup]) -> pd.DataFrame:
@@ -52,7 +53,6 @@ def config_cmip7_aft(config):
     return config
 
 
-@pytest.mark.skip(reason="Re-enable once ilamb3 loads references lazily.")
 @pytest.mark.slow
 def test_solve_cmip7_aft(
     sample_data_dir,
@@ -89,10 +89,17 @@ def test_solve_cmip7_aft(
         ["datasets", "ingest", "--source-type", "pmp-climatology", str(sample_data_dir / "pmp-climatology")]
     )
 
+    # Diagnostics that are too heavy for CI are excluded via REF_TEST_CASES_SKIP
+    excluded = sorted(excluded_test_case_diagnostics())
+    exclude_args = [arg for token in excluded for arg in ("--exclude-diagnostic", token)]
+
     # Solve
     # This will also create conda environments for the diagnostic providers
     # We always log the std out and stderr from the command as it is useful for debugging
-    invoke_cli(["--verbose", "solve", "--one-per-diagnostic", "--timeout", f"{60 * 60}"], always_log=True)
+    invoke_cli(
+        ["--verbose", "solve", "--one-per-diagnostic", "--timeout", f"{60 * 60}", *exclude_args],
+        always_log=True,
+    )
 
     execution_groups = db.session.query(ExecutionGroup).all()
     df = create_execution_dataframe(execution_groups)
@@ -101,6 +108,16 @@ def test_solve_cmip7_aft(
 
     # Check that all 3 diagnostic providers have been used
     assert set(df["provider"].unique()) == {"esmvaltool", "ilamb", "pmp"}
+
+    # Check that the excluded diagnostics were not solved
+    # Exclusion tokens are either a diagnostic slug or a provider/diagnostic pair
+    excluded_set = set(excluded)
+    solved_excluded = {
+        f"{provider}/{diagnostic}"
+        for provider, diagnostic in zip(df["provider"], df["diagnostic"], strict=True)
+        if diagnostic in excluded_set or f"{provider}/{diagnostic}" in excluded_set
+    }
+    assert not solved_excluded, f"excluded diagnostics were solved: {solved_excluded}"
 
     # Check that some of the diagnostics have been marked successful
     assert df["successful"].any()

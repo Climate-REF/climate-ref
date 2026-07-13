@@ -372,6 +372,14 @@ class SolveFilterOptions:
     lists of allowed values.  Different facets are ANDed together; multiple
     values for the same facet are ORed.
     """
+    exclude_diagnostic: list[str] | None = None
+    """
+    Exclude diagnostics by slug or ``provider/diagnostic`` pair.
+
+    Matching is exact and case-insensitive, unlike the fuzzy include filters.
+    This uses the same token format as the ``REF_TEST_CASES_SKIP``
+    environment variable.
+    """
 
 
 def apply_dataset_filters(
@@ -454,6 +462,11 @@ def matches_filter(diagnostic: Diagnostic, filters: SolveFilterOptions | None) -
 
     if filters.diagnostic and not any([f.lower() in diagnostic_slug for f in filters.diagnostic]):
         return False
+
+    if filters.exclude_diagnostic:
+        excluded = {f.lower() for f in filters.exclude_diagnostic}
+        if {diagnostic_slug.lower(), f"{provider_slug}/{diagnostic_slug}".lower()} & excluded:
+            return False
 
     return True
 

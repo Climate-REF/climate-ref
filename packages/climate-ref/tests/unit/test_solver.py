@@ -1423,6 +1423,33 @@ class TestMatchesFilter:
             is False
         )
 
+    def test_exclude_by_slug(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_diagnostic=["mock"])) is False
+
+    def test_exclude_by_provider_pair(self, mock_diagnostic):
+        assert (
+            matches_filter(mock_diagnostic, SolveFilterOptions(exclude_diagnostic=["mock_provider/mock"]))
+            is False
+        )
+
+    def test_exclude_is_case_insensitive(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_diagnostic=["MOCK"])) is False
+
+    def test_exclude_is_exact_not_substring(self, mock_diagnostic):
+        # Unlike the include filters, a partial match must not exclude
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_diagnostic=["ock"])) is True
+
+    def test_exclude_wrong_provider_pair(self, mock_diagnostic):
+        assert matches_filter(mock_diagnostic, SolveFilterOptions(exclude_diagnostic=["other/mock"])) is True
+
+    def test_exclude_wins_over_include(self, mock_diagnostic):
+        assert (
+            matches_filter(
+                mock_diagnostic, SolveFilterOptions(diagnostic=["mock"], exclude_diagnostic=["mock"])
+            )
+            is False
+        )
+
 
 def test_solve_metric_executions_empty_dataframe(mock_diagnostic, provider):
     """Test solve_executions when data catalog has an empty DataFrame for the source type."""

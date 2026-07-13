@@ -48,9 +48,11 @@ class TestRegistryAnnotationsRoundTrip:
         assert entry.use_case is RegistryUseCase.reference
 
     def test_esmvaltool_datasets(self):
+        # The OBS/OBS6/native6/obs4MIPs data is ingestable through the ESMValCore-DRS adapter,
+        # so the registry is annotated as ESMValTool reference data.
         entry = dataset_registry_manager.entry(_DATASETS_REGISTRY_NAME)
-        assert entry.source_type is None
-        assert entry.use_case is RegistryUseCase.support
+        assert entry.source_type is SourceDatasetType.ESMValToolReference
+        assert entry.use_case is RegistryUseCase.reference
 
     def test_esmvaltool_recipes(self):
         entry = dataset_registry_manager.entry(_RECIPES_REGISTRY_NAME)
@@ -93,20 +95,23 @@ class TestRegistryAnnotationsRoundTrip:
 class TestIterReferenceRegistries:
     """``iter_reference_registries`` yields exactly the annotated ``reference`` registries."""
 
-    def test_yields_obs4ref_and_quickstart_and_pmp_climatology(self):
+    def test_yields_reference_registries(self):
         results = list(iter_reference_registries(dataset_registry_manager))
         by_id = {id(registry): source_type for registry, source_type in results}
 
         assert by_id[id(dataset_registry_manager["obs4ref"])] is SourceDatasetType.obs4REF
         assert by_id[id(dataset_registry_manager["quickstart"])] is SourceDatasetType.obs4REF
         assert by_id[id(dataset_registry_manager["pmp-climatology"])] is SourceDatasetType.PMPClimatology
+        assert (
+            by_id[id(dataset_registry_manager[_DATASETS_REGISTRY_NAME])]
+            is SourceDatasetType.ESMValToolReference
+        )
 
-    def test_does_not_yield_sample_data_or_esmvaltool_registries(self):
+    def test_does_not_yield_sample_data_or_recipes_registries(self):
         results = list(iter_reference_registries(dataset_registry_manager))
         yielded_registries = {id(registry) for registry, _ in results}
 
         assert id(dataset_registry_manager["sample-data"]) not in yielded_registries
-        assert id(dataset_registry_manager[_DATASETS_REGISTRY_NAME]) not in yielded_registries
         assert id(dataset_registry_manager[_RECIPES_REGISTRY_NAME]) not in yielded_registries
 
     def test_does_not_yield_ilamb_registries(self):

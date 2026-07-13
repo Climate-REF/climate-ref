@@ -732,9 +732,9 @@ def _set_ilamb3_options(masks_registry: pooch.Pooch | None) -> None:
     Parameters
     ----------
     masks_registry
-        Pooch registry holding the ``ilamb/regions/*.nc`` mask files (typically the
-        ``ilamb-regions`` registry), or ``None`` if this diagnostic does not use
-        region masks.
+        Pooch registry holding the ``ilamb/regions/*.nc`` mask files
+        (typically the ``ilamb-regions`` registry),
+        or ``None`` if this diagnostic does not use region masks.
     """
     ilamb3.conf.reset()  # type: ignore
     if masks_registry is not None:
@@ -819,16 +819,18 @@ class ILAMBStandard(Diagnostic):
             REF data requirement filters).
         region_masks
             Name of the registry holding the ``ilamb/regions/*.nc`` mask files
-            (typically ``"ilamb-regions"``), or ``None`` if this diagnostic does
-            not need region masks. Deliberately independent of ``realm``,
-            because a land diagnostic may still not need masks
-            (e.g. ``ilamb-test`` fixtures).
+            (typically ``"ilamb-regions"``), or ``None`` if this diagnostic does not need region masks.
+
+            Deliberately independent of ``realm``,
+            because a land diagnostic may still not need masks.
         ilamb_registry
-            Name of the registry that resolves this diagnostic's string-form
-            reference sources. Defaults to ``"ilamb"`` for land diagnostics and
-            to ``None`` (no ILAMB registry data, e.g. ocean diagnostics whose
-            sources are all dict-form obs4REF requests) otherwise. Tests may
-            override this to point at the small ``"ilamb-test"`` fixture
+            Name of the registry that resolves this diagnostic's string-form reference sources.
+
+            Defaults to ``"ilamb"`` for land diagnostics and to ``None``
+            (no ILAMB registry data, e.g. ocean diagnostics whose sources are all dict-form obs4REF requests)
+            otherwise.
+
+            Tests may override this to point at the small ``"ilamb-test"`` fixture
             registry instead of the real reference data.
         """
         if ilamb_registry is None:
@@ -989,10 +991,9 @@ class ILAMBStandard(Diagnostic):
         if self.ilamb_registry is not None:
             self.ilamb_data = registry_to_collection(dataset_registry_manager[self.ilamb_registry])
         else:
-            # No ILAMB registry backs this diagnostic (e.g. an ocean diagnostic
-            # whose sources are all dict-form obs4REF requests). Degrade to an
-            # empty collection with the columns downstream code expects, rather
-            # than crashing on a missing registry.
+            # No ILAMB registry backs this diagnostic (all references on ESGF)
+            # Degrade to an empty collection with the columns downstream code expects,
+            # rather than crashing on a missing registry.
             self.ilamb_data = DatasetCollection(pd.DataFrame(columns=["key", "path"]), "key")
 
     def execute(self, definition: ExecutionDefinition) -> None:

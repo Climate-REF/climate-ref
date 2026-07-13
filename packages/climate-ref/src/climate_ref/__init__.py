@@ -39,9 +39,8 @@ dataset_registry_manager.register(
 )
 # Register the sample data registry, used for testing.
 #
-# This is genuinely multi-type: its manifest mixes CMIP6, obs4MIPs and obs4REF content, so it
-# cannot satisfy "exactly one source type" and is left unannotated (source_type=None). It is
-# ingested by explicit `--source-type` in tests, never by registry-driven ingest.
+# This is genuinely multi-type: its manifest mixes CMIP6, obs4MIPs and obs4REF content.
+# It is ingested by explicit `--source-type` in tests, never by registry-driven ingest.
 dataset_registry_manager.register(
     "sample-data",
     base_url="https://raw.githubusercontent.com/Climate-REF/ref-sample-data/refs/tags/{version}/data/",

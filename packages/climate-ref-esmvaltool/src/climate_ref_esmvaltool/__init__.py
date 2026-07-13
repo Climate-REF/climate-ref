@@ -20,6 +20,7 @@ from climate_ref_core.dataset_registry import (
     validate_registry_cache,
 )
 from climate_ref_core.providers import CondaDiagnosticProvider
+from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_esmvaltool._version import __version__
 from climate_ref_esmvaltool.diagnostics.base import _DATASETS_REGISTRY_NAME
 from climate_ref_esmvaltool.recipe import (
@@ -79,19 +80,21 @@ for _diagnostic_cls_name in climate_ref_esmvaltool.diagnostics.__all__:
     _diagnostic_cls = getattr(climate_ref_esmvaltool.diagnostics, _diagnostic_cls_name)
     provider.register(_diagnostic_cls())
 
-# Register OBS, OBS6, and raw data.
+# Register OBS, OBS6, and raw data as ESMValTool reference datasets.
 #
-# `support` here is a holding position, not a classification: data.txt mixes OBS Tier2/3,
-# native6 raw ERA5 and an obs4MIPs GPCP-V2.3 subset, and nothing in it is ingestable by an
-# adapter that exists today. When the ESMValCore-DRS adapter lands this flips to
-# `reference` / `esmvaltool-reference` wholesale, with no manifest split required.
+# data.txt mixes OBS/OBS6 Tier2/3, native6 raw ERA5 and an obs4MIPs GPCP-V2.3 subset. The
+# ESMValCore-DRS adapter (`ESMValToolReferenceDatasetAdapter`) reads metadata from the DRS path
+# rather than the file contents, so the whole registry ingests as the `esmvaltool-reference`
+# source type. Ingestion records these datasets for provenance. Solve-time selection is a
+# separate follow-up.
 dataset_registry_manager.register(
     name=_DATASETS_REGISTRY_NAME,
     base_url=DATASET_URL,
     package="climate_ref_esmvaltool.dataset_registry",
     resource="data.txt",
     cache_name=_DATASETS_REGISTRY_NAME.replace("-", "/"),
-    use_case=RegistryUseCase.support,
+    source_type=SourceDatasetType.ESMValToolReference,
+    use_case=RegistryUseCase.reference,
 )
 # Register the ESMValTool recipes.
 dataset_registry_manager.register(

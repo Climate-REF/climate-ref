@@ -5,8 +5,37 @@
     "output.json": "7474e7e327a830c53b821d5320e05bff2f55c24068a4926fb49c76c484ed2c9a",
     "series.json": "f40c1da8ac81e1ef2317fad9c17dbd78e04f336b226a9313307dbdfadbeb3fc0"
   },
-  "diagnostic_version": 1,
-  "native": {},
+  "diagnostic_version": 2,
+  "native": {
+    "diagnostic.json": {
+      "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
+      "size": 128
+    },
+    "executions/recipe/index.html": {
+      "sha256": "e7779a81457d717ab319fdce1c415985390e4179f7e218482156cfe4c8d88c5e",
+      "size": 13052
+    },
+    "executions/recipe/plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png": {
+      "sha256": "4431266ab4bdb21b7d016900dcef88de35821647a9c4eba598dbe60e7f9f5f03",
+      "size": 89280
+    },
+    "executions/recipe/run/polar_cap_time_series_SH/plot/diagnostic_provenance.yml": {
+      "sha256": "eba310a7f6b9269b1026590a58d612bdbcf830617d91408efdc3bfb9ccbf5e76",
+      "size": 658
+    },
+    "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
+      "sha256": "1e6b935538f4e36d79d4d9dc9ffc59829c2d605c23680b5b32a8ac4d4a9a2da5",
+      "size": 10310
+    },
+    "output.json": {
+      "sha256": "85f5de5ad39e01de85c3bf9c35f255edf678dc014986df5e033cec81a8522f63",
+      "size": 1398
+    },
+    "series.json": {
+      "sha256": "b6fe210ff96a969bf2b55eb008eec330dd2957466285ed269e996fe1a2e41131",
+      "size": 4139
+    }
+  },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

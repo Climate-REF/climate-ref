@@ -57,10 +57,8 @@ cSoil-HWSD2:
   variable_cmap: viridis
 
 lai-AVH15C1:
-  # This case needs a lot of memory. ILAMB scores the coarsened 0.5 degree reference over its
-  # full monthly record, which peaks around 30 GB per execution regardless of the coarsen cache.
-  # A cold cache adds a few GB more (about 34 GB) while it also coarsens the ~0.05 degree source.
-  # A runner or solve worker with less than roughly 40 GB will be killed on this diagnostic.
+  # This case needs a lot of memory.
+  # ILAMB scores the coarsened 0.5 degree reference over its full monthly record, which peaks around 30 GB per execution.
   version: 4
   sources:
     lai:

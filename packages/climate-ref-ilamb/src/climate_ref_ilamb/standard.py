@@ -133,8 +133,8 @@ class _CoarsenSpatial(ILAMBTransform):
             self._write_cache(coarse, cache_path)
         return coarse
 
-    # Time steps coarsened per pass. One pass of the ~0.05 degree AVHRR LAI reference is
-    # about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB, well within a CI runner.
+    # Time steps coarsened per pass.
+    # One pass of the ~0.05 degree AVHRR LAI reference is about 12 * 3600 * 7200 * 8 bytes ~= 2.5 GB.
     _TIME_CHUNK = 12
 
     def _coarsen(self, ds: xr.Dataset) -> xr.Dataset:
@@ -142,11 +142,10 @@ class _CoarsenSpatial(ILAMBTransform):
         Coarsen the fine reference without materialising the whole cube.
 
         The reference is opened dask-backed and chunked over time (``open_mfdataset`` in ilamb3).
-        Coarsening the whole field at once needs the entire cube in memory
-        (the AVHRR LAI reference is ~0.05 degrees, roughly 100 GB as float64, and the
-        conservative weighting makes several copies of it).
+
         ``coarsen_dataset`` also cannot run on a lazy field, because its nan-masking indexes with
-        a boolean array that must be concrete. So the field is coarsened one time block at a time,
+        a boolean array that must be concrete.
+        So the field is coarsened one time block at a time,
         materialising only that block, and the small coarse blocks are concatenated.
         """
         if "time" not in ds.dims:

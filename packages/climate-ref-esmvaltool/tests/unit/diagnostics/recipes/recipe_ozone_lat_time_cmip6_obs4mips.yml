@@ -33,7 +33,7 @@ preprocessors:
       operator: mean
     extract_region:
       start_latitude: 60
-      end_latitude: 85
+      end_latitude: 80
       start_longitude: 0
       end_longitude: 360
     extract_month:
@@ -96,11 +96,11 @@ datasets:
   mip: AERmon
   timerange: 1996/2014
 timerange_for_toz_monthly_data:
-  timerange: 1950/2014
+  timerange: 1950/2021
 timerange_for_toz_zonal_mean:
-  timerange: 1997/2014
+  timerange: 1997/2021
 timerange_for_ozone_profile:
-  timerange: 1990/2000
+  timerange: 1990/2021
 diagnostics:
   lat_time_mapplot:
     variables:

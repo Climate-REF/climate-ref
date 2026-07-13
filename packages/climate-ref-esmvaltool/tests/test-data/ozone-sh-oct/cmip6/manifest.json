@@ -5,7 +5,7 @@
     "output.json": "7474e7e327a830c53b821d5320e05bff2f55c24068a4926fb49c76c484ed2c9a",
     "series.json": "4b803facd29ee24afb14f81e2de5d5ae5dc3997a28f58a61eec90d27525d7c1d"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,16 +16,16 @@
       "size": 13052
     },
     "executions/recipe/plots/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.png": {
-      "sha256": "8053ecf0f1e073ec2728822cc0c2558ff35ed10f750e6ec636098da8bb4b6ae5",
-      "size": 89516
+      "sha256": "ef55006c1e5c1c22478a9e4dbfd537ff35b209b7d92573a2b546aaa0ed142460",
+      "size": 89533
     },
     "executions/recipe/run/polar_cap_time_series_SH/plot/diagnostic_provenance.yml": {
-      "sha256": "9d38b674b4c8c10152fffffe178762741bdb78096592d0953ebbe5af6706c7d6",
+      "sha256": "a3ec416d400446df8a996d5f9394fcad6aafb8bd0d7d2be1de13d9b44aee98f8",
       "size": 650
     },
     "executions/recipe/work/polar_cap_time_series_SH/plot/timeseries_toz_SH_Oct.nc": {
-      "sha256": "325ea921530e0892d0fe0c39f4f998111a4d17c956f54b9087b84e5305911484",
-      "size": 10298
+      "sha256": "cd4afb40d1a98497e965109a4c9d5ee9359e6a08ca1cf1b9679fabd9dd6248c4",
+      "size": 10310
     },
     "output.json": {
       "sha256": "85f5de5ad39e01de85c3bf9c35f255edf678dc014986df5e033cec81a8522f63",
@@ -37,5 +37,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

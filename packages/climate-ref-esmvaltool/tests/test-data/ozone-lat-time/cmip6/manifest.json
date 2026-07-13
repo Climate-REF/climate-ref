@@ -5,7 +5,7 @@
     "output.json": "806aec53b4c2ce0a9d9ec21cd2c0360d9b433ef2392f04053eead0f4e9e30a0e",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 1,
+  "diagnostic_version": 2,
   "native": {
     "diagnostic.json": {
       "sha256": "e52b1e19e1ed5a2a046bb8aa01c004240305fabfe69c4ffb4e64898b1b6bbb84",
@@ -16,23 +16,23 @@
       "size": 14596
     },
     "executions/recipe/plots/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map.png": {
-      "sha256": "e79419b2db56913a70925031569bb1aac87b04db1ee455431e9aa70bac8b4fb4",
-      "size": 147664
+      "sha256": "27d58ff62aef6b1a6a358ad531d60b5d341e1fd0815ab253710808ebb40ced7a",
+      "size": 147681
     },
     "executions/recipe/run/lat_time_mapplot/plot/diagnostic_provenance.yml": {
-      "sha256": "f73993c9ba77c04fad00a8aa0c00e411ca4e0ab9a39770f35e88853b1f7ca9e2",
+      "sha256": "bebd2719f0413f7dc998d62e1fd2ce06fa4852a28884dc31b53d3e4a0365466a",
       "size": 2037
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_bottom.nc": {
-      "sha256": "4a587875e86a9eb1b0b645622de6a314d2175009e046b39b0f913eca3ed65f37",
+      "sha256": "fd9c7ba45be087d4bab1fd96aeb9c5e35cebb1988de188bb6478e80bfa891a51",
       "size": 64540
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_left.nc": {
-      "sha256": "4fa600a5307fbbffdc960a580177d69d1f782b26e8fc013a1efecb9ad8df7d54",
-      "size": 64661
+      "sha256": "1364138224660d2e526f7ec9abcca2907bfb676fbb51f0234616e2bb8755a951",
+      "size": 64725
     },
     "executions/recipe/work/lat_time_mapplot/plot/hovmoeller_time_vs_lat_or_lon_toz_LatTime_Map_top_right.nc": {
-      "sha256": "69d00de2c1179ef862718d5270a4af5be59c20559f51910376e91e9a39e85045",
+      "sha256": "75cc0ff0c7804e583eae8bc81ad15a169e4e5ccb8e7e336890ad999ab310a280",
       "size": 63332
     },
     "output.json": {
@@ -45,5 +45,5 @@
     }
   },
   "schema": 2,
-  "test_case_version": 1
+  "test_case_version": 2
 }

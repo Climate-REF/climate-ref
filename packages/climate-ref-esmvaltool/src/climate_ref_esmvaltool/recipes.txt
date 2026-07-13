@@ -9,7 +9,7 @@ ref/recipe_ref_annual_cycle_region.yml      88e0c2f07a76c4de4276547badcc74091516
 ref/recipe_ref_cre_cmip7.yml                b15687ac9e3ace4fe45e81d099e5828888101a205a0e2ed07d8a57a90cbe3f55
 ref/recipe_ref_ecs.yml                      3121df2d8c27f42b11e56f918ecbce49b0c8dc831e6d6886493f64bc8cce3032
 ref/recipe_ref_fire.yml                     2ad82effaca4e742d8abe6a0aa07bb46e1e92ef0d2d240760f7623b0ba045926
-ref/recipe_ref_ozone.yml                    09ded4946ecd762ba000916c9f8618120a2e6269930427ae5129da466165f3e5
+ref/recipe_ref_ozone_cmip7.yml              16b127ef957a1b029835b0cdd940530f439576f0d22c589cd472598d03568702
 ref/recipe_ref_sea_ice_area_basic.yml       7d01a8527880663ca28284772f83a8356d9972fb4f022a4000e50a56ce044b09
 ref/recipe_ref_scatterplot.yml              b99d1736e16256d161847b025811d7088ad9f892d4887fb009fa99c4079135a0
 ref/recipe_ref_tcr.yml                      443dbd46f5ef13ea187a1acdb6e70ecfa7669e0ef4b21392e9a00b5d0c821ef5

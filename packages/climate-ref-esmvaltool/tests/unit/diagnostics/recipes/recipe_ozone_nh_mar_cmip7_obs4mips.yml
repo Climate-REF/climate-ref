@@ -99,16 +99,16 @@ datasets:
   region: glb
   timerange: 1950/2014
 timerange_for_toz_monthly_data:
-  timerange: 1950/2014
+  timerange: 1950/2021
 timerange_for_toz_zonal_mean:
-  timerange: 1997/2014
+  timerange: 1997/2021
 timerange_for_ozone_profile:
-  timerange: 1990/2000
+  timerange: 1990/2021
 diagnostics:
   polar_cap_time_series_NH:
     variables:
       toz:
-        timerange: 1950/2014
+        timerange: 1950/2021
         mip: aerosol
         exp: historical
         preprocessor: create_time_series_NH

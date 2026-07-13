@@ -165,7 +165,8 @@ class O3LatTimeMapplot(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-lat-time"
-    base_recipe = "ref/recipe_ref_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
+    version = 2
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -200,7 +201,8 @@ class O3PolarCapTimeseriesSH(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-sh-oct"
-    base_recipe = "ref/recipe_ref_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
+    version = 2
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -245,7 +247,8 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-nh-mar"
-    base_recipe = "ref/recipe_ref_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
+    version = 2
 
     data_requirements = toz_data_requirement
     facets = ()
@@ -274,10 +277,6 @@ class O3PolarCapTimeseriesNH(ESMValToolDiagnostic):
         input_files: dict[SourceDatasetType, pandas.DataFrame],
     ) -> None:
         """Update the recipe."""
-        # Make sure only grid cells south of 80N are considered as there are no
-        # measurements north of 80N in March. Specifying 85N as northern boundary
-        # in the orignal 'recipe_ref_ozone.yml' is a bug!
-        recipe["preprocessors"]["create_time_series_NH"]["extract_region"]["end_latitude"] = 80
         recipe_variables = dataframe_to_recipe(input_files[get_cmip_source_type(input_files)])
         dataset = recipe_variables["toz"]["additional_datasets"][0]
         # set model (CMIP6) time range to 1950...2014
@@ -298,8 +297,8 @@ class O3ZonalMeanProfiles(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-zonal"
-    base_recipe = "ref/recipe_ref_ozone.yml"
-    version = 2
+    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
+    version = 3
 
     data_requirements = (
         DataRequirement(
@@ -397,7 +396,8 @@ class O3LatMonthMapplot(ESMValToolDiagnostic):
 
     name = "Ozone Diagnostics"
     slug = "ozone-annual-cycle"
-    base_recipe = "ref/recipe_ref_ozone.yml"
+    base_recipe = "ref/recipe_ref_ozone_cmip7.yml"
+    version = 2
 
     data_requirements = toz_data_requirement
     facets = ()

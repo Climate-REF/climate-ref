@@ -5,41 +5,8 @@
     "output.json": "7c0d866622e63bcf810bb7f031ef682f8a4c0eb5b228ff16ade1a03533e6d23c",
     "series.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570"
   },
-  "diagnostic_version": 2,
-  "native": {
-    "diagnostic.json": {
-      "sha256": "4518f5bd84e6908b2f3195321cc864cbc5a2c308981720894018afe23d91ceff",
-      "size": 598
-    },
-    "executions/recipe/index.html": {
-      "sha256": "7656e2996f85e939b1dd58ada0bc462ad1939030d50ce72485a26ac7bec6d668",
-      "size": 14552
-    },
-    "executions/recipe/plots/tcre/calculate_tcre/tcre.png": {
-      "sha256": "c4ef829c1961a9a28125e1270a62ebccbc77cc90df42d396986709de0cd205d6",
-      "size": 65745
-    },
-    "executions/recipe/run/tcre/calculate_tcre/diagnostic_provenance.yml": {
-      "sha256": "349e0ee2d10cc180c4b3efc139713aeda8effa4cbc85f5d37f64319d5e2f05d4",
-      "size": 2898
-    },
-    "executions/recipe/work/tcre/calculate_tcre/MPI-ESM1-2-LR.nc": {
-      "sha256": "bf7712d5e6c036e2dab37b0f21b092f4d4bc17dbca9c8f5857a92c2824f01fd1",
-      "size": 31144
-    },
-    "executions/recipe/work/tcre/calculate_tcre/tcre.nc": {
-      "sha256": "f9eea5d08f353593176554c1bb951aee81b657fec7948f9a84844160cabfbf3d",
-      "size": 9154
-    },
-    "output.json": {
-      "sha256": "af500a387f982ae97975d4fbc33873507660ef58ca48bd20ad50e4a40f8d6605",
-      "size": 2151
-    },
-    "series.json": {
-      "sha256": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
-      "size": 2
-    }
-  },
+  "diagnostic_version": 3,
+  "native": {},
   "schema": 2,
   "test_case_version": 2
 }

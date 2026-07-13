@@ -92,6 +92,15 @@ def solve(  # noqa: PLR0913
             "Multiple values can be provided"
         ),
     ] = None,
+    exclude_diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Excludes diagnostics by slug or provider/diagnostic pair. "
+            "Matching is exact and case-insensitive, unlike --diagnostic. "
+            "For example, --exclude-diagnostic ilamb/thetao-woa2023-surface. "
+            "Multiple values can be provided"
+        ),
+    ] = None,
     dataset_filter: Annotated[
         list[str] | None,
         typer.Option(
@@ -140,6 +149,7 @@ def solve(  # noqa: PLR0913
         diagnostic=diagnostic,
         provider=provider,
         dataset=parsed_dataset_filters,
+        exclude_diagnostic=exclude_diagnostic,
     )
 
     solve_required_executions(

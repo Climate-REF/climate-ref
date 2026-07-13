@@ -69,6 +69,21 @@ class TestSolve:
         assert kwargs["filters"].diagnostic == ["global-mean-timeseries"]
         assert kwargs["filters"].provider == ["esmvaltool", "ilamb"]
 
+    def test_solve_with_exclude_diagnostic(self, sample_data_dir, db, invoke_cli, mocker):
+        mock_solve = mocker.patch("climate_ref.solver.solve_required_executions")
+        invoke_cli(
+            [
+                "solve",
+                "--exclude-diagnostic",
+                "ilamb/thetao-woa2023-surface",
+                "--exclude-diagnostic",
+                "annual-cycle",
+            ]
+        )
+
+        _args, kwargs = mock_solve.call_args
+        assert kwargs["filters"].exclude_diagnostic == ["ilamb/thetao-woa2023-surface", "annual-cycle"]
+
     def test_solve_with_mixed_case_provider_filter(self, sample_data_dir, db, invoke_cli, mocker, config):
         from climate_ref.config import DiagnosticProviderConfig
 

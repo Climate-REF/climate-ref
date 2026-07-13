@@ -1,0 +1,1 @@
+Adds dataset adapters for the obs4REF and ESMValTool reference dataset types, so both can now be ingested with `ref datasets ingest --source-type obs4ref` and `ref datasets ingest --source-type esmvaltool-reference`. obs4REF datasets also participate in solving, while ESMValTool reference datasets are ingest-only for now.

@@ -45,4 +45,5 @@ jobs:
           token: "${{ secrets.PAT }}"
           draft: true
           files: |
-            dist/*
+            dist/*.whl
+            dist/*.tar.gz

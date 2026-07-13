@@ -87,6 +87,8 @@ jobs:
       REF_TEST_OUTPUT: "test-outputs"
       PYTEST_ADDOPTS: "--slow"
       TQDM_DISABLE: "1"
+      # Diagnostics that are too heavy for CI, also excluded from the cmip7_aft solve
+      REF_TEST_CASES_SKIP: "ilamb/thetao-woa2023-surface"
     strategy:
       fail-fast: false
       matrix:

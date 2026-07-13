@@ -124,6 +124,7 @@ def _fetch_and_build_catalog(
         CMIP6DatasetAdapter,
         CMIP7DatasetAdapter,
         Obs4MIPsDatasetAdapter,
+        Obs4REFDatasetAdapter,
         PMPClimatologyDatasetAdapter,
     )
     from climate_ref_core.datasets import SourceDatasetType
@@ -159,6 +160,9 @@ def _fetch_and_build_catalog(
             data_catalog[SourceDatasetType.PMPClimatology] = _build_catalog(
                 PMPClimatologyDatasetAdapter(), file_paths
             )
+
+        elif source_type == "obs4REF":
+            data_catalog[SourceDatasetType.obs4REF] = _build_catalog(Obs4REFDatasetAdapter(), file_paths)
 
     if not data_catalog:
         raise DatasetResolutionError(

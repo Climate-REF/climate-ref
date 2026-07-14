@@ -573,7 +573,7 @@ class AnnualCycle(CommandLineDiagnostic):
         input_datasets = definition.datasets[model_source_type]
         variable_id = input_datasets["variable_id"].unique()[0]
 
-        if variable_id in ["ua", "va", "ta"]:
+        if variable_id in ["ua", "va", "ta", "zg"]:
             variable_dir_pattern = f"{variable_id}-???"
         else:
             variable_dir_pattern = variable_id

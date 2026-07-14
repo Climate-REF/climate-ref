@@ -278,6 +278,21 @@ def test_handle_execution_result_ingestion_failure_leaves_dirty(
     assert mock_execution_result.execution_group.dirty
 
 
+def test_handle_execution_result_system_failure_respects_update_dirty_false(
+    config, db, mock_execution_result, mock_definition
+):
+    """Reingest (update_dirty=False) must not touch the dirty flag on a retryable failure."""
+    mock_execution_result.execution_group.dirty = False
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=True
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result, update_dirty=False)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    assert mock_execution_result.execution_group.dirty is False
+
+
 def test_handle_execution_result_missing_log_file_leaves_dirty(
     config, db, mock_execution_result, mocker, definition_factory
 ):

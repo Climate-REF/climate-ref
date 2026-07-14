@@ -425,15 +425,20 @@ def handle_execution_result(
             f"This is likely a system error (will be retried on next solve)."
         )
         execution.mark_failed()
-        # Missing log file suggests the process was killed before writing output,
-        # so leave dirty=True for retry
+        if update_dirty:
+            # Missing log file suggests the process was killed before writing output,
+            # so set dirty=True for retry rather than assuming it was already set.
+            execution.execution_group.dirty = True
         return
 
     if not result.successful or result.metric_bundle_filename is None:
         execution.mark_failed()
         if result.retryable:
             logger.error(f"{execution} failed due to a system error (will be retried on next solve)")
-            # Leave dirty=True so the execution is retried on next solve
+            if update_dirty:
+                # A hash-change rerun starts from dirty=False, so set it explicitly
+                # rather than assuming it was already True.
+                execution.execution_group.dirty = True
         else:
             logger.error(f"{execution} failed due to a diagnostic error")
             if update_dirty:

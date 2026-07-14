@@ -52,6 +52,7 @@ def _seed_execution(
     *,
     key: str,
     dataset_hash: str = "hash",
+    dirty: bool = True,
 ) -> tuple[int, int, Path]:
     """Persist a pending Execution and stage its scratch directory + log file.
 
@@ -78,7 +79,7 @@ def _seed_execution(
         execution_group = ExecutionGroup(
             key=key,
             diagnostic_id=diagnostic_row.id,
-            dirty=True,
+            dirty=dirty,
             selectors={},
         )
         db.session.add(execution_group)
@@ -166,6 +167,55 @@ class TestLocalExecutorFailureModes:
         assert execution.successful is False
         # System-level failure: leave dirty=True so the next solve picks it up.
         assert execution_group.dirty is True
+
+    def test_system_failure_on_clean_group_sets_dirty(
+        self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
+    ):
+        """A retryable failure on a previously-clean group (hash-change rerun) must re-dirty it.
+
+        Without this, a group that reruns because its input dataset hash changed
+        and then hits a retryable system failure would be stranded: the failed
+        execution's hash matches the group, and the group is clean, so
+        ``ExecutionGroup.should_run`` never picks it back up.
+        """
+        executor = _build_executor(db_with_provider, config, thread_pool)
+        definition = definition_factory(diagnostic=mock_diagnostic)
+        execution_id, eg_id, _ = _seed_execution(
+            db_with_provider, provider, "mock", config, key="system-failure-clean-group", dirty=False
+        )
+        future: Future = Future()
+        future.set_result(ExecutionResult.build_from_failure(definition, retryable=True))
+        _attach_future(executor, definition, execution_id, future)
+
+        executor.join(timeout=10)
+
+        with db_with_provider.session.begin():
+            execution = db_with_provider.session.get(Execution, execution_id)
+            execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
+        assert execution.successful is False
+        # A hash-change rerun starts from dirty=False; the retryable failure must set it.
+        assert execution_group.dirty is True
+
+    def test_diagnostic_logic_failure_on_clean_group_stays_clean(
+        self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool
+    ):
+        """A non-retryable failure on a previously-clean group must not re-dirty it."""
+        executor = _build_executor(db_with_provider, config, thread_pool)
+        definition = definition_factory(diagnostic=mock_diagnostic)
+        execution_id, eg_id, _ = _seed_execution(
+            db_with_provider, provider, "mock", config, key="logic-failure-clean-group", dirty=False
+        )
+        future: Future = Future()
+        future.set_result(ExecutionResult.build_from_failure(definition, retryable=False))
+        _attach_future(executor, definition, execution_id, future)
+
+        executor.join(timeout=10)
+
+        with db_with_provider.session.begin():
+            execution = db_with_provider.session.get(Execution, execution_id)
+            execution_group = db_with_provider.session.get(ExecutionGroup, eg_id)
+        assert execution.successful is False
+        assert execution_group.dirty is False
 
     def test_per_task_timeout_marks_failed_retryable(
         self, db_with_provider, config, provider, definition_factory, mock_diagnostic, thread_pool

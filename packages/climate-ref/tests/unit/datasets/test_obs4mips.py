@@ -3,11 +3,14 @@ import shutil
 import warnings
 from pathlib import Path
 
+import netCDF4
+import numpy as np
 import pandas as pd
 import pytest
 
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, parse_obs4mips
 from climate_ref.datasets.utils import sort_data_catalog
+from climate_ref.models.dataset import Obs4MIPsDataset
 from climate_ref.testing import TEST_DATA_DIR
 
 
@@ -153,3 +156,74 @@ class Testobs4MIPsAdapter:
         with pytest.raises(ValueError, match="No files matching"):
             adapter = Obs4MIPsDatasetAdapter()
             adapter.find_local_datasets(test_empty_dir)
+
+
+def _write_file_without_variable_long_name(path: Path) -> None:
+    """Write an obs4MIPs file whose variable carries no ``long_name`` attribute."""
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with netCDF4.Dataset(path, "w") as ds:
+        ds.activity_id = "obs4MIPs"
+        ds.frequency = "mon"
+        ds.grid = "site"
+        ds.grid_label = "site"
+        ds.institution_id = "TESTORG"
+        ds.nominal_resolution = "site"
+        ds.realm = "land"
+        ds.product = "site-observations"
+        ds.source_id = "TEST-SRC"
+        ds.source_type = "insitu"
+        ds.variable_id = "gpp"
+        ds.variant_label = "v1"
+        ds.source_version_number = "1"
+
+        ds.createDimension("time", 3)
+        time_var = ds.createVariable("time", "f8", ("time",))
+        time_var.units = "days since 1850-01-01"
+        time_var.calendar = "standard"
+        time_var[:] = [0, 30, 60]
+
+        # units but deliberately no long_name -- obs4MIPs does not require it, and the published
+        # obs4REF FLUXNET2015 gpp dataset omits it.
+        gpp_var = ds.createVariable("gpp", "f4", ("time",))
+        gpp_var.units = "g m-2 d-1"
+        gpp_var[:] = np.array([1.0, 2.0, 3.0])
+
+
+@pytest.fixture
+def obs4mips_dir_without_long_name(tmp_path):
+    fixture_dir = tmp_path / "no_long_name"
+    _write_file_without_variable_long_name(
+        fixture_dir / "obs4MIPs" / "TESTORG" / "TEST-SRC" / "mon" / "gpp" / "site" / "v1" / "gpp_mon.nc"
+    )
+    return fixture_dir
+
+
+class TestObs4MIPsMissingLongName:
+    """``long_name`` is optional metadata: a file without it must still ingest.
+
+    It is read from the *variable's* attributes, which obs4MIPs does not require. The published
+    obs4REF FLUXNET2015 ``gpp`` dataset has none, and a ``NOT NULL`` column previously turned that
+    into an ``IntegrityError`` that aborted the entire obs4MIPs ingest.
+    """
+
+    def test_parse_returns_none_long_name(self, obs4mips_dir_without_long_name):
+        file = next(obs4mips_dir_without_long_name.rglob("*.nc"))
+
+        result = parse_obs4mips(str(file))
+
+        assert result["long_name"] is None
+        # The rest of the metadata still parses, so the dataset is not otherwise degraded
+        assert result["variable_id"] == "gpp"
+        assert result["units"] == "g m-2 d-1"
+
+    def test_registers_with_null_long_name(self, db, obs4mips_dir_without_long_name):
+        adapter = Obs4MIPsDatasetAdapter()
+        data_catalog = adapter.find_local_datasets(obs4mips_dir_without_long_name)
+        assert len(data_catalog) == 1
+
+        with db.session.begin():
+            adapter.register_dataset(db, data_catalog)
+
+        dataset = db.session.query(Obs4MIPsDataset).one()
+        assert dataset.long_name is None
+        assert dataset.variable_id == "gpp"

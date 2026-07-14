@@ -451,12 +451,20 @@ def handle_execution_result(
     # (metric bundle, output bundle and the files it references, series)
     # from scratch to results.
     # Only the files in results are served by the API.
-    copy_execution_outputs(
-        config.paths.scratch,
-        config.paths.results,
-        execution.output_fragment,
-        result,
-    )
+    try:
+        copy_execution_outputs(
+            config.paths.scratch,
+            config.paths.results,
+            execution.output_fragment,
+            result,
+        )
+    except (FileNotFoundError, OSError):
+        # The diagnostic reported success but a file its bundle references is
+        # missing or unreadable. Fail this execution rather than aborting the
+        # whole result-collection loop.
+        logger.exception(f"Could not copy outputs for {execution}")
+        execution.mark_failed()
+        return
 
     # Ingest outputs and metrics into the database via the shared ingestion path
     cv = CV.load_from_file(config.paths.dimensions_cv)

@@ -170,6 +170,12 @@ packages/*/NOTICE
 # Materialised test-case output slots (local inspection only; never committed)
 **/test-data/**/output/
 
+# Providers write raw run output (plots, netCDFs, recipes) straight into the
+# regression directory beside the committed baselines. Only the *.json baselines
+# are tracked there, everything else is generated.
+**/test-data/**/regression/**
+!**/test-data/**/regression/*.json
+
 # Debug log files
 **/main_log_debug.txt
 

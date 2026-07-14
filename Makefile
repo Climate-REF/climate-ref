@@ -75,7 +75,7 @@ test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 		coverage run --append --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref \
 		--ignore=packages/climate-ref/tests/integration \
-		-r a -v --doctest-modules --durations=20
+		-r a -v --doctest-modules --durations=0 --durations-min=1
 
 .PHONY: test-ref-integration
 test-ref-integration:  ## run the climate-ref integration tests

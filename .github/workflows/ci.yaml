@@ -48,7 +48,9 @@ jobs:
       - name: Test ref (unit)
         run: |
           echo "::group::test-ref-unit"
-          time make test-ref-unit
+          # Public GitHub hosted Linux runners have four vCPUs.
+          # Keep module scoped fixtures in one worker.
+          PYTEST_ADDOPTS="-n 4 --dist=loadscope" time make test-ref-unit
           echo "::endgroup::"
       - name: Test celery
         run: |
@@ -60,6 +62,7 @@ jobs:
         # the aggregate fail_under gate is enforced by codecov/project rather
         # than here -- both jobs upload to the same `core` flag.
         run: |
+          uv run coverage combine
           uv run coverage report --fail-under=0
           uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
@@ -97,6 +100,7 @@ jobs:
           echo "::endgroup::"
       - name: Coverage report
         run: |
+          uv run coverage combine
           uv run coverage report --fail-under=0
           uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action
@@ -141,6 +145,7 @@ jobs:
         # fail_under gate is enforced by codecov/project (all jobs upload to the
         # same `providers` flag) rather than here.
         run: |
+          uv run coverage combine
           uv run coverage report --fail-under=0
           uv run coverage xml --fail-under=0
       - name: Upload coverage reports to Codecov with GitHub Action

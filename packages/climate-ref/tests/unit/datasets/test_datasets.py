@@ -865,12 +865,12 @@ class TestIngestDatasets:
         with pytest.raises(ValueError, match=r"chunk_size must be >= 1"):
             ingest_datasets(adapter, data_dir, db, chunk_size=bad_size)
 
-    def test_chunk_size_rejected_when_adapter_lacks_iter(self, test_db, tmp_path):
+    def test_chunk_size_rejected_when_adapter_lacks_iter(self, monkeypatch, test_db, tmp_path):
         """``chunk_size`` requires the adapter to implement ``iter_local_datasets``."""
         adapter, db = test_db
         # The mock CMIP6 adapter inherits iter_local_datasets — drop it for this test.
         if hasattr(adapter, "iter_local_datasets"):
-            delattr(type(adapter), "iter_local_datasets")  # type: ignore[arg-type]
+            monkeypatch.delattr(type(adapter), "iter_local_datasets")
         data_dir = tmp_path / "data"
         data_dir.mkdir()
         (data_dir / "test.nc").touch()

@@ -569,8 +569,8 @@ def fail_stale_in_progress_executions(
     a worker is killed (OOM, walltime, segfault) before its result-handling
     callback ran, or when the join loop crashed mid-flight.
 
-    The execution group's ``dirty`` flag is left untouched so the existing
-    retry logic (``ExecutionGroup.should_run``) picks the work back up.
+    The execution group's ``dirty`` flag is set so the existing retry logic
+    (``ExecutionGroup.should_run``) picks the work back up on the next solve.
 
     Parameters
     ----------
@@ -600,6 +600,9 @@ def fail_stale_in_progress_executions(
                 f"{execution.execution_group_id}) as failed; created at {execution.created_at}"
             )
             execution.mark_failed()
+            # This reaper only runs from a real solve (never from reingest), so no
+            # update_dirty guard is needed here.
+            execution.execution_group.dirty = True
 
     if stale:
         logger.info(f"Marked {len(stale)} stale in-progress executions as failed")

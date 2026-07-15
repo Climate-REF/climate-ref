@@ -164,11 +164,15 @@ packages/*/NOTICE
 # Generated SDK
 /climate_ref_client
 
+# Test cases
+# Only track the materialised data for the test cases, not the raw output of the providers.
+**/test-data/**/output/
+**/test-data/**/regression/**
+!**/test-data/**/regression/*.json
+
 # User-specific catalog paths (test data)
 *.paths.yaml
 
-# Materialised test-case output slots (local inspection only; never committed)
-**/test-data/**/output/
 
 # Debug log files
 **/main_log_debug.txt

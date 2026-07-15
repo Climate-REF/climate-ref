@@ -66,6 +66,11 @@ dimensions:
   description: "Global warming level (e.g., 1.5C, 2C, etc.)"
   allow_extra_values: true
   required: false
+- name: level
+  long_name: Level
+  description: "Vertical level at which the metric is calculated (e.g. pressure level in hPa)"
+  allow_extra_values: true
+  required: false
 - name: metric
   long_name: Metric
   description: ""

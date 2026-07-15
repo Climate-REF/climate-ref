@@ -286,11 +286,12 @@ class AnnualCycle(CommandLineDiagnostic):
         "experiment_id",
         "variable_id",
         "reference_source_id",
+        "level",
         "region",
         "statistic",
         "season",
     )
-    version = 4
+    version = 5
 
     _variable_obs_pairs = (
         # ERA-5 as reference dataset, spatial 2-D variables
@@ -360,6 +361,29 @@ class AnnualCycle(CommandLineDiagnostic):
                             "source_id": "ACCESS-ESM1-5",
                             "experiment_id": "historical",
                             "variable_id": "pr",
+                            "member_id": "r1i1p1f1",
+                            "table_id": "Amon",
+                        },
+                        time_span=("2000-01", "2014-12"),
+                    ),
+                ),
+            ),
+            TestCase(
+                name="cmip6-ta",
+                description="Test with CMIP6 ta data and ERA-5 climatology. "
+                "Exercises the 3D pressure-level path, which captures a level dimension.",
+                requests=(
+                    RegistryRequest(
+                        slug="annual-cycle-era5-ta",
+                        registry_name="pmp-climatology",
+                        facets={"variable_id": "ta", "source_id": "ERA-5"},
+                    ),
+                    CMIP6Request(
+                        slug="annual-cycle-cmip6-ta",
+                        facets={
+                            "source_id": "ACCESS-ESM1-5",
+                            "experiment_id": "historical",
+                            "variable_id": "ta",
                             "member_id": "r1i1p1f1",
                             "table_id": "Amon",
                         },
@@ -549,18 +573,15 @@ class AnnualCycle(CommandLineDiagnostic):
         input_datasets = definition.datasets[model_source_type]
         variable_id = input_datasets["variable_id"].unique()[0]
 
-        if variable_id in ["ua", "va", "ta"]:
+        if variable_id in ["ua", "va", "ta", "zg"]:
             variable_dir_pattern = f"{variable_id}-???"
         else:
             variable_dir_pattern = variable_id
 
         results_directory = definition.output_directory
-        png_directory = results_directory / variable_dir_pattern
-        data_directory = results_directory / variable_dir_pattern
 
         logger.debug(f"results_directory: {results_directory}")
-        logger.debug(f"png_directory: {png_directory}")
-        logger.debug(f"data_directory: {data_directory}")
+        logger.debug(f"variable_dir_pattern: {variable_dir_pattern}")
 
         # Find the CMEC JSON file(s)
         results_files = transform_results_files(list(results_directory.glob("*_cmec.json")))
@@ -576,9 +597,18 @@ class AnnualCycle(CommandLineDiagnostic):
             logger.error("Unexpected case: no cmec file found")
             return ExecutionResult.build_from_failure(definition)
 
+        # PMP writes plots and data into a per-variable subdirectory (``ts`` for 2D variables,
+        # ``ta-200``/``ta-850`` for 3D pressure-level variables). Glob from the results directory
+        # so the ``variable_dir_pattern`` wildcard matches every level subdir.
         # Sort so the committed output.json plot/data key order is deterministic across hosts.
-        png_files = [definition.as_relative_path(f) for f in sorted(png_directory.glob("*.png"))]
-        data_files = [definition.as_relative_path(f) for f in sorted(data_directory.glob("*.nc"))]
+        png_files = [
+            definition.as_relative_path(f)
+            for f in sorted(results_directory.glob(f"{variable_dir_pattern}/*.png"))
+        ]
+        data_files = [
+            definition.as_relative_path(f)
+            for f in sorted(results_directory.glob(f"{variable_dir_pattern}/*.nc"))
+        ]
 
         # Prepare the output bundles
         cmec_output_bundle, cmec_metric_bundle = process_json_result(results_file, png_files, data_files)

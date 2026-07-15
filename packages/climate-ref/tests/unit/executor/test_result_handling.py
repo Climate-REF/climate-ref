@@ -278,6 +278,21 @@ def test_handle_execution_result_ingestion_failure_leaves_dirty(
     assert mock_execution_result.execution_group.dirty
 
 
+def test_handle_execution_result_system_failure_respects_update_dirty_false(
+    config, db, mock_execution_result, mock_definition
+):
+    """Reingest (update_dirty=False) must not touch the dirty flag on a retryable failure."""
+    mock_execution_result.execution_group.dirty = False
+    result = ExecutionResult(
+        definition=mock_definition, successful=False, metric_bundle_filename=None, retryable=True
+    )
+
+    handle_execution_result(config, db, mock_execution_result, result, update_dirty=False)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    assert mock_execution_result.execution_group.dirty is False
+
+
 def test_handle_execution_result_missing_log_file_leaves_dirty(
     config, db, mock_execution_result, mocker, definition_factory
 ):
@@ -297,15 +312,25 @@ def test_handle_execution_result_missing_log_file_leaves_dirty(
     assert mock_execution_result.execution_group.dirty
 
 
-def test_handle_execution_result_missing_file(config, db, mock_execution_result, mock_definition):
+def test_handle_execution_result_missing_output_marks_failed(
+    config, db, mock_execution_result, mock_definition
+):
+    """A successful result whose outputs cannot be copied must fail, not raise.
+
+    Raising here aborts the whole result-collection loop and strands every
+    sibling execution in the batch at successful=None, so the missing output is
+    treated as a per-execution failure instead.
+    """
     result = ExecutionResult(
         definition=mock_definition, successful=True, metric_bundle_filename=pathlib.Path("diagnostic.json")
     )
 
-    with pytest.raises(
-        FileNotFoundError, match=r"Could not find diagnostic.json in .*/scratch/output_fragment"
-    ):
-        handle_execution_result(config, db, mock_execution_result, result)
+    # The metric bundle is absent from scratch, so copy_execution_outputs really
+    # raises FileNotFoundError (not mocked).
+    handle_execution_result(config, db, mock_execution_result, result)
+
+    mock_execution_result.mark_failed.assert_called_once()
+    mock_execution_result.mark_successful.assert_not_called()
 
 
 @pytest.mark.parametrize("is_relative", [True, False])

@@ -21,6 +21,137 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.16.2 (2026-07-15)
+
+### Breaking Changes
+
+- Split the `ilamb` dataset registry: it now holds only the 3 ILAMB reference products without an obs4REF equivalent (`mrsol/WangMao`, `tas/CRU4.02`, `evspsbl/GLEAMv3.3a`), and the two region masks moved to a new `ilamb-regions` registry.
+  The `iomb` registry has been removed entirely as all diagnostics have been migrated to obs4REF.
+  The ILAMB and IOMB diagnostic configuration files (`configure/ilamb.yaml`, `configure/iomb.yaml`) now declare `realm: land` / `realm: ocean` and, where relevant, `region_masks: ilamb-regions` in place of the old `registry:` key.
+  The `gpp-WECANN` diagnostic's `pr` relationship now reads GPCP from obs4REF (`NOAA-NCEI/GPCP-2-3/mon`) instead of the retired `ilamb/pr/GPCPv2.3/pr.nc` (sha1 `e1b942863ec76a75aa972b6d75e2e08646741259`).
+  This is a different processing of the same underlying product, so if it moves an ILAMB regression baseline the baseline will be re-minted separately. ([#815](https://github.com/Climate-REF/climate-ref/pull/815))
+
+### Features
+
+- Added dataset retraction.
+  `ref datasets retract <slug>` marks a dataset ineligible for future solve-time selection
+  without deleting its row or its execution provenance links,
+  and `ref datasets unretract <slug>` reverses it.
+  Retracting an already-retracted dataset (or unretracting an already-active one) is a no-op.
+  `ref datasets list` now surfaces retraction state via a `retracted_at` column.
+  Retracted datasets are excluded by default, matching what the solver selects,
+  and can be shown with the new `--include-retracted` flag,
+  which also lists every version of a dataset instead of only the latest.
+  "Retract" follows the term ESGF uses for pulling a published dataset from recommended use. ([#802](https://github.com/Climate-REF/climate-ref/pull/802))
+- Added two new source dataset types, `obs4REF` and `ESMValToolReference`, together with their database tables.
+
+  `obs4REF` is REF-curated observational data that follows the obs4MIPs metadata conventions that has not yet been published to the obs4MIPs ESGF archive.
+   `ESMValToolReference` is ESMValTool's own reference data, which is not CMOR compliant and so carries a smaller set of metadata.
+   The shared obs4MIPs-style column block used by `obs4MIPs`, `PMPClimatology` and now `obs4REF` was extracted into a `ReferenceDatasetMixin`. ([#805](https://github.com/Climate-REF/climate-ref/pull/805))
+- Adds dataset adapters for the obs4REF and ESMValTool reference dataset types, so both can now be ingested with `ref datasets ingest --source-type obs4ref` and `ref datasets ingest --source-type esmvaltool-reference`. obs4REF datasets also participate in solving, while ESMValTool reference datasets are ingest-only for now. ([#814](https://github.com/Climate-REF/climate-ref/pull/814))
+- Reworked the ILAMB provider to draw its reference observations from the ingested obs4MIPs and obs4REF datasets rather than its own bundled registry.
+  The few observations not yet published there (currently WangMao, GLEAMv3 and CRU4.02) are still fetched from the provider registry at execute time. ILAMB region masks moved to their own support registry.
+
+  Each dataset registry now declares which source type its files map to, if any, and whether it holds reference or support data. This is what lets the solver provision reference observations from the database. ([#815](https://github.com/Climate-REF/climate-ref/pull/815))
+- Added a `--exclude-diagnostic` option to `ref solve`.
+  Diagnostics can be excluded by slug or by `provider/diagnostic` pair, matched exactly and case-insensitively.
+  This uses the same token format as the `REF_TEST_CASES_SKIP` environment variable. ([#820](https://github.com/Climate-REF/climate-ref/pull/820))
+
+### Improvements
+
+- Reworked the cloud radiative effects diagnostic so it runs on CMIP7.
+  Both source types now use the `ref/recipe_ref_cre_cmip7.yml` recipe,
+  with the time range rewritten per source type: 2002-2014 for CMIP6 and 2002-2021 for CMIP7. ([#683](https://github.com/Climate-REF/climate-ref/pull/683))
+- Adds CMIP7 support to the ozone diagnostics.
+  All five now build from the new `ref/recipe_ref_ozone_cmip7.yml` recipe.
+  The lat-time, SH October, NH March and annual-cycle diagnostics run on both CMIP6 and CMIP7, and the stratospheric zonal-mean profile stays on CMIP6 with its reference switched to the ESACCI-OZONE `L3-SAGE-OMPS` product. ([#704](https://github.com/Climate-REF/climate-ref/pull/704))
+- Switched the PMP extratropical modes-of-variability diagnostics that use sea-level pressure
+  (NAO, NAM, PNA, NPO, SAM) to the obs4MIPs ``20CR-V2`` reference, fetched from ESGF,
+  in place of the obs4REF ``20CR`` copy.
+  Their regression baselines were re-minted against the new reference.
+  The shared ``ExtratropicalModesOfVariability`` version bumps from 2 to 3.
+  The surface-temperature modes (PDO, NPGO) share that class, so their baselines were
+  re-minted under the new version too. Their reference is unchanged and only the
+  last few significant figures move. ([#801](https://github.com/Climate-REF/climate-ref/pull/801))
+- ESMValTool reference data (the OBS, OBS6, native6 and obs4MIPs files in the provider's `data.txt` registry) is now ingested as the `esmvaltool-reference` source type, so it is recorded in the database. Selecting it at solve time is a separate follow-up. This also adds the CMIP5-era `OImon` sea-ice table to the MIP-table to frequency mapping, which the OSI-450 sea-ice references use. ([#815](https://github.com/Climate-REF/climate-ref/pull/815))
+- Reduced the `climate-ref` unit test runtime by reusing migrated database templates, parallelising pull request checks, and moving full archive solver regressions to the main slow test suite. ([#825](https://github.com/Climate-REF/climate-ref/pull/825))
+
+### Bug Fixes
+
+- Made the transient climate response to cumulative CO2 emissions (TCRE) diagnostic compatible with CMIP7 data. ([#702](https://github.com/Climate-REF/climate-ref/pull/702))
+- Moved the test-case `catalog.paths.yaml` sidecar out of the provider packages and into the dataset cache,
+  at `$REF_DATASET_CACHE_DIR/test-case-paths/{provider}/{diagnostic}/{test_case}/`. ([#806](https://github.com/Climate-REF/climate-ref/pull/806))
+- Fixed `ref test-cases fetch` aborting the whole fetch loop when the solver found no
+  matching datasets for a single test case.
+  The failure is now logged and the remaining test cases are still fetched,
+  so one broken case no longer leaves later diagnostics without catalogs and paths sidecars.
+
+  Fixed the `global-sst-bias` example diagnostic to accumulate its global means in float64.
+  The float32 reduction differed by ~1e-6 between platforms,
+  which tripped the regression gate when baselines were minted on a different machine.
+  Its regression baselines were re-minted and the diagnostic version bumps from 1 to 2.
+
+  Loosened the regression comparison's default relative tolerance from 1e-6 to 1e-5,
+  so platform-level floating-point noise no longer trips the gate.
+  Committed bundles keep their 7 significant figures,
+  which is now two digits finer than the tolerance. ([#810](https://github.com/Climate-REF/climate-ref/pull/810))
+- Handles an ESGF search that returns no results by raising `DatasetResolutionError`.
+  This lets `ref test-cases fetch` log and skip a test case whose dataset has been de-indexed,
+  instead of crashing the whole prefetch. ([#811](https://github.com/Climate-REF/climate-ref/pull/811))
+- Enables the CEDA Solr index as an additional ESGF search index when fetching data.
+  The obs4MIPs ozone reference C3S-GTO-ECV-9-0 is currently missing from the default
+  ESGF2-US-1.5-Catalog index but is still served by CEDA,
+  so this lets `ref test-cases fetch` and `scripts/fetch-esgf.py` resolve it again. ([#812](https://github.com/Climate-REF/climate-ref/pull/812))
+- Fixed the PMP regression baselines drifting on CI.
+  The annual-cycle climatology version stamp is now derived from the diagnostic version instead of the run date,
+  the conda platform in CMEC provenance is redacted to a placeholder,
+  and the affected baselines were re-minted on linux-64 to match the CI platform. ([#816](https://github.com/Climate-REF/climate-ref/pull/816))
+- Fixed the `ozone-zonal` diagnostic by shipping the ESACCI-OZONE `L3-SAGE-OMPS` ozone profile file
+  that the updated ESMValTool recipe references in the dataset registry.
+  Also re-minted the ESMValTool regression baselines that drifted after the ESMValTool version update
+  and improved the error message for catalogs built from unfinalised CMIP7 datasets. ([#817](https://github.com/Climate-REF/climate-ref/pull/817))
+- Fixes the ILAMB `lai-avh15c1` test case running the CI runner out of memory and getting killed with no logs.
+
+  - Coarsens the very fine AVHRR LAI reference one time block at a time instead of loading the whole ~0.05 degree cube into memory at once
+  - Caches the coarsened reference to disk, keyed on the source data and target resolution, because every model comparison in a solve reuses the same coarsened field. The first execution computes it, later ones read the cached file. Set `REF_ILAMB_COARSEN_NO_CACHE` to disable.
+  - Logs wall clock, CPU time, and peak memory after each test case in `ref test-cases run` and the per-provider drift tests.
+  - Re-mints the `lai-avh15c1` baselines against the chunked coarsening, and the `gpp-fluxnet2015` baselines to adopt the CF `long_name` a newer ILAMB now sets on the region traces.
+
+  ([#818](https://github.com/Climate-REF/climate-ref/pull/818))
+- Fixed the GitHub release listing a stray `default.gitignore` alongside the wheels and sdists.
+  `uv build` writes a `.gitignore` into the build output directory,
+  and the release workflow's `dist/*` glob was uploading it as a release asset.
+  The upload is now restricted to the built wheels and source distributions. ([#819](https://github.com/Climate-REF/climate-ref/pull/819))
+- Captures the pressure `level` for the PMP annual cycle diagnostic's 3D variables.
+  The `ta`, `ua`, `va` and `zg` variables are evaluated at fixed pressure levels,
+  but the level was dropped when the scalar values were written to the database.
+  Every level landed with identical dimensions, so the per-level values could not be told apart.
+
+  - Adds a `level` dimension to the controlled vocabulary so it is stored and queryable.
+  - The annual cycle diagnostic reports `level` as a facet and its version bumps to 5.
+  - Fixes the plots and data files for 3D variables, which were never captured because the output was globbed from a directory that never existed.
+
+  ([#821](https://github.com/Climate-REF/climate-ref/pull/821))
+- Re-dirties the execution group when a run fails retryably, so the failure is actually retried on the next solve.
+  A group that reran because its input hash changed starts from `dirty=False`,
+  so a retryable failure (timeout, OOM, worker death, missing log file) left the group clean
+  and the next solve never picked it back up.
+  The stale-execution reaper had the same gap and now marks the group dirty too.
+
+  Guards the success-path output copy so a diagnostic that reports success but under-declares
+  a referenced output file fails only its own execution.
+  `copy_execution_outputs` raising `FileNotFoundError` used to abort the whole result-collection loop
+  inside the local executor and strand every not-yet-processed execution in the batch at `successful=None`. ([#822](https://github.com/Climate-REF/climate-ref/pull/822))
+- Made `long_name` nullable on the obs4MIPs, obs4REF and PMP climatology dataset tables.
+  Every other dataset table already treated `long_name` as optional. ([#824](https://github.com/Climate-REF/climate-ref/pull/824))
+
+### Improved Documentation
+
+- Rewrites the architecture background page to describe the system as implemented,
+  with C4 context, container and component diagrams,
+  a package layering diagram and sequence diagrams for the main runtime flows. ([#813](https://github.com/Climate-REF/climate-ref/pull/813))
+
+
 ## climate-ref 0.16.1 (2026-07-08)
 
 ### Bug Fixes

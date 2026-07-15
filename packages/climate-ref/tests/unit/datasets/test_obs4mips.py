@@ -201,9 +201,8 @@ def obs4mips_dir_without_long_name(tmp_path):
 class TestObs4MIPsMissingLongName:
     """``long_name`` is optional metadata: a file without it must still ingest.
 
-    It is read from the *variable's* attributes, which obs4MIPs does not require. The published
-    obs4REF FLUXNET2015 ``gpp`` dataset has none, and a ``NOT NULL`` column previously turned that
-    into an ``IntegrityError`` that aborted the entire obs4MIPs ingest.
+    It is read from the *variable's* attributes, which obs4MIPs does not require.
+    The published obs4REF FLUXNET2015 ``gpp`` dataset has none.
     """
 
     def test_parse_returns_none_long_name(self, obs4mips_dir_without_long_name):

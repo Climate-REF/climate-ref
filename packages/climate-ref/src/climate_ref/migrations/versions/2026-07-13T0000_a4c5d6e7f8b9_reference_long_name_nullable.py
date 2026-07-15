@@ -1,19 +1,9 @@
 """make reference dataset long_name nullable
 
-``long_name`` is read from the *variable's* attributes, not the global ones, and obs4MIPs does not
-require it. The canonical obs4REF FLUXNET2015 ``gpp`` file omits it, which made ingesting that
-dataset fail with a ``NOT NULL`` ``IntegrityError`` and abort the whole obs4MIPs ingest.
+``long_name`` is read from the *variable's* attributes, not the global ones, and obs4MIPs does not require it.
+This brings it in line with CMIP6/7
 
-Every other dataset table already treats it as optional: ``cmip6_dataset``, ``cmip7_dataset`` and
-``esmvaltool_reference_dataset`` all declare it nullable, and the ESMValTool adapter sets it to
-``None`` unconditionally. This aligns the three ``ReferenceDatasetMixin`` tables with them.
-
-``long_name`` is descriptive metadata only -- it is not part of the dataset identity and no
-``instance_id`` or slug derives from it -- so relaxing it cannot collapse two datasets into one.
-
-SQLite cannot ``ALTER COLUMN``, so the change goes through ``batch_alter_table``, which rebuilds
-each table. The downgrade is intentionally lossy-safe: it cannot restore a ``NOT NULL`` constraint
-while rows hold ``NULL``, so it backfills those rows with the empty string first.
+SQLite cannot ``ALTER COLUMN``, so the change goes through ``batch_alter_table`` which rebuilds each table.
 
 Revision ID: a4c5d6e7f8b9
 Revises: e1f2a3b4c5d6

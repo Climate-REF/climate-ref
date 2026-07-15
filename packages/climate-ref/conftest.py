@@ -54,7 +54,7 @@ def _clone_db(target_db_url: str, template_db_path: Path) -> None:
     if target_db_path is None:
         raise ValueError("Expected a file-based SQLite database URL")
 
-    target_db_path.parent.mkdir(parents=True)
+    target_db_path.parent.mkdir(parents=True, exist_ok=True)
     shutil.copy(template_db_path, target_db_path)
 
 

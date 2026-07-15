@@ -868,7 +868,8 @@ class TestIngestDatasets:
     def test_chunk_size_rejected_when_adapter_lacks_iter(self, monkeypatch, test_db, tmp_path):
         """``chunk_size`` requires the adapter to implement ``iter_local_datasets``."""
         adapter, db = test_db
-        # The mock CMIP6 adapter inherits iter_local_datasets — drop it for this test.
+        # CMIP6DatasetAdapter defines iter_local_datasets — drop it for this test.
+        # monkeypatch.delattr restores it afterwards so other tests keep the method.
         if hasattr(adapter, "iter_local_datasets"):
             monkeypatch.delattr(type(adapter), "iter_local_datasets")
         data_dir = tmp_path / "data"

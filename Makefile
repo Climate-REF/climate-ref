@@ -34,7 +34,7 @@ mypy:  ## run mypy on the codebase
 .PHONY: clean
 clean:  ## clean up temporary files
 	rm -rf site dist build
-	rm -rf .coverage
+	rm -rf .coverage .coverage.*
 
 .PHONY: clean-sample-data
 clean-sample-data:  ## clean up the sample data
@@ -64,7 +64,8 @@ ruff-fixes:  ## fix the code using ruff
 
 # Coverage is collected with `coverage run` (rather than pytest-cov) so that
 # module-level code in entry-point plugins is tracked from process start.
-# Each target appends to .coverage; the `test` target runs a final report.
+# Each target writes a parallel-compatible data file. The `test` target combines
+# the files before reporting.
 
 .PHONY: test-ref
 test-ref: test-ref-unit test-ref-integration  ## run all the climate-ref tests (unit + integration)
@@ -72,7 +73,7 @@ test-ref: test-ref-unit test-ref-integration  ## run all the climate-ref tests (
 .PHONY: test-ref-unit
 test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 	uv run --package climate-ref \
-		coverage run --append --source=packages/climate-ref/src \
+		coverage run --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref \
 		--ignore=packages/climate-ref/tests/integration \
 		-r a -v --doctest-modules --durations=0 --durations-min=1
@@ -80,35 +81,35 @@ test-ref-unit:  ## run the climate-ref unit tests (+ src doctests)
 .PHONY: test-ref-integration
 test-ref-integration:  ## run the climate-ref integration tests
 	uv run --package climate-ref \
-		coverage run --append --source=packages/climate-ref/src \
+		coverage run --source=packages/climate-ref/src \
 		-m pytest packages/climate-ref/tests/integration \
 		-r a -v --durations=20
 
 .PHONY: test-core
 test-core:  ## run the tests
 	uv run --package climate-ref-core \
-		coverage run --append --source=packages/climate-ref-core/src \
+		coverage run --source=packages/climate-ref-core/src \
 		-m pytest packages/climate-ref-core \
 		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-celery
 test-celery:  ## run the tests
 	uv run --package climate-ref-celery \
-		coverage run --append --source=packages/climate-ref-celery/src \
+		coverage run --source=packages/climate-ref-celery/src \
 		-m pytest packages/climate-ref-celery \
 		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-example
 test-diagnostic-example:  ## run the tests
 	uv run --package climate-ref-example \
-		coverage run --append --source=packages/climate-ref-example/src \
+		coverage run --source=packages/climate-ref-example/src \
 		-m pytest packages/climate-ref-example \
 		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-esmvaltool
 test-diagnostic-esmvaltool:  ## run the tests
 	uv run --package climate-ref-esmvaltool \
-		coverage run --append --source=packages/climate-ref-esmvaltool/src \
+		coverage run --source=packages/climate-ref-esmvaltool/src \
 		-m pytest packages/climate-ref-esmvaltool \
 		-r a -v --doctest-modules --durations=20
 
@@ -116,14 +117,14 @@ test-diagnostic-esmvaltool:  ## run the tests
 test-diagnostic-ilamb:  ## run the tests
 	uv run ref datasets fetch-data --registry ilamb-test
 	uv run --package climate-ref-ilamb \
-		coverage run --append --source=packages/climate-ref-ilamb/src \
+		coverage run --source=packages/climate-ref-ilamb/src \
 		-m pytest packages/climate-ref-ilamb \
 		-r a -v --doctest-modules --durations=20
 
 .PHONY: test-diagnostic-pmp
 test-diagnostic-pmp:  ## run the tests
 	uv run --package climate-ref-pmp \
-		coverage run --append --source=packages/climate-ref-pmp/src \
+		coverage run --source=packages/climate-ref-pmp/src \
 		-m pytest packages/climate-ref-pmp \
 		-r a -v --doctest-modules --durations=20
 
@@ -151,6 +152,7 @@ regression-gate:  ## run the regression baseline coupling gate + replay (compare
 
 .PHONY: test
 test: clean test-core test-ref test-executors test-diagnostics test-integration ## run the tests
+	uv run coverage combine
 	uv run coverage report
 
 .PHONY: test-quick

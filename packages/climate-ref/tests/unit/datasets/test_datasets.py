@@ -4,8 +4,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from climate_ref.config import Config
-from climate_ref.database import Database, ModelState
+from climate_ref.database import ModelState
 from climate_ref.datasets import IngestionStats, get_dataset_adapter, get_slug_column, ingest_datasets
 from climate_ref.datasets import base as base_module
 from climate_ref.datasets.base import DatasetAdapter, _is_na
@@ -122,8 +121,8 @@ def test_get_slug_column_resolves_for_every_source_type(source_type):
 
 
 @pytest.fixture
-def test_db(monkeypatch):
-    """Create an in-memory SQLite database for testing"""
+def test_db(monkeypatch, db):
+    """Create a CMIP6 adapter backed by the isolated test database."""
 
     # Keep validate_path from resolving to absolute paths
     monkeypatch.setattr(base_module, "validate_path", lambda p: p, raising=True)
@@ -145,11 +144,7 @@ def test_db(monkeypatch):
     # Bypass validation
     adapter.validate_data_catalog = lambda df, **kwargs: df
 
-    config = Config.default()
-    db = Database("sqlite:///:memory:")
-    db.migrate(config)
-    yield adapter, db
-    db.close()
+    return adapter, db
 
 
 def _mk_df(instance_id="CESM2.tas.gn", rows=None):
@@ -870,12 +865,13 @@ class TestIngestDatasets:
         with pytest.raises(ValueError, match=r"chunk_size must be >= 1"):
             ingest_datasets(adapter, data_dir, db, chunk_size=bad_size)
 
-    def test_chunk_size_rejected_when_adapter_lacks_iter(self, test_db, tmp_path):
+    def test_chunk_size_rejected_when_adapter_lacks_iter(self, monkeypatch, test_db, tmp_path):
         """``chunk_size`` requires the adapter to implement ``iter_local_datasets``."""
         adapter, db = test_db
-        # The mock CMIP6 adapter inherits iter_local_datasets — drop it for this test.
+        # CMIP6DatasetAdapter defines iter_local_datasets — drop it for this test.
+        # monkeypatch.delattr restores it afterwards so other tests keep the method.
         if hasattr(adapter, "iter_local_datasets"):
-            delattr(type(adapter), "iter_local_datasets")  # type: ignore[arg-type]
+            monkeypatch.delattr(type(adapter), "iter_local_datasets")
         data_dir = tmp_path / "data"
         data_dir.mkdir()
         (data_dir / "test.nc").touch()
@@ -1072,7 +1068,7 @@ def _mk_df_with_na(instance_id="CESM2.tas.gn", rows=None, finalised=False, na_co
 
 
 @pytest.fixture
-def test_db_with_finalised(monkeypatch):
+def test_db_with_finalised(monkeypatch, db):
     """Like test_db but includes 'finalised' in the adapter metadata."""
     monkeypatch.setattr(base_module, "validate_path", lambda p: p, raising=True)
     adapter = CMIP6DatasetAdapter()
@@ -1098,11 +1094,7 @@ def test_db_with_finalised(monkeypatch):
     )
     adapter.validate_data_catalog = lambda df, **kwargs: df
 
-    config = Config.default()
-    db = Database("sqlite:///:memory:")
-    db.migrate(config)
-    yield adapter, db
-    db.close()
+    return adapter, db
 
 
 class TestReingestionWithNA:

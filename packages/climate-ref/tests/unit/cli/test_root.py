@@ -228,3 +228,9 @@ def test_config_list_skips_database(invoke_cli, mocker):
 
     # Database should not have been created for config list
     mock_from_config.assert_not_called()
+
+
+def test_cli_database_access_migrates_fresh_database(invoke_cli_unmigrated):
+    result = invoke_cli_unmigrated(["datasets", "list"])
+
+    assert result.exit_code == 0

@@ -92,6 +92,8 @@ climate-ref-pmp = { workspace = true }
 [tool.coverage.run]
 source = ["packages"]
 branch = true
+parallel = true
+patch = ["subprocess"]
 
 [tool.coverage.report]
 fail_under = 70

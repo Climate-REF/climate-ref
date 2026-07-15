@@ -12,8 +12,6 @@ from unittest.mock import MagicMock, patch
 import numpy as np
 import pandas as pd
 
-from climate_ref.database import Database
-
 
 def _make_unfinalised_df(cfg, paths: list) -> pd.DataFrame:
     """Build a minimal unfinalised DataFrame matching adapter column expectations."""
@@ -81,141 +79,133 @@ class TestParserDispatch:
 class TestFinalisationEdgeCases:
     """Finalisation edge cases for FinaliseableDatasetAdapterMixin, parameterised over adapter types."""
 
-    def test_skips_rows_with_na_path(self, config, adapter_config):
+    def test_skips_rows_with_na_path(self, config, adapter_config, db):
         """Rows with NA path are skipped and remain unfinalised."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            df = _make_unfinalised_df(adapter_config, [pd.NA])
-            result = adapter.finalise_datasets(database, df)
-            assert not result["finalised"].any()
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, [pd.NA])
+        result = adapter.finalise_datasets(db, df)
+        assert not result["finalised"].any()
 
-    def test_skips_invalid_asset_response(self, config, adapter_config):
+    def test_skips_invalid_asset_response(self, config, adapter_config, db):
         """Rows returning INVALID_ASSET from the parser remain unfinalised."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
 
-            with patch(
-                adapter_config.complete_parser_patch_path,
-                return_value={"INVALID_ASSET": "/fake/path.nc", "TRACEBACK": "parse error"},
-            ):
-                result = adapter.finalise_datasets(database, df)
-            assert not result["finalised"].any()
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value={"INVALID_ASSET": "/fake/path.nc", "TRACEBACK": "parse error"},
+        ):
+            result = adapter.finalise_datasets(db, df)
+        assert not result["finalised"].any()
 
-    def test_noop_when_all_already_finalised(self, config, adapter_config):
+    def test_noop_when_all_already_finalised(self, config, adapter_config, db):
         """No parsing occurs when all rows are already finalised."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            df = _make_unfinalised_df(adapter_config, ["/some/path.nc"])
-            df["finalised"] = True
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/some/path.nc"])
+        df["finalised"] = True
 
-            with patch(adapter_config.complete_parser_patch_path) as mock_parse:
-                result = adapter.finalise_datasets(database, df)
-            mock_parse.assert_not_called()
-            assert result["finalised"].all()
+        with patch(adapter_config.complete_parser_patch_path) as mock_parse:
+            result = adapter.finalise_datasets(db, df)
+        mock_parse.assert_not_called()
+        assert result["finalised"].all()
 
-    def test_successful_parse_updates_metadata(self, config, adapter_config):
+    def test_successful_parse_updates_metadata(self, config, adapter_config, db):
         """Successful parsing updates metadata columns and marks finalised."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
 
-            with patch(
-                adapter_config.complete_parser_patch_path,
-                return_value=adapter_config.successful_parsed_result,
-            ):
-                result = adapter.finalise_datasets(database, df)
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ):
+            result = adapter.finalise_datasets(db, df)
 
-            assert result["finalised"].iloc[0]
-            for field, expected in adapter_config.metadata_checks.items():
-                assert result[field].iloc[0] == expected, (
-                    f"Expected {field}={expected!r}, got {result[field].iloc[0]!r}"
-                )
+        assert result["finalised"].iloc[0]
+        for field, expected in adapter_config.metadata_checks.items():
+            assert result[field].iloc[0] == expected, (
+                f"Expected {field}={expected!r}, got {result[field].iloc[0]!r}"
+            )
 
-    def test_partial_failure_finalises_only_successful_rows(self, config, adapter_config):
+    def test_partial_failure_finalises_only_successful_rows(self, config, adapter_config, db):
         """When one row fails and another succeeds, only the successful one is finalised."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            df = _make_unfinalised_df(adapter_config, ["/bad/path.nc", "/good/path.nc"])
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/bad/path.nc", "/good/path.nc"])
 
-            def side_effect(path, **_):
-                if "bad" in path:
-                    return {"INVALID_ASSET": path, "TRACEBACK": "corrupt file"}
-                return adapter_config.successful_parsed_result
+        def side_effect(path, **_):
+            if "bad" in path:
+                return {"INVALID_ASSET": path, "TRACEBACK": "corrupt file"}
+            return adapter_config.successful_parsed_result
 
-            with patch(
-                adapter_config.complete_parser_patch_path,
-                side_effect=side_effect,
-            ):
-                result = adapter.finalise_datasets(database, df)
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            side_effect=side_effect,
+        ):
+            result = adapter.finalise_datasets(db, df)
 
-            assert not result["finalised"].iloc[0]
-            assert result["finalised"].iloc[1]
-            field, expected = next(iter(adapter_config.metadata_checks.items()))
-            assert result[field].iloc[1] == expected
+        assert not result["finalised"].iloc[0]
+        assert result["finalised"].iloc[1]
+        field, expected = next(iter(adapter_config.metadata_checks.items()))
+        assert result[field].iloc[1] == expected
 
-    def test_parsed_none_values_are_not_written(self, config, adapter_config):
+    def test_parsed_none_values_are_not_written(self, config, adapter_config, db):
         """Parsed values that are None do not overwrite existing column values."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
-            df["source_id"] = "original-model"
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/fake/path.nc"])
+        df["source_id"] = "original-model"
 
-            check_field = next(iter(adapter_config.metadata_checks))
-            check_value = adapter_config.metadata_checks[check_field]
-            parsed = {
-                "source_id": None,
-                check_field: check_value,
-            }
-            with patch(
-                adapter_config.complete_parser_patch_path,
-                return_value=parsed,
-            ):
-                result = adapter.finalise_datasets(database, df)
+        check_field = next(iter(adapter_config.metadata_checks))
+        check_value = adapter_config.metadata_checks[check_field]
+        parsed = {
+            "source_id": None,
+            check_field: check_value,
+        }
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=parsed,
+        ):
+            result = adapter.finalise_datasets(db, df)
 
-            # source_id should retain original value since parsed value was None
-            assert result["source_id"].iloc[0] == "original-model"
-            assert result[check_field].iloc[0] == check_value
+        # source_id should retain original value since parsed value was None
+        assert result["source_id"].iloc[0] == "original-model"
+        assert result[check_field].iloc[0] == check_value
 
 
 class TestPersistFinalisedMetadata:
     """_persist_finalised_metadata edge cases, parameterised over adapter types."""
 
-    def test_skips_when_no_matching_db_record(self, config, adapter_config):
+    def test_skips_when_no_matching_db_record(self, config, adapter_config, db):
         """Silently skips slugs that have no matching database record."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            data = {col: ["value"] for col in adapter.dataset_specific_metadata}
-            data.update({col: [pd.NA] for col in adapter.file_specific_metadata})
-            data["instance_id"] = [adapter_config.default_instance_id + ".nonexistent"]
-            data["finalised"] = [True]
-            data["path"] = ["/fake/path.nc"]
-            df = pd.DataFrame(data)
+        adapter = adapter_config.adapter_cls(config=config)
+        data = {col: ["value"] for col in adapter.dataset_specific_metadata}
+        data.update({col: [pd.NA] for col in adapter.file_specific_metadata})
+        data["instance_id"] = [adapter_config.default_instance_id + ".nonexistent"]
+        data["finalised"] = [True]
+        data["path"] = ["/fake/path.nc"]
+        df = pd.DataFrame(data)
 
-            # Should not raise
-            adapter._persist_finalised_metadata(database, df, df.index)
+        # Should not raise
+        adapter._persist_finalised_metadata(db, df, df.index)
 
-    def test_skips_duplicate_slugs(self, config, adapter_config):
+    def test_skips_duplicate_slugs(self, config, adapter_config, db):
         """Each slug is persisted only once even when multiple rows share it."""
-        with Database.from_config(config, run_migrations=True) as database:
-            adapter = adapter_config.adapter_cls(config=config)
-            slug = adapter_config.default_instance_id
-            data = {col: ["val", "val"] for col in adapter.dataset_specific_metadata}
-            data.update({col: [pd.NA, pd.NA] for col in adapter.file_specific_metadata})
-            data["instance_id"] = [slug, slug]
-            data["finalised"] = [True, True]
-            data["path"] = ["/fake/path1.nc", "/fake/path2.nc"]
-            df = pd.DataFrame(data)
+        adapter = adapter_config.adapter_cls(config=config)
+        slug = adapter_config.default_instance_id
+        data = {col: ["val", "val"] for col in adapter.dataset_specific_metadata}
+        data.update({col: [pd.NA, pd.NA] for col in adapter.file_specific_metadata})
+        data["instance_id"] = [slug, slug]
+        data["finalised"] = [True, True]
+        data["path"] = ["/fake/path1.nc", "/fake/path2.nc"]
+        df = pd.DataFrame(data)
 
-            # Make the query return None so we exercise the "no record" path
-            database.session.query = lambda *a, **kw: type(
-                "Q",
-                (),
-                {"filter": lambda *a, **kw: type("Q2", (), {"one_or_none": lambda: None})()},
-            )()
+        # Make the query return None so we exercise the "no record" path
+        db.session.query = lambda *a, **kw: type(
+            "Q",
+            (),
+            {"filter": lambda *a, **kw: type("Q2", (), {"one_or_none": lambda: None})()},
+        )()
 
-            # Should not raise and should only attempt once for the slug
-            adapter._persist_finalised_metadata(database, df, df.index)
+        # Should not raise and should only attempt once for the slug
+        adapter._persist_finalised_metadata(db, df, df.index)
 
     def test_na_values_do_not_overwrite_db_records(self, config, adapter_config):
         """pd.NA and np.nan values must not overwrite existing database fields.

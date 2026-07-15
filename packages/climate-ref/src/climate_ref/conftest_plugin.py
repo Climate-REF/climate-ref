@@ -299,13 +299,8 @@ def config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, request: pytest.Fixt
 
 
 @pytest.fixture
-def invoke_cli(config: Config, monkeypatch: pytest.MonkeyPatch) -> Callable[..., Result]:
-    """Invoke the REF CLI and verify exit code.
-
-    Depends on the ``config`` fixture so every CLI invocation uses an
-    isolated configuration directory and database rather than the user's
-    real one.
-    """
+def cli_runner(monkeypatch: pytest.MonkeyPatch) -> Callable[..., Result]:
+    """Build a REF CLI runner with deterministic output and exit-code checks."""
     runner = CliRunner()
     # Older versions of typer mix stderr and stdout. This option has been removed in newer versions
     runner.mix_stderr = False  # type: ignore[attr-defined]
@@ -338,6 +333,12 @@ def invoke_cli(config: Config, monkeypatch: pytest.MonkeyPatch) -> Callable[...,
         return result
 
     return _invoke_cli
+
+
+@pytest.fixture
+def invoke_cli(config: Config, cli_runner: Callable[..., Result]) -> Callable[..., Result]:
+    """Invoke the REF CLI with an isolated configuration and database."""
+    return cli_runner
 
 
 class MockDiagnostic(Diagnostic):

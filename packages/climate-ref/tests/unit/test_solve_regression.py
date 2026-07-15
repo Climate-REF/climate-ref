@@ -19,6 +19,8 @@ from climate_ref_example import provider as example_provider
 
 from climate_ref.solve_helpers import solve_results_for_regression
 
+pytestmark = pytest.mark.slow
+
 
 @pytest.fixture(scope="module")
 def example_results(esgf_example_solve_results):

@@ -8,6 +8,7 @@ import json
 
 import pandas as pd
 import pytest
+from climate_ref_example import provider as example_provider
 
 from climate_ref.solve_helpers import (
     format_solve_results_json,
@@ -15,6 +16,7 @@ from climate_ref.solve_helpers import (
     generate_catalog,
     load_solve_catalog,
     solve_results_for_regression,
+    solve_to_results,
     write_catalog_parquet,
 )
 from climate_ref_core.datasets import SourceDatasetType
@@ -64,9 +66,9 @@ def obs4mips_generated_catalog(sample_data_dir):
 
 
 @pytest.fixture(scope="module")
-def example_solve_results(esgf_example_solve_results):
-    """Reuse the session-cached example-provider solve (see root conftest)."""
-    return esgf_example_solve_results
+def example_solve_results(esgf_data_catalog_trimmed):
+    """Solve a representative ESGF catalog for output contract tests."""
+    return solve_to_results(esgf_data_catalog_trimmed, providers=[example_provider])
 
 
 class TestGenerateCatalog:

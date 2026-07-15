@@ -251,15 +251,16 @@ python scripts/generate_esgf_catalog.py \
 ### Solver regression tests
 
 Solver regression tests in `packages/climate-ref/tests/unit/test_solve_regression.py`
-run the solver against the ESGF parquet catalogs for each provider
+run the solver against the full ESGF parquet catalogs for each provider
 and compare the output against YAML baselines.
+They run in the slow test suite after merges to `main`.
 Any change to solver logic, constraints, or data requirements
 will produce a diff in these baseline files.
 
 To regenerate baselines after an intentional change:
 
 ```bash
-uv run pytest packages/climate-ref/tests/unit/test_solve_regression.py --force-regen
+uv run pytest packages/climate-ref/tests/unit/test_solve_regression.py --slow --force-regen
 ```
 
 ## Documentation

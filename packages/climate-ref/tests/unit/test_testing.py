@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pandas as pd
 import pytest
 
+from climate_ref.database import Database, MigrationState
 from climate_ref.testing import (
     TestCaseRunner,
     assert_test_case_no_drift,
@@ -24,6 +25,17 @@ from climate_ref_core.testing import (
     TestCasePaths,
     TestDataSpecification,
 )
+
+
+def test_invoke_cli_uses_migrated_database_template(config, invoke_cli):
+    original_migrate = Database.migrate
+
+    result = invoke_cli(["datasets", "list"])
+
+    assert result.exit_code == 0
+    assert Database.migrate is original_migrate
+    with Database.from_config(config, run_migrations=False) as database:
+        assert database.migration_status(config)["state"] is MigrationState.UP_TO_DATE
 
 
 class TestTestCasePathsFromDiagnostic:

@@ -1,6 +1,12 @@
 import pytest
 
 
+@pytest.fixture
+def invoke_cli(invoke_cli_unmigrated):
+    """Keep migration commands on a database without a revision stamp."""
+    return invoke_cli_unmigrated
+
+
 def test_without_subcommand(invoke_cli):
     result = invoke_cli(["db"], expected_exit_code=2)
     assert "Missing command." in result.stderr

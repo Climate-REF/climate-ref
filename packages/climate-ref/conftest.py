@@ -4,7 +4,6 @@ import shutil
 from collections.abc import Callable, Generator
 from pathlib import Path
 from typing import Any
-from urllib import parse as urlparse
 
 import cftime
 import pandas as pd
@@ -15,7 +14,7 @@ from pytest_regressions.data_regression import RegressionYamlDumper
 from yaml.representer import SafeRepresenter
 
 from climate_ref.config import Config
-from climate_ref.database import Database
+from climate_ref.database import Database, _get_sqlite_path
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.cmip6_parsers import parse_cmip6_complete, parse_cmip6_drs
 from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
@@ -51,18 +50,65 @@ for _cftime_cls in cftime._cftime.DATE_TYPES.values():
 
 
 def _clone_db(target_db_url: str, template_db_path: Path) -> None:
-    split_url = urlparse.urlsplit(target_db_url)
-    target_db_path = Path(split_url.path[1:])
-    target_db_path.parent.mkdir(parents=True)
+    target_db_path = _get_sqlite_path(target_db_url)
+    if target_db_path is None:
+        raise ValueError("Expected a file-based SQLite database URL")
 
+    target_db_path.parent.mkdir(parents=True)
     shutil.copy(template_db_path, target_db_path)
 
 
+@pytest.fixture(scope="session")
+def migrated_db_template(tmp_path_session: Path) -> Path:
+    """Build the current database schema once for reuse by isolated test databases."""
+    template_db_path = tmp_path_session / "climate_ref_template.db"
+    template_config = Config()
+    template_config.paths.dimensions_cv = Path(
+        str(importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml")
+    )
+    template_config.db.database_url = f"sqlite:///{template_db_path}"
+
+    database = Database.from_config(template_config, run_migrations=True, skip_backup=True)
+    database.close()
+
+    return template_db_path
+
+
 @pytest.fixture
-def db(config) -> Generator[Database, None, None]:
-    database = Database.from_config(config, run_migrations=True)
+def db(config: Config, migrated_db_template: Path) -> Generator[Database, None, None]:
+    _clone_db(config.db.database_url, migrated_db_template)
+    database = Database.from_config(config, run_migrations=False)
     yield database
     database.close()
+
+
+@pytest.fixture
+def invoke_cli(
+    config: Config,
+    migrated_db_template: Path,
+    cli_runner: Callable[..., Any],
+    request: pytest.FixtureRequest,
+    monkeypatch: pytest.MonkeyPatch,
+) -> Callable[..., Any]:
+    """Invoke the CLI against an isolated database with the current schema."""
+    if not {"db", "db_seeded"}.intersection(request.fixturenames):
+        _clone_db(config.db.database_url, migrated_db_template)
+
+    def _invoke_cli(*args: Any, **kwargs: Any) -> Any:
+        def _skip_migrate(*_args: Any, **_kwargs: Any) -> None:
+            return None
+
+        with monkeypatch.context() as migration_patch:
+            migration_patch.setattr(Database, "migrate", _skip_migrate)
+            return cli_runner(*args, **kwargs)
+
+    return _invoke_cli
+
+
+@pytest.fixture
+def invoke_cli_unmigrated(config: Config, cli_runner: Callable[..., Any]) -> Callable[..., Any]:
+    """Invoke the CLI without preparing its isolated database."""
+    return cli_runner
 
 
 @pytest.fixture(scope="session")
@@ -78,12 +124,17 @@ def prepare_db(cmip7_aft_cv):
 
 
 @pytest.fixture(scope="session")
-def db_seeded_template(tmp_path_session, cmip6_data_catalog, obs4mips_data_catalog, prepare_db) -> Path:
+def db_seeded_template(
+    tmp_path_session: Path,
+    migrated_db_template: Path,
+    cmip6_data_catalog,
+    obs4mips_data_catalog,
+    prepare_db,
+) -> Path:
     template_db_path = tmp_path_session / "climate_ref_template_seeded.db"
+    shutil.copy(migrated_db_template, template_db_path)
 
-    config = Config.default()  # This is just dummy config
     database = Database(f"sqlite:///{template_db_path}")
-    database.migrate(config)
 
     # Seed the CMIP6 sample datasets. ``register_dataset`` trusts callers to
     # have already validated the catalog, so do that here before iterating.
@@ -109,11 +160,10 @@ def db_seeded_template(tmp_path_session, cmip6_data_catalog, obs4mips_data_catal
 
 
 @pytest.fixture
-def db_seeded(db_seeded_template, config) -> Database:
-    # Copy the template database to the location in the config
+def db_seeded(db_seeded_template: Path, config: Config) -> Generator[Database, None, None]:
     _clone_db(config.db.database_url, db_seeded_template)
 
-    database = Database.from_config(config, run_migrations=True)
+    database = Database.from_config(config, run_migrations=False)
     yield database
     database.close()
 

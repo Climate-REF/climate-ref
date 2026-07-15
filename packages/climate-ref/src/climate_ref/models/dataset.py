@@ -236,7 +236,7 @@ class ReferenceDatasetMixin:
     grid: Mapped[str] = mapped_column()
     grid_label: Mapped[str] = mapped_column()
     institution_id: Mapped[str] = mapped_column()
-    long_name: Mapped[str] = mapped_column()
+    long_name: Mapped[str | None] = mapped_column(nullable=True)
     nominal_resolution: Mapped[str] = mapped_column()
     realm: Mapped[str] = mapped_column()
     product: Mapped[str] = mapped_column()

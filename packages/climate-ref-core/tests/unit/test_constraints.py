@@ -1580,5 +1580,29 @@ class TestSelectFirstMember:
         data = pd.DataFrame(columns=["source_id", "member_id", "path"])
         assert SelectFirstMember().apply(data, data).empty
 
+    def test_non_cmip_members_sort_deterministically(self):
+        # Members that do not match r<r>i<i>p<p>f<f> fall back to raw-string ordering,
+        # so the alphabetically-first non-CMIP label is kept deterministically.
+        data = pd.DataFrame(
+            {
+                "source_id": ["MODEL", "MODEL"],
+                "member_id": ["obs-b", "obs-a"],
+                "path": ["a.nc", "b.nc"],
+            }
+        )
+        result = SelectFirstMember().apply(data, data)
+        assert list(result["member_id"]) == ["obs-a"]
+
+    def test_all_missing_members_keeps_subgroup(self):
+        # An all-NaN member column yields no members to select on; the subgroup is kept intact.
+        data = pd.DataFrame(
+            {
+                "source_id": ["A", "A"],
+                "member_id": [None, None],
+                "path": ["a.nc", "b.nc"],
+            }
+        )
+        assert_frame_equal(SelectFirstMember().apply(data, data), data)
+
     def test_is_group_constraint(self):
         assert isinstance(SelectFirstMember(), GroupConstraint)

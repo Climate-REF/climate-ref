@@ -2,6 +2,7 @@
 Dataset selection constraints
 """
 
+import re
 from collections import defaultdict
 from collections.abc import Mapping
 from functools import total_ordering
@@ -632,3 +633,61 @@ class AddParentDataset:
             },
         }
         return cls(parent_facet_map=parent_facet_options[source_type])
+
+
+_MEMBER_RE = re.compile(r"r(\d+)i(\d+)p(\d+)f(\d+)")
+
+
+def _member_sort_key(member: str) -> tuple[int, tuple[int, ...] | str]:
+    """
+    Sort key that orders CMIP ensemble members numerically.
+
+    Members matching ``r<r>i<i>p<p>f<f>`` sort first, ordered by their numeric
+    (realization, initialization, physics, forcing) indices, so ``r1i1p1f1`` precedes
+    both ``r2i1p1f1`` and ``r10i1p1f1``. Members that do not match sort afterwards by
+    their raw string, keeping the ordering deterministic.
+    """
+    match = _MEMBER_RE.fullmatch(str(member))
+    if match:
+        return (0, tuple(int(value) for value in match.groups()))
+    return (1, str(member))
+
+
+@frozen
+class SelectFirstMember:
+    """
+    Keep a single ensemble member per group.
+
+    Within each group defined by ``group_by``, only the datasets belonging to a single
+    ensemble member are retained: the member with the lowest CMIP indices (``r1i1p1f1``
+    when present, see :func:`_member_sort_key`).
+
+    Some diagnostic scripts expect exactly one member per model and error when given
+    several (e.g. ``None or too many matching files``). The REF otherwise passes every
+    ingested member of a model into a single execution, so this constraint reduces each
+    model to one representative member.
+    """
+
+    member_facet: str = "member_id"
+    """The facet identifying the ensemble member (``member_id`` for CMIP6, ``variant_label`` for CMIP7)."""
+
+    group_by: tuple[str, ...] = field(converter=_to_tuple, default=("source_id",))
+    """The facets defining each model within which a single member is kept."""
+
+    def apply(self, group: pd.DataFrame, data_catalog: pd.DataFrame) -> pd.DataFrame:
+        """
+        Keep only the first ensemble member within each group.
+        """
+        if group.empty or self.member_facet not in group.columns:
+            return group
+
+        keep = pd.Series(False, index=group.index)
+        for _, subgroup in group.groupby(list(self.group_by)):
+            members = subgroup[self.member_facet].dropna().unique()
+            if len(members) == 0:
+                # No member information to select on; keep the subgroup unchanged.
+                keep.loc[subgroup.index] = True
+                continue
+            first = min(members, key=_member_sort_key)
+            keep.loc[subgroup.index[subgroup[self.member_facet] == first]] = True
+        return group[keep]

@@ -17,6 +17,7 @@ from climate_ref_core.constraints import (
     RequireFacets,
     RequireOverlappingTimerange,
     RequireTimerange,
+    SelectFirstMember,
     apply_constraint,
 )
 from climate_ref_core.datasets import SourceDatasetType
@@ -1521,3 +1522,87 @@ def test_apply_constraint_validate_invalid(data_catalog):
         )
         is None
     )
+
+
+class TestSelectFirstMember:
+    def test_reduces_to_one_member_per_model(self):
+        # Two models, several members each, both siconc and tas present per member.
+        rows = []
+        for source_id, members in (
+            ("ACCESS-CM2", ["r1i1p1f1", "r2i1p1f1", "r10i1p1f1"]),
+            ("CanESM5", ["r5i1p2f1", "r1i1p2f1"]),
+        ):
+            for member in members:
+                for var in ("siconc", "tas"):
+                    rows.append(
+                        {
+                            "source_id": source_id,
+                            "member_id": member,
+                            "grid_label": "gn",
+                            "variable_id": var,
+                            "path": f"{source_id}_{member}_{var}.nc",
+                        }
+                    )
+        data = pd.DataFrame(rows)
+
+        result = SelectFirstMember(member_facet="member_id", group_by=("source_id",)).apply(data, data)
+
+        # One member kept per model: the lowest CMIP index (r1i1p1f1; r1i1p2f1 for CanESM5),
+        # not the lexicographic first (r10.../r5...). Both variables of that member survive.
+        kept = {sid: sorted(sub["member_id"].unique()) for sid, sub in result.groupby("source_id")}
+        assert kept == {"ACCESS-CM2": ["r1i1p1f1"], "CanESM5": ["r1i1p2f1"]}
+        assert sorted(result[result["source_id"] == "ACCESS-CM2"]["variable_id"]) == ["siconc", "tas"]
+        assert len(result) == 4  # 2 models * 1 member * 2 variables
+
+    def test_variant_label_facet_for_cmip7(self):
+        data = pd.DataFrame(
+            {
+                "source_id": ["MODEL", "MODEL"],
+                "variant_label": ["r2i1p1f1", "r1i1p1f1"],
+                "path": ["a.nc", "b.nc"],
+            }
+        )
+        result = SelectFirstMember(member_facet="variant_label", group_by=("source_id",)).apply(data, data)
+        assert list(result["variant_label"]) == ["r1i1p1f1"]
+
+    def test_single_member_unchanged(self):
+        data = pd.DataFrame({"source_id": ["A"], "member_id": ["r1i1p1f1"], "path": ["a.nc"]})
+        assert_frame_equal(
+            SelectFirstMember().apply(data, data),
+            data,
+        )
+
+    def test_missing_member_facet_returns_group_unchanged(self):
+        data = pd.DataFrame({"source_id": ["A", "A"], "path": ["a.nc", "b.nc"]})
+        assert_frame_equal(SelectFirstMember().apply(data, data), data)
+
+    def test_empty_group(self):
+        data = pd.DataFrame(columns=["source_id", "member_id", "path"])
+        assert SelectFirstMember().apply(data, data).empty
+
+    def test_non_cmip_members_sort_deterministically(self):
+        # Members that do not match r<r>i<i>p<p>f<f> fall back to raw-string ordering,
+        # so the alphabetically-first non-CMIP label is kept deterministically.
+        data = pd.DataFrame(
+            {
+                "source_id": ["MODEL", "MODEL"],
+                "member_id": ["obs-b", "obs-a"],
+                "path": ["a.nc", "b.nc"],
+            }
+        )
+        result = SelectFirstMember().apply(data, data)
+        assert list(result["member_id"]) == ["obs-a"]
+
+    def test_all_missing_members_keeps_subgroup(self):
+        # An all-NaN member column yields no members to select on; the subgroup is kept intact.
+        data = pd.DataFrame(
+            {
+                "source_id": ["A", "A"],
+                "member_id": [None, None],
+                "path": ["a.nc", "b.nc"],
+            }
+        )
+        assert_frame_equal(SelectFirstMember().apply(data, data), data)
+
+    def test_is_group_constraint(self):
+        assert isinstance(SelectFirstMember(), GroupConstraint)

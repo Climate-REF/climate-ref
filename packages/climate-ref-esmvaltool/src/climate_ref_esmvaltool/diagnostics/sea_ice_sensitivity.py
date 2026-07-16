@@ -8,6 +8,7 @@ from climate_ref_core.constraints import (
     PartialDateTime,
     RequireFacets,
     RequireTimerange,
+    SelectFirstMember,
 )
 from climate_ref_core.datasets import ExecutionDatasetCollection, FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
@@ -62,6 +63,9 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                         required_facets=("siconc", "tas"),
                         group_by=("source_id", "member_id", "grid_label"),
                     ),
+                    # The diagnostic script expects a single member per model; the REF
+                    # otherwise feeds every ingested member into this one execution.
+                    SelectFirstMember(member_facet="member_id", group_by=("source_id",)),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP6),
                     AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP6),
                     RequireFacets(
@@ -105,6 +109,9 @@ class SeaIceSensitivity(ESMValToolDiagnostic):
                         required_facets=("siconc", "tas"),
                         group_by=("source_id", "variant_label", "grid_label"),
                     ),
+                    # The diagnostic script expects a single member per model; the REF
+                    # otherwise feeds every ingested member into this one execution.
+                    SelectFirstMember(member_facet="variant_label", group_by=("source_id",)),
                     AddSupplementaryDataset.from_defaults("areacella", SourceDatasetType.CMIP7),
                     AddSupplementaryDataset.from_defaults("areacello", SourceDatasetType.CMIP7),
                     RequireFacets(

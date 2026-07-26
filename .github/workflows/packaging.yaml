@@ -62,7 +62,7 @@ jobs:
       generated-semver: ${{ steps.semantic-version.outputs.generated-semver }}
     steps:
     - uses: actions/checkout@v7
-    - uses: actions/setup-python@v6
+    - uses: actions/setup-python@v7
     - name: Install jq
       run: |
         sudo apt-get install --yes jq

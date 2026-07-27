@@ -69,8 +69,9 @@ class ESMValToolProvider(CondaDiagnosticProvider):
         reference_path = registry_data_root()
         if not reference_path.exists():
             logger.warning(
-                f"ESMValTool reference data not found at {reference_path}. "
-                f"Run `ref providers setup --provider {self.slug}` first."
+                f"No ESMValTool reference data has been fetched to {reference_path}, "
+                "so there is nothing to ingest. "
+                f"Fetch it with `ref datasets fetch-data --registry {_DATASETS_REGISTRY_NAME}`."
             )
             return
 

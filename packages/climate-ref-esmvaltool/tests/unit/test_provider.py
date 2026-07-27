@@ -75,7 +75,9 @@ class TestESMValToolProviderHooks:
 
         provider.ingest_data(mocker.Mock(), mocker.Mock())
 
-        assert "ESMValTool reference data not found" in caplog.text
+        assert "No ESMValTool reference data has been fetched" in caplog.text
+        # The remediation cannot be the command this hook already runs under.
+        assert "ref datasets fetch-data" in caplog.text
 
     def test_ingest_data(self, mocker, tmp_path):
         """The fetched tree is ingested so the solver can select from it."""

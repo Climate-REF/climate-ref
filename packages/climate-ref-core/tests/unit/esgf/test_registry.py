@@ -248,6 +248,11 @@ class TestMatchesFacets:
         assert _matches_facets({"tier": 2}, {"tier": 2}) is True
         assert _matches_facets({"tier": 2}, {"tier": 3}) is False
 
+    @pytest.mark.parametrize("allowed", [{"ERA-5", "GPCP-Monthly-3-2"}, ["ERA-5"], ("ERA-5",)])
+    def test_matches_any_collection_of_allowed_values(self, allowed):
+        """A set is a collection of allowed values, not a single one."""
+        assert _matches_facets({"source_id": "ERA-5"}, {"source_id": allowed}) is True
+
 
 class TestRegistryRequest:
     """Tests for RegistryRequest class."""

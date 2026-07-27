@@ -36,9 +36,8 @@ def parse_esmvaltool_reference(file: str, **kwargs: Any) -> dict[str, Any]:
     """
     Parse a single ESMValTool reference file into a metadata record.
 
-    Metadata comes from the path rather than the file contents, because the data is not
-    CMOR compliant. The date range is resolved here and not in the shared parser, because
-    nothing selects reference data on it.
+    Metadata comes from the path rather than the file contents,
+    because the data is not CMOR compliant.
     """
     try:
         info = parse_reference_path(file)._asdict()

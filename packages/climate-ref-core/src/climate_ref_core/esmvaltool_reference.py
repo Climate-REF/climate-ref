@@ -263,10 +263,15 @@ class ReferenceFacets(NamedTuple):
     timerange: str | None
 
 
+def _filename_fields(filename: str) -> list[str]:
+    """Split a CMOR-style filename into its underscore-separated fields."""
+    stem = filename[:-3] if filename.endswith(".nc") else filename
+    return stem.split("_")
+
+
 def _parse_obs(rel: tuple[str, ...], filename: str) -> ReferenceFacets:
     # rel == ("OBS", "Tier{n}", "{dataset}", ..., filename)
-    stem = filename[:-3] if filename.endswith(".nc") else filename
-    tokens = stem.split("_")
+    tokens = _filename_fields(filename)
     # {project}_{dataset}_{type}_{version}_{mip}_{short_name}[_{timerange}]
     if len(tokens) < _OBS_FILENAME_TOKENS:
         raise ValueError(f"unexpected OBS filename structure: {filename}")
@@ -302,8 +307,7 @@ def _parse_native6(rel: tuple[str, ...]) -> ReferenceFacets:
 
 def _parse_obs4mips(rel: tuple[str, ...], filename: str) -> ReferenceFacets:
     # rel == ("obs4MIPs", "{dataset}", "{version}", filename)
-    stem = filename[:-3] if filename.endswith(".nc") else filename
-    tokens = stem.split("_")
+    tokens = _filename_fields(filename)
     if not tokens[0]:
         raise ValueError(f"unexpected obs4MIPs filename structure: {filename}")
     return ReferenceFacets(

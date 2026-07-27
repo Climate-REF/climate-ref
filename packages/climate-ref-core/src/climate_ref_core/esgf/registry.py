@@ -8,7 +8,7 @@ This module provides request classes for fetching datasets from pooch registries
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from typing import Any
 
 import pandas as pd
@@ -17,6 +17,13 @@ from loguru import logger
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import select_latest_version
 from climate_ref_core.esmvaltool_reference import parse_reference_path
+
+type FacetValue = str | int | Collection[str | int]
+"""
+One allowed value for a facet, or a collection of them.
+
+Not every facet is a string. An ESMValTool reference key parses ``tier`` as an int.
+"""
 
 # Number of path parts in PMP climatology registry keys
 _PMP_CLIMATOLOGY_PATH_PARTS = 5
@@ -151,10 +158,8 @@ def _parse_esmvaltool_reference_key(key: str) -> dict[str, Any]:
     """
     Parse an ESMValTool reference registry key to extract metadata.
 
-    Keys are the file's DRS path relative to the data root, so they parse the same way the
-    ingest adapter parses the downloaded file. Sharing
-    :func:`~climate_ref_core.esmvaltool_reference.parse_reference_path` is what keeps a
-    request's facet values spelled the way the catalog spells them.
+    A key is the file's DRS path relative to the data root,
+    so it parses the same way the ingest adapter parses the downloaded file.
 
     Parameters
     ----------
@@ -179,7 +184,7 @@ def _parse_esmvaltool_reference_key(key: str) -> dict[str, Any]:
 
 def _matches_facets(
     metadata: dict[str, Any],
-    facets: dict[str, str | tuple[str, ...]],
+    facets: dict[str, FacetValue],
 ) -> bool:
     """
     Check if metadata matches all provided facets.
@@ -199,9 +204,13 @@ def _matches_facets(
         if facet_name not in metadata:
             return False
 
-        # Normalize to tuple for comparison.
-        # Not every facet is a string: an ESMValTool reference key parses ``tier`` as an int.
-        allowed_values = facet_value if isinstance(facet_value, tuple | list) else (facet_value,)
+        # Normalize to a collection of allowed values.
+        # A string is one value rather than a collection of characters,
+        # and so is anything that is not a collection at all, such as an int ``tier``.
+        if isinstance(facet_value, str) or not isinstance(facet_value, Collection):
+            allowed_values: Collection[str | int] = (facet_value,)
+        else:
+            allowed_values = facet_value
 
         if metadata[facet_name] not in allowed_values:
             return False
@@ -246,7 +255,7 @@ class RegistryRequest:
         self,
         slug: str,
         registry_name: str,
-        facets: dict[str, str | tuple[str, ...]],
+        facets: dict[str, FacetValue],
         source_type: str = "PMPClimatology",
         time_span: tuple[str, str] | None = None,
     ) -> None:

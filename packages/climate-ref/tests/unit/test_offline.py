@@ -9,6 +9,7 @@ and they point the cache at an unwritable directory so nothing can quietly be wr
 import socket
 
 import pytest
+import requests
 
 from climate_ref.config import Config, refresh_ignore_datasets_file
 from climate_ref_core.data import ResourceOrigin
@@ -29,23 +30,31 @@ def no_network(monkeypatch):
     library is caught, including one added by a future change.
     """
 
+    attempts: list[object] = []
+
     def blocked(*args, **kwargs):
-        raise NetworkAccessError(f"network access attempted: {args[:1]}")
+        attempts.append(args[-1] if args else None)
+        raise NetworkAccessError("network access attempted")
 
     monkeypatch.setattr(socket.socket, "connect", blocked)
     monkeypatch.setattr(socket.socket, "connect_ex", blocked)
     monkeypatch.setattr(socket, "create_connection", blocked)
+    return attempts
 
 
 @pytest.fixture
 def read_only_cache(monkeypatch, tmp_path):
-    """Point the dataset cache at a directory that cannot be created."""
-    root = tmp_path / "readonly"
-    root.mkdir()
-    root.chmod(0o500)
-    monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(root / "cache"))
-    yield root / "cache"
-    root.chmod(0o700)
+    """
+    Point the dataset cache somewhere it cannot be created.
+
+    A regular file is used rather than a directory with the write bit cleared,
+    because permissions do not stop a privileged user and do not mean the same
+    thing on Windows. Creating a directory beneath a file always fails.
+    """
+    root = tmp_path / "not-a-directory"
+    root.touch()
+    monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(root))
+    return root
 
 
 @pytest.fixture
@@ -60,19 +69,22 @@ def test_the_fixture_really_blocks_the_network(no_network):
     # test below pass for the wrong reason.
     with pytest.raises(NetworkAccessError):
         socket.create_connection(("example.invalid", 80))
+    assert no_network
 
 
 def test_configuration_loads(offline_config, read_only_cache):
     assert offline_config.ignore_datasets_file is None
     assert offline_config.paths.dimensions_cv is None
-    assert not read_only_cache.exists()
+    assert read_only_cache.is_file()
 
 
-def test_controlled_vocabulary_resolves_from_the_package(offline_config):
+def test_controlled_vocabulary_resolves_from_the_package(offline_config, no_network):
     resource = offline_config.paths.dimensions_cv_resource
 
     assert resource.origin == ResourceOrigin.package
     assert CV.load(resource).dimensions
+    # The controlled vocabulary has no remote copy, so nothing should even try.
+    assert no_network == []
 
 
 def test_grey_list_resolves_from_the_package(offline_config):
@@ -87,7 +99,26 @@ def test_grey_list_resolves_from_the_package(offline_config):
 def test_refreshing_the_grey_list_writes_nothing(offline_config, read_only_cache):
     refresh_ignore_datasets_file(offline_config)
 
-    assert not read_only_cache.exists()
+    assert read_only_cache.is_file()
+
+
+def test_grey_list_resolves_from_the_package_with_a_writable_cache(monkeypatch, tmp_path, no_network):
+    """
+    The air-gapped case with an ordinary filesystem.
+
+    `refresh_ignore_datasets_file` creates the cache directory before it fetches,
+    so the read-only case above never reaches the network.
+    This one does, and the download is what fails.
+    """
+    monkeypatch.setenv("REF_CONFIGURATION", str(tmp_path / "climate_ref"))
+    monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
+    config = Config.default()
+
+    refresh_ignore_datasets_file(config)
+
+    assert no_network, "the download should have been attempted and blocked"
+    assert config.ignore_datasets_resource.origin == ResourceOrigin.package
+    assert config.ignore_datasets_resource.read_text()
 
 
 def test_provider_configure_applies_the_grey_list(offline_config, provider):
@@ -116,7 +147,7 @@ def test_a_conda_provider_does_not_need_the_network_to_configure(offline_config)
 
 @pytest.mark.xfail(
     reason="climate_ref_pmp downloads micromamba during configure, which is on the solve path",
-    raises=Exception,
+    raises=requests.exceptions.ConnectionError,
     strict=True,
 )
 def test_offline_known_gaps(offline_config):

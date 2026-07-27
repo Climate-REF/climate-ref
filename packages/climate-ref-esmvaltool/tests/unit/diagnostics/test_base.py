@@ -124,6 +124,30 @@ def test_build_cmd_with_selected_reference_data(mocker, tmp_path, metric_definit
     assert config["projects"]["obs4MIPs"]["data"]["esmvaltool"]["rootpath"] == str(reference_data)
 
 
+def test_build_cmd_with_empty_selected_reference_data(mocker, tmp_path, metric_definition, mock_diagnostic):
+    """An opt-in diagnostic that selected no reference files fails rather than running blind.
+
+    Carrying on would leave ESMValCore to fall back on its own default rootpaths.
+    """
+    dataset_registry_manager = mocker.patch.object(
+        climate_ref_esmvaltool.diagnostics.base,
+        "dataset_registry_manager",
+    )
+    dataset_registry_manager.__getitem__.return_value.abspath = tmp_path / "registry"
+
+    reference = DatasetCollection(
+        pandas.DataFrame({"instance_id": [], "path": []}),
+        "instance_id",
+    )
+    datasets = dict(metric_definition.datasets.items())
+    datasets[SourceDatasetType.ESMValToolReference] = reference
+    definition = attrs.evolve(metric_definition, datasets=ExecutionDatasetCollection(datasets))
+    definition.output_directory.mkdir(parents=True)
+
+    with pytest.raises(ValueError, match="no files were selected"):
+        mock_diagnostic.build_cmd(definition)
+
+
 def test_build_metric_result(metric_definition, mock_diagnostic):
     results_dir = metric_definition.to_output_path("executions") / "recipe_test"
 

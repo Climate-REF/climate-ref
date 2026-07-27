@@ -370,7 +370,7 @@ def test_prepare_reference_data_rejects_unknown_project(tmp_path):
         prepare_reference_data(datasets, reference_data_dir)
 
 
-def test_prepare_reference_data_anchors_on_the_last_project_directory(tmp_path):
+def test_prepare_reference_data_ignores_an_anchor_in_the_data_root(tmp_path):
     # A data root that itself contains a directory named after a project must not
     # truncate the DRS path at the root instead of at the real anchor.
     rel = "OBS/store/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"

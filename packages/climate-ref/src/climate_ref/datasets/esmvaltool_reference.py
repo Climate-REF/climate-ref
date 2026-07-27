@@ -31,7 +31,7 @@ from climate_ref.datasets.utils import (
     parse_drs_daterange,
 )
 from climate_ref.models.dataset import Dataset, ESMValToolReferenceDataset
-from climate_ref_core.esmvaltool_reference import relative_parts
+from climate_ref_core.esmvaltool_reference import drs_relative_parts
 
 _SLUG_PREFIX = "esmvaltool-reference"
 
@@ -129,7 +129,7 @@ def parse_esmvaltool_reference(file: str, **kwargs: Any) -> dict[str, Any]:
     """
     try:
         path = Path(file)
-        rel = relative_parts(path)
+        rel = drs_relative_parts(path)
         anchor = rel[0]
 
         if anchor == "OBS":

@@ -9,7 +9,7 @@ import pandas as pd
 import yaml
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
-from climate_ref_core.esmvaltool_reference import relative_parts
+from climate_ref_core.esmvaltool_reference import drs_relative_parts
 from climate_ref_esmvaltool.types import Recipe
 
 if TYPE_CHECKING:
@@ -407,6 +407,14 @@ def load_recipe(recipe: str) -> Recipe:
     return normalize(yaml.safe_load(Path(filename).read_text(encoding="utf-8")))  # type: ignore[no-any-return]
 
 
+def _row_path(row: Any) -> str:
+    """Return the ``path`` column of a catalog row, which is always a string."""
+    if not isinstance(row.path, str):  # pragma: no branch
+        msg = f"Invalid path encountered in {row}"
+        raise ValueError(msg)
+    return row.path
+
+
 def _symlink_into_tree(tgt: Path, source: str, cleaned_dirs: set[Path]) -> None:
     """Symlink ``tgt`` to ``source``, first clearing any stale symlinks in its directory.
 
@@ -458,12 +466,9 @@ def prepare_reference_data(datasets: pd.DataFrame, reference_data_dir: Path) -> 
     cleaned_dirs: set[Path] = set()
 
     for row in datasets.itertuples():
-        if not isinstance(row.path, str):  # pragma: no branch
-            msg = f"Invalid path encountered in {row}"
-            raise ValueError(msg)
-
-        tgt = reference_data_dir.joinpath(*relative_parts(row.path))
-        _symlink_into_tree(tgt, row.path, cleaned_dirs)
+        path = _row_path(row)
+        tgt = reference_data_dir.joinpath(*drs_relative_parts(path))
+        _symlink_into_tree(tgt, path, cleaned_dirs)
 
 
 def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None:
@@ -486,9 +491,7 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if not isinstance(row.instance_id, str):  # pragma: no branch
             msg = f"Invalid instance_id encountered in {row}"
             raise ValueError(msg)
-        if not isinstance(row.path, str):  # pragma: no branch
-            msg = f"Invalid path encountered in {row}"
-            raise ValueError(msg)
+        path = _row_path(row)
         if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
             subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
@@ -496,5 +499,5 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
             subdirs = row.instance_id.split(".")
         else:
             subdirs = row.instance_id.split(".")
-        tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
-        _symlink_into_tree(tgt, row.path, cleaned_dirs)
+        tgt = climate_data_dir.joinpath(*subdirs) / Path(path).name
+        _symlink_into_tree(tgt, path, cleaned_dirs)

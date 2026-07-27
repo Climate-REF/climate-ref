@@ -107,7 +107,8 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
     """
     Load parquet catalog files from a directory.
 
-    The filename for each source type is given by ``catalog_files`` below.
+    Reads one parquet file per source type, named after the source type,
+    such as ``cmip6_catalog.parquet`` or ``esmvaltool_reference_catalog.parquet``.
     Missing files are skipped, so a partial catalog directory loads what it has.
 
     Parameters

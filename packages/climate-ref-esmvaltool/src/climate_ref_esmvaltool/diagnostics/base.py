@@ -308,26 +308,31 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data.
         # ESMValCore locates these from its own DRS templates rather than by instance_id,
         # so they get their own rootpaths rather than sharing the climate_data tree.
-        if SourceDatasetType.ESMValToolReference in definition.datasets:
+        selected_reference_data = SourceDatasetType.ESMValToolReference in definition.datasets
+        if selected_reference_data:
             data_dir = definition.to_output_path("reference_data")
             prepare_reference_data(
                 definition.datasets[SourceDatasetType.ESMValToolReference].datasets,
                 reference_data_dir=data_dir,
             )
-            unavailable_message = (
-                f"No ESMValTool reference files were selected for this execution, so {data_dir} is empty."
-            )
         else:
             registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
             data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
-            unavailable_message = (
+
+        if not data_dir.exists():
+            if selected_reference_data:
+                # Carrying on would leave ESMValCore to fall back on its own default
+                # rootpaths, quietly running the recipe against whatever it finds there.
+                msg = (
+                    "The diagnostic requested ESMValTool reference data "
+                    "but no files were selected for this execution."
+                )
+                raise ValueError(msg)
+            logger.warning(
                 "ESMValTool observational and reanalysis data is not available "
                 f"in {data_dir}, you may want to run the command "
                 f"`ref datasets fetch-data --registry {_DATASETS_REGISTRY_NAME}`."
             )
-
-        if not data_dir.exists():
-            logger.warning(unavailable_message)
         else:
             config["projects"]["OBS"] = {
                 "data": {

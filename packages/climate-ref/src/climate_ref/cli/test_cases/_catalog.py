@@ -123,6 +123,7 @@ def _fetch_and_build_catalog(
     from climate_ref.datasets import (
         CMIP6DatasetAdapter,
         CMIP7DatasetAdapter,
+        ESMValToolReferenceDatasetAdapter,
         Obs4MIPsDatasetAdapter,
         Obs4REFDatasetAdapter,
         PMPClimatologyDatasetAdapter,
@@ -163,6 +164,11 @@ def _fetch_and_build_catalog(
 
         elif source_type == "obs4REF":
             data_catalog[SourceDatasetType.obs4REF] = _build_catalog(Obs4REFDatasetAdapter(), file_paths)
+
+        elif source_type == "ESMValToolReference":
+            data_catalog[SourceDatasetType.ESMValToolReference] = _build_catalog(
+                ESMValToolReferenceDatasetAdapter(), file_paths
+            )
 
     if not data_catalog:
         raise DatasetResolutionError(

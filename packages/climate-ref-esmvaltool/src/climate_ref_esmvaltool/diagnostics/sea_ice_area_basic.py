@@ -1,3 +1,6 @@
+from collections.abc import Mapping
+from types import MappingProxyType
+
 import pandas
 
 from climate_ref_core.constraints import (
@@ -33,11 +36,13 @@ MONTHS = {
 _REFERENCE_SOURCE_IDS = tuple(f"OSI-450-{region}" for region in REGIONS)
 _REFERENCE_VARIABLES = ("sic", "areacello")
 
-REFERENCE_FACETS: dict[str, str | tuple[str, ...]] = {
-    "project": "OBS",
-    "source_id": _REFERENCE_SOURCE_IDS,
-    "variable_id": _REFERENCE_VARIABLES,
-}
+_REFERENCE_FACETS: Mapping[str, str | tuple[str, ...]] = MappingProxyType(
+    {
+        "project": "OBS",
+        "source_id": _REFERENCE_SOURCE_IDS,
+        "variable_id": _REFERENCE_VARIABLES,
+    }
+)
 """The OSI-450 observations the recipe compares each model against.
 
 Solving and fetching share this, so a test case cannot fetch a different set of files
@@ -46,7 +51,7 @@ from the one the solver goes on to select.
 
 _REFERENCE_REQUIREMENT = DataRequirement(
     source_type=SourceDatasetType.ESMValToolReference,
-    filters=(FacetFilter(facets=REFERENCE_FACETS),),
+    filters=(FacetFilter(facets=_REFERENCE_FACETS),),
     # A single execution plots both hemispheres, so grouping cannot be by `source_id`.
     # The filter pins the project, so this is one group holding every selected file.
     group_by=("project",),
@@ -63,7 +68,7 @@ _REFERENCE_REQUEST = RegistryRequest(
     slug="osi-450",
     registry_name=_DATASETS_REGISTRY_NAME,
     source_type=SourceDatasetType.ESMValToolReference.value,
-    facets=REFERENCE_FACETS,
+    facets=_REFERENCE_FACETS,
     key_parser=parse_registry_key,
 )
 """Fetches the reference data a test case needs.

@@ -3,7 +3,6 @@ import importlib.resources
 from climate_ref_esmvaltool.diagnostics.sea_ice_area_basic import (
     _REFERENCE_REQUEST,
     _REFERENCE_REQUIREMENT,
-    REFERENCE_FACETS,
     SeaIceAreaBasic,
 )
 from climate_ref_esmvaltool.reference_registry import parse_registry_key
@@ -32,17 +31,16 @@ def test_the_request_selects_what_the_recipe_names():
 
     assert {facets["source_id"] for facets in matched} == {"OSI-450-nh", "OSI-450-sh"}
     assert {facets["variable_id"] for facets in matched} == {"sic", "areacello"}
-    # 36 years of monthly sea ice concentration per hemisphere, plus one cell area file each.
+    # Per hemisphere: one annual file for each year of 1979-2014, plus one cell area file.
     assert len(matched) == 74
 
 
 def test_the_request_and_the_requirement_agree():
     """A test case cannot fetch one set of files and the solver then select another."""
-    assert _REFERENCE_REQUEST.facets is REFERENCE_FACETS
-    # A `FacetFilter` wraps a lone value in a tuple, so the filter holds the same facets, not the same dict.
+    # A `FacetFilter` wraps a lone value in a tuple, so the two carry the same facets, not the same object.
     assert _REFERENCE_REQUIREMENT.filters[0].facets == {
         facet: (value,) if isinstance(value, str) else tuple(value)
-        for facet, value in REFERENCE_FACETS.items()
+        for facet, value in _REFERENCE_REQUEST.facets.items()
     }
     assert _REFERENCE_REQUEST.source_type == SourceDatasetType.ESMValToolReference.value
 

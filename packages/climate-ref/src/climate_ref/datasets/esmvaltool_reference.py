@@ -31,7 +31,7 @@ from climate_ref.datasets.utils import (
     parse_drs_daterange,
 )
 from climate_ref.models.dataset import Dataset, ESMValToolReferenceDataset
-from climate_ref_core.esmvaltool_reference import drs_relative_parts
+from climate_ref_core.esmvaltool_reference import drs_relative_parts, matches_project_layout
 
 _SLUG_PREFIX = "esmvaltool-reference"
 
@@ -75,8 +75,6 @@ def _parse_obs(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
 
 def _parse_native6(rel: tuple[str, ...]) -> dict[str, Any]:
     # rel == ("native6", "Tier{n}", "{dataset}", "{version}", "{frequency}", "{short_name}", filename)
-    if len(rel) < 7:  # noqa: PLR2004
-        raise ValueError(f"unexpected native6 path structure: {'/'.join(rel)}")
     tier = _tier_from_segment(rel[1])
     dataset, version, frequency, short_name = rel[2], rel[3], rel[4], rel[5]
     return {
@@ -95,8 +93,6 @@ def _parse_native6(rel: tuple[str, ...]) -> dict[str, Any]:
 
 def _parse_obs4mips(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
     # rel == ("obs4MIPs", "{dataset}", "{version}", filename)
-    if len(rel) < 4:  # noqa: PLR2004
-        raise ValueError(f"unexpected obs4MIPs path structure: {'/'.join(rel)}")
     dataset, version = rel[1], rel[2]
     stem = filename[:-3] if filename.endswith(".nc") else filename
     tokens = stem.split("_")
@@ -131,6 +127,9 @@ def parse_esmvaltool_reference(file: str, **kwargs: Any) -> dict[str, Any]:
         path = Path(file)
         rel = drs_relative_parts(path)
         anchor = rel[0]
+
+        if not matches_project_layout(rel):
+            raise ValueError(f"unexpected {anchor} path structure: {'/'.join(rel)}")
 
         if anchor == "OBS":
             info = _parse_obs(rel, path.name)

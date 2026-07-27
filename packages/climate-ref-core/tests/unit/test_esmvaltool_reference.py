@@ -1,6 +1,24 @@
 import pytest
 
-from climate_ref_core.esmvaltool_reference import drs_relative_parts
+from climate_ref_core.esmvaltool_reference import drs_relative_parts, matches_project_layout
+
+
+@pytest.mark.parametrize(
+    "rel, expected",
+    [
+        (("OBS", "Tier2", "CERES-EBAF", "x.nc"), True),
+        # OBS tolerates extra directories between the dataset and the file.
+        (("OBS", "Tier2", "CERES-EBAF", "sub", "x.nc"), True),
+        (("OBS", "CERES-EBAF", "x.nc"), False),
+        (("native6", "Tier3", "ERA5", "v1", "mon", "tas", "x.nc"), True),
+        (("native6", "Tier3", "ERA5", "v1", "mon", "tas", "sub", "x.nc"), False),
+        (("obs4MIPs", "GPCP-V2.3", "v20180519", "x.nc"), True),
+        (("obs4MIPs", "Tier2", "GPCP-V2.3", "x.nc"), False),
+        (("obs4MIPs", "GPCP-V2.3", "x.nc"), False),
+    ],
+)
+def test_matches_project_layout(rel, expected):
+    assert matches_project_layout(rel) is expected
 
 
 @pytest.mark.parametrize(

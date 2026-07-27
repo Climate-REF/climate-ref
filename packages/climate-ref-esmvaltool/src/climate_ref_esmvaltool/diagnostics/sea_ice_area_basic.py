@@ -67,7 +67,9 @@ and the executions that used them are recorded in the database.
 _REFERENCE_REQUEST = RegistryRequest(
     slug="osi-450",
     registry_name=_DATASETS_REGISTRY_NAME,
-    source_type=SourceDatasetType.ESMValToolReference.value,
+    # A request names a source type by its enum name. A name the test case catalog builder
+    # does not recognise is skipped, leaving the case with nothing to solve.
+    source_type=SourceDatasetType.ESMValToolReference.name,
     facets=_REFERENCE_FACETS,
     key_parser=parse_registry_key,
 )

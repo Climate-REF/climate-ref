@@ -42,7 +42,9 @@ def test_the_request_and_the_requirement_agree():
         facet: (value,) if isinstance(value, str) else tuple(value)
         for facet, value in _REFERENCE_REQUEST.facets.items()
     }
-    assert _REFERENCE_REQUEST.source_type == SourceDatasetType.ESMValToolReference.value
+    # The test case catalog builder looks the source type up by name, so the value would not resolve.
+    assert _REFERENCE_REQUEST.source_type in SourceDatasetType.__members__
+    assert SourceDatasetType[_REFERENCE_REQUEST.source_type] == _REFERENCE_REQUIREMENT.source_type
 
 
 def test_every_requirement_collection_asks_for_the_reference_data():

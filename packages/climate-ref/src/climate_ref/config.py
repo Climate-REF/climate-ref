@@ -658,6 +658,20 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
+    n_jobs: int = env_field("N_JOBS", default=1, converter=int)
+    """
+    Number of worker processes used to parse dataset files
+
+    `1` parses serially,
+    `-1` uses all available CPUs,
+    and any other positive value is used as-is.
+
+    Parsing opens netCDF files, so it is bound by (highly parallel) filesystem latency rather than by CPU.
+    This applies both to `ref datasets ingest` (where `--n-jobs` overrides it)
+    and to the finalisation of datasets that the solver performs
+    when they were ingested with the `drs` parser.
+    """
+
     ignore_datasets_file: Path | None = env_field(  # noqa: RUF009
         "IGNORE_DATASETS_FILE",
         converter=_optional_path,
@@ -908,6 +922,11 @@ class Config:
     def __attrs_post_init__(self) -> None:
         # This is needed to apply the environment variable overrides on initialization
         _environ_post_init(self)
+
+        # Checked after the overrides so an invalid value from the environment is caught too.
+        # `0` and negatives below `-1` would otherwise fall back to serial parsing without a word.
+        if self.n_jobs != -1 and self.n_jobs < 1:
+            raise ValueError(f"n_jobs must be -1 (all CPUs) or a positive integer, got {self.n_jobs}")
 
 
 def _make_converter(omit_default: bool, forbid_extra_keys: bool) -> Converter:

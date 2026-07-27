@@ -253,7 +253,10 @@ def ingest(  # noqa
     source_type: Annotated[SourceDatasetType, typer.Option(help="Type of source dataset")],
     solve: Annotated[bool, typer.Option(help="Solve for new diagnostic executions after ingestion")] = False,
     dry_run: Annotated[bool, typer.Option(help="Do not ingest datasets into the database")] = False,
-    n_jobs: Annotated[int | None, typer.Option(help="Number of jobs to run in parallel")] = None,
+    n_jobs: Annotated[
+        int | None,
+        typer.Option(help="Number of jobs to run in parallel. Defaults to the `n_jobs` configuration value"),
+    ] = None,
     skip_invalid: Annotated[
         bool, typer.Option(help="Ignore (but log) any datasets that don't pass validation")
     ] = True,
@@ -276,19 +279,14 @@ def ingest(  # noqa
 
     A table of the datasets will be printed to the console at the end of the operation.
     """
-    from climate_ref.datasets import IngestionStats, ingest_datasets
+    from climate_ref.datasets import IngestionStats, ingest_datasets, log_deferred_finalisation
 
     config = ctx.obj.config
     db = ctx.obj.database
     console = ctx.obj.console
 
-    kwargs = {}
-
-    if n_jobs is not None:
-        kwargs["n_jobs"] = n_jobs
-
     # Create a data catalog from the specified file or directory
-    adapter = get_dataset_adapter(source_type.value, **kwargs)
+    adapter = get_dataset_adapter(source_type.value, n_jobs=n_jobs if n_jobs is not None else config.n_jobs)
 
     failed_dirs: list[Path] = []
 
@@ -395,6 +393,9 @@ def ingest(  # noqa
             # Use shared ingestion logic with pre-validated catalog
             stats = ingest_datasets(adapter, None, db, data_catalog=data_catalog, skip_invalid=skip_invalid)
             stats.log_summary()
+
+    if not dry_run:
+        log_deferred_finalisation(db, source_type)
 
     if solve:
         from climate_ref.solver import solve_required_executions

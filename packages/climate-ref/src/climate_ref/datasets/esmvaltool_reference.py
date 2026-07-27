@@ -31,7 +31,7 @@ from climate_ref.datasets.utils import (
     parse_drs_daterange,
 )
 from climate_ref.models.dataset import Dataset, ESMValToolReferenceDataset
-from climate_ref_core.esmvaltool_reference import drs_relative_parts, matches_project_layout
+from climate_ref_core.esmvaltool_reference import drs_relative_parts, tier_from_segment
 
 _SLUG_PREFIX = "esmvaltool-reference"
 
@@ -39,16 +39,9 @@ _SLUG_PREFIX = "esmvaltool-reference"
 _INSTANCE_ID_FACETS = ("project", "source_id", "frequency", "variable_id", "version")
 
 
-def _tier_from_segment(segment: str) -> int | None:
-    """Parse ``Tier2`` -> ``2``, returning ``None`` if the segment is not a tier."""
-    if segment.startswith("Tier") and segment[4:].isdigit():
-        return int(segment[4:])
-    return None
-
-
 def _parse_obs(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
     # rel == ("OBS", "Tier{n}", "{dataset}", ..., filename)
-    tier = _tier_from_segment(rel[1])
+    tier = tier_from_segment(rel[1])
     dataset = rel[2]
     stem = filename[:-3] if filename.endswith(".nc") else filename
     tokens = stem.split("_")
@@ -75,7 +68,7 @@ def _parse_obs(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
 
 def _parse_native6(rel: tuple[str, ...]) -> dict[str, Any]:
     # rel == ("native6", "Tier{n}", "{dataset}", "{version}", "{frequency}", "{short_name}", filename)
-    tier = _tier_from_segment(rel[1])
+    tier = tier_from_segment(rel[1])
     dataset, version, frequency, short_name = rel[2], rel[3], rel[4], rel[5]
     return {
         "project": "native6",
@@ -127,9 +120,6 @@ def parse_esmvaltool_reference(file: str, **kwargs: Any) -> dict[str, Any]:
         path = Path(file)
         rel = drs_relative_parts(path)
         anchor = rel[0]
-
-        if not matches_project_layout(rel):
-            raise ValueError(f"unexpected {anchor} path structure: {'/'.join(rel)}")
 
         if anchor == "OBS":
             info = _parse_obs(rel, path.name)

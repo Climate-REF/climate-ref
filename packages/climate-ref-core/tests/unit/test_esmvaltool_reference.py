@@ -1,24 +1,44 @@
 import pytest
 
-from climate_ref_core.esmvaltool_reference import drs_relative_parts, matches_project_layout
+from climate_ref_core.esmvaltool_reference import drs_relative_parts, tier_from_segment
 
 
 @pytest.mark.parametrize(
-    "rel, expected",
+    "segment, expected",
+    [("Tier2", 2), ("Tier10", 10), ("CERES-EBAF", None), ("Tier", None), ("TierX", None)],
+)
+def test_tier_from_segment(segment, expected):
+    assert tier_from_segment(segment) == expected
+
+
+@pytest.mark.parametrize(
+    "path",
     [
-        (("OBS", "Tier2", "CERES-EBAF", "x.nc"), True),
         # OBS tolerates extra directories between the dataset and the file.
-        (("OBS", "Tier2", "CERES-EBAF", "sub", "x.nc"), True),
-        (("OBS", "CERES-EBAF", "x.nc"), False),
-        (("native6", "Tier3", "ERA5", "v1", "mon", "tas", "x.nc"), True),
-        (("native6", "Tier3", "ERA5", "v1", "mon", "tas", "sub", "x.nc"), False),
-        (("obs4MIPs", "GPCP-V2.3", "v20180519", "x.nc"), True),
-        (("obs4MIPs", "Tier2", "GPCP-V2.3", "x.nc"), False),
-        (("obs4MIPs", "GPCP-V2.3", "x.nc"), False),
+        "/data/OBS/Tier2/CERES-EBAF/sub/x.nc",
+        "/data/native6/Tier3/ERA5/v1/mon/tas/x.nc",
+        "/data/obs4MIPs/GPCP-V2.3/v20180519/x.nc",
     ],
 )
-def test_matches_project_layout(rel, expected):
-    assert matches_project_layout(rel) is expected
+def test_drs_relative_parts_accepts_each_project_layout(path):
+    assert drs_relative_parts(path)[0] in ("OBS", "native6", "obs4MIPs")
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        # No tier directory under a tiered project.
+        "/data/OBS/CERES-EBAF/x.nc",
+        # native6 and obs4MIPs are fixed depth, so neither may carry extra directories.
+        "/data/native6/Tier3/ERA5/v1/mon/tas/sub/x.nc",
+        "/data/obs4MIPs/GPCP-V2.3/x.nc",
+        # A tier directory under an untiered project.
+        "/data/obs4MIPs/Tier2/GPCP-V2.3/x.nc",
+    ],
+)
+def test_drs_relative_parts_rejects_a_path_that_fits_no_layout(path):
+    with pytest.raises(ValueError, match=r"unexpected \w+ path structure"):
+        drs_relative_parts(path)
 
 
 @pytest.mark.parametrize(
@@ -76,10 +96,10 @@ def test_drs_relative_parts_ignores_an_untiered_anchor_inside_a_tiered_tree():
     assert drs_relative_parts(path)[0] == "native6"
 
 
-def test_drs_relative_parts_falls_back_to_the_leftmost_anchor():
-    # Nothing structurally fits, so the leftmost candidate is used and the caller's
-    # own parser reports what is wrong with it.
-    assert drs_relative_parts("/data/OBS/odd.nc") == ("OBS", "odd.nc")
+def test_drs_relative_parts_names_the_project_it_could_not_fit():
+    # The message points at the leftmost candidate, which is the project the caller meant.
+    with pytest.raises(ValueError, match="unexpected OBS path structure"):
+        drs_relative_parts("/data/OBS/odd.nc")
 
 
 def test_drs_relative_parts_rejects_a_path_with_no_anchor():

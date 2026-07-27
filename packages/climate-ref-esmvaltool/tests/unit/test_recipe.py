@@ -405,20 +405,10 @@ def test_prepare_reference_data_rejects_unknown_project(tmp_path):
         prepare_reference_data(datasets, reference_data_dir)
 
 
-def test_prepare_reference_data_ignores_an_anchor_in_the_data_root(tmp_path):
-    # A data root that itself contains a directory named after a project must not
-    # truncate the DRS path at the root instead of at the real anchor.
-    rel = "OBS/store/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"
-    source = tmp_path / rel
-    source.parent.mkdir(parents=True)
-    source.touch()
-
-    reference_data_dir = tmp_path / "reference_data"
-    prepare_reference_data(pd.DataFrame({"path": [str(source)]}), reference_data_dir)
-
-    symlink = reference_data_dir / "native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"
-    assert symlink.is_symlink()
-    assert symlink.resolve() == source.resolve()
+def test_prepare_reference_data_rejects_an_empty_selection(tmp_path):
+    # An empty tree would leave ESMValCore to fall back on its own default rootpaths.
+    with pytest.raises(ValueError, match="no files were selected"):
+        prepare_reference_data(pd.DataFrame({"path": []}), tmp_path / "reference_data")
 
 
 def _cmip7_recipe(diagnostic):

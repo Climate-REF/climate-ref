@@ -5,7 +5,6 @@ ESMValCore locates this data from its own DRS directory templates rather than by
 ``instance_id``, so a reference file is identified by where its DRS path begins.
 """
 
-import re
 from pathlib import Path
 from typing import NamedTuple
 
@@ -13,17 +12,18 @@ from typing import NamedTuple
 class _Layout(NamedTuple):
     """DRS shape of one project, counted from its anchor."""
 
-    min_parts: int
-    max_parts: int | None
-    """``None`` where the project allows extra directories above the file."""
+    parts: int
+    """The number of path components the project's template produces."""
+    allow_extra: bool
+    """Whether extra directories may sit between the dataset and the file."""
     tiered: bool
     """Whether a ``TierN`` directory sits directly under the anchor."""
 
 
 _PROJECT_LAYOUTS = {
-    "OBS": _Layout(min_parts=3, max_parts=None, tiered=True),
-    "native6": _Layout(min_parts=7, max_parts=7, tiered=True),
-    "obs4MIPs": _Layout(min_parts=4, max_parts=4, tiered=False),
+    "OBS": _Layout(parts=3, allow_extra=True, tiered=True),
+    "native6": _Layout(parts=7, allow_extra=False, tiered=True),
+    "obs4MIPs": _Layout(parts=4, allow_extra=False, tiered=False),
 }
 
 PROJECT_ANCHORS = tuple(_PROJECT_LAYOUTS)
@@ -34,33 +34,37 @@ Top-level project directories, relative to the ``ESMValTool`` data root, that be
 The project itself is recovered from the filename.
 """
 
-_TIER_RE = re.compile(r"^Tier\d+$")
 
-
-def matches_project_layout(rel: tuple[str, ...]) -> bool:
+def tier_from_segment(segment: str) -> int | None:
     """
-    Report whether DRS-relative components fit the layout of the project they start with.
+    Parse a ``TierN`` directory name into its tier number.
 
     Parameters
     ----------
-    rel
-        Path components from the project anchor onward, as returned by
-        :func:`drs_relative_parts`.
+    segment
+        A single path component.
 
     Returns
     -------
     :
-        Whether ``rel`` has a usable depth and tier directory for its project.
+        The tier number, or ``None`` if ``segment`` does not name a tier.
     """
+    if segment.startswith("Tier") and segment[4:].isdigit():
+        return int(segment[4:])
+    return None
+
+
+def _fits_layout(rel: tuple[str, ...]) -> bool:
+    """Report whether DRS-relative components fit the layout of the project they start with."""
     layout = _PROJECT_LAYOUTS[rel[0]]
 
     # Every layout is at least three components deep, so this also guards ``rel[1]`` below.
-    if len(rel) < layout.min_parts:
+    if len(rel) < layout.parts:
         return False
-    if layout.max_parts is not None and len(rel) > layout.max_parts:
+    if not layout.allow_extra and len(rel) > layout.parts:
         return False
 
-    return layout.tiered == bool(_TIER_RE.match(rel[1]))
+    return layout.tiered == (tier_from_segment(rel[1]) is not None)
 
 
 def drs_relative_parts(path: str | Path) -> tuple[str, ...]:
@@ -70,8 +74,7 @@ def drs_relative_parts(path: str | Path) -> tuple[str, ...]:
     A data root may itself contain a directory named after a project, and a directory
     inside the tree may in turn be named after another project, so neither the first nor
     the last matching component is reliable on its own. The rightmost candidate whose
-    remaining structure fits its project is used, falling back to the leftmost candidate
-    when none fits.
+    remaining components fit its project's layout wins.
 
     Parameters
     ----------
@@ -88,7 +91,8 @@ def drs_relative_parts(path: str | Path) -> tuple[str, ...]:
     Raises
     ------
     ValueError
-        If no component of ``path`` is one of :data:`PROJECT_ANCHORS`.
+        If no component of ``path`` names a project,
+        or if none of them begins a path that fits that project's layout.
     """
     parts = Path(path).parts
     candidates = [index for index, part in enumerate(parts) if part in PROJECT_ANCHORS]
@@ -99,7 +103,7 @@ def drs_relative_parts(path: str | Path) -> tuple[str, ...]:
         )
 
     for index in reversed(candidates):
-        if matches_project_layout(parts[index:]):
+        if _fits_layout(parts[index:]):
             return parts[index:]
 
-    return parts[candidates[0] :]
+    raise ValueError(f"unexpected {parts[candidates[0]]} path structure: {path}")

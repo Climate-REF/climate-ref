@@ -120,14 +120,7 @@ def _fetch_and_build_catalog(
     :
         Tuple of (datasets, catalog_was_written)
     """
-    from climate_ref.datasets import (
-        CMIP6DatasetAdapter,
-        CMIP7DatasetAdapter,
-        ESMValToolReferenceDatasetAdapter,
-        Obs4MIPsDatasetAdapter,
-        Obs4REFDatasetAdapter,
-        PMPClimatologyDatasetAdapter,
-    )
+    from climate_ref.datasets import get_dataset_adapter
     from climate_ref_core.datasets import SourceDatasetType
     from climate_ref_core.esgf import ESGFFetcher
     from climate_ref_core.testing import TestCasePaths, save_datasets_to_yaml
@@ -146,29 +139,14 @@ def _fetch_and_build_catalog(
     data_catalog: dict[SourceDatasetType, pd.DataFrame] = {}
 
     for source_type, group_df in combined.groupby("source_type"):
+        # Requests name a source type by its enum name, adapters are keyed by its value.
+        # An unrecognised name is skipped, and falls out as the "no datasets" error below.
+        if source_type not in SourceDatasetType.__members__:
+            continue
+
         file_paths = [Path(p) for p in group_df["path"].unique().tolist()]
-
-        if source_type == "CMIP6":
-            data_catalog[SourceDatasetType.CMIP6] = _build_catalog(CMIP6DatasetAdapter(), file_paths)
-
-        elif source_type == "CMIP7":
-            data_catalog[SourceDatasetType.CMIP7] = _build_catalog(CMIP7DatasetAdapter(), file_paths)
-
-        elif source_type == "obs4MIPs":
-            data_catalog[SourceDatasetType.obs4MIPs] = _build_catalog(Obs4MIPsDatasetAdapter(), file_paths)
-
-        elif source_type == "PMPClimatology":
-            data_catalog[SourceDatasetType.PMPClimatology] = _build_catalog(
-                PMPClimatologyDatasetAdapter(), file_paths
-            )
-
-        elif source_type == "obs4REF":
-            data_catalog[SourceDatasetType.obs4REF] = _build_catalog(Obs4REFDatasetAdapter(), file_paths)
-
-        elif source_type == "ESMValToolReference":
-            data_catalog[SourceDatasetType.ESMValToolReference] = _build_catalog(
-                ESMValToolReferenceDatasetAdapter(), file_paths
-            )
+        source = SourceDatasetType[str(source_type)]
+        data_catalog[source] = _build_catalog(get_dataset_adapter(source.value), file_paths)
 
     if not data_catalog:
         raise DatasetResolutionError(

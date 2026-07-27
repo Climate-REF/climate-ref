@@ -418,21 +418,21 @@ def _require_path(row: Any) -> str:
 def _symlink_into_tree(tgt: Path, source: str, cleaned_dirs: set[Path]) -> None:
     """Symlink ``tgt`` to ``source``, first clearing any stale symlinks in its directory.
 
-    ``cleaned_dirs`` records the parent directories already swept for dangling symlinks,
-    so each directory is scanned at most once across a batch of links.
+    ``cleaned_dirs`` records the parent directories already created and swept,
+    so each directory is handled at most once across a batch of links.
     """
-    tgt.parent.mkdir(parents=True, exist_ok=True)
-
-    # Remove any stale symlinks in the target directory to prevent
-    # ESMValCore from finding dangling symlinks from previous runs.
     if tgt.parent not in cleaned_dirs:
+        tgt.parent.mkdir(parents=True, exist_ok=True)
+
+        # Remove any stale symlinks in the target directory to prevent
+        # ESMValCore from finding dangling symlinks from previous runs.
+        # ``exists`` follows the link, so a dangling one reads as absent.
         for existing in tgt.parent.iterdir():
-            if existing.is_symlink() and not existing.resolve().exists():
+            if existing.is_symlink() and not existing.exists():
                 existing.unlink()
         cleaned_dirs.add(tgt.parent)
 
-    if tgt.is_symlink() or tgt.exists():
-        tgt.unlink()
+    tgt.unlink(missing_ok=True)
     tgt.symlink_to(source)
 
 
@@ -458,9 +458,15 @@ def prepare_reference_data(datasets: pd.DataFrame, reference_data_dir: Path) -> 
     Raises
     ------
     ValueError
-        If a selected file does not sit under a project anchor,
-        which would leave ESMValCore unable to find it.
+        If ``datasets`` is empty, or if a selected file does not fit a project layout,
+        either of which would leave ESMValCore unable to find the data it was asked for.
     """
+    if datasets.empty:
+        # Building an empty tree would leave ESMValCore to fall back on its own
+        # default rootpaths and run the recipe against whatever it finds there.
+        msg = "The diagnostic requested ESMValTool reference data but no files were selected."
+        raise ValueError(msg)
+
     cleaned_dirs: set[Path] = set()
 
     for row in datasets.itertuples():

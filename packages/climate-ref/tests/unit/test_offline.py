@@ -9,7 +9,6 @@ and they point the cache at an unwritable directory so nothing can quietly be wr
 import socket
 
 import pytest
-import requests
 
 from climate_ref.config import Config, refresh_ignore_datasets_file
 from climate_ref_core.data import ResourceOrigin
@@ -145,19 +144,17 @@ def test_a_conda_provider_does_not_need_the_network_to_configure(offline_config)
     assert conda_provider.prefix == offline_config.paths.software / "conda"
 
 
-@pytest.mark.xfail(
-    reason="climate_ref_pmp downloads micromamba during configure, which is on the solve path",
-    raises=requests.exceptions.ConnectionError,
-    strict=True,
-)
-def test_offline_known_gaps(offline_config):
+def test_pmp_configure_does_not_download_micromamba(offline_config, no_network):
     """
-    Records that building the provider registry still needs the network.
+    `configure` runs whenever the provider registry is built, so it is on the solve path.
 
-    `PMPDiagnosticProvider.configure` calls `get_conda_exe`, which downloads micromamba
-    when it is missing or more than a week old.
-    Remove this test once that call is deferred to environment setup.
+    It used to resolve the conda executable eagerly, which downloaded micromamba when it
+    was missing or more than a week old, and so failed on a host with no network.
     """
     pmp = pytest.importorskip("climate_ref_pmp")
 
-    pmp.PMPDiagnosticProvider("PMP", "v0").configure(offline_config)
+    provider = pmp.PMPDiagnosticProvider("PMP", "v0")
+    provider.configure(offline_config)
+
+    assert no_network == []
+    assert provider.env_vars["PCMDI_CONDA_EXE"] == str(offline_config.paths.software / "conda/micromamba")

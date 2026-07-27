@@ -41,7 +41,10 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
     def configure(self, config: Config) -> None:
         """Configure the provider."""
         super().configure(config)
-        self.env_vars["PCMDI_CONDA_EXE"] = str(self.get_conda_exe())
+        # The path, not the executable. Installing it here would put a download on the
+        # solve path, since the provider registry configures every provider it builds.
+        # The subprocesses that read this variable all run after `setup_environment`.
+        self.env_vars["PCMDI_CONDA_EXE"] = str(self.conda_exe_path)
         # This is a workaround for a fatal error in internal_Finalize of MPICH
         # when running in a conda environment on MacOS.
         # It is not clear if this is a bug in MPICH or a problem with the conda environment.

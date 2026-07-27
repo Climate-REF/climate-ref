@@ -486,6 +486,16 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
+    @property
+    def conda_exe_path(self) -> Path:
+        """
+        Where the conda executable lives, whether or not it has been installed yet.
+
+        Use this when only the location is needed.
+        `get_conda_exe` installs the executable, which requires network access.
+        """
+        return self.prefix / "micromamba"
+
     def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)
@@ -521,7 +531,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             The path to the executable.
 
         """
-        conda_exe = self.prefix / "micromamba"
+        conda_exe = self.conda_exe_path
 
         if not conda_exe.exists() or update or self._is_stale(conda_exe):
             logger.info("Installing conda")

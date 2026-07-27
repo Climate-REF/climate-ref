@@ -227,5 +227,5 @@ class CV:
         return CV.load(FileResource(pathlib.Path(filename)))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     print(BUNDLED_CV.read_text())

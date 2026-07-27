@@ -329,6 +329,24 @@ def test_transform_error():
     assert transform_error(err, "test") == ["invalid value @ test", "required field missing @ test"]
 
 
+@pytest.mark.parametrize("value", ["", "   ", None])
+def test_optional_path_treats_blank_as_unset(value):
+    assert climate_ref.config._optional_path(value) is None
+
+
+def test_refresh_ignore_datasets_file_skips_a_directory(mocker, monkeypatch, tmp_path, caplog):
+    """A cache path that is a directory is reported rather than written over."""
+    get_mock = mocker.patch.object(climate_ref.config.requests, "get")
+    config = _refresh_config(monkeypatch, tmp_path)
+    _ignore_datasets_cache_file().mkdir(parents=True)
+
+    with caplog.at_level(logging.WARNING):
+        refresh_ignore_datasets_file(config)
+
+    get_mock.assert_not_called()
+    assert "is a directory, not a file" in caplog.text
+
+
 def test_ignore_datasets_cache_file(monkeypatch, tmp_path):
     """The cache location is a pure path computation with no filesystem or network access."""
     monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))

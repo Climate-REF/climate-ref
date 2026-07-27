@@ -12,7 +12,7 @@ from requests import Response
 
 import climate_ref_core.providers
 from climate_ref_core.constraints import IgnoreFacets
-from climate_ref_core.data import LayeredResource, PackagedResource
+from climate_ref_core.data import DataResourceError, LayeredResource, PackagedResource
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
 from climate_ref_core.exceptions import (
     CondaCommandError,
@@ -117,6 +117,28 @@ class TestDiagnosticProvider:
         # The override is reported as unreadable, and the packaged copy is used instead.
         assert f"Could not read the grey list from {mock_config.ignore_datasets_file}" in caplog.text
         assert "using the grey list from climate_ref/default_ignore_datasets.yaml" in caplog.text
+
+    def test_configure_warns_when_no_grey_list_can_be_read(self, provider, mock_config, caplog, mocker):
+        # Both the override and the packaged copy failing must be said out loud.
+        mock_config.ignore_datasets_file.unlink()
+        packaged = mocker.Mock()
+        packaged.read_text.side_effect = DataResourceError("packaged copy is missing")
+        packaged.describe.return_value = "packaged"
+        packaged.__str__ = mocker.Mock(return_value="packaged")
+        mock_config.ignore_datasets_resource = LayeredResource(
+            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+            override=mock_config.ignore_datasets_file,
+        )
+        mocker.patch.object(
+            type(mock_config.ignore_datasets_resource.packaged),
+            "read_text",
+            side_effect=DataResourceError("packaged copy is missing"),
+        )
+
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+
+        assert "No grey list could be read" in caplog.text
 
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(

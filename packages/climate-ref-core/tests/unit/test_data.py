@@ -143,6 +143,12 @@ class TestResolveCacheDir:
 
         assert resolve_cache_dir("grey_list") == Path("/somewhere/else/grey_list")
 
+    def test_unresolvable_user_is_left_alone(self, monkeypatch):
+        # `~nosuchuser` cannot be expanded. That must not fail the caller.
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", "~nosuchuser12345/cache")
+
+        assert resolve_cache_dir("grey_list").parts[-2:] == ("cache", "grey_list")
+
     def test_environment_variable_expansion(self, monkeypatch):
         monkeypatch.setenv("A_ROOT", "/expanded")
         monkeypatch.setenv("REF_DATASET_CACHE_DIR", "$A_ROOT/cache")

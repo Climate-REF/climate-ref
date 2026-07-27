@@ -260,7 +260,7 @@ def log_deferred_finalisation(db: Database, source_type: SourceDatasetType) -> N
 
     logger.warning(
         f"{n_datasets} {source_type.value} datasets ({n_files} files) are missing metadata that "
-        "can only be read from the files themselves when potentially needed by a solve. "
+        "can only be read from the files themselves when potentially needed by a solve."
     )
 
 

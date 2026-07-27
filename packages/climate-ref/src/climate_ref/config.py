@@ -535,8 +535,9 @@ class Config:
     """
     Number of worker processes used to parse dataset files
 
-    `1` parses serially, `-1` uses all available CPUs and any other positive value
-    is used as-is.
+    `1` parses serially,
+    `-1` uses all available CPUs,
+    and any other positive value is used as-is.
 
     Parsing opens netCDF files, so it is bound by (highly parallel) filesystem latency rather than by CPU.
     This applies both to `ref datasets ingest` (where `--n-jobs` overrides it)

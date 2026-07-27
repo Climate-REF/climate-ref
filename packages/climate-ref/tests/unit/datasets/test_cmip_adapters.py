@@ -239,6 +239,24 @@ class TestChunkedFinalisation:
         mock_parse.assert_called_once_with("/b.nc")
         assert result["finalised"].all()
 
+    def test_chunk_holds_every_file_of_a_partly_finalised_dataset(self, config, adapter_config, db, mocker):
+        """Per-dataset fixes need the whole dataset, not just its unfinalised files."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a1.nc", "/a2.nc"])
+        df.loc[0, "finalised"] = True
+
+        persist = mocker.patch.object(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ) as mock_parse:
+            result = adapter.finalise_datasets(db, df, chunk_size=10)
+
+        # Only the unfinalised file is opened, but the commit sees both rows.
+        mock_parse.assert_called_once_with("/a2.nc")
+        assert len(persist.call_args_list[0].args[1]) == 2
+        assert result["finalised"].all()
+
     def test_file_metadata_is_not_broadcast_across_duplicate_labels(self, config, adapter_config, db):
         """A catalog loaded from the database repeats its dataset id once per file."""
         adapter = adapter_config.adapter_cls(config=config)

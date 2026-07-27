@@ -124,7 +124,7 @@ export REF_CMIP6_PARSER=drs
 export REF_CMIP7_PARSER=drs
 ```
 
-Both parsers open files in parallel using `n_jobs` worker processes:
+File parsing is spread across `n_jobs` worker processes:
 
 ```toml
 n_jobs = 16  # 1 (the default) parses serially, -1 uses all available CPUs

@@ -148,15 +148,20 @@ class FinaliseableDatasetAdapterMixin:
             f"using {n_jobs} worker(s)"
         )
 
-        untouched = working.drop(index=unfinalised.index)
-        chunks = [untouched] if len(untouched) else []
+        # Chunk over every file of an affected dataset, not just its unfinalised ones,
+        # so per-dataset fixes and the per-dataset commit see the whole dataset.
+        affected = working[working[slug_column].isin(unfinalised[slug_column].unique())]
+        untouched = working.drop(index=affected.index)
+        chunks: list[pd.DataFrame] = [untouched] if len(untouched) else []
 
         parsed_files = 0
-        for labels in _chunk_by_dataset(unfinalised, slug_column, chunk_size):
-            chunk = self._finalise_chunk(db, working.loc[labels].copy(), parsing_func, n_jobs)
-            chunks.append(chunk)
+        for labels in _chunk_by_dataset(affected, slug_column, chunk_size):
+            chunk = working.loc[labels].copy()
+            attempted = int(chunk.loc[chunk["finalised"] == False, "path"].notna().sum())  # noqa: E712
 
-            parsed_files += int(chunk["path"].notna().sum())
+            chunks.append(self._finalise_chunk(db, chunk, parsing_func, n_jobs))
+
+            parsed_files += attempted
             logger.info(f"Parsed {parsed_files}/{total_files} files")
 
         return pd.concat(chunks).sort_index().set_axis(original_index)
@@ -176,7 +181,8 @@ class FinaliseableDatasetAdapterMixin:
         db
             Database instance for persisting updated metadata
         chunk
-            Unfinalised rows for a whole number of datasets, with a unique index
+            Every row of a whole number of datasets, with a unique index.
+            Rows that are already finalised are left alone.
         parsing_func
             Parser that opens each file to extract full metadata
         n_jobs
@@ -187,7 +193,8 @@ class FinaliseableDatasetAdapterMixin:
         :
             The chunk with metadata extracted from the files that parsed successfully
         """
-        valid = [(label, str(path)) for label, path in chunk["path"].items() if not pd.isna(path)]
+        pending = chunk.loc[chunk["finalised"] == False, "path"]  # noqa: E712
+        valid = [(label, str(path)) for label, path in pending.items() if not pd.isna(path)]
         if not valid:
             return chunk
 

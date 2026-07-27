@@ -124,6 +124,15 @@ export REF_CMIP6_PARSER=drs
 export REF_CMIP7_PARSER=drs
 ```
 
+Both parsers open files in parallel using `n_jobs` worker processes:
+
+```toml
+n_jobs = 16  # 1 (the default) parses serially, -1 uses all available CPUs
+```
+
+This applies to `ref datasets ingest` (where `--n-jobs` overrides it)
+and to the finalisation that `ref solve` performs.
+
 ## Two-Phase Ingestion (Lazy Finalisation)
 
 When using the DRS parser, the REF uses a two-phase workflow
@@ -146,6 +155,18 @@ so subsequent solves do not need to re-read the same files.
 This means that for an archive with hundreds of thousands of files,
 only the subset that is actually needed by a diagnostic is ever opened --
 not the entire archive.
+
+That subset can still be large, and opening a file is slow,
+so the deferred cost shows up as a long pause at the start of the first solve.
+Two things help:
+
+- Set `n_jobs` in your configuration to parse the files in parallel.
+  The work is bound by filesystem latency rather than by CPU, so values well above the core count are reasonable.
+- Watch the log. Finalisation runs in chunks of whole datasets and commits each chunk before parsing the next,
+  so progress is reported as it goes and a cancelled solve keeps what it has already parsed.
+
+`ref datasets ingest` reports how many datasets are left unfinalised
+so the size of the deferred work is known before the first solve.
 
 ### Re-ingestion Behaviour
 

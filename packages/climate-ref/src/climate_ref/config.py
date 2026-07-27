@@ -531,6 +531,19 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
+    n_jobs: int = env_field("N_JOBS", default=1, converter=int)
+    """
+    Number of worker processes used to parse dataset files
+
+    `1` parses serially, `-1` uses all available CPUs and any other positive value
+    is used as-is.
+
+    Parsing opens netCDF files, so it is bound by (highly parallel) filesystem latency rather than by CPU.
+    This applies both to `ref datasets ingest` (where `--n-jobs` overrides it)
+    and to the finalisation of datasets that the solver performs
+    when they were ingested with the `drs` parser.
+    """
+
     ignore_datasets_file: Path = env_field(  # noqa: RUF009
         "IGNORE_DATASETS_FILE",
         factory=_get_default_ignore_datasets_file,

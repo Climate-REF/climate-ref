@@ -177,7 +177,7 @@ def build_catalog(
         Maximum directory depth to search
     n_jobs
         Number of parallel workers for parsing.
-        ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many threads.
+        ``1`` = sequential, ``-1`` = all CPUs, ``>1`` = that many worker processes.
 
     Returns
     -------

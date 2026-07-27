@@ -8,6 +8,7 @@ from typing import Any
 import pandas as pd
 from attrs import define
 from loguru import logger
+from sqlalchemy import func
 
 from climate_ref.database import Database, ModelState
 from climate_ref.datasets.base import DatasetAdapter
@@ -16,6 +17,7 @@ from climate_ref.datasets.cmip7 import CMIP7DatasetAdapter
 from climate_ref.datasets.esmvaltool_reference import ESMValToolReferenceDatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter, Obs4REFDatasetAdapter
 from climate_ref.datasets.pmp_climatology import PMPClimatologyDatasetAdapter
+from climate_ref.models.dataset import Dataset, DatasetFile
 from climate_ref_core.datasets import SourceDatasetType
 
 # Pre-computed slug column lookup by source type.
@@ -228,6 +230,40 @@ def ingest_datasets(  # noqa: PLR0913
     return _ingest_catalog(adapter, db, data_catalog)
 
 
+def log_deferred_finalisation(db: Database, source_type: SourceDatasetType) -> None:
+    """
+    Report the metadata extraction that has been deferred to the next solve.
+
+    The `drs` parsers read metadata from the filename and directory structure only,
+    so the remaining metadata is extracted the first time the solver needs it.
+    That work is invisible at ingest time,
+    which makes the `drs` parser look cheaper than it is.
+
+    Parameters
+    ----------
+    db
+        Database instance to count the unfinalised datasets in
+    source_type
+        Source type that was just ingested
+    """
+    with db.session.begin():
+        counts = (
+            db.session.query(func.count(func.distinct(Dataset.id)), func.count(DatasetFile.id))
+            .join(DatasetFile, DatasetFile.dataset_id == Dataset.id, isouter=True)
+            .filter(Dataset.dataset_type == source_type, Dataset.finalised.is_(False))
+            .one()
+        )
+    n_datasets, n_files = counts
+
+    if not n_datasets:
+        return
+
+    logger.warning(
+        f"{n_datasets} {source_type.value} datasets ({n_files} files) are missing metadata that "
+        "can only be read from the files themselves when potentially needed by a solve. "
+    )
+
+
 def get_dataset_adapter(source_type: str, **kwargs: Any) -> DatasetAdapter:
     """
     Get the appropriate adapter for the specified source type
@@ -271,4 +307,5 @@ __all__ = [
     "get_dataset_adapter",
     "get_slug_column",
     "ingest_datasets",
+    "log_deferred_finalisation",
 ]

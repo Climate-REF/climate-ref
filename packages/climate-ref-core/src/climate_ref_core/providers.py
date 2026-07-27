@@ -92,7 +92,7 @@ class DiagnosticProvider:
         # The packaged copy is tried second so a mistyped `ignore_datasets_file`
         # cannot silently drop the grey list protections.
         ignore_datasets_all: dict[str, Any] = {}
-        source = str(grey_list.packaged)
+        source = "nothing"
         for candidate in (grey_list, grey_list.packaged):
             try:
                 ignore_datasets_all = yaml.safe_load(candidate.read_text()) or {}
@@ -101,6 +101,8 @@ class DiagnosticProvider:
                 continue
             source = candidate.describe()
             break
+        else:
+            logger.warning(f"No grey list could be read for provider {self.slug}, ignoring no datasets")
         logger.debug(f"Configuring provider {self.slug} using the grey list from {source}")
 
         ignore_datasets = ignore_datasets_all.get(self.slug, {})

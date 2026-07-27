@@ -241,16 +241,16 @@ def data_catalog(
 @lru_cache(maxsize=1)
 def packaged_ignore_datasets_file() -> Path:
     """
-    Materialise the grey list shipped inside the ``climate_ref`` package as a real file.
+    Expose the grey list shipped inside the ``climate_ref`` package as a real file.
 
-    The content is copied out of the package into a temporary file that lives for the
-    duration of the test session, so the returned path is durable and independent of
-    how the package is installed.
+    The path lives for the duration of the test session.
+    For an ordinary install this is the packaged file itself rather than a copy,
+    so treat it as read only.
 
     Returns
     -------
     :
-        Path to a copy of the packaged grey list.
+        Path to the packaged grey list.
     """
     stack = ExitStack()
     atexit.register(stack.close)

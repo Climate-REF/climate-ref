@@ -3,14 +3,8 @@ Adapter for ESMValTool reference (observational/reanalysis) datasets.
 
 ESMValTool reference data is *not* CMOR/obs4MIPs compliant, so metadata cannot be read
 from global attributes the way :mod:`climate_ref.datasets.obs4mips` does. Instead it is
-parsed from the ESMValCore DRS path and filename templates that ESMValTool itself uses to
-locate the data at run time (see ``climate_ref_esmvaltool.diagnostics.base``):
-
-* ``OBS`` / ``OBS6`` (metadata from the filename):
-  ``OBS/Tier{tier}/{dataset}/{project}_{dataset}_{type}_{version}_{mip}_{short_name}_{timerange}.nc``
-* ``native6`` (metadata from the directory, raw non-CMOR filename):
-  ``native6/Tier{tier}/{dataset}/{version}/{frequency}/{short_name}/*.nc``
-* ``obs4MIPs``: ``obs4MIPs/{dataset}/{version}/{short_name}_*.nc``
+parsed from the ESMValCore DRS path and filename templates by
+:mod:`climate_ref_core.esmvaltool_reference`, which describes the layouts.
 """
 
 from __future__ import annotations
@@ -26,12 +20,11 @@ from climate_ref.datasets.base import DatasetAdapter
 from climate_ref.datasets.catalog_builder import build_catalog
 from climate_ref.datasets.utils import (
     build_instance_id,
-    frequency_from_mip_table,
     parse_cftime_dates,
     parse_drs_daterange,
 )
 from climate_ref.models.dataset import Dataset, ESMValToolReferenceDataset
-from climate_ref_core.esmvaltool_reference import drs_relative_parts, tier_from_segment
+from climate_ref_core.esmvaltool_reference import parse_reference_path
 
 _SLUG_PREFIX = "esmvaltool-reference"
 
@@ -39,95 +32,19 @@ _SLUG_PREFIX = "esmvaltool-reference"
 _INSTANCE_ID_FACETS = ("project", "source_id", "frequency", "variable_id", "version")
 
 
-def _parse_obs(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
-    # rel == ("OBS", "Tier{n}", "{dataset}", ..., filename)
-    tier = tier_from_segment(rel[1])
-    dataset = rel[2]
-    stem = filename[:-3] if filename.endswith(".nc") else filename
-    tokens = stem.split("_")
-    # {project}_{dataset}_{type}_{version}_{mip}_{short_name}[_{timerange}]
-    if len(tokens) < 6:  # noqa: PLR2004
-        raise ValueError(f"unexpected OBS filename structure: {filename}")
-    project, _, data_type, version, mip, short_name = tokens[:6]
-    # The timerange is the trailing token. Use ``tokens[-1]`` (matching ``_parse_obs4mips``)
-    # so an unexpected extra segment does not silently drop the date range.
-    timerange = tokens[-1] if len(tokens) > 6 else None  # noqa: PLR2004
-    start_time, end_time = parse_drs_daterange(timerange) if timerange else (None, None)
-    return {
-        "project": project,
-        "source_id": dataset,
-        "variable_id": short_name,
-        "frequency": frequency_from_mip_table(mip),
-        "version": version,
-        "data_type": data_type,
-        "tier": tier,
-        "start_time": start_time,
-        "end_time": end_time,
-    }
-
-
-def _parse_native6(rel: tuple[str, ...]) -> dict[str, Any]:
-    # rel == ("native6", "Tier{n}", "{dataset}", "{version}", "{frequency}", "{short_name}", filename)
-    tier = tier_from_segment(rel[1])
-    dataset, version, frequency, short_name = rel[2], rel[3], rel[4], rel[5]
-    return {
-        "project": "native6",
-        "source_id": dataset,
-        "variable_id": short_name,
-        "frequency": frequency_from_mip_table(frequency),
-        "version": version,
-        "data_type": None,
-        "tier": tier,
-        # native6 filenames are raw (non-CMOR) and carry no reliable DRS date range.
-        "start_time": None,
-        "end_time": None,
-    }
-
-
-def _parse_obs4mips(rel: tuple[str, ...], filename: str) -> dict[str, Any]:
-    # rel == ("obs4MIPs", "{dataset}", "{version}", filename)
-    dataset, version = rel[1], rel[2]
-    stem = filename[:-3] if filename.endswith(".nc") else filename
-    tokens = stem.split("_")
-    if not tokens[0]:
-        raise ValueError(f"unexpected obs4MIPs filename structure: {filename}")
-    short_name = tokens[0]
-    timerange = tokens[-1] if len(tokens) > 1 else None
-    start_time, end_time = parse_drs_daterange(timerange) if timerange else (None, None)
-    return {
-        "project": "obs4MIPs",
-        "source_id": dataset,
-        "variable_id": short_name,
-        # obs4MIPs reference files here are monthly, so "mon" is the non-null grouping key.
-        "frequency": "mon",
-        "version": version,
-        "data_type": None,
-        "tier": None,
-        "start_time": start_time,
-        "end_time": end_time,
-    }
-
-
 def parse_esmvaltool_reference(file: str, **kwargs: Any) -> dict[str, Any]:
     """
     Parse a single ESMValTool reference file into a metadata record.
 
-    Dispatches on the top-level project directory (``OBS``/``native6``/``obs4MIPs``) and
-    reads metadata from the path/filename rather than the file contents, because the data
-    is not CMOR compliant.
+    Metadata comes from the path rather than the file contents, because the data is not
+    CMOR compliant. The date range is resolved here and not in the shared parser, because
+    nothing selects reference data on it.
     """
     try:
-        path = Path(file)
-        rel = drs_relative_parts(path)
-        anchor = rel[0]
+        info = parse_reference_path(file)._asdict()
+        timerange = info.pop("timerange")
 
-        if anchor == "OBS":
-            info = _parse_obs(rel, path.name)
-        elif anchor == "native6":
-            info = _parse_native6(rel)
-        else:
-            info = _parse_obs4mips(rel, path.name)
-
+        info["start_time"], info["end_time"] = parse_drs_daterange(timerange) if timerange else (None, None)
         info["path"] = str(file)
         info["long_name"] = None
         info["units"] = None

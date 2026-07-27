@@ -1,6 +1,11 @@
 import pytest
 
-from climate_ref_core.esmvaltool_reference import drs_relative_parts, tier_from_segment
+from climate_ref_core.esmvaltool_reference import (
+    drs_relative_parts,
+    frequency_from_mip_table,
+    parse_reference_path,
+    tier_from_segment,
+)
 
 
 @pytest.mark.parametrize(
@@ -107,3 +112,137 @@ def test_drs_relative_parts_names_the_project_it_could_not_fit():
 def test_drs_relative_parts_rejects_a_path_with_no_anchor():
     with pytest.raises(ValueError, match="not under a known ESMValTool reference project"):
         drs_relative_parts("/data/somewhere/mystery.nc")
+
+
+class TestFrequencyFromMipTable:
+    """``Amon`` -> ``mon``, for ESMValTool OBS/OBS6 reference data."""
+
+    @pytest.mark.parametrize(
+        "mip_table, expected",
+        [
+            # The common monthly tables across realms.
+            ("Amon", "mon"),
+            ("Omon", "mon"),
+            ("Lmon", "mon"),
+            ("LImon", "mon"),
+            ("SImon", "mon"),
+            ("AERmon", "mon"),
+            ("Emon", "mon"),
+            # Daily.
+            ("day", "day"),
+            ("Oday", "day"),
+            ("SIday", "day"),
+            ("CFday", "day"),
+            # CMIP5-era sea-ice tables (used by ESMValTool OBS data, e.g. OSI-450 sic).
+            ("OImon", "mon"),
+            ("OIday", "day"),
+            # Sub-daily, including the point-sampled variants.
+            ("3hr", "3hr"),
+            ("E3hrPt", "3hrPt"),
+            ("6hrLev", "6hr"),
+            ("6hrPlevPt", "6hrPt"),
+            ("AERhr", "1hr"),
+            # Fixed fields and yearly.
+            ("fx", "fx"),
+            ("Ofx", "fx"),
+            ("Oyr", "yr"),
+            ("IyrGre", "yr"),
+            # The irregular ones the enumeration exists for.
+            ("Oclim", "monC"),
+            ("E1hrClimMon", "1hrCM"),
+            ("Esubhr", "subhrPt"),
+            # Zonal-mean tables keep the frequency of their non-zonal counterpart.
+            ("AERmonZ", "mon"),
+            ("EdayZ", "day"),
+            ("E6hrZ", "6hr"),
+        ],
+    )
+    def test_maps_mip_table_to_frequency(self, mip_table, expected):
+        assert frequency_from_mip_table(mip_table) == expected
+
+    @pytest.mark.parametrize("frequency", ["mon", "day", "fx", "yr", "3hr", "subhrPt"])
+    def test_existing_frequency_passes_through(self, frequency):
+        """``native6`` paths already carry a frequency, so the same call site handles them."""
+        assert frequency_from_mip_table(frequency) == frequency
+
+    @pytest.mark.parametrize("value", ["day", "fx"])
+    def test_names_that_are_both_table_and_frequency_are_idempotent(self, value):
+        assert frequency_from_mip_table(value) == value
+        assert frequency_from_mip_table(frequency_from_mip_table(value)) == value
+
+    @pytest.mark.parametrize("value", ["Amonthly", "", "monthly", "Xmon", "AMON"])
+    def test_unknown_value_raises(self, value):
+        """Failing loudly beats defaulting: a silent fallback would collapse two datasets that
+        differ only by frequency onto one ``instance_id``."""
+        with pytest.raises(ValueError, match="Unknown MIP table or frequency"):
+            frequency_from_mip_table(value)
+
+
+class TestParseReferencePath:
+    def test_obs(self):
+        facets = parse_reference_path(
+            "/data/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc"
+        )
+
+        assert facets.project == "OBS"
+        assert facets.source_id == "OSI-450-nh"
+        assert facets.variable_id == "sic"
+        assert facets.frequency == "mon"
+        assert facets.version == "v3"
+        assert facets.data_type == "reanaly"
+        assert facets.tier == 2
+        assert facets.timerange == "197901-197912"
+
+    def test_obs6_keeps_its_own_project(self):
+        """OBS6 data lives under the OBS directory, so only the filename distinguishes it."""
+        facets = parse_reference_path(
+            "/data/ESMValTool/OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Omon_tos_197901-201812.nc"
+        )
+
+        assert facets.project == "OBS6"
+
+    def test_obs_without_a_timerange(self):
+        """A fixed field carries no date range, which is how a supplementary is spelled."""
+        facets = parse_reference_path(
+            "/data/ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_fx_areacello.nc"
+        )
+
+        assert facets.variable_id == "areacello"
+        assert facets.frequency == "fx"
+        assert facets.timerange is None
+
+    def test_native6(self):
+        facets = parse_reference_path(
+            "/data/ESMValTool/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"
+        )
+
+        assert facets.project == "native6"
+        assert facets.source_id == "ERA5"
+        assert facets.variable_id == "tas"
+        assert facets.frequency == "mon"
+        assert facets.version == "v1"
+        assert facets.data_type is None
+        assert facets.tier == 3
+        # The filename is raw, so it carries no reliable date range.
+        assert facets.timerange is None
+
+    def test_obs4mips(self):
+        facets = parse_reference_path(
+            "/data/ESMValTool/obs4MIPs/GPCP-V2.3/v20180519/pr_mon_GPCP-V2-3_gn_200001-200012.nc"
+        )
+
+        assert facets.project == "obs4MIPs"
+        assert facets.source_id == "GPCP-V2.3"
+        assert facets.variable_id == "pr"
+        assert facets.frequency == "mon"
+        assert facets.version == "v20180519"
+        assert facets.tier is None
+        assert facets.timerange == "200001-200012"
+
+    def test_obs_filename_missing_fields_raises(self):
+        with pytest.raises(ValueError, match="unexpected OBS filename structure"):
+            parse_reference_path("/data/ESMValTool/OBS/Tier2/CERES-EBAF/OBS_CERES-EBAF_sat.nc")
+
+    def test_obs4mips_filename_without_a_variable_raises(self):
+        with pytest.raises(ValueError, match="unexpected obs4MIPs filename structure"):
+            parse_reference_path("/data/ESMValTool/obs4MIPs/GPCP-V2.3/v20180519/_mon_gn.nc")

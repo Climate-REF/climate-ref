@@ -16,6 +16,7 @@ from loguru import logger
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import select_latest_version
+from climate_ref_core.esmvaltool_reference import parse_reference_path
 
 # Number of path parts in PMP climatology registry keys
 _PMP_CLIMATOLOGY_PATH_PARTS = 5
@@ -146,6 +147,36 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
     return metadata
 
 
+def _parse_esmvaltool_reference_key(key: str) -> dict[str, Any]:
+    """
+    Parse an ESMValTool reference registry key to extract metadata.
+
+    Keys are the file's DRS path relative to the data root, so they parse the same way the
+    ingest adapter parses the downloaded file. Sharing
+    :func:`~climate_ref_core.esmvaltool_reference.parse_reference_path` is what keeps a
+    request's facet values spelled the way the catalog spells them.
+
+    Parameters
+    ----------
+    key
+        The registry key (path) to parse
+
+    Returns
+    -------
+        Dictionary with parsed metadata, or empty dict if parsing fails
+    """
+    # Example: ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc
+    try:
+        facets = parse_reference_path(key)
+    except ValueError as err:
+        logger.debug(f"Unexpected ESMValTool reference key format: {key} ({err})")
+        return {}
+
+    metadata = facets._asdict()
+    metadata["key"] = key
+    return metadata
+
+
 def _matches_facets(
     metadata: dict[str, Any],
     facets: dict[str, str | tuple[str, ...]],
@@ -168,8 +199,9 @@ def _matches_facets(
         if facet_name not in metadata:
             return False
 
-        # Normalize to tuple for comparison
-        allowed_values = (facet_value,) if isinstance(facet_value, str) else facet_value
+        # Normalize to tuple for comparison.
+        # Not every facet is a string: an ESMValTool reference key parses ``tier`` as an int.
+        allowed_values = facet_value if isinstance(facet_value, tuple | list) else (facet_value,)
 
         if metadata[facet_name] not in allowed_values:
             return False
@@ -236,6 +268,8 @@ class RegistryRequest:
             return _parse_pmp_climatology_key
         elif self.registry_name == "obs4ref":
             return _parse_obs4ref_key
+        elif self.registry_name == "esmvaltool-datasets":
+            return _parse_esmvaltool_reference_key
         else:
             # Default to obs4ref parser as fallback
             logger.warning(f"Unknown registry '{self.registry_name}', using obs4ref parser")

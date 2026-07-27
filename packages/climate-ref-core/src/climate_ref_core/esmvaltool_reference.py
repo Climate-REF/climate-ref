@@ -3,6 +3,18 @@ Path conventions for ESMValTool reference (observational/reanalysis) data.
 
 ESMValCore locates this data from its own DRS directory templates rather than by ``instance_id``,
 so a reference file is identified by where its DRS path begins.
+
+This data is not CMOR/obs4MIPs compliant, so its metadata cannot be read from global attributes.
+It is parsed from the path and filename templates that ESMValTool itself uses to find the data:
+
+* ``OBS`` / ``OBS6`` (metadata from the filename):
+  ``OBS/Tier{tier}/{dataset}/{project}_{dataset}_{type}_{version}_{mip}_{short_name}_{timerange}.nc``
+* ``native6`` (metadata from the directory, raw non-CMOR filename):
+  ``native6/Tier{tier}/{dataset}/{version}/{frequency}/{short_name}/*.nc``
+* ``obs4MIPs``: ``obs4MIPs/{dataset}/{version}/{short_name}_*.nc``
+
+Both the ingest adapter and the registry fetcher parse through :func:`parse_reference_path`,
+so a request cannot name a facet value that ingest would spell differently.
 """
 
 from pathlib import Path
@@ -107,3 +119,233 @@ def drs_relative_parts(path: str | Path) -> tuple[str, ...]:
             return parts[index:]
 
     raise ValueError(f"unexpected {parts[candidates[0]]} path structure: {path}")
+
+
+# CMIP6 CMOR table -> CMIP6 ``frequency`` CV value.
+#
+# ESMValTool's ``OBS``/``OBS6`` layouts encode the MIP table (e.g. ``Amon``) rather than the
+# frequency, while ``native6`` encodes the frequency directly (e.g. ``mon``). Reference datasets
+# store only ``frequency``, so the table has to be reduced to its frequency at parse time.
+#
+# A CMOR table name is a realm prefix plus a frequency suffix, but the reduction is not a plain
+# suffix strip: ``Oclim`` is a monthly climatology (``monC``), ``E1hrClimMon`` is ``1hrCM``, the
+# zonal-mean tables (``AERmonZ``, ``EmonZ``, ``EdayZ``, ``E6hrZ``) keep the frequency of their
+# non-zonal counterpart, and the ``Pt`` (point-sampled) tables map to distinct ``*Pt``
+# frequencies. So the mapping is enumerated rather than derived.
+_MIP_TABLE_FREQUENCIES: dict[str, str] = {
+    "3hr": "3hr",
+    "6hrLev": "6hr",
+    "6hrPlev": "6hr",
+    "6hrPlevPt": "6hrPt",
+    "AERday": "day",
+    "AERhr": "1hr",
+    "AERmon": "mon",
+    "AERmonZ": "mon",
+    "Amon": "mon",
+    "CF3hr": "3hr",
+    "CFday": "day",
+    "CFmon": "mon",
+    "CFsubhr": "subhrPt",
+    "day": "day",
+    "E1hr": "1hr",
+    "E1hrClimMon": "1hrCM",
+    "E3hr": "3hr",
+    "E3hrPt": "3hrPt",
+    "E6hrZ": "6hr",
+    "Eday": "day",
+    "EdayZ": "day",
+    "Efx": "fx",
+    "Emon": "mon",
+    "EmonZ": "mon",
+    "Esubhr": "subhrPt",
+    "Eyr": "yr",
+    "IfxAnt": "fx",
+    "IfxGre": "fx",
+    "ImonAnt": "mon",
+    "ImonGre": "mon",
+    "IyrAnt": "yr",
+    "IyrGre": "yr",
+    "LImon": "mon",
+    "Lmon": "mon",
+    "OIclim": "monC",
+    "OIday": "day",
+    "OImon": "mon",
+    "Oclim": "monC",
+    "Oday": "day",
+    "Odec": "dec",
+    "Ofx": "fx",
+    "Omon": "mon",
+    "Oyr": "yr",
+    "SIday": "day",
+    "SImon": "mon",
+    "fx": "fx",
+}
+
+# The CMIP6 ``frequency`` CV. Values already in this set pass through ``frequency_from_mip_table``
+# untouched, which is what lets the ``native6`` layout (which stores a frequency, not a table)
+# use the same call site.
+_FREQUENCIES: frozenset[str] = frozenset(
+    {
+        "1hr",
+        "1hrCM",
+        "1hrPt",
+        "3hr",
+        "3hrPt",
+        "6hr",
+        "6hrPt",
+        "day",
+        "dec",
+        "fx",
+        "mon",
+        "monC",
+        "monPt",
+        "subhrPt",
+        "yr",
+        "yrPt",
+    }
+)
+
+# The shortest ``OBS`` filename that still carries every field of the template.
+_OBS_FILENAME_TOKENS = 6
+
+
+def frequency_from_mip_table(value: str) -> str:
+    """
+    Reduce a CMOR MIP table name to its CMIP6 ``frequency`` CV value.
+
+    Reference datasets record ``frequency`` and not the MIP table, because ESMValTool's
+    ``native6`` layout never carries a table in the first place. This maps the ``OBS``/``OBS6``
+    table (e.g. ``Amon`` -> ``mon``) onto the same axis.
+
+    A value that is already a valid frequency is returned unchanged, so a caller parsing a
+    ``native6`` path (which yields ``mon``, ``day``, ...) can use this without branching.
+    ``day`` and ``fx`` are both a table name and a frequency, and map to themselves either way.
+
+    Parameters
+    ----------
+    value
+        A CMOR MIP table name (``Amon``, ``Omon``, ``SIday``) or an existing frequency (``mon``).
+
+    Returns
+    -------
+    :
+        The corresponding CMIP6 frequency.
+
+    Raises
+    ------
+    ValueError
+        If the value is neither a known MIP table nor a known frequency. Failing loudly is
+        deliberate: silently defaulting would let a mis-parsed path collapse two datasets that
+        differ only by frequency onto one ``instance_id``.
+    """
+    if value in _MIP_TABLE_FREQUENCIES:
+        return _MIP_TABLE_FREQUENCIES[value]
+    if value in _FREQUENCIES:
+        return value
+    raise ValueError(f"Unknown MIP table or frequency: {value!r}")
+
+
+class ReferenceFacets(NamedTuple):
+    """
+    Metadata carried by the path of one ESMValTool reference file.
+
+    ``timerange`` is the raw DRS token rather than a parsed date range,
+    because it is not a facet anything selects on.
+    """
+
+    project: str
+    source_id: str
+    variable_id: str
+    frequency: str
+    version: str
+    data_type: str | None
+    tier: int | None
+    timerange: str | None
+
+
+def _parse_obs(rel: tuple[str, ...], filename: str) -> ReferenceFacets:
+    # rel == ("OBS", "Tier{n}", "{dataset}", ..., filename)
+    stem = filename[:-3] if filename.endswith(".nc") else filename
+    tokens = stem.split("_")
+    # {project}_{dataset}_{type}_{version}_{mip}_{short_name}[_{timerange}]
+    if len(tokens) < _OBS_FILENAME_TOKENS:
+        raise ValueError(f"unexpected OBS filename structure: {filename}")
+    project, _, data_type, version, mip, short_name = tokens[:_OBS_FILENAME_TOKENS]
+    # The timerange is the trailing token. Use ``tokens[-1]`` (matching ``_parse_obs4mips``)
+    # so an unexpected extra segment does not silently drop the date range.
+    return ReferenceFacets(
+        project=project,
+        source_id=rel[2],
+        variable_id=short_name,
+        frequency=frequency_from_mip_table(mip),
+        version=version,
+        data_type=data_type,
+        tier=tier_from_segment(rel[1]),
+        timerange=tokens[-1] if len(tokens) > _OBS_FILENAME_TOKENS else None,
+    )
+
+
+def _parse_native6(rel: tuple[str, ...]) -> ReferenceFacets:
+    # rel == ("native6", "Tier{n}", "{dataset}", "{version}", "{frequency}", "{short_name}", filename)
+    return ReferenceFacets(
+        project="native6",
+        source_id=rel[2],
+        variable_id=rel[5],
+        frequency=frequency_from_mip_table(rel[4]),
+        version=rel[3],
+        data_type=None,
+        tier=tier_from_segment(rel[1]),
+        # native6 filenames are raw (non-CMOR) and carry no reliable DRS date range.
+        timerange=None,
+    )
+
+
+def _parse_obs4mips(rel: tuple[str, ...], filename: str) -> ReferenceFacets:
+    # rel == ("obs4MIPs", "{dataset}", "{version}", filename)
+    stem = filename[:-3] if filename.endswith(".nc") else filename
+    tokens = stem.split("_")
+    if not tokens[0]:
+        raise ValueError(f"unexpected obs4MIPs filename structure: {filename}")
+    return ReferenceFacets(
+        project="obs4MIPs",
+        source_id=rel[1],
+        variable_id=tokens[0],
+        # obs4MIPs reference files here are monthly, so "mon" is the non-null grouping key.
+        frequency="mon",
+        version=rel[2],
+        data_type=None,
+        tier=None,
+        timerange=tokens[-1] if len(tokens) > 1 else None,
+    )
+
+
+def parse_reference_path(path: str | Path) -> ReferenceFacets:
+    """
+    Read the metadata a reference file's DRS path encodes.
+
+    Parameters
+    ----------
+    path
+        Path to a reference file, absolute or relative.
+        It may equally be a registry key, which is the same path relative to the data root.
+
+    Returns
+    -------
+    :
+        The facets the path carries.
+
+    Raises
+    ------
+    ValueError
+        If the path does not fit any project layout,
+        or if the filename does not fit the template of the project it sits under.
+    """
+    file = Path(path)
+    rel = drs_relative_parts(file)
+    anchor = rel[0]
+
+    if anchor == "OBS":
+        return _parse_obs(rel, file.name)
+    if anchor == "native6":
+        return _parse_native6(rel)
+    return _parse_obs4mips(rel, file.name)

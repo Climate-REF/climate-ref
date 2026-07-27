@@ -363,32 +363,39 @@ def test_prepare_reference_data_rejects_a_non_string_path(tmp_path):
         prepare_reference_data(datasets, tmp_path / "reference_data")
 
 
-def test_prepare_reference_data_clears_stale_symlinks(tmp_path):
+def test_prepare_reference_data_drops_files_the_run_did_not_select(tmp_path):
+    # Reusing an output directory must not leave ESMValCore able to read a file that
+    # an earlier run selected, whether or not that file still exists on disk.
     source_dir = tmp_path / "source" / "OBS" / "Tier2" / "CERES-EBAF"
     source_dir.mkdir(parents=True)
-    gone = source_dir / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc"
+    deselected = source_dir / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc"
+    removed = source_dir / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rsdt_200003-202311.nc"
     kept = source_dir / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rsut_200003-202311.nc"
-    gone.touch()
-    kept.touch()
+    for source in (deselected, removed, kept):
+        source.touch()
 
     reference_data_dir = tmp_path / "reference_data"
-    prepare_reference_data(pd.DataFrame({"path": [str(gone)]}), reference_data_dir)
+    prepare_reference_data(
+        pd.DataFrame({"path": [str(deselected), str(removed), str(kept)]}),
+        reference_data_dir,
+    )
 
-    # The first run's source disappears, leaving a dangling symlink behind.
-    gone.unlink()
+    # One source disappears, so its link dangles. The other two stay on disk.
+    removed.unlink()
     laid_out = reference_data_dir / "OBS" / "Tier2" / "CERES-EBAF"
-    assert (laid_out / gone.name).is_symlink()
+    assert (laid_out / deselected.name).is_symlink()
 
-    # A second run over the same directory sweeps it, and relinking an unchanged
-    # file replaces the existing symlink rather than failing.
+    # A second run selects only one of them. Relinking an unchanged file replaces the
+    # existing symlink rather than failing.
     prepare_reference_data(
         pd.DataFrame({"path": [str(kept), str(kept)]}),
         reference_data_dir,
     )
 
-    assert not (laid_out / gone.name).exists()
-    assert not (laid_out / gone.name).is_symlink()
     assert (laid_out / kept.name).resolve() == kept.resolve()
+    for dropped in (deselected, removed):
+        assert not (laid_out / dropped.name).exists()
+        assert not (laid_out / dropped.name).is_symlink()
 
 
 def test_prepare_reference_data_rejects_unknown_project(tmp_path):

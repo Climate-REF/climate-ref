@@ -29,6 +29,8 @@ def test_drs_relative_parts_accepts_each_project_layout(path):
     [
         # No tier directory under a tiered project.
         "/data/OBS/CERES-EBAF/x.nc",
+        # No dataset directory, which would otherwise read the filename as the dataset.
+        "/data/OBS/Tier2/OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc",
         # native6 and obs4MIPs are fixed depth, so neither may carry extra directories.
         "/data/native6/Tier3/ERA5/v1/mon/tas/sub/x.nc",
         "/data/obs4MIPs/GPCP-V2.3/x.nc",

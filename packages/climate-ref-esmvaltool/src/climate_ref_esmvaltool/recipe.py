@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -466,6 +467,11 @@ def prepare_reference_data(datasets: pd.DataFrame, reference_data_dir: Path) -> 
         # default rootpaths and run the recipe against whatever it finds there.
         msg = "The diagnostic requested ESMValTool reference data but no files were selected."
         raise ValueError(msg)
+
+    # Start from an empty tree. A link left by an earlier run whose source still exists
+    # would otherwise survive, and ESMValCore would read data this run did not select.
+    if reference_data_dir.exists():
+        shutil.rmtree(reference_data_dir)
 
     cleaned_dirs: set[Path] = set()
 

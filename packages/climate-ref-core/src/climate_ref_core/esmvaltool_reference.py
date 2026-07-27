@@ -21,7 +21,7 @@ class _Layout(NamedTuple):
 
 
 _PROJECT_LAYOUTS = {
-    "OBS": _Layout(parts=3, allow_extra=True, tiered=True),
+    "OBS": _Layout(parts=4, allow_extra=True, tiered=True),
     "native6": _Layout(parts=7, allow_extra=False, tiered=True),
     "obs4MIPs": _Layout(parts=4, allow_extra=False, tiered=False),
 }
@@ -58,7 +58,7 @@ def _fits_layout(rel: tuple[str, ...]) -> bool:
     """Report whether DRS-relative components fit the layout of the project they start with."""
     layout = _PROJECT_LAYOUTS[rel[0]]
 
-    # Every layout is at least three components deep, so this also guards ``rel[1]`` below.
+    # Every layout is at least four components deep, so this also guards ``rel[1]`` below.
     if len(rel) < layout.parts:
         return False
     if not layout.allow_extra and len(rel) > layout.parts:

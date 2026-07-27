@@ -195,7 +195,11 @@ class FinaliseableDatasetAdapterMixin:
         :
             The chunk with metadata extracted from the files that parsed successfully
         """
+        # Captured before the parse marks rows finalised, so the commit can still tell
+        # which rows this chunk was responsible for.
         pending = chunk.loc[chunk["finalised"] == False, "path"]  # noqa: E712
+        pending_index = pending.index
+
         valid = [(label, str(path)) for label, path in pending.items() if not pd.isna(path)]
         if not valid:
             return chunk
@@ -227,7 +231,7 @@ class FinaliseableDatasetAdapterMixin:
             # A chunk holds whole datasets, so per-dataset fixes see all of their files.
             chunk = self._post_finalise_fixes(chunk)
 
-        self._persist_finalised_metadata(db, chunk, chunk.index)
+        self._persist_finalised_metadata(db, chunk, pending_index)
 
         return chunk
 

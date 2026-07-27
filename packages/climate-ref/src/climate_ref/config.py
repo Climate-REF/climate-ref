@@ -764,6 +764,11 @@ class Config:
         # This is needed to apply the environment variable overrides on initialization
         _environ_post_init(self)
 
+        # Checked after the overrides so an invalid value from the environment is caught too.
+        # `0` and negatives below `-1` would otherwise fall back to serial parsing without a word.
+        if self.n_jobs != -1 and self.n_jobs < 1:
+            raise ValueError(f"n_jobs must be -1 (all CPUs) or a positive integer, got {self.n_jobs}")
+
 
 def _make_converter(omit_default: bool, forbid_extra_keys: bool) -> Converter:
     conv = Converter(omit_if_default=omit_default, forbid_extra_keys=forbid_extra_keys)

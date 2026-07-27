@@ -165,7 +165,7 @@ Two things help:
 - Watch the log. Finalisation runs in chunks of whole datasets and commits each chunk before parsing the next,
   so progress is reported as it goes and a cancelled solve keeps what it has already parsed.
 
-`ref datasets ingest` reports how many datasets are left unfinalised
+`ref datasets ingest` reports how many datasets are left unfinalised,
 so the size of the deferred work is known before the first solve.
 
 ### Re-ingestion Behaviour

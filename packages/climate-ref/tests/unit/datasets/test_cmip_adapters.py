@@ -257,6 +257,29 @@ class TestChunkedFinalisation:
         assert len(persist.call_args_list[0].args[1]) == 2
         assert result["finalised"].all()
 
+    def test_failed_parse_does_not_finalise_via_an_already_finalised_sibling(
+        self, config, adapter_config, db, mocker
+    ):
+        """A dataset must not be committed as finalised on the strength of rows it did not parse."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a1.nc", "/a2.nc"])
+        df.loc[0, "finalised"] = True
+
+        persist = mocker.spy(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value={"INVALID_ASSET": "/a2.nc", "TRACEBACK": "corrupt file"},
+        ):
+            result = adapter.finalise_datasets(db, df, chunk_size=10)
+
+        # Only the row this chunk actually parsed counts towards the commit,
+        # so the already-finalised sibling cannot stand in for it.
+        committed = persist.call_args_list[0].args[1]
+        pending_index = persist.call_args_list[0].args[2]
+        assert list(pending_index) == [1]
+        assert not committed.loc[pending_index, "finalised"].any()
+        assert not result["finalised"].iloc[1]
+
     def test_file_metadata_is_not_broadcast_across_duplicate_labels(self, config, adapter_config, db):
         """A catalog loaded from the database repeats its dataset id once per file."""
         adapter = adapter_config.adapter_cls(config=config)

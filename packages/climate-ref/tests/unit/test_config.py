@@ -132,6 +132,22 @@ filename = "sqlite://climate_ref.db"
         assert f"invalid type ({expected_msg}) @ $.paths.scratch" in caplog.records[1].message
         assert caplog.records[1].levelname == "ERROR"
 
+    @pytest.mark.parametrize("n_jobs", [0, -2])
+    def test_invalid_n_jobs_rejected(self, n_jobs):
+        """An unusable n_jobs must fail loudly rather than silently parse serially."""
+        with pytest.raises(ValueError, match="n_jobs must be -1"):
+            Config(n_jobs=n_jobs)
+
+    @pytest.mark.parametrize("n_jobs", [-1, 1, 32])
+    def test_valid_n_jobs_accepted(self, n_jobs):
+        assert Config(n_jobs=n_jobs).n_jobs == n_jobs
+
+    def test_invalid_n_jobs_from_environment_rejected(self, monkeypatch):
+        monkeypatch.setenv("REF_N_JOBS", "0")
+
+        with pytest.raises(ValueError, match="n_jobs must be -1"):
+            Config()
+
     def test_save(self, tmp_path):
         config = Config(paths=PathConfig(scratch=Path("scratch")))
 
@@ -177,6 +193,7 @@ filename = "sqlite://climate_ref.db"
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
             "cmip7_parser": "complete",
+            "n_jobs": 1,
             "diagnostic_providers": [
                 {"provider": "climate_ref_example:provider"},
             ],
@@ -190,6 +207,7 @@ filename = "sqlite://climate_ref.db"
             "log_format": DEFAULT_LOG_FORMAT,
             "cmip6_parser": "complete",
             "cmip7_parser": "complete",
+            "n_jobs": 1,
             "diagnostic_providers": [
                 {
                     "provider": "climate_ref_example:provider",

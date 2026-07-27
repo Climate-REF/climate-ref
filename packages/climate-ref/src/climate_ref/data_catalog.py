@@ -10,7 +10,6 @@ from __future__ import annotations
 
 import pandas as pd
 from attrs import define
-from loguru import logger
 
 from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetAdapter
@@ -106,9 +105,6 @@ class DataCatalog:
         if not has_unfinalised:
             return subset
 
-        logger.info(
-            f"Finalising {(subset['finalised'] == False).sum()} unfinalised datasets"  # noqa: E712
-        )
         result = self.adapter.finalise_datasets(self.database, subset)
 
         # Invalidate the cached DataFrame so the next to_frame() call

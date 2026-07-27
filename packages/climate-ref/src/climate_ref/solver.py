@@ -501,15 +501,23 @@ class ExecutionSolver:
         return ExecutionSolver(
             provider_registry=ProviderRegistry.build_from_config(config, db),
             data_catalog={
-                SourceDatasetType.CMIP6: DataCatalog(database=db, adapter=CMIP6DatasetAdapter(config=config)),
-                SourceDatasetType.CMIP7: DataCatalog(database=db, adapter=CMIP7DatasetAdapter()),
-                SourceDatasetType.obs4MIPs: DataCatalog(database=db, adapter=Obs4MIPsDatasetAdapter()),
-                SourceDatasetType.PMPClimatology: DataCatalog(
-                    database=db, adapter=PMPClimatologyDatasetAdapter()
+                SourceDatasetType.CMIP6: DataCatalog(
+                    database=db, adapter=CMIP6DatasetAdapter(n_jobs=config.n_jobs, config=config)
                 ),
-                SourceDatasetType.obs4REF: DataCatalog(database=db, adapter=Obs4REFDatasetAdapter()),
+                SourceDatasetType.CMIP7: DataCatalog(
+                    database=db, adapter=CMIP7DatasetAdapter(n_jobs=config.n_jobs, config=config)
+                ),
+                SourceDatasetType.obs4MIPs: DataCatalog(
+                    database=db, adapter=Obs4MIPsDatasetAdapter(n_jobs=config.n_jobs)
+                ),
+                SourceDatasetType.PMPClimatology: DataCatalog(
+                    database=db, adapter=PMPClimatologyDatasetAdapter(n_jobs=config.n_jobs)
+                ),
+                SourceDatasetType.obs4REF: DataCatalog(
+                    database=db, adapter=Obs4REFDatasetAdapter(n_jobs=config.n_jobs)
+                ),
                 SourceDatasetType.ESMValToolReference: DataCatalog(
-                    database=db, adapter=ESMValToolReferenceDatasetAdapter()
+                    database=db, adapter=ESMValToolReferenceDatasetAdapter(n_jobs=config.n_jobs)
                 ),
             },
         )

@@ -94,6 +94,15 @@ class TestMetricSolver:
         assert SourceDatasetType.ESMValToolReference in solver.data_catalog
         assert isinstance(solver.data_catalog[SourceDatasetType.ESMValToolReference], DataCatalog)
 
+    def test_build_from_db_uses_configured_n_jobs(self, config, db_seeded):
+        """Solve-time finalisation must be parallelisable via the configuration."""
+        config.n_jobs = 4
+
+        solver = ExecutionSolver.build_from_db(config, db_seeded)
+
+        for catalog in solver.data_catalog.values():
+            assert catalog.adapter.n_jobs == 4
+
     def test_build_from_db_refreshes_ignore_datasets(self, config, db_seeded, mocker):
         refresh_mock = mocker.patch("climate_ref.solver.refresh_ignore_datasets_file")
 

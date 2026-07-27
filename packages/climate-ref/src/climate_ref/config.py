@@ -563,7 +563,10 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
         _write_atomically(path, response.content)
     except Exception as exc:
         # The packaged copy is always available, so a failed refresh is never fatal.
-        fallback = path if path is not None and path.is_file() else BUNDLED_IGNORE_DATASETS
+        usable_cache = (
+            path is not None and path.is_file() and _cache_age(path) <= DEFAULT_IGNORE_DATASETS_MAX_STALE
+        )
+        fallback = path if usable_cache else BUNDLED_IGNORE_DATASETS
         logger.warning(f"Could not refresh the grey list from {url}, using {fallback}: {exc}")
 
 
@@ -611,9 +614,8 @@ def _write_atomically(path: Path, content: bytes) -> None:
         # multi-user host, so it has to stay readable by them.
         temporary.chmod(0o644)
         temporary.replace(path)
-    except OSError:
+    finally:
         temporary.unlink(missing_ok=True)
-        raise
 
 
 @define(auto_attribs=True)

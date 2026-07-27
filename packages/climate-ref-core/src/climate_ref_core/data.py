@@ -19,7 +19,7 @@ import importlib.resources
 import os
 import pathlib
 from collections.abc import Iterator
-from contextlib import contextmanager
+from contextlib import ExitStack, contextmanager
 from typing import Protocol
 
 import platformdirs
@@ -98,18 +98,30 @@ class PackagedResource:
         """
         Locate the file within the installed package.
 
+        Existence is checked here rather than at each accessor,
+        because `importlib.resources.as_file` happily hands back a path that does not exist.
+
         Returns
         -------
         :
             The located file.
+
+        Raises
+        ------
+        DataResourceError
+            If the file is not present in the installed package.
         """
+        missing = DataResourceError(
+            f"Could not read {self} from the installed package. "
+            "This usually means the package was built without its data files."
+        )
         try:
-            return importlib.resources.files(self.package) / self.resource
+            located = importlib.resources.files(self.package) / self.resource
+            if not located.is_file():
+                raise missing
         except _RESOURCE_ERRORS as exc:
-            raise DataResourceError(
-                f"Could not read {self} from the installed package. "
-                "This usually means the package was built without its data files."
-            ) from exc
+            raise missing from exc
+        return located
 
     def exists(self) -> bool:
         """
@@ -121,9 +133,10 @@ class PackagedResource:
             True if the file can be read.
         """
         try:
-            return self._traversable().is_file()
-        except (DataResourceError, OSError):
+            self._traversable()
+        except DataResourceError:
             return False
+        return True
 
     def read_text(self, encoding: str = "utf-8") -> str:
         """
@@ -161,13 +174,13 @@ class PackagedResource:
             A path that exists for the duration of the context.
         """
         traversable = self._traversable()
-        try:
-            manager = importlib.resources.as_file(traversable)
-        except _RESOURCE_ERRORS as exc:
-            raise DataResourceError(f"Could not materialise {self} as a filesystem path.") from exc
-        # The lookup is guarded, the body is not. An exception raised in the caller's
-        # `with` block propagates back in through this yield and must not be relabelled.
-        with manager as path:
+        with ExitStack() as stack:
+            try:
+                path = stack.enter_context(importlib.resources.as_file(traversable))
+            except _RESOURCE_ERRORS as exc:
+                raise DataResourceError(f"Could not materialise {self} as a filesystem path.") from exc
+            # Only the lookup is guarded. An exception raised in the caller's `with`
+            # block propagates back in through this yield and must not be relabelled.
             yield path
 
     def describe(self) -> str:

@@ -99,6 +99,10 @@ class DiagnosticProvider:
             except (DataResourceError, yaml.YAMLError) as exc:
                 logger.warning(f"Could not read the grey list from {candidate.describe()}: {exc}")
                 continue
+            if not isinstance(ignore_datasets_all, dict):
+                logger.warning(f"The grey list at {candidate.describe()} is not a mapping, ignoring it")
+                ignore_datasets_all = {}
+                continue
             source = candidate.describe()
             break
         else:

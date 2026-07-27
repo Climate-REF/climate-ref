@@ -38,6 +38,14 @@ class TestPackagedResource:
             assert path.is_file()
             assert path.read_text(encoding="utf-8") == CV.read_text()
 
+    def test_as_path_missing_resource_raises_data_resource_error(self):
+        # as_file() hands back a path that does not exist, so the lookup has to check.
+        missing = PackagedResource("climate_ref_core.pycmec", "nope.yaml")
+
+        with pytest.raises(DataResourceError, match="Could not read"):
+            with missing.as_path():
+                pass
+
     def test_as_path_does_not_swallow_body_errors(self):
         # An OSError raised by the caller must propagate unchanged, not be relabelled
         # as a resolution failure.

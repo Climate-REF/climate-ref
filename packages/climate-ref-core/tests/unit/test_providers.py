@@ -140,6 +140,15 @@ class TestDiagnosticProvider:
 
         assert "No grey list could be read" in caplog.text
 
+    def test_configure_ignores_a_grey_list_that_is_not_a_mapping(self, provider, mock_config, caplog):
+        # A hand-edited list at the top level must not crash the provider.
+        mock_config.ignore_datasets_file.write_text("- not: a mapping\n", encoding="utf-8")
+
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+
+        assert "is not a mapping" in caplog.text
+
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(
             textwrap.dedent(

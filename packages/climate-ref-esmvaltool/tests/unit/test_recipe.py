@@ -356,6 +356,41 @@ def test_prepare_reference_data(tmp_path):
         assert symlink.resolve() == source_path.resolve()
 
 
+def test_prepare_reference_data_rejects_a_non_string_path(tmp_path):
+    datasets = pd.DataFrame({"path": [123]})
+
+    with pytest.raises(ValueError, match="Invalid path encountered"):
+        prepare_reference_data(datasets, tmp_path / "reference_data")
+
+
+def test_prepare_reference_data_clears_stale_symlinks(tmp_path):
+    source_dir = tmp_path / "source" / "OBS" / "Tier2" / "CERES-EBAF"
+    source_dir.mkdir(parents=True)
+    gone = source_dir / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc"
+    kept = source_dir / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rsut_200003-202311.nc"
+    gone.touch()
+    kept.touch()
+
+    reference_data_dir = tmp_path / "reference_data"
+    prepare_reference_data(pd.DataFrame({"path": [str(gone)]}), reference_data_dir)
+
+    # The first run's source disappears, leaving a dangling symlink behind.
+    gone.unlink()
+    laid_out = reference_data_dir / "OBS" / "Tier2" / "CERES-EBAF"
+    assert (laid_out / gone.name).is_symlink()
+
+    # A second run over the same directory sweeps it, and relinking an unchanged
+    # file replaces the existing symlink rather than failing.
+    prepare_reference_data(
+        pd.DataFrame({"path": [str(kept), str(kept)]}),
+        reference_data_dir,
+    )
+
+    assert not (laid_out / gone.name).exists()
+    assert not (laid_out / gone.name).is_symlink()
+    assert (laid_out / kept.name).resolve() == kept.resolve()
+
+
 def test_prepare_reference_data_rejects_unknown_project(tmp_path):
     source = tmp_path / "source" / "somewhere" / "mystery.nc"
     source.parent.mkdir(parents=True)

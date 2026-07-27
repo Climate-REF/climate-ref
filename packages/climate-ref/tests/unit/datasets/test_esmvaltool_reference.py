@@ -85,6 +85,13 @@ def test_parse_rejects_unknown_layout():
     assert result["INVALID_ASSET"] == "/root/somewhere/random.nc"
 
 
+def test_parse_rejects_a_path_that_does_not_fit_its_project_layout():
+    # A native6 path that is too shallow to carry the full DRS is flagged rather than
+    # read with whatever components happen to be present.
+    result = parse_esmvaltool_reference("/root/ESMValTool/native6/Tier3/ERA5/v1/tas.nc")
+    assert "INVALID_ASSET" in result
+
+
 def test_parse_rejects_malformed_obs_filename():
     result = parse_esmvaltool_reference("/root/ESMValTool/OBS/Tier2/FOO/OBS_FOO_sat.nc")
     assert "INVALID_ASSET" in result

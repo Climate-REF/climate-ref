@@ -8,11 +8,12 @@ from climate_ref_core.constraints import (
 )
 from climate_ref_core.datasets import FacetFilter, SourceDatasetType
 from climate_ref_core.diagnostics import DataRequirement
-from climate_ref_core.esgf import CMIP6Request, CMIP7Request
+from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
 from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
+from climate_ref_esmvaltool.reference_registry import parse_registry_key
 from climate_ref_esmvaltool.types import Recipe
 
 REGIONS = {
@@ -25,6 +26,47 @@ MONTHS = {
     "sh": "February",
 }
 
+_REFERENCE_SOURCE_IDS = tuple(f"OSI-450-{region}" for region in REGIONS)
+_REFERENCE_VARIABLES = ("sic", "areacello")
+
+_REFERENCE_REQUIREMENT = DataRequirement(
+    source_type=SourceDatasetType.ESMValToolReference,
+    filters=(
+        FacetFilter(
+            facets={
+                "project": "OBS",
+                "source_id": _REFERENCE_SOURCE_IDS,
+                "variable_id": _REFERENCE_VARIABLES,
+            },
+        ),
+    ),
+    # A single execution plots both hemispheres, so grouping cannot be by `source_id`.
+    # The filter pins the project, so this is one group holding every selected file.
+    group_by=("project",),
+    constraints=(RequireFacets("source_id", _REFERENCE_SOURCE_IDS),),
+)
+"""The OSI-450 observations the recipe compares each model against.
+
+Declaring them means the run sees only these files rather than the whole downloaded registry,
+and the executions they were used by are recorded in the database.
+"""
+
+_REFERENCE_REQUEST = RegistryRequest(
+    slug="osi-450",
+    registry_name="esmvaltool-datasets",
+    source_type="ESMValToolReference",
+    facets={
+        "project": "OBS",
+        "source_id": _REFERENCE_SOURCE_IDS,
+        "variable_id": _REFERENCE_VARIABLES,
+    },
+    key_parser=parse_registry_key,
+)
+"""Fetches the same files for a test case that the requirement above selects at solve time.
+
+Both sides read a path through `parse_reference_path`, so they cannot spell a facet differently.
+"""
+
 
 class SeaIceAreaBasic(ESMValToolDiagnostic):
     """
@@ -34,6 +76,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
     name = "Sea ice area basic"
     slug = "sea-ice-area-basic"
     base_recipe = "ref/recipe_ref_sea_ice_area_basic.yml"
+    version = 2
 
     data_requirements = (
         (
@@ -59,6 +102,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     RequireFacets("variable_id", ("siconc", "areacello")),
                 ),
             ),
+            _REFERENCE_REQUIREMENT,
         ),
         (
             DataRequirement(
@@ -84,6 +128,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                     RequireFacets("variable_id", ("siconc", "areacello")),
                 ),
             ),
+            _REFERENCE_REQUIREMENT,
         ),
         # TODO: Use OSI-450-nh and OSI-450-sh from obs4MIPs once available.
     )
@@ -160,6 +205,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                         remove_ensembles=True,
                         time_span=("1979", "2014"),
                     ),
+                    _REFERENCE_REQUEST,
                 ),
             ),
             TestCase(
@@ -183,6 +229,7 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
                         remove_ensembles=True,
                         time_span=("1979", "2014"),
                     ),
+                    _REFERENCE_REQUEST,
                 ),
             ),
         )
@@ -202,7 +249,9 @@ class SeaIceAreaBasic(ESMValToolDiagnostic):
         for dataset in recipe["datasets"]:
             dataset.pop("timerange")
 
-        # Update observational datasets
+        # Update observational datasets.
+        # These name the files `_REFERENCE_REQUIREMENT` selects,
+        # so a change here needs the same change there.
         nh_obs = {
             "dataset": "OSI-450-nh",
             "mip": "OImon",

@@ -1,5 +1,4 @@
 import dataclasses
-import importlib.resources
 import shutil
 from collections.abc import Callable, Generator
 from pathlib import Path
@@ -29,7 +28,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     create_cmip7_path,
     format_cmip7_time_range,
 )
-from climate_ref_core.pycmec.controlled_vocabulary import CV
+from climate_ref_core.pycmec.controlled_vocabulary import BUNDLED_CV, CV
 
 # Ignore the alembic folder
 collect_ignore = ["src/climate_ref/migrations"]
@@ -62,10 +61,8 @@ def _clone_db(target_db_url: str, template_db_path: Path) -> None:
 def migrated_db_template(tmp_path_session: Path) -> Path:
     """Build the current database schema once for reuse by isolated test databases."""
     template_db_path = tmp_path_session / "climate_ref_template.db"
+    # dimensions_cv is left unset so the CV shipped in climate_ref_core is used.
     template_config = Config()
-    template_config.paths.dimensions_cv = Path(
-        str(importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml")
-    )
     template_config.db.database_url = f"sqlite:///{template_db_path}"
 
     database = Database.from_config(template_config, run_migrations=True, skip_backup=True)
@@ -113,9 +110,7 @@ def invoke_cli_unmigrated(config: Config, cli_runner: Callable[..., Any]) -> Cal
 
 @pytest.fixture(scope="session")
 def cmip7_aft_cv() -> CV:
-    cv_file = str(importlib.resources.files("climate_ref_core.pycmec") / "cv_cmip7_aft.yaml")
-
-    return CV.load_from_file(cv_file)
+    return CV.from_text(BUNDLED_CV.read_text(), source=str(BUNDLED_CV))
 
 
 @pytest.fixture(scope="session")

@@ -1144,7 +1144,7 @@ class TestReingestExecution:
         _patch_build_result(mocker, mock_provider_registry, mock_result)
 
         # Original ingestion via the shared path
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
         ingest_execution_result(
             reingest_db,
             execution,

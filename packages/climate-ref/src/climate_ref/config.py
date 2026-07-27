@@ -15,12 +15,11 @@ which always take precedence over any other configuration values.
 # https://github.com/ESGF/esgf-download/blob/main/esgpull/config.py
 
 import datetime
-import importlib.resources
+import importlib.metadata
 import os
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
-import platformdirs
 import requests
 import tomlkit
 from attr import Factory
@@ -35,15 +34,17 @@ from climate_ref._config_helpers import (
     _format_exception,
     _format_key_exception,
     _pop_empty,
+    _pop_none,
     config,
     env_field,
     transform_error,
 )
 from climate_ref.constants import CONFIG_FILENAME
-from climate_ref_core.dataset_registry import resolve_cache_dir
+from climate_ref_core.data import LayeredResource, PackagedResource, resolve_cache_dir
 from climate_ref_core.env import env
-from climate_ref_core.exceptions import IgnoreDatasetsRefreshError, InvalidExecutorException
+from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
+from climate_ref_core.pycmec.controlled_vocabulary import BUNDLED_CV
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
@@ -72,6 +73,31 @@ def ensure_absolute_path(path: str | Path) -> Path:
         path = Path(path)
     path = Path(*[os.path.expandvars(p) for p in path.parts])
     return path.resolve()
+
+
+def _optional_path(path: str | Path | None) -> Path | None:
+    """
+    Convert a value to a path, treating an unset or empty value as "not configured"
+
+    An empty string is treated as unset so that an environment variable can clear
+    a value that is set in the configuration file.
+
+    Parameters
+    ----------
+    path
+        Path to convert
+
+    Returns
+    -------
+        The path, or None if no path was configured
+    """
+    if path is None:
+        return None
+    if isinstance(path, str):
+        if not path.strip():
+            return None
+        path = Path(path)
+    return Path(os.path.expandvars(str(path))).expanduser()
 
 
 @config(prefix=env_prefix)
@@ -125,16 +151,18 @@ class PathConfig:
     Path to store the executions
     """
 
-    dimensions_cv: Path = env_field(name="DIMENSIONS_CV_PATH", converter=Path)
+    dimensions_cv: Path | None = env_field(name="DIMENSIONS_CV_PATH", converter=_optional_path, default=None)
     """
     Path to a file containing the controlled vocabulary for the dimensions in a CMEC diagnostics bundle
 
-    This defaults to the controlled vocabulary for the CMIP7 Assessment Fast Track diagnostics,
-    which is included in the `climate_ref_core` package.
+    Leave this unset to use the controlled vocabulary for the CMIP7 Assessment Fast Track
+    diagnostics, which is shipped inside the `climate_ref_core` package.
+    That copy is read straight out of the installed package,
+    so it needs no network access and no writable filesystem.
 
     This controlled vocabulary is used to validate the dimensions in the diagnostics bundle.
     If custom diagnostics are implemented,
-    this file may need to be extended to include any new dimensions.
+    point this at a copy that has been extended with any new dimensions.
     """
 
     @log.default
@@ -153,10 +181,20 @@ class PathConfig:
     def _results_factory(self) -> Path:
         return env.path("REF_CONFIGURATION").resolve() / "results"
 
-    @dimensions_cv.default
-    def _dimensions_cv_factory(self) -> Path:
-        filename = "cv_cmip7_aft.yaml"
-        return Path(str(importlib.resources.files("climate_ref_core.pycmec") / filename))
+    @property
+    def dimensions_cv_resource(self) -> LayeredResource:
+        """
+        The controlled vocabulary to validate diagnostic bundles against
+
+        Resolves to `dimensions_cv` if it is set, and to the copy shipped
+        inside `climate_ref_core` otherwise.
+
+        Returns
+        -------
+        :
+            The resolved controlled vocabulary resource.
+        """
+        return LayeredResource(packaged=BUNDLED_CV, override=self.dimensions_cv)
 
 
 @config(prefix=env_prefix)
@@ -409,58 +447,61 @@ DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
 DEFAULT_IGNORE_DATASETS_FILENAME = "default_ignore_datasets.yaml"
 DEFAULT_IGNORE_DATASETS_URL = f"https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/{DEFAULT_IGNORE_DATASETS_FILENAME}"
 
+BUNDLED_IGNORE_DATASETS = PackagedResource("climate_ref", DEFAULT_IGNORE_DATASETS_FILENAME)
+"""
+The grey list shipped inside the `climate_ref` package.
 
-def _get_default_ignore_datasets_file() -> Path:
+This is the copy that was current when the installed version was released.
+It is always readable, so a solve never depends on the network or on a writable cache.
+"""
+
+
+def _ignore_datasets_cache_file() -> Path:
     """
-    Return the default location of the ignore datasets file.
+    Return the location the fetched copy of the grey list is cached at
 
     This is a pure path computation with no filesystem or network access.
-    The file itself is fetched lazily at solve time via `refresh_ignore_datasets_file`.
 
     Returns
     -------
     :
-        Path to the ignore datasets file under the user cache directory.
+        Path to the cached grey list, under the shared REF dataset cache.
     """
-    return platformdirs.user_cache_path("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
+    return resolve_cache_dir("grey_list") / DEFAULT_IGNORE_DATASETS_FILENAME
 
 
 def refresh_ignore_datasets_file(config: "Config") -> None:
     """
-    Refresh the cached ignore datasets file from `config.ignore_datasets_url`.
+    Refresh the cached grey list from `config.ignore_datasets_url`.
 
     This is called at solve time so that configuration loading never performs network I/O.
-    The download happens at most once every `DEFAULT_IGNORE_DATASETS_MAX_AGE`;
-    a fresh cached file is reused untouched.
+    The download happens at most once every `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
+    A fresh cached file is reused untouched.
 
-    If `config.ignore_datasets_url` is empty the function returns immediately
-    without touching the filesystem,
-    which supports offline and air-gapped deployments that manage the file manually.
+    Refreshing is best effort.
+    An unset URL, an unreachable network, and an unwritable cache directory are all
+    non-fatal: the solve falls back to the cached copy if there is one,
+    and to the copy shipped in the package otherwise.
+    This keeps read-only and air-gapped deployments working without any configuration.
 
-    On download failure an existing cached copy is reused unchanged
-    (its content and modification time are preserved,
-    so a transient failure does not extend the cache window).
-    If no cached copy exists an `IgnoreDatasetsRefreshError` is raised
-    so the solver fails loudly rather than silently running without ignore-dataset protections.
+    Refreshing is skipped entirely when `ignore_datasets_file` is set,
+    since an explicit file is the operator's to manage.
 
     Parameters
     ----------
     config
         The configuration providing `ignore_datasets_file` and `ignore_datasets_url`.
-
-    Raises
-    ------
-    IgnoreDatasetsRefreshError
-        If the URL is set, the download fails, and no cached file exists.
     """
-    path = config.ignore_datasets_file
     url = config.ignore_datasets_url
 
-    if not url:
+    if not url or config.ignore_datasets_file is not None:
         return
 
+    path = _ignore_datasets_cache_file()
+
     if path.is_dir():
-        raise IgnoreDatasetsRefreshError(f"The ignore datasets file path {path} is a directory, not a file.")
+        logger.warning(f"The grey list cache path {path} is a directory, not a file. Skipping refresh.")
+        return
 
     if path.is_file():
         modification_time = datetime.datetime.fromtimestamp(path.stat().st_mtime)
@@ -470,23 +511,15 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
 
     try:
         path.parent.mkdir(parents=True, exist_ok=True)
-        logger.info(f"Downloading default ignore datasets file from {url} to {path}")
+        logger.info(f"Downloading the grey list from {url} to {path}")
         response = requests.get(url, timeout=120)
         response.raise_for_status()
-    except (requests.RequestException, OSError) as exc:
-        if path.is_file():
-            logger.warning(
-                f"Failed to refresh ignore datasets file from {url}; using cached copy at {path}: {exc}"
-            )
-            return
-        raise IgnoreDatasetsRefreshError(
-            f"Failed to download the ignore datasets file from {url} and no cached copy exists at {path}. "
-            "Point `ignore_datasets_file` (or `REF_IGNORE_DATASETS_FILE`) at a writable location "
-            "or a manually seeded file, or set `REF_IGNORE_DATASETS_URL=` (empty) to opt out of fetching."
-        ) from exc
-    else:
         with path.open(mode="wb") as file:
             file.write(response.content)
+    except (requests.RequestException, OSError) as exc:
+        # The packaged copy is always available, so a failed refresh is never fatal.
+        fallback = path if path.is_file() else BUNDLED_IGNORE_DATASETS
+        logger.warning(f"Could not refresh the grey list from {url}, using {fallback}: {exc}")
 
 
 @define(auto_attribs=True)
@@ -531,13 +564,13 @@ class Config:
     - `complete`: Use the complete parser, which parses the dataset based on all available metadata.
     """
 
-    ignore_datasets_file: Path = env_field(  # noqa: RUF009
+    ignore_datasets_file: Path | None = env_field(  # noqa: RUF009
         "IGNORE_DATASETS_FILE",
-        factory=_get_default_ignore_datasets_file,
-        converter=Path,
+        converter=_optional_path,
+        default=None,
     )
     """
-    Path to the file containing the ignore datasets
+    Path to a file containing the grey list
 
     This file is a YAML file that contains a list of facets to ignore per diagnostic.
 
@@ -550,22 +583,21 @@ class Config:
           - another_facet: [another_value1, another_value2]
     ```
 
-    Defaults to a path under the user cache directory.
-    The file is fetched lazily from `ignore_datasets_url` at solve time
-    if it is missing or older than 6 hours,
-    so this location must be writable unless the file is seeded manually.
+    Leave this unset to use the grey list shipped inside the `climate_ref` package,
+    refreshed from `ignore_datasets_url` when that is possible.
+    Setting it pins the grey list to a file you manage, and disables fetching.
     """
 
     ignore_datasets_url: str = env_field("IGNORE_DATASETS_URL", default=DEFAULT_IGNORE_DATASETS_URL)
     """
-    URL to fetch the ignore datasets file from at solve time.
+    URL to refresh the grey list from at solve time.
 
     The download happens during solving only, at most once every 6 hours,
     and never during configuration loading.
+    A failed download is not an error, since the copy shipped in the package is used instead.
 
-    Set to an empty string (e.g. `REF_IGNORE_DATASETS_URL=`) to disable fetching entirely;
-    in that case the solver uses whatever file already exists at `ignore_datasets_file`,
-    which supports offline and air-gapped deployments.
+    Set to an empty string (e.g. `REF_IGNORE_DATASETS_URL=`) to skip the attempt entirely,
+    which avoids the request timeout on a host with no route to the internet.
     """
 
     paths: PathConfig = Factory(PathConfig)
@@ -575,6 +607,26 @@ class Config:
     diagnostic_providers: list[DiagnosticProviderConfig] = Factory(default_providers)  # noqa: RUF009, RUF100
     _raw: TOMLDocument | None = field(init=False, default=None, repr=False)
     _config_file: Path | None = field(init=False, default=None, repr=False)
+
+    @property
+    def ignore_datasets_resource(self) -> LayeredResource:
+        """
+        The grey list to apply when solving
+
+        Resolves to `ignore_datasets_file` if it is set,
+        then to a copy refreshed from `ignore_datasets_url`,
+        and finally to the copy shipped inside `climate_ref`.
+
+        Returns
+        -------
+        :
+            The resolved grey list resource.
+        """
+        return LayeredResource(
+            packaged=BUNDLED_IGNORE_DATASETS,
+            override=self.ignore_datasets_file,
+            cache=_ignore_datasets_cache_file(),
+        )
 
     @classmethod
     def load(cls, config_file: Path, allow_missing: bool = True) -> "Config":
@@ -740,6 +792,8 @@ class Config:
         else:
             converter = _converter_no_defaults
         dump = converter.unstructure(self)
+        # TOML cannot express null, so an unset value is written as an absent key.
+        _pop_none(dump)
         if not defaults:
             _pop_empty(dump)
         doc = TOMLDocument()

@@ -1,0 +1,146 @@
+"""Tests for the layered resolution of data files distributed with the REF."""
+
+from pathlib import Path
+
+import pytest
+
+from climate_ref_core.data import (
+    DataResourceError,
+    LayeredResource,
+    PackagedResource,
+    ResourceOrigin,
+    resolve_cache_dir,
+)
+
+CV = PackagedResource("climate_ref_core.pycmec", "cv_cmip7_aft.yaml")
+
+
+class TestPackagedResource:
+    def test_exists(self):
+        assert CV.exists()
+
+    def test_missing_resource_does_not_exist(self):
+        assert not PackagedResource("climate_ref_core.pycmec", "nope.yaml").exists()
+
+    def test_missing_package_does_not_exist(self):
+        assert not PackagedResource("climate_ref_core.not_a_package", "nope.yaml").exists()
+
+    def test_read_text(self):
+        assert "dimensions" in CV.read_text()
+
+    def test_read_missing_raises(self):
+        with pytest.raises(DataResourceError, match="Could not read"):
+            PackagedResource("climate_ref_core.pycmec", "nope.yaml").read_text()
+
+    def test_open_text(self):
+        with CV.open_text() as handle:
+            assert handle.read() == CV.read_text()
+
+    def test_as_path(self):
+        with CV.as_path() as path:
+            assert path.is_file()
+            assert path.read_text(encoding="utf-8") == CV.read_text()
+
+    def test_as_path_does_not_swallow_body_errors(self):
+        # An OSError raised by the caller must propagate unchanged, not be relabelled
+        # as a resolution failure.
+        with pytest.raises(OSError, match="from the body"):
+            with CV.as_path():
+                raise OSError("from the body")
+
+    def test_str(self):
+        assert str(CV) == "climate_ref_core.pycmec/cv_cmip7_aft.yaml"
+
+
+class TestLayeredResource:
+    def test_falls_back_to_package(self):
+        resource = LayeredResource(packaged=CV)
+
+        assert resource.origin == ResourceOrigin.package
+        assert resource.read_text() == CV.read_text()
+        assert resource.describe() == f"{CV} (package)"
+
+    def test_cache_wins_over_package(self, tmp_path):
+        cache = tmp_path / "cached.yaml"
+        cache.write_text("cached", encoding="utf-8")
+
+        resource = LayeredResource(packaged=CV, cache=cache)
+
+        assert resource.origin == ResourceOrigin.cache
+        assert resource.read_text() == "cached"
+
+    def test_absent_cache_falls_through(self, tmp_path):
+        resource = LayeredResource(packaged=CV, cache=tmp_path / "missing.yaml")
+
+        assert resource.origin == ResourceOrigin.package
+
+    def test_cache_populated_later_is_picked_up(self, tmp_path):
+        cache = tmp_path / "cached.yaml"
+        resource = LayeredResource(packaged=CV, cache=cache)
+        assert resource.origin == ResourceOrigin.package
+
+        cache.write_text("cached", encoding="utf-8")
+
+        assert resource.origin == ResourceOrigin.cache
+
+    def test_override_wins_over_cache(self, tmp_path):
+        cache = tmp_path / "cached.yaml"
+        cache.write_text("cached", encoding="utf-8")
+        override = tmp_path / "override.yaml"
+        override.write_text("override", encoding="utf-8")
+
+        resource = LayeredResource(packaged=CV, override=override, cache=cache)
+
+        assert resource.origin == ResourceOrigin.override
+        assert resource.read_text() == "override"
+
+    def test_missing_override_raises_with_guidance(self, tmp_path):
+        resource = LayeredResource(packaged=CV, override=tmp_path / "missing.yaml")
+
+        with pytest.raises(DataResourceError, match="does not exist"):
+            resource.read_text()
+
+    def test_describe_never_raises_for_a_missing_override(self, tmp_path):
+        resource = LayeredResource(packaged=CV, override=tmp_path / "missing.yaml")
+
+        assert resource.describe() == f"{tmp_path / 'missing.yaml'} (missing)"
+
+    def test_open_text_from_each_layer(self, tmp_path):
+        override = tmp_path / "override.yaml"
+        override.write_text("override", encoding="utf-8")
+
+        with LayeredResource(packaged=CV).open_text() as handle:
+            assert handle.read() == CV.read_text()
+        with LayeredResource(packaged=CV, override=override).open_text() as handle:
+            assert handle.read() == "override"
+
+    def test_as_path_from_each_layer(self, tmp_path):
+        override = tmp_path / "override.yaml"
+        override.write_text("override", encoding="utf-8")
+
+        with LayeredResource(packaged=CV).as_path() as path:
+            assert path.read_text(encoding="utf-8") == CV.read_text()
+        with LayeredResource(packaged=CV, override=override).as_path() as path:
+            assert path == override
+
+
+class TestResolveCacheDir:
+    def test_default_root(self, monkeypatch, mocker):
+        monkeypatch.delenv("REF_DATASET_CACHE_DIR", raising=False)
+        mocker.patch(
+            "climate_ref_core.data.platformdirs.user_cache_path",
+            return_value=Path("/cache/climate_ref"),
+        )
+
+        assert resolve_cache_dir("grey_list") == Path("/cache/climate_ref/grey_list")
+
+    def test_environment_variable_root(self, monkeypatch):
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", "/somewhere/else")
+
+        assert resolve_cache_dir("grey_list") == Path("/somewhere/else/grey_list")
+
+    def test_environment_variable_expansion(self, monkeypatch):
+        monkeypatch.setenv("A_ROOT", "/expanded")
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", "$A_ROOT/cache")
+
+        assert resolve_cache_dir("grey_list") == Path("/expanded/cache/grey_list")

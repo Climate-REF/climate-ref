@@ -12,7 +12,6 @@ as a preview.
 from __future__ import annotations
 
 import ast
-import importlib.resources
 import inspect
 import os
 import textwrap
@@ -41,11 +40,6 @@ def _get_default_value(items: Sequence[str]) -> Any:
         value = getattr(value, item)
         if isinstance(value, list):
             value = value[0]
-
-    # We need to replace a path within the installation directory with a dummy values
-    ref_install_directory = str(importlib.resources.files("climate_ref_core.pycmec"))
-    if ref_install_directory in str(value):
-        return str(value).replace(ref_install_directory, "$REF_INSTALL_DIRECTORY")
 
     if "__REF_CONFIGURATION__" in str(value):
         return str(value).replace("/__REF_CONFIGURATION__", "$REF_CONFIGURATION")

@@ -467,7 +467,7 @@ def handle_execution_result(
         return
 
     # Ingest outputs and metrics into the database via the shared ingestion path
-    cv = CV.load_from_file(config.paths.dimensions_cv)
+    cv = CV.load(config.paths.dimensions_cv_resource)
     try:
         with database.session.begin_nested():
             ingest_execution_result(

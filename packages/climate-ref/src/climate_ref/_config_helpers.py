@@ -25,6 +25,29 @@ def _pop_empty(d: dict[str, Any]) -> None:
                 d.pop(key)
 
 
+def _pop_none(d: dict[str, Any]) -> None:
+    """
+    Remove keys whose value is None, recursively
+
+    TOML has no null, so an unset value is represented by the absence of the key.
+
+    Parameters
+    ----------
+    d
+        The unstructured configuration, modified in place.
+    """
+    for key in list(d.keys()):
+        value = d[key]
+        if value is None:
+            d.pop(key)
+        elif isinstance(value, dict):
+            _pop_none(value)
+        elif isinstance(value, list):
+            for entry in value:
+                if isinstance(entry, dict):
+                    _pop_none(entry)
+
+
 def _format_key_exception(exc: BaseException, _: type | None) -> str | None:
     """Format a n error exception."""
     if isinstance(exc, ForbiddenExtraKeysError):

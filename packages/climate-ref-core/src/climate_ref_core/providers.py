@@ -27,6 +27,7 @@ from attrs import evolve
 from loguru import logger
 
 from climate_ref_core.constraints import IgnoreFacets
+from climate_ref_core.data import DataResourceError
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import (
@@ -79,27 +80,26 @@ class DiagnosticProvider:
         config :
             A configuration.
         """
-        logger.debug(
-            f"Configuring provider {self.slug} using ignore_datasets_file {config.ignore_datasets_file}"
-        )
+        grey_list = config.ignore_datasets_resource
+        source = grey_list.describe()
+        logger.debug(f"Configuring provider {self.slug} using the grey list from {source}")
+
         # The format of the configuration file is:
         # provider:
         #   diagnostic:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        ignore_datasets_file = config.ignore_datasets_file
-        if ignore_datasets_file.is_file():
-            ignore_datasets_all = yaml.safe_load(ignore_datasets_file.read_text(encoding="utf-8")) or {}
-        else:
-            logger.warning(
-                f"Ignore datasets file {ignore_datasets_file} not found; no datasets will be ignored"
-            )
+        try:
+            ignore_datasets_all = yaml.safe_load(grey_list.read_text()) or {}
+        except (DataResourceError, yaml.YAMLError) as exc:
+            logger.warning(f"Could not read the grey list from {source}, no datasets will be ignored: {exc}")
             ignore_datasets_all = {}
+
         ignore_datasets = ignore_datasets_all.get(self.slug, {})
         if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:
             logger.warning(
-                f"Unknown diagnostics found in {config.ignore_datasets_file} "
+                f"Unknown diagnostics found in {source} "
                 f"for provider {self.slug}: {', '.join(sorted(unknown_slugs))}"
             )
 
@@ -108,7 +108,7 @@ class DiagnosticProvider:
             if diagnostic.slug in ignore_datasets:
                 if unknown_source_types := set(ignore_datasets[diagnostic.slug]) - known_source_types:
                     logger.warning(
-                        f"Unknown source types found in {config.ignore_datasets_file} for "
+                        f"Unknown source types found in {source} for "
                         f"diagnostic '{diagnostic.slug}' by provider {self.slug}: "
                         f"{', '.join(sorted(unknown_source_types))}"
                     )

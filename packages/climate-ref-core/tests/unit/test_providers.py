@@ -12,6 +12,7 @@ from requests import Response
 
 import climate_ref_core.providers
 from climate_ref_core.constraints import IgnoreFacets
+from climate_ref_core.data import LayeredResource, PackagedResource
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
 from climate_ref_core.exceptions import (
     CondaCommandError,
@@ -28,6 +29,12 @@ def mock_config(tmp_path, mocker):
     config.paths.software = tmp_path / "software"
     config.ignore_datasets_file = tmp_path / "ignore_datasets.yaml"
     config.ignore_datasets_file.touch()
+    # The grey list is resolved through a real LayeredResource so the tests exercise
+    # the same resolution the application uses.
+    config.ignore_datasets_resource = LayeredResource(
+        packaged=PackagedResource("climate_ref_core.pycmec", "cv_cmip7_aft.yaml"),
+        override=config.ignore_datasets_file,
+    )
     return config
 
 
@@ -91,7 +98,8 @@ class TestDiagnosticProvider:
         mock_config.ignore_datasets_file.unlink()
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
-        assert f"Ignore datasets file {mock_config.ignore_datasets_file} not found" in caplog.text
+        assert "Could not read the grey list" in caplog.text
+        assert str(mock_config.ignore_datasets_file) in caplog.text
 
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(
@@ -108,7 +116,7 @@ class TestDiagnosticProvider:
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
         expected_msg = (
-            f"Unknown diagnostics found in {mock_config.ignore_datasets_file} "
+            f"Unknown diagnostics found in {mock_config.ignore_datasets_file} (override) "
             "for provider mock_provider: invalid_diagnostic"
         )
         assert expected_msg in caplog.text
@@ -128,7 +136,7 @@ class TestDiagnosticProvider:
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
         expected_msg = (
-            f"Unknown source types found in {mock_config.ignore_datasets_file} "
+            f"Unknown source types found in {mock_config.ignore_datasets_file} (override) "
             "for diagnostic 'mock' by provider mock_provider: invalid_source_type"
         )
         assert expected_msg in caplog.text

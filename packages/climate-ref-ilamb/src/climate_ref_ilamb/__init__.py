@@ -15,12 +15,12 @@ from typing import TYPE_CHECKING
 import yaml
 from loguru import logger
 
+from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.dataset_registry import (
     DATASET_URL,
     RegistryUseCase,
     dataset_registry_manager,
     fetch_all_files,
-    resolve_cache_dir,
     validate_registry_cache,
 )
 from climate_ref_core.providers import DiagnosticProvider
@@ -106,10 +106,17 @@ dataset_registry_manager.register(
     use_case=RegistryUseCase.support,
 )
 
-# Dynamically register ILAMB diagnostics
-for yaml_file in importlib.resources.files("climate_ref_ilamb.configure").iterdir():
-    with open(str(yaml_file)) as fin:
-        metrics = yaml.safe_load(fin)
+# Dynamically register ILAMB diagnostics.
+# Sorted so the registration order does not depend on the filesystem,
+# and restricted to YAML so a stray __pycache__ entry is never opened.
+_configure_files = sorted(
+    (entry for entry in importlib.resources.files("climate_ref_ilamb.configure").iterdir()),
+    key=lambda entry: entry.name,
+)
+for yaml_file in _configure_files:
+    if not yaml_file.name.endswith(".yaml"):
+        continue
+    metrics = yaml.safe_load(yaml_file.read_text(encoding="utf-8"))
     realm = metrics.pop("realm")
     region_masks = metrics.pop("region_masks", None)
     for metric, options in metrics.items():

@@ -609,10 +609,8 @@ def _write_atomically(path: Path, content: bytes) -> None:
         with os.fdopen(handle, "wb") as file:
             file.write(content)
         # mkstemp creates the file 0600. The cache is shared between users on a
-        # multi-user host, so restore the mode a plain open would have given.
-        umask = os.umask(0)
-        os.umask(umask)
-        temporary.chmod(0o666 & ~umask)
+        # multi-user host, so it has to stay readable by them.
+        temporary.chmod(0o644)
         temporary.replace(path)
     except OSError:
         temporary.unlink(missing_ok=True)

@@ -462,9 +462,7 @@ def test_refresh_ignore_datasets_file_is_group_readable(mocker, monkeypatch, tmp
     refresh_ignore_datasets_file(config)
 
     target = _ignore_datasets_cache_file()
-    umask = os.umask(0)
-    os.umask(umask)
-    assert stat.S_IMODE(target.stat().st_mode) == 0o666 & ~umask
+    assert stat.S_IMODE(target.stat().st_mode) == 0o644
 
 
 def test_stale_cache_does_not_shadow_the_packaged_copy(monkeypatch, tmp_path):

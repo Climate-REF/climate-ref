@@ -5,7 +5,11 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from climate_ref_core.esgf import ESGFRequest, RegistryRequest
-from climate_ref_core.esgf.registry import _matches_facets, _parse_obs4ref_key, _parse_pmp_climatology_key
+from climate_ref_core.esgf.registry import (
+    _matches_facets,
+    _parse_obs4ref_key,
+    _parse_pmp_climatology_key,
+)
 
 
 class TestParsePMPClimatologyKey:
@@ -201,6 +205,16 @@ class TestMatchesFacets:
         metadata = {"variable_id": "psl", "source_id": "ERA-5"}
         assert _matches_facets(metadata, {}) is True
 
+    def test_matches_a_facet_that_is_not_a_string(self):
+        """An ESMValTool reference key parses ``tier`` as an int."""
+        assert _matches_facets({"tier": 2}, {"tier": 2}) is True
+        assert _matches_facets({"tier": 2}, {"tier": 3}) is False
+
+    @pytest.mark.parametrize("allowed", [{"ERA-5", "GPCP-Monthly-3-2"}, ["ERA-5"], ("ERA-5",)])
+    def test_matches_any_collection_of_allowed_values(self, allowed):
+        """A set is a collection of allowed values, not a single one."""
+        assert _matches_facets({"source_id": "ERA-5"}, {"source_id": allowed}) is True
+
 
 class TestRegistryRequest:
     """Tests for RegistryRequest class."""
@@ -368,6 +382,49 @@ class TestRegistryRequest:
             assert len(result) == 2
             assert set(result["source_id"].tolist()) == {"HadISST-1-1", "TropFlux-1-0"}
             assert set(result["variable_id"].tolist()) == {"ts", "tauu"}
+
+    def test_fetch_datasets_with_an_injected_key_parser(self):
+        """A registry this module does not know supplies its own key parser."""
+        mock_registry = MagicMock()
+        mock_registry.registry.keys.return_value = ["alpha/pr.nc", "alpha/tas.nc", "skip-me"]
+        mock_registry.fetch.side_effect = lambda key: f"/path/to/{key}"
+
+        mock_manager = MagicMock()
+        mock_manager.__getitem__ = MagicMock(return_value=mock_registry)
+        mock_manager.keys.return_value = ["custom-registry"]
+
+        def parse_key(key):
+            if not key.startswith("alpha/"):
+                return {}
+            return {"variable_id": key.removeprefix("alpha/").removesuffix(".nc"), "key": key}
+
+        with patch(
+            "climate_ref_core.esgf.registry.dataset_registry_manager",
+            mock_manager,
+        ):
+            request = RegistryRequest(
+                slug="test-request",
+                registry_name="custom-registry",
+                facets={"variable_id": "pr"},
+                key_parser=parse_key,
+            )
+            result = request.fetch_datasets()
+
+            assert len(result) == 1
+            assert result.iloc[0]["variable_id"] == "pr"
+            assert "path" in result.columns
+            assert "files" in result.columns
+
+    def test_injected_key_parser_wins_over_the_registry_name(self):
+        """The caller's parser is used even for a registry this module knows by name."""
+        request = RegistryRequest(
+            slug="test-request",
+            registry_name="pmp-climatology",
+            facets={},
+            key_parser=lambda key: {"key": key},
+        )
+
+        assert request._get_parser()("anything") == {"key": "anything"}
 
     def test_fetch_datasets_filters_to_latest_version(self):
         """Test that fetch_datasets returns only the latest version when multiple versions exist."""

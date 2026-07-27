@@ -8,7 +8,7 @@ This module provides request classes for fetching datasets from pooch registries
 from __future__ import annotations
 
 import re
-from collections.abc import Callable
+from collections.abc import Callable, Collection
 from typing import Any
 
 import pandas as pd
@@ -16,6 +16,13 @@ from loguru import logger
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import select_latest_version
+
+type FacetValue = str | int | Collection[str | int]
+"""
+One allowed value for a facet, or a collection of them.
+
+Not every facet is a string. An ESMValTool reference key parses ``tier`` as an int.
+"""
 
 # Number of path parts in PMP climatology registry keys
 _PMP_CLIMATOLOGY_PATH_PARTS = 5
@@ -148,7 +155,7 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
 
 def _matches_facets(
     metadata: dict[str, Any],
-    facets: dict[str, str | tuple[str, ...]],
+    facets: dict[str, FacetValue],
 ) -> bool:
     """
     Check if metadata matches all provided facets.
@@ -158,7 +165,8 @@ def _matches_facets(
     metadata
         Parsed metadata dictionary
     facets
-        Facets to match against. Values can be strings or tuples of strings.
+        Facets to match against.
+        A value is one allowed value, or a collection of them.
 
     Returns
     -------
@@ -168,8 +176,13 @@ def _matches_facets(
         if facet_name not in metadata:
             return False
 
-        # Normalize to tuple for comparison
-        allowed_values = (facet_value,) if isinstance(facet_value, str) else facet_value
+        # Normalize to a collection of allowed values.
+        # A string is one value rather than a collection of characters,
+        # and so is anything that is not a collection at all.
+        if isinstance(facet_value, str) or not isinstance(facet_value, Collection):
+            allowed_values: Collection[str | int] = (facet_value,)
+        else:
+            allowed_values = facet_value
 
         if metadata[facet_name] not in allowed_values:
             return False
@@ -197,6 +210,10 @@ class RegistryRequest:
         Type of dataset source (default: "PMPClimatology")
     time_span
         Optional time range filter (not used for registry filtering, but required for protocol)
+    key_parser
+        Reads one registry key into the facets it carries, returning an empty dict for a key
+        it does not recognise. A registry whose keys this module does not know how to read
+        supplies its own, so the package that owns the registry owns how its keys are spelled.
 
     Example
     -------
@@ -210,19 +227,22 @@ class RegistryRequest:
     ```
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         slug: str,
         registry_name: str,
-        facets: dict[str, str | tuple[str, ...]],
+        facets: dict[str, FacetValue],
         source_type: str = "PMPClimatology",
         time_span: tuple[str, str] | None = None,
+        *,
+        key_parser: Callable[[str], dict[str, Any]] | None = None,
     ) -> None:
         self.slug = slug
         self.registry_name = registry_name
         self.facets = facets
         self.source_type = source_type
         self.time_span = time_span
+        self.key_parser = key_parser
 
     def __repr__(self) -> str:
         return (
@@ -232,6 +252,8 @@ class RegistryRequest:
 
     def _get_parser(self) -> Callable[[str], dict[str, Any]]:
         """Get the appropriate parser function based on registry name."""
+        if self.key_parser is not None:
+            return self.key_parser
         if self.registry_name == "pmp-climatology":
             return _parse_pmp_climatology_key
         elif self.registry_name == "obs4ref":

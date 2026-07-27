@@ -7,7 +7,6 @@ import pytest
 from climate_ref_core.esgf import ESGFRequest, RegistryRequest
 from climate_ref_core.esgf.registry import (
     _matches_facets,
-    _parse_esmvaltool_reference_key,
     _parse_obs4ref_key,
     _parse_pmp_climatology_key,
 )
@@ -166,43 +165,6 @@ class TestParseObs4refKey:
         key = "obs4REF/MOHC/HadISST-1-1/mon/ts/gn/v20250415/invalid_filename.nc"
         result = _parse_obs4ref_key(key)
         assert result == {}
-
-
-class TestParseESMValToolReferenceKey:
-    """Tests for _parse_esmvaltool_reference_key function."""
-
-    def test_parse_obs_key(self):
-        key = "ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc"
-        result = _parse_esmvaltool_reference_key(key)
-
-        assert result["project"] == "OBS"
-        assert result["source_id"] == "OSI-450-nh"
-        assert result["variable_id"] == "sic"
-        assert result["frequency"] == "mon"
-        assert result["version"] == "v3"
-        assert result["tier"] == 2
-        assert result["key"] == key
-
-    def test_parse_native6_key(self):
-        key = "ESMValTool/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"
-        result = _parse_esmvaltool_reference_key(key)
-
-        assert result["project"] == "native6"
-        assert result["source_id"] == "ERA5"
-        assert result["variable_id"] == "tas"
-        assert result["frequency"] == "mon"
-
-    def test_frequency_matches_what_the_catalog_records(self):
-        """A request names the frequency ingest derives, not the MIP table in the filename."""
-        key = "ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc"
-
-        assert _parse_esmvaltool_reference_key(key)["frequency"] == "mon"
-
-    def test_parse_key_outside_any_project(self):
-        assert _parse_esmvaltool_reference_key("ESMValTool/recipes/recipe_sea_ice.yml") == {}
-
-    def test_parse_key_with_unexpected_structure(self):
-        assert _parse_esmvaltool_reference_key("ESMValTool/OBS/odd.nc") == {}
 
 
 class TestMatchesFacets:
@@ -421,20 +383,20 @@ class TestRegistryRequest:
             assert set(result["source_id"].tolist()) == {"HadISST-1-1", "TropFlux-1-0"}
             assert set(result["variable_id"].tolist()) == {"ts", "tauu"}
 
-    def test_fetch_datasets_esmvaltool_reference_registry(self):
-        """Test fetch_datasets with the ESMValTool reference registry."""
+    def test_fetch_datasets_with_an_injected_key_parser(self):
+        """A registry this module does not know supplies its own key parser."""
         mock_registry = MagicMock()
-        mock_registry.registry.keys.return_value = [
-            "ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc",
-            "ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_fx_areacello.nc",
-            "ESMValTool/OBS/Tier2/CERES-EBAF/OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc",
-            "ESMValTool/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc",
-        ]
+        mock_registry.registry.keys.return_value = ["alpha/pr.nc", "alpha/tas.nc", "skip-me"]
         mock_registry.fetch.side_effect = lambda key: f"/path/to/{key}"
 
         mock_manager = MagicMock()
         mock_manager.__getitem__ = MagicMock(return_value=mock_registry)
-        mock_manager.keys.return_value = ["esmvaltool-datasets"]
+        mock_manager.keys.return_value = ["custom-registry"]
+
+        def parse_key(key):
+            if not key.startswith("alpha/"):
+                return {}
+            return {"variable_id": key.removeprefix("alpha/").removesuffix(".nc"), "key": key}
 
         with patch(
             "climate_ref_core.esgf.registry.dataset_registry_manager",
@@ -442,16 +404,27 @@ class TestRegistryRequest:
         ):
             request = RegistryRequest(
                 slug="test-request",
-                registry_name="esmvaltool-datasets",
-                source_type="ESMValToolReference",
-                facets={"source_id": "OSI-450-nh"},
+                registry_name="custom-registry",
+                facets={"variable_id": "pr"},
+                key_parser=parse_key,
             )
             result = request.fetch_datasets()
 
-            assert len(result) == 2
-            assert set(result["variable_id"].tolist()) == {"sic", "areacello"}
+            assert len(result) == 1
+            assert result.iloc[0]["variable_id"] == "pr"
             assert "path" in result.columns
             assert "files" in result.columns
+
+    def test_injected_key_parser_wins_over_the_registry_name(self):
+        """The caller's parser is used even for a registry this module knows by name."""
+        request = RegistryRequest(
+            slug="test-request",
+            registry_name="pmp-climatology",
+            facets={},
+            key_parser=lambda key: {"key": key},
+        )
+
+        assert request._get_parser()("anything") == {"key": "anything"}
 
     def test_fetch_datasets_filters_to_latest_version(self):
         """Test that fetch_datasets returns only the latest version when multiple versions exist."""

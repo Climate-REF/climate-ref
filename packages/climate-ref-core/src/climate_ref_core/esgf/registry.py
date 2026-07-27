@@ -16,7 +16,6 @@ from loguru import logger
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import select_latest_version
-from climate_ref_core.esmvaltool_reference import parse_reference_path
 
 type FacetValue = str | int | Collection[str | int]
 """
@@ -154,34 +153,6 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
     return metadata
 
 
-def _parse_esmvaltool_reference_key(key: str) -> dict[str, Any]:
-    """
-    Parse an ESMValTool reference registry key to extract metadata.
-
-    A key is the file's DRS path relative to the data root,
-    so it parses the same way the ingest adapter parses the downloaded file.
-
-    Parameters
-    ----------
-    key
-        The registry key (path) to parse
-
-    Returns
-    -------
-        Dictionary with parsed metadata, or empty dict if parsing fails
-    """
-    # Example: ESMValTool/OBS/Tier2/OSI-450-nh/OBS_OSI-450-nh_reanaly_v3_OImon_sic_197901-197912.nc
-    try:
-        facets = parse_reference_path(key)
-    except ValueError as err:
-        logger.debug(f"Unexpected ESMValTool reference key format: {key} ({err})")
-        return {}
-
-    metadata = facets._asdict()
-    metadata["key"] = key
-    return metadata
-
-
 def _matches_facets(
     metadata: dict[str, Any],
     facets: dict[str, FacetValue],
@@ -239,6 +210,10 @@ class RegistryRequest:
         Type of dataset source (default: "PMPClimatology")
     time_span
         Optional time range filter (not used for registry filtering, but required for protocol)
+    key_parser
+        Reads one registry key into the facets it carries, returning an empty dict for a key
+        it does not recognise. A registry whose keys this module does not know how to read
+        supplies its own, so the package that owns the registry owns how its keys are spelled.
 
     Example
     -------
@@ -252,19 +227,22 @@ class RegistryRequest:
     ```
     """
 
-    def __init__(
+    def __init__(  # noqa: PLR0913
         self,
         slug: str,
         registry_name: str,
         facets: dict[str, FacetValue],
         source_type: str = "PMPClimatology",
         time_span: tuple[str, str] | None = None,
+        *,
+        key_parser: Callable[[str], dict[str, Any]] | None = None,
     ) -> None:
         self.slug = slug
         self.registry_name = registry_name
         self.facets = facets
         self.source_type = source_type
         self.time_span = time_span
+        self.key_parser = key_parser
 
     def __repr__(self) -> str:
         return (
@@ -274,12 +252,12 @@ class RegistryRequest:
 
     def _get_parser(self) -> Callable[[str], dict[str, Any]]:
         """Get the appropriate parser function based on registry name."""
+        if self.key_parser is not None:
+            return self.key_parser
         if self.registry_name == "pmp-climatology":
             return _parse_pmp_climatology_key
         elif self.registry_name == "obs4ref":
             return _parse_obs4ref_key
-        elif self.registry_name == "esmvaltool-datasets":
-            return _parse_esmvaltool_reference_key
         else:
             # Default to obs4ref parser as fallback
             logger.warning(f"Unknown registry '{self.registry_name}', using obs4ref parser")

@@ -19,7 +19,7 @@ import importlib.resources
 import os
 import pathlib
 from collections.abc import Iterator
-from contextlib import AbstractContextManager, contextmanager
+from contextlib import contextmanager
 from typing import Protocol
 
 import platformdirs
@@ -65,17 +65,17 @@ def resolve_cache_dir(cache_name: str) -> pathlib.Path:
 
 class Resource(Protocol):
     """
-    A readable data file, wherever it happens to live
-    """
+    Something a data file can be read from
 
-    def exists(self) -> bool:
-        """Check whether the file can be read."""
+    This is the contract `LayeredResource` resolves to,
+    and the narrowest one its consumers need.
+    """
 
     def read_text(self, encoding: str = "utf-8") -> str:
         """Read the file as text."""
 
-    def as_path(self) -> AbstractContextManager[pathlib.Path]:
-        """Expose the file as a filesystem path."""
+    def describe(self) -> str:
+        """Describe where the file is read from, for a log or error message."""
 
 
 @frozen
@@ -94,14 +94,9 @@ class PackagedResource:
     resource: str
     """Name of the file within that package, for example ``cv_cmip7_aft.yaml``."""
 
-    def _traversable(self, action: str) -> importlib.resources.abc.Traversable:
+    def _traversable(self) -> importlib.resources.abc.Traversable:
         """
         Locate the file within the installed package.
-
-        Parameters
-        ----------
-        action
-            Verb used in the error message when the lookup fails.
 
         Returns
         -------
@@ -112,7 +107,7 @@ class PackagedResource:
             return importlib.resources.files(self.package) / self.resource
         except _RESOURCE_ERRORS as exc:
             raise DataResourceError(
-                f"Could not {action} {self} from the installed package. "
+                f"Could not read {self} from the installed package. "
                 "This usually means the package was built without its data files."
             ) from exc
 
@@ -126,7 +121,7 @@ class PackagedResource:
             True if the file can be read.
         """
         try:
-            return self._traversable("locate").is_file()
+            return self._traversable().is_file()
         except (DataResourceError, OSError):
             return False
 
@@ -144,7 +139,7 @@ class PackagedResource:
         :
             The contents of the file.
         """
-        traversable = self._traversable("read")
+        traversable = self._traversable()
         try:
             return traversable.read_text(encoding=encoding)
         except _RESOURCE_ERRORS as exc:
@@ -165,7 +160,7 @@ class PackagedResource:
         :
             A path that exists for the duration of the context.
         """
-        traversable = self._traversable("materialise")
+        traversable = self._traversable()
         try:
             manager = importlib.resources.as_file(traversable)
         except _RESOURCE_ERRORS as exc:
@@ -174,6 +169,17 @@ class PackagedResource:
         # `with` block propagates back in through this yield and must not be relabelled.
         with manager as path:
             yield path
+
+    def describe(self) -> str:
+        """
+        Describe where the file is read from
+
+        Returns
+        -------
+        :
+            The package and file name.
+        """
+        return str(self)
 
     def __str__(self) -> str:
         return f"{self.package}/{self.resource}"
@@ -228,6 +234,17 @@ class FileResource:
             The path itself, which already exists on disk.
         """
         yield self.path
+
+    def describe(self) -> str:
+        """
+        Describe where the file is read from
+
+        Returns
+        -------
+        :
+            The path.
+        """
+        return str(self)
 
     def __str__(self) -> str:
         return str(self.path)
@@ -335,16 +352,3 @@ class LayeredResource:
             The contents of the file.
         """
         return self.resolve()[1].read_text(encoding=encoding)
-
-    @contextmanager
-    def as_path(self) -> Iterator[pathlib.Path]:
-        """
-        Expose the file as a filesystem path for the duration of the context
-
-        Yields
-        ------
-        :
-            A path that exists for the duration of the context.
-        """
-        with self.resolve()[1].as_path() as path:
-            yield path

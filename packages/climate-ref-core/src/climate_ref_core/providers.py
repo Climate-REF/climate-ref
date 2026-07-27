@@ -81,8 +81,6 @@ class DiagnosticProvider:
             A configuration.
         """
         grey_list = config.ignore_datasets_resource
-        source = grey_list.describe()
-        logger.debug(f"Configuring provider {self.slug} using the grey list from {source}")
 
         # The format of the configuration file is:
         # provider:
@@ -90,18 +88,20 @@ class DiagnosticProvider:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        try:
-            ignore_datasets_all = yaml.safe_load(grey_list.read_text()) or {}
-        except (DataResourceError, yaml.YAMLError) as exc:
-            # Falling through to the packaged copy rather than to an empty grey list,
-            # so a mistyped path cannot silently drop the grey list protections.
-            source = str(grey_list.packaged)
-            logger.warning(f"Could not read the grey list, falling back to {source}: {exc}")
+        #
+        # The packaged copy is tried second so a mistyped `ignore_datasets_file`
+        # cannot silently drop the grey list protections.
+        ignore_datasets_all: dict[str, Any] = {}
+        source = str(grey_list.packaged)
+        for candidate in (grey_list, grey_list.packaged):
             try:
-                ignore_datasets_all = yaml.safe_load(grey_list.packaged.read_text()) or {}
-            except (DataResourceError, yaml.YAMLError) as packaged_exc:
-                logger.warning(f"Could not read {source} either, no datasets will be ignored: {packaged_exc}")
-                ignore_datasets_all = {}
+                ignore_datasets_all = yaml.safe_load(candidate.read_text()) or {}
+            except (DataResourceError, yaml.YAMLError) as exc:
+                logger.warning(f"Could not read the grey list from {candidate.describe()}: {exc}")
+                continue
+            source = candidate.describe()
+            break
+        logger.debug(f"Configuring provider {self.slug} using the grey list from {source}")
 
         ignore_datasets = ignore_datasets_all.get(self.slug, {})
         if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:

@@ -7,17 +7,11 @@ from cattrs import Converter, transform_error
 from loguru import logger
 from yaml import safe_load
 
-from climate_ref_core.data import LayeredResource, PackagedResource
+from climate_ref_core.data import FileResource, Resource
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.metric_values import ScalarMetricValue, SeriesMetricValue
+from climate_ref_core.pycmec import BUNDLED_CV
 from climate_ref_core.pycmec.metric import CMECMetric
-
-BUNDLED_CV = PackagedResource("climate_ref_core.pycmec", "cv_cmip7_aft.yaml")
-"""
-The controlled vocabulary for the CMIP7 Assessment Fast Track diagnostics.
-
-This ships inside `climate_ref_core` and is used unless an operator overrides it.
-"""
 
 RESERVED_DIMENSION_NAMES = {"attributes", "json_structure", "created_at", "updated_at", "value", "id"}
 """
@@ -203,9 +197,9 @@ class CV:
             raise
 
     @staticmethod
-    def load(resource: LayeredResource) -> "CV":
+    def load(resource: Resource) -> "CV":
         """
-        Load a CV from a layered resource
+        Load a CV from a resource
 
         The CV may come from an operator override or from the copy shipped with the REF.
 
@@ -230,10 +224,7 @@ class CV:
             A new CV instance
 
         """
-        return CV.from_text(
-            pathlib.Path(filename).read_text(encoding="utf-8"),
-            source=str(filename),
-        )
+        return CV.load(FileResource(pathlib.Path(filename)))
 
 
 if __name__ == "__main__":

@@ -495,15 +495,22 @@ def test_inherited_legacy_ignore_datasets_default_is_not_an_override(monkeypatch
     legacy.parent.mkdir(parents=True, exist_ok=True)
     legacy.write_text("stale", encoding="utf-8")
 
-    config = Config()
-    config.ignore_datasets_file = legacy
+    config_file = tmp_path / "ref.toml"
+    config_file.write_text(f'ignore_datasets_file = "{legacy}"\n', encoding="utf-8")
 
-    # The inherited value is ignored, so refreshing still happens.
+    config = Config.load(config_file)
+
+    # Cleared at load, so it is not reported, not saved, and does not disable refreshing.
+    assert config.ignore_datasets_file is None
+
     refresh_ignore_datasets_file(config)
 
     get_mock.assert_called_once()
     assert config.ignore_datasets_resource.origin == ResourceOrigin.cache
     assert config.ignore_datasets_resource.read_text() == "downloaded"
+
+    config.save(config_file)
+    assert "ignore_datasets_file" not in config_file.read_text()
 
 
 def test_refresh_ignore_datasets_file_fail_uses_stale_cache(mocker, monkeypatch, tmp_path, caplog):

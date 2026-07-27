@@ -111,10 +111,12 @@ class TestDiagnosticProvider:
             override=mock_config.ignore_datasets_file,
         )
 
-        with caplog.at_level(logging.WARNING):
+        with caplog.at_level(logging.DEBUG):
             provider.configure(mock_config)
 
-        assert "falling back to climate_ref/default_ignore_datasets.yaml" in caplog.text
+        # The override is reported as unreadable, and the packaged copy is used instead.
+        assert f"Could not read the grey list from {mock_config.ignore_datasets_file}" in caplog.text
+        assert "using the grey list from climate_ref/default_ignore_datasets.yaml" in caplog.text
 
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(

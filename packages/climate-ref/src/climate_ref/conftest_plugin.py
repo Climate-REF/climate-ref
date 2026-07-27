@@ -29,9 +29,9 @@ from __future__ import annotations
 import atexit
 import os
 import re
-import shutil
 import tempfile
 from collections.abc import Callable, Iterator
+from contextlib import ExitStack
 from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
@@ -46,7 +46,6 @@ from typer.testing import CliRunner
 from climate_ref import cli
 from climate_ref.config import (
     BUNDLED_IGNORE_DATASETS,
-    DEFAULT_IGNORE_DATASETS_FILENAME,
     Config,
     DiagnosticProviderConfig,
 )
@@ -253,11 +252,9 @@ def packaged_ignore_datasets_file() -> Path:
     :
         Path to a copy of the packaged grey list.
     """
-    directory = tempfile.mkdtemp(prefix="climate_ref_grey_list_")
-    atexit.register(shutil.rmtree, directory, True)
-    destination = Path(directory) / DEFAULT_IGNORE_DATASETS_FILENAME
-    destination.write_text(BUNDLED_IGNORE_DATASETS.read_text(), encoding="utf-8")
-    return destination
+    stack = ExitStack()
+    atexit.register(stack.close)
+    return stack.enter_context(BUNDLED_IGNORE_DATASETS.as_path())
 
 
 def _use_local_ignore_datasets_file(cfg: Config) -> None:

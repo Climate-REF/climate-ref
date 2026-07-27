@@ -127,15 +127,6 @@ class TestLayeredResource:
 
         assert resource.describe() == f"{tmp_path / 'missing.yaml'} (missing)"
 
-    def test_as_path_from_each_layer(self, tmp_path):
-        override = tmp_path / "override.yaml"
-        override.write_text("override", encoding="utf-8")
-
-        with LayeredResource(packaged=CV).as_path() as path:
-            assert path.read_text(encoding="utf-8") == CV.read_text()
-        with LayeredResource(packaged=CV, override=override).as_path() as path:
-            assert path == override
-
 
 class TestResolveCacheDir:
     def test_default_root(self, monkeypatch, mocker):

@@ -46,7 +46,7 @@ from climate_ref_core.data import LayeredResource, PackagedResource, resolve_cac
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
-from climate_ref_core.pycmec.controlled_vocabulary import BUNDLED_CV
+from climate_ref_core.pycmec import BUNDLED_CV
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
@@ -95,11 +95,9 @@ def _optional_path(path: str | Path | None) -> Path | None:
     """
     if path is None:
         return None
-    if isinstance(path, str):
-        if not path.strip():
-            return None
-        path = Path(path)
-    return Path(os.path.expandvars(str(path))).expanduser()
+    if isinstance(path, str) and not path.strip():
+        return None
+    return ensure_absolute_path(Path(path).expanduser())
 
 
 @config(prefix=env_prefix)
@@ -434,15 +432,20 @@ def default_providers() -> list[DiagnosticProviderConfig]:
 def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
     # Try loading the configuration with strict validation
     try:
-        return _converter_defaults.structure(doc, Config)
+        loaded = _converter_defaults.structure(doc, Config)
     except Exception as exc:
         # Find the extra key errors which are displayed as warnings
         key_validation_errors = transform_error(exc, format_exception=_format_key_exception)
         for key_error in key_validation_errors:
             logger.warning(f"Error loading configuration from {config_file}: {key_error}")
+    else:
+        _drop_inherited_defaults(loaded)
+        return loaded
 
     # Try again with relaxed validation
-    return _converter_defaults_relaxed.structure(doc, Config)
+    loaded = _converter_defaults_relaxed.structure(doc, Config)
+    _drop_inherited_defaults(loaded)
+    return loaded
 
 
 DEFAULT_IGNORE_DATASETS_REFRESH_INTERVAL = datetime.timedelta(hours=6)
@@ -490,33 +493,29 @@ def _legacy_ignore_datasets_file() -> Path:
     return platformdirs.user_cache_path("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
 
 
-def _configured_ignore_datasets_file(config: "Config") -> Path | None:
+def _drop_inherited_defaults(config: "Config") -> None:
     """
-    Return the operator's chosen grey list, ignoring an inherited legacy default
+    Clear configuration values that only exist because an older release wrote its default out
 
     Before the grey list gained a packaged fallback its cache path was a config *default*,
     so `Config.save()` baked it into every `ref.toml`.
     Treating that value as a deliberate override would pin those installations to a stale
-    cache and silently disable refreshing, so it is treated as unset.
+    cache and silently disable refreshing.
+
+    Clearing it here rather than at each read site keeps `ref config get` honest
+    and stops `Config.save()` from writing the stale value out again.
 
     Parameters
     ----------
     config
-        The configuration to read `ignore_datasets_file` from.
-
-    Returns
-    -------
-    :
-        The configured path, or None when nothing was deliberately chosen.
+        The freshly loaded configuration, modified in place.
     """
-    configured = config.ignore_datasets_file
-    if configured is not None and configured == _legacy_ignore_datasets_file():
+    if config.ignore_datasets_file == _optional_path(_legacy_ignore_datasets_file()):
         logger.debug(
-            f"Ignoring inherited grey list default {configured}. "
-            "Remove `ignore_datasets_file` from your configuration to silence this."
+            f"Ignoring the inherited grey list default {config.ignore_datasets_file}. "
+            "It was written out by an older release rather than chosen."
         )
-        return None
-    return configured
+        config.ignore_datasets_file = None
 
 
 def refresh_ignore_datasets_file(config: "Config") -> None:
@@ -543,7 +542,7 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
     """
     url = config.ignore_datasets_url
 
-    if not url or _configured_ignore_datasets_file(config) is not None:
+    if not url or config.ignore_datasets_file is not None:
         return
 
     path: Path | None = None
@@ -730,7 +729,7 @@ class Config:
 
         return LayeredResource(
             packaged=BUNDLED_IGNORE_DATASETS,
-            override=_configured_ignore_datasets_file(self),
+            override=self.ignore_datasets_file,
             cache=cache,
         )
 

@@ -5,7 +5,7 @@ Rapid evaluating CMIP data with ESMValTool.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 import pooch
 from loguru import logger
@@ -22,7 +22,7 @@ from climate_ref_core.dataset_registry import (
 from climate_ref_core.providers import CondaDiagnosticProvider
 from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_esmvaltool._version import __version__
-from climate_ref_esmvaltool.diagnostics.base import _DATASETS_REGISTRY_NAME
+from climate_ref_esmvaltool.diagnostics.base import _DATASETS_REGISTRY_NAME, registry_data_root
 from climate_ref_esmvaltool.recipe import (
     _ESMVALCORE_URL,
     _ESMVALTOOL_URL,
@@ -42,6 +42,44 @@ class ESMValToolProvider(CondaDiagnosticProvider):
         for registry_name in [_DATASETS_REGISTRY_NAME, _RECIPES_REGISTRY_NAME]:
             registry = dataset_registry_manager[registry_name]
             fetch_all_files(registry, registry_name, output_dir=None)
+
+    def ingest_data(self, config: Config, db: Any) -> None:
+        """
+        Ingest the fetched ESMValTool reference data into the database.
+
+        A diagnostic that declares an `esmvaltool-reference` requirement
+        selects its reference data from the catalog,
+        so the downloaded files have to be ingested before the solver can find them.
+
+        Note: This method requires the climate-ref package to be installed.
+        When using climate-ref-esmvaltool standalone (without climate-ref), ingestion
+        will be skipped with a warning message.
+        """
+        try:
+            from climate_ref.datasets import ingest_datasets  # noqa: PLC0415
+            from climate_ref.datasets.esmvaltool_reference import (  # noqa: PLC0415
+                ESMValToolReferenceDatasetAdapter,
+            )
+        except ImportError:
+            logger.info(
+                f"Skipping {self.slug} data ingestion: climate-ref package not installed. "
+                "Run `ref datasets ingest --source-type esmvaltool-reference` manually if needed."
+            )
+            return
+
+        reference_path = registry_data_root()
+        if not reference_path.exists():
+            logger.warning(
+                f"ESMValTool reference data not found at {reference_path}. "
+                f"Run `ref providers setup --provider {self.slug}` first."
+            )
+            return
+
+        try:
+            stats = ingest_datasets(ESMValToolReferenceDatasetAdapter(), reference_path, db)
+            stats.log_summary("ESMValTool reference ingestion complete:")
+        except ValueError as e:
+            logger.warning(f"No valid ESMValTool reference datasets found: {e}")
 
     def validate_setup(self, config: Config) -> bool:
         """Validate conda environment and data checksums."""

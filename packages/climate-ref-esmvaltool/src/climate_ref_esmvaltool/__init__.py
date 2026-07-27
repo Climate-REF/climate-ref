@@ -51,9 +51,8 @@ class ESMValToolProvider(CondaDiagnosticProvider):
         selects its reference data from the catalog,
         so the downloaded files have to be ingested before the solver can find them.
 
-        Note: This method requires the climate-ref package to be installed.
-        When using climate-ref-esmvaltool standalone (without climate-ref), ingestion
-        will be skipped with a warning message.
+        Ingestion needs the climate-ref package, so it is skipped when the provider is
+        installed on its own.
         """
         try:
             from climate_ref.datasets import ingest_datasets  # noqa: PLC0415

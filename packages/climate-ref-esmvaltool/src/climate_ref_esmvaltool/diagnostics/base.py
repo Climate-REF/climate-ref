@@ -39,7 +39,6 @@ def registry_data_root() -> Path:
 
     Every registry key is a DRS path below an ``ESMValTool`` directory,
     so the project anchors (``OBS``, ``OBS6``, ``native6``, ``obs4MIPs``) sit directly beneath this.
-    Ingestion and the whole-registry fallback both read the tree from here.
     """
     registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
     return Path(registry.abspath) / "ESMValTool"  # type: ignore[attr-defined]

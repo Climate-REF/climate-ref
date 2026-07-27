@@ -11,7 +11,11 @@ from climate_ref_core.diagnostics import DataRequirement
 from climate_ref_core.esgf import CMIP6Request, CMIP7Request, RegistryRequest
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.testing import TestCase, TestDataSpecification
-from climate_ref_esmvaltool.diagnostics.base import ESMValToolDiagnostic, get_cmip_source_type
+from climate_ref_esmvaltool.diagnostics.base import (
+    _DATASETS_REGISTRY_NAME,
+    ESMValToolDiagnostic,
+    get_cmip_source_type,
+)
 from climate_ref_esmvaltool.recipe import dataframe_to_recipe
 from climate_ref_esmvaltool.reference_registry import parse_registry_key
 from climate_ref_esmvaltool.types import Recipe
@@ -29,42 +33,43 @@ MONTHS = {
 _REFERENCE_SOURCE_IDS = tuple(f"OSI-450-{region}" for region in REGIONS)
 _REFERENCE_VARIABLES = ("sic", "areacello")
 
+REFERENCE_FACETS: dict[str, str | tuple[str, ...]] = {
+    "project": "OBS",
+    "source_id": _REFERENCE_SOURCE_IDS,
+    "variable_id": _REFERENCE_VARIABLES,
+}
+"""The OSI-450 observations the recipe compares each model against.
+
+Solving and fetching share this, so a test case cannot fetch a different set of files
+from the one the solver goes on to select.
+"""
+
 _REFERENCE_REQUIREMENT = DataRequirement(
     source_type=SourceDatasetType.ESMValToolReference,
-    filters=(
-        FacetFilter(
-            facets={
-                "project": "OBS",
-                "source_id": _REFERENCE_SOURCE_IDS,
-                "variable_id": _REFERENCE_VARIABLES,
-            },
-        ),
-    ),
+    filters=(FacetFilter(facets=REFERENCE_FACETS),),
     # A single execution plots both hemispheres, so grouping cannot be by `source_id`.
     # The filter pins the project, so this is one group holding every selected file.
     group_by=("project",),
-    constraints=(RequireFacets("source_id", _REFERENCE_SOURCE_IDS),),
+    constraints=(
+        RequireFacets("source_id", _REFERENCE_SOURCE_IDS),
+        RequireFacets("variable_id", _REFERENCE_VARIABLES),
+    ),
 )
-"""The OSI-450 observations the recipe compares each model against.
-
-Declaring them means the run sees only these files rather than the whole downloaded registry,
-and the executions they were used by are recorded in the database.
+"""Declaring the observations means the run sees only these files rather than the whole registry,
+and the executions that used them are recorded in the database.
 """
 
 _REFERENCE_REQUEST = RegistryRequest(
     slug="osi-450",
-    registry_name="esmvaltool-datasets",
-    source_type="ESMValToolReference",
-    facets={
-        "project": "OBS",
-        "source_id": _REFERENCE_SOURCE_IDS,
-        "variable_id": _REFERENCE_VARIABLES,
-    },
+    registry_name=_DATASETS_REGISTRY_NAME,
+    source_type=SourceDatasetType.ESMValToolReference.value,
+    facets=REFERENCE_FACETS,
     key_parser=parse_registry_key,
 )
-"""Fetches the same files for a test case that the requirement above selects at solve time.
+"""Fetches the reference data a test case needs.
 
-Both sides read a path through `parse_reference_path`, so they cannot spell a facet differently.
+`parse_registry_key` reads a registry key the way ingest reads the downloaded file,
+so a facet cannot be spelled one way here and another way in the catalog.
 """
 
 

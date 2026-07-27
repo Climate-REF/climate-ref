@@ -237,5 +237,4 @@ class CV:
 
 
 if __name__ == "__main__":
-    # Write the bundled CV to stdout so it can be copied and extended.
     print(BUNDLED_CV.read_text())

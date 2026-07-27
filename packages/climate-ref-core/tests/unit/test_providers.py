@@ -101,6 +101,21 @@ class TestDiagnosticProvider:
         assert "Could not read the grey list" in caplog.text
         assert str(mock_config.ignore_datasets_file) in caplog.text
 
+    def test_configure_missing_override_falls_back_to_the_packaged_grey_list(
+        self, provider, mock_config, caplog
+    ):
+        # A mistyped ignore_datasets_file must not silently drop the grey list protections.
+        mock_config.ignore_datasets_file.unlink()
+        mock_config.ignore_datasets_resource = LayeredResource(
+            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+            override=mock_config.ignore_datasets_file,
+        )
+
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+
+        assert "falling back to climate_ref/default_ignore_datasets.yaml" in caplog.text
+
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(
             textwrap.dedent(

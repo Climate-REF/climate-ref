@@ -9,7 +9,6 @@ from climate_ref_core.data import (
     FileResource,
     LayeredResource,
     PackagedResource,
-    Resource,
     ResourceOrigin,
     resolve_cache_dir,
 )
@@ -34,10 +33,6 @@ class TestPackagedResource:
         with pytest.raises(DataResourceError, match="Could not read"):
             PackagedResource("climate_ref_core.pycmec", "nope.yaml").read_text()
 
-    def test_open_text(self):
-        with CV.open_text() as handle:
-            assert handle.read() == CV.read_text()
-
     def test_as_path(self):
         with CV.as_path() as path:
             assert path.is_file()
@@ -55,10 +50,6 @@ class TestPackagedResource:
 
 
 class TestFileResource:
-    def test_satisfies_the_resource_protocol(self):
-        assert isinstance(FileResource(Path("/nowhere")), Resource)
-        assert isinstance(CV, Resource)
-
     def test_read_text(self, tmp_path):
         target = tmp_path / "a.yaml"
         target.write_text("contents", encoding="utf-8")
@@ -71,11 +62,6 @@ class TestFileResource:
     def test_read_missing_raises(self, tmp_path):
         with pytest.raises(DataResourceError, match="Could not read"):
             FileResource(tmp_path / "missing.yaml").read_text()
-
-    def test_open_missing_raises(self, tmp_path):
-        with pytest.raises(DataResourceError, match="Could not open"):
-            with FileResource(tmp_path / "missing.yaml").open_text():
-                pass
 
     def test_as_path_returns_the_path_itself(self, tmp_path):
         target = tmp_path / "a.yaml"
@@ -140,15 +126,6 @@ class TestLayeredResource:
         resource = LayeredResource(packaged=CV, override=tmp_path / "missing.yaml")
 
         assert resource.describe() == f"{tmp_path / 'missing.yaml'} (missing)"
-
-    def test_open_text_from_each_layer(self, tmp_path):
-        override = tmp_path / "override.yaml"
-        override.write_text("override", encoding="utf-8")
-
-        with LayeredResource(packaged=CV).open_text() as handle:
-            assert handle.read() == CV.read_text()
-        with LayeredResource(packaged=CV, override=override).open_text() as handle:
-            assert handle.read() == "override"
 
     def test_as_path_from_each_layer(self, tmp_path):
         override = tmp_path / "override.yaml"

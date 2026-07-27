@@ -93,8 +93,15 @@ class DiagnosticProvider:
         try:
             ignore_datasets_all = yaml.safe_load(grey_list.read_text()) or {}
         except (DataResourceError, yaml.YAMLError) as exc:
-            logger.warning(f"Could not read the grey list from {source}, no datasets will be ignored: {exc}")
-            ignore_datasets_all = {}
+            # Falling through to the packaged copy rather than to an empty grey list,
+            # so a mistyped path cannot silently drop the grey list protections.
+            source = str(grey_list.packaged)
+            logger.warning(f"Could not read the grey list, falling back to {source}: {exc}")
+            try:
+                ignore_datasets_all = yaml.safe_load(grey_list.packaged.read_text()) or {}
+            except (DataResourceError, yaml.YAMLError) as packaged_exc:
+                logger.warning(f"Could not read {source} either, no datasets will be ignored: {packaged_exc}")
+                ignore_datasets_all = {}
 
         ignore_datasets = ignore_datasets_all.get(self.slug, {})
         if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:

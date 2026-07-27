@@ -166,8 +166,11 @@ and to the packaged copy otherwise.
 Each provider logs which layer it read the grey list from at debug level.
 
 A cached copy that has not been refreshed for 30 days is ignored in favour of the packaged copy.
-Without that bound, a cache left behind by an older release would shadow the newer packaged
-copy indefinitely on a host that can never reach the network.
+Without that bound,
+a cache left behind by an older release would shadow the newer packaged copy indefinitely
+on a host that can never reach the network.
+On such a host the cache can still shadow a newer packaged copy for up to 30 days after an upgrade.
+Set `REF_IGNORE_DATASETS_URL=` to skip the refresh entirely and always read the packaged copy.
 
 ### Offline and air-gapped deployments
 

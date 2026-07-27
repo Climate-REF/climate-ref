@@ -2,6 +2,7 @@ import datetime
 import importlib.metadata
 import logging
 import os
+import stat
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -340,7 +341,9 @@ def test_refresh_ignore_datasets_file(mocker, monkeypatch, tmp_path, status):
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text("existing", encoding="utf-8")
     if status == "stale":
-        mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
+        mocker.patch.object(
+            climate_ref.config, "DEFAULT_IGNORE_DATASETS_REFRESH_INTERVAL", timedelta(seconds=-1)
+        )
 
     refresh_ignore_datasets_file(config)
 
@@ -447,6 +450,23 @@ def test_refresh_ignore_datasets_file_writes_atomically(mocker, monkeypatch, tmp
     assert config.ignore_datasets_resource.origin == ResourceOrigin.package
 
 
+def test_refresh_ignore_datasets_file_is_group_readable(mocker, monkeypatch, tmp_path):
+    """The cache is shared between users, so it must not inherit the 0600 mkstemp mode."""
+    mocker.patch.object(
+        climate_ref.config.requests,
+        "get",
+        return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
+    )
+    config = _refresh_config(monkeypatch, tmp_path)
+
+    refresh_ignore_datasets_file(config)
+
+    target = _ignore_datasets_cache_file()
+    umask = os.umask(0)
+    os.umask(umask)
+    assert stat.S_IMODE(target.stat().st_mode) == 0o666 & ~umask
+
+
 def test_stale_cache_does_not_shadow_the_packaged_copy(monkeypatch, tmp_path):
     """A cache left by an older release must not shadow the newer packaged copy forever."""
     monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
@@ -498,7 +518,7 @@ def test_refresh_ignore_datasets_file_fail_uses_stale_cache(mocker, monkeypatch,
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text("cached", encoding="utf-8")
     original_mtime = target.stat().st_mtime
-    mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_MAX_AGE", timedelta(seconds=-1))
+    mocker.patch.object(climate_ref.config, "DEFAULT_IGNORE_DATASETS_REFRESH_INTERVAL", timedelta(seconds=-1))
 
     with caplog.at_level(logging.WARNING):
         refresh_ignore_datasets_file(config)

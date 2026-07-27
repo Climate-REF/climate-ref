@@ -20,7 +20,7 @@ import os
 import pathlib
 from collections.abc import Iterator
 from contextlib import AbstractContextManager, contextmanager
-from typing import IO, Protocol, runtime_checkable
+from typing import Protocol
 
 import platformdirs
 from attrs import field, frozen
@@ -63,7 +63,6 @@ def resolve_cache_dir(cache_name: str) -> pathlib.Path:
     return cache_dir / cache_name
 
 
-@runtime_checkable
 class Resource(Protocol):
     """
     A readable data file, wherever it happens to live
@@ -74,9 +73,6 @@ class Resource(Protocol):
 
     def read_text(self, encoding: str = "utf-8") -> str:
         """Read the file as text."""
-
-    def open_text(self, encoding: str = "utf-8") -> AbstractContextManager[IO[str]]:
-        """Open the file as a text stream."""
 
     def as_path(self) -> AbstractContextManager[pathlib.Path]:
         """Expose the file as a filesystem path."""
@@ -155,36 +151,11 @@ class PackagedResource:
             raise DataResourceError(f"Could not read {self} from the installed package.") from exc
 
     @contextmanager
-    def open_text(self, encoding: str = "utf-8") -> Iterator[IO[str]]:
-        """
-        Open the file as a text stream
-
-        Parameters
-        ----------
-        encoding
-            Text encoding of the file.
-
-        Yields
-        ------
-        :
-            An open text stream positioned at the start of the file.
-        """
-        traversable = self._traversable("open")
-        try:
-            handle = traversable.open("r", encoding=encoding)
-        except _RESOURCE_ERRORS as exc:
-            raise DataResourceError(f"Could not open {self} from the installed package.") from exc
-        try:
-            yield handle
-        finally:
-            handle.close()
-
-    @contextmanager
     def as_path(self) -> Iterator[pathlib.Path]:
         """
         Expose the file as a filesystem path for the duration of the context
 
-        Prefer `read_text` or `open_text`.
+        Prefer `read_text`.
         Use this only for third-party APIs that insist on a path.
         The path may point at a temporary file that is removed on exit,
         so it must not be retained beyond the context.
@@ -245,30 +216,6 @@ class FileResource:
             return self.path.read_text(encoding=encoding)
         except OSError as exc:
             raise DataResourceError(f"Could not read {self}.") from exc
-
-    @contextmanager
-    def open_text(self, encoding: str = "utf-8") -> Iterator[IO[str]]:
-        """
-        Open the file as a text stream
-
-        Parameters
-        ----------
-        encoding
-            Text encoding of the file.
-
-        Yields
-        ------
-        :
-            An open text stream positioned at the start of the file.
-        """
-        try:
-            handle = self.path.open("r", encoding=encoding)
-        except OSError as exc:
-            raise DataResourceError(f"Could not open {self}.") from exc
-        try:
-            yield handle
-        finally:
-            handle.close()
 
     @contextmanager
     def as_path(self) -> Iterator[pathlib.Path]:
@@ -388,24 +335,6 @@ class LayeredResource:
             The contents of the file.
         """
         return self.resolve()[1].read_text(encoding=encoding)
-
-    @contextmanager
-    def open_text(self, encoding: str = "utf-8") -> Iterator[IO[str]]:
-        """
-        Open the file as a text stream from whichever layer supplies it
-
-        Parameters
-        ----------
-        encoding
-            Text encoding of the file.
-
-        Yields
-        ------
-        :
-            An open text stream positioned at the start of the file.
-        """
-        with self.resolve()[1].open_text(encoding=encoding) as handle:
-            yield handle
 
     @contextmanager
     def as_path(self) -> Iterator[pathlib.Path]:

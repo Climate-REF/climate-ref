@@ -26,8 +26,10 @@ Provided fixtures
 
 from __future__ import annotations
 
+import atexit
 import os
 import re
+import shutil
 import tempfile
 from collections.abc import Callable, Iterator
 from functools import lru_cache
@@ -251,7 +253,9 @@ def packaged_ignore_datasets_file() -> Path:
     :
         Path to a copy of the packaged grey list.
     """
-    destination = Path(tempfile.mkdtemp(prefix="climate_ref_grey_list_")) / (DEFAULT_IGNORE_DATASETS_FILENAME)
+    directory = tempfile.mkdtemp(prefix="climate_ref_grey_list_")
+    atexit.register(shutil.rmtree, directory, True)
+    destination = Path(directory) / DEFAULT_IGNORE_DATASETS_FILENAME
     destination.write_text(BUNDLED_IGNORE_DATASETS.read_text(), encoding="utf-8")
     return destination
 

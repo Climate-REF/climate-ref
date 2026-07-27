@@ -445,7 +445,7 @@ def _load_config(config_file: str | Path, doc: dict[str, Any]) -> "Config":
     return _converter_defaults_relaxed.structure(doc, Config)
 
 
-DEFAULT_IGNORE_DATASETS_MAX_AGE = datetime.timedelta(hours=6)
+DEFAULT_IGNORE_DATASETS_REFRESH_INTERVAL = datetime.timedelta(hours=6)
 DEFAULT_IGNORE_DATASETS_FILENAME = "default_ignore_datasets.yaml"
 DEFAULT_IGNORE_DATASETS_URL = f"https://raw.githubusercontent.com/Climate-REF/climate-ref/refs/heads/main/{DEFAULT_IGNORE_DATASETS_FILENAME}"
 
@@ -524,7 +524,7 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
     Refresh the cached grey list from `config.ignore_datasets_url`.
 
     This is called at solve time so that configuration loading never performs network I/O.
-    The download happens at most once every `DEFAULT_IGNORE_DATASETS_MAX_AGE`.
+    The download happens at most once every `DEFAULT_IGNORE_DATASETS_REFRESH_INTERVAL`.
     A fresh cached file is reused untouched.
 
     Refreshing is best effort.
@@ -546,6 +546,7 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
     if not url or _configured_ignore_datasets_file(config) is not None:
         return
 
+    path: Path | None = None
     try:
         path = _ignore_datasets_cache_file()
 
@@ -553,7 +554,7 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
             logger.warning(f"The grey list cache path {path} is a directory, not a file. Skipping refresh.")
             return
 
-        if _cache_age(path) < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+        if _cache_age(path) < DEFAULT_IGNORE_DATASETS_REFRESH_INTERVAL:
             return
 
         path.parent.mkdir(parents=True, exist_ok=True)
@@ -563,7 +564,8 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
         _write_atomically(path, response.content)
     except Exception as exc:
         # The packaged copy is always available, so a failed refresh is never fatal.
-        logger.warning(f"Could not refresh the grey list from {url}: {exc}")
+        fallback = path if path is not None and path.is_file() else BUNDLED_IGNORE_DATASETS
+        logger.warning(f"Could not refresh the grey list from {url}, using {fallback}: {exc}")
 
 
 def _cache_age(path: Path) -> datetime.timedelta:
@@ -606,6 +608,11 @@ def _write_atomically(path: Path, content: bytes) -> None:
     try:
         with os.fdopen(handle, "wb") as file:
             file.write(content)
+        # mkstemp creates the file 0600. The cache is shared between users on a
+        # multi-user host, so restore the mode a plain open would have given.
+        umask = os.umask(0)
+        os.umask(umask)
+        temporary.chmod(0o666 & ~umask)
         temporary.replace(path)
     except OSError:
         temporary.unlink(missing_ok=True)
@@ -708,17 +715,19 @@ class Config:
         and finally to the copy shipped inside `climate_ref`.
 
         A cache that has not been refreshed for `DEFAULT_IGNORE_DATASETS_MAX_STALE` is skipped.
-        Without that bound a copy left behind by an older release would shadow the newer
-        packaged copy indefinitely on a host that can never reach the network.
+        Without that bound,
+        a copy left behind by an older release would shadow the newer packaged copy
+        indefinitely on a host that can never reach the network.
 
         Returns
         -------
         :
             The resolved grey list resource.
         """
-        cache: Path | None = _ignore_datasets_cache_file()
-        if cache is not None and _cache_age(cache) > DEFAULT_IGNORE_DATASETS_MAX_STALE:
-            logger.debug(f"Ignoring the grey list cache at {cache} because it is too old to trust.")
+        cached = _ignore_datasets_cache_file()
+        cache: Path | None = cached
+        if _cache_age(cached) > DEFAULT_IGNORE_DATASETS_MAX_STALE:
+            logger.debug(f"Ignoring the grey list cache at {cached} because it is too old to trust.")
             cache = None
 
         return LayeredResource(

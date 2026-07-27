@@ -1,5 +1,6 @@
 import json
 
+import attrs
 import climate_ref_esmvaltool.diagnostics.base
 import numpy as np
 import pandas
@@ -13,7 +14,7 @@ from climate_ref_esmvaltool.diagnostics.regional_historical_changes import (
 )
 from climate_ref_esmvaltool.types import Recipe
 
-from climate_ref_core.datasets import SourceDatasetType
+from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import CommandLineDiagnostic, ExecutionDefinition
 from climate_ref_core.metric_values import SeriesMetricValue as SeriesMetricValueType
 from climate_ref_core.metric_values.typing import SeriesDefinition
@@ -68,6 +69,59 @@ def test_build_cmd(mocker, tmp_path, metric_definition, mock_diagnostic, data_di
     assert "CMIP6" in config["projects"]
     assert "CMIP7" in config["projects"]
     assert "obs4MIPs" in config["projects"]
+
+
+def test_build_cmd_with_selected_reference_data(mocker, tmp_path, metric_definition, mock_diagnostic):
+    """When the solver selected ESMValTool reference data, ``build_cmd`` points ESMValCore at it.
+
+    The selected files are laid out under ``reference_data`` (not mixed into ``climate_data``),
+    and the OBS/OBS6/native6/obs4MIPs rootpaths use that tree instead of the bulk registry.
+    """
+    dataset_registry_manager = mocker.patch.object(
+        climate_ref_esmvaltool.diagnostics.base,
+        "dataset_registry_manager",
+    )
+    dataset_registry_manager.__getitem__.return_value.abspath = tmp_path / "registry"
+
+    ref_file = (
+        tmp_path
+        / "refsrc"
+        / "OBS"
+        / "Tier2"
+        / "CERES-EBAF"
+        / "OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc"
+    )
+    ref_file.parent.mkdir(parents=True)
+    ref_file.touch()
+    reference = DatasetCollection(
+        pandas.DataFrame(
+            {
+                "instance_id": ["esmvaltool-reference.OBS.CERES-EBAF.mon.rlut.Ed4.2"],
+                "path": [str(ref_file)],
+            }
+        ),
+        "instance_id",
+    )
+    datasets = dict(metric_definition.datasets.items())
+    datasets[SourceDatasetType.ESMValToolReference] = reference
+    definition = attrs.evolve(metric_definition, datasets=ExecutionDatasetCollection(datasets))
+    output_dir = definition.output_directory
+    output_dir.mkdir(parents=True)
+
+    mock_diagnostic.build_cmd(definition)
+
+    reference_data = output_dir / "reference_data"
+    laid_out = reference_data / "OBS" / "Tier2" / "CERES-EBAF" / ref_file.name
+    assert laid_out.is_symlink()
+    assert laid_out.resolve() == ref_file.resolve()
+    # The reference rows are not mixed into the model climate_data tree.
+    assert not list((output_dir / "climate_data").rglob(ref_file.name))
+
+    config = yaml.safe_load((output_dir / "config" / "config.yml").read_text(encoding="utf-8"))
+    assert config["projects"]["OBS"]["data"]["local"]["rootpath"] == str(reference_data / "OBS")
+    assert config["projects"]["OBS6"]["data"]["local"]["rootpath"] == str(reference_data / "OBS")
+    assert config["projects"]["native6"]["data"]["local"]["rootpath"] == str(reference_data / "native6")
+    assert config["projects"]["obs4MIPs"]["data"]["esmvaltool"]["rootpath"] == str(reference_data)
 
 
 def test_build_metric_result(metric_definition, mock_diagnostic):

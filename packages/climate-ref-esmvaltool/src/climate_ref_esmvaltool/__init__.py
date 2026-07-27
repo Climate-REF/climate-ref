@@ -85,8 +85,8 @@ for _diagnostic_cls_name in climate_ref_esmvaltool.diagnostics.__all__:
 # data.txt mixes OBS/OBS6 Tier2/3, native6 raw ERA5 and an obs4MIPs GPCP-V2.3 subset. The
 # ESMValCore-DRS adapter (`ESMValToolReferenceDatasetAdapter`) reads metadata from the DRS path
 # rather than the file contents, so the whole registry ingests as the `esmvaltool-reference`
-# source type. Ingestion records these datasets for provenance. Solve-time selection is a
-# separate follow-up.
+# source type. A diagnostic that declares an `esmvaltool-reference` data requirement is given
+# only the files the solver selected. One that does not gets the whole registry.
 dataset_registry_manager.register(
     name=_DATASETS_REGISTRY_NAME,
     base_url=DATASET_URL,

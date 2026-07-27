@@ -26,6 +26,7 @@ from climate_ref_esmvaltool.recipe import (
     fix_annual_statistics_keep_year,
     load_recipe,
     prepare_climate_data,
+    prepare_reference_data,
     rewrite_mip_for_cmip7,
 )
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
@@ -245,7 +246,12 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         recipe_path = self.write_recipe(definition)
         climate_data = definition.to_output_path("climate_data")
 
-        for metric_dataset in definition.datasets.values():
+        for source_type, metric_dataset in definition.datasets.items():
+            # ESMValTool reference data is laid out separately below,
+            # into the DRS tree that ESMValCore's OBS/OBS6/native6 rootpaths point at,
+            # not by instance_id.
+            if source_type == SourceDatasetType.ESMValToolReference:
+                continue
             prepare_climate_data(
                 metric_dataset.datasets,
                 climate_data_dir=climate_data,
@@ -299,15 +305,29 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             },
         }
 
-        # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
-        registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
-        data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
-        if not data_dir.exists():
-            logger.warning(
+        # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data.
+        # ESMValCore locates these from its own DRS templates rather than by instance_id,
+        # so they get their own rootpaths rather than sharing the climate_data tree.
+        if SourceDatasetType.ESMValToolReference in definition.datasets:
+            data_dir = definition.to_output_path("reference_data")
+            prepare_reference_data(
+                definition.datasets[SourceDatasetType.ESMValToolReference].datasets,
+                reference_data_dir=data_dir,
+            )
+            unavailable_message = (
+                f"No ESMValTool reference files were selected for this execution, so {data_dir} is empty."
+            )
+        else:
+            registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
+            data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
+            unavailable_message = (
                 "ESMValTool observational and reanalysis data is not available "
                 f"in {data_dir}, you may want to run the command "
                 f"`ref datasets fetch-data --registry {_DATASETS_REGISTRY_NAME}`."
             )
+
+        if not data_dir.exists():
+            logger.warning(unavailable_message)
         else:
             config["projects"]["OBS"] = {
                 "data": {

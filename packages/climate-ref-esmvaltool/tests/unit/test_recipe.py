@@ -7,6 +7,7 @@ from climate_ref_esmvaltool.recipe import (
     as_facets,
     get_child_and_parent_dataset,
     prepare_climate_data,
+    prepare_reference_data,
     rewrite_mip_for_cmip7,
 )
 
@@ -320,6 +321,69 @@ def test_prepare_climate_data(tmp_path, datasets, expected):
     for source_path, symlink in zip(datasets["path"], expected):
         assert Path(symlink).is_symlink()
         assert Path(symlink).resolve() == Path(source_path).resolve()
+
+
+def test_prepare_reference_data(tmp_path):
+    # Each source path sits under a project anchor (OBS/native6/obs4MIPs).
+    # OBS6 data lives under the OBS directory, so its anchor is OBS too.
+    rel_paths = [
+        "ESMValTool/OBS/Tier2/CERES-EBAF/OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc",
+        "ESMValTool/OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Omon_tos_197901-201812.nc",
+        "ESMValTool/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc",
+        "ESMValTool/obs4MIPs/GPCP-V2-3/v20250101/pr_mon_GPCP-V2-3_gn_200001-200012.nc",
+    ]
+    expected_rel = [
+        "OBS/Tier2/CERES-EBAF/OBS_CERES-EBAF_sat_Ed4.2_Amon_rlut_200003-202311.nc",
+        "OBS/Tier2/TROPFLUX/OBS6_TROPFLUX_reanaly_v1_Omon_tos_197901-201812.nc",
+        "native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc",
+        "obs4MIPs/GPCP-V2-3/v20250101/pr_mon_GPCP-V2-3_gn_200001-200012.nc",
+    ]
+
+    source_data_dir = tmp_path / "source_data"
+    source_paths = [source_data_dir / rel for rel in rel_paths]
+    for path in source_paths:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.touch()
+
+    datasets = pd.DataFrame({"path": [str(p) for p in source_paths]})
+    reference_data_dir = tmp_path / "reference_data"
+
+    prepare_reference_data(datasets, reference_data_dir)
+
+    for source_path, rel in zip(source_paths, expected_rel):
+        symlink = reference_data_dir / rel
+        assert symlink.is_symlink()
+        assert symlink.resolve() == source_path.resolve()
+
+
+def test_prepare_reference_data_rejects_unknown_project(tmp_path):
+    source = tmp_path / "source" / "somewhere" / "mystery.nc"
+    source.parent.mkdir(parents=True)
+    source.touch()
+
+    datasets = pd.DataFrame({"path": [str(source)]})
+    reference_data_dir = tmp_path / "reference_data"
+
+    # ESMValCore could never find such a file, so laying out a partial tree would
+    # fail later with a much less obvious error.
+    with pytest.raises(ValueError, match="not under a known ESMValTool reference project"):
+        prepare_reference_data(datasets, reference_data_dir)
+
+
+def test_prepare_reference_data_anchors_on_the_last_project_directory(tmp_path):
+    # A data root that itself contains a directory named after a project must not
+    # truncate the DRS path at the root instead of at the real anchor.
+    rel = "OBS/store/native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"
+    source = tmp_path / rel
+    source.parent.mkdir(parents=True)
+    source.touch()
+
+    reference_data_dir = tmp_path / "reference_data"
+    prepare_reference_data(pd.DataFrame({"path": [str(source)]}), reference_data_dir)
+
+    symlink = reference_data_dir / "native6/Tier3/ERA5/v1/mon/tas/era5_tas_1980_monthly.nc"
+    assert symlink.is_symlink()
+    assert symlink.resolve() == source.resolve()
 
 
 def _cmip7_recipe(diagnostic):

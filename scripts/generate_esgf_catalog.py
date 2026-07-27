@@ -43,6 +43,13 @@ def main() -> None:
         help="Directory containing PMP climatology data (can be specified multiple times)",
     )
     parser.add_argument(
+        "--esmvaltool-reference-dir",
+        type=Path,
+        action="append",
+        default=[],
+        help="Directory containing ESMValTool reference data (can be specified multiple times)",
+    )
+    parser.add_argument(
         "--output-dir",
         type=Path,
         required=True,
@@ -79,6 +86,15 @@ def main() -> None:
             "pmp-climatology", args.pmp_climatology_dir, strip_path_prefix=args.strip_prefix
         )
         out_path = output_dir / "pmp_climatology_catalog.parquet"
+        write_catalog_parquet(catalog, out_path)
+        print(f"  Wrote {len(catalog)} rows to {out_path}")
+
+    if args.esmvaltool_reference_dir:
+        print(f"Scanning ESMValTool reference directories: {args.esmvaltool_reference_dir}")
+        catalog = generate_catalog(
+            "esmvaltool-reference", args.esmvaltool_reference_dir, strip_path_prefix=args.strip_prefix
+        )
+        out_path = output_dir / "esmvaltool_reference_catalog.parquet"
         write_catalog_parquet(catalog, out_path)
         print(f"  Wrote {len(catalog)} rows to {out_path}")
 

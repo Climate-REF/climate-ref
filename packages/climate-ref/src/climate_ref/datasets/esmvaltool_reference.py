@@ -31,10 +31,7 @@ from climate_ref.datasets.utils import (
     parse_drs_daterange,
 )
 from climate_ref.models.dataset import Dataset, ESMValToolReferenceDataset
-
-# Top-level ESMValTool reference project directories (relative to the ``ESMValTool`` data root).
-# ``OBS6`` data lives under the ``OBS`` directory. The project is recovered from the filename.
-_PROJECT_ANCHORS = ("OBS", "native6", "obs4MIPs")
+from climate_ref_core.esmvaltool_reference import relative_parts
 
 _SLUG_PREFIX = "esmvaltool-reference"
 
@@ -132,14 +129,7 @@ def parse_esmvaltool_reference(file: str, **kwargs: Any) -> dict[str, Any]:
     """
     try:
         path = Path(file)
-        parts = path.parts
-
-        anchor_idx = next((i for i, part in enumerate(parts) if part in _PROJECT_ANCHORS), None)
-        if anchor_idx is None:
-            raise ValueError(
-                f"{file} is not under a known ESMValTool reference project ({', '.join(_PROJECT_ANCHORS)})"
-            )
-        rel = parts[anchor_idx:]
+        rel = relative_parts(path)
         anchor = rel[0]
 
         if anchor == "OBS":

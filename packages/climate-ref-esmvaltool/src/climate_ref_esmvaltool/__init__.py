@@ -82,11 +82,10 @@ for _diagnostic_cls_name in climate_ref_esmvaltool.diagnostics.__all__:
 
 # Register OBS, OBS6, and raw data as ESMValTool reference datasets.
 #
-# data.txt mixes OBS/OBS6 Tier2/3, native6 raw ERA5 and an obs4MIPs GPCP-V2.3 subset. The
-# ESMValCore-DRS adapter (`ESMValToolReferenceDatasetAdapter`) reads metadata from the DRS path
-# rather than the file contents, so the whole registry ingests as the `esmvaltool-reference`
-# source type. Ingestion records these datasets for provenance. Solve-time selection is a
-# separate follow-up.
+# data.txt mixes OBS/OBS6 Tier2/3, native6 raw ERA5 and an obs4MIPs GPCP-V2.3 subset.
+# The ESMValCore-DRS adapter (`ESMValToolReferenceDatasetAdapter`) reads metadata from the DRS path
+# rather than the file contents, so the whole registry ingests as the `esmvaltool-reference` source type.
+# Declaring an `esmvaltool-reference` data requirement only gives the files the solver selected.
 dataset_registry_manager.register(
     name=_DATASETS_REGISTRY_NAME,
     base_url=DATASET_URL,

@@ -21,6 +21,7 @@ from climate_ref.database import Database
 from climate_ref.datasets import (
     CMIP6DatasetAdapter,
     CMIP7DatasetAdapter,
+    ESMValToolReferenceDatasetAdapter,
     Obs4MIPsDatasetAdapter,
     Obs4REFDatasetAdapter,
     PMPClimatologyDatasetAdapter,
@@ -507,6 +508,9 @@ class ExecutionSolver:
                     database=db, adapter=PMPClimatologyDatasetAdapter()
                 ),
                 SourceDatasetType.obs4REF: DataCatalog(database=db, adapter=Obs4REFDatasetAdapter()),
+                SourceDatasetType.ESMValToolReference: DataCatalog(
+                    database=db, adapter=ESMValToolReferenceDatasetAdapter()
+                ),
             },
         )
 

@@ -89,6 +89,11 @@ class TestMetricSolver:
         assert SourceDatasetType.obs4REF in solver.data_catalog
         assert isinstance(solver.data_catalog[SourceDatasetType.obs4REF], DataCatalog)
 
+    def test_solver_build_from_db_includes_esmvaltool_reference(self, solver):
+        """``build_from_db`` must wire up ESMValToolReference, or it is a silently dead type."""
+        assert SourceDatasetType.ESMValToolReference in solver.data_catalog
+        assert isinstance(solver.data_catalog[SourceDatasetType.ESMValToolReference], DataCatalog)
+
     def test_build_from_db_refreshes_ignore_datasets(self, config, db_seeded, mocker):
         refresh_mock = mocker.patch("climate_ref.solver.refresh_ignore_datasets_file")
 
@@ -901,6 +906,38 @@ def test_solve_metric_executions_obs4ref(solver, mock_diagnostic, provider):
         "REF-OBS-A",
         "REF-OBS-B",
     }
+
+
+def test_solve_metric_executions_esmvaltool_reference(solver, mock_diagnostic, provider):
+    """A diagnostic with an ESMValToolReference ``DataRequirement`` resolves against the catalog.
+
+    Filtering and grouping behave like any other reference source type.
+    """
+    metric = mock_diagnostic
+    metric.data_requirements = (
+        DataRequirement(
+            source_type=SourceDatasetType.ESMValToolReference,
+            filters=(FacetFilter(facets={"variable_id": "tas"}),),
+            group_by=("project", "source_id"),
+        ),
+    )
+
+    data_catalog = {
+        SourceDatasetType.ESMValToolReference: pd.DataFrame(
+            {
+                "project": ["native6", "OBS6", "native6"],
+                "source_id": ["ERA5", "CERES-EBAF", "ERA5"],
+                "variable_id": ["tas", "tas", "pr"],
+                "frequency": ["mon", "mon", "mon"],
+            }
+        ),
+    }
+    executions = list(solve_executions(data_catalog, metric, provider))
+    assert len(executions) == 2
+    selectors = {
+        dict(e.datasets[SourceDatasetType.ESMValToolReference].selector)["source_id"] for e in executions
+    }
+    assert selectors == {"ERA5", "CERES-EBAF"}
 
 
 def test_solve_metric_executions_multiple_sets(solver, mock_diagnostic, provider):

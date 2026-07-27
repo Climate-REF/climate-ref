@@ -103,7 +103,6 @@ class TestMetricSolver:
         for catalog in solver.data_catalog.values():
             assert catalog.adapter.n_jobs == 4
 
-
     def test_build_from_db_refreshes_ignore_datasets(self, config, db_seeded, mocker):
         refresh_mock = mocker.patch("climate_ref.solver.refresh_ignore_datasets_file")
 

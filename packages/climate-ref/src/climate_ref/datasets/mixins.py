@@ -47,7 +47,9 @@ def _chunk_by_dataset(datasets: pd.DataFrame, slug_column: str, chunk_size: int)
     """
     labels: list[Any] = []
 
-    for _, group in datasets.groupby(slug_column, sort=False):
+    # dropna=False so a row with a missing slug still lands in a chunk.
+    # The caller reassembles the catalog from the chunks and would otherwise lose it.
+    for _, group in datasets.groupby(slug_column, sort=False, dropna=False):
         labels.extend(group.index.tolist())
         if len(labels) >= chunk_size:
             yield pd.Index(labels)

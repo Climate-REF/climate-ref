@@ -1,8 +1,8 @@
 """
 Path conventions for ESMValTool reference (observational/reanalysis) data.
 
-ESMValCore locates this data from its own DRS directory templates rather than by
-``instance_id``, so a reference file is identified by where its DRS path begins.
+ESMValCore locates this data from its own DRS directory templates rather than by ``instance_id``,
+so a reference file is identified by where its DRS path begins.
 """
 
 from pathlib import Path

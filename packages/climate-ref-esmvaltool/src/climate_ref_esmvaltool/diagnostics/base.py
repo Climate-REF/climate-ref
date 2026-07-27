@@ -264,8 +264,8 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         recipe_path = self.write_recipe(definition)
         climate_data = definition.to_output_path("climate_data")
 
-        # ESMValCore finds reference data from its own DRS templates, so it gets its own
-        # rootpaths rather than sharing the instance_id tree that model data uses.
+        # ESMValCore finds reference data from its own DRS templates,
+        # so it gets its own rootpaths rather than sharing the instance_id tree that model data uses.
         data_dir = self._reference_data_root(definition)
 
         for source_type, metric_dataset in definition.datasets.items():

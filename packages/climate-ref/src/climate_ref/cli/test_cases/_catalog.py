@@ -6,9 +6,6 @@ These turn a diagnostic's test-data requests into a solved
 input catalog YAML next to the test case.
 """
 
-# ``from __future__ import annotations`` keeps the heavy signature types
-# (pandas, dataset adapters, diagnostics) under ``TYPE_CHECKING`` so importing
-# this module -- which happens on every ``ref`` invocation -- stays cheap.
 from __future__ import annotations
 
 from pathlib import Path

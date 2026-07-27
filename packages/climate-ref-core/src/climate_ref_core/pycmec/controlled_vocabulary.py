@@ -234,3 +234,8 @@ class CV:
             pathlib.Path(filename).read_text(encoding="utf-8"),
             source=str(filename),
         )
+
+
+if __name__ == "__main__":
+    # Write the bundled CV to stdout so it can be copied and extended.
+    print(BUNDLED_CV.read_text())

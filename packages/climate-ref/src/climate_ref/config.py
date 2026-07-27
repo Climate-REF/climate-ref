@@ -17,9 +17,11 @@ which always take precedence over any other configuration values.
 import datetime
 import importlib.metadata
 import os
+import tempfile
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Literal
 
+import platformdirs
 import requests
 import tomlkit
 from attr import Factory
@@ -456,6 +458,9 @@ It is always readable, so a solve never depends on the network or on a writable 
 """
 
 
+DEFAULT_IGNORE_DATASETS_MAX_STALE = datetime.timedelta(days=30)
+
+
 def _ignore_datasets_cache_file() -> Path:
     """
     Return the location the fetched copy of the grey list is cached at
@@ -468,6 +473,50 @@ def _ignore_datasets_cache_file() -> Path:
         Path to the cached grey list, under the shared REF dataset cache.
     """
     return resolve_cache_dir("grey_list") / DEFAULT_IGNORE_DATASETS_FILENAME
+
+
+def _legacy_ignore_datasets_file() -> Path:
+    """
+    Return the cache location used before the grey list moved under the REF dataset cache
+
+    Releases up to 0.16 wrote this path into every saved configuration file as a default,
+    so an upgraded installation has it recorded as though the operator had chosen it.
+
+    Returns
+    -------
+    :
+        The pre-0.17 cache location.
+    """
+    return platformdirs.user_cache_path("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
+
+
+def _configured_ignore_datasets_file(config: "Config") -> Path | None:
+    """
+    Return the operator's chosen grey list, ignoring an inherited legacy default
+
+    Before the grey list gained a packaged fallback its cache path was a config *default*,
+    so `Config.save()` baked it into every `ref.toml`.
+    Treating that value as a deliberate override would pin those installations to a stale
+    cache and silently disable refreshing, so it is treated as unset.
+
+    Parameters
+    ----------
+    config
+        The configuration to read `ignore_datasets_file` from.
+
+    Returns
+    -------
+    :
+        The configured path, or None when nothing was deliberately chosen.
+    """
+    configured = config.ignore_datasets_file
+    if configured is not None and configured == _legacy_ignore_datasets_file():
+        logger.debug(
+            f"Ignoring inherited grey list default {configured}. "
+            "Remove `ignore_datasets_file` from your configuration to silence this."
+        )
+        return None
+    return configured
 
 
 def refresh_ignore_datasets_file(config: "Config") -> None:
@@ -494,32 +543,73 @@ def refresh_ignore_datasets_file(config: "Config") -> None:
     """
     url = config.ignore_datasets_url
 
-    if not url or config.ignore_datasets_file is not None:
+    if not url or _configured_ignore_datasets_file(config) is not None:
         return
-
-    path = _ignore_datasets_cache_file()
-
-    if path.is_dir():
-        logger.warning(f"The grey list cache path {path} is a directory, not a file. Skipping refresh.")
-        return
-
-    if path.is_file():
-        modification_time = datetime.datetime.fromtimestamp(path.stat().st_mtime)
-        age = datetime.datetime.now() - modification_time
-        if age < DEFAULT_IGNORE_DATASETS_MAX_AGE:
-            return
 
     try:
+        path = _ignore_datasets_cache_file()
+
+        if path.is_dir():
+            logger.warning(f"The grey list cache path {path} is a directory, not a file. Skipping refresh.")
+            return
+
+        if _cache_age(path) < DEFAULT_IGNORE_DATASETS_MAX_AGE:
+            return
+
         path.parent.mkdir(parents=True, exist_ok=True)
         logger.info(f"Downloading the grey list from {url} to {path}")
         response = requests.get(url, timeout=120)
         response.raise_for_status()
-        with path.open(mode="wb") as file:
-            file.write(response.content)
-    except (requests.RequestException, OSError) as exc:
+        _write_atomically(path, response.content)
+    except Exception as exc:
         # The packaged copy is always available, so a failed refresh is never fatal.
-        fallback = path if path.is_file() else BUNDLED_IGNORE_DATASETS
-        logger.warning(f"Could not refresh the grey list from {url}, using {fallback}: {exc}")
+        logger.warning(f"Could not refresh the grey list from {url}: {exc}")
+
+
+def _cache_age(path: Path) -> datetime.timedelta:
+    """
+    Return how old a cached file is, treating an unreadable one as infinitely old
+
+    Parameters
+    ----------
+    path
+        The cached file.
+
+    Returns
+    -------
+    :
+        The age of the file, or `datetime.timedelta.max` if it cannot be read.
+    """
+    try:
+        modification_time = datetime.datetime.fromtimestamp(path.stat().st_mtime)
+    except OSError:
+        return datetime.timedelta.max
+    return datetime.datetime.now() - modification_time
+
+
+def _write_atomically(path: Path, content: bytes) -> None:
+    """
+    Write a file via a temporary file and a rename
+
+    A partial write would otherwise leave a truncated file with a fresh modification time,
+    which would then shadow the packaged copy until the cache window expired.
+
+    Parameters
+    ----------
+    path
+        Destination file.
+    content
+        Bytes to write.
+    """
+    handle, temporary_name = tempfile.mkstemp(dir=path.parent, prefix=f".{path.name}.")
+    temporary = Path(temporary_name)
+    try:
+        with os.fdopen(handle, "wb") as file:
+            file.write(content)
+        temporary.replace(path)
+    except OSError:
+        temporary.unlink(missing_ok=True)
+        raise
 
 
 @define(auto_attribs=True)
@@ -617,15 +707,24 @@ class Config:
         then to a copy refreshed from `ignore_datasets_url`,
         and finally to the copy shipped inside `climate_ref`.
 
+        A cache that has not been refreshed for `DEFAULT_IGNORE_DATASETS_MAX_STALE` is skipped.
+        Without that bound a copy left behind by an older release would shadow the newer
+        packaged copy indefinitely on a host that can never reach the network.
+
         Returns
         -------
         :
             The resolved grey list resource.
         """
+        cache: Path | None = _ignore_datasets_cache_file()
+        if cache is not None and _cache_age(cache) > DEFAULT_IGNORE_DATASETS_MAX_STALE:
+            logger.debug(f"Ignoring the grey list cache at {cache} because it is too old to trust.")
+            cache = None
+
         return LayeredResource(
             packaged=BUNDLED_IGNORE_DATASETS,
-            override=self.ignore_datasets_file,
-            cache=_ignore_datasets_cache_file(),
+            override=_configured_ignore_datasets_file(self),
+            cache=cache,
         )
 
     @classmethod

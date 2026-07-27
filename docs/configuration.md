@@ -131,8 +131,8 @@ The grey list is a YAML file listing facets to exclude per provider, diagnostic 
 !!! note "Naming"
 
     The configuration values below are currently named `ignore_datasets_*` for historical reasons.
-    They will be renamed to `grey_list_*` in a future release;
-    the old names will continue to work for a deprecation period.
+    They will be renamed to `grey_list_*` in a future release.
+    The old names will continue to work for a deprecation period.
 
 The grey list is resolved from the first of three layers that is available:
 
@@ -145,11 +145,11 @@ so a solve never depends on the network or on a writable filesystem.
 
 Two configuration values control this behaviour:
 
-* `ignore_datasets_file` (env `REF_IGNORE_DATASETS_FILE`) —
+* `ignore_datasets_file` (env `REF_IGNORE_DATASETS_FILE`):
   a path to a grey list you manage yourself.
   Leave it unset to use the packaged copy.
   Setting it also disables fetching, because an explicit file is yours to manage.
-* `ignore_datasets_url` (env `REF_IGNORE_DATASETS_URL`) —
+* `ignore_datasets_url` (env `REF_IGNORE_DATASETS_URL`):
   the URL the grey list is refreshed from.
   It defaults to the copy served from the `main` branch of the Climate-REF repository.
 
@@ -164,6 +164,10 @@ An unreachable network, an unwritable cache directory, and an HTTP error are all
 The solve logs a warning and falls back to the cached copy if there is one,
 and to the packaged copy otherwise.
 Each provider logs which layer it read the grey list from at debug level.
+
+A cached copy that has not been refreshed for 30 days is ignored in favour of the packaged copy.
+Without that bound, a cache left behind by an older release would shadow the newer packaged
+copy indefinitely on a host that can never reach the network.
 
 ### Offline and air-gapped deployments
 

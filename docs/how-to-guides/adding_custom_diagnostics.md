@@ -368,7 +368,7 @@ extend the controlled vocabulary in `climate-ref-core`:
 - Copy the default CV, which is shipped inside `climate_ref_core` and can be written out with:
 
 ```bash
-python -c "from climate_ref_core.pycmec.controlled_vocabulary import BUNDLED_CV; print(BUNDLED_CV.read_text())" > cv_custom.yaml
+python -m climate_ref_core.pycmec.controlled_vocabulary > cv_custom.yaml
 ```
 
   It is also visible on [GitHub](https://github.com/Climate-REF/climate-ref/blob/main/packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml).

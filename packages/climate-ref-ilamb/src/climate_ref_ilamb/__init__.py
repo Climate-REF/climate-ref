@@ -110,7 +110,7 @@ dataset_registry_manager.register(
 # Sorted so the registration order does not depend on the filesystem,
 # and restricted to YAML so a stray __pycache__ entry is never opened.
 _configure_files = sorted(
-    (entry for entry in importlib.resources.files("climate_ref_ilamb.configure").iterdir()),
+    importlib.resources.files("climate_ref_ilamb.configure").iterdir(),
     key=lambda entry: entry.name,
 )
 for yaml_file in _configure_files:

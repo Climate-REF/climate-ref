@@ -1,5 +1,7 @@
+import datetime
 import importlib.metadata
 import logging
+import os
 import sys
 from datetime import timedelta
 from pathlib import Path
@@ -16,6 +18,7 @@ from climate_ref.config import (
     Config,
     PathConfig,
     _ignore_datasets_cache_file,
+    _legacy_ignore_datasets_file,
     refresh_ignore_datasets_file,
     transform_error,
 )
@@ -423,6 +426,66 @@ def test_refresh_ignore_datasets_file_unwritable_cache(mocker, monkeypatch, tmp_
 
     assert config.ignore_datasets_resource.origin == ResourceOrigin.package
     assert any("Could not refresh the grey list" in r.message for r in caplog.records)
+
+
+def test_refresh_ignore_datasets_file_writes_atomically(mocker, monkeypatch, tmp_path):
+    """A failed write must not leave a truncated file behind with a fresh modification time."""
+    mocker.patch.object(
+        climate_ref.config.requests,
+        "get",
+        return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
+    )
+    mocker.patch.object(climate_ref.config.Path, "replace", side_effect=OSError("disk full"))
+    config = _refresh_config(monkeypatch, tmp_path)
+
+    refresh_ignore_datasets_file(config)
+
+    target = _ignore_datasets_cache_file()
+    assert not target.exists()
+    # The temporary file is cleaned up rather than left in the cache directory.
+    assert list(target.parent.iterdir()) == []
+    assert config.ignore_datasets_resource.origin == ResourceOrigin.package
+
+
+def test_stale_cache_does_not_shadow_the_packaged_copy(monkeypatch, tmp_path):
+    """A cache left by an older release must not shadow the newer packaged copy forever."""
+    monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
+    config = Config()
+    target = _ignore_datasets_cache_file()
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text("ancient", encoding="utf-8")
+
+    assert config.ignore_datasets_resource.origin == ResourceOrigin.cache
+
+    ancient = (
+        datetime.datetime.now() - climate_ref.config.DEFAULT_IGNORE_DATASETS_MAX_STALE - timedelta(days=1)
+    ).timestamp()
+    os.utime(target, (ancient, ancient))
+
+    assert config.ignore_datasets_resource.origin == ResourceOrigin.package
+
+
+def test_inherited_legacy_ignore_datasets_default_is_not_an_override(monkeypatch, tmp_path, mocker):
+    """Releases up to 0.16 baked the cache path into ref.toml, which must not pin the grey list."""
+    monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path))
+    get_mock = mocker.patch.object(
+        climate_ref.config.requests,
+        "get",
+        return_value=mocker.MagicMock(status_code=200, content=b"downloaded"),
+    )
+    legacy = _legacy_ignore_datasets_file()
+    legacy.parent.mkdir(parents=True, exist_ok=True)
+    legacy.write_text("stale", encoding="utf-8")
+
+    config = Config()
+    config.ignore_datasets_file = legacy
+
+    # The inherited value is ignored, so refreshing still happens.
+    refresh_ignore_datasets_file(config)
+
+    get_mock.assert_called_once()
+    assert config.ignore_datasets_resource.origin == ResourceOrigin.cache
+    assert config.ignore_datasets_resource.read_text() == "downloaded"
 
 
 def test_refresh_ignore_datasets_file_fail_uses_stale_cache(mocker, monkeypatch, tmp_path, caplog):

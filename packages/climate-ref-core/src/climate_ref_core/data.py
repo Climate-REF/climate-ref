@@ -19,13 +19,15 @@ import importlib.resources
 import os
 import pathlib
 from collections.abc import Iterator
-from contextlib import contextmanager
-from typing import IO
+from contextlib import AbstractContextManager, contextmanager
+from typing import IO, Protocol, runtime_checkable
 
 import platformdirs
 from attrs import field, frozen
 
 from climate_ref_core.exceptions import RefException
+
+_RESOURCE_ERRORS = (ModuleNotFoundError, FileNotFoundError, OSError)
 
 
 class DataResourceError(RefException):
@@ -49,11 +51,35 @@ def resolve_cache_dir(cache_name: str) -> pathlib.Path:
         The resolved cache directory path.
     """
     if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
-        cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
+        cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir))
+        try:
+            cache_dir = cache_dir.expanduser()
+        except RuntimeError:
+            # An unresolvable ``~user`` is left as-is rather than failing the caller.
+            pass
     else:
         cache_dir = platformdirs.user_cache_path("climate_ref")
 
     return cache_dir / cache_name
+
+
+@runtime_checkable
+class Resource(Protocol):
+    """
+    A readable data file, wherever it happens to live
+    """
+
+    def exists(self) -> bool:
+        """Check whether the file can be read."""
+
+    def read_text(self, encoding: str = "utf-8") -> str:
+        """Read the file as text."""
+
+    def open_text(self, encoding: str = "utf-8") -> AbstractContextManager[IO[str]]:
+        """Open the file as a text stream."""
+
+    def as_path(self) -> AbstractContextManager[pathlib.Path]:
+        """Expose the file as a filesystem path."""
 
 
 @frozen
@@ -72,6 +98,28 @@ class PackagedResource:
     resource: str
     """Name of the file within that package, for example ``cv_cmip7_aft.yaml``."""
 
+    def _traversable(self, action: str) -> importlib.resources.abc.Traversable:
+        """
+        Locate the file within the installed package.
+
+        Parameters
+        ----------
+        action
+            Verb used in the error message when the lookup fails.
+
+        Returns
+        -------
+        :
+            The located file.
+        """
+        try:
+            return importlib.resources.files(self.package) / self.resource
+        except _RESOURCE_ERRORS as exc:
+            raise DataResourceError(
+                f"Could not {action} {self} from the installed package. "
+                "This usually means the package was built without its data files."
+            ) from exc
+
     def exists(self) -> bool:
         """
         Check whether the file is present in the installed package
@@ -82,8 +130,8 @@ class PackagedResource:
             True if the file can be read.
         """
         try:
-            return (importlib.resources.files(self.package) / self.resource).is_file()
-        except (ModuleNotFoundError, FileNotFoundError):
+            return self._traversable("locate").is_file()
+        except (DataResourceError, OSError):
             return False
 
     def read_text(self, encoding: str = "utf-8") -> str:
@@ -99,19 +147,12 @@ class PackagedResource:
         -------
         :
             The contents of the file.
-
-        Raises
-        ------
-        DataResourceError
-            If the file is missing from the installed package.
         """
+        traversable = self._traversable("read")
         try:
-            return (importlib.resources.files(self.package) / self.resource).read_text(encoding=encoding)
-        except (ModuleNotFoundError, FileNotFoundError, OSError) as exc:
-            raise DataResourceError(
-                f"Could not read {self} from the installed package. "
-                "This usually means the package was built without its data files."
-            ) from exc
+            return traversable.read_text(encoding=encoding)
+        except _RESOURCE_ERRORS as exc:
+            raise DataResourceError(f"Could not read {self} from the installed package.") from exc
 
     @contextmanager
     def open_text(self, encoding: str = "utf-8") -> Iterator[IO[str]]:
@@ -128,9 +169,10 @@ class PackagedResource:
         :
             An open text stream positioned at the start of the file.
         """
+        traversable = self._traversable("open")
         try:
-            handle = (importlib.resources.files(self.package) / self.resource).open("r", encoding=encoding)
-        except (ModuleNotFoundError, FileNotFoundError, OSError) as exc:
+            handle = traversable.open("r", encoding=encoding)
+        except _RESOURCE_ERRORS as exc:
             raise DataResourceError(f"Could not open {self} from the installed package.") from exc
         try:
             yield handle
@@ -152,17 +194,96 @@ class PackagedResource:
         :
             A path that exists for the duration of the context.
         """
-        # Only the lookup is guarded. An exception raised in the caller's `with` body
-        # propagates back in through this yield, and must not be relabelled.
+        traversable = self._traversable("materialise")
         try:
-            manager = importlib.resources.as_file(importlib.resources.files(self.package) / self.resource)
-        except (ModuleNotFoundError, FileNotFoundError, OSError) as exc:
+            manager = importlib.resources.as_file(traversable)
+        except _RESOURCE_ERRORS as exc:
             raise DataResourceError(f"Could not materialise {self} as a filesystem path.") from exc
+        # The lookup is guarded, the body is not. An exception raised in the caller's
+        # `with` block propagates back in through this yield and must not be relabelled.
         with manager as path:
             yield path
 
     def __str__(self) -> str:
         return f"{self.package}/{self.resource}"
+
+
+@frozen
+class FileResource:
+    """
+    A data file at a plain filesystem path
+    """
+
+    path: pathlib.Path
+
+    def exists(self) -> bool:
+        """
+        Check whether the file exists
+
+        Returns
+        -------
+        :
+            True if the path points at a readable file.
+        """
+        return self.path.is_file()
+
+    def read_text(self, encoding: str = "utf-8") -> str:
+        """
+        Read the file as text
+
+        Parameters
+        ----------
+        encoding
+            Text encoding of the file.
+
+        Returns
+        -------
+        :
+            The contents of the file.
+        """
+        try:
+            return self.path.read_text(encoding=encoding)
+        except OSError as exc:
+            raise DataResourceError(f"Could not read {self}.") from exc
+
+    @contextmanager
+    def open_text(self, encoding: str = "utf-8") -> Iterator[IO[str]]:
+        """
+        Open the file as a text stream
+
+        Parameters
+        ----------
+        encoding
+            Text encoding of the file.
+
+        Yields
+        ------
+        :
+            An open text stream positioned at the start of the file.
+        """
+        try:
+            handle = self.path.open("r", encoding=encoding)
+        except OSError as exc:
+            raise DataResourceError(f"Could not open {self}.") from exc
+        try:
+            yield handle
+        finally:
+            handle.close()
+
+    @contextmanager
+    def as_path(self) -> Iterator[pathlib.Path]:
+        """
+        Expose the file as a filesystem path
+
+        Yields
+        ------
+        :
+            The path itself, which already exists on disk.
+        """
+        yield self.path
+
+    def __str__(self) -> str:
+        return str(self.path)
 
 
 class ResourceOrigin(enum.Enum):
@@ -199,14 +320,14 @@ class LayeredResource:
     cache: pathlib.Path | None = field(default=None)
     """A local cache location. Used only when the file is actually present there."""
 
-    def resolve(self) -> tuple[ResourceOrigin, pathlib.Path | PackagedResource]:
+    def resolve(self) -> tuple[ResourceOrigin, Resource]:
         """
         Determine which layer supplies the file
 
         Returns
         -------
         :
-            The origin, and either a filesystem path or the packaged resource.
+            The origin, and the resource that supplies the file.
 
         Raises
         ------
@@ -220,10 +341,10 @@ class LayeredResource:
                     "Point it at an existing file, or remove the setting to use the copy "
                     f"shipped with the REF ({self.packaged})."
                 )
-            return ResourceOrigin.override, self.override
+            return ResourceOrigin.override, FileResource(self.override)
 
         if self.cache is not None and self.cache.is_file():
-            return ResourceOrigin.cache, self.cache
+            return ResourceOrigin.cache, FileResource(self.cache)
 
         return ResourceOrigin.package, self.packaged
 
@@ -266,13 +387,7 @@ class LayeredResource:
         :
             The contents of the file.
         """
-        _, source = self.resolve()
-        if isinstance(source, PackagedResource):
-            return source.read_text(encoding=encoding)
-        try:
-            return source.read_text(encoding=encoding)
-        except OSError as exc:
-            raise DataResourceError(f"Could not read {source}.") from exc
+        return self.resolve()[1].read_text(encoding=encoding)
 
     @contextmanager
     def open_text(self, encoding: str = "utf-8") -> Iterator[IO[str]]:
@@ -289,13 +404,8 @@ class LayeredResource:
         :
             An open text stream positioned at the start of the file.
         """
-        _, source = self.resolve()
-        if isinstance(source, PackagedResource):
-            with source.open_text(encoding=encoding) as handle:
-                yield handle
-        else:
-            with source.open("r", encoding=encoding) as handle:
-                yield handle
+        with self.resolve()[1].open_text(encoding=encoding) as handle:
+            yield handle
 
     @contextmanager
     def as_path(self) -> Iterator[pathlib.Path]:
@@ -307,9 +417,5 @@ class LayeredResource:
         :
             A path that exists for the duration of the context.
         """
-        _, source = self.resolve()
-        if isinstance(source, PackagedResource):
-            with source.as_path() as path:
-                yield path
-        else:
-            yield source
+        with self.resolve()[1].as_path() as path:
+            yield path

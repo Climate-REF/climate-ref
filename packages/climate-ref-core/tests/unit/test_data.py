@@ -6,8 +6,10 @@ import pytest
 
 from climate_ref_core.data import (
     DataResourceError,
+    FileResource,
     LayeredResource,
     PackagedResource,
+    Resource,
     ResourceOrigin,
     resolve_cache_dir,
 )
@@ -50,6 +52,40 @@ class TestPackagedResource:
 
     def test_str(self):
         assert str(CV) == "climate_ref_core.pycmec/cv_cmip7_aft.yaml"
+
+
+class TestFileResource:
+    def test_satisfies_the_resource_protocol(self):
+        assert isinstance(FileResource(Path("/nowhere")), Resource)
+        assert isinstance(CV, Resource)
+
+    def test_read_text(self, tmp_path):
+        target = tmp_path / "a.yaml"
+        target.write_text("contents", encoding="utf-8")
+
+        assert FileResource(target).read_text() == "contents"
+
+    def test_exists(self, tmp_path):
+        assert not FileResource(tmp_path / "missing.yaml").exists()
+
+    def test_read_missing_raises(self, tmp_path):
+        with pytest.raises(DataResourceError, match="Could not read"):
+            FileResource(tmp_path / "missing.yaml").read_text()
+
+    def test_open_missing_raises(self, tmp_path):
+        with pytest.raises(DataResourceError, match="Could not open"):
+            with FileResource(tmp_path / "missing.yaml").open_text():
+                pass
+
+    def test_as_path_returns_the_path_itself(self, tmp_path):
+        target = tmp_path / "a.yaml"
+        target.write_text("contents", encoding="utf-8")
+
+        with FileResource(target).as_path() as path:
+            assert path == target
+
+    def test_str(self, tmp_path):
+        assert str(FileResource(tmp_path / "a.yaml")) == str(tmp_path / "a.yaml")
 
 
 class TestLayeredResource:

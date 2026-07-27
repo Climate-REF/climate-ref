@@ -290,8 +290,7 @@ class DatasetRegistryManager:
                 old_path = legacy_dir / key
                 if old_path.exists():
                     # Registration happens at import time, so a read-only cache must not
-                    # stop the package from importing. The file stays where it is and
-                    # will be refetched if it is ever actually needed.
+                    # stop the package from importing.
                     try:
                         new_path.parent.mkdir(parents=True, exist_ok=True)
                         logger.info(f"Migrating cached file {key}: {old_path} -> {new_path}")

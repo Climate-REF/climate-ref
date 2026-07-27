@@ -50,6 +50,14 @@ def test_drs_relative_parts_ignores_an_anchor_inside_the_tree():
     assert drs_relative_parts(path)[0] == "OBS"
 
 
+def test_drs_relative_parts_ignores_an_untiered_anchor_inside_a_tiered_tree():
+    # obs4MIPs has no TierN directory, so a dataset directory of that name inside a
+    # native6 tree is long enough to look plausible on length alone.
+    path = "/data/ESMValTool/native6/Tier3/obs4MIPs/v1/mon/tas/era5_tas_1980_monthly.nc"
+
+    assert drs_relative_parts(path)[0] == "native6"
+
+
 def test_drs_relative_parts_falls_back_to_the_leftmost_anchor():
     # Nothing structurally fits, so the leftmost candidate is used and the caller's
     # own parser reports what is wrong with it.

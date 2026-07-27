@@ -407,8 +407,8 @@ def load_recipe(recipe: str) -> Recipe:
     return normalize(yaml.safe_load(Path(filename).read_text(encoding="utf-8")))  # type: ignore[no-any-return]
 
 
-def _row_path(row: Any) -> str:
-    """Return the ``path`` column of a catalog row, which is always a string."""
+def _require_path(row: Any) -> str:
+    """Return the ``path`` column of a catalog row, rejecting a row that has no usable path."""
     if not isinstance(row.path, str):  # pragma: no branch
         msg = f"Invalid path encountered in {row}"
         raise ValueError(msg)
@@ -444,9 +444,7 @@ def prepare_reference_data(datasets: pd.DataFrame, reference_data_dir: Path) -> 
     not by the ``instance_id`` layout used for model data.
     Each file already sits under one of the project anchors on disk,
     so the path from the anchor onward is replicated verbatim under ``reference_data_dir``.
-    This lays out exactly the subset the solver selected,
-    so :meth:`build_cmd` can point ESMValCore at a version-pinned tree
-    instead of the whole downloaded registry.
+    The tree therefore holds exactly the selected subset and nothing else.
 
     Parameters
     ----------
@@ -466,7 +464,7 @@ def prepare_reference_data(datasets: pd.DataFrame, reference_data_dir: Path) -> 
     cleaned_dirs: set[Path] = set()
 
     for row in datasets.itertuples():
-        path = _row_path(row)
+        path = _require_path(row)
         tgt = reference_data_dir.joinpath(*drs_relative_parts(path))
         _symlink_into_tree(tgt, path, cleaned_dirs)
 
@@ -491,7 +489,7 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if not isinstance(row.instance_id, str):  # pragma: no branch
             msg = f"Invalid instance_id encountered in {row}"
             raise ValueError(msg)
-        path = _row_path(row)
+        path = _require_path(row)
         if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
             subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]

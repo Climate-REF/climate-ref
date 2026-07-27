@@ -1,16 +1,24 @@
 """
 Path conventions for ESMValTool reference (observational/reanalysis) data.
 
-ESMValTool reference data is located by ESMValCore from its own DRS directory templates
-rather than by ``instance_id``, so both the ingest adapter and the diagnostic runner need
-to know where the DRS-relative part of a path begins. That knowledge lives here so the two
-cannot drift apart.
+ESMValCore locates this data from its own DRS directory templates rather than by
+``instance_id``, so a reference file is identified by where its DRS path begins.
 """
 
 import re
 from pathlib import Path
 
-PROJECT_ANCHORS = ("OBS", "native6", "obs4MIPs")
+# DRS shape of each project, counted from the anchor: the fewest and most path
+# components it produces, and whether a ``TierN`` directory sits directly under the
+# anchor. ``native6`` and ``obs4MIPs`` are fixed depth. ``OBS`` allows extra
+# directories between the dataset and the file, so it has no upper bound.
+_PROJECT_LAYOUTS = {
+    "OBS": (3, None, True),
+    "native6": (7, 7, True),
+    "obs4MIPs": (4, 4, False),
+}
+
+PROJECT_ANCHORS = tuple(_PROJECT_LAYOUTS)
 """
 Top-level project directories, relative to the ``ESMValTool`` data root, that begin a DRS path.
 
@@ -20,19 +28,15 @@ The project itself is recovered from the filename.
 
 _TIER_RE = re.compile(r"^Tier\d+$")
 
-# Shortest DRS path each project can produce, counted from the anchor.
-_OBS_MIN_PARTS = 3
-_OBS4MIPS_MIN_PARTS = 4
-_NATIVE6_MIN_PARTS = 7
-
 
 def _is_plausible_drs(rel: tuple[str, ...]) -> bool:
     """Report whether ``rel`` looks like a DRS path for the project it starts with."""
-    if rel[0] == "obs4MIPs":
-        return len(rel) >= _OBS4MIPS_MIN_PARTS
-
-    minimum = _NATIVE6_MIN_PARTS if rel[0] == "native6" else _OBS_MIN_PARTS
-    return len(rel) >= minimum and bool(_TIER_RE.match(rel[1]))
+    min_parts, max_parts, tiered = _PROJECT_LAYOUTS[rel[0]]
+    if len(rel) < min_parts or (max_parts is not None and len(rel) > max_parts):
+        return False
+    # Only the tiered projects put a ``TierN`` directory directly under the anchor,
+    # so its presence tells the two layouts apart.
+    return tiered == bool(_TIER_RE.match(rel[1]))
 
 
 def drs_relative_parts(path: str | Path) -> tuple[str, ...]:

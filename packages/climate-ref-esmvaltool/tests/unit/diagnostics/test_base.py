@@ -143,6 +143,8 @@ def test_build_cmd_with_empty_selected_reference_data(mocker, tmp_path, metric_d
     datasets[SourceDatasetType.ESMValToolReference] = reference
     definition = attrs.evolve(metric_definition, datasets=ExecutionDatasetCollection(datasets))
     definition.output_directory.mkdir(parents=True)
+    # A leftover tree from an earlier run must not disguise an empty selection.
+    (definition.output_directory / "reference_data").mkdir()
 
     with pytest.raises(ValueError, match="no files were selected"):
         mock_diagnostic.build_cmd(definition)

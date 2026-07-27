@@ -194,7 +194,8 @@ def _matches_facets(
     metadata
         Parsed metadata dictionary
     facets
-        Facets to match against. Values can be strings or tuples of strings.
+        Facets to match against.
+        A value is one allowed value, or a collection of them.
 
     Returns
     -------
@@ -206,7 +207,7 @@ def _matches_facets(
 
         # Normalize to a collection of allowed values.
         # A string is one value rather than a collection of characters,
-        # and so is anything that is not a collection at all, such as an int ``tier``.
+        # and so is anything that is not a collection at all.
         if isinstance(facet_value, str) or not isinstance(facet_value, Collection):
             allowed_values: Collection[str | int] = (facet_value,)
         else:

@@ -183,6 +183,17 @@ jobs:
         kubectl exec deployment/test-ref-orchestrator -- celery -A climate_ref_celery.app inspect active --timeout 10 || true
         kubectl exec deployment/test-ref-orchestrator -- celery -A climate_ref_celery.app inspect reserved --timeout 10 || true
         echo ""
+        echo "=== Worker Stacks ==="
+        curl -sL -o /tmp/pyspy.whl https://github.com/benfred/py-spy/releases/download/v0.4.2/py_spy-0.4.2-py2.py3-none-manylinux_2_5_x86_64.manylinux1_x86_64.whl
+        unzip -o -q /tmp/pyspy.whl -d /tmp/pyspy
+        chmod +x /tmp/pyspy/py_spy-0.4.2.data/scripts/py-spy
+        for component in orchestrator example pmp esmvaltool ilamb; do
+          pod=$(kubectl get pod -l app.kubernetes.io/component=$component -o jsonpath='{.items[0].metadata.name}')
+          echo "--- $component ($pod) ---"
+          kubectl cp /tmp/pyspy/py_spy-0.4.2.data/scripts/py-spy "$pod:/tmp/py-spy" || true
+          kubectl exec "$pod" -- sh -c 'chmod +x /tmp/py-spy; for p in $(ls /proc | grep -E "^[0-9]+$"); do grep -aq python /proc/$p/cmdline 2>/dev/null && /tmp/py-spy dump --pid $p 2>&1; done' || true
+        done
+        echo ""
         echo "=== PMP Worker Logs ==="
         kubectl logs -l app.kubernetes.io/component=pmp --tail=500 || true
         echo ""

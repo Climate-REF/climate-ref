@@ -1,4 +1,5 @@
 import importlib.resources
+import threading
 from pathlib import Path
 
 import pytest
@@ -375,6 +376,25 @@ def test_fetch_all_files_no_output(mocker):
 
     fetch_all_files(registry, "obs4ref", None)
     assert registry.fetch.call_count == NUM_OBS4REF_FILES
+
+
+def test_fetch_all_files_fetches_in_parallel(mocker):
+    registry = mocker.Mock()
+    registry.registry = {
+        "first.nc": "sha256:first",
+        "second.nc": "sha256:second",
+    }
+    simultaneous_fetches = threading.Barrier(2, timeout=2)
+
+    def fetch(key):
+        simultaneous_fetches.wait()
+        return key
+
+    registry.fetch.side_effect = fetch
+
+    fetch_all_files(registry, "obs4ref", None)
+
+    assert registry.fetch.call_count == 2
 
 
 class TestValidateRegistryCache:

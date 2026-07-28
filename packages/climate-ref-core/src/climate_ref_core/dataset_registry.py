@@ -12,6 +12,7 @@ import os
 import pathlib
 import shutil
 from collections.abc import Iterator
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 import pooch
 import pooch.hashes
@@ -23,6 +24,7 @@ from climate_ref_core.env import env
 from climate_ref_core.source_types import SourceDatasetType
 
 DATASET_URL = env.str("REF_DATASET_URL", default="https://obs4ref.climate-ref.org")
+_MAX_FETCH_WORKERS = 4
 
 
 class RegistryUseCase(enum.Enum):
@@ -191,7 +193,7 @@ def fetch_all_files(
     """
     Fetch all files associated with a pooch registry and write them to an output directory.
 
-    Pooch fetches, caches and validates the downloaded files.
+    Pooch fetches, caches and validates up to four downloaded files concurrently.
     Subsequent calls to this function will not refetch any previously downloaded files.
 
     Parameters
@@ -217,7 +219,7 @@ def fetch_all_files(
     if output_dir:
         output_dir.mkdir(parents=True, exist_ok=True)
 
-    for key in track(registry.registry.keys(), description=f"Fetching {name} data"):
+    def fetch_one(key: str) -> None:
         fetch_file = registry.fetch(key)
         expected_hash = registry.registry[key]
         if not isinstance(expected_hash, str) or not expected_hash:  # pragma: no cover
@@ -225,7 +227,7 @@ def fetch_all_files(
 
         if output_dir is None:
             # Just warm the cache and move onto the next file
-            continue
+            return
 
         linked_file = output_dir / key
         linked_file.parent.mkdir(parents=True, exist_ok=True)
@@ -241,6 +243,16 @@ def fetch_all_files(
             logger.info(f"File {linked_file} already exists. Skipping.")
         if verify:
             _verify_hash_matches(linked_file, expected_hash)
+
+    keys = list(registry.registry)
+    with ThreadPoolExecutor(max_workers=_MAX_FETCH_WORKERS) as executor:
+        futures = [executor.submit(fetch_one, key) for key in keys]
+        for future in track(
+            as_completed(futures),
+            total=len(futures),
+            description=f"Fetching {name} data",
+        ):
+            future.result()
 
 
 class DatasetRegistryManager:

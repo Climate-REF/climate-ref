@@ -1,7 +1,57 @@
+import math
 from typing import Any, TypeVar
 
-from sqlalchemy import JSON, MetaData
+from sqlalchemy import JSON, Dialect, MetaData
 from sqlalchemy.orm import DeclarativeBase
+from sqlalchemy.types import TypeDecorator
+
+
+def replace_non_finite(value: Any) -> Any:
+    """
+    Replace NaN and infinities with None, recursing into lists and dicts
+
+    JSON has no literal for either.
+    `json.dumps` writes the bare tokens `NaN`, `Infinity` and `-Infinity` by default,
+    which Python reads back but PostgreSQL rejects when it validates the value on insert.
+
+    Parameters
+    ----------
+    value
+        Value about to be serialised as JSON.
+
+    Returns
+    -------
+    :
+        The value with every non-finite float replaced by None.
+    """
+    if isinstance(value, float) and not math.isfinite(value):
+        return None
+    if isinstance(value, dict):
+        return {key: replace_non_finite(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [replace_non_finite(item) for item in value]
+    return value
+
+
+class SanitisedJSON(TypeDecorator[Any]):
+    """
+    JSON column that maps non-finite floats to null.
+
+    A missing value in a metric series is entirely ordinary,
+    so a series that contains one must still be storable.
+    Mapping to null keeps the series the same length,
+    which is what a consumer plotting it needs.
+    """
+
+    impl = JSON
+    cache_ok = True
+
+    # JSON stores a Python None as the JSON literal null rather than SQL NULL.
+    should_evaluate_none = True
+
+    def process_bind_param(self, value: Any, dialect: Dialect) -> Any:
+        """Sanitise the value on its way into the database."""
+        return replace_non_finite(value)
 
 
 class Base(DeclarativeBase):
@@ -10,9 +60,9 @@ class Base(DeclarativeBase):
     """
 
     type_annotation_map = {  # noqa: RUF012
-        dict[str, Any]: JSON,
-        list[float | int]: JSON,
-        list[float | int | str]: JSON,
+        dict[str, Any]: SanitisedJSON,
+        list[float | int]: SanitisedJSON,
+        list[float | int | str]: SanitisedJSON,
     }
     metadata = MetaData(
         # Enforce a common naming convention for constraints

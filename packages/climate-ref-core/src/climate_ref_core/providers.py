@@ -10,7 +10,9 @@ Each diagnostic package must implement the `DiagnosticProvider` interface.
 from __future__ import annotations
 
 import datetime
+import functools
 import hashlib
+import importlib.metadata
 import importlib.resources
 import os
 import stat
@@ -362,6 +364,86 @@ def import_provider(fqn: str) -> DiagnosticProvider:
     except AttributeError:
         logger.error(f"Provider '{fqn}' not found")
         raise InvalidProviderException(fqn, "Provider not found in module")
+
+
+@functools.cache
+def provider_by_slug(slug: str) -> DiagnosticProvider:
+    """
+    Look up a registered provider by its slug
+
+    Entry points can be enumerated without importing them,
+    so only the provider that matches is ever loaded.
+    The loaded provider is the module-level singleton,
+    so it carries whatever configuration the current process has already applied to it.
+
+    Parameters
+    ----------
+    slug
+        Slug of the provider, for example `esmvaltool`.
+
+    Raises
+    ------
+    InvalidProviderException
+        If no registered provider has the given slug.
+
+    Returns
+    -------
+    :
+        DiagnosticProvider instance
+    """
+    entry_points = list(importlib.metadata.entry_points(group="climate-ref.providers"))
+
+    # The entry point name is the provider slug by convention, so try that first.
+    for entry_point in entry_points:
+        if entry_point.name == slug:
+            provider = import_provider(entry_point.value)
+            if provider.slug == slug:
+                return provider
+
+    # Otherwise load the rest and compare their slugs.
+    # A provider that fails to import is skipped rather than masking the one we are looking for.
+    for entry_point in entry_points:
+        if entry_point.name == slug:
+            continue
+        try:
+            provider = import_provider(entry_point.value)
+        except InvalidProviderException:
+            logger.debug(f"Skipping provider {entry_point.name!r} while looking for {slug!r}")
+            continue
+        if provider.slug == slug:
+            return provider
+
+    available = ", ".join(sorted(ep.name for ep in entry_points)) or "[]"
+    raise InvalidProviderException(slug, f"No provider with slug {slug!r}. Available: {available}")
+
+
+def resolve_diagnostic(full_slug: str) -> Diagnostic:
+    """
+    Look up a diagnostic from its full slug
+
+    Parameters
+    ----------
+    full_slug
+        Slug of the form `{provider_slug}/{diagnostic_slug}`, as produced by
+        [Diagnostic.full_slug][climate_ref_core.diagnostics.Diagnostic.full_slug].
+
+    Raises
+    ------
+    InvalidProviderException
+        If the slug is malformed or names a provider that is not installed.
+    KeyError
+        If the provider does not supply a diagnostic with that slug.
+
+    Returns
+    -------
+    :
+        The diagnostic registered with the named provider.
+    """
+    provider_slug, separator, diagnostic_slug = full_slug.partition("/")
+    if not separator:
+        raise InvalidProviderException(full_slug, "Expected a slug of the form 'provider/diagnostic'")
+
+    return provider_by_slug(provider_slug).get(diagnostic_slug)
 
 
 class CommandLineDiagnosticProvider(DiagnosticProvider):

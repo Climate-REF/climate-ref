@@ -18,7 +18,13 @@ from climate_ref_core.exceptions import (
     InvalidDiagnosticException,
     InvalidProviderException,
 )
-from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider, import_provider
+from climate_ref_core.providers import (
+    CondaDiagnosticProvider,
+    DiagnosticProvider,
+    import_provider,
+    provider_by_slug,
+    resolve_diagnostic,
+)
 
 
 @pytest.fixture
@@ -652,3 +658,27 @@ class TestLifecycleHooks:
 
         # Should return True when env_path exists
         assert provider.validate_setup(mock_config) is True
+
+
+class TestProviderLookup:
+    def test_provider_by_slug(self):
+        # The same singleton the entry point exposes, so it carries any configuration
+        # the current process has already applied to it
+        assert provider_by_slug("example") is import_provider("climate_ref_example:provider")
+
+    def test_provider_by_slug_unknown(self):
+        with pytest.raises(InvalidProviderException, match="No provider with slug 'nope'"):
+            provider_by_slug("nope")
+
+    def test_resolve_diagnostic(self):
+        provider = import_provider("climate_ref_example:provider")
+
+        assert resolve_diagnostic("example/global-mean-timeseries") is provider.get("global-mean-timeseries")
+
+    def test_resolve_diagnostic_requires_a_provider_prefix(self):
+        with pytest.raises(InvalidProviderException, match="provider/diagnostic"):
+            resolve_diagnostic("global-mean-timeseries")
+
+    def test_resolve_diagnostic_unknown_diagnostic(self):
+        with pytest.raises(KeyError):
+            resolve_diagnostic("example/not-a-diagnostic")

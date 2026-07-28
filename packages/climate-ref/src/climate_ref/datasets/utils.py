@@ -120,9 +120,7 @@ def parse_cftime_dates(
             microsecond = int(frac)
 
         try:
-            return cftime.datetime(  # type: ignore[call-arg]
-                year, month, day, hour, minute, second, microsecond, calendar=cal
-            )
+            return cftime.datetime(year, month, day, hour, minute, second, microsecond, calendar=cal)
         except ValueError:
             logger.error(f"Failed to create cftime date from: {date_str} (calendar={cal})")
             return None

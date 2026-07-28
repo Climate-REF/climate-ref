@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pathlib
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
 from attrs import field, frozen
 
@@ -64,9 +64,12 @@ class ExecutionDefinition:
     for a specific set of datasets fulfilling the requirements.
     """
 
-    diagnostic: Diagnostic
+    _diagnostic: Diagnostic | None = field(eq=False)
     """
     The diagnostic that is being executed
+
+    May be None on a definition that has been deserialised, in which case it is
+    resolved from :attr:`diagnostic_full_slug` on first access.
     """
 
     key: str
@@ -93,11 +96,48 @@ class ExecutionDefinition:
     Root directory for storing the output of the diagnostic execution
     """
 
+    _diagnostic_full_slug: str | None = field(default=None, eq=False)
+    """
+    Slug of the diagnostic, supplied when the diagnostic itself is not available.
+
+    Read through :attr:`diagnostic_full_slug`, which derives it from the diagnostic when
+    it was not given. Both this and :attr:`_diagnostic` are filled in lazily, so neither
+    takes part in equality.
+    """
+
+    @property
+    def diagnostic_full_slug(self) -> str:
+        """
+        Slug of the diagnostic being executed, of the form `{provider_slug}/{diagnostic_slug}`
+
+        This is the definition's identity across a process boundary. The diagnostic is a
+        live Python object owned by its provider, so only the slug crosses the wire.
+        """
+        if self._diagnostic_full_slug is None:
+            if self._diagnostic is None:
+                raise ValueError("Either diagnostic or diagnostic_full_slug must be given")
+            object.__setattr__(self, "_diagnostic_full_slug", self._diagnostic.full_slug())
+        return cast("str", self._diagnostic_full_slug)
+
+    @property
+    def diagnostic(self) -> Diagnostic:
+        """
+        The diagnostic that is being executed
+
+        Resolved from the provider registry on first access if it was not supplied,
+        which imports only the provider named in the slug.
+        """
+        if self._diagnostic is None:
+            from climate_ref_core.providers import resolve_diagnostic  # noqa: PLC0415
+
+            object.__setattr__(self, "_diagnostic", resolve_diagnostic(self.diagnostic_full_slug))
+        return cast("Diagnostic", self._diagnostic)
+
     def execution_slug(self) -> str:
         """
         Get a slug for the execution
         """
-        return f"{self.diagnostic.full_slug()}/{self.key}"
+        return f"{self.diagnostic_full_slug}/{self.key}"
 
     def to_output_path(self, filename: pathlib.Path | str | None) -> pathlib.Path:
         """

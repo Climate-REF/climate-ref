@@ -11,6 +11,7 @@ from loguru import logger
 from rich.pretty import pretty_repr
 
 from climate_ref.config import Config
+from climate_ref_celery.serialisation import register_serialisation
 from climate_ref_core.logging import initialise_logging
 
 os.environ.setdefault("CELERY_CONFIG_MODULE", "climate_ref_celery.celeryconf.dev")
@@ -24,6 +25,8 @@ def create_celery_app(name: str) -> Celery:
     The configuration module is loaded from the environment variable `CELERY_CONFIG_MODULE`
     which defaults to `climate_ref_celery.celeryconf.dev` if not set.
     """
+    register_serialisation()
+
     app = Celery(name)
     app.config_from_envvar("CELERY_CONFIG_MODULE")
 

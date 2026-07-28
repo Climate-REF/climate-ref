@@ -221,6 +221,11 @@ def fetch_all_files(
             _verify_hash_matches(linked_file, expected_hash)
 
     keys = list(registry.registry)
+    # Pooch creates missing cache directories without exist_ok=True. Prepare them
+    # before starting workers so files with a shared parent cannot race in mkdir.
+    for key in keys:
+        (registry.abspath / key).parent.mkdir(parents=True, exist_ok=True)  # type: ignore[attr-defined]
+
     with ThreadPoolExecutor(max_workers=_MAX_FETCH_WORKERS) as executor:
         futures = [executor.submit(fetch_one, key) for key in keys]
         for future in track(

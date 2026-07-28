@@ -91,26 +91,27 @@ def _decode_float(payload: dict[str, Any]) -> float:
 
 def _encode_scalar(value: Any) -> Any:
     """
-    Encode a single cell of a dataset frame.
+    Encode a scalar, whether it is a cell of a dataset frame or a value on its own.
 
     Every flavour of missing value becomes JSON null, including NaN.
-    The column's dtype is recorded alongside,
-    and pandas restores the sentinel that dtype uses when the column is rebuilt.
+    A frame column records its dtype alongside,
+    so pandas restores the sentinel that dtype uses when the column is rebuilt.
     An infinity is a real value rather than a missing one, so it is tagged instead.
     """
     if value is None or value is pd.NA or value is pd.NaT:
         return None
+    if hasattr(value, "item"):
+        # numpy scalars carry a dtype that JSON has no room for
+        value = value.item()
+    if isinstance(value, bool | int | str):
+        return value
+    if isinstance(value, float):
+        return _encode_float(value)
     if isinstance(value, cftime.datetime):
         return _encode_cftime(value)
     if isinstance(value, pathlib.PurePath):
         return _encode_path(value)
-    if isinstance(value, float):
-        return _encode_float(value)
-    if hasattr(value, "item") and not isinstance(value, str | bytes):
-        # numpy scalars carry a dtype that JSON has no room for
-        item = value.item()
-        return _encode_float(item) if isinstance(item, float) else item
-    return value
+    raise TypeError(f"Cannot encode {type(value).__name__} as JSON")
 
 
 _SCALAR_DECODERS: dict[str, Callable[[dict[str, Any]], Any]] = {
@@ -129,7 +130,7 @@ def _decode_scalar(value: Any) -> Any:
     return value
 
 
-def _encode_values(values: pd.Series | pd.Index) -> list[Any]:
+def _encode_values(values: pd.Series | pd.Index, where: str) -> list[Any]:
     """
     Encode a column or index of a dataset frame.
 
@@ -142,13 +143,16 @@ def _encode_values(values: pd.Series | pd.Index) -> list[Any]:
         dtype.kind in "iub" or (dtype.kind == "f" and bool(np.isfinite(values.to_numpy()).all()))
     ):
         return values.tolist()
-    return [_encode_scalar(value) for value in values.tolist()]
+    try:
+        return [_encode_scalar(value) for value in values.tolist()]
+    except TypeError as exc:
+        raise TypeError(f"Cannot encode {where} of the dataset frame: {exc}") from exc
 
 
 def _encode_frame(frame: pd.DataFrame) -> dict[str, Any]:
     return {
         TAG: "dataframe",
-        "index": _encode_values(frame.index),
+        "index": _encode_values(frame.index, "the index"),
         "index_name": frame.index.name,
         "index_dtype": str(frame.index.dtype),
         # Column-major keeps each column's dtype with its values,
@@ -157,7 +161,7 @@ def _encode_frame(frame: pd.DataFrame) -> dict[str, Any]:
             {
                 "name": name,
                 "dtype": str(column.dtype),
-                "values": _encode_values(column),
+                "values": _encode_values(column, f"column {name!r}"),
             }
             for name, column in frame.items()
         ],
@@ -256,7 +260,7 @@ _DECODERS: dict[str, Callable[[dict[str, Any]], Any]] = {
 }
 
 
-def to_wire(value: Any) -> Any:  # noqa: PLR0911
+def to_wire(value: Any) -> Any:
     """
     Convert a value into its JSON representation
 
@@ -287,15 +291,8 @@ def to_wire(value: Any) -> Any:  # noqa: PLR0911
         return {key: to_wire(item) for key, item in value.items()}
     if isinstance(value, list | tuple):
         return [to_wire(item) for item in value]
-    if isinstance(value, float):
-        return _encode_float(value)
-    if value is None or isinstance(value, str | bool | int):
-        return value
 
-    encoded = _encode_scalar(value)
-    if encoded is value:
-        raise TypeError(f"Cannot encode {type(value).__name__} as JSON")
-    return encoded
+    return _encode_scalar(value)
 
 
 def from_wire(value: Any) -> Any:

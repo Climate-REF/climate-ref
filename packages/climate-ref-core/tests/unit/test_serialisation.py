@@ -146,6 +146,12 @@ def test_definition_roundtrip_preserves_every_field(cmip6_data_catalog):
         output_directory=pathlib.Path("/scratch/fragment"),
     )
 
+    # Every field except the omitted diagnostic must appear in the payload,
+    # so a new field with a default cannot silently stay off the wire.
+    payload = to_wire(definition)
+    field_names = {field.name.lstrip("_") for field in attrs.fields(ExecutionDefinition)} - {"diagnostic"}
+    assert field_names <= set(payload)
+
     decoded = roundtrip(definition)
 
     for field in attrs.fields(ExecutionDefinition):
@@ -344,3 +350,10 @@ def test_frame_with_nan_roundtrips():
     frame = pd.DataFrame({"value": pd.Series([1.0, float("nan")], dtype="float64")})
 
     pd.testing.assert_frame_equal(roundtrip(frame), frame)
+
+
+def test_frame_with_timestamps_is_rejected_naming_the_column():
+    frame = pd.DataFrame({"start_time": pd.to_datetime(["2000-01-01"])})
+
+    with pytest.raises(TypeError, match="column 'start_time'"):
+        to_wire(frame)

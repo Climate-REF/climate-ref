@@ -11,6 +11,10 @@ flower:
 defaults:
   podSecurityContext:
     runAsUser: 1000
+  # Lets the failure-capture step attach py-spy to hung workers.
+  securityContext:
+    capabilities:
+      add: ["SYS_PTRACE"]
   volumes:
   - name: gha-cached
     hostPath:

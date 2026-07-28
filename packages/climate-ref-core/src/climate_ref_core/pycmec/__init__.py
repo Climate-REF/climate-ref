@@ -4,7 +4,7 @@ CMEC python package
 
 from climate_ref_core.data import PackagedResource
 
-BUNDLED_CV = PackagedResource("climate_ref_core.pycmec", "cv_cmip7_aft.yaml")
+BUNDLED_AFT_CV = PackagedResource("climate_ref_core.pycmec", "cv_cmip7_aft.yaml")
 """
 The controlled vocabulary for the CMIP7 Assessment Fast Track diagnostics.
 

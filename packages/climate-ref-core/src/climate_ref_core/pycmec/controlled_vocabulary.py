@@ -10,7 +10,6 @@ from yaml import safe_load
 from climate_ref_core.data import FileResource, Resource
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.metric_values import ScalarMetricValue, SeriesMetricValue
-from climate_ref_core.pycmec import BUNDLED_CV
 from climate_ref_core.pycmec.metric import CMECMetric
 
 RESERVED_DIMENSION_NAMES = {"attributes", "json_structure", "created_at", "updated_at", "value", "id"}
@@ -225,7 +224,3 @@ class CV:
 
         """
         return CV.load(FileResource(pathlib.Path(filename)))
-
-
-if __name__ == "__main__":  # pragma: no cover
-    print(BUNDLED_CV.read_text())

@@ -46,7 +46,7 @@ from climate_ref_core.data import LayeredResource, PackagedResource, resolve_cac
 from climate_ref_core.env import env
 from climate_ref_core.exceptions import InvalidExecutorException
 from climate_ref_core.logging import DEFAULT_LOG_FORMAT
-from climate_ref_core.pycmec import BUNDLED_CV
+from climate_ref_core.pycmec import BUNDLED_AFT_CV
 
 if TYPE_CHECKING:
     from climate_ref.database import Database
@@ -194,7 +194,7 @@ class PathConfig:
         :
             The resolved controlled vocabulary resource.
         """
-        return LayeredResource(packaged=BUNDLED_CV, override=self.dimensions_cv)
+        return LayeredResource(packaged=BUNDLED_AFT_CV, override=self.dimensions_cv)
 
 
 @config(prefix=env_prefix)

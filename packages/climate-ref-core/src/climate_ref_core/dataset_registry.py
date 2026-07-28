@@ -404,8 +404,8 @@ def iter_reference_registries(
     Yield the ``(registry, source_type)`` pairs for all catalog-ingestable registries.
 
     Registries whose ``use_case`` is not ``reference``, or whose ``source_type`` is
-    ``None`` (e.g. registries that mix source types and so cannot be catalogued as
-    a whole), are skipped.
+    ``None`` (e.g. registries that mix source types and so cannot be catalogued as a whole),
+    are skipped.
     A later ingest driver can pass the yielded ``source_type`` to
     :func:`climate_ref.datasets.get_dataset_adapter` to select the parsing adapter.
 

@@ -18,7 +18,7 @@ import enum
 import importlib.resources
 import os
 import pathlib
-from collections.abc import Iterator
+from collections.abc import Generator
 from contextlib import ExitStack, contextmanager
 from typing import Protocol
 
@@ -159,7 +159,7 @@ class PackagedResource:
             raise DataResourceError(f"Could not read {self} from the installed package.") from exc
 
     @contextmanager
-    def as_path(self) -> Iterator[pathlib.Path]:
+    def as_path(self) -> Generator[pathlib.Path]:
         """
         Expose the file as a filesystem path for the duration of the context
 
@@ -237,7 +237,7 @@ class FileResource:
             raise DataResourceError(f"Could not read {self}.") from exc
 
     @contextmanager
-    def as_path(self) -> Iterator[pathlib.Path]:
+    def as_path(self) -> Generator[pathlib.Path]:
         """
         Expose the file as a filesystem path
 

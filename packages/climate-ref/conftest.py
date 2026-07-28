@@ -28,7 +28,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     create_cmip7_path,
     format_cmip7_time_range,
 )
-from climate_ref_core.pycmec import BUNDLED_CV
+from climate_ref_core.pycmec import BUNDLED_AFT_CV
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 
 # Ignore the alembic folder
@@ -111,7 +111,7 @@ def invoke_cli_unmigrated(config: Config, cli_runner: Callable[..., Any]) -> Cal
 
 @pytest.fixture(scope="session")
 def cmip7_aft_cv() -> CV:
-    return CV.load(BUNDLED_CV)
+    return CV.load(BUNDLED_AFT_CV)
 
 
 @pytest.fixture(scope="session")

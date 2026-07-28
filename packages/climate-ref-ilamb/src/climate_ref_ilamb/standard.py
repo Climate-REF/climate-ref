@@ -670,7 +670,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                 RegistryRequest(
                     slug=slug,
                     registry_name="obs4ref",
-                    facets=obs_filters,  # type: ignore
+                    facets=obs_filters,
                     source_type="obs4MIPs",
                 ),
             )

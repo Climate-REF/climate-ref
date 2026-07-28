@@ -15,14 +15,53 @@ T = TypeVar("T")
 C = TypeVar("C", bound=type)
 
 
-def _pop_empty(d: dict[str, Any]) -> None:
-    keys = list(d.keys())
-    for key in keys:
+def _prune(d: dict[str, Any], should_drop: Callable[[Any], bool]) -> None:
+    """
+    Remove entries matching a predicate, recursively
+
+    Parameters
+    ----------
+    d
+        The unstructured configuration, modified in place.
+    should_drop
+        Returns True for values that should be removed.
+    """
+    for key in list(d.keys()):
         value = d[key]
         if isinstance(value, dict):
-            _pop_empty(value)
-            if not value:
-                d.pop(key)
+            _prune(value, should_drop)
+        elif isinstance(value, list):
+            for entry in value:
+                if isinstance(entry, dict):
+                    _prune(entry, should_drop)
+        if should_drop(d[key]):
+            d.pop(key)
+
+
+def _pop_empty(d: dict[str, Any]) -> None:
+    """
+    Remove keys whose value is an empty mapping, recursively
+
+    Parameters
+    ----------
+    d
+        The unstructured configuration, modified in place.
+    """
+    _prune(d, lambda value: isinstance(value, dict) and not value)
+
+
+def _pop_none(d: dict[str, Any]) -> None:
+    """
+    Remove keys whose value is None, recursively
+
+    TOML has no null, so an unset value is represented by the absence of the key.
+
+    Parameters
+    ----------
+    d
+        The unstructured configuration, modified in place.
+    """
+    _prune(d, lambda value: value is None)
 
 
 def _format_key_exception(exc: BaseException, _: type | None) -> str | None:

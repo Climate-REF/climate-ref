@@ -1,6 +1,7 @@
 import json
 import pathlib
 
+import attrs
 import cftime
 import pandas as pd
 import pytest
@@ -127,6 +128,33 @@ def test_definition_roundtrips(metric_definition):
     assert result.output_directory == metric_definition.output_directory
     assert result.output_fragment() == metric_definition.output_fragment()
     assert result.datasets.hash == metric_definition.datasets.hash
+
+
+def test_definition_roundtrip_preserves_every_field(cmip6_data_catalog):
+    """
+    `_structure_definition` lists the fields by hand,
+    so a new field on `ExecutionDefinition` must fail here rather than fall off the wire.
+    """
+    definition = ExecutionDefinition(
+        diagnostic=None,
+        diagnostic_full_slug="example/global-mean-timeseries",
+        key="key",
+        datasets=ExecutionDatasetCollection(
+            {SourceDatasetType.CMIP6: DatasetCollection(cmip6_data_catalog, "instance_id")}
+        ),
+        root_directory=pathlib.Path("/scratch"),
+        output_directory=pathlib.Path("/scratch/fragment"),
+    )
+
+    decoded = roundtrip(definition)
+
+    for field in attrs.fields(ExecutionDefinition):
+        original = getattr(definition, field.name)
+        restored = getattr(decoded, field.name)
+        if isinstance(original, ExecutionDatasetCollection):
+            assert restored.hash == original.hash, field.name
+        else:
+            assert restored == original, field.name
 
 
 def test_definition_does_not_carry_the_diagnostic(metric_definition):

@@ -68,8 +68,8 @@ class ExecutionDefinition:
     """
     The diagnostic that is being executed
 
-    May be None on a definition that has been deserialised, in which case it is
-    resolved from :attr:`diagnostic_full_slug` on first access.
+    May be None on a definition that has been deserialised,
+    in which case it is resolved from :attr:`diagnostic_full_slug` on first access.
     """
 
     key: str

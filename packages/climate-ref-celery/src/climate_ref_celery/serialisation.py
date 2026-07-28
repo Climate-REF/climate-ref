@@ -1,8 +1,9 @@
 """
 Registration of the REF wire format with kombu.
 
-Celery looks codecs up by name, so this has to be imported by both the client sending a
-task and the worker receiving it. Importing `climate_ref_celery.app` is enough for both.
+Celery looks codecs up by name,
+so this has to be imported by both the client sending a task and the worker receiving it.
+Importing `climate_ref_celery.app` is enough for both.
 """
 
 import json

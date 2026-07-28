@@ -43,8 +43,8 @@ def _encode_cftime(value: cftime.datetime) -> dict[str, Any]:
 
 
 def _decode_cftime(payload: dict[str, Any]) -> cftime.datetime:
-    # cftime dates are not always representable by datetime.fromisoformat: calendars admit 30 February
-    # and a year zero, so the components are parsed directly.
+    # cftime dates are not always representable by datetime.fromisoformat:
+    # calendars admit 30 February and a year zero, so the components are parsed directly.
     match = _ISO.match(payload["value"])
     if match is None:  # pragma: no cover, guards against a corrupted message
         raise ValueError(f"Could not parse cftime value {payload['value']!r}")
@@ -151,8 +151,8 @@ def _encode_frame(frame: pd.DataFrame) -> dict[str, Any]:
         "index": _encode_values(frame.index),
         "index_name": frame.index.name,
         "index_dtype": str(frame.index.dtype),
-        # Column-major keeps each column's dtype with its values, and repeats the column
-        # names once rather than once per row.
+        # Column-major keeps each column's dtype with its values,
+        # and repeats the column names once rather than once per row.
         "columns": [
             {
                 "name": name,

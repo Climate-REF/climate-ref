@@ -212,8 +212,11 @@ We need to be resiliant to workers failing.
 | `CELERY_ACCEPT_CONTENT`             | Comma separated content types the worker accepts | `json,ref-json`     |
 
 Tasks and results are encoded as JSON (`ref-json`).
-A rolling upgrade from a release that still used pickle needs `CELERY_ACCEPT_CONTENT` set to
-`json,ref-json,pickle` until the queues have drained, then reverted.
+A rolling upgrade from a release that still used pickle
+needs `CELERY_ACCEPT_CONTENT` set to `json,ref-json,pickle` until the queues have drained,
+then reverted.
+Upgrade the workers before any client that submits tasks,
+because an old worker cannot decode `ref-json` messages.
 
 The following settings are always enabled in `base.py` and cannot be overridden via
 environment variables:

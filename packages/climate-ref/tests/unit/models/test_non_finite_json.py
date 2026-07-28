@@ -93,9 +93,9 @@ class TestNonFiniteReachesTheDatabaseAsNull:
 
     def test_none_attributes_stay_a_json_null(self, db_seeded):
         """
-        `attributes` is not nullable, and relies on JSON storing a Python None as the
-        JSON literal null rather than SQL NULL. A TypeDecorator does not inherit that
-        behaviour on its own.
+        `attributes` is not nullable,
+        and relies on JSON storing a Python None as the JSON literal null rather than SQL NULL.
+        A TypeDecorator does not inherit that behaviour on its own.
         """
         session = db_seeded.session
 
@@ -128,9 +128,9 @@ class TestNonFiniteReachesTheDatabaseAsNull:
         """
         The content hash is deliberately left alone.
 
-        Its serialisation is relied on by the series-index migration backfill, so it must
-        stay stable. Two axes that differ only in NaN versus None therefore remain
-        separate rows that happen to store the same values.
+        Its serialisation is relied on by the series-index migration backfill, so it must stay stable.
+        Two axes that differ only in NaN versus None
+        therefore remain separate rows that happen to store the same values.
         """
         assert SeriesIndex.compute_hash("t", [1.0, NAN]) != SeriesIndex.compute_hash("t", [1.0, None])
 

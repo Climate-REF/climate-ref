@@ -9,6 +9,7 @@ The execution then ends up with 0 metric values despite the diagnostic having su
 
 import json
 
+import numpy as np
 import pytest
 
 from climate_ref.models import SeriesIndex, SeriesMetricValue
@@ -30,6 +31,12 @@ class TestReplaceNonFinite:
     @pytest.mark.parametrize("value", [None, True, 3, "NaN", "a string"])
     def test_other_types_are_untouched(self, value):
         assert replace_non_finite(value) is value
+
+    @pytest.mark.parametrize("dtype", ["float16", "float32", "float64"])
+    def test_numpy_non_finite_becomes_none(self, dtype):
+        assert replace_non_finite(np.dtype(dtype).type(NAN)) is None
+        assert replace_non_finite(np.dtype(dtype).type(INF)) is None
+        assert replace_non_finite(np.dtype(dtype).type(1.5)) == 1.5
 
     def test_recurses_into_lists(self):
         assert replace_non_finite([1.0, NAN, [INF, 2.0]]) == [1.0, None, [None, 2.0]]

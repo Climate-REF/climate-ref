@@ -24,6 +24,10 @@ def replace_non_finite(value: Any) -> Any:
     :
         The value with every non-finite float replaced by None.
     """
+    if hasattr(value, "item"):
+        # numpy scalars are not JSON serialisable,
+        # and a non-finite float32 must be caught like any other float
+        value = value.item()
     if isinstance(value, float) and not math.isfinite(value):
         return None
     if isinstance(value, dict):

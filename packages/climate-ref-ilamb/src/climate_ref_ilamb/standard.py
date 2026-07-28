@@ -20,7 +20,8 @@ from loguru import logger
 
 from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
-from climate_ref_core.dataset_registry import dataset_registry_manager, resolve_cache_dir
+from climate_ref_core.data import resolve_cache_dir
+from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,
@@ -669,7 +670,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                 RegistryRequest(
                     slug=slug,
                     registry_name="obs4ref",
-                    facets=obs_filters,  # type: ignore
+                    facets=obs_filters,
                     source_type="obs4MIPs",
                 ),
             )

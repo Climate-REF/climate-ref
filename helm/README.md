@@ -182,7 +182,7 @@ Environment variables can be set via `defaults.env` or per-provider:
 | ----------------------- | ------------------------- | -------------------------------------------- |
 | `CELERY_BROKER_URL`     | Redis broker URL          | Auto-configured to Dragonfly                 |
 | `CELERY_RESULT_BACKEND` | Redis result backend URL  | Auto-configured to Dragonfly                 |
-| `CELERY_ACCEPT_CONTENT` | Accepted content types    | `["json", "pickle"]`                         |
+| `CELERY_ACCEPT_CONTENT` | Accepted content types    | `json,ref-json` (from the app config)        |
 | `REF_EXECUTOR`          | Executor class            | `climate_ref_celery.executor.CeleryExecutor` |
 | `HOME`                  | Home directory (writable) | `/tmp`                                       |
 
@@ -213,8 +213,7 @@ We need to be resiliant to workers failing.
 
 Tasks and results are encoded as JSON (`ref-json`).
 A rolling upgrade from a release that still used pickle
-needs `CELERY_ACCEPT_CONTENT` set to `json,ref-json,pickle` until the queues have drained,
-then reverted.
+needs `CELERY_ACCEPT_CONTENT` set to `json,ref-json,pickle` until the queues have drained, then reverted.
 Upgrade the workers before any client that submits tasks,
 because an old worker cannot decode `ref-json` messages.
 

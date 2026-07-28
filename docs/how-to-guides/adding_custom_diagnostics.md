@@ -150,7 +150,6 @@ class GlobalMeanTimeseries(Diagnostic):
 If your diagnostic must run in its own Conda environment,
 extend [CommandLineDiagnostic][climate_ref_core.diagnostics.CommandLineDiagnostic] instead.
 
-
 ## 4. Register your diagnostics
 
 In your package entry point (e.g. `__init__.py`), register all diagnostics:
@@ -192,7 +191,7 @@ These hooks are called by `ref providers setup` before any diagnostics are run.
 ### Available hooks
 
 | Hook | Purpose | When to use |
-|------|---------|-------------|
+| ------ | --------- | ------------- |
 | `setup_environment(config)` | Set up execution environment | Conda env creation, tool installation |
 | `fetch_data(config)` | Download required data | Reference datasets, auxiliary files |
 | `post_setup(config)` | Post-setup tasks | Tasks requiring both env and data |
@@ -204,11 +203,11 @@ All hooks receive the application `Config` object and **must be idempotent** (sa
 
 The REF provides several provider base classes depending on your needs:
 
-| Base Class | Use Case |
-|------------|----------|
-| `DiagnosticProvider` | Pure Python diagnostics, no special environment needed |
-| `CommandLineDiagnosticProvider` | Diagnostics that run via subprocess |
-| `CondaDiagnosticProvider` | Diagnostics requiring an isolated conda environment |
+| Base Class                      | Use Case                                               |
+| ------------------------------- | ------------------------------------------------------ |
+| `DiagnosticProvider`            | Pure Python diagnostics, no special environment needed |
+| `CommandLineDiagnosticProvider` | Diagnostics that run via subprocess                    |
+| `CondaDiagnosticProvider`       | Diagnostics requiring an isolated conda environment    |
 
 `CondaDiagnosticProvider` automatically implements `setup_environment()` to create conda environments.
 
@@ -366,7 +365,14 @@ Next time you run a `ref` command you should see your provider being added to th
 If your metrics use new facets in its metric output (e.g. custom experiment IDs or grid labels),
 extend the controlled vocabulary in `climate-ref-core`:
 
-- Copy the default CV (located in `packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml` or on [GitHub](https://github.com/Climate-REF/climate-ref/blob/main/packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml).
+- Copy the default CV, which is shipped inside `climate_ref_core` and can be written out with:
+
+```bash
+python -m climate_ref_core.pycmec.controlled_vocabulary > cv_custom.yaml
+```
+
+  It is also visible on [GitHub](https://github.com/Climate-REF/climate-ref/blob/main/packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml).
+
 - Modify it to include your new facets or values.
 - Update your [configuration][paths_dimensions_cv] to point to your custom CV file:
 

@@ -33,6 +33,17 @@ from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Rec
 
 _DATASETS_REGISTRY_NAME = "esmvaltool-datasets"
 
+
+def registry_data_root() -> Path:
+    """Return the root of the downloaded ESMValTool reference data.
+
+    Every registry key is a DRS path below an ``ESMValTool`` directory,
+    so the project anchors (``OBS``, ``OBS6``, ``native6``, ``obs4MIPs``) sit directly beneath this.
+    """
+    registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
+    return Path(registry.abspath) / "ESMValTool"  # type: ignore[attr-defined]
+
+
 _STABLE_SESSION_NAME = "recipe"
 """Stable name for the ESMValTool session directory.
 
@@ -244,8 +255,7 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             )
             return reference_data
 
-        registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
-        return registry.abspath / "ESMValTool"  # type: ignore[attr-defined,no-any-return]
+        return registry_data_root()
 
     def build_cmd(self, definition: ExecutionDefinition) -> Iterable[str]:
         """

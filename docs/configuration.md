@@ -109,6 +109,13 @@ This defaults to the following locations:
   environment variable, if defined. (Linux)
 * `%USERPROFILE%\AppData\Local\climate_ref\Cache` (Windows)
 
+### `REF_DATASET_FETCH_WORKERS`
+
+Maximum number of files fetched concurrently by `ref datasets fetch-data`.
+This must be a positive integer and defaults to `4`.
+Set it to `1` to fetch files sequentially,
+or reduce it when network bandwidth or the remote server limits concurrent transfers.
+
 ### `REF_TEST_DATA_DIR`
 
 Override the location of the test data directory.

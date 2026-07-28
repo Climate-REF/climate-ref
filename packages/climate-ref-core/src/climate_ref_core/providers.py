@@ -513,8 +513,9 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
 
     Attributes
     ----------
-    env_vars
-        Environment variables to set when running commands in the conda environment.
+    env_overrides
+        Environment variables overriding the process environment
+        for commands run in the conda environment.
     pip_packages
         Pip packages to install (as URLs) with ``--no-deps``
         after creating the conda environment.
@@ -531,7 +532,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         self._conda_exe: Path | None = None
         self._prefix: Path | None = None
         self.pip_packages: list[str] = []
-        self.env_vars: dict[str, str] = os.environ.copy()
+        self.env_overrides: dict[str, str] = {}
 
     @property
     def prefix(self) -> Path:
@@ -549,11 +550,24 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
+    def _launch_env(self) -> dict[str, str]:
+        """
+        Environment for a command launched in the conda environment.
+
+        The live process environment is the base,
+        so settings applied to a worker reach every command it launches,
+        with the provider's overrides on top.
+        HOME falls back to the conda prefix so micromamba has a writable directory.
+        """
+        env = {**os.environ, **self.env_overrides}
+        if "HOME" not in env:
+            env["HOME"] = str(self.prefix)
+        return env
+
     def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)
         self.prefix = config.paths.software / "conda"
-        self.env_vars.setdefault("HOME", str(self.prefix))
 
     def _is_stale(self, path: Path) -> bool:
         """Check if a file is older than `MICROMAMBA_MAX_AGE`.
@@ -655,7 +669,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 f"{self.env_path}",
             ]
             logger.debug(f"Running {' '.join(cmd)}")
-            subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
+            subprocess.run(cmd, check=True, env=self._launch_env())  # noqa: S603
 
             for pkg in self.pip_packages:
                 logger.info(f"Installing development version from {pkg}")
@@ -670,7 +684,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
-                subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
+                subprocess.run(cmd, check=True, env=self._launch_env())  # noqa: S603
 
     def run(self, cmd: Iterable[str]) -> None:
         """
@@ -712,7 +726,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=self.env_vars,
+                env=self._launch_env(),
             )
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")

@@ -196,9 +196,9 @@ class TestCondaDiagnosticProvider:
     @pytest.fixture
     def provider(self, tmp_path, mocker):
         mocker.patch.object(
-            climate_ref_core.providers.os.environ,
-            "copy",
-            return_value={"existing_var": "existing_value"},
+            climate_ref_core.providers.os,
+            "environ",
+            {"existing_var": "existing_value"},
         )
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
         provider.prefix = tmp_path / "conda"
@@ -216,28 +216,28 @@ class TestCondaDiagnosticProvider:
 
         assert isinstance(provider.prefix, Path)
 
-        # Ensure configure() sets HOME to contain mamba writes
-        assert "HOME" in provider.env_vars
+        # HOME is defaulted at launch so micromamba has a writable directory
+        assert "HOME" in provider._launch_env()
 
-    def test_preserves_env_vars(self, config, mocker: pytest_mock.MockFixture) -> None:
-        mock_env = mocker.patch.object(
-            climate_ref_core.providers.os.environ,
-            "copy",
-            return_value={"preserved_var": "untouched", "overridden_var": "untouched"},
+    def test_launch_env_merges_the_live_environment(self, config, mocker: pytest_mock.MockFixture) -> None:
+        mocker.patch.object(
+            climate_ref_core.providers.os,
+            "environ",
+            {"preserved_var": "untouched", "overridden_var": "untouched"},
         )
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
         provider.configure(config)
-        provider.env_vars["overridden_var"] = "overridden"
-        provider.env_vars["new_var"] = "added"
+        provider.env_overrides["overridden_var"] = "overridden"
+        provider.env_overrides["new_var"] = "added"
 
-        # Ensure os.environ.copy was used vs manipulating the whole execution environ
-        mock_env.assert_called_once()
+        # The base is read at launch, so a variable set after construction still applies
+        climate_ref_core.providers.os.environ["late_var"] = "set-later"
 
-        # Ensure existing env vars are preserved and new ones are added
-        assert provider.env_vars == {
+        assert provider._launch_env() == {
             "preserved_var": "untouched",
             "overridden_var": "overridden",
             "new_var": "added",
+            "late_var": "set-later",
             "HOME": str(provider.prefix),
         }
 
@@ -367,8 +367,11 @@ class TestCondaDiagnosticProvider:
                 f"{env_path}",
             ],
             check=True,
-            env={"existing_var": "existing_value"},
+            env=mocker.ANY,
         )
+        env = run.call_args.kwargs["env"]
+        assert env["existing_var"] == "existing_value"
+        assert env["HOME"] == str(provider.prefix)
 
     def test_create_env_with_pip_packages(self, mocker, tmp_path, provider):
         lockfile = tmp_path / "conda-lock.yml"
@@ -477,7 +480,7 @@ class TestCondaDiagnosticProvider:
             create_autospec=True,
         )
 
-        provider.env_vars["test_var"] = "test_value"
+        provider.env_overrides["test_var"] = "test_value"
 
         with raised:
             provider.run(["mock-command"])
@@ -494,8 +497,12 @@ class TestCondaDiagnosticProvider:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env={"existing_var": "existing_value", "test_var": "test_value"},
+                env=mocker.ANY,
             )
+            env = run.call_args.kwargs["env"]
+            assert env["existing_var"] == "existing_value"
+            assert env["test_var"] == "test_value"
+            assert env["HOME"] == str(provider.prefix)
 
     def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider):
         """Test that run() re-raises CalledProcessError when command fails."""

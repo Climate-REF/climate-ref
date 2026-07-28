@@ -99,10 +99,10 @@ class TestPMPProviderHooks:
 
         test_provider.configure(mock_config)
 
-        assert "PCMDI_CONDA_EXE" in test_provider.env_vars
-        assert test_provider.env_vars["PCMDI_CONDA_EXE"] == "/path/to/conda"
-        assert "FI_PROVIDER" in test_provider.env_vars
-        assert test_provider.env_vars["FI_PROVIDER"] == "tcp"
+        assert "PCMDI_CONDA_EXE" in test_provider.env_overrides
+        assert test_provider.env_overrides["PCMDI_CONDA_EXE"] == "/path/to/conda"
+        assert "FI_PROVIDER" in test_provider.env_overrides
+        assert test_provider.env_overrides["FI_PROVIDER"] == "tcp"
 
     def test_ingest_data_skips_when_climate_ref_not_installed(self, mocker, caplog):
         """Test ingest_data gracefully skips when climate-ref package is not installed."""

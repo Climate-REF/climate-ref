@@ -5,7 +5,7 @@ An executor may run a diagnostic in another process or on another node,
 which means the execution definition and its result have to be encoded.
 
 JSON cannot represent everything these objects hold,
-so values that have no JSON equivalent are written as tagged objects carrying a `__ref_type__` key.
+and values with no JSON equivalent are written as tagged objects carrying a `__ref_type__` key.
 The types that need this are paths, cftime dates and the pandas frame of selected datasets.
 """
 
@@ -15,8 +15,11 @@ import re
 from collections.abc import Callable
 from typing import Any
 
+import cattrs
 import cftime
+import numpy as np
 import pandas as pd
+from cattrs.gen import make_dict_unstructure_fn, override
 
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
@@ -43,7 +46,7 @@ def _decode_cftime(payload: dict[str, Any]) -> cftime.datetime:
     # cftime dates are not always representable by datetime.fromisoformat: calendars admit 30 February
     # and a year zero, so the components are parsed directly.
     match = _ISO.match(payload["value"])
-    if match is None:  # pragma: no cover - guards against a corrupted message
+    if match is None:  # pragma: no cover, guards against a corrupted message
         raise ValueError(f"Could not parse cftime value {payload['value']!r}")
 
     year, month, day, hour, minute, second, fraction = match.groups()
@@ -58,6 +61,14 @@ def _decode_cftime(payload: dict[str, Any]) -> cftime.datetime:
         calendar=payload["calendar"],
         has_year_zero=payload["has_year_zero"],
     )
+
+
+def _encode_path(value: pathlib.PurePath) -> dict[str, Any]:
+    return {TAG: "path", "value": str(value)}
+
+
+def _decode_path(payload: dict[str, Any]) -> pathlib.Path:
+    return pathlib.Path(payload["value"])
 
 
 def _encode_float(value: float) -> Any:
@@ -92,7 +103,7 @@ def _encode_scalar(value: Any) -> Any:
     if isinstance(value, cftime.datetime):
         return _encode_cftime(value)
     if isinstance(value, pathlib.PurePath):
-        return {TAG: "path", "value": str(value)}
+        return _encode_path(value)
     if isinstance(value, float):
         return _encode_float(value)
     if hasattr(value, "item") and not isinstance(value, str | bytes):
@@ -102,22 +113,42 @@ def _encode_scalar(value: Any) -> Any:
     return value
 
 
+_SCALAR_DECODERS: dict[str, Callable[[dict[str, Any]], Any]] = {
+    "cftime": _decode_cftime,
+    "path": _decode_path,
+    "float": _decode_float,
+}
+
+
 def _decode_scalar(value: Any) -> Any:
     if isinstance(value, dict) and TAG in value:
-        if value[TAG] == "cftime":
-            return _decode_cftime(value)
-        if value[TAG] == "path":
-            return pathlib.Path(value["value"])
-        if value[TAG] == "float":
-            return _decode_float(value)
-        raise ValueError(f"Unknown tagged value {value[TAG]!r}")
+        decoder = _SCALAR_DECODERS.get(value[TAG])
+        if decoder is None:
+            raise ValueError(f"Unknown tagged value {value[TAG]!r}")
+        return decoder(value)
     return value
+
+
+def _encode_values(values: pd.Series | pd.Index) -> list[Any]:
+    """
+    Encode a column or index of a dataset frame.
+
+    A numeric numpy dtype cannot hold a taggable value,
+    so its cells are emitted directly rather than dispatched one at a time.
+    A float column is only eligible when every value is finite.
+    """
+    dtype = values.dtype
+    if isinstance(dtype, np.dtype) and (
+        dtype.kind in "iub" or (dtype.kind == "f" and bool(np.isfinite(values.to_numpy()).all()))
+    ):
+        return values.tolist()
+    return [_encode_scalar(value) for value in values.tolist()]
 
 
 def _encode_frame(frame: pd.DataFrame) -> dict[str, Any]:
     return {
         TAG: "dataframe",
-        "index": [_encode_scalar(value) for value in frame.index.tolist()],
+        "index": _encode_values(frame.index),
         "index_name": frame.index.name,
         "index_dtype": str(frame.index.dtype),
         # Column-major keeps each column's dtype with its values, and repeats the column
@@ -125,10 +156,10 @@ def _encode_frame(frame: pd.DataFrame) -> dict[str, Any]:
         "columns": [
             {
                 "name": name,
-                "dtype": str(frame[name].dtype),
-                "values": [_encode_scalar(value) for value in frame[name].tolist()],
+                "dtype": str(column.dtype),
+                "values": _encode_values(column),
             }
-            for name in frame.columns
+            for name, column in frame.items()
         ],
     }
 
@@ -150,105 +181,78 @@ def _decode_frame(payload: dict[str, Any]) -> pd.DataFrame:
     return frame
 
 
-def _encode_collection(collection: DatasetCollection) -> dict[str, Any]:
+_converter = cattrs.Converter()
+
+_converter.register_unstructure_hook(pathlib.PurePath, str)
+_converter.register_structure_hook(pathlib.Path, lambda value, _: pathlib.Path(value))
+_converter.register_unstructure_hook(pd.DataFrame, _encode_frame)
+_converter.register_structure_hook(pd.DataFrame, lambda value, _: _decode_frame(value))
+
+
+def _unstructure_execution_datasets(collection: ExecutionDatasetCollection) -> dict[str, Any]:
     return {
-        TAG: "dataset_collection",
-        "datasets": _encode_frame(collection.datasets),
-        "slug_column": collection.slug_column,
-        "selector": [list(pair) for pair in collection.selector],
+        source_type.value: _converter.unstructure(datasets) for source_type, datasets in collection.items()
     }
 
 
-def _decode_collection(payload: dict[str, Any]) -> DatasetCollection:
-    return DatasetCollection(
-        datasets=_decode_frame(payload["datasets"]),
-        slug_column=payload["slug_column"],
-        selector=tuple((key, value) for key, value in payload["selector"]),
+def _structure_execution_datasets(payload: dict[str, Any], _: type) -> ExecutionDatasetCollection:
+    return ExecutionDatasetCollection(
+        {key: _converter.structure(value, DatasetCollection) for key, value in payload.items()}
     )
 
 
-def _encode_definition(definition: ExecutionDefinition) -> dict[str, Any]:
-    return {
-        TAG: "execution_definition",
-        "diagnostic_full_slug": definition.diagnostic_full_slug,
-        "key": definition.key,
-        "datasets": {
-            source_type.value: _encode_collection(collection)
-            for source_type, collection in definition.datasets.items()
-        },
-        "output_directory": str(definition.output_directory),
-        "root_directory": str(definition._root_directory),
-    }
+_converter.register_unstructure_hook(ExecutionDatasetCollection, _unstructure_execution_datasets)
+_converter.register_structure_hook(ExecutionDatasetCollection, _structure_execution_datasets)
+
+_unstructure_definition_fields = make_dict_unstructure_fn(
+    ExecutionDefinition,
+    _converter,
+    _diagnostic=override(omit=True),
+    _diagnostic_full_slug=override(omit=True),
+    _root_directory=override(rename="root_directory"),
+)
 
 
-def _decode_definition(payload: dict[str, Any]) -> ExecutionDefinition:
-    datasets = ExecutionDatasetCollection(
-        {
-            SourceDatasetType(source_type): _decode_collection(collection)
-            for source_type, collection in payload["datasets"].items()
-        }
-    )
+def _unstructure_definition(definition: ExecutionDefinition) -> dict[str, Any]:
+    # The diagnostic is a live object owned by its provider,
+    # so only its slug crosses the wire and the receiver resolves it against its own registry.
+    payload = _unstructure_definition_fields(definition)
+    payload["diagnostic_full_slug"] = definition.diagnostic_full_slug
+    return payload
+
+
+def _structure_definition(payload: dict[str, Any], _: type) -> ExecutionDefinition:
     return ExecutionDefinition(
         diagnostic=None,
         diagnostic_full_slug=payload["diagnostic_full_slug"],
         key=payload["key"],
-        datasets=datasets,
-        output_directory=pathlib.Path(payload["output_directory"]),
-        root_directory=pathlib.Path(payload["root_directory"]),
+        datasets=_converter.structure(payload["datasets"], ExecutionDatasetCollection),
+        output_directory=_converter.structure(payload["output_directory"], pathlib.Path),
+        root_directory=_converter.structure(payload["root_directory"], pathlib.Path),
     )
 
 
-def _encode_result(result: ExecutionResult) -> dict[str, Any]:
-    return {
-        TAG: "execution_result",
-        "definition": _encode_definition(result.definition),
-        "output_bundle_filename": _optional_path(result.output_bundle_filename),
-        "metric_bundle_filename": _optional_path(result.metric_bundle_filename),
-        "series_filename": _optional_path(result.series_filename),
-        "successful": result.successful,
-        "retryable": result.retryable,
-    }
+_converter.register_unstructure_hook(ExecutionDefinition, _unstructure_definition)
+_converter.register_structure_hook(ExecutionDefinition, _structure_definition)
 
-
-def _decode_result(payload: dict[str, Any]) -> ExecutionResult:
-    return ExecutionResult(
-        definition=_decode_definition(payload["definition"]),
-        output_bundle_filename=_optional_path_from(payload["output_bundle_filename"]),
-        metric_bundle_filename=_optional_path_from(payload["metric_bundle_filename"]),
-        series_filename=_optional_path_from(payload["series_filename"]),
-        successful=payload["successful"],
-        retryable=payload["retryable"],
-    )
-
-
-def _optional_path(value: pathlib.Path | None) -> str | None:
-    return None if value is None else str(value)
-
-
-def _optional_path_from(value: str | None) -> pathlib.Path | None:
-    return None if value is None else pathlib.Path(value)
-
-
-_ENCODERS: list[tuple[type, Any]] = [
-    (ExecutionResult, _encode_result),
-    (ExecutionDefinition, _encode_definition),
-    (DatasetCollection, _encode_collection),
-    (pd.DataFrame, _encode_frame),
+_WIRE_TYPES: list[tuple[type, str]] = [
+    (ExecutionResult, "execution_result"),
+    (ExecutionDefinition, "execution_definition"),
+    (DatasetCollection, "dataset_collection"),
 ]
 
 
-def _decode_path(payload: dict[str, Any]) -> pathlib.Path:
-    return pathlib.Path(payload["value"])
+def _structure_as(kind: type) -> Callable[[dict[str, Any]], Any]:
+    def decode(payload: dict[str, Any]) -> Any:
+        return _converter.structure(payload, kind)
+
+    return decode
 
 
 _DECODERS: dict[str, Callable[[dict[str, Any]], Any]] = {
-    "execution_result": _decode_result,
-    "execution_definition": _decode_definition,
-    "dataset_collection": _decode_collection,
     "dataframe": _decode_frame,
-    "cftime": _decode_cftime,
-    "path": _decode_path,
-    "float": _decode_float,
+    **_SCALAR_DECODERS,
+    **{tag: _structure_as(kind) for kind, tag in _WIRE_TYPES},
 }
 
 
@@ -271,14 +275,12 @@ def to_wire(value: Any) -> Any:  # noqa: PLR0911
     :
         A structure built only from types that `json` can serialise.
     """
-    for kind, encoder in _ENCODERS:
+    for kind, tag in _WIRE_TYPES:
         if isinstance(value, kind):
-            return encoder(value)
+            return {TAG: tag, **_converter.unstructure(value)}
 
-    if isinstance(value, pathlib.PurePath):
-        return {TAG: "path", "value": str(value)}
-    if isinstance(value, cftime.datetime):
-        return _encode_cftime(value)
+    if isinstance(value, pd.DataFrame):
+        return _encode_frame(value)
     if isinstance(value, SourceDatasetType):
         return value.value
     if isinstance(value, dict):

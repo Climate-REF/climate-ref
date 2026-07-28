@@ -100,9 +100,9 @@ class ExecutionDefinition:
     """
     Slug of the diagnostic, supplied when the diagnostic itself is not available.
 
-    Read through :attr:`diagnostic_full_slug`, which derives it from the diagnostic when
-    it was not given. Both this and :attr:`_diagnostic` are filled in lazily, so neither
-    takes part in equality.
+    Read through :attr:`diagnostic_full_slug`,
+    which derives it from the diagnostic when it was not given.
+    Like :attr:`_diagnostic` it takes no part in equality.
     """
 
     @property
@@ -110,14 +110,13 @@ class ExecutionDefinition:
         """
         Slug of the diagnostic being executed, of the form `{provider_slug}/{diagnostic_slug}`
 
-        This is the definition's identity across a process boundary. The diagnostic is a
-        live Python object owned by its provider, so only the slug crosses the wire.
+        This is the definition's identity that is serialised across the wire.
         """
-        if self._diagnostic_full_slug is None:
-            if self._diagnostic is None:
-                raise ValueError("Either diagnostic or diagnostic_full_slug must be given")
-            object.__setattr__(self, "_diagnostic_full_slug", self._diagnostic.full_slug())
-        return cast("str", self._diagnostic_full_slug)
+        if self._diagnostic_full_slug is not None:
+            return self._diagnostic_full_slug
+        if self._diagnostic is None:
+            raise ValueError("Either diagnostic or diagnostic_full_slug must be given")
+        return self._diagnostic.full_slug()
 
     @property
     def diagnostic(self) -> Diagnostic:

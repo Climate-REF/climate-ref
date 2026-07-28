@@ -32,15 +32,15 @@ result_serializer = env.str("CELERY_RESULT_SERIALIZER", "ref-json")
 # Messages compress by roughly 80% with gzip.
 #
 # Set to an empty string to disable.
-task_compression = os.environ.get("CELERY_TASK_COMPRESSION", "gzip") or None
-result_compression = os.environ.get("CELERY_RESULT_COMPRESSION", "gzip") or None
+task_compression = env.str("CELERY_TASK_COMPRESSION", "gzip") or None
+result_compression = env.str("CELERY_RESULT_COMPRESSION", "gzip") or None
 
 # Number of concurrent worker processes to use
 worker_concurrency = int(os.environ.get("CELERY_WORKER_CONCURRENCY", get_available_cpu_count()))
 
 # Only prefetch one task at a time per worker process.
 # Higher values cause multiple tasks to be lost/redelivered on a worker crash.
-worker_prefetch_multiplier = int(os.environ.get("CELERY_WORKER_PREFETCH_MULTIPLIER", 1))  # noqa: PLW1508
+worker_prefetch_multiplier = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER", default=1)
 
 # Recycle worker processes after N tasks to prevent memory leaks from
 # scientific Python libraries (numpy, xarray, netCDF4).

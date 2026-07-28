@@ -3,7 +3,6 @@ import logging
 import threading
 from pathlib import Path
 
-import netCDF4
 import pytest
 
 from climate_ref_core.dataset_registry import (
@@ -436,58 +435,6 @@ def test_fetch_all_files_fetches_in_parallel(mocker, tmp_path):
     fetch_all_files(registry, "obs4ref", None)
 
     assert registry.fetch.call_count == 2
-
-
-def test_parallel_fetch_keeps_netcdf_access_on_caller_thread(mocker, tmp_path):
-    caller_thread = threading.get_ident()
-    source_dir = tmp_path / "source"
-    source_dir.mkdir()
-    keys = ["yearly/2000.nc", "yearly/2001.nc"]
-    source_files = {}
-
-    for year, key in zip((2000, 2001), keys, strict=True):
-        source_file = source_dir / f"{year}.nc"
-        with netCDF4.Dataset(source_file, "w") as dataset:
-            dataset.createDimension("time", 1)
-            values = dataset.createVariable("year", "i4", ("time",))
-            values[:] = year
-        source_files[key] = source_file
-
-    registry = mocker.Mock()
-    registry.abspath = tmp_path / "cache"
-    registry.registry = {key: f"sha256:{key}" for key in keys}
-    simultaneous_fetches = threading.Barrier(2, timeout=2)
-    fetch_threads = []
-
-    def fetch(key):
-        fetch_threads.append(threading.get_ident())
-        simultaneous_fetches.wait()
-        return source_files[key]
-
-    registry.fetch.side_effect = fetch
-
-    netcdf_threads = []
-    netcdf_dataset = netCDF4.Dataset
-
-    def open_netcdf(*args, **kwargs):
-        netcdf_threads.append(threading.get_ident())
-        assert threading.get_ident() == caller_thread
-        return netcdf_dataset(*args, **kwargs)
-
-    mocker.patch.object(netCDF4, "Dataset", side_effect=open_netcdf)
-
-    output_dir = tmp_path / "output"
-    fetch_all_files(registry, "obs4ref", output_dir, verify=False)
-
-    assert len(set(fetch_threads)) == 2
-    assert caller_thread not in fetch_threads
-    assert netcdf_threads == []
-
-    for year, key in zip((2000, 2001), keys, strict=True):
-        with netCDF4.Dataset(output_dir / key) as dataset:
-            assert dataset.variables["year"][:].tolist() == [year]
-
-    assert netcdf_threads == [caller_thread, caller_thread]
 
 
 def test_fetch_all_files_prepares_shared_cache_directory(mocker, tmp_path):

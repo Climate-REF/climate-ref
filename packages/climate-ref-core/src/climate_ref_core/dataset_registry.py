@@ -24,7 +24,7 @@ from climate_ref_core.env import env
 from climate_ref_core.source_types import SourceDatasetType
 
 DATASET_URL = env.str("REF_DATASET_URL", default="https://obs4ref.climate-ref.org")
-_MAX_FETCH_WORKERS = 4
+_MAX_FETCH_WORKERS = env.int("REF_DATASET_FETCH_WORKERS", 4)
 
 
 class RegistryUseCase(enum.Enum):
@@ -221,8 +221,8 @@ def fetch_all_files(
             _verify_hash_matches(linked_file, expected_hash)
 
     keys = list(registry.registry)
-    # Pooch creates missing cache directories without exist_ok=True. Prepare them
-    # before starting workers so files with a shared parent cannot race in mkdir.
+    # Pooch creates missing cache directories without exist_ok=True.
+    # Prepare them before starting workers so files with a shared parent cannot race in mkdir.
     for key in keys:
         (registry.abspath / key).parent.mkdir(parents=True, exist_ok=True)  # type: ignore[attr-defined]
 

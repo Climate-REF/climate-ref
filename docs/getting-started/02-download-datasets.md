@@ -54,6 +54,18 @@ In the future, these datasets will be available on ESGF and can be fetched direc
 ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION/datasets/obs4ref
 ```
 
+The command fetches up to four files concurrently by default.
+Set `REF_DATASET_FETCH_WORKERS` to a positive integer to change this limit:
+
+```bash
+REF_DATASET_FETCH_WORKERS=8 ref datasets fetch-data --registry obs4ref \
+  --output-directory $REF_CONFIGURATION/datasets/obs4ref
+```
+
+Use `REF_DATASET_FETCH_WORKERS=1` to fetch files sequentially.
+The workers only download, copy, and verify files; NetCDF datasets are not opened
+by the worker threads.
+
 ### Future work
 
 The Climate-REF team is working on providing a more integrated way to fetch and manage these datasets from the Next Generation ESGF infrastructure that in the process of being deployed.

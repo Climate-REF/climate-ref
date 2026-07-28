@@ -17,6 +17,12 @@ def load_base(monkeypatch):
     importlib.reload(importlib.import_module("climate_ref_celery.celeryconf.base"))
 
 
+def test_accept_content_reads_a_comma_separated_list(load_base):
+    base = load_base(CELERY_ACCEPT_CONTENT="json,ref-json,pickle")
+
+    assert base.accept_content == ["json", "ref-json", "pickle"]
+
+
 def test_compression_defaults_to_gzip(load_base):
     base = load_base()
 

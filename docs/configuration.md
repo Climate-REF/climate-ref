@@ -34,7 +34,6 @@ log = "${REF_CONFIGURATION}/log"
 scratch = "${REF_CONFIGURATION}/scratch"
 software = "${REF_CONFIGURATION}/software"
 results = "${REF_CONFIGURATION}/results"
-dimensions_cv = "${REF_INSTALLATION_DIR}/packages/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml"
 
 [db]
 database_url = "sqlite:///${REF_CONFIGURATION}/db/climate_ref.db"
@@ -132,44 +131,61 @@ The grey list is a YAML file listing facets to exclude per provider, diagnostic 
 !!! note "Naming"
 
     The configuration values below are currently named `ignore_datasets_*` for historical reasons.
-    They will be renamed to `grey_list_*` in a future release;
-    the old names will continue to work for a deprecation period.
+    They will be renamed to `grey_list_*` in a future release.
+    The old names will continue to work for a deprecation period.
+
+The grey list is resolved from the first of three layers that is available:
+
+1. `ignore_datasets_file`, if it is set.
+2. A copy refreshed from `ignore_datasets_url` into the local cache.
+3. The copy shipped inside the `climate_ref` package.
+
+The third layer is always available,
+so a solve never depends on the network or on a writable filesystem.
 
 Two configuration values control this behaviour:
 
-* `ignore_datasets_file` (env `REF_IGNORE_DATASETS_FILE`) —
-  the path to the grey list file.
-  It defaults to a location under the user cache directory
-  and is coerced to a filesystem path.
-* `ignore_datasets_url` (env `REF_IGNORE_DATASETS_URL`) —
-  the URL the grey list is fetched from.
-  It defaults to the copy shipped in the Climate-REF repository.
+* `ignore_datasets_file` (env `REF_IGNORE_DATASETS_FILE`):
+  a path to a grey list you manage yourself.
+  Leave it unset to use the packaged copy.
+  Setting it also disables fetching, because an explicit file is yours to manage.
+* `ignore_datasets_url` (env `REF_IGNORE_DATASETS_URL`):
+  the URL the grey list is refreshed from.
+  It defaults to the copy served from the `main` branch of the Climate-REF repository.
 
-The grey list is fetched lazily during solving,
-not while the configuration is loaded.
-Read-only commands such as `ref providers list` and `ref datasets list` never perform network I/O.
+Refreshing happens lazily during solving, not while the configuration is loaded,
+so read-only commands such as `ref providers list` never perform network I/O.
 When a solve runs,
-the cached file is refreshed from `ignore_datasets_url` only if it is missing or older than six hours,
+the cached file is refreshed only if it is missing or older than six hours,
 so at most one download happens per six-hour window.
 
-If the download fails and a cached copy already exists,
-the cached copy is reused unchanged and a warning is logged.
-If the download fails and no cached copy exists,
-the solve fails with an error
-rather than silently running without the grey list protections.
+Refreshing is best effort.
+An unreachable network, an unwritable cache directory, and an HTTP error are all non-fatal.
+The solve logs a warning and falls back to the cached copy if there is one,
+and to the packaged copy otherwise.
+Each provider logs which layer it read the grey list from at debug level.
+
+A cached copy that has not been refreshed for 30 days is ignored in favour of the packaged copy.
+Without that bound,
+a cache left behind by an older release would shadow the newer packaged copy indefinitely
+on a host that can never reach the network.
+On such a host the cache can still shadow a newer packaged copy for up to 30 days after an upgrade.
+Delete the cached file to read the packaged copy immediately.
 
 ### Offline and air-gapped deployments
 
-On systems without outbound network access (for example an air-gapped HPC cluster),
-seed the grey list manually and disable fetching:
+Nothing needs to be configured.
+The grey list and the dimensions controlled vocabulary are both read straight out of the
+installed packages, so the REF runs with no outbound network access
+and on a read-only filesystem.
 
-1. Copy `default_ignore_datasets.yaml` to a writable location on the target system.
-2. Point `ignore_datasets_file` at that copy,
-   for example `REF_IGNORE_DATASETS_FILE=/shared/config/default_ignore_datasets.yaml`.
-3. Set `REF_IGNORE_DATASETS_URL=` (an empty string) to disable fetching entirely.
+On a host with no route to the internet,
+set `REF_IGNORE_DATASETS_URL=` (an empty string) to skip the refresh attempt.
+This avoids waiting for the request to time out on every solve.
+It changes nothing else, since a failed refresh already falls back to the packaged copy.
 
-With an empty URL the solver never touches the network
-and uses whatever grey list already exists at `ignore_datasets_file`.
+To pin the grey list to a version you control,
+point `REF_IGNORE_DATASETS_FILE` at your own copy.
 
 ## Configuration Options
 

@@ -184,15 +184,15 @@ def test_database_invalid_url(config, monkeypatch):
 
 
 def test_database_cvs(config, mocker):
-    cv = CV.load_from_file(config.paths.dimensions_cv)
+    cv = CV.load(config.paths.dimensions_cv_resource)
 
     mock_register_cv = mocker.patch.object(MetricValue, "register_cv_dimensions")
-    mock_cv = mocker.patch.object(CV, "load_from_file", return_value=cv)
+    mock_cv = mocker.patch.object(CV, "load", return_value=cv)
 
     with Database.from_config(config, run_migrations=True) as db:
         # CV is loaded once during a migration and once with each call to _add_dimension_columns
         assert mock_cv.call_count == 3
-        mock_cv.assert_called_with(config.paths.dimensions_cv)
+        mock_cv.assert_called_with(config.paths.dimensions_cv_resource)
         mock_register_cv.assert_called_once_with(mock_cv.return_value)
 
         # Verify that the dimensions have automatically been created

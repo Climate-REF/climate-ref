@@ -27,6 +27,7 @@ from attrs import evolve
 from loguru import logger
 
 from climate_ref_core.constraints import IgnoreFacets
+from climate_ref_core.data import DataResourceError
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.diagnostics import Diagnostic
 from climate_ref_core.exceptions import (
@@ -79,27 +80,39 @@ class DiagnosticProvider:
         config :
             A configuration.
         """
-        logger.debug(
-            f"Configuring provider {self.slug} using ignore_datasets_file {config.ignore_datasets_file}"
-        )
+        grey_list = config.ignore_datasets_resource
+
         # The format of the configuration file is:
         # provider:
         #   diagnostic:
         #     source_type:
         #       - facet: value
         #       - other_facet: [other_value1, other_value2]
-        ignore_datasets_file = config.ignore_datasets_file
-        if ignore_datasets_file.is_file():
-            ignore_datasets_all = yaml.safe_load(ignore_datasets_file.read_text(encoding="utf-8")) or {}
+        #
+        # The packaged copy is tried second so a mistyped `ignore_datasets_file`
+        # cannot silently drop the grey list protections.
+        ignore_datasets_all: dict[str, Any] = {}
+        source = "nothing"
+        for candidate in (grey_list, grey_list.packaged):
+            try:
+                ignore_datasets_all = yaml.safe_load(candidate.read_text()) or {}
+            except (DataResourceError, yaml.YAMLError) as exc:
+                logger.warning(f"Could not read the grey list from {candidate.describe()}: {exc}")
+                continue
+            if not isinstance(ignore_datasets_all, dict):
+                logger.warning(f"The grey list at {candidate.describe()} is not a mapping, ignoring it")
+                ignore_datasets_all = {}
+                continue
+            source = candidate.describe()
+            break
         else:
-            logger.warning(
-                f"Ignore datasets file {ignore_datasets_file} not found; no datasets will be ignored"
-            )
-            ignore_datasets_all = {}
+            logger.warning(f"No grey list could be read for provider {self.slug}, ignoring no datasets")
+        logger.debug(f"Configuring provider {self.slug} using the grey list from {source}")
+
         ignore_datasets = ignore_datasets_all.get(self.slug, {})
         if unknown_slugs := {slug for slug in ignore_datasets} - {d.slug for d in self.diagnostics()}:
             logger.warning(
-                f"Unknown diagnostics found in {config.ignore_datasets_file} "
+                f"Unknown diagnostics found in {source} "
                 f"for provider {self.slug}: {', '.join(sorted(unknown_slugs))}"
             )
 
@@ -108,7 +121,7 @@ class DiagnosticProvider:
             if diagnostic.slug in ignore_datasets:
                 if unknown_source_types := set(ignore_datasets[diagnostic.slug]) - known_source_types:
                     logger.warning(
-                        f"Unknown source types found in {config.ignore_datasets_file} for "
+                        f"Unknown source types found in {source} for "
                         f"diagnostic '{diagnostic.slug}' by provider {self.slug}: "
                         f"{', '.join(sorted(unknown_source_types))}"
                     )
@@ -473,6 +486,16 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
+    @property
+    def conda_exe_path(self) -> Path:
+        """
+        Where the conda executable lives, whether or not it has been installed yet.
+
+        Use this when only the location is needed.
+        `get_conda_exe` installs the executable, which requires network access.
+        """
+        return self.prefix / "micromamba"
+
     def configure(self, config: Any) -> None:
         """Configure the provider."""
         super().configure(config)
@@ -508,7 +531,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
             The path to the executable.
 
         """
-        conda_exe = self.prefix / "micromamba"
+        conda_exe = self.conda_exe_path
 
         if not conda_exe.exists() or update or self._is_stale(conda_exe):
             logger.info("Installing conda")

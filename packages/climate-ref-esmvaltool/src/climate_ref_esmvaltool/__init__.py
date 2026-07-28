@@ -11,12 +11,12 @@ import pooch
 from loguru import logger
 
 import climate_ref_esmvaltool.diagnostics
+from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.dataset_registry import (
     DATASET_URL,
     RegistryUseCase,
     dataset_registry_manager,
     fetch_all_files,
-    resolve_cache_dir,
     validate_registry_cache,
 )
 from climate_ref_core.providers import CondaDiagnosticProvider

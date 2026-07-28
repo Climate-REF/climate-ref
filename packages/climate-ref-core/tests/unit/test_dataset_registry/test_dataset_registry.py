@@ -1,4 +1,5 @@
 import importlib.resources
+import logging
 from pathlib import Path
 
 import pytest
@@ -126,12 +127,15 @@ class TestDatasetRegistry:
         base_url = "http://example.com"
 
         mock_pooch = mocker.patch("climate_ref_core.dataset_registry.pooch")
-        mock_pooch.os_cache.return_value = Path("/path/to/climate_ref")
+        mock_cache = mocker.patch(
+            "climate_ref_core.data.platformdirs.user_cache_path",
+            return_value=Path("/path/to/climate_ref"),
+        )
         package, resource = self.setup_registry_file(fake_registry_file)
 
         registry.register(name, base_url, package, resource, cache_name=cache_name)
 
-        mock_pooch.os_cache.assert_called_with("climate_ref")
+        mock_cache.assert_called_with("climate_ref")
         assert name in registry._registries
         expected_kwargs = {
             "base_url": "http://example.com",
@@ -160,7 +164,10 @@ class TestDatasetRegistry:
         base_url = "http://example.com"
 
         mock_pooch = mocker.patch("climate_ref_core.dataset_registry.pooch")
-        mock_pooch.os_cache.return_value = Path("/path/to/climate_ref")
+        mocker.patch(
+            "climate_ref_core.data.platformdirs.user_cache_path",
+            return_value=Path("/path/to/climate_ref"),
+        )
         package, resource = self.setup_registry_file(fake_registry_file)
 
         registry.register(name, base_url, package, resource)
@@ -274,6 +281,36 @@ class TestMigrateCache:
         DatasetRegistryManager._migrate_cache(mock_registry, [legacy_dir])
 
         assert not (new_dir / "file1.txt").exists()
+
+    def test_migrate_unwritable_target_is_not_fatal(self, tmp_path, caplog):
+        """Registration happens at import time, so a read-only cache must not break importing."""
+        legacy_dir = tmp_path / "old_cache"
+        legacy_dir.mkdir()
+        (legacy_dir / "file1.txt").write_text("legacy_data")
+
+        readonly_root = tmp_path / "readonly"
+        readonly_root.mkdir()
+        readonly_root.chmod(0o500)
+        new_dir = readonly_root / "new_cache"
+
+        mock_registry = type(
+            "R",
+            (),
+            {
+                "abspath": new_dir,
+                "registry": {"file1.txt": "sha256:a"},
+            },
+        )()
+
+        try:
+            with caplog.at_level(logging.WARNING):
+                DatasetRegistryManager._migrate_cache(mock_registry, [legacy_dir])
+        finally:
+            readonly_root.chmod(0o700)
+
+        # The legacy file is left untouched and will be refetched if it is ever needed.
+        assert (legacy_dir / "file1.txt").read_text() == "legacy_data"
+        assert "Could not migrate cached file" in caplog.text
 
     def test_register_with_legacy_cache_dirs(self, tmp_path, mocker, fake_registry_file):
         """Integration test: register() with legacy_cache_dirs triggers migration."""

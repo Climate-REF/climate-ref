@@ -4,6 +4,8 @@ from pathlib import Path
 import pooch
 from climate_ref_pmp import PMPDiagnosticProvider, __version__, provider
 
+from climate_ref_core.data import LayeredResource, PackagedResource
+
 
 def test_provider():
     assert provider.name == "PMP"
@@ -94,13 +96,18 @@ class TestPMPProviderHooks:
         mock_config.paths.software = tmp_path / "software"
         mock_config.ignore_datasets_file = tmp_path / "ignore.yaml"
         mock_config.ignore_datasets_file.touch()
-
-        mocker.patch.object(test_provider, "get_conda_exe", return_value=Path("/path/to/conda"))
+        mock_config.ignore_datasets_resource = LayeredResource(
+            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+            override=mock_config.ignore_datasets_file,
+        )
 
         test_provider.configure(mock_config)
 
         assert "PCMDI_CONDA_EXE" in test_provider.env_vars
-        assert test_provider.env_vars["PCMDI_CONDA_EXE"] == "/path/to/conda"
+        # The path is recorded without installing anything, so `configure` stays offline.
+        assert test_provider.env_vars["PCMDI_CONDA_EXE"] == str(
+            mock_config.paths.software / "conda/micromamba"
+        )
         assert "FI_PROVIDER" in test_provider.env_vars
         assert test_provider.env_vars["FI_PROVIDER"] == "tcp"
 

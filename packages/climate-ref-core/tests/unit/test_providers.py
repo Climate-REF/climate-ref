@@ -12,6 +12,7 @@ from requests import Response
 
 import climate_ref_core.providers
 from climate_ref_core.constraints import IgnoreFacets
+from climate_ref_core.data import DataResourceError, LayeredResource, PackagedResource
 from climate_ref_core.diagnostics import CommandLineDiagnostic, Diagnostic
 from climate_ref_core.exceptions import (
     CondaCommandError,
@@ -28,6 +29,12 @@ def mock_config(tmp_path, mocker):
     config.paths.software = tmp_path / "software"
     config.ignore_datasets_file = tmp_path / "ignore_datasets.yaml"
     config.ignore_datasets_file.touch()
+    # The grey list is resolved through a real LayeredResource so the tests exercise
+    # the same resolution the application uses.
+    config.ignore_datasets_resource = LayeredResource(
+        packaged=PackagedResource("climate_ref_core.pycmec", "cv_cmip7_aft.yaml"),
+        override=config.ignore_datasets_file,
+    )
     return config
 
 
@@ -91,7 +98,56 @@ class TestDiagnosticProvider:
         mock_config.ignore_datasets_file.unlink()
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
-        assert f"Ignore datasets file {mock_config.ignore_datasets_file} not found" in caplog.text
+        assert "Could not read the grey list" in caplog.text
+        assert str(mock_config.ignore_datasets_file) in caplog.text
+
+    def test_configure_missing_override_falls_back_to_the_packaged_grey_list(
+        self, provider, mock_config, caplog
+    ):
+        # A mistyped ignore_datasets_file must not silently drop the grey list protections.
+        mock_config.ignore_datasets_file.unlink()
+        mock_config.ignore_datasets_resource = LayeredResource(
+            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+            override=mock_config.ignore_datasets_file,
+        )
+
+        with caplog.at_level(logging.DEBUG):
+            provider.configure(mock_config)
+
+        # The override is reported as unreadable, and the packaged copy is used instead.
+        assert f"Could not read the grey list from {mock_config.ignore_datasets_file}" in caplog.text
+        assert "using the grey list from climate_ref/default_ignore_datasets.yaml" in caplog.text
+
+    def test_configure_warns_when_no_grey_list_can_be_read(self, provider, mock_config, caplog, mocker):
+        # Both the override and the packaged copy failing must be said out loud.
+        mock_config.ignore_datasets_file.unlink()
+        packaged = mocker.Mock()
+        packaged.read_text.side_effect = DataResourceError("packaged copy is missing")
+        packaged.describe.return_value = "packaged"
+        packaged.__str__ = mocker.Mock(return_value="packaged")
+        mock_config.ignore_datasets_resource = LayeredResource(
+            packaged=PackagedResource("climate_ref", "default_ignore_datasets.yaml"),
+            override=mock_config.ignore_datasets_file,
+        )
+        mocker.patch.object(
+            type(mock_config.ignore_datasets_resource.packaged),
+            "read_text",
+            side_effect=DataResourceError("packaged copy is missing"),
+        )
+
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+
+        assert "No grey list could be read" in caplog.text
+
+    def test_configure_ignores_a_grey_list_that_is_not_a_mapping(self, provider, mock_config, caplog):
+        # A hand-edited list at the top level must not crash the provider.
+        mock_config.ignore_datasets_file.write_text("- not: a mapping\n", encoding="utf-8")
+
+        with caplog.at_level(logging.WARNING):
+            provider.configure(mock_config)
+
+        assert "is not a mapping" in caplog.text
 
     def test_configure_unknown_diagnostic(self, provider, mock_config, caplog):
         mock_config.ignore_datasets_file.write_text(
@@ -108,7 +164,7 @@ class TestDiagnosticProvider:
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
         expected_msg = (
-            f"Unknown diagnostics found in {mock_config.ignore_datasets_file} "
+            f"Unknown diagnostics found in {mock_config.ignore_datasets_file} (override) "
             "for provider mock_provider: invalid_diagnostic"
         )
         assert expected_msg in caplog.text
@@ -128,7 +184,7 @@ class TestDiagnosticProvider:
         with caplog.at_level(logging.WARNING):
             provider.configure(mock_config)
         expected_msg = (
-            f"Unknown source types found in {mock_config.ignore_datasets_file} "
+            f"Unknown source types found in {mock_config.ignore_datasets_file} (override) "
             "for diagnostic 'mock' by provider mock_provider: invalid_source_type"
         )
         assert expected_msg in caplog.text

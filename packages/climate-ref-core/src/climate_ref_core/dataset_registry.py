@@ -7,7 +7,6 @@ before it is included in any published data catalogs.
 """
 
 import enum
-import importlib.resources
 import os
 import pathlib
 import shutil
@@ -19,6 +18,7 @@ from attrs import frozen
 from loguru import logger
 from rich.progress import track
 
+from climate_ref_core.data import PackagedResource, resolve_cache_dir
 from climate_ref_core.env import env
 from climate_ref_core.source_types import SourceDatasetType
 
@@ -65,30 +65,6 @@ class RegistryEntry:
 
     use_case: RegistryUseCase
     """Whether the registry's contents are catalog-ingestable or fetch-only."""
-
-
-def resolve_cache_dir(cache_name: str) -> pathlib.Path:
-    """
-    Resolve the cache directory for a registry.
-
-    If the ``REF_DATASET_CACHE_DIR`` environment variable is set, use that as the root.
-    Otherwise, fall back to the OS cache under ``climate_ref``.
-
-    Parameters
-    ----------
-    cache_name
-        Subdirectory name within the cache root.
-
-    Returns
-    -------
-        The resolved cache directory path.
-    """
-    if env_cache_dir := os.environ.get("REF_DATASET_CACHE_DIR"):
-        cache_dir = pathlib.Path(os.path.expandvars(env_cache_dir)).expanduser()
-    else:
-        cache_dir = pooch.os_cache("climate_ref")
-
-    return cache_dir / cache_name
 
 
 def _verify_hash_matches(fname: str | pathlib.Path, known_hash: str) -> bool:
@@ -313,9 +289,15 @@ class DatasetRegistryManager:
             for legacy_dir in legacy_cache_dirs:
                 old_path = legacy_dir / key
                 if old_path.exists():
-                    new_path.parent.mkdir(parents=True, exist_ok=True)
-                    logger.info(f"Migrating cached file {key}: {old_path} -> {new_path}")
-                    shutil.move(str(old_path), str(new_path))
+                    # Registration happens at import time, so a read-only cache must not
+                    # stop the package from importing.
+                    try:
+                        new_path.parent.mkdir(parents=True, exist_ok=True)
+                        logger.info(f"Migrating cached file {key}: {old_path} -> {new_path}")
+                        shutil.move(str(old_path), str(new_path))
+                    except OSError as exc:
+                        logger.warning(f"Could not migrate cached file {key} to {new_path}: {exc}")
+                        return
                     break
 
     def register(  # noqa: PLR0913
@@ -398,7 +380,9 @@ class DatasetRegistryManager:
             version=version,
             retry_if_failed=10,
         )
-        registry.load_registry(str(importlib.resources.files(package) / resource))
+        # pooch reads the manifest eagerly, so the temporary path only has to outlive the call.
+        with PackagedResource(package, resource).as_path() as manifest:
+            registry.load_registry(manifest)
 
         if cache_path != default_legacy:
             self._migrate_cache(registry, all_legacy_dirs)
@@ -420,8 +404,8 @@ def iter_reference_registries(
     Yield the ``(registry, source_type)`` pairs for all catalog-ingestable registries.
 
     Registries whose ``use_case`` is not ``reference``, or whose ``source_type`` is
-    ``None`` (e.g. registries that mix source types and so cannot be catalogued as
-    a whole), are skipped.
+    ``None`` (e.g. registries that mix source types and so cannot be catalogued as a whole),
+    are skipped.
     A later ingest driver can pass the yielded ``source_type`` to
     :func:`climate_ref.datasets.get_dataset_adapter` to select the parsing adapter.
 

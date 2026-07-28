@@ -171,6 +171,8 @@ def fetch_all_files(
 
     Pooch fetches, caches and validates up to four downloaded files concurrently.
     Subsequent calls to this function will not refetch any previously downloaded files.
+    The number of simultaneous threads can be overriden using the
+    ``REF_DATASET_FETCH_WORKERS`` environment variable.
 
     Parameters
     ----------

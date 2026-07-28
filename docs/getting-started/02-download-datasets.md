@@ -55,16 +55,7 @@ ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION
 ```
 
 The command fetches up to four files concurrently by default.
-Set `REF_DATASET_FETCH_WORKERS` to a positive integer to change this limit:
-
-```bash
-REF_DATASET_FETCH_WORKERS=8 ref datasets fetch-data --registry obs4ref \
-  --output-directory $REF_CONFIGURATION/datasets/obs4ref
-```
-
-Use `REF_DATASET_FETCH_WORKERS=1` to fetch files sequentially.
-The workers only download, copy, and verify files; NetCDF datasets are not opened
-by the worker threads.
+This can be overriden by setting the `REF_DATASET_FETCH_WORKERS` environment variable.
 
 ### Future work
 

@@ -207,6 +207,13 @@ We need to be resiliant to workers failing.
 | `CELERY_RESULT_EXPIRES`             | Result expiry in seconds                         | `172800` (48 hours) |
 | `CELERY_WORKER_MAX_TASKS_PER_CHILD` | Recycle worker after N tasks (memory leak guard) | None (no limit)     |
 | `CELERY_WORKER_MAX_MEMORY_PER_CHILD`| Max resident memory per worker in KB             | None (no limit)     |
+| `CELERY_TASK_COMPRESSION`           | Codec for task message bodies (empty to disable) | `gzip`              |
+| `CELERY_RESULT_COMPRESSION`         | Codec for result bodies (empty to disable)       | `gzip`              |
+| `CELERY_ACCEPT_CONTENT`             | Comma separated content types the worker accepts | `json,ref-json`     |
+
+Tasks and results are encoded as JSON (`ref-json`).
+A rolling upgrade from a release that still used pickle needs `CELERY_ACCEPT_CONTENT` set to
+`json,ref-json,pickle` until the queues have drained, then reverted.
 
 The following settings are always enabled in `base.py` and cannot be overridden via
 environment variables:

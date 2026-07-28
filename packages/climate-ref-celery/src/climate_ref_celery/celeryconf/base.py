@@ -27,6 +27,14 @@ accept_content = env.list("CELERY_ACCEPT_CONTENT", ["json", "ref-json"])
 task_serializer = env.str("CELERY_TASK_SERIALIZER", "ref-json")
 result_serializer = env.str("CELERY_RESULT_SERIALIZER", "ref-json")
 
+# Compress message bodies before they hit the broker.
+#
+# Messages compress by roughly 80% with gzip.
+#
+# Set to an empty string to disable.
+task_compression = os.environ.get("CELERY_TASK_COMPRESSION", "gzip") or None
+result_compression = os.environ.get("CELERY_RESULT_COMPRESSION", "gzip") or None
+
 # Number of concurrent worker processes to use
 worker_concurrency = int(os.environ.get("CELERY_WORKER_CONCURRENCY", get_available_cpu_count()))
 

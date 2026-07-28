@@ -418,6 +418,7 @@ def test_fetch_all_files_no_output(mocker, tmp_path):
 
 
 def test_fetch_all_files_fetches_in_parallel(mocker, tmp_path):
+    mocker.patch("climate_ref_core.dataset_registry._MAX_FETCH_WORKERS", 2)
     registry = mocker.Mock()
     registry.abspath = tmp_path / "cache"
     registry.registry = {

@@ -55,7 +55,7 @@ ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION
 ```
 
 The command fetches up to four files concurrently by default.
-This can be overriden by setting the `REF_DATASET_FETCH_WORKERS` environment variable.
+This can be overridden by setting the `REF_DATASET_FETCH_WORKERS` environment variable.
 
 ### Future work
 

@@ -59,8 +59,7 @@ def _add_dimension_columns(connection: Connection, table: str, Cls: type[Dimensi
     # Extract the current columns in the DB
     existing_columns = [c["name"] for c in inspector.get_columns(table)]
 
-    cv_file = ref_config.paths.dimensions_cv
-    cv = CV.load_from_file(cv_file)
+    cv = CV.load(ref_config.paths.dimensions_cv_resource)
 
     for dimension in cv.dimensions:
         if dimension.name not in existing_columns:

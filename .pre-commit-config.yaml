@@ -40,6 +40,13 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
+      # Keep the packaged copy of the grey list identical to the canonical one
+      - id: sync-grey-list
+        name: sync grey list into the climate_ref package
+        entry: python scripts/sync_grey_list.py
+        language: system
+        pass_filenames: false
+        files: "^(default_ignore_datasets\\.yaml|packages/climate-ref/src/climate_ref/default_ignore_datasets\\.yaml)$"
       # Prevent committing .rej files
       - id: forbidden-files
         name: forbidden files

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import shutil
 from collections.abc import Iterable, Iterator
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
@@ -9,6 +10,7 @@ import pandas as pd
 import yaml
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
+from climate_ref_core.esmvaltool_reference import drs_relative_parts
 from climate_ref_esmvaltool.types import Recipe
 
 if TYPE_CHECKING:
@@ -406,6 +408,79 @@ def load_recipe(recipe: str) -> Recipe:
     return normalize(yaml.safe_load(Path(filename).read_text(encoding="utf-8")))  # type: ignore[no-any-return]
 
 
+def _require_path(row: Any) -> str:
+    """Return the ``path`` column of a catalog row, rejecting a row that has no usable path."""
+    if not isinstance(row.path, str):  # pragma: no branch
+        msg = f"Invalid path encountered in {row}"
+        raise ValueError(msg)
+    return row.path
+
+
+def _symlink_into_tree(tgt: Path, source: str, cleaned_dirs: set[Path]) -> None:
+    """Symlink ``tgt`` to ``source``, first clearing any stale symlinks in its directory.
+
+    ``cleaned_dirs`` records the parent directories already created and swept,
+    so each directory is handled at most once across a batch of links.
+    """
+    if tgt.parent not in cleaned_dirs:
+        tgt.parent.mkdir(parents=True, exist_ok=True)
+
+        # Remove any stale symlinks in the target directory to prevent
+        # ESMValCore from finding dangling symlinks from previous runs.
+        # ``exists`` follows the link, so a dangling one reads as absent.
+        for existing in tgt.parent.iterdir():
+            if existing.is_symlink() and not existing.exists():
+                existing.unlink()
+        cleaned_dirs.add(tgt.parent)
+
+    tgt.unlink(missing_ok=True)
+    tgt.symlink_to(source)
+
+
+def prepare_reference_data(datasets: pd.DataFrame, reference_data_dir: Path) -> None:
+    """Symlink solver-selected ESMValTool reference files into an ESMValCore DRS tree.
+
+    ESMValTool reference data (``OBS``/``OBS6``, ``native6`` and non-compliant ``obs4MIPs``)
+    is located by ESMValCore from its own directory templates,
+    not by the ``instance_id`` layout used for model data.
+    Each file already sits under one of the project anchors on disk,
+    so the path from the anchor onward is replicated verbatim under ``reference_data_dir``.
+    The tree therefore holds exactly the selected subset and nothing else.
+
+    Parameters
+    ----------
+    datasets
+        The pandas dataframe describing the selected ESMValTool reference files.
+    reference_data_dir
+        The directory to build the reference DRS tree in.
+        It mirrors the ``ESMValTool`` data root,
+        so ``OBS``/``native6``/``obs4MIPs`` sit directly beneath it.
+
+    Raises
+    ------
+    ValueError
+        If ``datasets`` is empty, or if a selected file does not fit a project layout,
+        either of which would leave ESMValCore unable to find the data it was asked for.
+    """
+    if datasets.empty:
+        # Building an empty tree would leave ESMValCore to fall back on its own
+        # default rootpaths and run the recipe against whatever it finds there.
+        msg = "The diagnostic requested ESMValTool reference data but no files were selected."
+        raise ValueError(msg)
+
+    # Start from an empty tree. A link left by an earlier run whose source still exists
+    # would otherwise survive, and ESMValCore would read data this run did not select.
+    if reference_data_dir.exists():
+        shutil.rmtree(reference_data_dir)
+
+    cleaned_dirs: set[Path] = set()
+
+    for row in datasets.itertuples():
+        path = _require_path(row)
+        tgt = reference_data_dir.joinpath(*drs_relative_parts(path))
+        _symlink_into_tree(tgt, path, cleaned_dirs)
+
+
 def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None:
     """Symlink the input files from the Pandas dataframe into a directory tree.
 
@@ -426,9 +501,7 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
         if not isinstance(row.instance_id, str):  # pragma: no branch
             msg = f"Invalid instance_id encountered in {row}"
             raise ValueError(msg)
-        if not isinstance(row.path, str):  # pragma: no branch
-            msg = f"Invalid path encountered in {row}"
-            raise ValueError(msg)
+        path = _require_path(row)
         if row.instance_id.startswith("obs4MIPs."):
             version = row.instance_id.split(".")[-1]
             subdirs: list[str] = ["obs4MIPs", row.source_id, version]  # type: ignore[list-item]
@@ -436,17 +509,5 @@ def prepare_climate_data(datasets: pd.DataFrame, climate_data_dir: Path) -> None
             subdirs = row.instance_id.split(".")
         else:
             subdirs = row.instance_id.split(".")
-        tgt = climate_data_dir.joinpath(*subdirs) / Path(row.path).name
-        tgt.parent.mkdir(parents=True, exist_ok=True)
-
-        # Remove any stale symlinks in the target directory to prevent
-        # ESMValCore from finding dangling symlinks from previous runs
-        if tgt.parent not in cleaned_dirs:
-            for existing in tgt.parent.iterdir():
-                if existing.is_symlink() and not existing.resolve().exists():
-                    existing.unlink()
-            cleaned_dirs.add(tgt.parent)
-
-        if tgt.is_symlink() or tgt.exists():
-            tgt.unlink()
-        tgt.symlink_to(row.path)
+        tgt = climate_data_dir.joinpath(*subdirs) / Path(path).name
+        _symlink_into_tree(tgt, path, cleaned_dirs)

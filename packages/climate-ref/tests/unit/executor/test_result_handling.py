@@ -515,7 +515,7 @@ class TestIngestScalarValues:
     ):
         """Should ingest scalar metric values from a real CMEC bundle."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_scalar_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -536,7 +536,7 @@ class TestIngestSeriesValues:
     ):
         """Should ingest series metric values from a real series file."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -558,7 +558,7 @@ class TestIngestKind:
     ):
         """A series defaults to kind ``model`` and that role is persisted."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -588,7 +588,7 @@ class TestIngestKind:
         mocker.patch.object(TSeries, "load_from_json", return_value=[bad])
 
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         with pytest.raises(ResultValidationError, match="Invalid metric-value kind"):
             ingest_series_values(
@@ -613,7 +613,7 @@ class TestIngestKind:
         mocker.patch.object(CMECMetric, "iter_results", return_value=[bad])
 
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         with pytest.raises(ResultValidationError, match="Invalid metric-value kind"):
             ingest_scalar_values(
@@ -655,7 +655,7 @@ class TestIngestKind:
         TSeries.dump_to_json(scratch_dir_with_data / "series.json", [ref_a1, ref_a2, ref_b, model])
 
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_series_values(database=_ingestion_db, result=mock_result, execution=ingestion_execution, cv=cv)
         _ingestion_db.session.commit()
@@ -684,7 +684,7 @@ class TestIngestExecutionResult:
     ):
         """Should ingest scalars, series, and register outputs in one call."""
         mock_result = mock_result_factory(scratch_dir_with_data)
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_execution_result(
             _ingestion_db,
@@ -716,7 +716,7 @@ class TestIngestExecutionResult:
         mock_result = mock_result_factory(
             scratch_dir_with_data, output_bundle_filename=None, series_filename=None
         )
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
 
         ingest_execution_result(
             _ingestion_db,

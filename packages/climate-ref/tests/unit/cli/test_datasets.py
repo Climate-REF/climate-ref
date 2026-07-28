@@ -377,6 +377,23 @@ class TestIngest:
         assert db.session.query(CMIP6Dataset).count() == expected_dataset_count
         assert db.session.query(DatasetFile).count() == expected_dataset_count
 
+    def test_ingest_drs_reports_deferred_finalisation(self, sample_data_dir, db, invoke_cli, monkeypatch):
+        """The DRS parser defers work to the first solve, so ingest has to say so."""
+        monkeypatch.setenv("REF_CMIP6_PARSER", "drs")
+
+        result = invoke_cli(
+            ["datasets", "ingest", str(sample_data_dir / self.data_dir), "--source-type", "cmip6"]
+        )
+
+        assert "6 cmip6 datasets (6 files) are missing metadata" in result.stderr
+
+    def test_ingest_complete_does_not_report_deferred_finalisation(self, sample_data_dir, db, invoke_cli):
+        result = invoke_cli(
+            ["datasets", "ingest", str(sample_data_dir / self.data_dir), "--source-type", "cmip6"]
+        )
+
+        assert "missing metadata" not in result.stderr
+
     def test_ingest_multiple(self, sample_data_dir, db, invoke_cli):
         invoke_cli(
             [

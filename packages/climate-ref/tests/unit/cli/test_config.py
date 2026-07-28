@@ -311,7 +311,7 @@ class TestConfigValidate:
         config_file = tmp_path / CONFIG_FILENAME
         config_file.write_text('log_level = "INFO"\n')
         request_get = Mock()
-        monkeypatch.setattr("climate_ref.config.platformdirs.user_cache_path", lambda _: tmp_path / "cache")
+        monkeypatch.setenv("REF_DATASET_CACHE_DIR", str(tmp_path / "cache"))
         monkeypatch.setattr("climate_ref.config.requests.get", request_get)
 
         assert Config.collect_validation_errors(config_file) == []

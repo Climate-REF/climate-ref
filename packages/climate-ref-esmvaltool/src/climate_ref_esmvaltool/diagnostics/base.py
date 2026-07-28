@@ -26,11 +26,23 @@ from climate_ref_esmvaltool.recipe import (
     fix_annual_statistics_keep_year,
     load_recipe,
     prepare_climate_data,
+    prepare_reference_data,
     rewrite_mip_for_cmip7,
 )
 from climate_ref_esmvaltool.types import MetricBundleArgs, OutputBundleArgs, Recipe
 
 _DATASETS_REGISTRY_NAME = "esmvaltool-datasets"
+
+
+def registry_data_root() -> Path:
+    """Return the root of the downloaded ESMValTool reference data.
+
+    Every registry key is a DRS path below an ``ESMValTool`` directory,
+    so the project anchors (``OBS``, ``OBS6``, ``native6``, ``obs4MIPs``) sit directly beneath this.
+    """
+    registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
+    return Path(registry.abspath) / "ESMValTool"  # type: ignore[attr-defined]
+
 
 _STABLE_SESSION_NAME = "recipe"
 """Stable name for the ESMValTool session directory.
@@ -228,6 +240,23 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             file.write(recipe_txt)
         return recipe_path
 
+    @staticmethod
+    def _reference_data_root(definition: ExecutionDefinition) -> Path:
+        """Return the directory ESMValCore should read OBS/OBS6/native6/obs4MIPs data from.
+
+        A diagnostic that requested reference data gets a tree holding just its selection.
+        One that did not gets the whole downloaded registry.
+        """
+        if SourceDatasetType.ESMValToolReference in definition.datasets:
+            reference_data = definition.to_output_path("reference_data")
+            prepare_reference_data(
+                definition.datasets[SourceDatasetType.ESMValToolReference].datasets,
+                reference_data_dir=reference_data,
+            )
+            return reference_data
+
+        return registry_data_root()
+
     def build_cmd(self, definition: ExecutionDefinition) -> Iterable[str]:
         """
         Build the command to run an ESMValTool recipe.
@@ -245,7 +274,13 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
         recipe_path = self.write_recipe(definition)
         climate_data = definition.to_output_path("climate_data")
 
-        for metric_dataset in definition.datasets.values():
+        # ESMValCore finds reference data from its own DRS templates,
+        # so it gets its own rootpaths rather than sharing the instance_id tree that model data uses.
+        data_dir = self._reference_data_root(definition)
+
+        for source_type, metric_dataset in definition.datasets.items():
+            if source_type == SourceDatasetType.ESMValToolReference:
+                continue
             prepare_climate_data(
                 metric_dataset.datasets,
                 climate_data_dir=climate_data,
@@ -299,9 +334,6 @@ class ESMValToolDiagnostic(CommandLineDiagnostic):
             },
         }
 
-        # Configure the paths to OBS/OBS6/native6 and non-compliant obs4MIPs data
-        registry = dataset_registry_manager[_DATASETS_REGISTRY_NAME]
-        data_dir = registry.abspath / "ESMValTool"  # type: ignore[attr-defined]
         if not data_dir.exists():
             logger.warning(
                 "ESMValTool observational and reanalysis data is not available "

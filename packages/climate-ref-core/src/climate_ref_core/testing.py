@@ -20,7 +20,7 @@ import yaml
 from attrs import field, frozen
 from loguru import logger
 
-from climate_ref_core.dataset_registry import resolve_cache_dir
+from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,

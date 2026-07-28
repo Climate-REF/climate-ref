@@ -107,9 +107,9 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
     """
     Load parquet catalog files from a directory.
 
-    Looks for ``cmip6_catalog.parquet``, ``cmip7_catalog.parquet``,
-    ``obs4mips_catalog.parquet``, ``pmp_climatology_catalog.parquet``,
-    and ``obs4ref_catalog.parquet``.
+    Reads one parquet file per source type, named after the source type,
+    such as ``cmip6_catalog.parquet`` or ``esmvaltool_reference_catalog.parquet``.
+    Missing files are skipped, so a partial catalog directory loads what it has.
 
     Parameters
     ----------
@@ -130,6 +130,7 @@ def load_solve_catalog(catalog_dir: Path) -> dict[SourceDatasetType, pd.DataFram
         SourceDatasetType.obs4MIPs: "obs4mips_catalog.parquet",
         SourceDatasetType.PMPClimatology: "pmp_climatology_catalog.parquet",
         SourceDatasetType.obs4REF: "obs4ref_catalog.parquet",
+        SourceDatasetType.ESMValToolReference: "esmvaltool_reference_catalog.parquet",
     }
 
     result: dict[SourceDatasetType, pd.DataFrame] = {}

@@ -24,7 +24,7 @@ from climate_ref_core.cmip6_to_cmip7 import (
     shift_time_axis_end,
     suppress_bounds_coordinates,
 )
-from climate_ref_core.dataset_registry import resolve_cache_dir
+from climate_ref_core.data import resolve_cache_dir
 from climate_ref_core.esgf.cmip6 import CMIP6Request
 
 

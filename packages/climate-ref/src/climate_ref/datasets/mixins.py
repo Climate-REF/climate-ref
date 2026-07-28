@@ -3,6 +3,8 @@ Mixins for dataset adapters that support lazy finalization.
 """
 
 from abc import abstractmethod
+from collections.abc import Iterator
+from typing import Any
 
 import pandas as pd
 from loguru import logger
@@ -11,6 +13,50 @@ from climate_ref.database import Database
 from climate_ref.datasets.base import DatasetParsingFunction
 from climate_ref.datasets.catalog_builder import parse_files
 from climate_ref.datasets.utils import _is_na, parse_cftime_dates
+
+DEFAULT_FINALISE_CHUNK_SIZE = 500
+"""
+Number of files that are parsed and committed per finalisation chunk.
+
+Each chunk is committed before the next one is parsed,
+so cancelling a long finalisation keeps the work that has already been done.
+"""
+
+
+def _chunk_by_dataset(datasets: pd.DataFrame, slug_column: str, chunk_size: int) -> Iterator[pd.Index]:
+    """
+    Split a catalog into chunks of index labels holding roughly ``chunk_size`` files each.
+
+    A dataset is never split across two chunks,
+    so each chunk can be parsed and committed as a unit.
+
+    Parameters
+    ----------
+    datasets
+        Catalog to split. The index must be unique.
+    slug_column
+        Column holding the dataset identifier.
+    chunk_size
+        Soft target for the number of files per chunk.
+        A chunk exceeds this when a single dataset has more files.
+
+    Yields
+    ------
+    :
+        Index labels for each chunk.
+    """
+    labels: list[Any] = []
+
+    # dropna=False so a row with a missing slug still lands in a chunk.
+    # The caller reassembles the catalog from the chunks and would otherwise lose it.
+    for _, group in datasets.groupby(slug_column, sort=False, dropna=False):
+        labels.extend(group.index.tolist())
+        if len(labels) >= chunk_size:
+            yield pd.Index(labels)
+            labels = []
+
+    if labels:
+        yield pd.Index(labels)
 
 
 class FinaliseableDatasetAdapterMixin:
@@ -54,12 +100,21 @@ class FinaliseableDatasetAdapterMixin:
         """
         return datasets
 
-    def finalise_datasets(self, db: Database, datasets: pd.DataFrame) -> pd.DataFrame:
+    def finalise_datasets(
+        self,
+        db: Database,
+        datasets: pd.DataFrame,
+        chunk_size: int = DEFAULT_FINALISE_CHUNK_SIZE,
+    ) -> pd.DataFrame:
         """
         Finalise unfinalised datasets by opening files to extract full metadata.
 
-        Files are parsed in parallel using ``self.n_jobs`` threads,
+        Files are parsed in parallel using ``self.n_jobs`` worker processes,
         mirroring the parallelism used during ingest.
+
+        Work is done in chunks of whole datasets.
+        Each chunk is committed before the next one is parsed,
+        so progress is visible and a cancelled run keeps what it has already parsed.
 
         Parameters
         ----------
@@ -67,53 +122,118 @@ class FinaliseableDatasetAdapterMixin:
             Database instance for persisting updated metadata
         datasets
             DataFrame containing datasets to finalise (should have finalised=False)
+        chunk_size
+            Soft target for the number of files parsed and committed per chunk
 
         Returns
         -------
         :
             Updated DataFrame with full metadata extracted from files
         """
-        unfinalised = datasets[datasets["finalised"] == False]  # noqa: E712
+        # The catalog is indexed by dataset id, which repeats once per file.
+        # Work against a unique index so per-row updates address a single file
+        # and chunks can be reassembled without ambiguity.
+        original_index = datasets.index
+        working = datasets.set_axis(pd.RangeIndex(len(datasets)))
 
-        # Collect (index, path) pairs for rows that have a valid path
-        valid = [(idx, str(row["path"])) for idx, row in unfinalised.iterrows() if not pd.isna(row["path"])]
-        if not valid:
+        unfinalised = working[working["finalised"] == False]  # noqa: E712
+        total_files = int(unfinalised["path"].notna().sum())
+        if not total_files:
             return datasets
 
-        indices, paths = zip(*valid)
-
+        slug_column = self.slug_column  # type: ignore[attr-defined]
+        parsing_func = self.get_complete_parser()
         n_jobs = self.n_jobs if hasattr(self, "n_jobs") else 1
 
-        parsed_results = parse_files(list(paths), self.get_complete_parser(), n_jobs=n_jobs)
+        logger.info(
+            f"Finalising {unfinalised[slug_column].nunique()} datasets ({total_files} files) "
+            f"using {n_jobs} worker(s)"
+        )
 
-        updated_indices = []
-        for idx, path, parsed in zip(indices, paths, parsed_results):
+        # Chunk over every file of an affected dataset, not just its unfinalised ones,
+        # so per-dataset fixes and the per-dataset commit see the whole dataset.
+        affected = working[working[slug_column].isin(unfinalised[slug_column].unique())]
+        untouched = working.drop(index=affected.index)
+        chunks: list[pd.DataFrame] = [untouched] if len(untouched) else []
+
+        parsed_files = 0
+        for labels in _chunk_by_dataset(affected, slug_column, chunk_size):
+            chunk = working.loc[labels].copy()
+            attempted = int(chunk.loc[chunk["finalised"] == False, "path"].notna().sum())  # noqa: E712
+
+            chunks.append(self._finalise_chunk(db, chunk, parsing_func, n_jobs))
+
+            parsed_files += attempted
+            logger.info(f"Parsed {parsed_files}/{total_files} files")
+
+        return pd.concat(chunks).sort_index().set_axis(original_index)
+
+    def _finalise_chunk(
+        self,
+        db: Database,
+        chunk: pd.DataFrame,
+        parsing_func: DatasetParsingFunction,
+        n_jobs: int,
+    ) -> pd.DataFrame:
+        """
+        Parse, fix and persist a single chunk of unfinalised rows.
+
+        Parameters
+        ----------
+        db
+            Database instance for persisting updated metadata
+        chunk
+            Every row of a whole number of datasets, with a unique index.
+            Rows that are already finalised are left alone.
+        parsing_func
+            Parser that opens each file to extract full metadata
+        n_jobs
+            Number of parallel workers to parse the chunk with
+
+        Returns
+        -------
+        :
+            The chunk with metadata extracted from the files that parsed successfully
+        """
+        # Captured before the parse marks rows finalised, so the commit can still tell
+        # which rows this chunk was responsible for.
+        pending = chunk.loc[chunk["finalised"] == False, "path"]  # noqa: E712
+        pending_index = pending.index
+
+        valid = [(label, str(path)) for label, path in pending.items() if not pd.isna(path)]
+        if not valid:
+            return chunk
+
+        labels, paths = zip(*valid)
+        parsed_results = parse_files(list(paths), parsing_func, n_jobs=n_jobs)
+
+        updated_labels = []
+        for label, path, parsed in zip(labels, paths, parsed_results):
             if "INVALID_ASSET" in parsed:
                 logger.warning(f"Failed to finalise {path}: {parsed.get('TRACEBACK', '')}")
                 continue
 
             for key, value in parsed.items():
-                if key in datasets.columns and value is not None:
-                    datasets.at[idx, key] = value
+                if key in chunk.columns and value is not None:
+                    chunk.at[label, key] = value
 
-            datasets.at[idx, "finalised"] = True
-            updated_indices.append(idx)
+            chunk.at[label, "finalised"] = True
+            updated_labels.append(label)
 
-        if updated_indices:
+        if updated_labels:
             # Convert start_time/end_time strings from the complete parser to cftime objects
-            mask = datasets.index.isin(updated_indices)
-            cal = datasets.loc[mask, "calendar"] if "calendar" in datasets.columns else "standard"
-            datasets.loc[mask, "start_time"] = parse_cftime_dates(
-                datasets.loc[mask, "start_time"], cal
-            ).values
-            datasets.loc[mask, "end_time"] = parse_cftime_dates(datasets.loc[mask, "end_time"], cal).values
+            mask = chunk.index.isin(updated_labels)
+            cal = chunk.loc[mask, "calendar"] if "calendar" in chunk.columns else "standard"
+            chunk.loc[mask, "start_time"] = parse_cftime_dates(chunk.loc[mask, "start_time"], cal).values
+            chunk.loc[mask, "end_time"] = parse_cftime_dates(chunk.loc[mask, "end_time"], cal).values
 
-            # Apply adapter-specific fixes
-            datasets = self._post_finalise_fixes(datasets)
+            # Apply adapter-specific fixes.
+            # A chunk holds whole datasets, so per-dataset fixes see all of their files.
+            chunk = self._post_finalise_fixes(chunk)
 
-        self._persist_finalised_metadata(db, datasets, unfinalised.index)
+        self._persist_finalised_metadata(db, chunk, pending_index)
 
-        return datasets
+        return chunk
 
     def _persist_finalised_metadata(
         self, db: Database, datasets: pd.DataFrame, unfinalised_index: pd.Index

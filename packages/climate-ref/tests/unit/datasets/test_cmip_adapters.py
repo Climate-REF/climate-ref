@@ -170,6 +170,134 @@ class TestFinalisationEdgeCases:
         assert result[check_field].iloc[0] == check_value
 
 
+class TestChunkedFinalisation:
+    """Finalisation happens in chunks of whole datasets, committed as it goes."""
+
+    def test_each_chunk_is_persisted_separately(self, config, adapter_config, db, mocker):
+        """A chunk is committed before the next one is parsed."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a.nc", "/b.nc", "/c.nc"])
+        df["instance_id"] = ["ds1", "ds2", "ds3"]
+
+        persist = mocker.patch.object(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ):
+            result = adapter.finalise_datasets(db, df, chunk_size=1)
+
+        assert persist.call_count == 3
+        assert result["finalised"].all()
+
+    def test_datasets_are_not_split_across_chunks(self, config, adapter_config, db, mocker):
+        """All files of a dataset are parsed and committed together."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a1.nc", "/a2.nc", "/b1.nc", "/b2.nc"])
+        df["instance_id"] = ["ds1", "ds1", "ds2", "ds2"]
+
+        persist = mocker.patch.object(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ):
+            adapter.finalise_datasets(db, df, chunk_size=1)
+
+        assert persist.call_count == 2
+        assert [len(call.args[1]) for call in persist.call_args_list] == [2, 2]
+
+    def test_row_order_and_index_are_preserved(self, config, adapter_config, db, mocker):
+        """The returned catalog keeps the index and row order it was given."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a.nc", "/b.nc", "/c.nc"])
+        df["instance_id"] = ["ds2", "ds1", "ds2"]
+        df.index = pd.Index([11, 12, 13])
+
+        mocker.patch.object(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ):
+            result = adapter.finalise_datasets(db, df, chunk_size=1)
+
+        assert list(result.index) == [11, 12, 13]
+        assert list(result["path"]) == ["/a.nc", "/b.nc", "/c.nc"]
+
+    def test_already_finalised_rows_are_kept(self, config, adapter_config, db, mocker):
+        """Rows that were already finalised survive the chunked rebuild."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a.nc", "/b.nc"])
+        df["instance_id"] = ["ds1", "ds2"]
+        df.loc[0, "finalised"] = True
+
+        mocker.patch.object(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ) as mock_parse:
+            result = adapter.finalise_datasets(db, df, chunk_size=10)
+
+        mock_parse.assert_called_once_with("/b.nc")
+        assert result["finalised"].all()
+
+    def test_chunk_holds_every_file_of_a_partly_finalised_dataset(self, config, adapter_config, db, mocker):
+        """Per-dataset fixes need the whole dataset, not just its unfinalised files."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a1.nc", "/a2.nc"])
+        df.loc[0, "finalised"] = True
+
+        persist = mocker.patch.object(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value=adapter_config.successful_parsed_result,
+        ) as mock_parse:
+            result = adapter.finalise_datasets(db, df, chunk_size=10)
+
+        # Only the unfinalised file is opened, but the commit sees both rows.
+        mock_parse.assert_called_once_with("/a2.nc")
+        assert len(persist.call_args_list[0].args[1]) == 2
+        assert result["finalised"].all()
+
+    def test_failed_parse_does_not_finalise_via_an_already_finalised_sibling(
+        self, config, adapter_config, db, mocker
+    ):
+        """A dataset must not be committed as finalised on the strength of rows it did not parse."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a1.nc", "/a2.nc"])
+        df.loc[0, "finalised"] = True
+
+        persist = mocker.spy(adapter, "_persist_finalised_metadata")
+        with patch(
+            adapter_config.complete_parser_patch_path,
+            return_value={"INVALID_ASSET": "/a2.nc", "TRACEBACK": "corrupt file"},
+        ):
+            result = adapter.finalise_datasets(db, df, chunk_size=10)
+
+        # Only the row this chunk actually parsed counts towards the commit,
+        # so the already-finalised sibling cannot stand in for it.
+        committed = persist.call_args_list[0].args[1]
+        pending_index = persist.call_args_list[0].args[2]
+        assert list(pending_index) == [1]
+        assert not committed.loc[pending_index, "finalised"].any()
+        assert not result["finalised"].iloc[1]
+
+    def test_file_metadata_is_not_broadcast_across_duplicate_labels(self, config, adapter_config, db):
+        """A catalog loaded from the database repeats its dataset id once per file."""
+        adapter = adapter_config.adapter_cls(config=config)
+        df = _make_unfinalised_df(adapter_config, ["/a1.nc", "/a2.nc"])
+        df.index = pd.Index([7, 7])
+
+        def side_effect(path, **_):
+            parsed = dict(adapter_config.successful_parsed_result)
+            parsed["start_time"] = "2000-01-01" if path.endswith("a1.nc") else "2001-01-01"
+            return parsed
+
+        with patch(adapter_config.complete_parser_patch_path, side_effect=side_effect):
+            result = adapter.finalise_datasets(db, df)
+
+        assert list(result.index) == [7, 7]
+        assert result["start_time"].iloc[0] != result["start_time"].iloc[1]
+
+
 class TestPersistFinalisedMetadata:
     """_persist_finalised_metadata edge cases, parameterised over adapter types."""
 

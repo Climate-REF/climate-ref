@@ -19,10 +19,6 @@ result_backend = env.str("CELERY_RESULT_BACKEND", broker_url)
 broker_connection_retry_on_startup = True
 
 # Tasks and results are encoded as JSON by climate_ref_celery.serialisation.
-# Pickle would let anything that can write to the broker run arbitrary code in a worker,
-# so it is not accepted by default.
-# A rolling deploy that still has pickled messages in flight can set
-# CELERY_ACCEPT_CONTENT to include "pickle" until the queues have drained.
 accept_content = env.list("CELERY_ACCEPT_CONTENT", ["json", "ref-json"])
 task_serializer = env.str("CELERY_TASK_SERIALIZER", "ref-json")
 result_serializer = env.str("CELERY_RESULT_SERIALIZER", "ref-json")

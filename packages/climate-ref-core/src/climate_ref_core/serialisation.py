@@ -77,9 +77,11 @@ def _encode_float(value: float) -> Any:
 
     `json.dumps` writes bare `NaN` and `Infinity` by default, which is not JSON.
     Postgres rejects it, and so does any strict parser.
+    NaN is tagged rather than nulled so that it survives the trip on its own,
+    where there is no column dtype to restore it from.
     """
     if math.isnan(value):
-        return None
+        return {TAG: "float", "value": "NaN"}
     if math.isinf(value):
         return {TAG: "float", "value": "Infinity" if value > 0 else "-Infinity"}
     return value
@@ -93,10 +95,10 @@ def _encode_scalar(value: Any) -> Any:
     """
     Encode a scalar, whether it is a cell of a dataset frame or a value on its own.
 
-    Every flavour of missing value becomes JSON null, including NaN.
+    A missing value becomes JSON null.
     A frame column records its dtype alongside,
     so pandas restores the sentinel that dtype uses when the column is rebuilt.
-    An infinity is a real value rather than a missing one, so it is tagged instead.
+    NaN and the infinities are real float values rather than missing ones, so they are tagged.
     """
     if value is None or value is pd.NA or value is pd.NaT:
         return None

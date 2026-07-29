@@ -1,4 +1,5 @@
 import json
+import math
 import pathlib
 
 import attrs
@@ -362,9 +363,23 @@ def test_infinity_roundtrips(value):
     assert json.loads(dumps_strict(value))["__ref_type__"] == "float"
 
 
-def test_nan_becomes_null():
-    """NaN is a missing marker everywhere it appears here, so it is encoded as null."""
-    assert to_wire(float("nan")) is None
+def test_nan_roundtrips():
+    """
+    NaN is tagged like the infinities rather than nulled.
+
+    Inside a frame the column dtype would restore it either way,
+    but a NaN on its own has no dtype to be restored from,
+    so nulling it would quietly turn it into None.
+    """
+    assert math.isnan(roundtrip(float("nan")))
+    assert json.loads(dumps_strict(float("nan")))["__ref_type__"] == "float"
+
+
+def test_none_is_still_null():
+    """Only the missing markers become null. NaN is a float value, not one of them."""
+    assert to_wire(None) is None
+    assert to_wire(pd.NA) is None
+    assert to_wire(pd.NaT) is None
 
 
 def _reject_constant(name):

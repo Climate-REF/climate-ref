@@ -22,11 +22,13 @@ def test_create_celery_app_does_not_accept_pickle():
 
 
 def test_create_celery_app_registers_the_serialiser():
-    from kombu.serialization import registry  # noqa: PLC0415
+    from kombu.serialization import dumps, loads  # noqa: PLC0415
 
     create_celery_app("test")
 
-    assert "ref-json" in registry._encoders
+    content_type, content_encoding, body = dumps({"a": 1}, serializer="ref-json")
+
+    assert loads(body, content_type, content_encoding) == {"a": 1}
 
 
 def test_create_celery_app_invalid_config(monkeypatch):

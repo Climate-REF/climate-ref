@@ -118,6 +118,12 @@ jobs:
       uses: medyagh/setup-minikube@latest
       with:
         mount-path: '${{ github.workspace }}/cache/ref-config:/cache/ref-config'
+    - name: Allow ptrace between processes on the node
+      # py-spy attaches from a kubectl exec, which is not an ancestor of the worker it wants to dump,
+      # so Yama's default scope refuses it. Granting SYS_PTRACE to the pods does not help,
+      # because they run as a non-root user and Kubernetes cannot set ambient capabilities.
+      # Widening the scope on the node lets a process dump another running under the same user.
+      run: minikube ssh -- sudo sysctl -w kernel.yama.ptrace_scope=0
     - name: Set up Helm
       uses: azure/setup-helm@v5.0.1
     - name: Install Chart

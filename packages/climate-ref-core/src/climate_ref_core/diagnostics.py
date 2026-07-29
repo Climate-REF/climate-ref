@@ -113,10 +113,12 @@ class ExecutionDefinition:
         #
         # A diagnostic that has not been registered with a provider yet has no slug to derive.
         # That stays permitted, and the slug is only demanded when something asks for it.
+        # A subclass that never ran this class's __init__ has no _provider at all,
+        # so the default keeps construction working for it too.
         if (
             self._diagnostic_full_slug is None
             and self._diagnostic is not None
-            and self._diagnostic._provider is not None
+            and getattr(self._diagnostic, "_provider", None) is not None
         ):
             object.__setattr__(self, "_diagnostic_full_slug", self._diagnostic.full_slug())
 

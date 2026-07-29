@@ -302,6 +302,31 @@ def test_unregistered_diagnostic_can_still_build_a_definition(cmip6_data_catalog
         definition.execution_slug()
 
 
+def test_a_diagnostic_that_skips_the_base_init_can_still_build_a_definition(cmip6_data_catalog):
+    """
+    `ILAMBStandard` never calls `Diagnostic.__init__`, so it has no `_provider` at all.
+
+    Deriving the slug at construction must not assume the attribute exists.
+    """
+    from climate_ref_example.example import GlobalMeanTimeseries  # noqa: PLC0415
+
+    class SkipsTheBaseInit(GlobalMeanTimeseries):
+        def __init__(self):  # deliberately does not call super().__init__()
+            pass
+
+    definition = ExecutionDefinition(
+        diagnostic=SkipsTheBaseInit(),
+        key="key",
+        datasets=ExecutionDatasetCollection(
+            {SourceDatasetType.CMIP6: DatasetCollection(cmip6_data_catalog, "instance_id")}
+        ),
+        root_directory=pathlib.Path("/scratch"),
+        output_directory=pathlib.Path("/scratch/fragment"),
+    )
+
+    assert definition._diagnostic_full_slug is None
+
+
 def test_result_roundtrips(metric_definition):
     result = ExecutionResult(
         definition=metric_definition,

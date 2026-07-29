@@ -1,3 +1,4 @@
+import importlib.metadata
 import io
 import logging
 import subprocess
@@ -724,6 +725,47 @@ class TestLifecycleHooks:
 
 
 class TestProviderLookup:
+    @pytest.fixture(autouse=True)
+    def _clear_the_lookup_cache(self):
+        # provider_by_slug is cached for the life of the process,
+        # so a mocked set of entry points would otherwise be answered from a previous test.
+        provider_by_slug.cache_clear()
+        yield
+        provider_by_slug.cache_clear()
+
+    @staticmethod
+    def _fake_entry_points(mocker, names):
+        """Register entry points named `names`, each pointing at a value of the same name."""
+        entry_points = [
+            importlib.metadata.EntryPoint(name=name, value=name, group="climate-ref.providers")
+            for name in names
+        ]
+        mocker.patch.object(
+            climate_ref_core.providers.importlib.metadata,
+            "entry_points",
+            return_value=entry_points,
+        )
+        return entry_points
+
+    @staticmethod
+    def _fake_imports(mocker, providers):
+        """
+        Resolve an entry point value through `providers`, recording the order of the attempts.
+
+        A value mapped to an exception raises it, standing in for a provider that fails to import.
+        """
+        attempted = []
+
+        def _import(value):
+            attempted.append(value)
+            result = providers[value]
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        mocker.patch.object(climate_ref_core.providers, "import_provider", side_effect=_import)
+        return attempted
+
     def test_provider_by_slug(self):
         # The same singleton the entry point exposes, so it carries any configuration
         # the current process has already applied to it
@@ -732,6 +774,58 @@ class TestProviderLookup:
     def test_provider_by_slug_unknown(self):
         with pytest.raises(InvalidProviderException, match="No provider with slug 'nope'"):
             provider_by_slug("nope")
+
+    def test_the_named_entry_point_is_tried_first(self, mocker):
+        """The name is the slug by convention, so nothing else should need importing."""
+        self._fake_entry_points(mocker, ["aaa", "wanted", "zzz"])
+        wanted = mocker.Mock(slug="wanted")
+        attempted = self._fake_imports(
+            mocker,
+            {"aaa": mocker.Mock(slug="aaa"), "wanted": wanted, "zzz": mocker.Mock(slug="zzz")},
+        )
+
+        assert provider_by_slug("wanted") is wanted
+        assert attempted == ["wanted"]
+
+    def test_an_entry_point_whose_name_differs_from_its_slug_is_still_found(self, mocker):
+        self._fake_entry_points(mocker, ["misnamed"])
+        provider = mocker.Mock(slug="wanted")
+        self._fake_imports(mocker, {"misnamed": provider})
+
+        assert provider_by_slug("wanted") is provider
+
+    def test_a_broken_provider_does_not_mask_the_one_being_looked_for(self, mocker):
+        """A provider we were not asked for is skipped when it fails to import."""
+        self._fake_entry_points(mocker, ["broken", "misnamed"])
+        wanted = mocker.Mock(slug="wanted")
+        attempted = self._fake_imports(
+            mocker,
+            {"broken": InvalidProviderException("broken", "boom"), "misnamed": wanted},
+        )
+
+        assert provider_by_slug("wanted") is wanted
+        assert attempted == ["broken", "misnamed"]
+
+    def test_a_broken_named_provider_propagates(self, mocker):
+        """Failing to import the provider actually asked for is an error, not a miss."""
+        self._fake_entry_points(mocker, ["wanted", "other"])
+        self._fake_imports(
+            mocker,
+            {
+                "wanted": InvalidProviderException("wanted", "boom"),
+                "other": mocker.Mock(slug="other"),
+            },
+        )
+
+        with pytest.raises(InvalidProviderException, match="boom"):
+            provider_by_slug("wanted")
+
+    def test_an_unmatched_slug_reports_what_is_available(self, mocker):
+        self._fake_entry_points(mocker, ["zzz", "aaa"])
+        self._fake_imports(mocker, {"zzz": mocker.Mock(slug="zzz"), "aaa": mocker.Mock(slug="aaa")})
+
+        with pytest.raises(InvalidProviderException, match="Available: aaa, zzz"):
+            provider_by_slug("wanted")
 
     def test_resolve_diagnostic(self):
         provider = import_provider("climate_ref_example:provider")

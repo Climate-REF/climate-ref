@@ -406,10 +406,14 @@ def provider_by_slug(slug: str) -> DiagnosticProvider:
     """
     entry_points = list(importlib.metadata.entry_points(group="climate-ref.providers"))
 
-    # The entry point name is the provider slug by convention, so any name match is tried first.
+    # The entry point name is the provider slug by convention, so the name match is tried first
+    # and the rest are only a fallback for a provider whose name and slug disagree.
+    named_first = [ep for ep in entry_points if ep.name == slug]
+    named_first += [ep for ep in entry_points if ep.name != slug]
+
     # A non-matching provider that fails to import is skipped rather than masking the one we are looking for,
     # while an import failure on the named provider itself propagates.
-    for entry_point in sorted(entry_points, key=lambda ep: ep.name != slug):
+    for entry_point in named_first:
         try:
             provider = import_provider(entry_point.value)
         except InvalidProviderException:

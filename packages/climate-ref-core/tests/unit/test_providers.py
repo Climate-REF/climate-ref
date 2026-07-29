@@ -1,3 +1,4 @@
+import importlib.metadata
 import io
 import logging
 import subprocess
@@ -19,7 +20,13 @@ from climate_ref_core.exceptions import (
     InvalidDiagnosticException,
     InvalidProviderException,
 )
-from climate_ref_core.providers import CondaDiagnosticProvider, DiagnosticProvider, import_provider
+from climate_ref_core.providers import (
+    CondaDiagnosticProvider,
+    DiagnosticProvider,
+    import_provider,
+    provider_by_slug,
+    resolve_diagnostic,
+)
 
 
 @pytest.fixture
@@ -246,9 +253,9 @@ class TestCondaDiagnosticProvider:
     @pytest.fixture
     def provider(self, tmp_path, mocker):
         mocker.patch.object(
-            climate_ref_core.providers.os.environ,
-            "copy",
-            return_value={"existing_var": "existing_value"},
+            climate_ref_core.providers.os,
+            "environ",
+            {"existing_var": "existing_value"},
         )
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
         provider.prefix = tmp_path / "conda"
@@ -266,28 +273,28 @@ class TestCondaDiagnosticProvider:
 
         assert isinstance(provider.prefix, Path)
 
-        # Ensure configure() sets HOME to contain mamba writes
-        assert "HOME" in provider.env_vars
+        # HOME is defaulted at launch so micromamba has a writable directory
+        assert "HOME" in provider._launch_env()
 
-    def test_preserves_env_vars(self, config, mocker: pytest_mock.MockFixture) -> None:
-        mock_env = mocker.patch.object(
-            climate_ref_core.providers.os.environ,
-            "copy",
-            return_value={"preserved_var": "untouched", "overridden_var": "untouched"},
+    def test_launch_env_merges_the_live_environment(self, config, mocker: pytest_mock.MockFixture) -> None:
+        mocker.patch.object(
+            climate_ref_core.providers.os,
+            "environ",
+            {"preserved_var": "untouched", "overridden_var": "untouched"},
         )
         provider = CondaDiagnosticProvider("provider_name", "v0.23")
         provider.configure(config)
-        provider.env_vars["overridden_var"] = "overridden"
-        provider.env_vars["new_var"] = "added"
+        provider.env_overrides["overridden_var"] = "overridden"
+        provider.env_overrides["new_var"] = "added"
 
-        # Ensure os.environ.copy was used vs manipulating the whole execution environ
-        mock_env.assert_called_once()
+        # The base is read at launch, so a variable set after construction still applies
+        climate_ref_core.providers.os.environ["late_var"] = "set-later"
 
-        # Ensure existing env vars are preserved and new ones are added
-        assert provider.env_vars == {
+        assert provider._launch_env() == {
             "preserved_var": "untouched",
             "overridden_var": "overridden",
             "new_var": "added",
+            "late_var": "set-later",
             "HOME": str(provider.prefix),
         }
 
@@ -417,8 +424,11 @@ class TestCondaDiagnosticProvider:
                 f"{env_path}",
             ],
             check=True,
-            env={"existing_var": "existing_value"},
+            env=mocker.ANY,
         )
+        env = run.call_args.kwargs["env"]
+        assert env["existing_var"] == "existing_value"
+        assert env["HOME"] == str(provider.prefix)
 
     def test_create_env_with_pip_packages(self, mocker, tmp_path, provider):
         lockfile = tmp_path / "conda-lock.yml"
@@ -527,7 +537,7 @@ class TestCondaDiagnosticProvider:
             create_autospec=True,
         )
 
-        provider.env_vars["test_var"] = "test_value"
+        provider.env_overrides["test_var"] = "test_value"
 
         with raised:
             provider.run(["mock-command"])
@@ -544,8 +554,12 @@ class TestCondaDiagnosticProvider:
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env={"existing_var": "existing_value", "test_var": "test_value"},
+                env=mocker.ANY,
             )
+            env = run.call_args.kwargs["env"]
+            assert env["existing_var"] == "existing_value"
+            assert env["test_var"] == "test_value"
+            assert env["HOME"] == str(provider.prefix)
 
     def test_run_command_fails(self, mocker: pytest_mock.MockerFixture, tmp_path, provider):
         """Test that run() re-raises CalledProcessError when command fails."""
@@ -708,3 +722,120 @@ class TestLifecycleHooks:
 
         # Should return True when env_path exists
         assert provider.validate_setup(mock_config) is True
+
+
+class TestProviderLookup:
+    @pytest.fixture(autouse=True)
+    def _clear_the_lookup_cache(self):
+        # provider_by_slug is cached for the life of the process,
+        # so a mocked set of entry points would otherwise be answered from a previous test.
+        provider_by_slug.cache_clear()
+        yield
+        provider_by_slug.cache_clear()
+
+    @staticmethod
+    def _fake_entry_points(mocker, names):
+        """Register entry points named `names`, each pointing at a value of the same name."""
+        entry_points = [
+            importlib.metadata.EntryPoint(name=name, value=name, group="climate-ref.providers")
+            for name in names
+        ]
+        mocker.patch.object(
+            climate_ref_core.providers.importlib.metadata,
+            "entry_points",
+            return_value=entry_points,
+        )
+        return entry_points
+
+    @staticmethod
+    def _fake_imports(mocker, providers):
+        """
+        Resolve an entry point value through `providers`, recording the order of the attempts.
+
+        A value mapped to an exception raises it, standing in for a provider that fails to import.
+        """
+        attempted = []
+
+        def _import(value):
+            attempted.append(value)
+            result = providers[value]
+            if isinstance(result, Exception):
+                raise result
+            return result
+
+        mocker.patch.object(climate_ref_core.providers, "import_provider", side_effect=_import)
+        return attempted
+
+    def test_provider_by_slug(self):
+        # The same singleton the entry point exposes, so it carries any configuration
+        # the current process has already applied to it
+        assert provider_by_slug("example") is import_provider("climate_ref_example:provider")
+
+    def test_provider_by_slug_unknown(self):
+        with pytest.raises(InvalidProviderException, match="No provider with slug 'nope'"):
+            provider_by_slug("nope")
+
+    def test_the_named_entry_point_is_tried_first(self, mocker):
+        """The name is the slug by convention, so nothing else should need importing."""
+        self._fake_entry_points(mocker, ["aaa", "wanted", "zzz"])
+        wanted = mocker.Mock(slug="wanted")
+        attempted = self._fake_imports(
+            mocker,
+            {"aaa": mocker.Mock(slug="aaa"), "wanted": wanted, "zzz": mocker.Mock(slug="zzz")},
+        )
+
+        assert provider_by_slug("wanted") is wanted
+        assert attempted == ["wanted"]
+
+    def test_an_entry_point_whose_name_differs_from_its_slug_is_still_found(self, mocker):
+        self._fake_entry_points(mocker, ["misnamed"])
+        provider = mocker.Mock(slug="wanted")
+        self._fake_imports(mocker, {"misnamed": provider})
+
+        assert provider_by_slug("wanted") is provider
+
+    def test_a_broken_provider_does_not_mask_the_one_being_looked_for(self, mocker):
+        """A provider we were not asked for is skipped when it fails to import."""
+        self._fake_entry_points(mocker, ["broken", "misnamed"])
+        wanted = mocker.Mock(slug="wanted")
+        attempted = self._fake_imports(
+            mocker,
+            {"broken": InvalidProviderException("broken", "boom"), "misnamed": wanted},
+        )
+
+        assert provider_by_slug("wanted") is wanted
+        assert attempted == ["broken", "misnamed"]
+
+    def test_a_broken_named_provider_propagates(self, mocker):
+        """Failing to import the provider actually asked for is an error, not a miss."""
+        self._fake_entry_points(mocker, ["wanted", "other"])
+        self._fake_imports(
+            mocker,
+            {
+                "wanted": InvalidProviderException("wanted", "boom"),
+                "other": mocker.Mock(slug="other"),
+            },
+        )
+
+        with pytest.raises(InvalidProviderException, match="boom"):
+            provider_by_slug("wanted")
+
+    def test_an_unmatched_slug_reports_what_is_available(self, mocker):
+        self._fake_entry_points(mocker, ["zzz", "aaa"])
+        self._fake_imports(mocker, {"zzz": mocker.Mock(slug="zzz"), "aaa": mocker.Mock(slug="aaa")})
+
+        with pytest.raises(InvalidProviderException, match="Available: aaa, zzz"):
+            provider_by_slug("wanted")
+
+    def test_resolve_diagnostic(self):
+        provider = import_provider("climate_ref_example:provider")
+
+        assert resolve_diagnostic("example/global-mean-timeseries") is provider.get("global-mean-timeseries")
+
+    def test_resolve_diagnostic_requires_a_provider_prefix(self):
+        with pytest.raises(InvalidProviderException, match="provider/diagnostic"):
+            resolve_diagnostic("global-mean-timeseries")
+
+    def test_resolve_diagnostic_unknown_diagnostic(self):
+        with pytest.raises(KeyError):
+            resolve_diagnostic("example/not-a-diagnostic")

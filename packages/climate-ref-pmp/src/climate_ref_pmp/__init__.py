@@ -41,13 +41,13 @@ class PMPDiagnosticProvider(CondaDiagnosticProvider):
     def configure(self, config: Config) -> None:
         """Configure the provider."""
         super().configure(config)
-        self.env_vars["PCMDI_CONDA_EXE"] = str(self.conda_exe_path)
+        self.env_overrides["PCMDI_CONDA_EXE"] = str(self.conda_exe_path)
         # This is a workaround for a fatal error in internal_Finalize of MPICH
         # when running in a conda environment on MacOS.
         # It is not clear if this is a bug in MPICH or a problem with the conda environment.
         if "FI_PROVIDER" not in os.environ:  # pragma: no branch
             logger.debug("Setting env variable 'FI_PROVIDER=tcp'")
-            self.env_vars["FI_PROVIDER"] = "tcp"
+            self.env_overrides["FI_PROVIDER"] = "tcp"
 
     def fetch_data(self, config: Config) -> None:
         """Fetch PMP climatology data."""

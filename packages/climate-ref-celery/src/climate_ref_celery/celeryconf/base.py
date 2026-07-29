@@ -10,6 +10,7 @@ See the Helm chart README for per-provider override examples.
 
 import os
 
+from climate_ref_celery.serialisation import SERIALIZER
 from climate_ref_core.env import get_available_cpu_count, get_env
 
 env = get_env()
@@ -18,16 +19,29 @@ broker_url = env.str("CELERY_BROKER_URL", "redis://localhost:6379/1")
 result_backend = env.str("CELERY_RESULT_BACKEND", broker_url)
 broker_connection_retry_on_startup = True
 
-accept_content = ["json", "pickle"]
-task_serializer = "pickle"
-result_serializer = "pickle"
+# Tasks and results are encoded as JSON by climate_ref_celery.serialisation.
+# What this process sends is fixed, so no deployment can put pickle back on the wire.
+task_serializer = SERIALIZER
+result_serializer = SERIALIZER
+
+# What it accepts is configurable, because a worker may still meet messages
+# a different release encoded. CELERY_ACCEPT_CONTENT is a comma separated list.
+accept_content = env.list("CELERY_ACCEPT_CONTENT", ["json", SERIALIZER])
+
+# Compress message bodies before they hit the broker.
+#
+# Messages compress by roughly 80% with gzip.
+#
+# Set to an empty string to disable.
+task_compression = env.str("CELERY_TASK_COMPRESSION", "gzip") or None
+result_compression = env.str("CELERY_RESULT_COMPRESSION", "gzip") or None
 
 # Number of concurrent worker processes to use
 worker_concurrency = int(os.environ.get("CELERY_WORKER_CONCURRENCY", get_available_cpu_count()))
 
 # Only prefetch one task at a time per worker process.
 # Higher values cause multiple tasks to be lost/redelivered on a worker crash.
-worker_prefetch_multiplier = int(os.environ.get("CELERY_WORKER_PREFETCH_MULTIPLIER", 1))  # noqa: PLW1508
+worker_prefetch_multiplier = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER", default=1)
 
 # Recycle worker processes after N tasks to prevent memory leaks from
 # scientific Python libraries (numpy, xarray, netCDF4).

@@ -543,14 +543,14 @@ def shift_time_axis_end(ds: xr.Dataset, end_year: int, end_month: int = 12) -> x
     if offset_months == 0:
         return ds
 
-    calendar = last.calendar  # type: ignore[attr-defined]
+    calendar = last.calendar
 
     def _days_in_month(year: int, month: int) -> int:
         # Last day of ``month`` = day before the first of the following month,
         # computed via cftime arithmetic so it respects the dataset's calendar
         # (noleap, 360_day, etc.).
         next_year, next_month = (year + 1, 1) if month == _MONTHS_PER_YEAR else (year, month + 1)
-        first_of_next = cftime.datetime(next_year, next_month, 1, calendar=calendar)  # type: ignore[call-arg]
+        first_of_next = cftime.datetime(next_year, next_month, 1, calendar=calendar)
         last_of_month = first_of_next - timedelta(days=1)  # type: ignore[operator]
         return int(last_of_month.day)  # type: ignore[attr-defined]
 
@@ -562,9 +562,7 @@ def shift_time_axis_end(ds: xr.Dataset, end_year: int, end_month: int = 12) -> x
         # can land a day-31 (or leap Feb-29) label on a shorter month, which cftime
         # would reject. Our monthly data is mid-month so this is normally a no-op.
         day = min(t.day, _days_in_month(year, month))
-        return cftime.datetime(  # type: ignore[call-arg]
-            year, month, day, t.hour, t.minute, t.second, t.microsecond, calendar=calendar
-        )
+        return cftime.datetime(year, month, day, t.hour, t.minute, t.second, t.microsecond, calendar=calendar)
 
     ds = ds.copy(deep=False)
     shifted = np.array([_shift(t) for t in time_values])

@@ -204,7 +204,7 @@ def fetch_all_files(
             raise ValueError(f"Expected a hash for {key} but got {expected_hash}")
 
         if output_dir is None:
-            # Just warm the cache and move onto the next file
+            # Fetching was the whole job: the file is in the cache and there is nowhere to link it.
             return
 
         linked_file = output_dir / key

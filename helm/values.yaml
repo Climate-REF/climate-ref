@@ -23,7 +23,22 @@ flower:
   # Additional Celery configuration for Flower (rendered as celeryconfig.py)
   # Use this for settings that cannot be set via environment variables
   celeryConfig: |
-    accept_content = ['application/json', 'application/x-python-serialize']
+    import json
+
+    from kombu.serialization import register
+
+    # Flower runs from the stock image and cannot import the REF codec.
+    # A ref-json body is plain JSON, so the json module decodes it well enough to monitor with.
+    # Tagged values arrive as their raw mappings, which is all the task views need.
+    register(
+        'ref-json',
+        encoder=json.dumps,
+        decoder=json.loads,
+        content_type='application/x-ref-json',
+        content_encoding='utf-8',
+    )
+
+    accept_content = ['application/json', 'application/x-ref-json']
 
   serviceMonitor:
     enabled: false

@@ -170,8 +170,31 @@ jobs:
     - name: Capture Worker Logs on Failure
       if: failure()
       run: |
+        echo "=== Pods ==="
+        kubectl get pods -o wide || true
+        echo ""
+        echo "=== PMP Pod Description ==="
+        kubectl describe pod -l app.kubernetes.io/component=pmp || true
+        echo ""
+        echo "=== Broker State ==="
+        kubectl exec deployment/test-ref-orchestrator -- python -c "import redis; r = redis.Redis(host='test-dragonfly'); ks = r.keys('*'); print('lists:', {k.decode(): r.llen(k) for k in ks if r.type(k) == b'list'}); print('key count:', len(ks))" || true
+        echo ""
+        echo "=== Celery Inspect ==="
+        kubectl exec deployment/test-ref-orchestrator -- celery -A climate_ref_celery.app inspect active --timeout 10 || true
+        kubectl exec deployment/test-ref-orchestrator -- celery -A climate_ref_celery.app inspect reserved --timeout 10 || true
+        echo ""
+        # SIGUSR1 makes a worker log the stack of every thread, so the dumps land in the logs below.
+        for component in orchestrator example pmp esmvaltool ilamb; do
+          kubectl exec "deployment/test-ref-$component" -- \
+            sh -c 'for p in $(ls /proc | grep -E "^[0-9]+$"); do grep -aq "[c]elery" /proc/$p/cmdline 2>/dev/null && kill -USR1 $p; done' || true
+        done
+        sleep 5
+        echo ""
         echo "=== PMP Worker Logs ==="
         kubectl logs -l app.kubernetes.io/component=pmp --tail=500 || true
+        echo ""
+        echo "=== PMP Worker Previous Logs ==="
+        kubectl logs -l app.kubernetes.io/component=pmp --previous --tail=200 || true
         echo ""
         echo "=== ESMValTool Worker Logs ==="
         kubectl logs -l app.kubernetes.io/component=esmvaltool --tail=500 || true

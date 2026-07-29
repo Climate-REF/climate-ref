@@ -10,6 +10,7 @@ See the Helm chart README for per-provider override examples.
 
 import os
 
+from climate_ref_celery.serialisation import SERIALIZER
 from climate_ref_core.env import get_available_cpu_count, get_env
 
 env = get_env()
@@ -19,10 +20,13 @@ result_backend = env.str("CELERY_RESULT_BACKEND", broker_url)
 broker_connection_retry_on_startup = True
 
 # Tasks and results are encoded as JSON by climate_ref_celery.serialisation.
-# CELERY_ACCEPT_CONTENT is a comma separated list.
-accept_content = env.list("CELERY_ACCEPT_CONTENT", ["json", "ref-json"])
-task_serializer = env.str("CELERY_TASK_SERIALIZER", "ref-json")
-result_serializer = env.str("CELERY_RESULT_SERIALIZER", "ref-json")
+# What this process sends is fixed, so no deployment can put pickle back on the wire.
+task_serializer = SERIALIZER
+result_serializer = SERIALIZER
+
+# What it accepts is configurable, because a worker may still meet messages
+# a different release encoded. CELERY_ACCEPT_CONTENT is a comma separated list.
+accept_content = env.list("CELERY_ACCEPT_CONTENT", ["json", SERIALIZER])
 
 # Compress message bodies before they hit the broker.
 #

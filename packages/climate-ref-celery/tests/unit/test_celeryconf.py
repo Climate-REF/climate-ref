@@ -23,6 +23,14 @@ def test_accept_content_reads_a_comma_separated_list(load_base):
     assert base.accept_content == ["json", "ref-json", "pickle"]
 
 
+def test_the_serialiser_cannot_be_changed_by_configuration(load_base):
+    """Accepting another format is a deployment's call. Sending one is not."""
+    base = load_base(CELERY_TASK_SERIALIZER="pickle", CELERY_RESULT_SERIALIZER="pickle")
+
+    assert base.task_serializer == "ref-json"
+    assert base.result_serializer == "ref-json"
+
+
 def test_compression_defaults_to_gzip(load_base):
     base = load_base()
 

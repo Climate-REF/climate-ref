@@ -149,7 +149,7 @@ Set either to an empty string to send uncompressed bodies.
 
 Comma separated content types a worker will decode, defaulting to `json,ref-json`.
 This only widens what is accepted.
-It will not revive messages queued by a release that still used pickle,
+It will not revive messages queued by a release that still used pickle
 because those carry a pickled diagnostic and provider that current releases no longer define.
 Purge the queues when upgrading from such a release and re-solve.
 

@@ -93,9 +93,10 @@ defaults:
     # CELERY_WORKER_MAX_MEMORY_PER_CHILD: "2097152"  # 2 GB cap per worker process (in KB)
     # CELERY_TASK_COMPRESSION: "gzip"          # Set to "" to send uncompressed task bodies
     # CELERY_RESULT_COMPRESSION: "gzip"        # Set to "" to store uncompressed results
-    # Only while draining pickled messages left over from a previous release.
-    # Accepting pickle lets anything that can write to the broker run code in a worker.
-    # CELERY_ACCEPT_CONTENT: "json,ref-json,pickle"
+    # Widens what a worker will decode. Accepting pickle lets anything that can write
+    # to the broker run code in a worker, and it will not revive messages from a
+    # pre-JSON release, so purge and re-solve instead. See the README.
+    # CELERY_ACCEPT_CONTENT: "json,ref-json"
 
   replicaCount: 1
 

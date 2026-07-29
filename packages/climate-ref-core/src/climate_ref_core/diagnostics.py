@@ -96,14 +96,29 @@ class ExecutionDefinition:
     Root directory for storing the output of the diagnostic execution
     """
 
-    _diagnostic_full_slug: str | None = field(default=None, eq=False)
+    _diagnostic_full_slug: str | None = field(default=None)
     """
     Slug of the diagnostic, supplied when the diagnostic itself is not available.
 
-    Read through :attr:`diagnostic_full_slug`,
-    which derives it from the diagnostic when it was not given.
-    Like :attr:`_diagnostic` it takes no part in equality.
+    Read through :attr:`diagnostic_full_slug`.
+    It is derived from the diagnostic at construction when it was not given,
+    so it carries the diagnostic's identity into equality even though
+    :attr:`_diagnostic` itself takes no part in it.
     """
+
+    def __attrs_post_init__(self) -> None:
+        # The diagnostic is excluded from equality because a deserialised definition resolves
+        # its own instance, so the slug has to stand in for it.
+        # Deriving it here means a definition always compares on which diagnostic it runs.
+        #
+        # A diagnostic that has not been registered with a provider yet has no slug to derive.
+        # That stays permitted, and the slug is only demanded when something asks for it.
+        if (
+            self._diagnostic_full_slug is None
+            and self._diagnostic is not None
+            and self._diagnostic._provider is not None
+        ):
+            object.__setattr__(self, "_diagnostic_full_slug", self._diagnostic.full_slug())
 
     @property
     def diagnostic_full_slug(self) -> str:
@@ -116,6 +131,7 @@ class ExecutionDefinition:
             return self._diagnostic_full_slug
         if self._diagnostic is None:
             raise ValueError("Either diagnostic or diagnostic_full_slug must be given")
+        # Only reachable while the diagnostic is still unregistered, which raises on the provider.
         return self._diagnostic.full_slug()
 
     @property

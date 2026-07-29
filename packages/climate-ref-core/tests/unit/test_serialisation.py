@@ -170,6 +170,58 @@ def test_definition_does_not_carry_the_diagnostic(metric_definition):
     assert type(metric_definition.diagnostic).__name__ not in payload
 
 
+def test_definition_does_not_carry_the_environment(metric_definition, monkeypatch):
+    """
+    The provider used to ship a snapshot of `os.environ` in every message.
+
+    That put `REF_DATABASE_URL` and `SECRET_KEY` in the broker,
+    readable by anything that could reach it, for as long as results were kept.
+    See Climate-REF/climate-ref#847.
+    """
+    monkeypatch.setenv("REF_DATABASE_URL", "postgresql://ref:hunter2@db/ref")
+    monkeypatch.setenv("SECRET_KEY", "a-secret-that-must-not-travel")
+
+    payload = json.dumps(to_wire(metric_definition))
+
+    assert "hunter2" not in payload
+    assert "a-secret-that-must-not-travel" not in payload
+
+
+def test_definitions_differing_only_in_diagnostic_are_not_equal(cmip6_data_catalog):
+    """
+    The diagnostic is a live object, so it takes no part in equality.
+
+    Its slug has to stand in for it,
+    otherwise two definitions running different diagnostics over the same datasets compare equal.
+    """
+    datasets = ExecutionDatasetCollection(
+        {SourceDatasetType.CMIP6: DatasetCollection(cmip6_data_catalog, "instance_id")}
+    )
+    common = {
+        "key": "key",
+        "datasets": datasets,
+        "root_directory": pathlib.Path("/scratch"),
+        "output_directory": pathlib.Path("/scratch/fragment"),
+    }
+
+    one = ExecutionDefinition(diagnostic=None, diagnostic_full_slug="example/one", **common)
+    other = ExecutionDefinition(diagnostic=None, diagnostic_full_slug="example/two", **common)
+
+    assert one != other
+    assert one == ExecutionDefinition(diagnostic=None, diagnostic_full_slug="example/one", **common)
+
+
+def test_definition_derives_the_slug_it_compares_on(metric_definition):
+    """
+    A definition built from a diagnostic derives the slug at construction.
+
+    Both sides of the wire therefore hold it as a field,
+    so equality compares the diagnostic even though the diagnostic itself does not travel.
+    """
+    assert metric_definition._diagnostic_full_slug == metric_definition.diagnostic.full_slug()
+    assert roundtrip(metric_definition)._diagnostic_full_slug == metric_definition._diagnostic_full_slug
+
+
 def test_definition_resolves_its_diagnostic_lazily(cmip6_data_catalog):
     from climate_ref_example import provider  # noqa: PLC0415
 

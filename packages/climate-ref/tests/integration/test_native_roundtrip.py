@@ -300,6 +300,9 @@ def _capture_execution(
     )
     base_dir = results_directory / fragment
     committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
+    # Digest the native set over sanitised bytes, matching the mint contract in
+    # climate_ref.cli.test_cases._stages.snapshot_native.
+    placeholders.sanitise(base_dir)
     native = build_native_snapshot(base_dir, relpaths)
     return committed, native
 

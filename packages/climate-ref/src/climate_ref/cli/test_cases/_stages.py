@@ -12,7 +12,7 @@ set of stages:
 
 Native produced by a source stage (execute or materialise) lands in a gitignored *output slot*
 (``<case>/output/<label>/``), flat at manifest-relative paths,
-with a ``regression/`` subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
+with a ``regression/`` subdirectory holding the rebuilt committed bundle.
 ``latest`` (the default label) is overwritten on every run.
 A custom named slot persists so two runs can be diffed (``--label before`` vs ``--label after``).
 See ``docs/background/regression-baselines.md``.
@@ -22,7 +22,6 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -49,7 +48,6 @@ if TYPE_CHECKING:
     from climate_ref_core.testing import TestCase, TestCasePaths
 
 SLOT_REGRESSION_DIRNAME = "regression"
-SLOT_SOURCE_STAMP = ".source.json"
 
 
 class StageError(Exception):
@@ -108,18 +106,18 @@ def prepare_slot(paths: TestCasePaths, label: str) -> Path:
 
 def slot_native_relpaths(slot: Path) -> list[Path]:
     """
-    Return the native files in a slot -- everything except the rebuilt bundle and the stamp.
+    Return the native files in a slot -- everything except the rebuilt bundle.
 
     A slot is populated only by a source stage with the curated output set, so this is
     exactly the curated native set (it excludes the ``regression/`` subdirectory written
-    by ``build`` and the ``.source.json`` stamp).
+    by ``build``).
     """
     relpaths: list[Path] = []
     for path in sorted(slot.rglob("*")):
         if not path.is_file():
             continue
         rel = path.relative_to(slot)
-        if rel.parts[0] == SLOT_REGRESSION_DIRNAME or rel.name == SLOT_SOURCE_STAMP:
+        if rel.parts[0] == SLOT_REGRESSION_DIRNAME:
             continue
         relpaths.append(rel)
     return relpaths
@@ -372,22 +370,3 @@ def native_is_stale(fresh: dict[str, NativeEntry], previous: dict[str, NativeEnt
     if not previous:
         return False
     return {k: v.sha256 for k, v in fresh.items()} != {k: v.sha256 for k, v in previous.items()}
-
-
-def write_source_stamp(
-    slot: Path,
-    *,
-    label: str,
-    verb: str,
-    source: str,
-    test_case_version: int,
-) -> None:
-    """Write the slot's ``.source.json`` so it is clear what currently populates the slot."""
-    stamp = {
-        "label": label,
-        "verb": verb,
-        "source": source,
-        "test_case_version": test_case_version,
-        "created": datetime.now(UTC).isoformat(),
-    }
-    (slot / SLOT_SOURCE_STAMP).write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")

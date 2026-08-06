@@ -1,9 +1,6 @@
 """
 Capture of regression baselines from a diagnostic execution.
 
-Capture reuses :func:`climate_ref_core.output_files.copy_execution_outputs`,
-so the captured native set is identical to what REF actually persists when handling an execution.
-
 Note that this is not the raw output from an execution (the "scratch" directory),
 but the curated subset of files copied into the "results" directory for persistence and comparison.
 This avoids the need to maintain a separate ignore list for regression captures.
@@ -26,7 +23,7 @@ import shutil
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
+from climate_ref_core.output_files import PlaceholderMap
 from climate_ref_core.paths import safe_path
 
 from ._quantise import round_floats
@@ -38,7 +35,6 @@ from .manifest import (
 )
 
 if TYPE_CHECKING:
-    from climate_ref_core.diagnostics import ExecutionResult
     from climate_ref_core.regression.store import NativeStore
 
 
@@ -251,69 +247,6 @@ def build_native_snapshot(base_dir: Path, relpaths: list[Path]) -> dict[str, Nat
         path = base_dir / relpath
         entries[relpath.as_posix()] = NativeEntry(sha256=sha256_file(path), size=path.stat().st_size)
     return entries
-
-
-def capture_execution(  # noqa: PLR0913
-    scratch_directory: Path,
-    results_directory: Path,
-    fragment: Path | str,
-    result: ExecutionResult,
-    *,
-    regression_dir: Path,
-    placeholders: PlaceholderMap,
-    # TODO: Unify the log handling
-    include_log: bool = False,
-    extra_globs: tuple[str, ...] = (),
-) -> tuple[dict[str, str], dict[str, NativeEntry]]:
-    """
-    Persist a successful execution and capture its committed bundle + native snapshot.
-
-    Copies the curated output set from scratch to results via
-    :func:`~climate_ref_core.output_files.copy_execution_outputs`
-    (the production persistence path),
-    then writes the committed bundle and snapshots every persisted native file.
-
-    Parameters
-    ----------
-    scratch_directory
-        Base scratch directory the diagnostic wrote into.
-    results_directory
-        Base results directory to persist the curated subset into.
-    fragment
-        The per-execution fragment under both base directories.
-    result
-        The successful execution result (must carry a metric bundle filename).
-    regression_dir
-        The test case ``regression/`` directory for the committed bundle.
-    placeholders
-        The placeholder map for this execution, already bound to the output directory via
-        :meth:`~climate_ref_core.output_files.PlaceholderMap.with_output`.
-    include_log
-        If True, the execution log is included in the persisted/native set.
-
-        Defaults to False, matching the behaviour of
-        :func:`~climate_ref_core.output_files.copy_execution_outputs`.
-    extra_globs
-        Extra output globs to persist beyond the bundle-referenced files
-        (a diagnostic's :attr:`~climate_ref_core.diagnostics.Diagnostic.reconstruction_inputs`).
-
-    Returns
-    -------
-    :
-        A ``(committed_digests, native_snapshot)`` tuple.
-    """
-    relpaths = copy_execution_outputs(
-        scratch_directory,
-        results_directory,
-        fragment,
-        result,
-        include_log=include_log,
-        extra_globs=extra_globs,
-    )
-    base_dir = results_directory / fragment
-    committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
-    native = build_native_snapshot(base_dir, relpaths)
-    return committed, native
 
 
 def materialise_native(native: dict[str, NativeEntry], store: NativeStore, dest: Path) -> None:

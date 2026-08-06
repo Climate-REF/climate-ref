@@ -4,9 +4,6 @@ CI coupling gate for test case regression bundles.
 For each test case, CI decides how to verify the regression baseline in a pull request,
 based on what changed relative to the base branch:
 
-- **EXECUTE**: re-run the diagnostic end-to-end and compare the regenerated bundle
-    to the committed copy.
-    Used when ``test_case_version`` was bumped but no native baseline exists to replay.
 - **REPLAY**: re-run ``build_execution_result`` against the cached native baseline
     and compare to the committed bundle.
     Used when extraction code changed but the committed bundle did not,
@@ -15,15 +12,14 @@ based on what changed relative to the base branch:
 - **FAIL**: the committed bundle or its catalog changed without a ``test_case_version`` bump,
     a version moved backwards,
     or the in-code ``Diagnostic.version`` no longer matches the recorded ``diagnostic_version``.
-- **SKIP**: nothing relevant changed, or the case is not under regression-baseline management.
+- **SKIP**: nothing relevant changed, the case is not under regression-baseline management,
+    or the committed bundle changed with no native baseline to replay against
+    (the diff review is the only signal in that case).
 
 The gate tracks two orthogonal version axes:
 ``test_case_version`` (per-case, mint-authored)
 and ``diagnostic_version`` (per-diagnostic, author-authored).
-``test_case_version`` is monotonic.
-``diagnostic_version`` may decrease only for an authorised revert:
-the code version is lowered and the baseline re-minted so the committed bundle changes,
-which the gate recognises structurally rather than via a flag.
+Both are monotonic. Neither may decrease.
 
 See [Regression Baselines](https://climate-ref.readthedocs.io/en/latest/background/regression-baselines/)
 for more information about the motivation and workflow for regression baselines.
@@ -47,9 +43,6 @@ class Action(enum.Enum):
 
     REPLAY = "replay"
     """Replay the cached native baseline and compare to the committed bundle."""
-
-    EXECUTE = "execute"
-    """Re-run the diagnostic end-to-end and compare to the committed bundle."""
 
     FAIL = "fail"
     """The change is not permissible (unauthorised baseline change or bad version)."""
@@ -79,8 +72,8 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
     Decide how CI should verify a single test case's regression baseline.
 
     The decision is pure: it performs no I/O.
-    All on-disk reality is summarised by its arguments
-    — the two manifests, whether the diagnostic's extraction code
+    All on-disk reality is summarised by its arguments,
+    namely the two manifests, whether the diagnostic's extraction code
     changed, and whether the committed bundle on disk still matches the current
     manifest's digests.
 
@@ -123,14 +116,15 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
         manifest's ``catalog_hash``.
         The caller computes this against the working tree.
         ``False`` means the inputs changed without the baseline being regenerated,
-        so the committed bundle no longer reflects its inputs — a hard failure.
+        so the committed bundle no longer reflects its inputs, a hard failure.
 
         Always ``True`` when the manifest carries no ``catalog_hash``
     code_diagnostic_version
         The diagnostic's current in-code ``Diagnostic.version``, injected by the caller
         (the pure function does no I/O). When provided, a code version that exceeds
         ``manifest.diagnostic_version`` fails the case as a stale baseline that must be
-        re-minted, and a code version below it fails as an illegal downgrade with no re-mint.
+        re-minted, and a code version below it fails because ``Diagnostic.version`` must
+        not drop below the minted baseline's version.
         ``None`` (the default) skips the staleness comparison entirely, preserving legacy behaviour.
 
     Returns
@@ -187,9 +181,8 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
                 Action.FAIL,
                 f"diagnostic Diagnostic.version ({code_diagnostic_version}) is below the "
                 f"baseline's diagnostic_version ({manifest.diagnostic_version}); "
-                "Diagnostic.version is append-only. To revert legitimately, lower the code "
-                "version AND re-mint (`ref test-cases mint`) so the bundle is re-authored at "
-                "the lower version.",
+                "Diagnostic.version must not be below the minted baseline's version, "
+                "re-mint after changing it",
             )
 
     if base_manifest is None:
@@ -213,19 +206,12 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
             f"{manifest.test_case_version}); version must be monotonic",
         )
 
-    # A diagnostic_version decrease only fails when the committed bundle is unchanged:
-    # a bare downgrade with no re-mint.
-    # A decrease that ships a re-minted bundle is an authorised revert and falls through,
-    # where the committed-changed logic below re-verifies it.
     if manifest.diagnostic_version < base_manifest.diagnostic_version:
-        if manifest.committed == base_manifest.committed:
-            return GateDecision(
-                Action.FAIL,
-                f"diagnostic_version decreased ({base_manifest.diagnostic_version} -> "
-                f"{manifest.diagnostic_version}) with the committed bundle unchanged; "
-                "a bare downgrade is not permitted; re-mint to re-author the baseline at "
-                "the lower version, or restore the version",
-            )
+        return GateDecision(
+            Action.FAIL,
+            f"diagnostic_version decreased ({base_manifest.diagnostic_version} -> "
+            f"{manifest.diagnostic_version}); version must be monotonic",
+        )
 
     version_bumped = manifest.test_case_version > base_manifest.test_case_version
     committed_changed = manifest.committed != base_manifest.committed
@@ -242,9 +228,10 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
                 "replaying to confirm the native baseline reproduces the new committed bundle",
             )
         return GateDecision(
-            Action.EXECUTE,
+            Action.SKIP,
             f"test_case_version bumped ({version_change}) with no native baseline to replay; "
-            "full end-to-end re-run required to verify the new committed bundle",
+            "the committed bundle changed with nothing to verify it against, so the diff "
+            "review is the only signal",
         )
 
     if committed_changed:
@@ -254,33 +241,18 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
             "bump test_case_version to authorise the new baseline",
         )
 
-    if native_changed:
-        if manifest.native:
-            # Native blobs were re-authored (re-minted) without a version bump.
-            # The committed bundle is unchanged,
-            # so verify the new native snapshot still reproduces it rather than skipping unverified.
-            return GateDecision(
-                Action.REPLAY,
-                "native baseline changed with committed bundle unchanged; "
-                "replaying to confirm the new native snapshot reproduces the committed bundle",
-            )
-        # De-mint: the native baseline was removed while the committed bundle stayed.
-        return GateDecision(
-            Action.SKIP,
-            "WARNING: native baseline removed (de-mint) with committed bundle unchanged; "
-            "the committed bundle still gates this case but native replay is no longer possible",
-        )
-
-    if extraction_changed:
+    if native_changed or extraction_changed:
+        trigger = "native baseline changed" if native_changed else "extraction code changed"
         if manifest.native:
             return GateDecision(
                 Action.REPLAY,
-                "extraction code changed with committed bundle unchanged; "
-                "replaying cached native baseline to verify",
+                f"{trigger} with committed bundle unchanged; "
+                "replaying to confirm the native baseline reproduces the committed bundle",
             )
+        # Native changed to empty (de-mint) or was already empty: nothing to replay against.
         return GateDecision(
             Action.SKIP,
-            "extraction code changed but no native baseline exists to replay; "
+            f"{trigger} but no native baseline exists to replay; "
             "the committed bundle is unchanged and remains the only signal",
         )
 

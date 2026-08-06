@@ -2,7 +2,7 @@
 ``ref test-cases ci-gate``.
 
 Decides, per test case, how CI should verify its regression baseline (replay,
-execute, skip, or fail) by comparing the committed ``manifest.json`` against the
+skip, or fail) by comparing the committed ``manifest.json`` against the
 base branch and detecting extraction-code changes.
 """
 
@@ -142,11 +142,11 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
 
     Compares each committed ``manifest.json`` to its counterpart on the base branch
     and reports the action CI should take per case: ``replay`` (cheap, against the
-    cached native baseline), ``execute`` (full re-run, when ``test_case_version`` was
-    bumped), ``skip`` (nothing relevant changed), or ``fail`` (an unauthorised
-    baseline change). Exits non-zero if any case is gated ``fail``.
+    cached native baseline), ``skip`` (nothing relevant changed, or nothing to
+    replay against), or ``fail`` (an unauthorised baseline change). Exits non-zero
+    if any case is gated ``fail``.
 
-    The ``--json`` output is intended for CI to dispatch ``replay``/``run`` jobs.
+    The ``--json`` output is intended for CI to dispatch ``replay`` jobs.
 
     Examples
     --------
@@ -288,7 +288,6 @@ def ci_gate(  # noqa: PLR0912, PLR0913, PLR0915
         table.add_column("Reason")
         style_for = {
             Action.FAIL.value: "red",
-            Action.EXECUTE.value: "yellow",
             Action.REPLAY.value: "green",
             Action.SKIP.value: "dim",
         }

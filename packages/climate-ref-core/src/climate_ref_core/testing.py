@@ -4,12 +4,10 @@ Test infrastructure for diagnostic testing.
 This module provides:
 - TestCase and TestDataSpecification for defining test scenarios
 - YAML serialization for dataset catalogs (with local paths stored separately, under the cache)
-- Utilities for CMEC bundle and series regression validation
 """
 
 from __future__ import annotations
 
-import json
 import os
 import sys
 from pathlib import Path
@@ -28,17 +26,13 @@ from climate_ref_core.datasets import (
     SourceDatasetType,
 )
 from climate_ref_core.esgf.base import ESGFRequest
-from climate_ref_core.metric_values.typing import SeriesMetricValue
-from climate_ref_core.output_files import ordered_replacements
 from climate_ref_core.paths import safe_path
-from climate_ref_core.pycmec.metric import CMECMetric
-from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.manifest import Manifest
 
 if TYPE_CHECKING:
     from _pytest.mark.structures import ParameterSet
 
-    from climate_ref_core.diagnostics import Diagnostic, ExecutionResult
+    from climate_ref_core.diagnostics import Diagnostic
     from climate_ref_core.providers import DiagnosticProvider
 
 
@@ -255,7 +249,7 @@ class TestCasePaths:
 
         A slot is a self-contained, inspectable snapshot of one execute/materialise:
         the curated native set (flat, at manifest-relative paths) plus a ``regression/``
-        subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
+        subdirectory holding the rebuilt committed bundle.
         ``latest`` (the default) is overwritten on every run; named slots persist so two
         runs can be diffed (e.g. ``--label before`` vs ``--label after``).
 
@@ -594,106 +588,6 @@ def save_datasets_to_yaml(
     _write_paths_file(paths_file, paths_map)
     logger.info(f"Saved catalog to {path} (paths: {paths_file})")
     return True
-
-
-def validate_cmec_bundles(diagnostic: Diagnostic, result: ExecutionResult) -> None:
-    """
-    Validate CMEC bundles in an execution result.
-
-    Performs structural validation of the metric and output bundles.
-
-    Raises
-    ------
-    AssertionError
-        If the result is not successful or bundles are invalid
-    """
-    # TODO: Add content regression checks for the CMEC bundles (diagnostic.json /
-    # output.json), mirroring `validate_series_regression`. These bundles are only
-    # structurally validated here, so a diagnostic can change the metric/output
-    # values without any regression test failing.
-    # A content comparison must sanitise the regenerated bundle first via `PlaceholderMap.
-    assert result.successful, f"Execution failed: {result}"
-
-    # Validate metric bundle
-    metric_bundle = CMECMetric.load_from_json(result.to_output_path(result.metric_bundle_filename))
-    CMECMetric.model_validate(metric_bundle)
-
-    # Check dimensions are a subset of diagnostic facets
-    # Different data requirements may have different group_by fields,
-    # so bundle dimensions vary per execution but must all be recognized facets
-    bundle_dimensions = set(metric_bundle.DIMENSIONS.root["json_structure"])
-    assert bundle_dimensions.issubset(set(diagnostic.facets)), (
-        f"Bundle dimensions {bundle_dimensions} are not a subset of diagnostic facets {diagnostic.facets}"
-    )
-
-    # Validate output bundle
-    CMECOutput.load_from_json(result.to_output_path(result.output_bundle_filename))
-
-
-def _load_series_sanitised(path: Path, replacements: dict[str, str]) -> list[SeriesMetricValue]:
-    """
-    Load series from ``path``, replacing real paths with regression placeholders.
-    """
-    text = path.read_text(encoding="utf-8")
-    # Apply replacements longest-key-first so a shorter key cannot shadow a longer one
-    # (the canonical ordering shared with all other sanitisation).
-    for real, placeholder in ordered_replacements(replacements):
-        text = text.replace(real, placeholder)
-    data = json.loads(text)
-    if not isinstance(data, list):
-        raise ValueError(f"Expected a list of series values, got {type(data)}")
-    return [SeriesMetricValue.model_validate(s, strict=True) for s in data]
-
-
-def validate_series_regression(
-    expected_path: Path,
-    actual_path: Path,
-    *,
-    slug: str,
-    replacements: dict[str, str] | None = None,
-) -> None:
-    """
-    Assert that regenerated series match the committed regression series.
-
-    If ``expected_path`` does not exist (legacy regression data without a stored series),
-    the check is skipped.
-
-    Parameters
-    ----------
-    expected_path
-        Path to the committed ``series.json`` regression artifact. This file
-        stores sanitized placeholders (e.g. ``<OUTPUT_DIR>``).
-    actual_path
-        Path to the freshly regenerated ``series.json`` in the output directory.
-        This file contains expanded absolute paths.
-    slug
-        The diagnostic slug, used for error messages.
-    replacements
-        Optional ``real path -> placeholder`` mapping applied to the regenerated series before comparison,
-        mirroring the sanitisation used when the regression data was written.
-
-    Raises
-    ------
-    AssertionError
-        If the regenerated series differ from the committed series.
-    """
-    if not expected_path.exists():
-        return
-
-    expected = SeriesMetricValue.load_from_json(expected_path)
-    actual = _load_series_sanitised(actual_path, replacements or {})
-
-    def _sorted_dump(series: list[SeriesMetricValue]) -> list[dict[str, Any]]:
-        return sorted((s.model_dump(mode="json") for s in series), key=lambda s: repr(s["dimensions"]))
-
-    assert len(actual) == len(expected), (
-        f"Diagnostic {slug} produced {len(actual)} series but the committed series.json "
-        f"has {len(expected)}. Regenerate the regression data with `--force-regen`."
-    )
-    assert _sorted_dump(actual) == _sorted_dump(expected), (
-        f"Diagnostic {slug} produced series that differ from the committed series.json. "
-        f"Regenerate the regression data with `--force-regen`."
-    )
 
 
 def collect_test_case_params(provider: DiagnosticProvider) -> list[ParameterSet]:

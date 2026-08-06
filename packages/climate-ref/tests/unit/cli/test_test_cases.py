@@ -788,19 +788,6 @@ class TestRunTestCaseCommand:
         # The slot holds the rebuilt committed bundle even when the baseline is untouched.
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
 
-    def test_run_reports_resource_usage(self, invoke_cli, mocker, tmp_path):
-        """Each executed test case logs wall clock, CPU time, and peak RSS."""
-        _setup_real_run(mocker, tmp_path, regression_files={})
-
-        result = invoke_cli(
-            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag"],
-        )
-
-        assert result.exit_code == 0
-        assert "Resources for example/test-diag/default: wall " in result.stderr
-        assert "peak RSS self " in result.stderr
-        assert "subprocesses " in result.stderr
-
     def test_run_output_directory_logs_scratch_and_slot_semantics(self, invoke_cli, mocker, tmp_path):
         """--output-directory is explained as scratch output, not the only written location."""
         paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path, regression_files={})
@@ -854,7 +841,7 @@ class TestRunTestCaseCommand:
         catalog_path.touch()
 
         # Create a scratch output directory holding the curated committed bundle.
-        # capture_execution copies from scratch_root / fragment into a temp results dir,
+        # copy_execution_outputs copies from scratch_root / fragment into a temp results dir,
         # so output_dir.parent (scratch_root) must differ from the temp dir it picks.
         scratch_root = tmp_path / "scratch"
         fragment = "frag"
@@ -2213,10 +2200,6 @@ class TestMintCommand:
         assert {k: v.sha256 for k, v in replayed.native.items()} == {
             k: v.sha256 for k, v in minted.native.items()
         }
-        # The slot records the from-replay source.
-        stamp = json.loads((paths.output_slot("latest") / ".source.json").read_text())
-        assert stamp["verb"] == "mint"
-        assert stamp["source"] == "materialise"
 
     def test_mint_from_replay_preserves_stored_native(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` keeps the stored native verbatim even if the rebuilt slot drifts.
@@ -2423,9 +2406,6 @@ class TestBuildCommand:
         assert result.exit_code == 0
         assert runner.run.call_count == 1  # build did not re-run the diagnostic
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
-        stamp = json.loads((paths.output_slot("latest") / ".source.json").read_text())
-        assert stamp["verb"] == "build"
-        assert stamp["source"] == "rebuild"
 
 
 def test_output_slot_pattern_is_gitignored(tmp_path):
@@ -2443,46 +2423,6 @@ def test_output_slot_pattern_is_gitignored(tmp_path):
     rel = "packages/pkg/tests/test-data/diag/default/output/latest/native.nc"
     # git check-ignore echoes the path when it is ignored (and exits non-zero otherwise).
     assert repo.git.check_ignore(rel) == rel
-
-
-class TestCheckStoreCommand:
-    """Tests for the ``ref test-cases check-store`` command."""
-
-    def test_check_store_help(self, invoke_cli):
-        result = invoke_cli(["test-cases", "check-store", "--help"])
-        assert "writable native baseline store" in result.stdout
-
-    def test_check_store_ok(self, invoke_cli, mocker):
-        store = MagicMock()  # preflight passes (no side effect)
-        mocker.patch(
-            "climate_ref_core.regression.store.build_native_store",
-            return_value=store,
-        )
-        result = invoke_cli(["test-cases", "check-store"])
-        assert "Native store OK" in result.stdout
-        store.preflight.assert_called_once()
-
-    def test_check_store_reports_auth_failure(self, invoke_cli, mocker):
-        from climate_ref_core.regression.store import NativeStoreUnavailableError
-
-        store = MagicMock()
-        store.preflight.side_effect = NativeStoreUnavailableError(
-            "Native store authentication failed (HTTP 401) for bucket 'ref-baselines-public'"
-        )
-        mocker.patch(
-            "climate_ref_core.regression.store.build_native_store",
-            return_value=store,
-        )
-        result = invoke_cli(["test-cases", "check-store"], expected_exit_code=1)
-        assert "401" in result.stderr
-
-    def test_check_store_reports_unconfigured(self, invoke_cli, mocker):
-        mocker.patch(
-            "climate_ref_core.regression.store.build_native_store",
-            side_effect=NotImplementedError("R2 backend deferred"),
-        )
-        result = invoke_cli(["test-cases", "check-store"], expected_exit_code=1)
-        assert "not configured" in result.stderr
 
 
 class TestCIGateCommand:
@@ -2649,13 +2589,13 @@ class TestCIGateCommand:
         assert result.exit_code == 0
         assert "skip" in result.output
 
-    def test_version_bump_executes(self, invoke_cli, mocker, tmp_path):
+    def test_version_bump_without_native_skips(self, invoke_cli, mocker, tmp_path):
         repo, _, digests = self._setup(mocker, tmp_path, current_version=2)
         self._set_base(repo, 1, digests)
 
         result = invoke_cli(["test-cases", "ci-gate"])
         assert result.exit_code == 0
-        assert "execute" in result.output
+        assert "skip" in result.output
 
     def test_committed_change_without_bump_fails(self, invoke_cli, mocker, tmp_path):
         repo, _, _ = self._setup(mocker, tmp_path, current_version=1)
@@ -2718,7 +2658,7 @@ class TestCIGateCommand:
         # The test runner mixes loguru's stderr lines into the captured output; in real
         # use stdout (the JSON) is captured separately. Slice from the JSON array start.
         payload = json.loads(result.output[result.output.index("[") :])
-        assert payload[0]["action"] == "execute"
+        assert payload[0]["action"] == "skip"
         assert payload[0]["case"] == "example/test-diag/default"
 
     def test_manifest_deletion_fails(self, invoke_cli, mocker, tmp_path):
@@ -2875,8 +2815,8 @@ class TestCIGateCommand:
         assert recovered.exit_code == 0
         assert "fail" not in recovered.output
 
-    def test_revert_green_path(self, invoke_cli, mocker, tmp_path):
-        """A legitimate revert (code v2->v1 + re-mint + tcv bump) has a GREEN gate exit."""
+    def test_diagnostic_version_decrease_fails(self, invoke_cli, mocker, tmp_path):
+        """A diagnostic_version decrease fails the gate, even alongside a re-mint and a tcv bump."""
         from climate_ref_core.regression.manifest import NativeEntry
 
         native = {"data.nc": NativeEntry("a" * 64, 10)}
@@ -2893,127 +2833,6 @@ class TestCIGateCommand:
         # Base: the pre-revert baseline at diagnostic_version 2 with the old committed bundle.
         self._set_base(repo, 1, {"output.json": "f" * 64}, native=native, diagnostic_version=2)
 
-        result = invoke_cli(["test-cases", "ci-gate"])
-        assert result.exit_code == 0
-        # 2a passes on equality, 2b's carve-out lets the decrease through, the tcv bump REPLAYs.
-        assert "replay" in result.output
-        assert "fail" not in result.output
-
-
-class TestMigrateManifestsCommand:
-    """Tests for the ``ref test-cases migrate-manifests`` verb."""
-
-    def _wire(self, mocker, tmp_path, *, code_version=1):
-        from climate_ref_core.testing import TestCasePaths
-
-        registry, diag, _tc = _make_case_mocks()
-        diag.version = code_version
-
-        case_dir = tmp_path / "td" / "test-diag" / "default"
-        case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir, provider_slug="example")
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
-        return paths
-
-    def test_migrate_help(self, invoke_cli):
-        result = invoke_cli(["test-cases", "migrate-manifests", "--help"])
-        assert "diagnostic_version" in result.output or "schema" in result.output
-
-    def test_migrate_stamps_code_version_and_bumps_schema(self, invoke_cli, mocker, tmp_path):
-        import json as _json
-
-        paths = self._wire(mocker, tmp_path, code_version=2)
-        # A schema-1 manifest (no diagnostic_version) on disk, as it would exist pre-migration.
-        paths.manifest.write_text(
-            _json.dumps(
-                {
-                    "schema": 1,
-                    "test_case_version": 3,
-                    "catalog_hash": "abc",
-                    "committed": {"output.json": "a" * 64},
-                    "native": {},
-                },
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-
-        result = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
-        assert result.exit_code == 0
-
-        from climate_ref_core.regression.manifest import Manifest
-
-        migrated = Manifest.load(paths.manifest)
-        assert migrated.schema == 2
-        assert migrated.diagnostic_version == 2  # stamped from diag.version
-        assert migrated.test_case_version == 3
-        assert migrated.catalog_hash == "abc"
-        assert migrated.committed == {"output.json": "a" * 64}
-
-    def test_migrate_preserves_recorded_diagnostic_version(self, invoke_cli, mocker, tmp_path):
-        import json as _json
-
-        # Code has advanced to version 3 but the committed manifest still records version 2:
-        # an authorised bump not yet re-minted, which the gate's staleness check fails until
-        # a re-mint. migrate-manifests must not paper over that by re-stamping the recorded
-        # value to the in-code version.
-        paths = self._wire(mocker, tmp_path, code_version=3)
-        paths.manifest.write_text(
-            _json.dumps(
-                {
-                    "schema": 2,
-                    "test_case_version": 1,
-                    "diagnostic_version": 2,
-                    "catalog_hash": None,
-                    "committed": {"output.json": "a" * 64},
-                    "native": {},
-                },
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-
-        result = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
-        assert result.exit_code == 0
-
-        from climate_ref_core.regression.manifest import Manifest
-
-        migrated = Manifest.load(paths.manifest)
-        assert migrated.diagnostic_version == 2  # preserved, NOT re-stamped to 3
-
-    def test_migrate_is_idempotent_and_byte_stable(self, invoke_cli, mocker, tmp_path):
-        import json as _json
-
-        paths = self._wire(mocker, tmp_path, code_version=1)
-        paths.manifest.write_text(
-            _json.dumps(
-                {
-                    "schema": 1,
-                    "test_case_version": 1,
-                    "committed": {},
-                    "native": {},
-                },
-                indent=2,
-                sort_keys=True,
-            )
-            + "\n",
-            encoding="utf-8",
-        )
-
-        first = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
-        assert first.exit_code == 0
-        after_first = paths.manifest.read_bytes()
-
-        # Re-running on an already-migrated manifest is a no-op (byte-identical).
-        second = invoke_cli(["test-cases", "migrate-manifests", "--provider", "example"])
-        assert second.exit_code == 0
-        assert paths.manifest.read_bytes() == after_first
+        result = invoke_cli(["test-cases", "ci-gate"], expected_exit_code=1)
+        assert result.exit_code == 1
+        assert "fail" in result.output

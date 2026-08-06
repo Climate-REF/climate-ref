@@ -93,11 +93,6 @@ jobs:
           if [ -n "${DIAGNOSTIC}" ]; then args+=(--diagnostic "${DIAGNOSTIC}"); fi
           if [ -n "${TEST_CASE}" ]; then args+=(--test-case "${TEST_CASE}"); fi
           uv run ref test-cases fetch "${args[@]}" || echo "::warning::test-case fetch incomplete"
-      - name: Verify store credentials
-        env:
-          REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
-          REF_NATIVE_STORE_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
-        run: uv run ref test-cases check-store
       - name: Mint native baselines
         env:
           REF_NATIVE_STORE_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}

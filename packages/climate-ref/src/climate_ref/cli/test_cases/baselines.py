@@ -37,7 +37,6 @@ from climate_ref.cli.test_cases._stages import (
     stage_materialise,
     stage_rebuild_from_slot,
     stage_upload,
-    write_source_stamp,
 )
 from climate_ref.config import Config
 
@@ -163,13 +162,6 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
         stage_build(slot=slot, source=source, placeholders=placeholders)
         cmp_failures, compared = stage_compare(
             slot=slot, paths=paths, slug=diag.slug, expected=manifest.committed
-        )
-        write_source_stamp(
-            slot,
-            label=label,
-            verb="replay",
-            source="materialise",
-            test_case_version=manifest.test_case_version,
         )
         if cmp_failures:
             logger.error(f"{case_id}: replay drift detected:\n" + "\n".join(cmp_failures))
@@ -336,7 +328,6 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
                     slot=slot,
                     placeholders=placeholders,
                 )
-                source_kind = "materialise"
             else:
                 datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
                 source = stage_execute(
@@ -348,7 +339,6 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
                     execution_dir=None,
                     clean=True,
                 )
-                source_kind = "execute"
         except StageError as exc:
             logger.error(f"{case_id}: {exc}")
             failures.append(case_id)
@@ -391,7 +381,6 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             committed=committed,
             native=native,
         )
-        write_source_stamp(slot, label=label, verb="mint", source=source_kind, test_case_version=version)
 
         minted += 1
         logger.info(
@@ -494,7 +483,6 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
 
         committed = stage_build(slot=slot, source=source, placeholders=placeholders)
         previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
-        version = previous.test_case_version if previous else 1
 
         if force_regen or not paths.regression.exists():
             promote_to_baseline(slot, paths)
@@ -528,7 +516,6 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
                 "(committed baseline unchanged; use --force-regen to promote it)"
             )
 
-        write_source_stamp(slot, label=label, verb="build", source="rebuild", test_case_version=version)
         built += 1
 
     console.print()

@@ -1,8 +1,8 @@
 """
 Capture of regression baselines from a diagnostic execution.
 
-Note that this is not the raw output from an execution (the "scratch" directory),
-but the curated subset of files copied into the "results" directory for persistence and comparison.
+Capture operates on the curated subset of files persisted for an execution,
+not the raw output in the "scratch" directory.
 This avoids the need to maintain a separate ignore list for regression captures.
 
 It produces two things:

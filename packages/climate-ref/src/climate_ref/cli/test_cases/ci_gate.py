@@ -69,9 +69,9 @@ def _provider_source_root(diag: Diagnostic, repo_root: Path) -> str | None:
 
 def _core_extraction_roots(repo_root: Path) -> list[str]:
     """
-    Return the core paths whose change affects replay/execute for every test case.
+    Return the core paths whose change affects a replay for every test case.
 
-    ``build_execution_result`` (the function replay/execute re-run) depends on more
+    ``build_execution_result`` (the function replay re-runs) depends on more
     than the regression package: it builds and reads CMEC bundles via
     :mod:`climate_ref_core.pycmec`, persists curated outputs via
     :mod:`climate_ref_core.output_files`, and is dispatched through

@@ -85,9 +85,8 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
     Changes to the native baseline are not failures.
     This is due to the workflow for minting requires credentials.
     This means fork contributors cannot author or edit native blobs.
-    ``replay`` is therefore only selected when native blobs actually exist to replay;
-    an absent or removed native baseline downgrades to ``skip`` (with a warning in the reason),
-    never ``fail``.
+    ``replay`` is therefore only selected when native blobs actually exist to replay.
+    An absent or removed native baseline downgrades to ``skip``, never ``fail``.
 
     See the module docstring for the meaning of each :class:`Action`.
 
@@ -210,7 +209,7 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
         return GateDecision(
             Action.FAIL,
             f"diagnostic_version decreased ({base_manifest.diagnostic_version} -> "
-            f"{manifest.diagnostic_version}); version must be monotonic",
+            f"{manifest.diagnostic_version}), but the version must be monotonic",
         )
 
     version_bumped = manifest.test_case_version > base_manifest.test_case_version
@@ -229,8 +228,8 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
             )
         return GateDecision(
             Action.SKIP,
-            f"test_case_version bumped ({version_change}) with no native baseline to replay; "
-            "the committed bundle changed with nothing to verify it against, so the diff "
+            f"test_case_version bumped ({version_change}) with no native baseline to replay, "
+            "so the committed bundle changed with nothing to verify it against and the diff "
             "review is the only signal",
         )
 
@@ -246,14 +245,14 @@ def decide_coupling(  # noqa: PLR0911, PLR0912, PLR0913
         if manifest.native:
             return GateDecision(
                 Action.REPLAY,
-                f"{trigger} with committed bundle unchanged; "
+                f"{trigger} with committed bundle unchanged, "
                 "replaying to confirm the native baseline reproduces the committed bundle",
             )
         # Native changed to empty (de-mint) or was already empty: nothing to replay against.
         return GateDecision(
             Action.SKIP,
-            f"{trigger} but no native baseline exists to replay; "
-            "the committed bundle is unchanged and remains the only signal",
+            f"{trigger} but no native baseline exists to replay, "
+            "so the unchanged committed bundle remains the only signal",
         )
 
     return GateDecision(

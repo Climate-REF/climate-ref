@@ -174,9 +174,9 @@ because an empty native set is legitimate, a missing native baseline downgrades 
 
 ### Actions
 
-- **`skip`** — nothing relevant to this case changed, the case is not under regression management, or the committed bundle changed (e.g. a `test_case_version` bump) with no native baseline to replay against, so the diff review is the only signal.
-- **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
-- **`fail`** — an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
+- **`skip`**: nothing relevant to this case changed, the case is not under regression management, or the committed bundle changed (e.g. a `test_case_version` bump) with no native baseline to replay against, so the diff review is the only signal.
+- **`replay`**: cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
+- **`fail`**: an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
 
 ### Decision flow
 

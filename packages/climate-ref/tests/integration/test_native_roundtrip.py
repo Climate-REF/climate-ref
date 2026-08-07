@@ -14,7 +14,7 @@ For a ``result`` from a run, ``defn = result.definition``;
 ``output_dir = defn.output_directory``; ``fragment = defn.output_fragment()`` (a
 method); ``scratch_root = output_dir.parent``.
 A *separate* temporary directory is used as the ``results_base`` for
-``capture_execution`` (it must differ from the scratch root), and the captured
+``_capture_execution`` (it must differ from the scratch root), and the captured
 native blob bytes live at ``results_base / fragment / <relpath>``.
 """
 
@@ -43,7 +43,7 @@ from climate_ref_core.diagnostics import (
     ExecutionDefinition,
     ExecutionResult,
 )
-from climate_ref_core.output_files import PlaceholderMap
+from climate_ref_core.output_files import PlaceholderMap, copy_execution_outputs
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
@@ -53,8 +53,9 @@ from climate_ref_core.regression import (
     NativeEntry,
     Tolerance,
     assert_bundle_regression,
-    capture_execution,
+    build_native_snapshot,
     materialise_native,
+    write_committed_bundle,
 )
 from climate_ref_core.regression.gate import Action, decide_coupling
 from climate_ref_core.regression.manifest import SCHEMA_VERSION
@@ -270,6 +271,42 @@ def _run_synthetic(tmp_path: Path) -> ExecutionResult:
     return runner.run(diag, "default", tmp_path / "output", clean=True)
 
 
+def _capture_execution(
+    scratch_directory: Path,
+    results_directory: Path,
+    fragment: Path | str,
+    result: ExecutionResult,
+    *,
+    regression_dir: Path,
+    placeholders: PlaceholderMap,
+    include_log: bool = False,
+    extra_globs: tuple[str, ...] = (),
+) -> tuple[dict[str, str], dict[str, NativeEntry]]:
+    """
+    Persist a successful execution and capture its committed bundle + native snapshot.
+
+    Mirrors the capture-path mechanics used by ``ref test-cases mint``
+    (:mod:`climate_ref.cli.test_cases._stages`), composed here from the shipped
+    building blocks (``copy_execution_outputs``, ``write_committed_bundle``,
+    ``build_native_snapshot``) for exercising the full round trip in one call.
+    """
+    relpaths = copy_execution_outputs(
+        scratch_directory,
+        results_directory,
+        fragment,
+        result,
+        include_log=include_log,
+        extra_globs=extra_globs,
+    )
+    base_dir = results_directory / fragment
+    committed = write_committed_bundle(base_dir, regression_dir, placeholders=placeholders)
+    # Digest the native set over sanitised bytes, matching the mint contract in
+    # climate_ref.cli.test_cases._stages.snapshot_native.
+    placeholders.sanitise(base_dir)
+    native = build_native_snapshot(base_dir, relpaths)
+    return committed, native
+
+
 def _capture_synthetic(
     result: ExecutionResult,
     *,
@@ -304,7 +341,7 @@ def _capture_synthetic(
     fragment = defn.output_fragment()
     scratch_root = output_dir.parent
 
-    return capture_execution(
+    return _capture_execution(
         scratch_root,
         results_base,
         fragment,
@@ -329,7 +366,7 @@ class TestSyntheticNestedRoundTrip:
         Steps
         -----
         1. **Run** the synthetic diagnostic.
-        2. **Capture + Mint**: ``capture_execution`` writes the committed bundle and
+        2. **Capture + Mint**: ``_capture_execution`` writes the committed bundle and
            snapshots the curated native files; ``store.put`` PUTs each native blob;
            a ``Manifest`` is authored carrying the native block.
         3. **Sync**: every blob in the manifest is reachable from the store.
@@ -1038,7 +1075,7 @@ class TestReconstructionInputRoundTrip:
     ) -> tuple[dict[str, str], dict[str, NativeEntry]]:
         defn = result.definition
         output_dir = defn.output_directory
-        return capture_execution(
+        return _capture_execution(
             output_dir.parent,
             results_base,
             defn.output_fragment(),

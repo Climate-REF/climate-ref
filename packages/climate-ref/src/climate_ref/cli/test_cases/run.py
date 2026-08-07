@@ -33,10 +33,8 @@ from climate_ref.cli.test_cases._stages import (
     snapshot_native,
     stage_build,
     stage_execute,
-    write_source_stamp,
 )
 from climate_ref.config import Config
-from climate_ref.testing import ResourceSnapshot, log_resource_usage
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     InvalidDiagnosticException,
@@ -214,7 +212,6 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     placeholders = baseline_placeholders(paths, config)
     committed = stage_build(slot=slot, source=source, placeholders=placeholders)
     previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
-    version = previous.test_case_version if previous else 1
 
     if force_regen or not paths.regression.exists():
         promote_to_baseline(slot, paths)
@@ -248,7 +245,6 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
             f"Wrote output slot {slot} (committed baseline unchanged; use --force-regen to update it)"
         )
 
-    write_source_stamp(slot, label=label, verb="run", source="execute", test_case_version=version)
     return True
 
 
@@ -425,7 +421,6 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
 
     for diag, tc in test_cases_to_run:
         case_id = f"{provider}/{diag.slug}/{tc.name}"
-        resources_before = ResourceSnapshot.capture()
         success = _run_single_test_case(
             config=config,
             console=console,
@@ -438,7 +433,6 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
             clean=clean,
             label=label,
         )
-        log_resource_usage(case_id, resources_before)
         if success:
             successes += 1
         else:

@@ -138,9 +138,8 @@ class Manifest:
     diagnostic_version: int
     """Author-declared ``Diagnostic.version`` at mint time.
 
-    Monotonic and append-only (with an authorised-revert carve-out in the CI gate).
-    The gate fails a case whose in-code ``Diagnostic.version`` exceeds this value
-    (a stale baseline that must be re-minted).
+    Monotonic. The gate fails a case whose in-code ``Diagnostic.version`` exceeds this value
+    (a stale baseline that must be re-minted), and one whose in-code version drops below it.
     """
 
     committed: dict[str, str]
@@ -288,40 +287,6 @@ class Manifest:
         }
         text = json.dumps(payload, indent=2, sort_keys=True) + "\n"
         path.write_text(text, encoding="utf-8")
-
-    @classmethod
-    def seed_v1(
-        cls,
-        committed_digests: dict[str, str],
-        catalog_hash: str | None = None,
-        diagnostic_version: int = 1,
-    ) -> Manifest:
-        """
-        Create an initial manifest at ``test_case_version == 1`` with no native outputs.
-
-        Parameters
-        ----------
-        committed_digests
-            Digests of the committed regression JSON artefacts.
-        catalog_hash
-            Hash of the input ``catalog.yaml`` that produced the baseline, if known.
-        diagnostic_version
-            Author-declared ``Diagnostic.version`` at seed time. Defaults to ``1``,
-            the version of a brand-new baseline.
-
-        Returns
-        -------
-        :
-            A fresh manifest with ``test_case_version=1`` and ``native={}``.
-        """
-        return cls(
-            schema=SCHEMA_VERSION,
-            test_case_version=1,
-            diagnostic_version=diagnostic_version,
-            committed=dict(committed_digests),
-            catalog_hash=catalog_hash,
-            native={},
-        )
 
 
 def compute_committed_digests(regression_dir: Path) -> dict[str, str]:

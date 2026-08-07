@@ -13,7 +13,6 @@ These data will be able to be fetched from an object store in CI and replayed lo
 
 from climate_ref_core.regression.capture import (
     build_native_snapshot,
-    capture_execution,
     materialise_native,
     write_committed_bundle,
 )
@@ -63,7 +62,6 @@ __all__ = [
     "assert_bundle_regression",
     "build_native_snapshot",
     "build_native_store",
-    "capture_execution",
     "compare_json_content",
     "compute_committed_digests",
     "decide_coupling",

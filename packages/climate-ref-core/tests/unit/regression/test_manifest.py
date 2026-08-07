@@ -65,33 +65,6 @@ class TestSha256Bytes:
         assert sha256_bytes(data) == sha256_file(tmp_file)
 
 
-class TestSeedV1:
-    def test_test_case_version_is_1(self) -> None:
-        m = Manifest.seed_v1({"series.json": "abc123"})
-        assert m.test_case_version == 1
-
-    def test_native_is_empty(self) -> None:
-        m = Manifest.seed_v1({"series.json": "abc123"})
-        assert m.native == {}
-
-    def test_schema_equals_schema_version(self) -> None:
-        m = Manifest.seed_v1({})
-        assert m.schema == SCHEMA_VERSION
-
-    def test_committed_digests_stored(self) -> None:
-        digests = {"series.json": "aa" * 32, "diagnostic.json": "bb" * 32}
-        m = Manifest.seed_v1(digests)
-        assert m.committed == digests
-
-    def test_diagnostic_version_defaults_to_1(self) -> None:
-        m = Manifest.seed_v1({})
-        assert m.diagnostic_version == 1
-
-    def test_diagnostic_version_override(self) -> None:
-        m = Manifest.seed_v1({}, diagnostic_version=3)
-        assert m.diagnostic_version == 3
-
-
 class TestDumpLoad:
     """dump then load must be byte-identical and stable."""
 
@@ -305,7 +278,13 @@ class TestComputeCommittedDigests:
 class TestVerifyCommittedIntegrity:
     def _make_manifest_for(self, regression_dir: Path) -> Manifest:
         digests = compute_committed_digests(regression_dir)
-        return Manifest.seed_v1(digests)
+        return Manifest(
+            schema=SCHEMA_VERSION,
+            test_case_version=1,
+            diagnostic_version=1,
+            committed=digests,
+            native={},
+        )
 
     def test_clean_bundle_returns_empty_list(self, regression_dir: Path) -> None:
         manifest = self._make_manifest_for(regression_dir)

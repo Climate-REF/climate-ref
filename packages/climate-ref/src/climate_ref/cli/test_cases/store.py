@@ -1,9 +1,8 @@
 """
-Native-store commands: ``ref test-cases sync`` and ``ref test-cases check-store``.
+Native-store commands: ``ref test-cases sync``.
 
 ``sync`` warms the local cache with the native blobs referenced by committed
-manifests; ``check-store`` preflights the writable store's credentials before a
-mint.
+manifests.
 """
 
 from __future__ import annotations
@@ -110,45 +109,3 @@ def sync_native(
         for failure in failures:
             console.print(f"  - {failure}")
         raise typer.Exit(code=1)
-
-
-@app.command(name="check-store")
-def check_store(
-    ctx: typer.Context,
-) -> None:
-    """
-    Check connectivity and credentials for the writable native baseline store.
-
-    Builds the writable store from the configuration and preflights it (an authenticated
-    no-op probe) without running any diagnostics or uploading anything. Use this to confirm a
-    mint will work — that the credentials (REF_NATIVE_STORE_PROFILE or the access-key env
-    vars) and the bucket are correct — before a slow mint run.
-
-    Examples
-    --------
-        ref test-cases check-store
-        REF_NATIVE_STORE_PROFILE=my-profile ref test-cases check-store
-    """
-    from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
-
-    config: Config = ctx.obj.config
-    console: Console = ctx.obj.console
-
-    try:
-        store = build_native_store(config.native_store, writable=True)
-    except (NotImplementedError, ValueError) as exc:
-        logger.error(
-            "Native store is not configured for writing. For the remote (R2) store set "
-            "REF_NATIVE_STORE_S3_ENDPOINT_URL and REF_NATIVE_STORE_BUCKET, and authenticate via "
-            "REF_NATIVE_STORE_ACCESS_KEY_ID / REF_NATIVE_STORE_SECRET_ACCESS_KEY or a named "
-            f"REF_NATIVE_STORE_PROFILE; or set REF_NATIVE_STORE_URL to a local file:// path: {exc}"
-        )
-        raise typer.Exit(code=1) from exc
-
-    try:
-        store.preflight()
-    except NativeStoreUnavailableError as exc:
-        logger.error(str(exc))
-        raise typer.Exit(code=1) from exc
-
-    console.print("[green]Native store OK:[/green] credentials accepted and the store is reachable.")

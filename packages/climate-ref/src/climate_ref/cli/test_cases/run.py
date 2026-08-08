@@ -135,8 +135,7 @@ def _rebuild_from_slot(
         logger.error(f"{case_id}: no native in output slot {label!r}; run/replay/mint it first")
         return None
     if not paths.catalog.exists():
-        logger.error(f"No catalog file found for {case_id}")
-        logger.error("Run 'ref test-cases fetch' first")
+        logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
         return None
 
     try:
@@ -357,6 +356,7 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     With --from-slot the diagnostic is not executed. The native already materialised in
     ``output/<label>/`` by a previous run, replay or mint is reused, and only the committed
     bundle is regenerated. This is how a bundle is refreshed after an extraction-code change.
+    The execution options (--fetch, --output-directory and --clean) do not apply to it.
 
     Examples
     --------

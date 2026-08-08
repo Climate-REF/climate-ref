@@ -1,7 +1,7 @@
 """
 Integration tests for the RFC-0005 native-baseline round-trip.
 
-These tests prove the native-baseline lifecycle ``run -> mint -> sync -> replay``
+These tests prove the native-baseline lifecycle ``run -> mint -> replay``
 end-to-end against a *local* content-addressed store
 (:class:`~climate_ref_core.regression.NativeStore`) created inside ``tmp_path``.
 
@@ -353,13 +353,13 @@ def _capture_synthetic(
 
 class TestSyntheticNestedRoundTrip:
     """
-    Full ``run -> mint -> sync -> replay`` on the synthetic nested-output diagnostic.
+    Full ``run -> mint -> replay`` on the synthetic nested-output diagnostic.
 
     This exercises every layer of the native-baseline system on nested native outputs
     with absolute-path dict keys.
     """
 
-    def test_run_mint_sync_replay(self, tmp_path: Path) -> None:
+    def test_run_mint_replay(self, tmp_path: Path) -> None:
         """
         Replay of minted blobs matches the committed bundle within tolerance.
 
@@ -423,11 +423,9 @@ class TestSyntheticNestedRoundTrip:
         assert reloaded.committed == manifest.committed
         assert set(reloaded.native) == set(manifest.native)
 
-        # Step 3: sync — every referenced blob must be in the store.
+        # Step 3: every referenced blob must be in the store.
         for relpath, entry in reloaded.native.items():
-            assert store.has(entry.sha256), (
-                f"Sync failed: blob {entry.sha256} not in store (relpath={relpath!r})"
-            )
+            assert store.has(entry.sha256), f"Blob {entry.sha256} not in store (relpath={relpath!r})"
 
         # Step 4: replay
         replay_dir = tmp_path / "replay_output"
@@ -540,7 +538,7 @@ class TestExampleSmokeRoundTrip:
 
     def test_example_roundtrip(self, tmp_path: Path) -> None:  # noqa: PLR0915
         """
-        Run -> mint -> sync -> replay the example diagnostic, or skip clearly.
+        Run -> mint -> replay the example diagnostic, or skip clearly.
 
         The skip message names the reason so CI / developers know what data is
         needed.
@@ -624,11 +622,9 @@ class TestExampleSmokeRoundTrip:
             native=native,
         )
 
-        # Sync
+        # Every minted blob must be in the store.
         for relpath, entry in manifest.native.items():
-            assert store.has(entry.sha256), (
-                f"Example sync failed: blob {entry.sha256} not in store (relpath={relpath!r})"
-            )
+            assert store.has(entry.sha256), f"Example blob {entry.sha256} not in store (relpath={relpath!r})"
 
         # Replay
         replay_dir = tmp_path / "example_replay"
@@ -774,7 +770,7 @@ class TestNegativeMissingBlob:
         )
         return store, manifest, native
 
-    def test_missing_blob_detected_on_sync(self, tmp_path: Path) -> None:
+    def test_missing_blob_detected_by_has(self, tmp_path: Path) -> None:
         """
         A blob deleted after minting is caught when verifying ``store.has``.
 
@@ -869,8 +865,8 @@ class TestNativeStoreConfig:
         config = _local_store_config(tmp_path)
         writable = build_native_store(config.native_store, writable=True)
         readable = build_native_store(config.native_store, writable=False)
-        assert isinstance(writable, NativeStore)
-        assert isinstance(readable, NativeStore)
+        assert writable.root is not None
+        assert readable.root == writable.root
 
         blob = tmp_path / "blob.bin"
         blob.write_bytes(b"abc")

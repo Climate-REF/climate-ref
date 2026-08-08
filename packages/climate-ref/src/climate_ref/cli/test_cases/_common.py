@@ -1,21 +1,24 @@
 """
 Helpers shared across several ``ref test-cases`` commands.
 
-``_iter_test_cases`` enumerates ``(diagnostic, test_case)`` pairs from the
-provider registry (used by ``sync`` / ``replay`` / ``mint`` / ``build`` /
-``ci-gate``) and ``_write_test_case_manifest`` authors the committed
-``manifest.json`` (used by ``run`` / ``mint`` / ``build``).
+``VerbDriver`` owns the per-case loop machinery every verb repeats
+(registry construction, selector validation, case enumeration, skip policy,
+tally and summary). ``_iter_test_cases`` enumerates ``(diagnostic, test_case)``
+pairs from the provider registry and ``_write_test_case_manifest`` authors the
+committed ``manifest.json`` (used by ``run`` / ``mint`` / ``build``).
 """
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, NamedTuple
 
 import typer
 from loguru import logger
 
 if TYPE_CHECKING:
     from collections.abc import Iterator
+
+    from rich.console import Console
 
     from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.diagnostics import Diagnostic
@@ -173,3 +176,133 @@ def _iter_test_cases(
                 if test_case and tc.name != test_case:
                     continue
                 yield diag, tc
+
+
+class VerbCase(NamedTuple):
+    """A test case ready for a verb's loop body, with its paths resolved."""
+
+    diag: Diagnostic
+    tc: TestCase
+    paths: TestCasePaths
+    case_id: str
+
+
+class VerbSummary(NamedTuple):
+    """The Rich epilogue wording for a per-case verb."""
+
+    mixed: str
+    """Yellow tally line when any case failed, e.g. ``"Replay: {successes} passed, {failures} failed"``."""
+
+    failed_header: str
+    """Red header above the failed case list, e.g. ``"Failed replays:"``."""
+
+    success: str
+    """Green line when every case succeeded, e.g. ``"All {successes} replay(s) matched ..."``."""
+
+
+class VerbDriver:
+    """
+    Shared per-case driver for the ``ref test-cases`` verbs.
+
+    Owns the loop machinery every verb repeats:
+    provider-registry construction, selector validation, case enumeration,
+    the missing-manifest and missing-catalog skip policy,
+    the success and failure tally, and the Rich summary epilogue.
+    The loop body stays with the verb and reports via :meth:`ok` and :meth:`fail`.
+    """
+
+    def __init__(
+        self,
+        ctx: typer.Context,
+        *,
+        provider: str | None,
+        diagnostic: str | None,
+        test_case: str | None,
+    ) -> None:
+        from climate_ref.provider_registry import ProviderRegistry
+
+        self.console: Console = ctx.obj.console
+        self.provider = provider
+        # When a specific case is named, an unusable test case is a hard failure.
+        self.named = bool(diagnostic or test_case)
+        self.registry = ProviderRegistry.build_from_config(ctx.obj.config, ctx.obj.database)
+        _validate_provider_in_registry(self.registry, provider)
+        _validate_requested_filters(
+            self.registry, provider=provider, diagnostic=diagnostic, test_case=test_case
+        )
+        self.cases = list(
+            _iter_test_cases(self.registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
+        )
+        self.successes = 0
+        self.failures: list[str] = []
+
+    def exit_if_empty(self, message: str | None = None) -> None:
+        """Exit 0 with a warning when the selectors matched no test cases."""
+        if self.cases:
+            return
+        logger.warning(message or f"No test cases found for provider {self.provider!r}")
+        raise typer.Exit(code=0)
+
+    def ready_cases(
+        self, *, require_manifest: bool = False, require_catalog: bool = False
+    ) -> Iterator[VerbCase]:
+        """
+        Yield the matched cases with paths resolved, applying the shared skip policy.
+
+        An unlocatable test-data directory or a missing ``manifest.json`` is a hard failure
+        when the case was named explicitly, and a warn-and-skip when sweeping.
+        A missing catalog is always a hard failure.
+
+        Skips and failures are recorded as the caller iterates,
+        so the loop must run to exhaustion for the summary to see them all.
+        """
+        from climate_ref_core.testing import TestCasePaths
+
+        for diag, tc in self.cases:
+            case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
+            paths = TestCasePaths.from_diagnostic(diag, tc.name)
+            if paths is None:
+                self._skip_or_fail(case_id, f"Could not determine test case directory for {case_id}")
+                continue
+            if require_manifest and not paths.manifest.exists():
+                self._skip_or_fail(
+                    case_id, f"No manifest.json for {case_id}; run `ref test-cases mint` first"
+                )
+                continue
+            if require_catalog and not paths.catalog.exists():
+                self.fail(case_id, f"No catalog file for {case_id}; run `ref test-cases fetch` first")
+                continue
+            yield VerbCase(diag, tc, paths, case_id)
+
+    def ok(self) -> None:
+        """Record a successful case."""
+        self.successes += 1
+
+    def fail(self, label: str, message: str | None = None) -> None:
+        """
+        Record a failure, logging ``message`` as an error when given.
+
+        ``label`` is the entry listed under the summary's failed header, usually the case id.
+        """
+        if message:
+            logger.error(message)
+        self.failures.append(label)
+
+    def _skip_or_fail(self, case_id: str, message: str) -> None:
+        """Fail a case that was named explicitly, and warn-and-skip it when sweeping."""
+        if self.named:
+            self.fail(case_id, message)
+        else:
+            logger.warning(message)
+
+    def finish(self, summary: VerbSummary) -> None:
+        """Print the verb's summary epilogue and exit non-zero when any case failed."""
+        self.console.print()
+        if self.failures:
+            mixed = summary.mixed.format(successes=self.successes, failures=len(self.failures))
+            self.console.print(f"[yellow]{mixed}[/yellow]")
+            self.console.print(f"[red]{summary.failed_header}[/red]")
+            for case in self.failures:
+                self.console.print(f"  - {case}")
+            raise typer.Exit(code=1)
+        self.console.print(f"[green]{summary.success.format(successes=self.successes)}[/green]")

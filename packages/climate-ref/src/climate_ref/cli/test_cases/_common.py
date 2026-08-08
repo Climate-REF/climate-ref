@@ -252,6 +252,9 @@ class VerbDriver:
         An unlocatable test-data directory or a missing ``manifest.json`` is a hard failure
         when the case was named explicitly, and a warn-and-skip when sweeping.
         A missing catalog is always a hard failure.
+
+        Skips and failures are recorded as the caller iterates,
+        so the loop must run to exhaustion for the summary to see them all.
         """
         from climate_ref_core.testing import TestCasePaths
 

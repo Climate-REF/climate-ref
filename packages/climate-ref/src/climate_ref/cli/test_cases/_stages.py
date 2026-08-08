@@ -294,9 +294,12 @@ def promote_and_author_manifest(  # noqa: PLR0913
     from climate_ref.cli.test_cases._common import _write_test_case_manifest
     from climate_ref_core.regression.manifest import Manifest
 
+    # Load before promoting: an unreadable manifest must fail before the tracked
+    # baseline is overwritten, or the promoted bundle is left recorded by stale digests.
+    previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
+
     promote_to_baseline(slot, paths)
     native = snapshot_native(slot, source=source, placeholders=placeholders)
-    previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
 
     if previous is not None:
         _write_test_case_manifest(

@@ -1620,6 +1620,92 @@ class TestSyncCommand:
         assert "Test case 'missing' was not found" in result.stderr
 
 
+class TestVerbDriverSkipPolicy:
+    """The shared driver's skip policy: hard fail when a case is named, warn and skip when sweeping."""
+
+    @staticmethod
+    def _patch_registry(mocker, registry):
+        mocker.patch(
+            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
+            return_value=registry,
+        )
+
+    def _setup_sync(self, mocker, tmp_path, *, paths):
+        """Wire `sync` against a given TestCasePaths (or None) and an empty local store."""
+        from climate_ref_core.regression.store import LocalFilesystemStore
+
+        registry, _diag, _tc = _make_case_mocks()
+        self._patch_registry(mocker, registry)
+        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=LocalFilesystemStore(root=tmp_path / "store"),
+        )
+        return registry
+
+    def test_named_case_without_test_data_dir_fails(self, invoke_cli, mocker, tmp_path):
+        """A named case whose test-data directory cannot be located is a hard failure."""
+        self._setup_sync(mocker, tmp_path, paths=None)
+
+        result = invoke_cli(
+            ["test-cases", "sync", "--provider", "example", "--diagnostic", "test-diag"],
+            expected_exit_code=1,
+        )
+        assert "Could not determine test case directory" in result.stderr
+
+    def test_sweeping_case_without_test_data_dir_warns(self, invoke_cli, mocker, tmp_path):
+        """Sweeping past a case with no test-data directory warns and still exits 0."""
+        self._setup_sync(mocker, tmp_path, paths=None)
+
+        result = invoke_cli(["test-cases", "sync", "--provider", "example"])
+        assert result.exit_code == 0
+        assert "Could not determine test case directory" in result.stderr
+
+    def test_sweeping_case_without_manifest_warns(self, invoke_cli, mocker, tmp_path):
+        """Sweeping past a case with no manifest warns and still exits 0."""
+        from climate_ref_core.testing import TestCasePaths
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        self._setup_sync(mocker, tmp_path, paths=TestCasePaths(root=case_dir, provider_slug="example"))
+
+        result = invoke_cli(["test-cases", "sync", "--provider", "example"])
+        assert result.exit_code == 0
+        assert "No manifest.json" in result.stderr
+
+    def test_named_case_without_manifest_fails(self, invoke_cli, mocker, tmp_path):
+        """A named case with no manifest is a hard failure."""
+        from climate_ref_core.testing import TestCasePaths
+
+        case_dir = tmp_path / "td" / "test-diag" / "default"
+        case_dir.mkdir(parents=True)
+        self._setup_sync(mocker, tmp_path, paths=TestCasePaths(root=case_dir, provider_slug="example"))
+
+        result = invoke_cli(
+            ["test-cases", "sync", "--provider", "example", "--diagnostic", "test-diag"],
+            expected_exit_code=1,
+        )
+        assert "No manifest.json" in result.stderr
+
+    def test_no_matching_cases_exits_zero(self, invoke_cli, mocker, tmp_path):
+        """Selectors that match nothing are a successful no-op, not an error."""
+        from unittest.mock import MagicMock
+
+        from climate_ref_core.regression.store import LocalFilesystemStore
+
+        provider = MagicMock(slug="example")
+        provider.diagnostics.return_value = []
+        self._patch_registry(mocker, MagicMock(providers=[provider]))
+        mocker.patch(
+            "climate_ref_core.regression.store.build_native_store",
+            return_value=LocalFilesystemStore(root=tmp_path / "store"),
+        )
+
+        result = invoke_cli(["test-cases", "sync"])
+        assert result.exit_code == 0
+        assert "No test cases found for the selected filters" in result.stderr
+
+
 class TestStageCompare:
     """`stage_compare` drives replay verification from the manifest's committed set."""
 
@@ -2406,6 +2492,40 @@ class TestBuildCommand:
         assert result.exit_code == 0
         assert runner.run.call_count == 1  # build did not re-run the diagnostic
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
+
+    def test_unreadable_manifest_leaves_the_baseline_intact(self, invoke_cli, mocker, tmp_path):
+        """A manifest that cannot be read fails before the tracked baseline is overwritten."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path)
+
+        # Seed a slot and a promoted baseline with one run.
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
+        # Diverge the tracked baseline from the slot's bundle, so a promotion would overwrite it.
+        for committed_file in sorted(paths.regression.iterdir()):
+            committed_file.write_text('{"sentinel": true}')
+        before = {p.name: p.read_bytes() for p in sorted(paths.regression.iterdir())}
+        assert before
+
+        paths.manifest.write_text("{ not valid json")
+        invoke_cli(
+            [
+                "test-cases",
+                "build",
+                "--provider",
+                "example",
+                "--diagnostic",
+                "test-diag",
+                "--force-regen",
+            ],
+            expected_exit_code=1,
+        )
+
+        after = {p.name: p.read_bytes() for p in sorted(paths.regression.iterdir())}
+        assert after == before
 
 
 def test_output_slot_pattern_is_gitignored(tmp_path):

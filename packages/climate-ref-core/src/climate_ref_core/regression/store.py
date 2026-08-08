@@ -36,7 +36,7 @@ from typing import Any, Protocol
 from urllib.parse import unquote, urlsplit
 
 import pooch
-from attrs import frozen
+from attrs import field, frozen
 from loguru import logger
 
 from climate_ref_core.dataset_registry import _verify_hash_matches
@@ -235,10 +235,12 @@ class NativeStore:
     access_key_id: str = ""
     secret_access_key: str = ""
     profile: str = ""
+    root: Path | None = field(init=False)
+    """The local store root, or ``None`` when this store is remote."""
 
     def __attrs_post_init__(self) -> None:
         """Fail fast at construction (mint startup) when the URL or routing config is unusable."""
-        if _local_root(self.url) is not None or not self.writable:
+        if self.root is not None or not self.writable:
             return
         if not self.s3_endpoint_url:
             raise ValueError(
@@ -250,9 +252,9 @@ class NativeStore:
                 "R2 native store requires a bucket name; set REF_NATIVE_STORE_BUCKET (e.g. ref-baselines)."
             )
 
-    @property
-    def root(self) -> Path | None:
-        """The local store root, or ``None`` when this store is remote."""
+    @root.default
+    def _resolve_root(self) -> Path | None:
+        """Resolve the local root once at construction, which also validates the URL."""
         return _local_root(self.url)
 
     def _blob_path(self, digest: str, root: Path) -> Path:
@@ -265,7 +267,7 @@ class NativeStore:
         _validate_digest(digest)
         return root / digest[:2] / digest
 
-    def _key(self, digest: str) -> str:
+    def _validated_key(self, digest: str) -> str:
         """
         Return the object key for a blob, validating the digest first.
 
@@ -276,9 +278,9 @@ class NativeStore:
         return digest
 
     def _pooch_cache(self) -> Path:
-        """Return the pooch cache directory, which an anonymous remote store cannot read without."""
+        """Return the directory pooch caches downloads in, which an anonymous read needs."""
         if self.cache_dir is None:
-            raise ValueError(f"Reading from {self.url} needs a cache directory; none was configured.")
+            raise ValueError(f"Reading from {self.url} needs a cache directory, but none is configured.")
         return self.cache_dir
 
     def _client(self) -> Any:
@@ -311,7 +313,7 @@ class NativeStore:
         from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
         try:
-            self._client().head_object(Bucket=self.bucket, Key=self._key(digest))
+            self._client().head_object(Bucket=self.bucket, Key=self._validated_key(digest))
         except ClientError as exc:
             if _is_missing(exc):
                 return False
@@ -354,7 +356,7 @@ class NativeStore:
             from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
             try:
-                self._client().download_file(self.bucket, self._key(digest), str(dest))
+                self._client().download_file(self.bucket, self._validated_key(digest), str(dest))
             except ClientError as exc:
                 if _is_missing(exc):
                     raise FileNotFoundError(
@@ -398,13 +400,13 @@ class NativeStore:
         else:
             if not self.writable:
                 raise NotImplementedError(
-                    f"Native store {self.url} is a public-read store; put() is not supported. "
+                    f"Native store {self.url} is a public-read store, so put() is not supported. "
                     "Mint against a local path or a credentialed remote store."
                 )
             if self.has(digest):
                 logger.debug(f"NativeStore.put: {digest} already present, skipping upload")
                 return digest
-            self._client().upload_file(str(path), self.bucket, self._key(digest))
+            self._client().upload_file(str(path), self.bucket, self._validated_key(digest))
         logger.debug(f"NativeStore.put: {path} -> {digest}")
         return digest
 

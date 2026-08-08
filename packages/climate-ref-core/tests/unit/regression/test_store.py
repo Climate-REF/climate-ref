@@ -253,6 +253,14 @@ class TestAnonymousRemoteStore:
         with pytest.raises(ValueError, match="does not match"):
             store.fetch(blob_digest, tmp_path / "out.nc")
 
+    def test_reading_without_a_cache_dir_raises(self, blob_digest: str, tmp_path: Path) -> None:
+        """An anonymous read needs somewhere to cache, so a store without one fails loudly."""
+        store = NativeStore(url=REMOTE_URL)
+        with pytest.raises(ValueError, match="needs a cache directory"):
+            store.has(blob_digest)
+        with pytest.raises(ValueError, match="needs a cache directory"):
+            store.fetch(blob_digest, tmp_path / "out.nc")
+
     def test_preflight_is_a_no_op(self, tmp_path: Path) -> None:
         NativeStore(url=REMOTE_URL, cache_dir=tmp_path).preflight()  # must not raise
 

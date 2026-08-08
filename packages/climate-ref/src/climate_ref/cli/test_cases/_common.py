@@ -223,7 +223,7 @@ class VerbDriver:
 
         self.console: Console = ctx.obj.console
         self.provider = provider
-        # When a specific case is named, a missing manifest is a hard failure.
+        # When a specific case is named, an unusable test case is a hard failure.
         self.named = bool(diagnostic or test_case)
         self.registry = ProviderRegistry.build_from_config(ctx.obj.config, ctx.obj.database)
         _validate_provider_in_registry(self.registry, provider)

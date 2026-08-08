@@ -1,5 +1,5 @@
 """
-The native-baseline lifecycle verbs: ``replay``, ``mint`` and ``build``.
+The native-baseline lifecycle verbs: ``replay`` and ``mint``.
 
 Each is a thin composition over the stages in
 :mod:`climate_ref.cli.test_cases._stages`:
@@ -7,8 +7,6 @@ Each is a thin composition over the stages in
 - ``replay`` materialises committed native from the store and checks it rebuilds
   the committed bundle within tolerance.
 - ``mint`` (re)authors the canonical native baselines and uploads them.
-- ``build`` rebuilds the committed bundle from an existing output slot without
-  re-executing.
 """
 
 from typing import TYPE_CHECKING, Annotated
@@ -26,15 +24,12 @@ from climate_ref.cli.test_cases._stages import (
     StageError,
     baseline_placeholders,
     prepare_slot,
-    promote_and_author_manifest,
     promote_to_baseline,
-    slot_native_relpaths,
     snapshot_native,
     stage_build,
     stage_compare,
     stage_execute,
     stage_materialise,
-    stage_rebuild_from_slot,
     stage_upload,
 )
 from climate_ref.config import Config
@@ -333,95 +328,5 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             mixed="Mint: {successes} minted, {failures} failed",
             failed_header="Failed mints:",
             success="Minted {successes} native baseline(s)",
-        )
-    )
-
-
-@app.command(name="build")
-def build_test_case(  # noqa: PLR0913
-    ctx: typer.Context,
-    provider: Annotated[
-        str,
-        typer.Option(help="Provider slug (required, e.g., 'example', 'ilamb')"),
-    ],
-    diagnostic: Annotated[
-        str | None,
-        typer.Option(help="Specific diagnostic slug to build"),
-    ] = None,
-    test_case: Annotated[
-        str | None,
-        typer.Option(help="Specific test case name to build"),
-    ] = None,
-    label: Annotated[
-        str,
-        typer.Option(help="Output slot to rebuild from (default: latest)"),
-    ] = "latest",
-    force_regen: Annotated[
-        bool,
-        typer.Option(help="Promote the rebuilt bundle to the tracked regression baseline"),
-    ] = False,
-) -> None:
-    """
-    Rebuild the committed bundle from an existing output slot, without re-executing.
-
-    Reuses the native already materialised in ``output/<label>/`` (by a previous
-    ``run`` / ``replay`` / ``mint``) to regenerate the slot's committed bundle. The tracked
-    ``regression/`` baseline is only promoted when ``--force-regen`` is given or no baseline
-    exists yet, so a rebuild never silently clobbers a committed baseline.
-
-    Examples
-    --------
-        ref test-cases build --provider example
-        ref test-cases build --provider example --label before --force-regen
-    """
-    config: Config = ctx.obj.config
-
-    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
-    driver.exit_if_empty()
-
-    for diag, tc, paths, case_id in driver.ready_cases(require_catalog=True):
-        slot = paths.output_slot(label)
-        if not slot.exists() or not slot_native_relpaths(slot):
-            driver.fail(case_id, f"{case_id}: no native in output slot {label!r}; run/replay/mint it first")
-            continue
-
-        placeholders = baseline_placeholders(paths, config)
-        try:
-            source = stage_rebuild_from_slot(
-                diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders
-            )
-        except Exception as exc:
-            driver.fail(case_id, f"{case_id}: failed to rebuild bundle from slot: {exc}")
-            continue
-
-        committed = stage_build(slot=slot, source=source, placeholders=placeholders)
-
-        if force_regen or not paths.regression.exists():
-            promote_and_author_manifest(
-                paths=paths,
-                diag=diag,
-                slot=slot,
-                source=source,
-                placeholders=placeholders,
-                committed=committed,
-                stale_message=(
-                    f"{case_id}: committed bundle rebuilt but the native baseline differs; "
-                    "re-mint with `ref test-cases mint`"
-                ),
-            )
-            logger.info(f"Promoted rebuilt bundle to regression baseline: {paths.regression}")
-        else:
-            logger.info(
-                f"Wrote output slot {slot}/regression "
-                "(committed baseline unchanged; use --force-regen to promote it)"
-            )
-
-        driver.ok()
-
-    driver.finish(
-        VerbSummary(
-            mixed="Build: {successes} built, {failures} failed",
-            failed_header="Failed builds:",
-            success="Built {successes} committed bundle(s) from output slots",
         )
     )

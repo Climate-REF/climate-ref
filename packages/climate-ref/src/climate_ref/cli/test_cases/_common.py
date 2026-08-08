@@ -5,7 +5,7 @@ Helpers shared across several ``ref test-cases`` commands.
 (registry construction, selector validation, case enumeration, skip policy,
 tally and summary). ``_iter_test_cases`` enumerates ``(diagnostic, test_case)``
 pairs from the provider registry and ``_write_test_case_manifest`` authors the
-committed ``manifest.json`` (used by ``run`` / ``mint`` / ``build``).
+committed ``manifest.json`` (used by ``run`` and ``mint``).
 """
 
 from __future__ import annotations
@@ -119,7 +119,7 @@ def _write_test_case_manifest(  # noqa: PLR0913
     ``mint`` (which authors the native block and may bump the version); the two
     callers differ only in the ``test_case_version`` and ``native`` they supply.
     Only ``mint`` advances ``diagnostic_version`` to the diagnostic's current
-    ``Diagnostic.version``; ``run`` / ``build`` preserve the value already recorded.
+    ``Diagnostic.version``, and ``run`` preserves the value already recorded.
     The ``catalog_hash`` is always (re)derived from the current ``catalog.yaml`` so
     the manifest stays coupled to the inputs that produced the committed bundle.
     """

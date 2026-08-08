@@ -58,9 +58,7 @@ flowchart LR
     run["run<br/>(no creds)"] -->|"seed committed bundle<br/>+ manifest, native = {}"| repo[("regression/<br/>+ manifest.json")]
     repo --> mint["mint<br/>(write creds, CI)"]
     mint -->|"upload blobs to store<br/>populate manifest.native"| store[("native object<br/>store (sha256)")]
-    store --> sync["sync<br/>(public read)"]
     store --> replay["replay<br/>(public read)"]
-    sync -->|"fetch blobs locally"| local[(local native)]
     replay -->|"materialise native +<br/>re-run build_execution_result +<br/>tolerant compare"| verdict{matches<br/>committed?}
     verdict -->|yes| ok([pass])
     verdict -->|no| bad([fail])
@@ -68,15 +66,13 @@ flowchart LR
 
 | Verb | Credentials | What it does |
 | --- | --- | --- |
-| `run` | none | Execute the diagnostic, curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and — when seeding or `--force-regen` — promote it to `regression/` and update `manifest.json` (first seed uses `native = {}`; existing manifests keep their native block). |
-| `build` | none | Rebuild the committed bundle from an existing output slot (no execution), under the same promotion gate as `run`. Handy for regenerating the bundle after an extraction-code change, from already-materialised native. |
+| `run` | none | Execute the diagnostic (or, with `--from-slot`, reuse the native already in the output slot instead of executing), curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and, when seeding or `--force-regen`, promote it to `regression/` and update `manifest.json`. The first seed uses `native = {}`, and existing manifests keep their native block. |
 | `mint` | write | Execute (or, with `--from-replay`, replay the stored native), upload the curated native to the object store, and populate `manifest.native`. Generally run by CI. |
-| `sync` | public read | Fetch the native blobs referenced by the manifest into the local store cache. |
 | `replay` | public read | Materialise the native baseline into a slot, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
 
 ### Output slots
 
-Every `run`, `build`, `replay`, and `mint` materialises what it produced into a gitignored
+Every `run`, `replay`, and `mint` materialises what it produced into a gitignored
 *output slot*, so a developer can actually see and diff what a run or replay generated:
 
 ```text
@@ -99,13 +95,13 @@ Named slots persist, so two runs can be compared side by side:
 for example `run --label fresh` then `replay --label fromstore`,
 or `run --label before`, edit the diagnostic, then `run --label after`.
 
-`run` and `build` write the slot on every invocation
+`run` writes the slot on every invocation
 but only *promote* the rebuilt bundle to the tracked `regression/` baseline
 when `--force-regen` is given or no baseline exists yet,
-so a labelled run never silently clobbers a committed baseline;
+so a labelled run never silently clobbers a committed baseline.
 `mint` always promotes and uploads.
 When a promoted bundle's underlying native digests differ from the minted baseline,
-`run` and `build` warn (they never block) that a re-mint is needed.
+`run` warns (it never blocks) that a re-mint is needed.
 `mint --from-replay` re-authors the manifest from the stored native instead of re-executing,
 and uploads only blobs whose digest actually changed.
 
@@ -248,7 +244,7 @@ The gate exits non-zero if any case is gated `fail`;
 the `--json` output drives CI's dispatch of the `replay` jobs.
 
 !!! warning "Credentials never cross the trust boundary"
-    `replay`, `sync`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
+    `replay`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
     Only `mint` holds object-store write credentials,
     and it runs exclusively on the trusted-tier runner — never on fork pull-request code.
 
@@ -262,7 +258,7 @@ Since this is a public project we have to be careful about when this is run to n
 | --- | --- | --- | --- |
 | `regression-pr-gate.yaml` | every pull request | none | Runs the coupling gate, then `replay`s every case it routes to `replay`. |
 | `regression-mint.yaml` | manual dispatch | R2 write | `mint`s native baselines and commits the regenerated manifest back to the branch. |
-| `regression-drift.yaml` | nightly + manual | none | `sync`s and `replay`s every baseline to catch silent drift. |
+| `regression-drift.yaml` | nightly + manual | none | `replay`s every baseline to catch silent drift. |
 
 ### PR gate (`regression-pr-gate.yaml`)
 
@@ -323,5 +319,5 @@ A `dry_run` input previews without uploading or committing, and the job refuses 
 
 ### Nightly drift (`regression-drift.yaml`)
 
-A scheduled (and manually dispatchable) job `sync`s every referenced native blob and `replay`s it against the committed bundle.
+A scheduled (and manually dispatchable) job `replay`s every referenced native blob against the committed bundle.
 This catches a baseline that no longer reproduce the committed results within tolerance — for example after a dependency upgrade. It is read-only and credential-free.

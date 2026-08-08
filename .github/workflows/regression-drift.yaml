@@ -54,9 +54,6 @@ jobs:
         env:
           PROVIDER: ${{ matrix.provider }}
         run: uv run ref test-cases fetch --provider "${PROVIDER}" || echo "::warning::test-case fetch incomplete"
-      - name: Sync native baselines
-        # Fetch every native blob referenced by a committed manifest into the cache.
-        run: uv run ref test-cases sync
       - name: Replay native baselines
         env:
           PROVIDER: ${{ matrix.provider }}

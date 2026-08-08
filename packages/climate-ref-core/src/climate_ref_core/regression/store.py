@@ -2,16 +2,18 @@
 Data store for native bundles.
 
 A single :class:`NativeStore` serves both ends of the baseline lifecycle.
-It is constructed from a read URL, plus the S3 routing config and credentials when it must
-also write:
+It is constructed from a read URL,
+plus the S3 routing config and credentials when it must also write:
 
-- A ``file://`` URL or a bare filesystem path is a local store, readable and writable
-  without credentials, laid out two levels deep (``<root>/<digest[:2]>/<digest>``) like
-  git's object store. Used by tests and local development.
-- An ``http(s)://`` URL is the public read store. Blobs are pulled with :mod:`pooch` for
-  caching, retry and hash verification, and are served flat at ``{url}/{digest}``.
-- The same ``http(s)://`` URL plus ``writable=True`` adds the credentialed S3-compatible
-  (Cloudflare R2) write path used by the ``mint`` verb.
+- A ``file://`` URL or a bare filesystem path is a local store,
+  readable and writable without credentials,
+  laid out two levels deep (``<root>/<digest[:2]>/<digest>``) like git's object store.
+  Used by tests and local development.
+- An ``http(s)://`` URL is the public read store.
+  Blobs are pulled with :mod:`pooch` for caching, retry and hash verification,
+  and are served flat at ``{url}/{digest}``.
+- The same ``http(s)://`` URL plus ``writable=True``
+  adds the credentialed S3-compatible (Cloudflare R2) write path used by the ``mint`` verb.
 
 The factory :func:`build_native_store` builds the store from the application
 :class:`~climate_ref.config.Config` and the ``writable`` flag.
@@ -34,7 +36,7 @@ from typing import Any, Protocol
 from urllib.parse import unquote, urlsplit
 
 import pooch
-from attrs import field, frozen
+from attrs import frozen
 from loguru import logger
 
 from climate_ref_core.dataset_registry import _verify_hash_matches
@@ -195,9 +197,9 @@ class NativeStore:
     """
     Content-addressed store for native baseline blobs, keyed by sha256 hex digest.
 
-    A local store (a ``file://`` URL or a bare path) always reads and writes without
-    credentials. A remote store reads anonymously through :mod:`pooch`, and writes only
-    when ``writable`` is set and the S3 routing config and credentials are supplied.
+    A local store (a ``file://`` URL or a bare path) always reads and writes without credentials.
+    A remote store reads anonymously through :mod:`pooch`,
+    and writes only when ``writable`` is set and the S3 routing config and credentials are supplied.
 
     Parameters
     ----------
@@ -205,14 +207,15 @@ class NativeStore:
         Where blobs are read from: an ``http(s)://`` base URL (no trailing slash needed),
         a ``file:///absolute/path`` URL, or a bare filesystem path.
     cache_dir
-        Local directory pooch caches remote downloads in. Unused by a local store.
+        Local directory pooch caches anonymous remote downloads in.
+        A local store does not use it.
     writable
-        Whether the remote backend is credentialed for writes. A local store ignores this
-        and is always writable.
+        Whether the remote backend is credentialed for writes.
+        A local store ignores this and is always writable.
     s3_endpoint_url
         S3 API endpoint for the bucket's account, without the bucket
-        (e.g. ``https://<account>.eu.r2.cloudflarestorage.com``). Required for a writable
-        remote store.
+        (e.g. ``https://<account>.eu.r2.cloudflarestorage.com``).
+        Required for a writable remote store.
     bucket
         Name of the R2 bucket (e.g. ``ref-baselines``). Required for a writable remote store.
     access_key_id
@@ -225,7 +228,7 @@ class NativeStore:
     """
 
     url: str
-    cache_dir: Path = field(default=Path(), converter=Path)
+    cache_dir: Path | None = None
     writable: bool = False
     s3_endpoint_url: str = ""
     bucket: str = ""
@@ -272,6 +275,12 @@ class NativeStore:
         _validate_digest(digest)
         return digest
 
+    def _pooch_cache(self) -> Path:
+        """Return the pooch cache directory, which an anonymous remote store cannot read without."""
+        if self.cache_dir is None:
+            raise ValueError(f"Reading from {self.url} needs a cache directory; none was configured.")
+        return self.cache_dir
+
     def _client(self) -> Any:
         """Return the cached boto3 S3 client for this store's endpoint and credentials."""
         return _s3_client(self.s3_endpoint_url, self.access_key_id, self.secret_access_key, self.profile)
@@ -297,7 +306,7 @@ class NativeStore:
         if root is not None:
             return self._blob_path(digest, root).exists()
         if not self.writable:
-            return (self.cache_dir / digest).exists()
+            return (self._pooch_cache() / digest).exists()
 
         from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
@@ -338,7 +347,7 @@ class NativeStore:
                 raise FileNotFoundError(f"Blob {digest!r} not found in local store at {root}")
             shutil.copy2(str(blob), str(dest))
         elif not self.writable:
-            registry = _pooch_manager(self.url.rstrip("/"), str(self.cache_dir))
+            registry = _pooch_manager(self.url.rstrip("/"), str(self._pooch_cache()))
             registry.registry[digest] = digest  # content-addressed: hash == name
             shutil.copy2(registry.fetch(digest), str(dest))
         else:

@@ -2320,6 +2320,43 @@ class TestRunFromSlot:
         )
         assert "no native in output slot" in result.stderr.lower()
 
+    def test_from_slot_fails_without_catalog(self, invoke_cli, mocker, tmp_path):
+        """--from-slot needs the committed catalog to rebuild the execution result."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path)
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
+        paths.catalog.unlink()
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--from-slot"],
+            expected_exit_code=1,
+        )
+        assert "No catalog file for" in result.stderr
+
+    def test_from_slot_reports_a_failed_rebuild(self, invoke_cli, mocker, tmp_path):
+        """A rebuild that raises is reported as a failed case, not a traceback."""
+        _setup_real_run(mocker, tmp_path)
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
+        mocker.patch(
+            "climate_ref.cli.test_cases.run.stage_rebuild_from_slot",
+            side_effect=RuntimeError("bundle is unreadable"),
+        )
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--from-slot"],
+            expected_exit_code=1,
+        )
+        assert "failed to rebuild bundle from slot" in result.stderr
+
     def test_from_slot_rebuilds_without_executing(self, invoke_cli, mocker, tmp_path):
         """--from-slot regenerates the committed bundle from an existing slot, never re-running."""
         paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)

@@ -1757,7 +1757,7 @@ class TestReplayCommand:
 
     def test_replay_empty_native_is_hard_failure(self, invoke_cli, mocker, tmp_path):
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -1776,7 +1776,7 @@ class TestReplayCommand:
             paths.manifest
         )
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
@@ -1846,7 +1846,7 @@ class TestReplayCommand:
     def test_replay_integrity_mismatch_warns_and_continues(self, invoke_cli, mocker, tmp_path):
         """An integrity mismatch is advisory, not a gate."""
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -1866,7 +1866,7 @@ class TestReplayCommand:
             native={},
         ).dump(paths.manifest)
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
@@ -1897,7 +1897,7 @@ class TestReplayCommand:
         silently claiming a match.
         """
         from climate_ref_core.regression.manifest import Manifest, NativeEntry
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -1918,7 +1918,7 @@ class TestReplayCommand:
             native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
         ).dump(paths.manifest)
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
@@ -2073,7 +2073,7 @@ class TestMintCommand:
 
     def test_mint_writes_blobs_and_manifest(self, invoke_cli, mocker, tmp_path):
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -2106,7 +2106,7 @@ class TestMintCommand:
         runner = MagicMock()
         runner.run.return_value = result_obj
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
 
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
@@ -2133,10 +2133,10 @@ class TestMintCommand:
 
     def test_mint_skips_unchanged_native_on_remint(self, invoke_cli, mocker, tmp_path):
         """Re-executing a mint with byte-identical native uploads nothing (changed-digest skip)."""
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         _setup_real_run(mocker, tmp_path)
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         first = invoke_cli(["test-cases", "mint", "--provider", "example"])
@@ -2151,10 +2151,10 @@ class TestMintCommand:
     def test_mint_from_replay_reauthors_without_reexecuting(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` rebuilds from stored native, uploading nothing and not re-executing."""
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         # First mint executes the diagnostic and uploads the native set.
@@ -2291,10 +2291,10 @@ class TestMintCommand:
 
     def test_mint_from_replay_requires_minted_manifest(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` fails when there is no existing minted native to replay from."""
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         _setup_real_run(mocker, tmp_path)
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         result = invoke_cli(

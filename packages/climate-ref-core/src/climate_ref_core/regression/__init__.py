@@ -38,11 +38,8 @@ from climate_ref_core.regression.manifest import (
     verify_committed_integrity,
 )
 from climate_ref_core.regression.store import (
-    LocalFilesystemStore,
     NativeStore,
     NativeStoreUnavailableError,
-    PoochReadStore,
-    R2WriteStore,
     build_native_store,
 )
 
@@ -51,13 +48,10 @@ __all__ = [
     "SCHEMA_VERSION",
     "Action",
     "GateDecision",
-    "LocalFilesystemStore",
     "Manifest",
     "NativeEntry",
     "NativeStore",
     "NativeStoreUnavailableError",
-    "PoochReadStore",
-    "R2WriteStore",
     "Tolerance",
     "assert_bundle_regression",
     "build_native_snapshot",

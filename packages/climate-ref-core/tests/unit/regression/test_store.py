@@ -6,21 +6,19 @@ from botocore.exceptions import ClientError
 from pytest_mock import MockerFixture
 
 from climate_ref_core.regression.store import (
-    LocalFilesystemStore,
     NativeStore,
     NativeStoreUnavailableError,
-    PoochReadStore,
-    R2WriteStore,
     build_native_store,
 )
 
+REMOTE_URL = "https://baselines.example.com"
+S3_ENDPOINT = "https://account.r2.cloudflarestorage.com"
+BUCKET = "ref-baselines"
 
-def _patch_pooch_create(
-    mocker: MockerFixture,
-    served: dict[str, bytes],
-) -> None:
+
+def _patch_pooch_create(mocker: MockerFixture, served: dict[str, bytes]) -> None:
     """
-    Replace ``pooch.create`` so ``PoochReadStore.fetch`` runs without any network.
+    Replace ``pooch.create`` so an anonymous remote fetch runs without any network.
 
     The returned registry double writes the bytes registered in ``served`` to the
     pooch cache directory and returns the cached path, leaving the store's own
@@ -35,8 +33,6 @@ def _patch_pooch_create(
     """
 
     def _create(*, path: Path, base_url: str, retry_if_failed: int = 0) -> object:
-        registry: dict[str, str] = {}
-
         def _fetch(name: str) -> str:
             cache_dir = Path(path)
             cache_dir.mkdir(parents=True, exist_ok=True)
@@ -45,11 +41,19 @@ def _patch_pooch_create(
             return str(cached)
 
         fake = mocker.MagicMock()
-        fake.registry = registry
+        fake.registry = {}
         fake.fetch.side_effect = _fetch
         return fake
 
     mocker.patch("climate_ref_core.regression.store.pooch.create", side_effect=_create)
+
+
+def _client_error(code: str, status: int, operation: str = "HeadObject") -> ClientError:
+    """Build a botocore ``ClientError`` with the given S3 error code / HTTP status."""
+    return ClientError(
+        {"Error": {"Code": code, "Message": code}, "ResponseMetadata": {"HTTPStatusCode": status}},
+        operation,
+    )
 
 
 @pytest.fixture()
@@ -70,174 +74,8 @@ def blob_digest(blob_content: bytes) -> str:
 
 
 @pytest.fixture()
-def local_store(tmp_path: Path) -> LocalFilesystemStore:
-    return LocalFilesystemStore(root=tmp_path / "store")
-
-
-class TestLocalFilesystemStore:
-    def test_satisfies_protocol(self, local_store: LocalFilesystemStore) -> None:
-        assert isinstance(local_store, NativeStore)
-
-    def test_put_returns_sha256(
-        self, local_store: LocalFilesystemStore, blob_file: Path, blob_digest: str
-    ) -> None:
-        result = local_store.put(blob_file)
-        assert result == blob_digest
-
-    def test_has_true_after_put(
-        self, local_store: LocalFilesystemStore, blob_file: Path, blob_digest: str
-    ) -> None:
-        local_store.put(blob_file)
-        assert local_store.has(blob_digest) is True
-
-    def test_has_false_before_put(self, local_store: LocalFilesystemStore, blob_digest: str) -> None:
-        assert local_store.has(blob_digest) is False
-
-    def test_fetch_byte_identical(
-        self,
-        local_store: LocalFilesystemStore,
-        blob_file: Path,
-        blob_content: bytes,
-        blob_digest: str,
-        tmp_path: Path,
-    ) -> None:
-        local_store.put(blob_file)
-        dest = tmp_path / "fetched.nc"
-        local_store.fetch(blob_digest, dest)
-        assert dest.read_bytes() == blob_content
-
-    def test_fetch_creates_parent_dirs(
-        self,
-        local_store: LocalFilesystemStore,
-        blob_file: Path,
-        blob_digest: str,
-        tmp_path: Path,
-    ) -> None:
-        local_store.put(blob_file)
-        dest = tmp_path / "deep" / "nested" / "file.nc"
-        local_store.fetch(blob_digest, dest)
-        assert dest.exists()
-
-    def test_fetch_missing_raises_file_not_found(
-        self, local_store: LocalFilesystemStore, blob_digest: str, tmp_path: Path
-    ) -> None:
-        with pytest.raises(FileNotFoundError):
-            local_store.fetch(blob_digest, tmp_path / "out.nc")
-
-    @pytest.mark.parametrize(
-        "bad_digest",
-        [
-            "../../etc/passwd",
-            "not-hex",
-            "ABCDEF" + "0" * 58,  # uppercase rejected
-            "0" * 63,  # too short
-            "0" * 65,  # too long
-        ],
-    )
-    def test_blob_path_rejects_bad_digest(self, local_store: LocalFilesystemStore, bad_digest: str) -> None:
-        with pytest.raises(ValueError, match="Invalid sha256 digest"):
-            local_store.has(bad_digest)
-
-    def test_fetch_digest_mismatch_raises_value_error(
-        self,
-        local_store: LocalFilesystemStore,
-        blob_file: Path,
-        blob_digest: str,
-        tmp_path: Path,
-    ) -> None:
-        """Corrupt the stored blob; fetch should detect the mismatch."""
-        local_store.put(blob_file)
-        # Corrupt the stored blob directly
-        blob_path = local_store._blob_path(blob_digest)
-        blob_path.write_bytes(b"corrupted content")
-        dest = tmp_path / "out.nc"
-        with pytest.raises(ValueError):
-            local_store.fetch(blob_digest, dest)
-
-    def test_put_idempotent(
-        self,
-        local_store: LocalFilesystemStore,
-        blob_file: Path,
-        blob_digest: str,
-    ) -> None:
-        """Putting the same blob twice must succeed and return the same digest."""
-        d1 = local_store.put(blob_file)
-        d2 = local_store.put(blob_file)
-        assert d1 == d2 == blob_digest
-
-    def test_two_level_layout(
-        self, local_store: LocalFilesystemStore, blob_file: Path, blob_digest: str
-    ) -> None:
-        """Blobs must be stored at root/<digest[:2]>/<digest>."""
-        local_store.put(blob_file)
-        expected = local_store.root / blob_digest[:2] / blob_digest
-        assert expected.exists()
-
-    def test_preflight_creates_and_accepts_root(self, tmp_path: Path) -> None:
-        store = LocalFilesystemStore(root=tmp_path / "new-store")
-        assert not store.root.exists()
-        store.preflight()  # must not raise; creates the root
-        assert store.root.is_dir()
-
-    def test_preflight_raises_when_not_writable(self, tmp_path: Path) -> None:
-        root = tmp_path / "ro-store"
-        root.mkdir()
-        root.chmod(0o500)  # read+execute, not writable
-        try:
-            store = LocalFilesystemStore(root=root)
-            with pytest.raises(NativeStoreUnavailableError, match="not writable"):
-                store.preflight()
-        finally:
-            root.chmod(0o700)  # restore so tmp cleanup can remove it
-
-
-class TestPoochReadStore:
-    def test_satisfies_protocol(self, tmp_path: Path) -> None:
-        store = PoochReadStore(base_url="https://example.com", cache_dir=tmp_path)
-        assert isinstance(store, NativeStore)
-
-    def test_put_raises_not_implemented(self, tmp_path: Path, blob_file: Path) -> None:
-        store = PoochReadStore(base_url="https://example.com", cache_dir=tmp_path)
-        with pytest.raises(NotImplementedError):
-            store.put(blob_file)
-
-    def test_fetch_byte_identical(
-        self,
-        mocker: MockerFixture,
-        blob_content: bytes,
-        blob_digest: str,
-        tmp_path: Path,
-    ) -> None:
-        """
-        PoochReadStore.fetch must download a blob and produce byte-identical content.
-
-        The pooch download is mocked so the test needs no network or local server.
-        """
-        _patch_pooch_create(mocker, {blob_digest: blob_content})
-
-        store = PoochReadStore(base_url="https://example.com", cache_dir=tmp_path / "cache")
-        dest = tmp_path / "fetched.nc"
-        store.fetch(blob_digest, dest)
-
-        assert dest.read_bytes() == blob_content
-
-    def test_fetch_hash_verified(
-        self,
-        mocker: MockerFixture,
-        blob_digest: str,
-        tmp_path: Path,
-    ) -> None:
-        """
-        A blob served with corrupt content under the correct digest name
-        must be detected by ``_verify_hash_matches`` and raise.
-        """
-        # The fake server returns corrupt bytes under the correct digest name.
-        _patch_pooch_create(mocker, {blob_digest: b"corrupt bytes -- digest will not match"})
-
-        store = PoochReadStore(base_url="https://example.com", cache_dir=tmp_path / "cache")
-        dest = tmp_path / "out.nc"
-        with pytest.raises(ValueError, match="does not match"):
-            store.fetch(blob_digest, dest)
+def local_store(tmp_path: Path) -> NativeStore:
+    return NativeStore(url=str(tmp_path / "store"))
 
 
 class _StubConfig:
@@ -247,8 +85,8 @@ class _StubConfig:
         self,
         url: str,
         cache_dir: Path,
-        s3_endpoint_url: str = "https://account.r2.cloudflarestorage.com",
-        bucket: str = "ref-baselines",
+        s3_endpoint_url: str = S3_ENDPOINT,
+        bucket: str = BUCKET,
     ) -> None:
         self._url = url
         self._cache_dir = cache_dir
@@ -272,185 +110,207 @@ class _StubConfig:
         return self._bucket
 
 
-class TestBuildNativeStore:
-    def test_writable_false_local_path_returns_local_store(self, tmp_path: Path) -> None:
-        cfg = _StubConfig(url=str(tmp_path / "store"), cache_dir=tmp_path / "cache")
-        store = build_native_store(cfg, writable=False)
-        assert isinstance(store, LocalFilesystemStore)
+class TestLocalStore:
+    """A ``file://`` URL or bare path reads and writes on the local filesystem."""
 
-    def test_writable_false_file_url_returns_local_store(self, tmp_path: Path) -> None:
-        cfg = _StubConfig(
-            url=(tmp_path / "store").as_uri(),
-            cache_dir=tmp_path / "cache",
-        )
-        store = build_native_store(cfg, writable=False)
-        assert isinstance(store, LocalFilesystemStore)
+    def test_put_returns_sha256(self, local_store: NativeStore, blob_file: Path, blob_digest: str) -> None:
+        assert local_store.put(blob_file) == blob_digest
 
-    def test_writable_false_remote_url_returns_pooch_store(self, tmp_path: Path) -> None:
-        cfg = _StubConfig(
-            url="https://baselines.example.com",
-            cache_dir=tmp_path / "cache",
-        )
-        store = build_native_store(cfg, writable=False)
-        assert isinstance(store, PoochReadStore)
+    def test_has_true_after_put(self, local_store: NativeStore, blob_file: Path, blob_digest: str) -> None:
+        local_store.put(blob_file)
+        assert local_store.has(blob_digest) is True
 
-    def test_writable_false_never_requires_creds(self, tmp_path: Path) -> None:
-        """
-        ``writable=False`` must always return a credential-free store.
+    def test_has_false_before_put(self, local_store: NativeStore, blob_digest: str) -> None:
+        assert local_store.has(blob_digest) is False
 
-        Local stores are inherently creds-free.
-        Remote read stores (PoochReadStore) are anonymous public-read.
-        This test asserts no :class:`NotImplementedError` is raised.
-        """
-        for url in [
-            str(tmp_path / "store"),
-            (tmp_path / "store").as_uri(),
-            "https://baselines.example.com",
-        ]:
-            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
-            # Must not raise — no credentials required.
-            store = build_native_store(cfg, writable=False)
-            assert isinstance(store, NativeStore)
+    def test_fetch_byte_identical_into_nested_dest(
+        self,
+        local_store: NativeStore,
+        blob_file: Path,
+        blob_content: bytes,
+        blob_digest: str,
+        tmp_path: Path,
+    ) -> None:
+        local_store.put(blob_file)
+        dest = tmp_path / "deep" / "nested" / "fetched.nc"
+        local_store.fetch(blob_digest, dest)
+        assert dest.read_bytes() == blob_content
+
+    def test_fetch_missing_raises_file_not_found(
+        self, local_store: NativeStore, blob_digest: str, tmp_path: Path
+    ) -> None:
+        with pytest.raises(FileNotFoundError):
+            local_store.fetch(blob_digest, tmp_path / "out.nc")
+
+    @pytest.mark.parametrize(
+        "bad_digest",
+        [
+            "../../etc/passwd",
+            "not-hex",
+            "ABCDEF" + "0" * 58,  # uppercase rejected
+            "0" * 63,  # too short
+            "0" * 65,  # too long
+        ],
+    )
+    def test_blob_path_rejects_bad_digest(self, local_store: NativeStore, bad_digest: str) -> None:
+        with pytest.raises(ValueError, match="Invalid sha256 digest"):
+            local_store.has(bad_digest)
+
+    def test_fetch_digest_mismatch_raises_value_error(
+        self, local_store: NativeStore, blob_file: Path, blob_digest: str, tmp_path: Path
+    ) -> None:
+        """Corrupt the stored blob; fetch should detect the mismatch."""
+        local_store.put(blob_file)
+        root = local_store.root
+        assert root is not None
+        (root / blob_digest[:2] / blob_digest).write_bytes(b"corrupted content")
+        with pytest.raises(ValueError):
+            local_store.fetch(blob_digest, tmp_path / "out.nc")
+
+    def test_put_idempotent(self, local_store: NativeStore, blob_file: Path, blob_digest: str) -> None:
+        """Putting the same blob twice must succeed and return the same digest."""
+        assert local_store.put(blob_file) == local_store.put(blob_file) == blob_digest
+
+    def test_two_level_layout(self, local_store: NativeStore, blob_file: Path, blob_digest: str) -> None:
+        """Blobs must be stored at root/<digest[:2]>/<digest>."""
+        local_store.put(blob_file)
+        root = local_store.root
+        assert root is not None
+        assert (root / blob_digest[:2] / blob_digest).exists()
+
+    def test_preflight_creates_and_accepts_root(self, tmp_path: Path) -> None:
+        store = NativeStore(url=str(tmp_path / "new-store"))
+        assert store.root is not None
+        assert not store.root.exists()
+        store.preflight()  # must not raise; creates the root
+        assert store.root.is_dir()
+
+    def test_preflight_raises_when_not_writable(self, tmp_path: Path) -> None:
+        root = tmp_path / "ro-store"
+        root.mkdir()
+        root.chmod(0o500)  # read+execute, not writable
+        try:
+            store = NativeStore(url=str(root))
+            with pytest.raises(NativeStoreUnavailableError, match="not writable"):
+                store.preflight()
+        finally:
+            root.chmod(0o700)  # restore so tmp cleanup can remove it
+
+    def test_writable_flag_needs_no_s3_config(self, tmp_path: Path) -> None:
+        """A local store is always read/write, so it never needs routing config."""
+        store = NativeStore(url=str(tmp_path / "store"), writable=True)
+        assert store.root == tmp_path / "store"
 
     def test_file_url_resolves_to_absolute_root(self, tmp_path: Path) -> None:
         root = tmp_path / "store"
         for url in [root.as_uri(), f"file:{root}"]:  # file:///abs and single-slash file:/abs
-            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
-            store = build_native_store(cfg, writable=False)
-            assert isinstance(store, LocalFilesystemStore)
-            assert store.root == root
+            assert NativeStore(url=url).root == root
 
-    def test_file_url_with_host_raises_value_error(self, tmp_path: Path) -> None:
-        cfg = _StubConfig(url="file://store/blobs", cache_dir=tmp_path / "cache")
+    def test_file_url_with_host_raises_value_error(self) -> None:
         with pytest.raises(ValueError, match="host component"):
-            build_native_store(cfg, writable=False)
+            NativeStore(url="file://store/blobs")
 
-    def test_writable_true_remote_url_returns_r2_store(self, tmp_path: Path, monkeypatch) -> None:
-        monkeypatch.setenv("REF_NATIVE_STORE_ACCESS_KEY_ID", "akid")
-        monkeypatch.setenv("REF_NATIVE_STORE_SECRET_ACCESS_KEY", "secret")
-        monkeypatch.delenv("REF_NATIVE_STORE_PROFILE", raising=False)
-        cfg = _StubConfig(
-            url="https://baselines.example.com",
-            cache_dir=tmp_path / "cache",
-            s3_endpoint_url="https://account.r2.cloudflarestorage.com",
-            bucket="ref-baselines",
-        )
-        store = build_native_store(cfg, writable=True)
-        assert isinstance(store, R2WriteStore)
-        assert store.endpoint_url == "https://account.r2.cloudflarestorage.com"
-        assert store.bucket == "ref-baselines"
-        assert store.access_key_id == "akid"
-        assert store.secret_access_key == "secret"  # noqa: S105 - test fixture value, not a real secret
-        assert store.profile == ""
-
-    def test_writable_true_remote_reads_creds_from_env_not_config(self, tmp_path: Path, monkeypatch) -> None:
-        # Credentials must come from the environment, never from the (serialisable) config.
-        monkeypatch.delenv("REF_NATIVE_STORE_ACCESS_KEY_ID", raising=False)
-        monkeypatch.delenv("REF_NATIVE_STORE_SECRET_ACCESS_KEY", raising=False)
-        monkeypatch.delenv("REF_NATIVE_STORE_PROFILE", raising=False)
-        cfg = _StubConfig(url="https://baselines.example.com", cache_dir=tmp_path / "cache")
-        store = build_native_store(cfg, writable=True)
-        assert isinstance(store, R2WriteStore)
-        # Empty creds + empty profile → boto3 default credential chain is used at client-build time.
-        assert store.access_key_id == ""
-        assert store.secret_access_key == ""
-        assert store.profile == ""
-
-    def test_writable_true_remote_reads_profile_from_env(self, tmp_path: Path, monkeypatch) -> None:
-        # A named profile authenticates without putting secrets in the config or env creds.
-        monkeypatch.delenv("REF_NATIVE_STORE_ACCESS_KEY_ID", raising=False)
-        monkeypatch.delenv("REF_NATIVE_STORE_SECRET_ACCESS_KEY", raising=False)
-        monkeypatch.setenv("REF_NATIVE_STORE_PROFILE", "cf-ref")
-        cfg = _StubConfig(url="https://baselines.example.com", cache_dir=tmp_path / "cache")
-        store = build_native_store(cfg, writable=True)
-        assert isinstance(store, R2WriteStore)
-        assert store.profile == "cf-ref"
-        assert store.access_key_id == ""
-        assert store.secret_access_key == ""
-
-    def test_writable_true_remote_without_endpoint_raises(self, tmp_path: Path) -> None:
-        cfg = _StubConfig(
-            url="https://baselines.example.com",
-            cache_dir=tmp_path / "cache",
-            s3_endpoint_url="",
-        )
-        with pytest.raises(ValueError, match="S3 endpoint URL"):
-            build_native_store(cfg, writable=True)
-
-    def test_writable_true_remote_without_bucket_raises(self, tmp_path: Path) -> None:
-        cfg = _StubConfig(
-            url="https://baselines.example.com",
-            cache_dir=tmp_path / "cache",
-            bucket="",
-        )
-        with pytest.raises(ValueError, match="bucket name"):
-            build_native_store(cfg, writable=True)
-
-    def test_unsupported_scheme_raises_value_error(self, tmp_path: Path) -> None:
+    def test_unsupported_scheme_raises_value_error(self) -> None:
         # An unrecognised remote scheme must fail loudly, not be coerced to a local path.
         for url in ["s3://bucket/blobs", "gs://bucket/blobs", "ftp://host/blobs"]:
-            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
             with pytest.raises(ValueError, match="not recognised"):
-                build_native_store(cfg, writable=False)
+                NativeStore(url=url)
 
 
-def _client_error(code: str, status: int, operation: str = "HeadObject") -> ClientError:
-    """Build a botocore ``ClientError`` with the given S3 error code / HTTP status."""
-    return ClientError(
-        {"Error": {"Code": code, "Message": code}, "ResponseMetadata": {"HTTPStatusCode": status}},
-        operation,
-    )
+class TestAnonymousRemoteStore:
+    """An ``http(s)`` URL without credentials reads through pooch and cannot write."""
+
+    def test_put_raises_not_implemented(self, tmp_path: Path, blob_file: Path) -> None:
+        store = NativeStore(url=REMOTE_URL, cache_dir=tmp_path)
+        with pytest.raises(NotImplementedError, match="public-read"):
+            store.put(blob_file)
+
+    def test_has_reports_the_pooch_cache(self, tmp_path: Path, blob_digest: str) -> None:
+        cache_dir = tmp_path / "cache"
+        cache_dir.mkdir()
+        store = NativeStore(url=REMOTE_URL, cache_dir=cache_dir)
+        assert store.has(blob_digest) is False
+        (cache_dir / blob_digest).write_bytes(b"cached")
+        assert store.has(blob_digest) is True
+
+    def test_fetch_byte_identical(
+        self, mocker: MockerFixture, blob_content: bytes, blob_digest: str, tmp_path: Path
+    ) -> None:
+        """A fetch downloads a blob and produces byte-identical content."""
+        _patch_pooch_create(mocker, {blob_digest: blob_content})
+
+        store = NativeStore(url=REMOTE_URL, cache_dir=tmp_path / "cache")
+        dest = tmp_path / "fetched.nc"
+        store.fetch(blob_digest, dest)
+
+        assert dest.read_bytes() == blob_content
+
+    def test_fetch_hash_verified(self, mocker: MockerFixture, blob_digest: str, tmp_path: Path) -> None:
+        """Corrupt content served under the correct digest name must be detected."""
+        _patch_pooch_create(mocker, {blob_digest: b"corrupt bytes, the digest will not match"})
+
+        store = NativeStore(url=REMOTE_URL, cache_dir=tmp_path / "cache")
+        with pytest.raises(ValueError, match="does not match"):
+            store.fetch(blob_digest, tmp_path / "out.nc")
+
+    def test_preflight_is_a_no_op(self, tmp_path: Path) -> None:
+        NativeStore(url=REMOTE_URL, cache_dir=tmp_path).preflight()  # must not raise
 
 
-class TestR2WriteStore:
-    """Behaviour of the credentialed R2 write backend with a mocked boto3 client.
+class TestWritableRemoteStore:
+    """
+    The credentialed R2 write path, with a mocked boto3 client.
 
     The boto3 client is replaced by patching :func:`_s3_client`, so these tests neither
     touch the network nor exercise the ``@cache`` on the real factory.
     """
 
-    def _store(self, mocker: MockerFixture, client, **kwargs) -> R2WriteStore:
+    def _store(self, mocker: MockerFixture, client, **kwargs) -> NativeStore:
         mocker.patch("climate_ref_core.regression.store._s3_client", return_value=client)
         params = {
-            "endpoint_url": "https://account.r2.cloudflarestorage.com",
-            "bucket": "ref-baselines",
+            "url": REMOTE_URL,
+            "writable": True,
+            "s3_endpoint_url": S3_ENDPOINT,
+            "bucket": BUCKET,
             "access_key_id": "akid",
             "secret_access_key": "secret",
         }
         params.update(kwargs)
-        return R2WriteStore(**params)
+        return NativeStore(**params)
 
     def test_construct_requires_endpoint(self) -> None:
         with pytest.raises(ValueError, match="S3 endpoint URL"):
-            R2WriteStore(endpoint_url="", bucket="b")
+            NativeStore(url=REMOTE_URL, writable=True, s3_endpoint_url="", bucket=BUCKET)
 
     def test_construct_requires_bucket(self) -> None:
         with pytest.raises(ValueError, match="bucket name"):
-            R2WriteStore(endpoint_url="https://x", bucket="")
+            NativeStore(url=REMOTE_URL, writable=True, s3_endpoint_url=S3_ENDPOINT, bucket="")
 
     def test_client_threads_profile_to_factory(self, mocker: MockerFixture) -> None:
         factory = mocker.patch(
             "climate_ref_core.regression.store._s3_client", return_value=mocker.MagicMock()
         )
-        store = R2WriteStore(
-            endpoint_url="https://account.r2.cloudflarestorage.com",
-            bucket="ref-baselines",
+        store = NativeStore(
+            url=REMOTE_URL,
+            writable=True,
+            s3_endpoint_url=S3_ENDPOINT,
+            bucket=BUCKET,
             profile="cf-ref",
         )
         store.has("a" * 64)
-        factory.assert_called_once_with("https://account.r2.cloudflarestorage.com", "", "", "cf-ref")
+        factory.assert_called_once_with(S3_ENDPOINT, "", "", "cf-ref")
 
     def test_key_validates_digest(self, mocker: MockerFixture) -> None:
         store = self._store(mocker, mocker.MagicMock())
         with pytest.raises(ValueError):
             store.has("not-a-valid-digest")
 
-    def test_key_uses_flat_layout_with_prefix(self, mocker: MockerFixture) -> None:
+    def test_key_is_the_bare_digest(self, mocker: MockerFixture) -> None:
         client = mocker.MagicMock()
-        store = self._store(mocker, client, key_prefix="native/")
+        store = self._store(mocker, client)
         digest = "a" * 64
         store.has(digest)
-        client.head_object.assert_called_once_with(Bucket="ref-baselines", Key=f"native/{digest}")
+        client.head_object.assert_called_once_with(Bucket=BUCKET, Key=digest)
 
     def test_put_uploads_when_absent(self, mocker: MockerFixture, tmp_path: Path) -> None:
         client = mocker.MagicMock()
@@ -461,16 +321,15 @@ class TestR2WriteStore:
         digest = hashlib.sha256(b"hello").hexdigest()
 
         assert store.put(blob) == digest
-        client.upload_file.assert_called_once_with(str(blob), "ref-baselines", digest)
+        client.upload_file.assert_called_once_with(str(blob), BUCKET, digest)
 
     def test_put_is_idempotent_when_present(self, mocker: MockerFixture, tmp_path: Path) -> None:
-        client = mocker.MagicMock()  # head_object succeeds → blob already present
+        client = mocker.MagicMock()  # head_object succeeds, so the blob is already present
         store = self._store(mocker, client)
         blob = tmp_path / "blob.nc"
         blob.write_bytes(b"hello")
-        digest = hashlib.sha256(b"hello").hexdigest()
 
-        assert store.put(blob) == digest
+        assert store.put(blob) == hashlib.sha256(b"hello").hexdigest()
         client.upload_file.assert_not_called()
 
     def test_has_returns_true_when_present(self, mocker: MockerFixture) -> None:
@@ -517,14 +376,14 @@ class TestR2WriteStore:
             store.fetch("d" * 64, tmp_path / "blob.nc")
 
     def test_preflight_ok_on_404(self, mocker: MockerFixture) -> None:
-        # 404 on the sentinel HEAD = authenticated, object simply absent -> usable.
+        # 404 on the sentinel HEAD means authenticated with the object simply absent, so usable.
         client = mocker.MagicMock()
         client.head_object.side_effect = _client_error("404", 404)
         store = self._store(mocker, client)
         store.preflight()  # must not raise
         # probe is a HEAD on a sentinel key, never a real digest
         _, kwargs = client.head_object.call_args
-        assert kwargs["Key"].endswith(".ref-preflight-probe")
+        assert kwargs["Key"] == ".ref-preflight-probe"
 
     def test_preflight_ok_on_200(self, mocker: MockerFixture) -> None:
         store = self._store(mocker, mocker.MagicMock())  # head_object succeeds
@@ -538,7 +397,7 @@ class TestR2WriteStore:
             store.preflight()
 
     def test_preflight_400_treated_as_bad_credentials(self, mocker: MockerFixture) -> None:
-        # A malformed access key id makes R2 return 400 on the HEAD; treat it as a creds problem.
+        # A malformed access key id makes R2 return 400 on the HEAD, so treat it as a creds problem.
         client = mocker.MagicMock()
         client.head_object.side_effect = _client_error("BadRequest", 400)
         store = self._store(mocker, client)
@@ -558,3 +417,81 @@ class TestR2WriteStore:
         store = self._store(mocker, client)
         with pytest.raises(NativeStoreUnavailableError, match="preflight failed"):
             store.preflight()
+
+
+class TestBuildNativeStore:
+    def test_writable_false_never_requires_creds(self, tmp_path: Path) -> None:
+        """``writable=False`` returns a credential-free store for every supported URL."""
+        for url in [
+            str(tmp_path / "store"),
+            (tmp_path / "store").as_uri(),
+            REMOTE_URL,
+        ]:
+            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
+            store = build_native_store(cfg, writable=False)
+            assert store.writable is False
+            assert store.access_key_id == ""
+
+    def test_local_url_is_writable_either_way(self, tmp_path: Path) -> None:
+        cfg = _StubConfig(url=str(tmp_path / "store"), cache_dir=tmp_path / "cache")
+        for writable in (False, True):
+            store = build_native_store(cfg, writable=writable)
+            assert store.root == tmp_path / "store"
+
+    def test_writable_true_remote_reads_creds_from_env(self, tmp_path: Path, monkeypatch) -> None:
+        monkeypatch.setenv("REF_NATIVE_STORE_ACCESS_KEY_ID", "akid")
+        monkeypatch.setenv("REF_NATIVE_STORE_SECRET_ACCESS_KEY", "secret")
+        monkeypatch.delenv("REF_NATIVE_STORE_PROFILE", raising=False)
+        cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache")
+
+        store = build_native_store(cfg, writable=True)
+        assert store.root is None
+        assert store.s3_endpoint_url == S3_ENDPOINT
+        assert store.bucket == BUCKET
+        assert store.access_key_id == "akid"
+        assert store.secret_access_key == "secret"  # noqa: S105 - test fixture value, not a real secret
+        assert store.profile == ""
+
+    def test_writable_true_remote_falls_back_to_default_chain(self, tmp_path: Path, monkeypatch) -> None:
+        # Credentials must come from the environment, never from the (serialisable) config.
+        for var in (
+            "REF_NATIVE_STORE_ACCESS_KEY_ID",
+            "REF_NATIVE_STORE_SECRET_ACCESS_KEY",
+            "REF_NATIVE_STORE_PROFILE",
+        ):
+            monkeypatch.delenv(var, raising=False)
+        cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache")
+
+        store = build_native_store(cfg, writable=True)
+        # Empty creds and empty profile mean boto3's default chain is used at client-build time.
+        assert store.access_key_id == ""
+        assert store.secret_access_key == ""
+        assert store.profile == ""
+
+    def test_writable_true_remote_reads_profile_from_env(self, tmp_path: Path, monkeypatch) -> None:
+        # A named profile authenticates without putting secrets in the config or env creds.
+        monkeypatch.delenv("REF_NATIVE_STORE_ACCESS_KEY_ID", raising=False)
+        monkeypatch.delenv("REF_NATIVE_STORE_SECRET_ACCESS_KEY", raising=False)
+        monkeypatch.setenv("REF_NATIVE_STORE_PROFILE", "cf-ref")
+        cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache")
+
+        store = build_native_store(cfg, writable=True)
+        assert store.profile == "cf-ref"
+        assert store.access_key_id == ""
+        assert store.secret_access_key == ""
+
+    def test_writable_true_remote_without_endpoint_raises(self, tmp_path: Path) -> None:
+        cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache", s3_endpoint_url="")
+        with pytest.raises(ValueError, match="S3 endpoint URL"):
+            build_native_store(cfg, writable=True)
+
+    def test_writable_true_remote_without_bucket_raises(self, tmp_path: Path) -> None:
+        cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache", bucket="")
+        with pytest.raises(ValueError, match="bucket name"):
+            build_native_store(cfg, writable=True)
+
+    def test_unsupported_scheme_raises_value_error(self, tmp_path: Path) -> None:
+        for url in ["s3://bucket/blobs", "gs://bucket/blobs", "ftp://host/blobs"]:
+            cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
+            with pytest.raises(ValueError, match="not recognised"):
+                build_native_store(cfg, writable=False)

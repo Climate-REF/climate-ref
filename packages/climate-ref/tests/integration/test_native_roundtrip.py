@@ -3,7 +3,7 @@ Integration tests for the RFC-0005 native-baseline round-trip.
 
 These tests prove the native-baseline lifecycle ``run -> mint -> sync -> replay``
 end-to-end against a *local* content-addressed store
-(:class:`~climate_ref_core.regression.LocalFilesystemStore`) created inside ``tmp_path``.
+(:class:`~climate_ref_core.regression.NativeStore`) created inside ``tmp_path``.
 
 This runs offline, without any credentials.
 
@@ -48,9 +48,9 @@ from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputCV
 from climate_ref_core.regression import (
-    LocalFilesystemStore,
     Manifest,
     NativeEntry,
+    NativeStore,
     Tolerance,
     assert_bundle_regression,
     build_native_snapshot,
@@ -374,7 +374,7 @@ class TestSyntheticNestedRoundTrip:
            placeholders, rebuild the result, and tolerantly compare each committed
            artefact.
         """
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         regression_dir = tmp_path / "regression"
         regression_dir.mkdir()
         test_data_dir = tmp_path / "test-data"
@@ -599,7 +599,7 @@ class TestExampleSmokeRoundTrip:
         results_base = tmp_path / "results-base"
         regression_dir = tmp_path / "example_regression"
         regression_dir.mkdir()
-        store = LocalFilesystemStore(root=tmp_path / "example_store")
+        store = NativeStore(url=str(tmp_path / "example_store"))
 
         # Mint
         committed_digests, native = _capture_synthetic(
@@ -744,9 +744,9 @@ class TestNegativeFloatDrift:
 class TestNegativeMissingBlob:
     """Deleting a referenced blob causes a loud, actionable failure."""
 
-    def _mint(self, tmp_path: Path) -> tuple[LocalFilesystemStore, Manifest, dict[str, NativeEntry]]:
+    def _mint(self, tmp_path: Path) -> tuple[NativeStore, Manifest, dict[str, NativeEntry]]:
         """Run + capture + PUT, returning the store, manifest, and native snapshot."""
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         regression_dir = tmp_path / "regression"
         regression_dir.mkdir()
         test_data_dir = tmp_path / "test-data"
@@ -783,7 +783,7 @@ class TestNegativeMissingBlob:
         store, manifest, native = self._mint(tmp_path)
 
         some_relpath, some_entry = next(iter(native.items()))
-        store._blob_path(some_entry.sha256).unlink()
+        _blob_path(store, some_entry.sha256).unlink()
 
         missing: list[tuple[str, str]] = [
             (relpath, entry.sha256)
@@ -802,7 +802,7 @@ class TestNegativeMissingBlob:
         store, manifest, native = self._mint(tmp_path)
 
         _some_relpath, some_entry = next(iter(native.items()))
-        store._blob_path(some_entry.sha256).unlink()
+        _blob_path(store, some_entry.sha256).unlink()
 
         replay_dir = tmp_path / "replay_output"
         replay_dir.mkdir()
@@ -835,12 +835,19 @@ def _synthetic_cli_case(tmp_path: Path) -> tuple[MagicMock, Diagnostic, MagicMoc
     return registry, diag, tc
 
 
+def _blob_path(store: NativeStore, digest: str) -> Path:
+    """Return the on-disk path of a blob in a local store, for tests that corrupt or delete one."""
+    root = store.root
+    assert root is not None
+    return root / digest[:2] / digest
+
+
 def _local_store_config(tmp_path: Path) -> Config:
     """
     Build a :class:`Config` whose ``native_store`` points at a local writable path.
 
     Uses a ``file://`` URL so :func:`~climate_ref_core.regression.build_native_store`
-    returns a :class:`LocalFilesystemStore` for both the writable mint path and the
+    returns a :class:`NativeStore` for both the writable mint path and the
     read-only replay path.
     """
     config = Config.default()
@@ -853,7 +860,7 @@ def _local_store_config(tmp_path: Path) -> Config:
 
 
 class TestNativeStoreConfig:
-    """The local-store config maps to a LocalFilesystemStore for both directions."""
+    """The local-store config maps to a NativeStore for both directions."""
 
     def test_file_url_builds_local_store(self, tmp_path: Path) -> None:
         """A ``file://`` native-store URL yields a writable and readable local store."""
@@ -862,8 +869,8 @@ class TestNativeStoreConfig:
         config = _local_store_config(tmp_path)
         writable = build_native_store(config.native_store, writable=True)
         readable = build_native_store(config.native_store, writable=False)
-        assert isinstance(writable, LocalFilesystemStore)
-        assert isinstance(readable, LocalFilesystemStore)
+        assert isinstance(writable, NativeStore)
+        assert isinstance(readable, NativeStore)
 
         blob = tmp_path / "blob.bin"
         blob.write_bytes(b"abc")
@@ -1086,8 +1093,8 @@ class TestReconstructionInputRoundTrip:
 
     def _store_native(
         self, native: dict[str, NativeEntry], *, results_base: Path, fragment: Path, store_root: Path
-    ) -> LocalFilesystemStore:
-        store = LocalFilesystemStore(root=store_root)
+    ) -> NativeStore:
+        store = NativeStore(url=str(store_root))
         base_dir = results_base / fragment
         for relpath in native:
             store.put(base_dir / relpath)

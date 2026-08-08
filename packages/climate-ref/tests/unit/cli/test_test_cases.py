@@ -2362,11 +2362,12 @@ class TestRunFromSlot:
         invoke_cli(
             [
                 "test-cases",
-                "build",
+                "run",
                 "--provider",
                 "example",
                 "--diagnostic",
                 "test-diag",
+                "--from-slot",
                 "--force-regen",
             ],
             expected_exit_code=1,

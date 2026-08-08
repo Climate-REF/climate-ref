@@ -1,7 +1,7 @@
 """
 Composable stages behind the ``ref test-cases`` verbs.
 
-The verbs ``run`` / ``mint`` / ``replay`` / ``build`` are thin compositions over a small
+The verbs ``run`` / ``mint`` / ``replay`` are thin compositions over a small
 set of stages:
 
 - **execute** -- run the diagnostic and copy its curated native set into a slot
@@ -73,8 +73,8 @@ def baseline_placeholders(paths: TestCasePaths, config: Config) -> PlaceholderMa
     Build the run-level baseline placeholder map shared by every ``ref test-cases`` verb.
 
     Declares the configuration-stable token set once (``<TEST_DATA_DIR>`` from the test case and
-    ``<SOFTWARE_ROOT_DIR>`` from the configured software root) so ``run`` / ``mint`` / ``replay`` /
-    ``build`` cannot sanitise against drifting token sets.
+    ``<SOFTWARE_ROOT_DIR>`` from the configured software root) so ``run`` / ``mint`` / ``replay``
+    cannot sanitise against drifting token sets.
 
     The per-execution ``<OUTPUT_DIR>`` is bound later by the caller.
 
@@ -95,7 +95,7 @@ def prepare_slot(paths: TestCasePaths, label: str) -> Path:
     Wipe and recreate ``output/<label>/`` and return the slot base directory.
 
     Used by the source stages (execute / materialise), which repopulate the native set.
-    ``build`` does not call this -- it reuses the native already in the slot.
+    ``run --from-slot`` does not call this -- it reuses the native already in the slot.
     """
     slot = paths.output_slot(label)
     if slot.exists():
@@ -110,7 +110,7 @@ def slot_native_relpaths(slot: Path) -> list[Path]:
 
     A slot is populated only by a source stage with the curated output set, so this is
     exactly the curated native set (it excludes the ``regression/`` subdirectory written
-    by ``build``).
+    by :func:`stage_build`).
     """
     relpaths: list[Path] = []
     for path in sorted(slot.rglob("*")):
@@ -178,7 +178,8 @@ def stage_rebuild_from_slot(
 
     Hydrates portable placeholders to concrete paths, then re-runs ``build_execution_result``
     so the rebuilt bundle is written into the slot (referencing the slot). No execution and
-    no store access -- this is the shared core of ``replay`` (after a fetch) and ``build``.
+    no store access -- this is the shared core of ``replay`` (after a fetch) and
+    ``run --from-slot``.
 
     The slot is its own output directory, so the placeholder map is bound to it
     (``placeholders.with_output(slot)``) before hydrating.

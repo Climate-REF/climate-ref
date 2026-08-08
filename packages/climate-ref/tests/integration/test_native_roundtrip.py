@@ -841,7 +841,7 @@ def _local_store_config(tmp_path: Path) -> Config:
 
     Uses a ``file://`` URL so :func:`~climate_ref_core.regression.build_native_store`
     returns a :class:`LocalFilesystemStore` for both the writable mint path and the
-    read-only sync/replay path.
+    read-only replay path.
     """
     config = Config.default()
     config.paths.results = tmp_path / "results"
@@ -871,15 +871,15 @@ class TestNativeStoreConfig:
         assert readable.has(digest)
 
 
-class TestCliMintSyncReplay:
-    """Drive ``ref test-cases mint`` / ``sync`` / ``replay`` against a local store."""
+class TestCliMintReplay:
+    """Drive ``ref test-cases mint`` and ``replay`` against a local store."""
 
-    def test_mint_sync_replay_succeeds(self, invoke_cli: Any, mocker: Any, tmp_path: Path) -> None:
+    def test_mint_replay_succeeds(self, invoke_cli: Any, mocker: Any, tmp_path: Path) -> None:
         """
         The full CLI lifecycle exits 0 on the synthetic case against a local store.
 
-        ``mint`` PUTs blobs and authors the manifest; ``sync`` confirms every blob
-        is reachable; ``replay`` materialises and tolerantly compares.
+        ``mint`` PUTs blobs and authors the manifest, then ``replay`` materialises them
+        and tolerantly compares.
         """
         registry, diag, _tc = _synthetic_cli_case(tmp_path)
         config = _local_store_config(tmp_path)
@@ -913,9 +913,6 @@ class TestCliMintSyncReplay:
         manifest = Manifest.load(paths.manifest)
         assert manifest.native, "mint must author a non-empty native block"
         assert _NATIVE_DATA_RELPATH in manifest.native
-
-        # Sync
-        invoke_cli(["test-cases", "sync", "--provider", "synthetic-test"], expected_exit_code=0)
 
         # Replay
         invoke_cli(

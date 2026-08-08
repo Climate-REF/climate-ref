@@ -249,9 +249,8 @@ class VerbDriver:
         """
         Yield the matched cases with paths resolved, applying the shared skip policy.
 
-        A case whose test-data directory cannot be located is warned about and skipped.
-        A missing ``manifest.json`` is a hard failure when the case was named explicitly,
-        and a warn-and-skip when sweeping.
+        An unlocatable test-data directory or a missing ``manifest.json`` is a hard failure
+        when the case was named explicitly, and a warn-and-skip when sweeping.
         A missing catalog is always a hard failure.
         """
         from climate_ref_core.testing import TestCasePaths
@@ -260,14 +259,12 @@ class VerbDriver:
             case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
             paths = TestCasePaths.from_diagnostic(diag, tc.name)
             if paths is None:
-                logger.warning(f"Could not determine test case directory for {case_id}")
+                self._skip_or_fail(case_id, f"Could not determine test case directory for {case_id}")
                 continue
             if require_manifest and not paths.manifest.exists():
-                message = f"No manifest.json for {case_id}; run `ref test-cases mint` first"
-                if self.named:
-                    self.fail(case_id, message)
-                else:
-                    logger.warning(message)
+                self._skip_or_fail(
+                    case_id, f"No manifest.json for {case_id}; run `ref test-cases mint` first"
+                )
                 continue
             if require_catalog and not paths.catalog.exists():
                 self.fail(case_id, f"No catalog file for {case_id}; run `ref test-cases fetch` first")
@@ -278,11 +275,22 @@ class VerbDriver:
         """Record a successful case."""
         self.successes += 1
 
-    def fail(self, case_id: str, message: str | None = None) -> None:
-        """Record a failed case, logging ``message`` as an error when given."""
+    def fail(self, label: str, message: str | None = None) -> None:
+        """
+        Record a failure, logging ``message`` as an error when given.
+
+        ``label`` is the entry listed under the summary's failed header, usually the case id.
+        """
         if message:
             logger.error(message)
-        self.failures.append(case_id)
+        self.failures.append(label)
+
+    def _skip_or_fail(self, case_id: str, message: str) -> None:
+        """Fail a case that was named explicitly, and warn-and-skip it when sweeping."""
+        if self.named:
+            self.fail(case_id, message)
+        else:
+            logger.warning(message)
 
     def finish(self, summary: VerbSummary) -> None:
         """Print the verb's summary epilogue and exit non-zero when any case failed."""

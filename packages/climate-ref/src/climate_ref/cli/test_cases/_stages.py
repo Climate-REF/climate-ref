@@ -290,8 +290,6 @@ def promote_and_author_manifest(  # noqa: PLR0913
     and native block, or seeds an empty set for a never-minted case.
     When the freshly snapshotted native differs from the minted one,
     ``stale_message`` is logged as a warning so the author knows to re-mint.
-    Shared by ``run`` and ``build``, which only promote when ``--force-regen``
-    is given or no baseline exists yet.
     """
     from climate_ref.cli.test_cases._common import _write_test_case_manifest
     from climate_ref_core.regression.manifest import Manifest

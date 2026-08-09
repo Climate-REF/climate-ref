@@ -116,7 +116,7 @@ def _write_test_case_manifest(  # noqa: PLR0913
     ``mint`` (which authors the native block and may bump the version); the two
     callers differ only in the ``test_case_version`` and ``native`` they supply.
     Only ``mint`` advances ``diagnostic_version`` to the diagnostic's current
-    ``Diagnostic.version``; ``run`` / ``build`` preserve the value already recorded.
+    ``Diagnostic.version``, and ``run`` preserves the value already recorded.
     The ``catalog_hash`` is always (re)derived from the current ``catalog.yaml`` so
     the manifest stays coupled to the inputs that produced the committed bundle.
     """
@@ -229,11 +229,11 @@ class VerbDriver:
         self.successes = 0
         self.failures: list[str] = []
 
-    def exit_if_empty(self, message: str | None = None) -> None:
+    def exit_if_empty(self) -> None:
         """Exit 0 with a warning when the selectors matched no test cases."""
         if self.cases:
             return
-        logger.warning(message or f"No test cases found for provider {self.provider!r}")
+        logger.warning(f"No test cases found for provider {self.provider!r}")
         raise typer.Exit(code=0)
 
     def ready_cases(

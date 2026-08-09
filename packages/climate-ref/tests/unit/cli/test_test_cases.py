@@ -1508,118 +1508,6 @@ def _setup_real_run(mocker, tmp_path, *, runner_result="success", regression_fil
     return paths, scratch_output_dir, paths.regression, runner
 
 
-class TestSyncCommand:
-    """Tests for the `test-cases sync` CLI verb."""
-
-    def test_sync_help(self, invoke_cli):
-        result = invoke_cli(["test-cases", "sync", "--help"])
-        assert "native baseline blobs" in result.stdout
-
-    def test_sync_fetches_missing_blob(self, invoke_cli, mocker, tmp_path):
-        from climate_ref_core.regression.manifest import Manifest, NativeEntry
-        from climate_ref_core.regression.store import LocalFilesystemStore
-        from climate_ref_core.testing import TestCasePaths
-
-        registry, _diag, _tc = _make_case_mocks()
-
-        # A populated store + a manifest referencing one of its blobs.
-        store = LocalFilesystemStore(root=tmp_path / "store")
-        blob = tmp_path / "blob.nc"
-        blob.write_bytes(b"native-data")
-        digest = store.put(blob)
-
-        case_dir = tmp_path / "td" / "test-diag" / "default"
-        case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir, provider_slug="example")
-        Manifest(
-            schema=2,
-            test_case_version=1,
-            diagnostic_version=1,
-            committed={},
-            native={"out.nc": NativeEntry(sha256=digest, size=len(b"native-data"))},
-        ).dump(paths.manifest)
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
-        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
-
-        result = invoke_cli(["test-cases", "sync", "--provider", "example"])
-        assert result.exit_code == 0
-
-    def test_sync_hard_fails_on_unservable_blob(self, invoke_cli, mocker, tmp_path):
-        from climate_ref_core.regression.manifest import Manifest, NativeEntry
-        from climate_ref_core.regression.store import LocalFilesystemStore
-        from climate_ref_core.testing import TestCasePaths
-
-        registry, _diag, _tc = _make_case_mocks()
-
-        store = LocalFilesystemStore(root=tmp_path / "store")  # empty store
-        case_dir = tmp_path / "td" / "test-diag" / "default"
-        case_dir.mkdir(parents=True)
-        paths = TestCasePaths(root=case_dir, provider_slug="example")
-        Manifest(
-            schema=2,
-            test_case_version=1,
-            diagnostic_version=1,
-            committed={},
-            native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
-        ).dump(paths.manifest)
-
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-        mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
-        mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
-
-        invoke_cli(["test-cases", "sync", "--provider", "example"], expected_exit_code=1)
-
-    def test_sync_nonexistent_provider(self, invoke_cli, mocker):
-        """sync with an unknown provider exits 1 rather than silently syncing nothing."""
-        registry, _diag, _tc = _make_case_mocks()
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-
-        result = invoke_cli(
-            ["test-cases", "sync", "--provider", "nonexistent"],
-            expected_exit_code=1,
-        )
-        assert "not configured" in result.stderr
-
-    def test_sync_nonexistent_diagnostic(self, invoke_cli, mocker):
-        """sync with a bad diagnostic filter fails instead of reporting a zero sync."""
-        registry, _diag, _tc = _make_case_mocks()
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-
-        result = invoke_cli(
-            ["test-cases", "sync", "--provider", "example", "--diagnostic", "missing"],
-            expected_exit_code=1,
-        )
-        assert "Diagnostic 'missing' was not found" in result.stderr
-
-    def test_sync_nonexistent_test_case(self, invoke_cli, mocker):
-        """sync with a bad test-case filter fails instead of reporting a zero sync."""
-        registry, _diag, _tc = _make_case_mocks()
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-
-        result = invoke_cli(
-            ["test-cases", "sync", "--provider", "example", "--test-case", "missing"],
-            expected_exit_code=1,
-        )
-        assert "Test case 'missing' was not found" in result.stderr
-
-
 class TestVerbDriverSkipPolicy:
     """The shared driver's skip policy: hard fail when a case is named, warn and skip when sweeping."""
 
@@ -1630,34 +1518,34 @@ class TestVerbDriverSkipPolicy:
             return_value=registry,
         )
 
-    def _setup_sync(self, mocker, tmp_path, *, paths):
-        """Wire `sync` against a given TestCasePaths (or None) and an empty local store."""
-        from climate_ref_core.regression.store import LocalFilesystemStore
+    def _setup_replay(self, mocker, tmp_path, *, paths):
+        """Wire `replay` against a given TestCasePaths (or None) and an empty local store."""
+        from climate_ref_core.regression.store import NativeStore
 
         registry, _diag, _tc = _make_case_mocks()
         self._patch_registry(mocker, registry)
         mocker.patch("climate_ref_core.testing.TestCasePaths.from_diagnostic", return_value=paths)
         mocker.patch(
             "climate_ref_core.regression.store.build_native_store",
-            return_value=LocalFilesystemStore(root=tmp_path / "store"),
+            return_value=NativeStore(url=str(tmp_path / "store")),
         )
         return registry
 
     def test_named_case_without_test_data_dir_fails(self, invoke_cli, mocker, tmp_path):
         """A named case whose test-data directory cannot be located is a hard failure."""
-        self._setup_sync(mocker, tmp_path, paths=None)
+        self._setup_replay(mocker, tmp_path, paths=None)
 
         result = invoke_cli(
-            ["test-cases", "sync", "--provider", "example", "--diagnostic", "test-diag"],
+            ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
             expected_exit_code=1,
         )
         assert "Could not determine test case directory" in result.stderr
 
     def test_sweeping_case_without_test_data_dir_warns(self, invoke_cli, mocker, tmp_path):
         """Sweeping past a case with no test-data directory warns and still exits 0."""
-        self._setup_sync(mocker, tmp_path, paths=None)
+        self._setup_replay(mocker, tmp_path, paths=None)
 
-        result = invoke_cli(["test-cases", "sync", "--provider", "example"])
+        result = invoke_cli(["test-cases", "replay", "--provider", "example"])
         assert result.exit_code == 0
         assert "Could not determine test case directory" in result.stderr
 
@@ -1667,9 +1555,9 @@ class TestVerbDriverSkipPolicy:
 
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        self._setup_sync(mocker, tmp_path, paths=TestCasePaths(root=case_dir, provider_slug="example"))
+        self._setup_replay(mocker, tmp_path, paths=TestCasePaths(root=case_dir, provider_slug="example"))
 
-        result = invoke_cli(["test-cases", "sync", "--provider", "example"])
+        result = invoke_cli(["test-cases", "replay", "--provider", "example"])
         assert result.exit_code == 0
         assert "No manifest.json" in result.stderr
 
@@ -1679,10 +1567,10 @@ class TestVerbDriverSkipPolicy:
 
         case_dir = tmp_path / "td" / "test-diag" / "default"
         case_dir.mkdir(parents=True)
-        self._setup_sync(mocker, tmp_path, paths=TestCasePaths(root=case_dir, provider_slug="example"))
+        self._setup_replay(mocker, tmp_path, paths=TestCasePaths(root=case_dir, provider_slug="example"))
 
         result = invoke_cli(
-            ["test-cases", "sync", "--provider", "example", "--diagnostic", "test-diag"],
+            ["test-cases", "replay", "--provider", "example", "--diagnostic", "test-diag"],
             expected_exit_code=1,
         )
         assert "No manifest.json" in result.stderr
@@ -1691,19 +1579,19 @@ class TestVerbDriverSkipPolicy:
         """Selectors that match nothing are a successful no-op, not an error."""
         from unittest.mock import MagicMock
 
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         provider = MagicMock(slug="example")
         provider.diagnostics.return_value = []
         self._patch_registry(mocker, MagicMock(providers=[provider]))
         mocker.patch(
             "climate_ref_core.regression.store.build_native_store",
-            return_value=LocalFilesystemStore(root=tmp_path / "store"),
+            return_value=NativeStore(url=str(tmp_path / "store")),
         )
 
-        result = invoke_cli(["test-cases", "sync"])
+        result = invoke_cli(["test-cases", "replay", "--provider", "example"])
         assert result.exit_code == 0
-        assert "No test cases found for the selected filters" in result.stderr
+        assert "No test cases found for provider" in result.stderr
 
 
 class TestStageCompare:
@@ -1869,7 +1757,7 @@ class TestReplayCommand:
 
     def test_replay_empty_native_is_hard_failure(self, invoke_cli, mocker, tmp_path):
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -1888,7 +1776,7 @@ class TestReplayCommand:
             paths.manifest
         )
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
@@ -1958,7 +1846,7 @@ class TestReplayCommand:
     def test_replay_integrity_mismatch_warns_and_continues(self, invoke_cli, mocker, tmp_path):
         """An integrity mismatch is advisory, not a gate."""
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -1978,7 +1866,7 @@ class TestReplayCommand:
             native={},
         ).dump(paths.manifest)
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
@@ -2009,7 +1897,7 @@ class TestReplayCommand:
         silently claiming a match.
         """
         from climate_ref_core.regression.manifest import Manifest, NativeEntry
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -2030,7 +1918,7 @@ class TestReplayCommand:
             native={"out.nc": NativeEntry(sha256="ab" * 32, size=1)},
         ).dump(paths.manifest)
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
             return_value=registry,
@@ -2185,7 +2073,7 @@ class TestMintCommand:
 
     def test_mint_writes_blobs_and_manifest(self, invoke_cli, mocker, tmp_path):
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
         from climate_ref_core.testing import TestCasePaths
 
         registry, _diag, _tc = _make_case_mocks()
@@ -2218,7 +2106,7 @@ class TestMintCommand:
         runner = MagicMock()
         runner.run.return_value = result_obj
 
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
 
         mocker.patch(
             "climate_ref.provider_registry.ProviderRegistry.build_from_config",
@@ -2245,10 +2133,10 @@ class TestMintCommand:
 
     def test_mint_skips_unchanged_native_on_remint(self, invoke_cli, mocker, tmp_path):
         """Re-executing a mint with byte-identical native uploads nothing (changed-digest skip)."""
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         _setup_real_run(mocker, tmp_path)
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         first = invoke_cli(["test-cases", "mint", "--provider", "example"])
@@ -2263,10 +2151,10 @@ class TestMintCommand:
     def test_mint_from_replay_reauthors_without_reexecuting(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` rebuilds from stored native, uploading nothing and not re-executing."""
         from climate_ref_core.regression.manifest import Manifest
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         # First mint executes the diagnostic and uploads the native set.
@@ -2403,10 +2291,10 @@ class TestMintCommand:
 
     def test_mint_from_replay_requires_minted_manifest(self, invoke_cli, mocker, tmp_path):
         """`mint --from-replay` fails when there is no existing minted native to replay from."""
-        from climate_ref_core.regression.store import LocalFilesystemStore
+        from climate_ref_core.regression.store import NativeStore
 
         _setup_real_run(mocker, tmp_path)
-        store = LocalFilesystemStore(root=tmp_path / "store")
+        store = NativeStore(url=str(tmp_path / "store"))
         mocker.patch("climate_ref_core.regression.store.build_native_store", return_value=store)
 
         result = invoke_cli(
@@ -2416,66 +2304,72 @@ class TestMintCommand:
         assert "--from-replay needs an existing minted manifest" in result.stderr
 
 
-class TestBuildCommand:
-    """Tests for the `test-cases build` CLI verb."""
+class TestRunFromSlot:
+    """Tests for `test-cases run --from-slot`, which rebuilds without executing."""
 
-    def test_build_help(self, invoke_cli):
-        result = invoke_cli(["test-cases", "build", "--help"])
-        assert "Rebuild the committed bundle" in result.stdout
+    def test_from_slot_in_help(self, invoke_cli):
+        result = invoke_cli(["test-cases", "run", "--help"])
+        assert "--from-slot" in result.stdout
 
-    def test_build_fails_without_slot(self, invoke_cli, mocker, tmp_path):
-        """build refuses when the named output slot has no native to rebuild from."""
+    @pytest.mark.parametrize("option", ["--fetch", "--clean", "--only-missing", "--if-changed"])
+    def test_from_slot_rejects_execution_options(self, invoke_cli, mocker, tmp_path, option):
+        """Options that only make sense when executing are refused, never silently ignored."""
+        _setup_real_run(mocker, tmp_path)
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--from-slot", option],
+            expected_exit_code=1,
+        )
+        assert f"--from-slot cannot be combined with {option}" in result.stderr
+
+    def test_from_slot_fails_without_slot(self, invoke_cli, mocker, tmp_path):
+        """--from-slot refuses when the named output slot has no native to rebuild from."""
         _setup_real_run(mocker, tmp_path)  # catalog present, but no output slot materialised
         result = invoke_cli(
-            ["test-cases", "build", "--provider", "example", "--diagnostic", "test-diag"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--from-slot"],
             expected_exit_code=1,
         )
         assert "no native in output slot" in result.stderr.lower()
 
-    def test_build_nonexistent_provider(self, invoke_cli, mocker):
-        """build with an unknown provider exits 1 rather than reporting 'no test cases'."""
-        registry, _diag, _tc = _make_case_mocks()
+    def test_from_slot_fails_without_catalog(self, invoke_cli, mocker, tmp_path):
+        """--from-slot needs the committed catalog to rebuild the execution result."""
+        paths, _scratch, _regression, _runner = _setup_real_run(mocker, tmp_path)
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
+        paths.catalog.unlink()
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--from-slot"],
+            expected_exit_code=1,
+        )
+        assert "No catalog file for" in result.stderr
+
+    def test_from_slot_reports_a_failed_rebuild(self, invoke_cli, mocker, tmp_path):
+        """A rebuild that raises is reported as a failed case, not a traceback."""
+        _setup_real_run(mocker, tmp_path)
+        assert (
+            invoke_cli(
+                ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--force-regen"]
+            ).exit_code
+            == 0
+        )
         mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
+            "climate_ref.cli.test_cases.run.stage_rebuild_from_slot",
+            side_effect=RuntimeError("bundle is unreadable"),
         )
 
         result = invoke_cli(
-            ["test-cases", "build", "--provider", "nonexistent"],
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--from-slot"],
             expected_exit_code=1,
         )
-        assert "not configured" in result.stderr
+        assert "failed to rebuild bundle from slot" in result.stderr
 
-    def test_build_nonexistent_diagnostic(self, invoke_cli, mocker):
-        """build with a bad diagnostic filter fails instead of silently selecting nothing."""
-        registry, _diag, _tc = _make_case_mocks()
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-
-        result = invoke_cli(
-            ["test-cases", "build", "--provider", "example", "--diagnostic", "missing"],
-            expected_exit_code=1,
-        )
-        assert "Diagnostic 'missing' was not found" in result.stderr
-
-    def test_build_nonexistent_test_case(self, invoke_cli, mocker):
-        """build with a bad test-case filter fails instead of silently selecting nothing."""
-        registry, _diag, _tc = _make_case_mocks()
-        mocker.patch(
-            "climate_ref.provider_registry.ProviderRegistry.build_from_config",
-            return_value=registry,
-        )
-
-        result = invoke_cli(
-            ["test-cases", "build", "--provider", "example", "--test-case", "missing"],
-            expected_exit_code=1,
-        )
-        assert "Test case 'missing' was not found" in result.stderr
-
-    def test_build_rebuilds_from_slot_without_executing(self, invoke_cli, mocker, tmp_path):
-        """build regenerates the committed bundle from an existing slot, never re-running."""
+    def test_from_slot_rebuilds_without_executing(self, invoke_cli, mocker, tmp_path):
+        """--from-slot regenerates the committed bundle from an existing slot, never re-running."""
         paths, _scratch, _regression, runner = _setup_real_run(mocker, tmp_path)
 
         # Seed a slot (and baseline) with one run.
@@ -2488,9 +2382,11 @@ class TestBuildCommand:
         assert runner.run.call_count == 1
 
         # Rebuild the committed bundle from that slot, without executing the diagnostic.
-        result = invoke_cli(["test-cases", "build", "--provider", "example", "--diagnostic", "test-diag"])
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--diagnostic", "test-diag", "--from-slot"]
+        )
         assert result.exit_code == 0
-        assert runner.run.call_count == 1  # build did not re-run the diagnostic
+        assert runner.run.call_count == 1  # --from-slot did not re-run the diagnostic
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
 
     def test_unreadable_manifest_leaves_the_baseline_intact(self, invoke_cli, mocker, tmp_path):
@@ -2514,11 +2410,12 @@ class TestBuildCommand:
         invoke_cli(
             [
                 "test-cases",
-                "build",
+                "run",
                 "--provider",
                 "example",
                 "--diagnostic",
                 "test-diag",
+                "--from-slot",
                 "--force-regen",
             ],
             expected_exit_code=1,

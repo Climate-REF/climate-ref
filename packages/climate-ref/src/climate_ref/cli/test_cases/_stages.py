@@ -273,6 +273,55 @@ def promote_to_baseline(slot: Path, paths: TestCasePaths) -> None:
             shutil.copy(source, paths.regression / filename)
 
 
+def promote_and_author_manifest(  # noqa: PLR0913
+    *,
+    paths: TestCasePaths,
+    diag: Diagnostic,
+    slot: Path,
+    source: SourceOutputs,
+    placeholders: PlaceholderMap,
+    committed: dict[str, str],
+    stale_message: str,
+) -> None:
+    """
+    Promote a slot's rebuilt bundle to the tracked baseline and author the manifest.
+
+    The native block is mint-owned, so this preserves the previous manifest's version and native block,
+    or seeds an empty set for a never-minted case.
+    When the freshly snapshotted native differs from the minted one,
+    ``stale_message`` is logged as a warning so the author knows to re-mint.
+    """
+    from climate_ref.cli.test_cases._common import _write_test_case_manifest
+    from climate_ref_core.regression.manifest import Manifest
+
+    # Load before promoting: an unreadable manifest must fail before the tracked baseline is overwritten,
+    # or the promoted bundle is left recorded by stale digests.
+    previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
+
+    promote_to_baseline(slot, paths)
+    native = snapshot_native(slot, source=source, placeholders=placeholders)
+
+    if previous is not None:
+        _write_test_case_manifest(
+            paths,
+            test_case_version=previous.test_case_version,
+            diagnostic_version=previous.diagnostic_version,
+            committed=committed,
+            native=previous.native,
+            schema=previous.schema,
+        )
+        if native_is_stale(native, previous.native):
+            logger.warning(stale_message)
+    else:
+        _write_test_case_manifest(
+            paths,
+            test_case_version=1,
+            diagnostic_version=diag.version,
+            committed=committed,
+            native={},
+        )
+
+
 def stage_upload(
     *,
     slot: Path,

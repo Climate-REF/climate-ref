@@ -18,16 +18,15 @@ from loguru import logger
 
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._common import (
-    _iter_test_cases,
-    _validate_provider_in_registry,
-    _validate_requested_filters,
+    VerbDriver,
+    VerbSummary,
     _write_test_case_manifest,
 )
 from climate_ref.cli.test_cases._stages import (
     StageError,
     baseline_placeholders,
-    native_is_stale,
     prepare_slot,
+    promote_and_author_manifest,
     promote_to_baseline,
     slot_native_relpaths,
     snapshot_native,
@@ -45,7 +44,7 @@ if TYPE_CHECKING:
 
 
 @app.command(name="replay")
-def replay_test_case(  # noqa: PLR0912, PLR0915
+def replay_test_case(
     ctx: typer.Context,
     provider: Annotated[
         str,
@@ -78,50 +77,16 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
         ref test-cases replay --provider example
         ref test-cases replay --provider example --diagnostic global-mean-timeseries
     """
-    from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.regression import Manifest, verify_committed_integrity
     from climate_ref_core.regression.store import build_native_store
-    from climate_ref_core.testing import TestCasePaths
 
     config: Config = ctx.obj.config
-    db = ctx.obj.database
-    console: Console = ctx.obj.console
 
-    registry = ProviderRegistry.build_from_config(config, db)
-    _validate_provider_in_registry(registry, provider)
-    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
     store = build_native_store(config.native_store, writable=False)
+    driver.exit_if_empty()
 
-    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
-    if not cases:
-        logger.warning(f"No test cases found for provider {provider!r}")
-        raise typer.Exit(code=0)
-
-    # When a specific case is named, a missing manifest/catalog is a hard failure.
-    named = bool(diagnostic or test_case)
-
-    successes = 0
-    failures: list[str] = []
-
-    for diag, tc in cases:
-        paths = TestCasePaths.from_diagnostic(diag, tc.name)
-        case_id = f"{provider}/{diag.slug}/{tc.name}"
-        if paths is None:
-            logger.warning(f"Could not determine test case directory for {case_id}")
-            continue
-        if not paths.manifest.exists():
-            message = f"No manifest.json for {case_id}; run `ref test-cases mint` first"
-            if named:
-                logger.error(message)
-                failures.append(case_id)
-            else:
-                logger.warning(message)
-            continue
-        if not paths.catalog.exists():
-            logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
-            failures.append(case_id)
-            continue
-
+    for diag, tc, paths, case_id in driver.ready_cases(require_manifest=True, require_catalog=True):
         manifest = Manifest.load(paths.manifest)
 
         # The byte-exact digest check is advisory that the committed baseline is not bitwise identical.
@@ -135,11 +100,11 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
                 logger.warning(f"  - {mismatch}")
 
         if not manifest.native:
-            logger.error(
-                f"{case_id}: manifest has no native baselines — not yet minted. "
-                "Run `ref test-cases mint` first."
+            driver.fail(
+                case_id,
+                f"{case_id}: manifest has no native baselines, not yet minted. "
+                "Run `ref test-cases mint` first.",
             )
-            failures.append(case_id)
             continue
 
         slot = prepare_slot(paths, label)
@@ -155,8 +120,7 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
                 placeholders=placeholders,
             )
         except Exception as exc:
-            logger.error(f"{case_id}: failed to materialise/rebuild native: {exc}")
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: failed to materialise/rebuild native: {exc}")
             continue
 
         stage_build(slot=slot, source=source, placeholders=placeholders)
@@ -164,11 +128,10 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
             slot=slot, paths=paths, slug=diag.slug, expected=manifest.committed
         )
         if cmp_failures:
-            logger.error(f"{case_id}: replay drift detected:\n" + "\n".join(cmp_failures))
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: replay drift detected:\n" + "\n".join(cmp_failures))
             continue
 
-        successes += 1
+        driver.ok()
         if mismatches:
             # The byte-level warning above was reconciled by the tolerant comparison.
             logger.info(
@@ -183,14 +146,13 @@ def replay_test_case(  # noqa: PLR0912, PLR0915
                 f"{len(compared)} bundle file(s) compared)"
             )
 
-    console.print()
-    if failures:
-        console.print(f"[yellow]Replay: {successes} passed, {len(failures)} failed[/yellow]")
-        console.print("[red]Failed replays:[/red]")
-        for case in failures:
-            console.print(f"  - {case}")
-        raise typer.Exit(code=1)
-    console.print(f"[green]All {successes} replay(s) matched the committed bundle[/green]")
+    driver.finish(
+        VerbSummary(
+            mixed="Replay: {successes} passed, {failures} failed",
+            failed_header="Failed replays:",
+            success="All {successes} replay(s) matched the committed bundle",
+        )
+    )
 
 
 @app.command(name="mint")
@@ -242,22 +204,15 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         ref test-cases mint --provider example --bump-version
         ref test-cases mint --provider example --dry-run
     """
-    from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.regression.store import NativeStoreUnavailableError, build_native_store
-    from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
+    from climate_ref_core.testing import load_datasets_from_yaml
 
     config: Config = ctx.obj.config
-    db = ctx.obj.database
     console: Console = ctx.obj.console
 
-    registry = ProviderRegistry.build_from_config(config, db)
-    _validate_provider_in_registry(registry, provider)
-    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
-    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
-    if not cases:
-        logger.warning(f"No test cases found for provider {provider!r}")
-        raise typer.Exit(code=0)
+    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    driver.exit_if_empty()
 
     try:
         store = build_native_store(config.native_store, writable=True)
@@ -280,35 +235,21 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         raise typer.Exit(code=1) from exc
 
     if dry_run:
-        # The store preflight has already passed at this point; report scope and stop before
-        # running any diagnostics or uploading anything.
-        console.print(f"[cyan]Dry run — would mint {len(cases)} test case(s):[/cyan]")
-        for diag, tc in cases:
+        # The store preflight has already passed at this point.
+        # Report scope and stop before running any diagnostics or uploading anything.
+        console.print(f"[cyan]Dry run: would mint {len(driver.cases)} test case(s):[/cyan]")
+        for diag, tc in driver.cases:
             console.print(f"  - {provider}/{diag.slug}/{tc.name}")
-        console.print("[cyan]Store preflight passed; nothing was run or uploaded.[/cyan]")
+        console.print("[cyan]Store preflight passed. Nothing was run or uploaded.[/cyan]")
         return
 
-    minted = 0
-    failures: list[str] = []
-
-    for diag, tc in cases:
-        case_id = f"{provider}/{diag.slug}/{tc.name}"
-        paths = TestCasePaths.from_diagnostic(diag, tc.name)
-        if paths is None:
-            logger.warning(f"Could not determine test case directory for {case_id}")
-            continue
-        if not paths.catalog.exists():
-            logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
-            failures.append(case_id)
-            continue
-
+    for diag, tc, paths, case_id in driver.ready_cases(require_catalog=True):
         paths.create()
         previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
         # Validate the --from-replay precondition before wiping the slot, so a never-minted
         # case does not destroy a pre-existing output/<label>/ on its way to failing.
         if from_replay and (previous is None or not previous.native):
-            logger.error(f"{case_id}: --from-replay needs an existing minted manifest")
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: --from-replay needs an existing minted manifest")
             continue
 
         slot = prepare_slot(paths, label)
@@ -340,12 +281,10 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
                     clean=True,
                 )
         except StageError as exc:
-            logger.error(f"{case_id}: {exc}")
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: {exc}")
             continue
         except Exception as exc:
-            logger.error(f"{case_id}: source stage failed during mint: {exc}")
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: source stage failed during mint: {exc}")
             continue
 
         committed = stage_build(slot=slot, source=source, placeholders=placeholders)
@@ -364,7 +303,7 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         if errors:
             for error in errors:
                 logger.error(f"{case_id}: {error}")
-            failures.append(case_id)
+            driver.fail(case_id)
             continue
 
         # Promote the rebuilt bundle and author the committed manifest: the native block
@@ -382,25 +321,24 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
             native=native,
         )
 
-        minted += 1
+        driver.ok()
         logger.info(
             f"Minted native baseline: {case_id} "
             f"({len(native)} native file(s), {len(committed)} committed file(s), "
             f"test_case_version={version})"
         )
 
-    console.print()
-    if failures:
-        console.print(f"[yellow]Mint: {minted} minted, {len(failures)} failed[/yellow]")
-        console.print("[red]Failed mints:[/red]")
-        for case in failures:
-            console.print(f"  - {case}")
-        raise typer.Exit(code=1)
-    console.print(f"[green]Minted {minted} native baseline(s)[/green]")
+    driver.finish(
+        VerbSummary(
+            mixed="Mint: {successes} minted, {failures} failed",
+            failed_header="Failed mints:",
+            success="Minted {successes} native baseline(s)",
+        )
+    )
 
 
 @app.command(name="build")
-def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
+def build_test_case(  # noqa: PLR0913
     ctx: typer.Context,
     provider: Annotated[
         str,
@@ -436,39 +374,15 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
         ref test-cases build --provider example
         ref test-cases build --provider example --label before --force-regen
     """
-    from climate_ref.provider_registry import ProviderRegistry
-    from climate_ref_core.regression.manifest import Manifest
-    from climate_ref_core.testing import TestCasePaths
-
     config: Config = ctx.obj.config
-    db = ctx.obj.database
-    console: Console = ctx.obj.console
 
-    registry = ProviderRegistry.build_from_config(config, db)
-    _validate_provider_in_registry(registry, provider)
-    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
-    cases = list(_iter_test_cases(registry, provider=provider, diagnostic=diagnostic, test_case=test_case))
-    if not cases:
-        logger.warning(f"No test cases found for provider {provider!r}")
-        raise typer.Exit(code=0)
+    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
+    driver.exit_if_empty()
 
-    built = 0
-    failures: list[str] = []
-
-    for diag, tc in cases:
-        case_id = f"{provider}/{diag.slug}/{tc.name}"
-        paths = TestCasePaths.from_diagnostic(diag, tc.name)
-        if paths is None:
-            logger.warning(f"Could not determine test case directory for {case_id}")
-            continue
+    for diag, tc, paths, case_id in driver.ready_cases(require_catalog=True):
         slot = paths.output_slot(label)
         if not slot.exists() or not slot_native_relpaths(slot):
-            logger.error(f"{case_id}: no native in output slot {label!r}; run/replay/mint it first")
-            failures.append(case_id)
-            continue
-        if not paths.catalog.exists():
-            logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: no native in output slot {label!r}. Run/replay/mint it first")
             continue
 
         placeholders = baseline_placeholders(paths, config)
@@ -477,38 +391,24 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
                 diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders
             )
         except Exception as exc:
-            logger.error(f"{case_id}: failed to rebuild bundle from slot: {exc}")
-            failures.append(case_id)
+            driver.fail(case_id, f"{case_id}: failed to rebuild bundle from slot: {exc}")
             continue
 
         committed = stage_build(slot=slot, source=source, placeholders=placeholders)
-        previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
 
         if force_regen or not paths.regression.exists():
-            promote_to_baseline(slot, paths)
-            native = snapshot_native(slot, source=source, placeholders=placeholders)
-            if previous is not None:
-                _write_test_case_manifest(
-                    paths,
-                    test_case_version=previous.test_case_version,
-                    diagnostic_version=previous.diagnostic_version,
-                    committed=committed,
-                    native=previous.native,
-                    schema=previous.schema,
-                )
-                if native_is_stale(native, previous.native):
-                    logger.warning(
-                        f"{case_id}: committed bundle rebuilt but the native baseline differs; "
-                        "re-mint with `ref test-cases mint`"
-                    )
-            else:
-                _write_test_case_manifest(
-                    paths,
-                    test_case_version=1,
-                    diagnostic_version=diag.version,
-                    committed=committed,
-                    native={},
-                )
+            promote_and_author_manifest(
+                paths=paths,
+                diag=diag,
+                slot=slot,
+                source=source,
+                placeholders=placeholders,
+                committed=committed,
+                stale_message=(
+                    f"{case_id}: committed bundle rebuilt but the native baseline differs. "
+                    "Re-mint with `ref test-cases mint`"
+                ),
+            )
             logger.info(f"Promoted rebuilt bundle to regression baseline: {paths.regression}")
         else:
             logger.info(
@@ -516,13 +416,12 @@ def build_test_case(  # noqa: PLR0912, PLR0913, PLR0915
                 "(committed baseline unchanged; use --force-regen to promote it)"
             )
 
-        built += 1
+        driver.ok()
 
-    console.print()
-    if failures:
-        console.print(f"[yellow]Build: {built} built, {len(failures)} failed[/yellow]")
-        console.print("[red]Failed builds:[/red]")
-        for case in failures:
-            console.print(f"  - {case}")
-        raise typer.Exit(code=1)
-    console.print(f"[green]Built {built} committed bundle(s) from output slots[/green]")
+    driver.finish(
+        VerbSummary(
+            mixed="Build: {successes} built, {failures} failed",
+            failed_header="Failed builds:",
+            success="Built {successes} committed bundle(s) from output slots",
+        )
+    )

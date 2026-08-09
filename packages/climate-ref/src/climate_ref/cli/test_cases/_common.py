@@ -2,10 +2,7 @@
 Helpers shared across several ``ref test-cases`` commands.
 
 ``VerbDriver`` owns the per-case loop machinery every verb repeats
-(registry construction, selector validation, case enumeration, skip policy,
-tally and summary). ``_iter_test_cases`` enumerates ``(diagnostic, test_case)``
-pairs from the provider registry and ``_write_test_case_manifest`` authors the
-committed ``manifest.json`` (used by ``run`` / ``mint`` / ``build``).
+(registry construction, selector validation, case enumeration, skip policy, tally and summary).
 """
 
 from __future__ import annotations
@@ -188,7 +185,7 @@ class VerbCase(NamedTuple):
 
 
 class VerbSummary(NamedTuple):
-    """The Rich epilogue wording for a per-case verb."""
+    """Summary for a per-case verb."""
 
     mixed: str
     """Yellow tally line when any case failed, e.g. ``"Replay: {successes} passed, {failures} failed"``."""
@@ -204,10 +201,6 @@ class VerbDriver:
     """
     Shared per-case driver for the ``ref test-cases`` verbs.
 
-    Owns the loop machinery every verb repeats:
-    provider-registry construction, selector validation, case enumeration,
-    the missing-manifest and missing-catalog skip policy,
-    the success and failure tally, and the Rich summary epilogue.
     The loop body stays with the verb and reports via :meth:`ok` and :meth:`fail`.
     """
 
@@ -296,8 +289,9 @@ class VerbDriver:
             logger.warning(message)
 
     def finish(self, summary: VerbSummary) -> None:
-        """Print the verb's summary epilogue and exit non-zero when any case failed."""
+        """Print the verb's summary and exit non-zero when any case failed."""
         self.console.print()
+
         if self.failures:
             mixed = summary.mixed.format(successes=self.successes, failures=len(self.failures))
             self.console.print(f"[yellow]{mixed}[/yellow]")

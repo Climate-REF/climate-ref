@@ -1,27 +1,27 @@
 """
 Data store for native bundles.
 
-A single :class:`NativeStore` serves both ends of the baseline lifecycle.
+A single :class:`NativeStore` serves the baseline lifecycle.
 It is constructed from a read URL,
 plus the S3 routing config and credentials when it must also write:
 
 - A ``file://`` URL or a bare filesystem path is a local store,
   readable and writable without credentials,
-  laid out two levels deep (``<root>/<digest[:2]>/<digest>``) like git's object store.
+  laid out two levels deep (``<root>/<digest[:2]>/<digest>``).
   Used by tests and local development.
 - An ``http(s)://`` URL is the public read store.
   Blobs are pulled with :mod:`pooch` for caching, retry and hash verification,
   and are served flat at ``{url}/{digest}``.
-- The same ``http(s)://`` URL plus ``writable=True``
+- The same ``http(s)://`` URL plus an :class:`S3WriteConfig`
   adds the credentialed S3-compatible (Cloudflare R2) write path used by the ``mint`` verb.
 
 The factory :func:`build_native_store` builds the store from the application
 :class:`~climate_ref.config.Config` and the ``writable`` flag.
 ``writable=False`` never requires credentials.
 
-Write credentials are **never** read from the persisted config: the S3 endpoint and
-bucket are non-secret routing config, while authentication is resolved at client-build time
-only, in precedence order: explicit ``REF_NATIVE_STORE_ACCESS_KEY_ID`` /
+Write credentials are **never** read from the persisted config.
+The S3 endpoint and bucket are not secrets, while authentication is resolved at client-build time only,
+in precedence order: explicit ``REF_NATIVE_STORE_ACCESS_KEY_ID`` /
 ``REF_NATIVE_STORE_SECRET_ACCESS_KEY`` env vars, then a named ``REF_NATIVE_STORE_PROFILE``,
 then boto3's default credential chain (which honours an ambient ``AWS_PROFILE``).
 
@@ -49,8 +49,6 @@ _HTTP_NOT_FOUND = 404
 _HTTP_BAD_REQUEST = 400
 _HTTP_UNAUTHORIZED = 401
 _HTTP_FORBIDDEN = 403
-# On a trivial preflight HEAD (bucket + sentinel key + signature), these all mean the
-# credentials could not be authenticated: malformed key (400), unknown/revoked key (401).
 _AUTH_REJECTED_STATUSES = (_HTTP_BAD_REQUEST, _HTTP_UNAUTHORIZED)
 
 _PREFLIGHT_PROBE_KEY = ".ref-preflight-probe"
@@ -145,8 +143,8 @@ def _local_root(url: str) -> Path | None:
     """
     Return the filesystem root a store URL names, or ``None`` when it is remote.
 
-    ``file://`` URLs are parsed properly so malformed variants fail loudly instead of
-    silently producing a wrong (for example relative) path.
+    ``file://`` URLs are parsed properly,
+    so malformed variants fail loudly instead of silently producing a wrong (for example relative) path.
 
     Raises
     ------
@@ -193,31 +191,20 @@ def _http_status(exc: Exception) -> int | None:
 
 
 @frozen
-class NativeStore:
+class S3WriteConfig:
     """
-    Content-addressed store for native baseline blobs, keyed by sha256 hex digest.
+    Where a remote store writes, and how it authenticates.
 
-    A local store (a ``file://`` URL or a bare path) always reads and writes without credentials.
-    A remote store reads anonymously through :mod:`pooch`,
-    and writes only when ``writable`` is set and the S3 routing config and credentials are supplied.
+    Routing (``endpoint_url`` and ``bucket``) is non-secret and comes from the application config.
+    Credentials are resolved from the environment at build time and are never persisted.
 
     Parameters
     ----------
-    url
-        Where blobs are read from: an ``http(s)://`` base URL (no trailing slash needed),
-        a ``file:///absolute/path`` URL, or a bare filesystem path.
-    cache_dir
-        Local directory pooch caches anonymous remote downloads in.
-        A local store does not use it.
-    writable
-        Whether the remote backend is credentialed for writes.
-        A local store ignores this and is always writable.
-    s3_endpoint_url
+    endpoint_url
         S3 API endpoint for the bucket's account, without the bucket
         (e.g. ``https://<account>.eu.r2.cloudflarestorage.com``).
-        Required for a writable remote store.
     bucket
-        Name of the R2 bucket (e.g. ``ref-baselines``). Required for a writable remote store.
+        Name of the R2 bucket (e.g. ``ref-baselines``).
     access_key_id
         R2 access-key id, or ``""`` to fall through to ``profile`` / boto3's default chain.
     secret_access_key
@@ -227,30 +214,57 @@ class NativeStore:
         Ignored when explicit ``access_key_id`` / ``secret_access_key`` are supplied.
     """
 
-    url: str
-    cache_dir: Path | None = None
-    writable: bool = False
-    s3_endpoint_url: str = ""
-    bucket: str = ""
+    endpoint_url: str
+    bucket: str
     access_key_id: str = ""
     secret_access_key: str = ""
     profile: str = ""
-    root: Path | None = field(init=False)
-    """The local store root, or ``None`` when this store is remote."""
 
     def __attrs_post_init__(self) -> None:
-        """Fail fast at construction (mint startup) when the URL or routing config is unusable."""
-        if self.root is not None or not self.writable:
-            return
-        if not self.s3_endpoint_url:
+        """Fail fast at construction (mint startup) when the routing config is missing."""
+        if not self.endpoint_url:
             raise ValueError(
-                "R2 native store requires an S3 endpoint URL; set REF_NATIVE_STORE_S3_ENDPOINT_URL "
+                "R2 native store requires an S3 endpoint URL. Set REF_NATIVE_STORE_S3_ENDPOINT_URL "
                 "(e.g. https://<account>.eu.r2.cloudflarestorage.com)."
             )
         if not self.bucket:
             raise ValueError(
-                "R2 native store requires a bucket name; set REF_NATIVE_STORE_BUCKET (e.g. ref-baselines)."
+                "R2 native store requires a bucket name. Set REF_NATIVE_STORE_BUCKET (e.g. ref-baselines)."
             )
+
+    def client(self) -> Any:
+        """Return the cached boto3 S3 client for this endpoint and these credentials."""
+        return _s3_client(self.endpoint_url, self.access_key_id, self.secret_access_key, self.profile)
+
+
+@frozen
+class NativeStore:
+    """
+    Content-addressed store for native baseline blobs, keyed by sha256 hex digest.
+
+    A local store (a ``file://`` URL or a bare path) always reads and writes without credentials.
+    A remote store reads anonymously through :mod:`pooch`,
+    and writes only when it is given an :class:`S3WriteConfig`.
+
+    Parameters
+    ----------
+    url
+        Where blobs are read from: an ``http(s)://`` base URL (no trailing slash needed),
+        a ``file:///absolute/path`` URL, or a bare filesystem path.
+    cache_dir
+        Local directory pooch caches anonymous remote downloads in.
+        A local store does not use it.
+    write
+        The S3 endpoint, bucket and credentials a remote store writes with.
+        ``None`` leaves a remote store read-only.
+        A local store ignores it and is always writable.
+    """
+
+    url: str
+    cache_dir: Path | None = None
+    write: S3WriteConfig | None = None
+    root: Path | None = field(init=False)
+    """The local store root, or ``None`` when this store is remote."""
 
     @root.default
     def _resolve_root(self) -> Path | None:
@@ -267,32 +281,19 @@ class NativeStore:
         _validate_digest(digest)
         return root / digest[:2] / digest
 
-    def _validated_key(self, digest: str) -> str:
-        """
-        Return the object key for a blob, validating the digest first.
-
-        The digest is validated as 64-character lowercase hex, so a malformed or hostile
-        digest cannot inject an unexpected object key.
-        """
-        _validate_digest(digest)
-        return digest
-
     def _pooch_cache(self) -> Path:
         """Return the directory pooch caches downloads in, which an anonymous read needs."""
         if self.cache_dir is None:
             raise ValueError(f"Reading from {self.url} needs a cache directory, but none is configured.")
         return self.cache_dir
 
-    def _client(self) -> Any:
-        """Return the cached boto3 S3 client for this store's endpoint and credentials."""
-        return _s3_client(self.s3_endpoint_url, self.access_key_id, self.secret_access_key, self.profile)
-
     def has(self, digest: str) -> bool:
         """
         Return ``True`` if the blob identified by ``digest`` is available.
 
-        A local store checks its canonical path, a writable remote store ``HEAD``s the
-        object, and an anonymous remote store checks the pooch cache.
+        A local store checks its canonical path,
+        a writable remote store ``HEAD``s the object,
+        and an anonymous remote store checks the pooch cache.
 
         Parameters
         ----------
@@ -307,13 +308,15 @@ class NativeStore:
         root = self.root
         if root is not None:
             return self._blob_path(digest, root).exists()
-        if not self.writable:
+        write = self.write
+        if write is None:
             return (self._pooch_cache() / digest).exists()
 
         from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
+        _validate_digest(digest)
         try:
-            self._client().head_object(Bucket=self.bucket, Key=self._validated_key(digest))
+            write.client().head_object(Bucket=write.bucket, Key=digest)
         except ClientError as exc:
             if _is_missing(exc):
                 return False
@@ -348,19 +351,21 @@ class NativeStore:
             if not blob.exists():
                 raise FileNotFoundError(f"Blob {digest!r} not found in local store at {root}")
             shutil.copy2(str(blob), str(dest))
-        elif not self.writable:
+        elif self.write is None:
             registry = _pooch_manager(self.url.rstrip("/"), str(self._pooch_cache()))
             registry.registry[digest] = digest  # content-addressed: hash == name
             shutil.copy2(registry.fetch(digest), str(dest))
         else:
             from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
+            write = self.write
+            _validate_digest(digest)
             try:
-                self._client().download_file(self.bucket, self._validated_key(digest), str(dest))
+                write.client().download_file(write.bucket, digest, str(dest))
             except ClientError as exc:
                 if _is_missing(exc):
                     raise FileNotFoundError(
-                        f"Blob {digest!r} not found in R2 bucket {self.bucket!r}"
+                        f"Blob {digest!r} not found in R2 bucket {write.bucket!r}"
                     ) from exc
                 raise
         _verify_hash_matches(dest, digest)
@@ -398,7 +403,8 @@ class NativeStore:
             blob.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(str(path), str(blob))
         else:
-            if not self.writable:
+            write = self.write
+            if write is None:
                 raise NotImplementedError(
                     f"Native store {self.url} is a public-read store, so put() is not supported. "
                     "Mint against a local path or a credentialed remote store."
@@ -406,7 +412,7 @@ class NativeStore:
             if self.has(digest):
                 logger.debug(f"NativeStore.put: {digest} already present, skipping upload")
                 return digest
-            self._client().upload_file(str(path), self.bucket, self._validated_key(digest))
+            write.client().upload_file(str(path), write.bucket, digest)
         logger.debug(f"NativeStore.put: {path} -> {digest}")
         return digest
 
@@ -414,15 +420,17 @@ class NativeStore:
         """
         Verify the store is reachable and usable before relying on it.
 
-        A local store's root is created if needed and checked for writability. A writable
-        remote store performs a cheap authenticated ``HEAD`` on a sentinel key (expected to
-        be absent): a ``404`` means the request authenticated and the store is usable, while
-        ``401`` / ``403`` become actionable errors so a misconfigured credential is caught
-        before the (slow) diagnostic run rather than after. ``head_object`` is used rather
-        than ``head_bucket`` so the check works with least-privilege, object-scoped tokens.
+        A local store's root is created if needed and checked for writability.
+        A writable remote store performs a cheap authenticated ``HEAD`` on a sentinel key,
+        which is expected to be absent:
+        a ``404`` means the request authenticated and the store is usable,
+        while ``401`` / ``403`` become actionable errors,
+        so a misconfigured credential is caught before the (slow) diagnostic run rather than after.
+        ``head_object`` is used rather than ``head_bucket``,
+        so the check works with least-privilege, object-scoped tokens.
 
-        An anonymous remote store has nothing to verify up front: it has no credentials, and
-        every read is hash-checked per blob.
+        An anonymous remote store has nothing to verify up front.
+        It has no credentials, and every read is hash-checked per blob.
 
         Raises
         ------
@@ -441,37 +449,38 @@ class NativeStore:
                 raise NativeStoreUnavailableError(f"Local native store root {root} is not writable.")
             logger.debug(f"Local native store ready at {root}")
             return
-        if not self.writable:
+        write = self.write
+        if write is None:
             return
 
         from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
         try:
-            self._client().head_object(Bucket=self.bucket, Key=_PREFLIGHT_PROBE_KEY)
+            write.client().head_object(Bucket=write.bucket, Key=_PREFLIGHT_PROBE_KEY)
         except ClientError as exc:
             status = _http_status(exc)
             if status == _HTTP_NOT_FOUND:
                 pass  # authenticated, and the probe object is simply absent, so the store is usable
             elif status in _AUTH_REJECTED_STATUSES:
                 raise NativeStoreUnavailableError(
-                    f"Native store authentication failed (HTTP {status}) for bucket {self.bucket!r} at "
-                    f"{self.s3_endpoint_url}: the credentials were rejected or malformed. Check "
+                    f"Native store authentication failed (HTTP {status}) for bucket {write.bucket!r} at "
+                    f"{write.endpoint_url}: the credentials were rejected or malformed. Check "
                     f"REF_NATIVE_STORE_PROFILE, or REF_NATIVE_STORE_ACCESS_KEY_ID / "
                     f"REF_NATIVE_STORE_SECRET_ACCESS_KEY."
                 ) from exc
             elif status == _HTTP_FORBIDDEN:
                 raise NativeStoreUnavailableError(
-                    f"Native store access denied (HTTP 403) for bucket {self.bucket!r} at "
-                    f"{self.s3_endpoint_url}: the request was forbidden. The secret key may be wrong, "
+                    f"Native store access denied (HTTP 403) for bucket {write.bucket!r} at "
+                    f"{write.endpoint_url}: the request was forbidden. The secret key may be wrong, "
                     f"or the token may lack object read and write on this bucket. Check the "
                     f"credentials and the token's permissions."
                 ) from exc
             else:
                 raise NativeStoreUnavailableError(
-                    f"Native store preflight failed (HTTP {status}) for bucket {self.bucket!r} at "
-                    f"{self.s3_endpoint_url}: {exc}"
+                    f"Native store preflight failed (HTTP {status}) for bucket {write.bucket!r} at "
+                    f"{write.endpoint_url}: {exc}"
                 ) from exc
-        logger.info(f"Native store authenticated: bucket {self.bucket!r} at {self.s3_endpoint_url}")
+        logger.info(f"Native store authenticated: bucket {write.bucket!r} at {write.endpoint_url}")
 
 
 class _NativeStoreConfigProtocol(Protocol):
@@ -509,13 +518,14 @@ def build_native_store(config: _NativeStoreConfigProtocol, *, writable: bool) ->
     (satisfying :class:`_NativeStoreConfigProtocol`), so callers pass ``config.native_store``
     rather than the full :class:`~climate_ref.config.Config`.
 
-    With ``writable=False`` the returned store is anonymous and credential-free (suitable for
-    CI read/replay paths). With ``writable=True`` and a remote URL the S3 endpoint and bucket
-    come from the config, and authentication is read from the environment
-    (``REF_NATIVE_STORE_ACCESS_KEY_ID`` / ``REF_NATIVE_STORE_SECRET_ACCESS_KEY``, else
-    ``REF_NATIVE_STORE_PROFILE``, else boto3's default chain), so secrets never live in the
-    persisted config. A local store is always readable and writable, so ``writable`` makes no
-    difference to it.
+    With ``writable=False`` the returned store is anonymous and credential-free,
+    which suits the CI read and replay paths.
+    With ``writable=True`` and a remote URL the S3 endpoint and bucket come from the config,
+    and authentication is read from the environment
+    (``REF_NATIVE_STORE_ACCESS_KEY_ID`` / ``REF_NATIVE_STORE_SECRET_ACCESS_KEY``,
+    else ``REF_NATIVE_STORE_PROFILE``, else boto3's default chain),
+    so secrets never live in the persisted config.
+    A local store is always readable and writable, so ``writable`` makes no difference to it.
 
     Parameters
     ----------
@@ -536,15 +546,18 @@ def build_native_store(config: _NativeStoreConfigProtocol, *, writable: bool) ->
         If the URL scheme is unrecognised, or a writable remote store is requested
         without an S3 endpoint / bucket configured.
     """
-    if not writable:
-        return NativeStore(url=config.url, cache_dir=config.cache_dir)
+    store = NativeStore(url=config.url, cache_dir=config.cache_dir)
+    if not writable or store.root is not None:
+        # A local store is already writable, and a read-only store needs no credentials.
+        return store
     return NativeStore(
         url=config.url,
         cache_dir=config.cache_dir,
-        writable=True,
-        s3_endpoint_url=config.s3_endpoint_url,
-        bucket=config.bucket,
-        access_key_id=os.environ.get("REF_NATIVE_STORE_ACCESS_KEY_ID", ""),
-        secret_access_key=os.environ.get("REF_NATIVE_STORE_SECRET_ACCESS_KEY", ""),
-        profile=os.environ.get("REF_NATIVE_STORE_PROFILE", ""),
+        write=S3WriteConfig(
+            endpoint_url=config.s3_endpoint_url,
+            bucket=config.bucket,
+            access_key_id=os.environ.get("REF_NATIVE_STORE_ACCESS_KEY_ID", ""),
+            secret_access_key=os.environ.get("REF_NATIVE_STORE_SECRET_ACCESS_KEY", ""),
+            profile=os.environ.get("REF_NATIVE_STORE_PROFILE", ""),
+        ),
     )

@@ -8,6 +8,7 @@ from pytest_mock import MockerFixture
 from climate_ref_core.regression.store import (
     NativeStore,
     NativeStoreUnavailableError,
+    S3WriteConfig,
     build_native_store,
 )
 
@@ -196,10 +197,13 @@ class TestLocalStore:
         finally:
             root.chmod(0o700)  # restore so tmp cleanup can remove it
 
-    def test_writable_flag_needs_no_s3_config(self, tmp_path: Path) -> None:
+    def test_local_store_needs_no_write_config(self, tmp_path: Path) -> None:
         """A local store is always read/write, so it never needs routing config."""
-        store = NativeStore(url=str(tmp_path / "store"), writable=True)
-        assert store.root == tmp_path / "store"
+        store = NativeStore(url=str(tmp_path / "store"))
+        assert store.write is None
+        blob = tmp_path / "blob.bin"
+        blob.write_bytes(b"abc")
+        assert store.has(store.put(blob))
 
     def test_file_url_resolves_to_absolute_root(self, tmp_path: Path) -> None:
         root = tmp_path / "store"
@@ -275,24 +279,22 @@ class TestWritableRemoteStore:
 
     def _store(self, mocker: MockerFixture, client, **kwargs) -> NativeStore:
         mocker.patch("climate_ref_core.regression.store._s3_client", return_value=client)
-        params = {
-            "url": REMOTE_URL,
-            "writable": True,
-            "s3_endpoint_url": S3_ENDPOINT,
+        write = {
+            "endpoint_url": S3_ENDPOINT,
             "bucket": BUCKET,
             "access_key_id": "akid",
             "secret_access_key": "secret",
         }
-        params.update(kwargs)
-        return NativeStore(**params)
+        write.update(kwargs)
+        return NativeStore(url=REMOTE_URL, write=S3WriteConfig(**write))
 
     def test_construct_requires_endpoint(self) -> None:
         with pytest.raises(ValueError, match="S3 endpoint URL"):
-            NativeStore(url=REMOTE_URL, writable=True, s3_endpoint_url="", bucket=BUCKET)
+            S3WriteConfig(endpoint_url="", bucket=BUCKET)
 
     def test_construct_requires_bucket(self) -> None:
         with pytest.raises(ValueError, match="bucket name"):
-            NativeStore(url=REMOTE_URL, writable=True, s3_endpoint_url=S3_ENDPOINT, bucket="")
+            S3WriteConfig(endpoint_url=S3_ENDPOINT, bucket="")
 
     def test_client_threads_profile_to_factory(self, mocker: MockerFixture) -> None:
         factory = mocker.patch(
@@ -300,10 +302,7 @@ class TestWritableRemoteStore:
         )
         store = NativeStore(
             url=REMOTE_URL,
-            writable=True,
-            s3_endpoint_url=S3_ENDPOINT,
-            bucket=BUCKET,
-            profile="cf-ref",
+            write=S3WriteConfig(endpoint_url=S3_ENDPOINT, bucket=BUCKET, profile="cf-ref"),
         )
         store.has("a" * 64)
         factory.assert_called_once_with(S3_ENDPOINT, "", "", "cf-ref")
@@ -437,14 +436,14 @@ class TestBuildNativeStore:
         ]:
             cfg = _StubConfig(url=url, cache_dir=tmp_path / "cache")
             store = build_native_store(cfg, writable=False)
-            assert store.writable is False
-            assert store.access_key_id == ""
+            assert store.write is None
 
     def test_local_url_is_writable_either_way(self, tmp_path: Path) -> None:
         cfg = _StubConfig(url=str(tmp_path / "store"), cache_dir=tmp_path / "cache")
         for writable in (False, True):
             store = build_native_store(cfg, writable=writable)
             assert store.root == tmp_path / "store"
+            assert store.write is None
 
     def test_writable_true_remote_reads_creds_from_env(self, tmp_path: Path, monkeypatch) -> None:
         monkeypatch.setenv("REF_NATIVE_STORE_ACCESS_KEY_ID", "akid")
@@ -454,11 +453,12 @@ class TestBuildNativeStore:
 
         store = build_native_store(cfg, writable=True)
         assert store.root is None
-        assert store.s3_endpoint_url == S3_ENDPOINT
-        assert store.bucket == BUCKET
-        assert store.access_key_id == "akid"
-        assert store.secret_access_key == "secret"  # noqa: S105 - test fixture value, not a real secret
-        assert store.profile == ""
+        assert store.write is not None
+        assert store.write.endpoint_url == S3_ENDPOINT
+        assert store.write.bucket == BUCKET
+        assert store.write.access_key_id == "akid"
+        assert store.write.secret_access_key == "secret"  # noqa: S105 - a fixture value, not a real secret
+        assert store.write.profile == ""
 
     def test_writable_true_remote_falls_back_to_default_chain(self, tmp_path: Path, monkeypatch) -> None:
         # Credentials must come from the environment, never from the (serialisable) config.
@@ -471,10 +471,11 @@ class TestBuildNativeStore:
         cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache")
 
         store = build_native_store(cfg, writable=True)
+        assert store.write is not None
         # Empty creds and empty profile mean boto3's default chain is used at client-build time.
-        assert store.access_key_id == ""
-        assert store.secret_access_key == ""
-        assert store.profile == ""
+        assert store.write.access_key_id == ""
+        assert store.write.secret_access_key == ""
+        assert store.write.profile == ""
 
     def test_writable_true_remote_reads_profile_from_env(self, tmp_path: Path, monkeypatch) -> None:
         # A named profile authenticates without putting secrets in the config or env creds.
@@ -484,9 +485,10 @@ class TestBuildNativeStore:
         cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache")
 
         store = build_native_store(cfg, writable=True)
-        assert store.profile == "cf-ref"
-        assert store.access_key_id == ""
-        assert store.secret_access_key == ""
+        assert store.write is not None
+        assert store.write.profile == "cf-ref"
+        assert store.write.access_key_id == ""
+        assert store.write.secret_access_key == ""
 
     def test_writable_true_remote_without_endpoint_raises(self, tmp_path: Path) -> None:
         cfg = _StubConfig(url=REMOTE_URL, cache_dir=tmp_path / "cache", s3_endpoint_url="")

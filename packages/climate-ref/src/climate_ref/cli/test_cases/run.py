@@ -132,7 +132,7 @@ def _rebuild_from_slot(
     case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
     slot = paths.output_slot(label)
     if not slot.exists() or not slot_native_relpaths(slot):
-        logger.error(f"{case_id}: no native in output slot {label!r}. Run, replay or mint it first")
+        logger.error(f"{case_id}: no native in output slot {label!r}. Run/replay/mint it first")
         return None
     if not paths.catalog.exists():
         logger.error(f"No catalog file for {case_id}. Run `ref test-cases fetch` first")
@@ -182,7 +182,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     case_id = f"{provider_slug}/{diagnostic_slug}/{test_case_name}"
 
     # Resolve datasets: either fetch from ESGF or load from the pre-built catalog.
-    if fetch and not from_slot:
+    if fetch:
         logger.info(f"Fetching test data for {case_id}")
         try:
             datasets, _ = _fetch_and_build_catalog(diag, tc)
@@ -207,8 +207,9 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     else:
         if not fetch:
             if not paths.catalog.exists():
-                logger.error(f"No catalog file found for {case_id}")
-                logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
+                logger.error(
+                    f"No catalog file for {case_id}. Run `ref test-cases fetch` first, or pass --fetch"
+                )
                 return False
             logger.info(f"Loading catalog from {paths.catalog}")
             datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
@@ -353,10 +354,11 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     Use --provider to select which provider's diagnostics to run (required).
     Use --diagnostic and --test-case to further narrow the scope.
 
-    With --from-slot the diagnostic is not executed. The native already materialised in
-    ``output/<label>/`` by a previous run, replay or mint is reused, and only the committed
-    bundle is regenerated. This is how a bundle is refreshed after an extraction-code change.
-    The execution options (--fetch, --output-directory and --clean) do not apply to it.
+    With --from-slot the diagnostic is not executed.
+    The native already materialised in ``output/<label>/`` by a previous run, replay or mint is reused,
+    and only the committed bundle is regenerated.
+    This is how a bundle is refreshed after an extraction-code change.
+    It cannot be combined with the options that only make sense when executing.
 
     Examples
     --------
@@ -374,6 +376,24 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
 
     config: Config = ctx.obj.config
     console: Console = ctx.obj.console
+
+    if from_slot:
+        # --only-missing and --if-changed would skip exactly the cases a rebuild targets,
+        # and the rest configure an execution that never happens.
+        conflicting = [
+            name
+            for name, given in (
+                ("--fetch", fetch),
+                ("--output-directory", output_directory is not None),
+                ("--clean", clean),
+                ("--only-missing", only_missing),
+                ("--if-changed", if_changed),
+            )
+            if given
+        ]
+        if conflicting:
+            logger.error(f"--from-slot cannot be combined with {', '.join(conflicting)}")
+            raise typer.Exit(code=1)
 
     driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
 
@@ -435,7 +455,7 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
         console.print(table)
         return
 
-    if output_directory is not None and not from_slot:
+    if output_directory is not None:
         logger.info(
             f"Using {output_directory} as the execution scratch directory; rebuilt native/bundle files "
             f"will also be written to each test case's gitignored output/{label} slot"

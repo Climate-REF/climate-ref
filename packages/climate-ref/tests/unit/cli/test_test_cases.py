@@ -2311,6 +2311,17 @@ class TestRunFromSlot:
         result = invoke_cli(["test-cases", "run", "--help"])
         assert "--from-slot" in result.stdout
 
+    @pytest.mark.parametrize("option", ["--fetch", "--clean", "--only-missing", "--if-changed"])
+    def test_from_slot_rejects_execution_options(self, invoke_cli, mocker, tmp_path, option):
+        """Options that only make sense when executing are refused, never silently ignored."""
+        _setup_real_run(mocker, tmp_path)
+
+        result = invoke_cli(
+            ["test-cases", "run", "--provider", "example", "--from-slot", option],
+            expected_exit_code=1,
+        )
+        assert f"--from-slot cannot be combined with {option}" in result.stderr
+
     def test_from_slot_fails_without_slot(self, invoke_cli, mocker, tmp_path):
         """--from-slot refuses when the named output slot has no native to rebuild from."""
         _setup_real_run(mocker, tmp_path)  # catalog present, but no output slot materialised

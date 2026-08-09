@@ -1,8 +1,7 @@
 """
 Composable stages behind the ``ref test-cases`` verbs.
 
-The verbs ``run`` / ``mint`` / ``replay`` are thin compositions over a small
-set of stages:
+The verbs ``run`` / ``mint`` / ``replay`` are thin compositions over a small set of stages:
 
 - **execute** -- run the diagnostic and copy its curated native set into a slot
 - **materialise** -- fetch a committed manifest's native blobs from the store into a slot
@@ -95,7 +94,7 @@ def prepare_slot(paths: TestCasePaths, label: str) -> Path:
     Wipe and recreate ``output/<label>/`` and return the slot base directory.
 
     Used by the source stages (execute / materialise), which repopulate the native set.
-    ``run --from-slot`` does not call this -- it reuses the native already in the slot.
+    ``run --from-slot`` does not call this, because it reuses the native already in the slot.
     """
     slot = paths.output_slot(label)
     if slot.exists():
@@ -178,8 +177,8 @@ def stage_rebuild_from_slot(
 
     Hydrates portable placeholders to concrete paths, then re-runs ``build_execution_result``
     so the rebuilt bundle is written into the slot (referencing the slot). No execution and
-    no store access -- this is the shared core of ``replay`` (after a fetch) and
-    ``run --from-slot``.
+    no store access.
+    This is the shared core of ``replay`` (after a fetch) and ``run --from-slot``.
 
     The slot is its own output directory, so the placeholder map is bound to it
     (``placeholders.with_output(slot)``) before hydrating.

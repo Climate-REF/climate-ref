@@ -40,6 +40,7 @@ from climate_ref_core.regression.manifest import (
 from climate_ref_core.regression.store import (
     NativeStore,
     NativeStoreUnavailableError,
+    S3WriteConfig,
     build_native_store,
 )
 
@@ -52,6 +53,7 @@ __all__ = [
     "NativeEntry",
     "NativeStore",
     "NativeStoreUnavailableError",
+    "S3WriteConfig",
     "Tolerance",
     "assert_bundle_regression",
     "build_native_snapshot",

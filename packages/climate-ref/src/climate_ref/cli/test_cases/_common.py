@@ -3,8 +3,6 @@ Helpers shared across several ``ref test-cases`` commands.
 
 ``VerbDriver`` owns the per-case loop machinery every verb repeats
 (registry construction, selector validation, case enumeration, skip policy, tally and summary).
-``_iter_test_cases`` enumerates ``(diagnostic, test_case)`` pairs from the provider registry
-and ``_write_test_case_manifest`` authors the committed ``manifest.json`` (used by ``run`` and ``mint``).
 """
 
 from __future__ import annotations
@@ -231,11 +229,11 @@ class VerbDriver:
         self.successes = 0
         self.failures: list[str] = []
 
-    def exit_if_empty(self, message: str | None = None) -> None:
+    def exit_if_empty(self) -> None:
         """Exit 0 with a warning when the selectors matched no test cases."""
         if self.cases:
             return
-        logger.warning(message or f"No test cases found for provider {self.provider!r}")
+        logger.warning(f"No test cases found for provider {self.provider!r}")
         raise typer.Exit(code=0)
 
     def ready_cases(

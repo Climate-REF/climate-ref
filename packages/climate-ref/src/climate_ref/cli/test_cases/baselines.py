@@ -102,7 +102,7 @@ def replay_test_case(
         if not manifest.native:
             driver.fail(
                 case_id,
-                f"{case_id}: manifest has no native baselines — not yet minted. "
+                f"{case_id}: manifest has no native baselines, not yet minted. "
                 "Run `ref test-cases mint` first.",
             )
             continue
@@ -235,12 +235,12 @@ def mint_native(  # noqa: PLR0912, PLR0913, PLR0915
         raise typer.Exit(code=1) from exc
 
     if dry_run:
-        # The store preflight has already passed at this point; report scope and stop before
-        # running any diagnostics or uploading anything.
-        console.print(f"[cyan]Dry run — would mint {len(driver.cases)} test case(s):[/cyan]")
+        # The store preflight has already passed at this point.
+        # Report scope and stop before running any diagnostics or uploading anything.
+        console.print(f"[cyan]Dry run: would mint {len(driver.cases)} test case(s):[/cyan]")
         for diag, tc in driver.cases:
             console.print(f"  - {provider}/{diag.slug}/{tc.name}")
-        console.print("[cyan]Store preflight passed; nothing was run or uploaded.[/cyan]")
+        console.print("[cyan]Store preflight passed. Nothing was run or uploaded.[/cyan]")
         return
 
     for diag, tc, paths, case_id in driver.ready_cases(require_catalog=True):
@@ -382,7 +382,7 @@ def build_test_case(  # noqa: PLR0913
     for diag, tc, paths, case_id in driver.ready_cases(require_catalog=True):
         slot = paths.output_slot(label)
         if not slot.exists() or not slot_native_relpaths(slot):
-            driver.fail(case_id, f"{case_id}: no native in output slot {label!r}; run/replay/mint it first")
+            driver.fail(case_id, f"{case_id}: no native in output slot {label!r}. Run/replay/mint it first")
             continue
 
         placeholders = baseline_placeholders(paths, config)
@@ -405,8 +405,8 @@ def build_test_case(  # noqa: PLR0913
                 placeholders=placeholders,
                 committed=committed,
                 stale_message=(
-                    f"{case_id}: committed bundle rebuilt but the native baseline differs; "
-                    "re-mint with `ref test-cases mint`"
+                    f"{case_id}: committed bundle rebuilt but the native baseline differs. "
+                    "Re-mint with `ref test-cases mint`"
                 ),
             )
             logger.info(f"Promoted rebuilt bundle to regression baseline: {paths.regression}")

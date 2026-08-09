@@ -259,11 +259,11 @@ class VerbDriver:
                 continue
             if require_manifest and not paths.manifest.exists():
                 self._skip_or_fail(
-                    case_id, f"No manifest.json for {case_id}; run `ref test-cases mint` first"
+                    case_id, f"No manifest.json for {case_id}. Run `ref test-cases mint` first"
                 )
                 continue
             if require_catalog and not paths.catalog.exists():
-                self.fail(case_id, f"No catalog file for {case_id}; run `ref test-cases fetch` first")
+                self.fail(case_id, f"No catalog file for {case_id}. Run `ref test-cases fetch` first")
                 continue
             yield VerbCase(diag, tc, paths, case_id)
 

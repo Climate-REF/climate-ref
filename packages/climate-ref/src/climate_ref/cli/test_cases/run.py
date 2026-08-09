@@ -214,8 +214,8 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
             placeholders=placeholders,
             committed=committed,
             stale_message=(
-                f"{case_id}: committed bundle regenerated but the native baseline differs; "
-                "re-mint with `ref test-cases mint` (or `mint --from-replay`)"
+                f"{case_id}: committed bundle regenerated but the native baseline differs. "
+                "Re-mint with `ref test-cases mint` (or `mint --from-replay`)"
             ),
         )
         logger.info(f"Updated regression baseline: {paths.regression}")

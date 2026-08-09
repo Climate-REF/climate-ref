@@ -74,7 +74,10 @@ def sync_native(
                 try:
                     store.fetch(entry.sha256, Path(tmp) / "blob")
                 except Exception as exc:
-                    driver.fail(f"{case_id}: cannot serve native blob {entry.sha256} ({relpath}): {exc}")
+                    driver.fail(
+                        f"{case_id}: {relpath}",
+                        f"{case_id}: cannot serve native blob {entry.sha256} ({relpath}): {exc}",
+                    )
                     continue
             fetched += 1
 

@@ -210,6 +210,10 @@ class TestLocalStore:
         for url in [root.as_uri(), f"file:{root}"]:  # file:///abs and single-slash file:/abs
             assert NativeStore(url=url).root == root
 
+    def test_windows_drive_letter_is_a_local_path(self) -> None:
+        """A single-character scheme is a drive letter, not an unrecognised URL scheme."""
+        assert NativeStore(url="C:/native-store").root == Path("C:/native-store")
+
     def test_file_url_with_host_raises_value_error(self) -> None:
         with pytest.raises(ValueError, match="host component"):
             NativeStore(url="file://store/blobs")
@@ -264,6 +268,29 @@ class TestAnonymousRemoteStore:
             store.has(blob_digest)
         with pytest.raises(ValueError, match="needs a cache directory"):
             store.fetch(blob_digest, tmp_path / "out.nc")
+
+    @pytest.mark.parametrize("bad_digest", ["../../etc/passwd", "not-hex", "0" * 63])
+    def test_rejects_bad_digest_before_touching_the_cache(self, tmp_path: Path, bad_digest: str) -> None:
+        """A hostile digest cannot escape the cache directory or reach the network."""
+        store = NativeStore(url=REMOTE_URL, cache_dir=tmp_path / "cache")
+        with pytest.raises(ValueError, match="Invalid sha256 digest"):
+            store.has(bad_digest)
+        with pytest.raises(ValueError, match="Invalid sha256 digest"):
+            store.fetch(bad_digest, tmp_path / "out.nc")
+
+    def test_credentials_are_not_in_the_repr(self) -> None:
+        """A logged or asserted store must not leak its keys."""
+        store = NativeStore(
+            url=REMOTE_URL,
+            write=S3WriteConfig(
+                endpoint_url=S3_ENDPOINT,
+                bucket=BUCKET,
+                access_key_id="akid",
+                secret_access_key="shhh",  # noqa: S106 - a fixture value, not a real secret
+            ),
+        )
+        assert "akid" not in repr(store)
+        assert "shhh" not in repr(store)
 
     def test_preflight_is_a_no_op(self, tmp_path: Path) -> None:
         NativeStore(url=REMOTE_URL, cache_dir=tmp_path).preflight()  # must not raise

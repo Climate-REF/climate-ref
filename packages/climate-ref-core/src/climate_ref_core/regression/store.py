@@ -161,7 +161,8 @@ def _local_root(url: str) -> Path | None:
                 "supported. Use the file:///absolute/path form (three slashes)."
             )
         return Path(unquote(parts.path))
-    if parts.scheme == "":
+    if parts.scheme == "" or len(parts.scheme) == 1:
+        # A single-character scheme is a Windows drive letter (``C:/store``), not a URL scheme.
         return Path(url)
     raise ValueError(
         f"Unsupported native store URL {url!r}: scheme {parts.scheme!r} is not recognised. "
@@ -216,8 +217,8 @@ class S3WriteConfig:
 
     endpoint_url: str
     bucket: str
-    access_key_id: str = ""
-    secret_access_key: str = ""
+    access_key_id: str = field(default="", repr=False)
+    secret_access_key: str = field(default="", repr=False)
     profile: str = ""
 
     def __attrs_post_init__(self) -> None:
@@ -305,6 +306,7 @@ class NativeStore:
         :
             ``True`` when the blob is present, ``False`` when it is not.
         """
+        _validate_digest(digest)
         root = self.root
         if root is not None:
             return self._blob_path(digest, root).exists()
@@ -314,7 +316,6 @@ class NativeStore:
 
         from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
-        _validate_digest(digest)
         try:
             write.client().head_object(Bucket=write.bucket, Key=digest)
         except ClientError as exc:
@@ -344,6 +345,7 @@ class NativeStore:
         ValueError
             If the fetched blob's sha256 does not match ``digest``.
         """
+        _validate_digest(digest)
         root = self.root
         dest.parent.mkdir(parents=True, exist_ok=True)
         if root is not None:
@@ -359,7 +361,6 @@ class NativeStore:
             from botocore.exceptions import ClientError  # noqa: PLC0415 - optional dependency
 
             write = self.write
-            _validate_digest(digest)
             try:
                 write.client().download_file(write.bucket, digest, str(dest))
             except ClientError as exc:

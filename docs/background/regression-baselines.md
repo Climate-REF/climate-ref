@@ -95,8 +95,8 @@ Named slots persist, so two runs can be compared side by side:
 for example `run --label fresh` then `replay --label fromstore`,
 or `run --label before`, edit the diagnostic, then `run --label after`.
 
-`run` writes the slot on every invocation
-but only *promote* the rebuilt bundle to the tracked `regression/` baseline
+`run` writes the slot on every invocation,
+but it only *promotes* the rebuilt bundle to the tracked `regression/` baseline
 when `--force-regen` is given or no baseline exists yet,
 so a labelled run never silently clobbers a committed baseline.
 `mint` always promotes and uploads.

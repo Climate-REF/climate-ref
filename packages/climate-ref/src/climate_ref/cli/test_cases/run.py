@@ -132,10 +132,10 @@ def _rebuild_from_slot(
     case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
     slot = paths.output_slot(label)
     if not slot.exists() or not slot_native_relpaths(slot):
-        logger.error(f"{case_id}: no native in output slot {label!r}; run/replay/mint it first")
+        logger.error(f"{case_id}: no native in output slot {label!r}. Run, replay or mint it first")
         return None
     if not paths.catalog.exists():
-        logger.error(f"No catalog file for {case_id}; run `ref test-cases fetch` first")
+        logger.error(f"No catalog file for {case_id}. Run `ref test-cases fetch` first")
         return None
 
     try:

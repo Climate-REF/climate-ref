@@ -459,7 +459,13 @@ class ResourceRecorder:
                 _in_flight.remove(self)
 
     def _stop_sampler(self) -> None:
-        """Ask the sampler to finish, waiting only for a bounded time."""
+        """
+        Ask the sampler to finish, waiting only for a bounded time.
+
+        Safe to call more than once.
+        A sampler left running would keep sweeping the process for the life of the process,
+        charging its CPU cost to whatever runs next.
+        """
         if self._sampler is not None:
             self._sampler.stop()
             self._sampler.join(timeout=_SAMPLER_JOIN_TIMEOUT)
@@ -587,4 +593,5 @@ def measure_resources(*, interval: float = 0.5, enabled: bool = True) -> Iterato
         except Exception:
             recorder.usage = None
         finally:
+            _safe(recorder._stop_sampler, None)
             recorder._deregister()

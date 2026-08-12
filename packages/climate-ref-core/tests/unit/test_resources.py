@@ -187,6 +187,13 @@ def test_a_failure_while_finishing_does_not_leak_the_registry_entry(monkeypatch)
 
     assert broken.usage is None
 
+    # The sampler must be stopped too.
+    # A leaked sampler keeps sweeping the process for the life of the process,
+    # charging its CPU cost to whatever runs next.
+    if broken._sampler is not None:
+        broken._sampler.join(timeout=5)
+        assert not broken._sampler.is_alive()
+
     with measure_resources(interval=0.01) as later:
         pass
 

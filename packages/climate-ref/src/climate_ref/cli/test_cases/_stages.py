@@ -1,8 +1,7 @@
 """
 Composable stages behind the ``ref test-cases`` verbs.
 
-The verbs ``run`` / ``mint`` / ``replay`` / ``build`` are thin compositions over a small
-set of stages:
+The verbs ``run`` / ``mint`` / ``replay`` are thin compositions over a small set of stages:
 
 - **execute** -- run the diagnostic and copy its curated native set into a slot
 - **materialise** -- fetch a committed manifest's native blobs from the store into a slot
@@ -12,7 +11,7 @@ set of stages:
 
 Native produced by a source stage (execute or materialise) lands in a gitignored *output slot*
 (``<case>/output/<label>/``), flat at manifest-relative paths,
-with a ``regression/`` subdirectory holding the rebuilt committed bundle and a ``.source.json`` stamp.
+with a ``regression/`` subdirectory holding the rebuilt committed bundle.
 ``latest`` (the default label) is overwritten on every run.
 A custom named slot persists so two runs can be diffed (``--label before`` vs ``--label after``).
 See ``docs/background/regression-baselines.md``.
@@ -22,7 +21,6 @@ from __future__ import annotations
 
 import json
 import shutil
-from datetime import UTC, datetime
 from pathlib import Path
 from typing import TYPE_CHECKING, NamedTuple
 
@@ -49,7 +47,6 @@ if TYPE_CHECKING:
     from climate_ref_core.testing import TestCase, TestCasePaths
 
 SLOT_REGRESSION_DIRNAME = "regression"
-SLOT_SOURCE_STAMP = ".source.json"
 
 
 class StageError(Exception):
@@ -75,8 +72,8 @@ def baseline_placeholders(paths: TestCasePaths, config: Config) -> PlaceholderMa
     Build the run-level baseline placeholder map shared by every ``ref test-cases`` verb.
 
     Declares the configuration-stable token set once (``<TEST_DATA_DIR>`` from the test case and
-    ``<SOFTWARE_ROOT_DIR>`` from the configured software root) so ``run`` / ``mint`` / ``replay`` /
-    ``build`` cannot sanitise against drifting token sets.
+    ``<SOFTWARE_ROOT_DIR>`` from the configured software root) so ``run`` / ``mint`` / ``replay``
+    cannot sanitise against drifting token sets.
 
     The per-execution ``<OUTPUT_DIR>`` is bound later by the caller.
 
@@ -97,7 +94,7 @@ def prepare_slot(paths: TestCasePaths, label: str) -> Path:
     Wipe and recreate ``output/<label>/`` and return the slot base directory.
 
     Used by the source stages (execute / materialise), which repopulate the native set.
-    ``build`` does not call this -- it reuses the native already in the slot.
+    ``run --from-slot`` does not call this, because it reuses the native already in the slot.
     """
     slot = paths.output_slot(label)
     if slot.exists():
@@ -108,18 +105,18 @@ def prepare_slot(paths: TestCasePaths, label: str) -> Path:
 
 def slot_native_relpaths(slot: Path) -> list[Path]:
     """
-    Return the native files in a slot -- everything except the rebuilt bundle and the stamp.
+    Return the native files in a slot -- everything except the rebuilt bundle.
 
     A slot is populated only by a source stage with the curated output set, so this is
     exactly the curated native set (it excludes the ``regression/`` subdirectory written
-    by ``build`` and the ``.source.json`` stamp).
+    by :func:`stage_build`).
     """
     relpaths: list[Path] = []
     for path in sorted(slot.rglob("*")):
         if not path.is_file():
             continue
         rel = path.relative_to(slot)
-        if rel.parts[0] == SLOT_REGRESSION_DIRNAME or rel.name == SLOT_SOURCE_STAMP:
+        if rel.parts[0] == SLOT_REGRESSION_DIRNAME:
             continue
         relpaths.append(rel)
     return relpaths
@@ -180,7 +177,8 @@ def stage_rebuild_from_slot(
 
     Hydrates portable placeholders to concrete paths, then re-runs ``build_execution_result``
     so the rebuilt bundle is written into the slot (referencing the slot). No execution and
-    no store access -- this is the shared core of ``replay`` (after a fetch) and ``build``.
+    no store access.
+    This is the shared core of ``replay`` (after a fetch) and ``run --from-slot``.
 
     The slot is its own output directory, so the placeholder map is bound to it
     (``placeholders.with_output(slot)``) before hydrating.
@@ -273,6 +271,55 @@ def promote_to_baseline(slot: Path, paths: TestCasePaths) -> None:
         source = slot_regression / filename
         if source.exists():
             shutil.copy(source, paths.regression / filename)
+
+
+def promote_and_author_manifest(  # noqa: PLR0913
+    *,
+    paths: TestCasePaths,
+    diag: Diagnostic,
+    slot: Path,
+    source: SourceOutputs,
+    placeholders: PlaceholderMap,
+    committed: dict[str, str],
+    stale_message: str,
+) -> None:
+    """
+    Promote a slot's rebuilt bundle to the tracked baseline and author the manifest.
+
+    The native block is mint-owned, so this preserves the previous manifest's version and native block,
+    or seeds an empty set for a never-minted case.
+    When the freshly snapshotted native differs from the minted one,
+    ``stale_message`` is logged as a warning so the author knows to re-mint.
+    """
+    from climate_ref.cli.test_cases._common import _write_test_case_manifest
+    from climate_ref_core.regression.manifest import Manifest
+
+    # Load before promoting: an unreadable manifest must fail before the tracked baseline is overwritten,
+    # or the promoted bundle is left recorded by stale digests.
+    previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
+
+    promote_to_baseline(slot, paths)
+    native = snapshot_native(slot, source=source, placeholders=placeholders)
+
+    if previous is not None:
+        _write_test_case_manifest(
+            paths,
+            test_case_version=previous.test_case_version,
+            diagnostic_version=previous.diagnostic_version,
+            committed=committed,
+            native=previous.native,
+            schema=previous.schema,
+        )
+        if native_is_stale(native, previous.native):
+            logger.warning(stale_message)
+    else:
+        _write_test_case_manifest(
+            paths,
+            test_case_version=1,
+            diagnostic_version=diag.version,
+            committed=committed,
+            native={},
+        )
 
 
 def stage_upload(
@@ -372,22 +419,3 @@ def native_is_stale(fresh: dict[str, NativeEntry], previous: dict[str, NativeEnt
     if not previous:
         return False
     return {k: v.sha256 for k, v in fresh.items()} != {k: v.sha256 for k, v in previous.items()}
-
-
-def write_source_stamp(
-    slot: Path,
-    *,
-    label: str,
-    verb: str,
-    source: str,
-    test_case_version: int,
-) -> None:
-    """Write the slot's ``.source.json`` so it is clear what currently populates the slot."""
-    stamp = {
-        "label": label,
-        "verb": verb,
-        "source": source,
-        "test_case_version": test_case_version,
-        "created": datetime.now(UTC).isoformat(),
-    }
-    (slot / SLOT_SOURCE_STAMP).write_text(json.dumps(stamp, indent=2) + "\n", encoding="utf-8")

@@ -1023,11 +1023,8 @@ class ILAMBStandard(Diagnostic):
         _set_ilamb3_options(
             dataset_registry_manager[self.region_masks] if self.region_masks is not None else None
         )
-        # The obs4MIPs rewrite below replaces configured sources with the instance_ids selected for
-        # *this* execution. A provider hands the same diagnostic instance to every execution, so
-        # work on a copy: mutating `self` would leak one execution's reference selection into the
-        # next, and re-deriving the source keys from an already-rewritten mapping would add a
-        # spurious source under the on-disk variable name.
+        # The rewrite below is per-execution, but the provider shares one diagnostic instance
+        # across executions, so copy rather than mutate `self`.
         ilamb_kwargs = {**self.ilamb_kwargs, "sources": dict(self.ilamb_kwargs["sources"])}
         # Temporary hack of the ilamb3 inputs while we still need to refer to
         # data not yet available in obs4{MIPs,REF}. This logic allows for

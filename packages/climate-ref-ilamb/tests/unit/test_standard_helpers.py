@@ -447,11 +447,9 @@ class TestRealmMaskDecoupling:
 
 class TestObs4MIPsSourceRewrite:
     """
-    The obs4MIPs rewrite in ``execute()`` must not leak between executions.
+    The obs4MIPs source rewrite in ``execute()`` must not leak between executions.
 
-    A provider hands the same diagnostic instance to every execution, so rewriting
-    ``self.ilamb_kwargs["sources"]`` in place would let one execution's reference selection
-    survive into the next.
+    The provider shares one diagnostic instance across executions.
     """
 
     def _diagnostic(self) -> ILAMBStandard:
@@ -517,8 +515,7 @@ class TestObs4MIPsSourceRewrite:
         second = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.second"), monkeypatch)
 
         assert first["sources"] == {"amoc": "obs4REF.first*"}
-        # Not `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`: the second execution must
-        # neither inherit the first instance_id nor gain a source under the on-disk variable name.
+        # Without the copy this is `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`.
         assert second["sources"] == {"amoc": "obs4REF.second*"}
         # The diagnostic itself still holds the configured mapping.
         assert diagnostic.ilamb_kwargs["sources"]["amoc"]["source_id"] == "RAPID-2023-1a"

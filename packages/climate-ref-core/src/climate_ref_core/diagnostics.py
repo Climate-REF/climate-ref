@@ -16,6 +16,7 @@ from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.resources import ResourceUsage
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -202,6 +203,14 @@ class ExecutionResult:
     A collection of series metric values that were extracted from the execution.
 
     These are written to a CSV file in the output directory.
+    """
+
+    resource_usage: ResourceUsage | None = None
+    """
+    What the execution cost in wall time, CPU time and peak memory.
+
+    None when the measurement was unavailable,
+    or when the result predates this field.
     """
 
     @staticmethod

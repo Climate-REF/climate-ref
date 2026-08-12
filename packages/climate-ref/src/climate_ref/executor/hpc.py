@@ -493,6 +493,7 @@ class HPCExecutor:
                 future=future,
                 definition=definition,
                 execution_id=execution.id if execution else None,
+                submitted_at=time.time(),
             )
         )
 
@@ -536,6 +537,9 @@ class HPCExecutor:
             while results:
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
+                    if result.started_at is None and result.future.running():
+                        result.started_at = time.time()
+
                     if not result.future.done():
                         continue
 
@@ -568,6 +572,9 @@ class HPCExecutor:
                     assert isinstance(execution_result, ExecutionResult), (
                         "Execution result should be of type ExecutionResult"
                     )
+
+                    result.infer_started_at(execution_result, time.time())
+
                     # Process the result in the main process
                     # The results should be committed after each execution
                     with self.database.session.begin():
@@ -576,7 +583,13 @@ class HPCExecutor:
                             if result.execution_id
                             else None
                         )
-                        process_result(self.config, self.database, execution_result, execution)
+                        process_result(
+                            self.config,
+                            self.database,
+                            execution_result,
+                            execution,
+                            queue_seconds=result.queue_seconds,
+                        )
                     logger.debug(f"Execution completed: {result}")
                     t.update(n=1)
                     results.remove(result)

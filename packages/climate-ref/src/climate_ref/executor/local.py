@@ -181,6 +181,11 @@ class LocalExecutor:
 
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
+                    # Record when a worker first picks the task up.
+                    # ``submitted_at`` only marks enqueue time
+                    if result.started_at is None and result.future.running():
+                        result.started_at = now
+
                     if result.future.done():
                         try:
                             execution_result = result.future.result(timeout=0)
@@ -198,6 +203,8 @@ class LocalExecutor:
                             "Execution result should be of type ExecutionResult"
                         )
 
+                        result.infer_started_at(execution_result, now)
+
                         # Process the result in the main process
                         # The results should be committed after each execution
                         with self.database.session.begin():
@@ -206,16 +213,17 @@ class LocalExecutor:
                                 if result.execution_id
                                 else None
                             )
-                            process_result(self.config, self.database, execution_result, execution)
+                            process_result(
+                                self.config,
+                                self.database,
+                                execution_result,
+                                execution,
+                                queue_seconds=result.queue_seconds,
+                            )
                         logger.debug(f"Execution completed: {result}")
                         t.update(n=1)
                         results.remove(result)
                         continue
-
-                    # Record when a worker first picks the task up.
-                    # ``submitted_at`` only marks enqueue time
-                    if result.started_at is None and result.future.running():
-                        result.started_at = now
 
                     # Per-task timeout: a runaway *running* diagnostic cannot block the pool forever.
                     # Cancel its future and mark the row failed-retryable.

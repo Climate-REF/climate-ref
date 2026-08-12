@@ -5,7 +5,7 @@ from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, ClassVar
 
 from loguru import logger
-from sqlalchemy import Column, ForeignKey, Table, UniqueConstraint, func, or_
+from sqlalchemy import BigInteger, Column, Float, ForeignKey, Table, UniqueConstraint, func, or_
 from sqlalchemy.orm import Mapped, Session, joinedload, mapped_column, relationship
 from sqlalchemy.orm.query import RowReturningQuery
 
@@ -19,6 +19,7 @@ if TYPE_CHECKING:
     from climate_ref.database import Database
     from climate_ref.models.metric_value import MetricValue
     from climate_ref_core.datasets import ExecutionDatasetCollection
+    from climate_ref_core.resources import ResourceUsage
 
 
 class ExecutionGroup(CreatedUpdatedMixin, Base):
@@ -248,6 +249,77 @@ class Execution(CreatedUpdatedMixin, Base):
     Rows that predate the column stay NULL.
     """
 
+    wall_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    """
+    Wall clock time taken by the execution, in seconds.
+
+    Measured by the worker as a monotonic delta around the diagnostic run.
+    """
+
+    cpu_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    """
+    CPU time consumed by the execution, in seconds.
+
+    Sums user and system time for the worker process and its children.
+    """
+
+    peak_memory_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    """
+    Peak resident memory observed during the execution, in bytes.
+
+    Stored as a big integer because a plain integer overflows at 4 GiB on Postgres,
+    and executions routinely peak well above that.
+    """
+
+    memory_source: Mapped[str | None] = mapped_column(nullable=True)
+    """
+    Provenance of ``peak_memory_bytes``.
+
+    One of ``cgroup``, ``proc_tree``, ``rusage`` or ``unavailable``.
+    The sources measure different things and are not interchangeable,
+    so a rusage figure must never be silently compared against a cgroup figure.
+    """
+
+    memory_limit_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)
+    """
+    Memory limit in force while the execution ran, in bytes.
+
+    Read from the container cgroup at run time.
+    A column rather than a context key because headroom is a comparison against
+    ``peak_memory_bytes`` that has to happen in SQL.
+    """
+
+    cpu_limit: Mapped[float | None] = mapped_column(Float, nullable=True)
+    """
+    CPU cores available to the execution.
+
+    Read from the container cgroup quota at run time.
+    """
+
+    resources_exclusive: Mapped[bool | None] = mapped_column(nullable=True)
+    """
+    Whether this execution was the only one running on the worker.
+
+    A cgroup reading covers the whole container,
+    so it is meaningless when a worker runs several executions at once.
+    Non-exclusive measurements are excluded from aggregation by default.
+    """
+
+    queue_seconds: Mapped[float | None] = mapped_column(Float, nullable=True)
+    """
+    Time between submission and the start of the execution, in seconds.
+
+    Recorded by the submitting executor rather than the worker.
+    """
+
+    resource_context: Mapped[dict[str, Any] | None] = mapped_column(nullable=True)
+    """
+    Supporting detail for the resource measurements.
+
+    Host, CPU count, sampler settings and any cross-checks the worker made.
+    Purely informational, so nothing here is a query predicate.
+    """
+
     execution_group: Mapped["ExecutionGroup"] = relationship(back_populates="executions")
     outputs: Mapped[list["ExecutionOutput"]] = relationship(back_populates="execution")
     values: Mapped[list["MetricValue"]] = relationship(back_populates="execution")
@@ -274,6 +346,48 @@ class Execution(CreatedUpdatedMixin, Base):
         # TODO: this needs to accept both a diagnostic and output bundle
         self.successful = True
         self.path = str(path)
+
+    def apply_resource_usage(
+        self, usage: "ResourceUsage | None", *, queue_seconds: float | None = None
+    ) -> None:
+        """
+        Copy a worker's resource measurements onto this row.
+
+        Every value is coerced before any of them is assigned,
+        so a value a column cannot store raises here rather than at flush,
+        where the offending execution is no longer identifiable.
+
+        Parameters
+        ----------
+        usage
+            The measurements taken by the worker, or None when nothing was measured.
+        queue_seconds
+            Submit-to-start latency observed by the submitting executor,
+            or None when it is unknown.
+        """
+        if queue_seconds is not None:
+            self.queue_seconds = float(queue_seconds)
+
+        if usage is None:
+            return
+
+        wall_seconds = float(usage.wall_seconds)
+        cpu_seconds = None if usage.cpu_seconds is None else float(usage.cpu_seconds)
+        peak_memory_bytes = None if usage.peak_memory_bytes is None else int(usage.peak_memory_bytes)
+        memory_source = str(usage.memory_source)
+        memory_limit_bytes = None if usage.memory_limit_bytes is None else int(usage.memory_limit_bytes)
+        cpu_limit = None if usage.cpu_limit is None else float(usage.cpu_limit)
+        exclusive = bool(usage.exclusive)
+        context = dict(usage.context)
+
+        self.wall_seconds = wall_seconds
+        self.cpu_seconds = cpu_seconds
+        self.peak_memory_bytes = peak_memory_bytes
+        self.memory_source = memory_source
+        self.memory_limit_bytes = memory_limit_bytes
+        self.cpu_limit = cpu_limit
+        self.resources_exclusive = exclusive
+        self.resource_context = context
 
     def mark_failed(self) -> None:
         """

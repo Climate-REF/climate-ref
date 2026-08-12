@@ -1,4 +1,5 @@
 import json
+import re
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -789,7 +790,7 @@ class TestRunTestCaseCommand:
         assert (paths.output_slot("latest") / "regression" / "diagnostic.json").exists()
 
     def test_run_reports_resource_usage(self, invoke_cli, mocker, tmp_path):
-        """Each executed test case logs wall clock, CPU time, and peak RSS."""
+        """Each executed test case logs wall clock, CPU time and peak memory with its provenance."""
         _setup_real_run(mocker, tmp_path, regression_files={})
 
         result = invoke_cli(
@@ -797,9 +798,10 @@ class TestRunTestCaseCommand:
         )
 
         assert result.exit_code == 0
-        assert "Resources for example/test-diag/default: wall " in result.stderr
-        assert "peak RSS self " in result.stderr
-        assert "subprocesses " in result.stderr
+        assert re.search(r"Resources for example/test-diag/default: wall \d+\.\d+s, cpu ", result.stderr)
+        assert re.search(
+            r"peak memory \d+\.\d+ [KMGT]?B \((via cgroup|via proc_tree|via rusage)", result.stderr
+        )
 
     def test_run_output_directory_logs_scratch_and_slot_semantics(self, invoke_cli, mocker, tmp_path):
         """--output-directory is explained as scratch output, not the only written location."""

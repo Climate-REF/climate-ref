@@ -10,8 +10,10 @@ import pytest
 from climate_ref.database import Database, MigrationState
 from climate_ref.testing import (
     TestCaseRunner,
+    _describe_memory,
     assert_test_case_no_drift,
     create_no_drift_test,
+    log_resources,
 )
 from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection
 from climate_ref_core.exceptions import (
@@ -19,6 +21,7 @@ from climate_ref_core.exceptions import (
     NoTestDataSpecError,
     TestCaseNotFoundError,
 )
+from climate_ref_core.resources import ResourceUsage
 from climate_ref_core.source_types import SourceDatasetType
 from climate_ref_core.testing import (
     TestCase,
@@ -221,6 +224,106 @@ class TestTestCaseRunnerClass:
         assert not stale.exists()
 
 
+def _usage(**overrides):
+    """Build a ResourceUsage, defaulting to an exclusive one gigabyte cgroup reading."""
+    fields = {
+        "wall_seconds": 12.34,
+        "cpu_seconds": 20.5,
+        "peak_memory_bytes": 1024**3,
+        "memory_source": "cgroup",
+        "memory_limit_bytes": None,
+        "cpu_limit": None,
+        "exclusive": True,
+        "context": {},
+    }
+    fields.update(overrides)
+    return ResourceUsage(**fields)
+
+
+class TestDescribeMemory:
+    """Tests for the memory fragment of the per test case resource log line."""
+
+    def test_names_the_source(self):
+        """A true per-block figure is reported with its source and no caveat."""
+        assert _describe_memory(_usage()) == "peak memory 1.0 GB (via cgroup)"
+
+    def test_proc_tree_has_no_caveat(self):
+        """The sampled process tree also gives a true per-block peak."""
+        assert _describe_memory(_usage(memory_source="proc_tree")) == "peak memory 1.0 GB (via proc_tree)"
+
+    def test_rusage_keeps_the_lifetime_caveat(self):
+        """A rusage figure never decreases, so it is not attributable to one case."""
+        described = _describe_memory(_usage(memory_source="rusage"))
+
+        assert described == (
+            "peak memory 1.0 GB (via rusage, process lifetime high-water mark, not raised by this case alone)"
+        )
+
+    def test_overlapping_cgroup_block_is_flagged(self):
+        """A cgroup reading covers the whole container, so an overlap makes it unattributable."""
+        described = _describe_memory(_usage(exclusive=False))
+
+        assert described == "peak memory 1.0 GB (via cgroup, shared with another measured block)"
+
+    def test_overlap_is_not_flagged_for_a_per_process_source(self):
+        """The process tree sweep only ever covers this process, so an overlap does not matter."""
+        described = _describe_memory(_usage(memory_source="proc_tree", exclusive=False))
+
+        assert described == "peak memory 1.0 GB (via proc_tree)"
+
+    def test_reports_limit_and_headroom(self):
+        """A known limit is reported alongside what is left of it."""
+        described = _describe_memory(_usage(memory_limit_bytes=4 * 1024**3))
+
+        assert described == "peak memory 1.0 GB (via cgroup) of 4.0 GB limit, 3.0 GB headroom"
+
+    def test_headroom_never_goes_negative(self):
+        """A peak above the limit reports no headroom rather than a negative one."""
+        described = _describe_memory(_usage(memory_limit_bytes=1024**2))
+
+        assert described.endswith("of 1.0 MB limit, 0.0 B headroom")
+
+    def test_unmeasured_memory(self):
+        """A host answering none of the sources says so."""
+        assert (
+            _describe_memory(_usage(peak_memory_bytes=None, memory_source="unavailable"))
+            == "peak memory unmeasured"
+        )
+
+
+class TestLogResources:
+    """Tests for the context manager wrapping a test case in a resource measurement."""
+
+    def test_logs_the_measurement(self, caplog):
+        """The line carries the case id, wall clock, CPU time and peak memory."""
+        with caplog.at_level("INFO"), patch("climate_ref.testing.measure_resources") as measure:
+            measure.return_value.__enter__.return_value.usage = _usage()
+            with log_resources("example/my-diag/default"):
+                pass
+
+        assert (
+            "Resources for example/my-diag/default: wall 12.3s, cpu 20.5s, peak memory 1.0 GB (via cgroup)"
+            in caplog.text
+        )
+
+    def test_reports_unmeasured_cpu(self, caplog):
+        """CPU counters the host will not answer are named rather than faked."""
+        with caplog.at_level("INFO"), patch("climate_ref.testing.measure_resources") as measure:
+            measure.return_value.__enter__.return_value.usage = _usage(cpu_seconds=None)
+            with log_resources("example/my-diag/default"):
+                pass
+
+        assert "cpu unmeasured" in caplog.text
+
+    def test_logs_when_the_block_raises(self, caplog):
+        """A failing case is the one most worth knowing the resource usage of."""
+        with caplog.at_level("INFO"), pytest.raises(ValueError, match="boom"):
+            with log_resources("example/my-diag/default"):
+                raise ValueError("boom")
+
+        assert "Resources for example/my-diag/default: wall " in caplog.text
+
+
 class TestCreateNoDriftTest:
     """Tests for the per-provider drift-test factory."""
 
@@ -293,6 +396,7 @@ class TestCreateNoDriftTest:
         test_fn = create_no_drift_test(provider)
         diagnostic = MagicMock()
         diagnostic.slug = "my-diag"
+        diagnostic.provider.slug = "example"
         paths = self._make_paths()
 
         with (
@@ -303,6 +407,23 @@ class TestCreateNoDriftTest:
 
         diagnostic.provider.configure.assert_called_once_with(config)
         assert_no_drift.assert_called_once_with(config, diagnostic, "default", paths, tmp_path)
+
+    def test_body_measures_the_case(self, provider, config, tmp_path, caplog):
+        """The drift assertion is wrapped in a resource measurement keyed by the case id."""
+        test_fn = create_no_drift_test(provider)
+        diagnostic = MagicMock()
+        diagnostic.slug = "my-diag"
+        diagnostic.provider.slug = "example"
+        paths = self._make_paths()
+
+        with (
+            caplog.at_level("INFO"),
+            patch("climate_ref.testing.TestCasePaths.from_diagnostic", return_value=paths),
+            patch("climate_ref.testing.assert_test_case_no_drift"),
+        ):
+            test_fn(diagnostic, "default", config, tmp_path)
+
+        assert "Resources for example/my-diag/default: wall " in caplog.text
 
 
 class TestAssertTestCaseNoDrift:

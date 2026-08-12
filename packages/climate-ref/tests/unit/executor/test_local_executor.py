@@ -94,6 +94,33 @@ class TestLocalExecutor:
 
         assert len(executor._results) == 0
 
+    def test_join_forwards_queue_seconds(self, metric_definition, mocker):
+        """Only the parent knows when the task was submitted, so it supplies the latency."""
+        executor = LocalExecutor(n=1)
+        future = Future()
+        future.set_result(
+            ExecutionResult(
+                definition=metric_definition,
+                successful=False,
+                output_bundle_filename=None,
+                metric_bundle_filename=None,
+            )
+        )
+        executor._results = [
+            ExecutionFuture(
+                future,
+                definition=metric_definition,
+                execution_id=None,
+                submitted_at=1000.0,
+                started_at=1002.5,
+            )
+        ]
+        process_spy = mocker.patch("climate_ref.executor.local.process_result")
+
+        executor.join(0.1)
+
+        assert process_spy.call_args.kwargs["queue_seconds"] == pytest.approx(2.5)
+
     def test_join_exception(self, metric_definition, mocker):
         executor = LocalExecutor(n=1)
         future = Future()

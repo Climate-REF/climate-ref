@@ -58,10 +58,10 @@ class SynchronousExecutor:
         if isinstance(execution, Execution):
             with self.database.session.begin():
                 attached = self.database.session.merge(execution)
-                process_result(self.config, self.database, result, attached)
+                process_result(self.config, self.database, result, attached, queue_seconds=0.0)
             return
 
-        process_result(self.config, self.database, result, execution)
+        process_result(self.config, self.database, result, execution, queue_seconds=0.0)
 
     def join(self, timeout: float) -> None:
         """

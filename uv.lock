@@ -774,6 +774,7 @@ dependencies = [
     { name = "numpy" },
     { name = "pandas" },
     { name = "pooch" },
+    { name = "psutil" },
     { name = "pyarrow" },
     { name = "pydantic" },
     { name = "pyyaml" },
@@ -790,6 +791,7 @@ aws = [
 
 [package.dev-dependencies]
 dev = [
+    { name = "types-psutil" },
     { name = "types-requests" },
 ]
 
@@ -805,6 +807,7 @@ requires-dist = [
     { name = "numpy", specifier = ">=2.0.0" },
     { name = "pandas", specifier = ">=2.1.0" },
     { name = "pooch", specifier = ">=1.8.0,<2" },
+    { name = "psutil", specifier = ">=5.9.8" },
     { name = "pyarrow", specifier = ">=17.0.0" },
     { name = "pydantic", specifier = ">=2.10.6" },
     { name = "pyyaml", specifier = ">=6.0.2" },
@@ -816,7 +819,10 @@ requires-dist = [
 provides-extras = ["aws"]
 
 [package.metadata.requires-dev]
-dev = [{ name = "types-requests" }]
+dev = [
+    { name = "types-psutil" },
+    { name = "types-requests" },
+]
 
 [[package]]
 name = "climate-ref-esmvaltool"
@@ -964,6 +970,7 @@ dev = [
     { name = "ruff" },
     { name = "seaborn" },
     { name = "towncrier" },
+    { name = "types-psutil" },
     { name = "types-pyyaml" },
     { name = "types-tqdm" },
     { name = "xarray" },
@@ -1024,6 +1031,7 @@ dev = [
     { name = "ruff", specifier = ">=0.15.11" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "towncrier", specifier = ">=25.8.0" },
+    { name = "types-psutil", specifier = ">=7.0.0" },
     { name = "types-pyyaml", specifier = ">=6.0.12.20260408" },
     { name = "types-tqdm", specifier = ">=4.67.3.20260408" },
     { name = "xarray", specifier = ">=2025.4.0" },
@@ -3071,16 +3079,16 @@ name = "parsl"
 version = "2026.2.16"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "dill", marker = "sys_platform != 'win32'" },
-    { name = "filelock", marker = "sys_platform != 'win32'" },
-    { name = "psutil", marker = "sys_platform != 'win32'" },
-    { name = "pyzmq", marker = "sys_platform != 'win32'" },
-    { name = "requests", marker = "sys_platform != 'win32'" },
-    { name = "setproctitle", marker = "sys_platform != 'win32'" },
-    { name = "sortedcontainers", marker = "sys_platform != 'win32'" },
-    { name = "tblib", marker = "sys_platform != 'win32'" },
-    { name = "typeguard", marker = "sys_platform != 'win32'" },
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "dill" },
+    { name = "filelock" },
+    { name = "psutil" },
+    { name = "pyzmq" },
+    { name = "requests" },
+    { name = "setproctitle" },
+    { name = "sortedcontainers" },
+    { name = "tblib" },
+    { name = "typeguard" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/d6/ba/40228c8e434304d959eb4d47924d60967bdf490401720efb8af81dd52db2/parsl-2026.2.16.tar.gz", hash = "sha256:dc34015c07d8a05157f0e62b88eda42087be86856fe1fbc1f513109fcd38b7b8", size = 375580, upload-time = "2026-02-16T22:51:04.583Z" }
 wheels = [
@@ -3135,7 +3143,7 @@ name = "pexpect"
 version = "4.9.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "ptyprocess", marker = "sys_platform != 'emscripten' and sys_platform != 'win32'" },
+    { name = "ptyprocess" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/42/92/cc564bf6381ff43ce1f4d06852fc19a2f11d180f23dc32d9588bee2f149d/pexpect-4.9.0.tar.gz", hash = "sha256:ee7d41123f3c9911050ea2c2dac107568dc43b2d3b0c7557a33212c398ead30f", size = 166450, upload-time = "2023-11-25T09:07:26.339Z" }
 wheels = [
@@ -4697,7 +4705,7 @@ name = "typeguard"
 version = "4.5.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "typing-extensions", marker = "sys_platform != 'win32'" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/2b/e8/66e25efcc18542d58706ce4e50415710593721aae26e794ab1dec34fb66f/typeguard-4.5.1.tar.gz", hash = "sha256:f6f8ecbbc819c9bc749983cc67c02391e16a9b43b8b27f15dc70ed7c4a007274", size = 80121, upload-time = "2026-02-19T16:09:03.392Z" }
 wheels = [
@@ -4726,6 +4734,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/3e/59/44409a8fc06b444ab1a6f71dcb29d49a6e17e02424345eb51b051bebb345/types_awscrt-0.34.1.tar.gz", hash = "sha256:559aa04250f6a419a617dfb788f3e10903aaf74700ef23e521b64a411b83b803", size = 19062, upload-time = "2026-06-05T04:40:10.689Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/e4/b1/214b12162b452ed6acd230065e6c587cde6b96871e3ce6d653f40888f8df/types_awscrt-0.34.1-py3-none-any.whl", hash = "sha256:20c752b6031544d8f694803c35174aee129f1be5ddf886ae46d22f7ffd9b7d75", size = 45688, upload-time = "2026-06-05T04:40:09.198Z" },
+]
+
+[[package]]
+name = "types-psutil"
+version = "7.2.2.20260518"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/cb/f1/6901857281d4e8d792492e1495eef6f4f01318a3b6a066486d81000a4511/types_psutil-7.2.2.20260518.tar.gz", hash = "sha256:9f825f631463a5b4d26f19f63aebc9ec25f01140d655026f3ad8a67841f9b331", size = 26660, upload-time = "2026-05-18T06:05:09.389Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/cd/eb/f726339668879819599c74c2e1f0cab760912a4159046942bdae2ad37bd6/types_psutil-7.2.2.20260518-py3-none-any.whl", hash = "sha256:6a3d697665754a60d7b5a41d5a2cff12b53f5e0676d77810cd28ba5e14cb4049", size = 32820, upload-time = "2026-05-18T06:05:08.321Z" },
 ]
 
 [[package]]

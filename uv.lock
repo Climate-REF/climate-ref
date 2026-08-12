@@ -728,6 +728,7 @@ name = "climate-ref-celery"
 version = "0.16.2"
 source = { editable = "packages/climate-ref-celery" }
 dependencies = [
+    { name = "attrs" },
     { name = "celery", extra = ["redis"] },
     { name = "climate-ref" },
     { name = "climate-ref-core" },
@@ -745,6 +746,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "attrs", specifier = ">=23.2.0" },
     { name = "celery", extras = ["redis"], specifier = ">=5.4.0" },
     { name = "climate-ref", editable = "packages/climate-ref" },
     { name = "climate-ref-core", editable = "packages/climate-ref-core" },

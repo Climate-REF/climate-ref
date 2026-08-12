@@ -92,6 +92,39 @@ Edit structured values such as `diagnostic_providers` and `executor.config` dire
 Environment variables are used to control some aspects of the framework
 outside of the configuration file.
 
+### `REF_CELERY_ROUTES`
+
+Path to a TOML routing table for the Celery executor.
+The table maps diagnostics to size classes,
+so that an execution lands on a size-specific queue such as `esmvaltool-large`
+instead of the bare provider queue.
+Differently sized worker pools can then consume the queues independently.
+
+```toml
+default = "medium"
+
+[esmvaltool]
+default = "medium"
+rules = [
+  { match = "portrait-*", size = "large" },
+  { match = "sea-ice-basic", size = "small" },
+]
+
+[ilamb]
+default = "small"
+```
+
+Rules are matched against the diagnostic slug in order, first match wins.
+Patterns support exact strings and glob wildcards.
+A provider `default` applies when no rule matches,
+and the top-level `default` applies when the provider has no entry.
+With no default and no match, the bare provider queue is used.
+
+If this is not set, every execution uses the bare provider queue.
+A malformed file fails the solve at startup rather than silently misrouting jobs.
+Workers consuming a size-specific queue must be started with that queue name explicitly,
+for example `ref-celery start-worker --provider climate_ref_esmvaltool -- --queues=esmvaltool-large`.
+
 ### `REF_DATASET_CACHE_DIR`
 
 Path where any datasets that are fetched via the `ref datasets fetch-data` command are stored.

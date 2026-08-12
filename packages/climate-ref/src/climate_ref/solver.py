@@ -850,6 +850,11 @@ def solve_required_executions(  # noqa: PLR0912, PLR0913, PLR0915
     for prov, count in provider_count.items():
         logger.info(f"  {prov}: {count} new executions")
 
+    # Executors may expose extra end-of-solve reporting, such as per-queue submission counts
+    log_submission_summary = getattr(executor, "log_submission_summary", None)
+    if log_submission_summary is not None:
+        log_submission_summary()
+
     if wait and executor is not None:
         executor.join(timeout=timeout)
         logger.info("All executions complete")

@@ -18,6 +18,7 @@ from climate_ref.config import (
     DEFAULT_LOG_FORMAT,
     Config,
     PathConfig,
+    _bool,
     _ignore_datasets_cache_file,
     _legacy_ignore_datasets_file,
     refresh_ignore_datasets_file,
@@ -272,6 +273,11 @@ filename = "sqlite://climate_ref.db"
 
         with pytest.raises(ValueError, match="Error loading configuration"):
             config.refresh()
+
+    def test_measure_resources_rejects_a_non_string(self):
+        # A TOML value such as ``measure_resources = 1`` reaches the converter as an int
+        with pytest.raises(ValueError, match="Cannot interpret 1"):
+            _bool(1)
 
     def test_ignore_datasets_env_variables(self, monkeypatch, config):
         monkeypatch.setenv("REF_IGNORE_DATASETS_FILE", "/my/test/ignore_datasets.yaml")

@@ -97,6 +97,8 @@ def _bool(value: str | bool) -> bool:
     """
     if isinstance(value, bool):
         return value
+    if not isinstance(value, str):
+        raise ValueError(f"Cannot interpret {value!r} as a boolean")
     normalised = value.strip().lower()
     if normalised in ("1", "true", "yes", "on"):
         return True

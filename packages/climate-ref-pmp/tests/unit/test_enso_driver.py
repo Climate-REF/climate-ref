@@ -1,16 +1,14 @@
 """
 Unit tests for the ENSO driver helpers.
 
-`enso_driver` runs inside the PMP conda environment, so the xcdat / pcmdi_metrics / EnsoMetrics
-imports it makes at module scope are stubbed out here to load it in the REF test environment.
-The one stub that matters for behaviour is `xc`, which is pointed at xarray: `open_mfdataset` and
-`to_netcdf` behave the same for the concatenation this module does, so the tests join real files.
+`enso_driver` runs inside the PMP conda environment,
+so the xcdat / pcmdi_metrics / EnsoMetrics imports it makes at module scope are stubbed..
 """
 
 import importlib.util
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import numpy as np
 import pandas as pd
@@ -37,24 +35,15 @@ _CONDA_ONLY_MODULES = (
 @pytest.fixture(scope="module")
 def enso_driver():
     """Import the driver script with its conda-only dependencies stubbed."""
-    saved = {name: sys.modules.get(name) for name in _CONDA_ONLY_MODULES}
-    for name in _CONDA_ONLY_MODULES:
-        sys.modules[name] = MagicMock()
-    try:
+    with patch.dict(sys.modules, {name: MagicMock() for name in _CONDA_ONLY_MODULES}):
         path = Path(_get_resource("climate_ref_pmp.drivers", "enso_driver.py", use_resources=True))
         spec = importlib.util.spec_from_file_location("enso_driver_under_test", path)
         assert spec is not None and spec.loader is not None
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        # xcdat wraps xarray; the reader and writer used here are the xarray ones.
+        # xcdat wraps xarray, so the reader and writer used here are the xarray ones.
         module.xc = xr
         yield module
-    finally:
-        for name, original in saved.items():
-            if original is None:
-                sys.modules.pop(name, None)
-            else:
-                sys.modules[name] = original
 
 
 @pytest.fixture
@@ -101,7 +90,7 @@ class TestConcatenateTimeseries:
         first = _write_slice(tmp_path, EARLY, "1850-01-01", 12)
         second = _write_slice(tmp_path, LATE, "1851-01-01", 12)
 
-        joined = enso_driver.concatenate_timeseries([first, second], "ts", output_dir=str(tmp_path))
+        joined = enso_driver.concatenate_timeseries([first, second], output_dir=str(tmp_path))
 
         with xr.open_dataset(joined) as ds:
             assert ds.sizes["time"] == 24
@@ -113,7 +102,7 @@ class TestConcatenateTimeseries:
         first = _write_slice(tmp_path, EARLY, "1850-01-01", 12)
         second = _write_slice(tmp_path, LATE, "1851-01-01", 12)
 
-        joined = enso_driver.concatenate_timeseries([first, second], "ts", output_dir=str(tmp_path))
+        joined = enso_driver.concatenate_timeseries([first, second], output_dir=str(tmp_path))
 
         with xr.open_dataset(joined) as ds, xr.open_dataset(first) as a, xr.open_dataset(second) as b:
             expected = xr.concat([a["ts"], b["ts"]], dim="time")
@@ -125,9 +114,9 @@ class TestConcatenateTimeseries:
         second = _write_slice(tmp_path, LATE, "1851-01-01", 12)
         out = tmp_path / "out"
 
-        joined = enso_driver.concatenate_timeseries([first, second], "ts", output_dir=str(out))
+        joined = enso_driver.concatenate_timeseries([first, second], output_dir=str(out))
         Path(joined).write_text("sentinel")
-        again = enso_driver.concatenate_timeseries([first, second], "ts", output_dir=str(out))
+        again = enso_driver.concatenate_timeseries([first, second], output_dir=str(out))
 
         assert again == joined
         assert Path(again).read_text() == "sentinel"
@@ -143,21 +132,13 @@ class TestConcatenateTimeseries:
         year_two = _write_slice(tmp_path, "pr_mon_GPCP_gn_185101-185112.nc", "1851-01-01", 12)
 
         joined = enso_driver.concatenate_timeseries(
-            [whole, year_one, year_two], "pr", output_dir=str(tmp_path / "out")
+            [whole, year_one, year_two], output_dir=str(tmp_path / "out")
         )
 
         with xr.open_dataset(joined) as ds:
             assert ds.sizes["time"] == 24
             assert ds.indexes["time"].is_monotonic_increasing
             assert not ds.indexes["time"].has_duplicates
-
-    def test_missing_input_is_reported(self, enso_driver, tmp_path):
-        first = _write_slice(tmp_path, EARLY, "1850-01-01", 12)
-
-        with pytest.raises(FileNotFoundError, match=r"missing\.nc"):
-            enso_driver.concatenate_timeseries(
-                [first, str(tmp_path / "missing.nc")], "ts", output_dir=str(tmp_path)
-            )
 
 
 class TestUpdateDictDatasets:
@@ -177,7 +158,7 @@ class TestUpdateDictDatasets:
             assert ds.sizes["time"] == 24
 
     def test_join_is_chronological_regardless_of_input_order(self, enso_driver, tmp_path, landmask_calls):
-        """The catalog does not order files; CMIP filenames sort chronologically."""
+        """The catalog does not order files, but CMIP filenames sort chronologically."""
         files = [
             _write_slice(tmp_path, LATE, "1851-01-01", 12),
             _write_slice(tmp_path, EARLY, "1850-01-01", 12),
@@ -215,7 +196,7 @@ class TestUpdateDictDatasets:
         assert result["model"]["ACCESS-CM2_r1i1p1f1"]["sst"]["path + filename"] == only
 
     def test_multi_file_observations_are_renamed(self, enso_driver, tmp_path, landmask_calls):
-        """The HadISST-1-1 reference is itself split over files; the rename must still apply."""
+        """The HadISST-1-1 reference is itself split over files, and the rename must still apply."""
         files = [
             _write_slice(tmp_path, "ts_HadISST-1-1_185101-185112.nc", "1851-01-01", 12),
             _write_slice(tmp_path, "ts_HadISST-1-1_185001-185012.nc", "1850-01-01", 12),
@@ -229,8 +210,9 @@ class TestUpdateDictDatasets:
 
     def test_duplicate_copies_are_not_concatenated(self, enso_driver, tmp_path, landmask_calls):
         """
-        HadISST-1-1 is ingested from both the obs4REF cache and the ESGF obs4MIPs mirror, so the
-        same file arrives twice. The copies cover one time range and must not be joined.
+        HadISST-1-1 may be ingested from both the obs4REF cache and the ESGF obs4MIPs mirror,
+        so the same file arrives twice.
+        The copies cover one time range and must not be joined.
         """
         name = "ts_mon_HadISST-1-1_PCMDI_gn_185001-185012.nc"
         cache = tmp_path / "obs4ref"

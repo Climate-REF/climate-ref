@@ -16,7 +16,8 @@ from climate_ref_ilamb.standard import (
     _RelationshipTimeTransform,
     _set_ilamb3_options,
 )
-from ilamb3.dataset import coarsen_dataset
+from ilamb3.dataset import coarsen_dataset, convert
+from ilamb3.transform.amoc import msftmz_to_rapid
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
 
@@ -162,6 +163,72 @@ class TestCoarsenSpatial:
 
         assert transform._cache_path(ds) is None
         assert not list(tmp_path.rglob("*.nc"))
+
+
+class TestMsftmzToRapid:
+    """
+    The RAPID-2023-1a obs4REF reference has no `basin` dimension, unlike CMIP `msftmz` and the
+    older RAPID file, so ILAMB's unguarded `isel(basin=0)` raised `ValueError`.
+    """
+
+    def _dataset(self, *, with_basin: bool) -> xr.Dataset:
+        time = pd.date_range("2000-01-01", periods=4, freq="MS")
+        lat = np.array([20.0, 26.5, 30.0])
+        depth = np.array([100.0, 1000.0])
+        # A distinct value per (lat, depth) so the 26.5N maximum-over-depth is identifiable.
+        # Scaled to a realistic msftmz magnitude (~1e10 kg s-1, i.e. a few Sv).
+        values = 1.0e10 * (
+            1.0
+            + np.arange(len(time) * len(depth) * len(lat), dtype=float).reshape(
+                len(time), len(depth), len(lat)
+            )
+        )
+        dims = ("time", "depth", "lat")
+        coords = {"time": time, "depth": depth, "lat": lat}
+        if with_basin:
+            # CMIP orders msftmz as (time, basin, depth, lat); basin 0 is the Atlantic.
+            values = np.stack([values, values + 5.0e10], axis=1)
+            dims = ("time", "basin", "depth", "lat")
+            coords["basin"] = np.array([0, 1])
+        ds = xr.Dataset({"msftmz": (dims, values)}, coords=coords)
+        ds["msftmz"].attrs["units"] = "kg s-1"
+        ds["lat"].attrs.update({"units": "degrees_north", "standard_name": "latitude"})
+        ds["depth"].attrs.update({"units": "m", "positive": "down"})
+        return ds
+
+    def test_reference_without_basin_is_transformed(self):
+        transform = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()
+
+        result = transform(self._dataset(with_basin=False))
+
+        assert "amoc" in result
+        assert "msftmz" not in result
+        assert "basin" not in result["amoc"].dims
+        assert result["amoc"].sizes["time"] == 4
+
+    def test_matches_upstream_when_basin_is_present(self):
+        """The guard must not alter data that already has a basin dimension."""
+        ds = self._dataset(with_basin=True)
+
+        result = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()(ds)
+        expected = msftmz_to_rapid()(ds)
+
+        xr.testing.assert_identical(result["amoc"], expected["amoc"])
+
+    def test_expanded_basin_selects_the_same_values(self):
+        """Restoring a length-1 basin must be value-preserving, not a different section."""
+        ds = self._dataset(with_basin=False)
+
+        amoc = ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"]()(ds)["amoc"]
+
+        # Same section and reduction as the transform, converted with ILAMB's own helper so the
+        # assertion pins the selection rather than restating the kg s-1 -> Sv factor.
+        expected = convert(ds["msftmz"].sel(lat=26.5, method="nearest").max("depth"), "Sv", "msftmz")
+        np.testing.assert_allclose(amoc.values, expected.values)
+
+        # A different latitude would give a different answer, so the assertion above has teeth.
+        off_section = convert(ds["msftmz"].sel(lat=20.0).max("depth"), "Sv", "msftmz")
+        assert not np.allclose(amoc.values, off_section.values)
 
 
 class TestCleanUnits:

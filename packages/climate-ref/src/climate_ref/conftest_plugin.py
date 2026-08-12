@@ -39,9 +39,8 @@ from typing import Any, cast
 import pandas as pd
 import pytest
 from _pytest.logging import LogCaptureFixture
-from click.testing import Result
 from loguru import logger
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 from climate_ref import cli
 from climate_ref.config import (

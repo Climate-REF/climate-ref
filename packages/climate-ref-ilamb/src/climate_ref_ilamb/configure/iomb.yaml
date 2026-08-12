@@ -35,16 +35,21 @@ so-WOA2023-surface:
   - sos
 
 amoc-RAPID:
-  version: 3
+  version: 4
+  # The transform replaces msftmz with the derived AMOC index, so the analysis runs on `amoc`
+  # rather than on the (only) source variable.
+  analysis_variable: amoc
   analyses:
   - timeseries
   related_vars:
   - msftmz
   transforms:
-  - msftmz_to_rapid
+  - climate_ref_msftmz_to_rapid
   sources:
-    # RAPID-2023-1a obs4REF provides raw msftmz; msftmz_to_rapid derives the AMOC index.
-    msftmz:
+    # RAPID-2023-1a obs4REF provides raw msftmz; climate_ref_msftmz_to_rapid derives the AMOC
+    # index (ILAMB's own msftmz_to_rapid assumes a `basin` dimension this file does not have).
+    # Keyed by the derived variable, which is what ilamb3 looks the reference up by.
+    amoc:
       obs_source: obs4ref
       source_id: RAPID-2023-1a
       variable_id: msftmz

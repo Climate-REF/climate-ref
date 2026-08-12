@@ -15,6 +15,7 @@ import pooch
 import xarray as xr
 from ilamb3 import run
 from ilamb3.dataset import coarsen_dataset, get_dim_name
+from ilamb3.transform.amoc import msftmz_to_rapid
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
@@ -90,6 +91,27 @@ class _RelationshipTimeTransform(ILAMBTransform):
 
 
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_relationship_time", _RelationshipTimeTransform)
+
+
+class _MsftmzToRapid(msftmz_to_rapid):
+    """
+    Derive the AMOC index from ``msftmz`` for references that carry no ``basin`` dimension.
+
+    ILAMB's ``msftmz_to_rapid`` selects the Atlantic overturning with a hardcoded
+    ``isel(basin=0)``. That holds for CMIP ``msftmz``, which is resolved by basin, and for the
+    older ``RAPID`` obs4REF file. The ``RAPID-2023-1a`` file this provider uses instead ships the
+    array already reduced to the single RAPID section (``time``/``depth``/``lat``), so the
+    unguarded ``isel`` raises ``ValueError: Dimensions {'basin'} do not exist``. Restoring a
+    length-1 ``basin`` leaves the values untouched and lets the upstream transform run unchanged.
+    """
+
+    def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        if "msftmz" in ds and "basin" not in ds["msftmz"].dims:
+            ds = ds.assign(msftmz=ds["msftmz"].expand_dims("basin"))
+        return super().__call__(ds)
+
+
+ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"] = _MsftmzToRapid
 
 
 class _CoarsenSpatial(ILAMBTransform):
@@ -1017,9 +1039,19 @@ class ILAMBStandard(Diagnostic):
             ref_datasets = definition.datasets[SourceDatasetType.obs4MIPs].datasets
             ref_datasets = ref_datasets.reset_index()
             ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
+            # ilamb3 keys reference data by the variable the analysis runs on, which is not always
+            # the variable stored on disk: `amoc-RAPID` loads msftmz and derives `amoc` in a
+            # transform. Keep the key the configure file chose so that derived name survives, and
+            # fall back to the on-disk variable for the usual case where the two agree.
+            source_keys = {
+                entry["variable_id"]: key
+                for key, entry in self.ilamb_kwargs["sources"].items()
+                if isinstance(entry, dict) and "variable_id" in entry
+            }
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
-                self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+                source_key = source_keys.get(variable_id, variable_id)
+                self.ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so

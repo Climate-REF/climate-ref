@@ -88,27 +88,6 @@ def _describe_memory(usage: ResourceUsage) -> str:
     return described
 
 
-def _log_resource_usage(case_id: str, usage: ResourceUsage | None) -> None:
-    """
-    Log wall clock, CPU time and peak memory for a completed test case.
-
-    Parameters
-    ----------
-    case_id
-        Identifier of the case the measurement belongs to.
-    usage
-        The measured usage, or None when the measurement itself failed.
-    """
-    if usage is None:  # pragma: no cover
-        logger.info(f"Resources for {case_id}: unmeasured")
-        return
-
-    cpu = f"{usage.cpu_seconds:.1f}s" if usage.cpu_seconds is not None else "unmeasured"
-    logger.info(
-        f"Resources for {case_id}: wall {usage.wall_seconds:.1f}s, cpu {cpu}, {_describe_memory(usage)}"
-    )
-
-
 @contextmanager
 def log_resources(case_id: str) -> Iterator[None]:
     """
@@ -133,7 +112,13 @@ def log_resources(case_id: str) -> Iterator[None]:
             yield
     finally:
         if recorder is not None:
-            _log_resource_usage(case_id, recorder.usage)
+            usage = recorder.usage
+            prefix = f"Resources for {case_id}"
+            if usage is None:
+                logger.info(f"{prefix}: unmeasured")
+            else:
+                cpu = f"{usage.cpu_seconds:.1f}s" if usage.cpu_seconds is not None else "unmeasured"
+                logger.info(f"{prefix}: wall {usage.wall_seconds:.1f}s, cpu {cpu}, {_describe_memory(usage)}")
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:

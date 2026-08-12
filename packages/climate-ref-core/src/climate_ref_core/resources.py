@@ -1,17 +1,26 @@
 """
 Measurement of the resources a block of work consumes.
 
-The whole surface is one context manager, :func:`measure_resources`,
-and the frozen record it produces, :class:`ResourceUsage`.
+A block can be measured via a context manager, :func:`measure_resources`,
+and results are returned as a frozen dataclass, :class:`ResourceUsage`.
+
+.. code-block:: python
+
+    with measure_resources() as recorder:
+        run_diagnostic()
+
+    usage = recorder.usage
+    print(usage.wall_seconds, usage.peak_memory_bytes, usage.memory_source)
 
 Measurement never raises.
 Any probe that fails degrades a single field to None,
-or degrades :attr:`ResourceUsage.memory_source` to ``"unavailable"``,
-so instrumenting a diagnostic can never fail it.
+or degrades :attr:`ResourceUsage.memory_source` to ``"unavailable"``.
 
 Peak memory comes from the first source that answers:
-cgroup v2 ``memory.peak``, then sampled cgroup ``memory.current``,
-then a summed sweep of the process tree, then ``getrusage``.
+cgroup v2 ``memory.peak``,
+then sampled cgroup ``memory.current``,
+then a summed sweep of the process tree,
+then ``getrusage``.
 :attr:`ResourceUsage.memory_source` records which one won,
 because a ``getrusage`` figure must never be silently compared against a cgroup figure.
 """

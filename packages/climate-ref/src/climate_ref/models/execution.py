@@ -276,8 +276,7 @@ class Execution(CreatedUpdatedMixin, Base):
     Provenance of ``peak_memory_bytes``.
 
     One of ``cgroup``, ``proc_tree``, ``rusage`` or ``unavailable``.
-    The sources measure different things and are not interchangeable,
-    so a rusage figure must never be silently compared against a cgroup figure.
+    The sources measure different things and are not interchangeable.
     """
 
     memory_limit_bytes: Mapped[int | None] = mapped_column(BigInteger, nullable=True)

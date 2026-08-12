@@ -113,8 +113,9 @@ class ExecutionFuture:
 
         A task submitted and finished between two polls is never seen running,
         which would leave the queue latency unrecorded for every short execution.
-        The worker measured how long it ran, so subtracting that from the moment
-        completion was observed puts the start within one poll interval of the truth.
+        The worker measured how long it ran,
+        so subtracting that from the moment completion was observed puts the start
+        within one poll interval of the truth.
 
         Parameters
         ----------

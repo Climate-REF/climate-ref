@@ -7,18 +7,18 @@ from climate_ref_celery.routing import (
 )
 
 EXAMPLE = """
-default = "medium"
+default = "{provider}-medium"
 
 [esmvaltool]
-default = "medium"
+default = "esmvaltool-medium"
 rules = [
-  { match = "portrait-*", size = "large" },
-  { match = "climate-at-global-warming-level", size = "large" },
-  { match = "sea-ice-basic", size = "small" },
+  { match = "portrait-*", queue = "esmvaltool-large" },
+  { match = "climate-at-global-warming-level", queue = "esmvaltool-large" },
+  { match = "sea-ice-basic", queue = "{provider}-small" },
 ]
 
 [ilamb]
-default = "small"
+default = "ilamb-small"
 """
 
 
@@ -57,8 +57,8 @@ class TestQueueFor:
                 """
                 [pmp]
                 rules = [
-                  { match = "annual-*", size = "large" },
-                  { match = "annual-cycle", size = "small" },
+                  { match = "annual-*", queue = "pmp-large" },
+                  { match = "annual-cycle", queue = "pmp-small" },
                 ]
                 """
             )
@@ -70,12 +70,16 @@ class TestQueueFor:
             routes_file(
                 """
                 [pmp]
-                rules = [{ match = "annual-*", size = "large" }]
+                rules = [{ match = "annual-*", queue = "pmp-large" }]
                 """
             )
         )
         assert table.queue_for("pmp", "variability-modes") == "pmp"
         assert table.queue_for("ilamb", "gpp") == "ilamb"
+
+    def test_provider_placeholder_default(self, routes_file):
+        table = RoutingTable.from_file(routes_file('default = "{provider}"'))
+        assert table.queue_for("pmp", "annual-cycle") == "pmp"
 
     def test_empty_table(self):
         assert RoutingTable().queue_for("pmp", "annual-cycle") == "pmp"
@@ -95,9 +99,14 @@ class TestValidation:
         with pytest.raises(RoutingTableError, match="top-level 'default'"):
             RoutingTable.from_file(routes_file("default = 3"))
 
-    def test_non_string_size(self, routes_file):
-        with pytest.raises(RoutingTableError, match=r"\[pmp\] rule 0 'size'"):
-            RoutingTable.from_file(routes_file('[pmp]\nrules = [{ match = "a", size = 2 }]'))
+    def test_non_string_queue(self, routes_file):
+        with pytest.raises(RoutingTableError, match=r"\[pmp\] rule 0 'queue'"):
+            RoutingTable.from_file(routes_file('[pmp]\nrules = [{ match = "a", queue = 2 }]'))
+
+    @pytest.mark.parametrize("template", ["{diagnostic}", "{provider", "queue-{}"])
+    def test_invalid_queue_template(self, routes_file, template):
+        with pytest.raises(RoutingTableError, match="not a valid queue template"):
+            RoutingTable.from_file(routes_file(f'default = "{template}"'))
 
     def test_missing_rule_keys(self, routes_file):
         with pytest.raises(RoutingTableError, match=r"\[pmp\] rule 0"):
@@ -125,8 +134,8 @@ class TestValidation:
                 """
                 [pmp]
                 rules = [
-                  { match = "annual-*", size = "large" },
-                  { match = "annual-*", size = "small" },
+                  { match = "annual-*", queue = "pmp-large" },
+                  { match = "annual-*", queue = "pmp-small" },
                 ]
                 """
             )

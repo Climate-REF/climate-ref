@@ -95,30 +95,31 @@ outside of the configuration file.
 ### `REF_CELERY_ROUTES`
 
 Path to a TOML routing table for the Celery executor.
-The table maps diagnostics to size classes,
-so that an execution lands on a size-specific queue such as `esmvaltool-large`
-instead of the bare provider queue.
+The table maps diagnostics to queue names,
+so that an execution lands on a queue such as `esmvaltool-large` instead of the bare provider queue.
 Differently sized worker pools can then consume the queues independently.
 
 ```toml
-default = "medium"
+default = "{provider}"
 
 [esmvaltool]
-default = "medium"
+default = "esmvaltool-medium"
 rules = [
-  { match = "portrait-*", size = "large" },
-  { match = "sea-ice-basic", size = "small" },
+  { match = "portrait-*", queue = "esmvaltool-large" },
+  { match = "sea-ice-basic", queue = "esmvaltool-small" },
 ]
 
 [ilamb]
-default = "small"
+default = "ilamb-small"
 ```
 
 Rules are matched against the diagnostic slug in order, first match wins.
 Patterns support exact strings and glob wildcards.
+Queue names are templates in which `{provider}` expands to the provider slug.
 A provider `default` applies when no rule matches,
 and the top-level `default` applies when the provider has no entry.
-With no default and no match, the bare provider queue is used.
+With no default and no match, the bare provider queue is used,
+equivalent to a default of `"{provider}"`.
 
 If this is not set, every execution uses the bare provider queue.
 A malformed file fails the solve at startup rather than silently misrouting jobs.

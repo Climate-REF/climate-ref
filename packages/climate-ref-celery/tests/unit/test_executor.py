@@ -45,7 +45,7 @@ def set_routes(monkeypatch, tmp_path):
 
 
 def test_run_routed_queue(config, metric_definition, mocker, set_routes):
-    set_routes('[mock_provider]\nrules = [{ match = "mock", size = "large" }]\n')
+    set_routes('[mock_provider]\nrules = [{ match = "mock", queue = "mock_provider-large" }]\n')
 
     executor = CeleryExecutor(config=config)
     mock_app = mocker.patch("climate_ref_celery.executor.app")
@@ -56,7 +56,7 @@ def test_run_routed_queue(config, metric_definition, mocker, set_routes):
 
 
 def test_run_routed_queue_no_match(config, metric_definition, mocker, set_routes):
-    set_routes('[mock_provider]\nrules = [{ match = "other-*", size = "large" }]\n')
+    set_routes('[mock_provider]\nrules = [{ match = "other-*", queue = "mock_provider-large" }]\n')
 
     executor = CeleryExecutor(config=config)
     mock_app = mocker.patch("climate_ref_celery.executor.app")
@@ -74,7 +74,7 @@ def test_malformed_routes_fails_construction(config, set_routes):
 
 
 def test_log_submission_summary(config, metric_definition, mocker, set_routes, caplog):
-    set_routes('[mock_provider]\nrules = [{ match = "mock", size = "large" }]\n')
+    set_routes('[mock_provider]\nrules = [{ match = "mock", queue = "mock_provider-large" }]\n')
 
     executor = CeleryExecutor(config=config)
     mocker.patch("climate_ref_celery.executor.app")

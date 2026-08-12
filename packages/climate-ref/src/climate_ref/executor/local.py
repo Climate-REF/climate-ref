@@ -128,7 +128,10 @@ class LocalExecutor:
             If provided, the result will be updated in the database when completed.
         """
         # Submit the execution to the process pool
-        # and track the future so we can wait for it to complete
+        # and track the future so we can wait for it to complete.
+        # The timestamp is taken before the submission,
+        # because the future can start running before the call returns.
+        submitted_at = time.time()
         future = self.pool.submit(
             _process_run,
             definition=definition,
@@ -139,7 +142,7 @@ class LocalExecutor:
                 future=future,
                 definition=definition,
                 execution_id=execution.id if execution else None,
-                submitted_at=time.time(),
+                submitted_at=submitted_at,
             )
         )
 

@@ -1186,6 +1186,7 @@ def resources(  # noqa: PLR0913
             pd.DataFrame.from_records([_resource_json_record(p) for p in ordered]),
             output_format=output_format,
         )
+        _warn_about_bias(ordered)
         return
 
     label = "provider" if by == ResourceGroupBy.provider else "diagnostic"

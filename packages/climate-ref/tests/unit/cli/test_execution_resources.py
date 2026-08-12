@@ -132,6 +132,15 @@ class TestResourcesCommand:
         assert "biased low" in result.stderr
         assert "fewer than 10 samples" in result.stderr
 
+    def test_json_still_warns_about_bias(self, db_with_resources, invoke_cli):
+        """stderr is the only place a JSON caller sees the bias signals, so it still has to carry them."""
+        result = invoke_cli(["executions", "resources", "--format", "json"])
+
+        # stdout stays machine readable, the warnings go alongside it.
+        json.loads(result.stdout)
+        assert "biased low" in result.stderr
+        assert "fewer than 10 samples" in result.stderr
+
     def test_by_provider(self, db_with_resources, invoke_cli):
         result = invoke_cli(["executions", "resources", "--by", "provider"])
 

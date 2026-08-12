@@ -39,6 +39,7 @@ import os
 import tomllib
 from collections.abc import Collection, Mapping
 from pathlib import Path
+from string import Formatter
 from typing import Any
 
 from attrs import field, frozen
@@ -60,13 +61,25 @@ class RoutingTableError(ValueError):
 def _require_queue_template(value: Any, path: Path, entry: str) -> str:
     if not isinstance(value, str):
         raise RoutingTableError(f"Routing table {path}: {entry} must be a string, got {value!r}")
-    try:
-        value.format(provider="provider")
-    except (KeyError, IndexError, ValueError) as exc:
-        raise RoutingTableError(
+
+    def invalid() -> RoutingTableError:
+        return RoutingTableError(
             f"Routing table {path}: {entry} is not a valid queue template "
             f"(only {{provider}} is supported): {value!r}"
-        ) from exc
+        )
+
+    # Allow only the bare {provider} field.
+    # Index/attribute lookups, conversions and format specs would mangle the queue name,
+    # for example {provider[0]}-large silently routes esmvaltool to e-large.
+    try:
+        fields = list(Formatter().parse(value))
+    except ValueError as exc:
+        raise invalid() from exc
+    for _, field_name, format_spec, conversion in fields:
+        if field_name is None:
+            continue
+        if field_name != "provider" or format_spec or conversion:
+            raise invalid()
     return value
 
 

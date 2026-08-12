@@ -103,7 +103,18 @@ class TestValidation:
         with pytest.raises(RoutingTableError, match=r"\[pmp\] rule 0 'queue'"):
             RoutingTable.from_file(routes_file('[pmp]\nrules = [{ match = "a", queue = 2 }]'))
 
-    @pytest.mark.parametrize("template", ["{diagnostic}", "{provider", "queue-{}"])
+    @pytest.mark.parametrize(
+        "template",
+        [
+            "{diagnostic}",
+            "{provider",
+            "queue-{}",
+            "{provider[0]}-large",
+            "{provider.name}",
+            "{provider!r}",
+            "{provider:>20}",
+        ],
+    )
     def test_invalid_queue_template(self, routes_file, template):
         with pytest.raises(RoutingTableError, match="not a valid queue template"):
             RoutingTable.from_file(routes_file(f'default = "{template}"'))

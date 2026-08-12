@@ -84,6 +84,7 @@ class CeleryExecutor(Executor):
         async_result = app.send_task(
             name,
             args=[definition, self.config.log_level],
+            kwargs={"measure": self.config.executor.measure_resources},
             queue=diagnostic.provider.slug,
             link=handle_result.s(execution_id=execution.id).set(queue="celery") if execution else None,
             link_error=handle_failure.s(execution_id=execution.id).set(queue="celery") if execution else None,

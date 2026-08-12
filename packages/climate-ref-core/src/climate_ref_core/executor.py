@@ -40,6 +40,7 @@ def execute_locally(
     definition: ExecutionDefinition,
     log_level: str,
     raise_error: bool = False,
+    measure: bool = True,
 ) -> ExecutionResult:
     """
     Run a diagnostic execution
@@ -52,12 +53,16 @@ def execute_locally(
         A description of the information needed for this execution of the diagnostic
     log_level
         The log level to use for the execution
+    measure
+        Whether to record what the execution costs in wall time, CPU time and peak memory.
+
+        When False the result carries no resource usage.
     """
     logger.info(f"Executing {definition.execution_slug()!r}")
 
     deferred: Exception | None = None
 
-    with measure_resources() as recorder:
+    with measure_resources(enabled=measure) as recorder:
         try:
             if definition.output_directory.exists():
                 logger.warning(

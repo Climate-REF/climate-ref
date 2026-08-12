@@ -153,12 +153,12 @@ def limit_from_env(*args: Any, **kwargs: Any) -> float | None:
 
 @python_app
 @with_memory_limit(limit_from_env)
-def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionResult:
+def _process_run(definition: ExecutionDefinition, log_level: str, measure: bool = True) -> ExecutionResult:
     """Run the function on computer nodes"""
     # This is a catch-all for any exceptions that occur in the process and need to raise for
     # parsl retries to work
     try:
-        return execute_locally(definition=definition, log_level=log_level, raise_error=True)
+        return execute_locally(definition=definition, log_level=log_level, raise_error=True, measure=measure)
     except DiagnosticError as e:  # pragma: no cover
         # any diagnostic error will be caught here
         logger.exception("Error running diagnostic")
@@ -489,6 +489,7 @@ class HPCExecutor:
         future = _process_run(
             definition=definition,
             log_level=self.config.log_level,
+            measure=self.config.executor.measure_resources,
         )
 
         self.parsl_results.append(

@@ -48,7 +48,11 @@ class SynchronousExecutor:
             A database model representing the execution of the diagnostic.
             If provided, the result will be updated in the database when completed.
         """
-        result = execute_locally(definition, log_level=self.config.log_level)
+        result = execute_locally(
+            definition,
+            log_level=self.config.log_level,
+            measure=self.config.executor.measure_resources,
+        )
 
         # Solver now commits the Execution row before submitting to the executor,
         # so the instance handed to ``run`` is detached and DB writes inside

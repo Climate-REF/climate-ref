@@ -547,7 +547,7 @@ def _hostname() -> str | None:
 
 
 @contextmanager
-def measure_resources(*, interval: float = 0.5) -> Iterator[ResourceRecorder]:
+def measure_resources(*, interval: float = 0.5, enabled: bool = True) -> Iterator[ResourceRecorder]:
     """
     Measure wall time, CPU time and peak memory of everything done in the block.
 
@@ -561,6 +561,12 @@ def measure_resources(*, interval: float = 0.5) -> Iterator[ResourceRecorder]:
     ----------
     interval
         Seconds between memory samples.
+    enabled
+        Whether to measure at all.
+
+        When False the block runs untouched and ``usage`` stays None,
+        which every consumer already reads as unmeasured.
+        No sampler thread is started and no cgroup file is read.
 
     Yields
     ------
@@ -568,6 +574,10 @@ def measure_resources(*, interval: float = 0.5) -> Iterator[ResourceRecorder]:
         The recorder holding the result.
     """
     recorder = ResourceRecorder(interval)
+    if not enabled:
+        yield recorder
+        return
+
     recorder._start()
     try:
         yield recorder

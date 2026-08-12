@@ -77,6 +77,34 @@ def ensure_absolute_path(path: str | Path) -> Path:
     return path.resolve()
 
 
+def _bool(value: str | bool) -> bool:
+    """
+    Convert a value to a boolean, accepting the spellings an environment variable can carry
+
+    Parameters
+    ----------
+    value
+        Value to convert
+
+    Returns
+    -------
+        The boolean value
+
+    Raises
+    ------
+    ValueError
+        The value is not a recognised spelling of true or false
+    """
+    if isinstance(value, bool):
+        return value
+    normalised = value.strip().lower()
+    if normalised in ("1", "true", "yes", "on"):
+        return True
+    if normalised in ("0", "false", "no", "off"):
+        return False
+    raise ValueError(f"Cannot interpret {value!r} as a boolean")
+
+
 def _optional_path(path: str | Path | None) -> Path | None:
     """
     Convert a value to a path, treating an unset or empty value as "not configured"
@@ -275,6 +303,16 @@ class ExecutorConfig:
     using a process pool.
 
     This class will be used for all executions of diagnostics.
+    """
+
+    measure_resources: bool = env_field(name="EXECUTOR_MEASURE_RESOURCES", default=True, converter=_bool)
+    """
+    Whether to record what each execution costs in wall time, CPU time and peak memory.
+
+    The measurement is what `ref executions resources` aggregates,
+    so turning it off leaves that command without new samples.
+    Set it to `false` where the sampling thread is unwelcome,
+    for example in a memory-constrained container or a profiling run.
     """
 
     config: dict[str, Any] = field(factory=dict)

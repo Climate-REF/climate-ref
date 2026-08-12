@@ -40,6 +40,16 @@ def test_usage_is_none_inside_and_populated_after():
     assert usage.exclusive is True
 
 
+def test_disabled_measures_nothing():
+    """A disabled block runs untouched and reports as unmeasured, with no sampler started"""
+    with measure_resources(interval=0.01, enabled=False) as recorder:
+        assert recorder.usage is None
+        time.sleep(0.02)
+
+    assert recorder.usage is None
+    assert recorder._sampler is None
+
+
 def test_context_is_json_serialisable():
     with measure_resources(interval=0.01) as recorder:
         pass

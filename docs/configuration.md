@@ -41,6 +41,7 @@ run_migrations = true
 
 [executor]
 executor = "climate_ref.executor.LocalExecutor"
+measure_resources = true
 
 [executor.config]
 
@@ -115,6 +116,16 @@ Maximum number of files fetched concurrently by `ref datasets fetch-data`.
 This must be a positive integer and defaults to `4`.
 Set it to `1` to fetch files sequentially,
 or reduce it when network bandwidth or the remote server limits concurrent transfers.
+
+### `REF_EXECUTOR_MEASURE_RESOURCES`
+
+Whether to record what each execution costs in wall time, CPU time and peak memory.
+This defaults to `true` and accepts `true`/`false`, `1`/`0`, `yes`/`no` and `on`/`off`.
+
+The measurement is what `ref executions resources` aggregates,
+so turning it off leaves that command without new samples.
+Set it to `false` where the sampling thread is unwelcome,
+for example in a memory-constrained container or a profiling run.
 
 ### `REF_TEST_DATA_DIR`
 

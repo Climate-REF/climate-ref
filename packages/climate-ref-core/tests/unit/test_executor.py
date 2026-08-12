@@ -184,6 +184,16 @@ class TestExecuteLocallyResourceUsage:
 
         assert isinstance(exc_info.value.result.resource_usage, ResourceUsage)
 
+    def test_measure_false_records_nothing(self, make_definition, mocker):
+        """Turning the measurement off leaves the result without usage, and the run untouched"""
+        definition = make_definition(mocker.Mock())
+        definition.diagnostic.run.return_value = ExecutionResult(definition=definition, successful=True)
+
+        result = execute_locally(definition, log_level="WARNING", measure=False)
+
+        assert result.successful is True
+        assert result.resource_usage is None
+
     def test_measurement_failure_does_not_fail_the_run(self, make_definition, mocker):
         """A recorder that cannot report leaves a successful result successful"""
         definition = make_definition(mocker.Mock())

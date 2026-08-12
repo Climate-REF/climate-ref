@@ -167,8 +167,7 @@ class TestCoarsenSpatial:
 
 class TestMsftmzToRapid:
     """
-    The RAPID-2023-1a obs4REF reference has no `basin` dimension, unlike CMIP `msftmz` and the
-    older RAPID file, so ILAMB's unguarded `isel(basin=0)` raised `ValueError`.
+    The RAPID-2023-1a obs4REF reference has no `basin` dimension.
     """
 
     def _dataset(self, *, with_basin: bool) -> xr.Dataset:
@@ -176,7 +175,6 @@ class TestMsftmzToRapid:
         lat = np.array([20.0, 26.5, 30.0])
         depth = np.array([100.0, 1000.0])
         # A distinct value per (lat, depth) so the 26.5N maximum-over-depth is identifiable.
-        # Scaled to a realistic msftmz magnitude (~1e10 kg s-1, i.e. a few Sv).
         values = 1.0e10 * (
             1.0
             + np.arange(len(time) * len(depth) * len(lat), dtype=float).reshape(
@@ -226,7 +224,6 @@ class TestMsftmzToRapid:
         expected = convert(ds["msftmz"].sel(lat=26.5, method="nearest").max("depth"), "Sv", "msftmz")
         np.testing.assert_allclose(amoc.values, expected.values)
 
-        # A different latitude would give a different answer, so the assertion above has teeth.
         off_section = convert(ds["msftmz"].sel(lat=20.0).max("depth"), "Sv", "msftmz")
         assert not np.allclose(amoc.values, off_section.values)
 

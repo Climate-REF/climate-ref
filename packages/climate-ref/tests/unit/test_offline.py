@@ -157,4 +157,6 @@ def test_pmp_configure_does_not_download_micromamba(offline_config, no_network):
     provider.configure(offline_config)
 
     assert no_network == []
-    assert provider.env_vars["PCMDI_CONDA_EXE"] == str(offline_config.paths.software / "conda/micromamba")
+    assert provider.env_overrides["PCMDI_CONDA_EXE"] == str(
+        offline_config.paths.software / "conda/micromamba"
+    )

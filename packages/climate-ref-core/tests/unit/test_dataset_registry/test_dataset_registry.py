@@ -1,5 +1,6 @@
 import importlib.resources
 import logging
+import threading
 from pathlib import Path
 
 import pytest
@@ -350,6 +351,7 @@ def test_fetch_all_files(mocker, tmp_path, symlink, verify):
     downloaded_file.write_text("foo")
 
     registry = dataset_registry_manager["obs4ref"]
+    mocker.patch.object(registry, "path", tmp_path / "cache")
     registry.fetch = mocker.MagicMock(return_value=downloaded_file)
 
     fetch_all_files(registry, "obs4ref", tmp_path, symlink=symlink, verify=verify)
@@ -406,12 +408,57 @@ def test_verify_hash_differs(mocker, tmp_path):
         _verify_hash_matches(file_path, expected_hash)
 
 
-def test_fetch_all_files_no_output(mocker):
+def test_fetch_all_files_no_output(mocker, tmp_path):
     registry = dataset_registry_manager["obs4ref"]
+    mocker.patch.object(registry, "path", tmp_path / "cache")
     registry.fetch = mocker.MagicMock()
 
     fetch_all_files(registry, "obs4ref", None)
     assert registry.fetch.call_count == NUM_OBS4REF_FILES
+
+
+def test_fetch_all_files_fetches_in_parallel(mocker, tmp_path):
+    mocker.patch("climate_ref_core.dataset_registry._MAX_FETCH_WORKERS", 2)
+    registry = mocker.Mock()
+    registry.abspath = tmp_path / "cache"
+    registry.registry = {
+        "first.nc": "sha256:first",
+        "second.nc": "sha256:second",
+    }
+    simultaneous_fetches = threading.Barrier(2, timeout=2)
+
+    def fetch(key):
+        simultaneous_fetches.wait()
+        return key
+
+    registry.fetch.side_effect = fetch
+
+    fetch_all_files(registry, "obs4ref", None)
+
+    assert registry.fetch.call_count == 2
+
+
+def test_fetch_all_files_prepares_shared_cache_directory(mocker, tmp_path):
+    registry = mocker.Mock()
+    registry.abspath = tmp_path / "cache"
+    registry.registry = {
+        "dataset/first.nc": "sha256:first",
+        "dataset/second.nc": "sha256:second",
+    }
+    simultaneous_parent_checks = threading.Barrier(2, timeout=2)
+
+    def fetch(key):
+        parent = (registry.abspath / key).parent
+        if not parent.exists():
+            simultaneous_parent_checks.wait()
+            parent.mkdir(parents=True)
+        return key
+
+    registry.fetch.side_effect = fetch
+
+    fetch_all_files(registry, "obs4ref", None)
+
+    assert registry.fetch.call_count == 2
 
 
 class TestValidateRegistryCache:

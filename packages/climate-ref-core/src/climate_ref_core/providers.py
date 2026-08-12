@@ -10,7 +10,9 @@ Each diagnostic package must implement the `DiagnosticProvider` interface.
 from __future__ import annotations
 
 import datetime
+import functools
 import hashlib
+import importlib.metadata
 import importlib.resources
 import os
 import stat
@@ -377,6 +379,84 @@ def import_provider(fqn: str) -> DiagnosticProvider:
         raise InvalidProviderException(fqn, "Provider not found in module")
 
 
+@functools.cache
+def provider_by_slug(slug: str) -> DiagnosticProvider:
+    """
+    Look up a registered provider by its slug
+
+    Entry points can be enumerated without importing them,
+    so only the provider that matches is ever loaded.
+    The loaded provider is the module-level singleton,
+    so it carries whatever configuration the current process has already applied to it.
+
+    Parameters
+    ----------
+    slug
+        Slug of the provider, for example `esmvaltool`.
+
+    Raises
+    ------
+    InvalidProviderException
+        If no registered provider has the given slug.
+
+    Returns
+    -------
+    :
+        DiagnosticProvider instance
+    """
+    entry_points = list(importlib.metadata.entry_points(group="climate-ref.providers"))
+
+    # The entry point name is the provider slug by convention, so the name match is tried first
+    # and the rest are only a fallback for a provider whose name and slug disagree.
+    named_first = [ep for ep in entry_points if ep.name == slug]
+    named_first += [ep for ep in entry_points if ep.name != slug]
+
+    # A non-matching provider that fails to import is skipped rather than masking the one we are looking for,
+    # while an import failure on the named provider itself propagates.
+    for entry_point in named_first:
+        try:
+            provider = import_provider(entry_point.value)
+        except InvalidProviderException:
+            if entry_point.name == slug:
+                raise
+            logger.debug(f"Skipping provider {entry_point.name!r} while looking for {slug!r}")
+            continue
+        if provider.slug == slug:
+            return provider
+
+    available = ", ".join(sorted(ep.name for ep in entry_points)) or "[]"
+    raise InvalidProviderException(slug, f"No provider with slug {slug!r}. Available: {available}")
+
+
+def resolve_diagnostic(full_slug: str) -> Diagnostic:
+    """
+    Look up a diagnostic from its full slug
+
+    Parameters
+    ----------
+    full_slug
+        Slug of the form `{provider_slug}/{diagnostic_slug}`, as produced by
+        [Diagnostic.full_slug][climate_ref_core.diagnostics.Diagnostic.full_slug].
+
+    Raises
+    ------
+    InvalidProviderException
+        If the slug is malformed or names a provider that is not installed.
+    KeyError
+        If the provider does not supply a diagnostic with that slug.
+
+    Returns
+    -------
+    :
+        The diagnostic registered with the named provider.
+    """
+    provider_slug, separator, diagnostic_slug = full_slug.partition("/")
+    if not separator:
+        raise InvalidProviderException(full_slug, "Expected a slug of the form 'provider/diagnostic'")
+
+    return provider_by_slug(provider_slug).get(diagnostic_slug)
+
+
 class CommandLineDiagnosticProvider(DiagnosticProvider):
     """
     A provider for diagnostics that can be run from the command line.
@@ -450,8 +530,9 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
 
     Attributes
     ----------
-    env_vars
-        Environment variables to set when running commands in the conda environment.
+    env_overrides
+        Environment variables overriding the process environment
+        for commands run in the conda environment.
     pip_packages
         Pip packages to install (as URLs) with ``--no-deps``
         after creating the conda environment.
@@ -468,7 +549,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         self._conda_exe: Path | None = None
         self._prefix: Path | None = None
         self.pip_packages: list[str] = []
-        self.env_vars: dict[str, str] = os.environ.copy()
+        self.env_overrides: dict[str, str] = {}
 
     @property
     def prefix(self) -> Path:
@@ -486,6 +567,20 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
     def prefix(self, path: Path) -> None:
         self._prefix = path
 
+    def _launch_env(self) -> dict[str, str]:
+        """
+        Environment for a command launched in the conda environment.
+
+        The live process environment is the base,
+        so settings applied to a worker reach every command it launches,
+        with the provider's overrides on top.
+        HOME falls back to the conda prefix so micromamba has a writable directory.
+        """
+        env = {**os.environ, **self.env_overrides}
+        if "HOME" not in env:
+            env["HOME"] = str(self.prefix)
+        return env
+
     @property
     def conda_exe_path(self) -> Path:
         """
@@ -500,7 +595,6 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
         """Configure the provider."""
         super().configure(config)
         self.prefix = config.paths.software / "conda"
-        self.env_vars.setdefault("HOME", str(self.prefix))
 
     def _is_stale(self, path: Path) -> bool:
         """Check if a file is older than `MICROMAMBA_MAX_AGE`.
@@ -602,7 +696,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 f"{self.env_path}",
             ]
             logger.debug(f"Running {' '.join(cmd)}")
-            subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
+            subprocess.run(cmd, check=True, env=self._launch_env())  # noqa: S603
 
             for pkg in self.pip_packages:
                 logger.info(f"Installing development version from {pkg}")
@@ -617,7 +711,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                     pkg,
                 ]
                 logger.debug(f"Running {' '.join(cmd)}")
-                subprocess.run(cmd, check=True, env=self.env_vars)  # noqa: S603
+                subprocess.run(cmd, check=True, env=self._launch_env())  # noqa: S603
 
     def run(self, cmd: Iterable[str]) -> None:
         """
@@ -659,7 +753,7 @@ class CondaDiagnosticProvider(CommandLineDiagnosticProvider):
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
                 text=True,
-                env=self.env_vars,
+                env=self._launch_env(),
             )
             logger.info("Command output: \n" + res.stdout)
             logger.info("Command execution successful")

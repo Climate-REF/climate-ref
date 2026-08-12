@@ -39,7 +39,7 @@ dependencies = [
     "pyyaml>=6.0.2",
     "psutil>=5.9.8",
     # Not used directly, but required to support some installations
-    "setuptools<81",
+    "setuptools<84",
 
     # ESGF data fetching
     "intake-esgf>=2025.7.16",

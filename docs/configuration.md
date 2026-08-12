@@ -109,6 +109,13 @@ This defaults to the following locations:
   environment variable, if defined. (Linux)
 * `%USERPROFILE%\AppData\Local\climate_ref\Cache` (Windows)
 
+### `REF_DATASET_FETCH_WORKERS`
+
+Maximum number of files fetched concurrently by `ref datasets fetch-data`.
+This must be a positive integer and defaults to `4`.
+Set it to `1` to fetch files sequentially,
+or reduce it when network bandwidth or the remote server limits concurrent transfers.
+
 ### `REF_TEST_DATA_DIR`
 
 Override the location of the test data directory.
@@ -120,6 +127,31 @@ If this is set, then the sample data won't be updated.
 
 Path where the test output is stored.
 This is used to store the output of the tests that are run in the test suite for later inspection.
+
+## Celery environment variables
+
+These apply when the Celery executor is in use.
+The full set of tuning knobs is listed in the Helm chart README,
+and the ones below govern the wire format.
+
+Tasks and results are encoded as JSON (`ref-json`).
+What a process sends is fixed and cannot be changed by configuration,
+so no deployment can put pickle back on the wire.
+
+### `CELERY_TASK_COMPRESSION` and `CELERY_RESULT_COMPRESSION`
+
+Codec used to compress task and result message bodies, defaulting to `gzip`.
+Bodies are dominated by the datasets DataFrame carried in the execution definition
+and shrink by roughly 80%, which cuts broker memory on a full solve.
+Set either to an empty string to send uncompressed bodies.
+
+### `CELERY_ACCEPT_CONTENT`
+
+Comma separated content types a worker will decode, defaulting to `json,ref-json`.
+This only widens what is accepted.
+It will not revive messages queued by a release that still used pickle
+because those carry a pickled diagnostic and provider that current releases no longer define.
+Purge the queues when upgrading from such a release and re-solve.
 
 ## Grey list
 

@@ -128,7 +128,6 @@ and defaults to `None`, so a provider that never sets it stays valid.
 | `TestCase`                 | Class (attrs) | A single test case definition                   |
 | `TestDataSpecification`    | Class (attrs) | Collection of test cases for a diagnostic       |
 | `TestCasePaths`            | Class (attrs) | Path resolver for test case data                |
-| `validate_cmec_bundles`    | Function      | Validate CMEC metric/output bundles             |
 | `collect_test_case_params` | Function      | Collect pytest parametrize params from provider |
 | `load_datasets_from_yaml`  | Function      | Load ExecutionDatasetCollection from YAML       |
 | `save_datasets_to_yaml`    | Function      | Save ExecutionDatasetCollection to YAML         |

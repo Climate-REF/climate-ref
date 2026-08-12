@@ -16,19 +16,11 @@ from climate_ref_core.pycmec.output import CMECOutput
 from climate_ref_core.regression.capture import (
     _redact_source_paths,
     build_native_snapshot,
-    capture_execution,
     materialise_native,
     write_committed_bundle,
 )
 from climate_ref_core.regression.manifest import COMMITTED_BUNDLE_FILES, NativeEntry, sha256_file
-from climate_ref_core.regression.store import LocalFilesystemStore
-
-
-class _FakeResult:
-    def __init__(self, metric_bundle_filename, output_bundle_filename=None, series_filename=None):
-        self.metric_bundle_filename = metric_bundle_filename
-        self.output_bundle_filename = output_bundle_filename
-        self.series_filename = series_filename
+from climate_ref_core.regression.store import NativeStore
 
 
 def _seed_execution(scratch, fragment, *, output_dir, test_data_dir):
@@ -309,89 +301,13 @@ def test_build_native_snapshot_digests_relpaths(tmp_path):
     assert snapshot["a.nc"].sha256 == sha256_file(base / "a.nc")
 
 
-def test_capture_execution_end_to_end(tmp_path):
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    output_dir = (scratch / fragment).resolve()
-    test_data_dir = (tmp_path / "test-data").resolve()
-    _seed_execution(scratch, fragment, output_dir=output_dir, test_data_dir=test_data_dir)
-    regression_dir = tmp_path / "regression"
-
-    result = _FakeResult(
-        metric_bundle_filename="diagnostic.json",
-        output_bundle_filename="output.json",
-        series_filename="series.json",
-    )
-
-    committed, native = capture_execution(
-        scratch,
-        results,
-        fragment,
-        result,
-        regression_dir=regression_dir,
-        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
-    )
-
-    # Committed bundle is the three CMEC artefacts.
-    assert set(committed) == {"series.json", "diagnostic.json", "output.json"}
-    # Native snapshot is exactly what copy_execution_outputs persists in production:
-    # the 3 bundles, without the execution log (the production default).
-    assert set(native) == {"diagnostic.json", "output.json", "series.json"}
-    # Persisted files actually landed in the results directory.
-    for relpath in native:
-        assert (results / fragment / relpath).exists()
-
-
-def test_capture_execution_include_log(tmp_path):
-    scratch = (tmp_path / "scratch").resolve()
-    results = (tmp_path / "results").resolve()
-    fragment = "frag"
-    output_dir = (scratch / fragment).resolve()
-    test_data_dir = (tmp_path / "test-data").resolve()
-    _seed_execution(scratch, fragment, output_dir=output_dir, test_data_dir=test_data_dir)
-
-    result = _FakeResult(
-        metric_bundle_filename="diagnostic.json",
-        output_bundle_filename="output.json",
-        series_filename="series.json",
-    )
-
-    _, native = capture_execution(
-        scratch,
-        results,
-        fragment,
-        result,
-        regression_dir=tmp_path / "regression",
-        placeholders=PlaceholderMap.for_baseline(test_data_dir=test_data_dir).with_output(output_dir),
-        include_log=True,
-    )
-
-    assert set(native) == {EXECUTION_LOG_FILENAME, "diagnostic.json", "output.json", "series.json"}
-
-
-def test_capture_execution_requires_metric_bundle(tmp_path):
-    result = _FakeResult(metric_bundle_filename=None)
-    with pytest.raises(ValueError, match="without a metric bundle"):
-        capture_execution(
-            tmp_path / "scratch",
-            tmp_path / "results",
-            "frag",
-            result,
-            regression_dir=tmp_path / "regression",
-            placeholders=PlaceholderMap.for_baseline(test_data_dir=tmp_path / "td").with_output(
-                tmp_path / "out"
-            ),
-        )
-
-
 def test_materialise_native_round_trip(tmp_path):
     # Put two blobs into a local store, snapshot them, then materialise.
     src = tmp_path / "src"
     src.mkdir()
     (src / "a.nc").write_bytes(b"alpha")
     (src / "b.png").write_bytes(b"beta")
-    store = LocalFilesystemStore(root=tmp_path / "store")
+    store = NativeStore(url=str(tmp_path / "store"))
 
     snapshot = build_native_snapshot(src, [Path("a.nc"), Path("b.png")])
     for relpath, entry in snapshot.items():
@@ -410,7 +326,7 @@ def test_materialise_native_round_trip(tmp_path):
     ["../escape.nc", "../../etc/passwd", "/abs/path.nc", "sub/../../escape.nc"],
 )
 def test_materialise_native_rejects_path_traversal(tmp_path, relpath):
-    store = LocalFilesystemStore(root=tmp_path / "store")
+    store = NativeStore(url=str(tmp_path / "store"))
     native = {relpath: NativeEntry(sha256="0" * 64, size=1)}
     with pytest.raises(ValueError, match=r"Unsafe native path"):
         materialise_native(native, store, tmp_path / "dest")

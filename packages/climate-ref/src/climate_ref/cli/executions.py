@@ -2,8 +2,10 @@
 View execution groups and their results
 """
 
+import datetime
 import pathlib
 import shutil
+from collections.abc import Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from typing import Annotated
@@ -23,6 +25,7 @@ from sqlalchemy import or_
 from climate_ref.cli._utils import (
     OutputFormat,
     df_to_table,
+    format_size,
     parse_facet_filters,
     pretty_print_df,
     render_dataframe,
@@ -42,6 +45,7 @@ from climate_ref.results import (
     Reader,
 )
 from climate_ref.results.executions import OutputView
+from climate_ref.results.resources import ResourceProfile
 from climate_ref.results.values import ValuesReader
 from climate_ref_core.logging import EXECUTION_LOG_FILENAME
 from climate_ref_core.paths import safe_path
@@ -68,6 +72,13 @@ class ValueKind(StrEnum):
 
     scalar = "scalar"
     series = "series"
+
+
+class ResourceGroupBy(StrEnum):
+    """Axis the ``resources`` command aggregates over."""
+
+    diagnostic = "diagnostic"
+    provider = "provider"
 
 
 # Default columns for the ``list-groups`` table.
@@ -827,8 +838,6 @@ def fail_running(
     An optional age threshold can be provided with --older-than to only fail executions
     that have been running for longer than the specified number of hours.
     """
-    import datetime
-
     session = ctx.obj.database.session
     console = ctx.obj.console
 
@@ -952,6 +961,241 @@ def stats(
     results_df = results_df.sort_values(["provider", "diagnostic"]).reset_index(drop=True)
 
     pretty_print_df(results_df, console=console)
+
+
+_SECONDS_PER_UNIT = {"h": 3600, "d": 86400, "w": 604800}
+
+
+def _parse_since(value: str) -> datetime.datetime:
+    """
+    Parse a ``--since`` value into a naive UTC cutoff.
+
+    Accepts a relative age with a unit suffix (``12h``, ``90d``, ``4w``)
+    or an ISO date such as ``2026-07-01``.
+
+    Parameters
+    ----------
+    value
+        The raw option string.
+
+    Returns
+    -------
+    :
+        The cutoff, naive and in UTC, matching how ``created_at`` is stored.
+
+    Raises
+    ------
+    ValueError
+        If the string is neither a relative age nor an ISO date.
+    """
+    suffix = value[-1:].lower()
+    if suffix in _SECONDS_PER_UNIT:
+        try:
+            magnitude = float(value[:-1])
+        except ValueError:
+            raise ValueError(f"Invalid --since value: {value!r}")
+        now = datetime.datetime.now(tz=datetime.UTC).replace(tzinfo=None)
+        return now - datetime.timedelta(seconds=magnitude * _SECONDS_PER_UNIT[suffix])
+
+    try:
+        return datetime.datetime.fromisoformat(value)
+    except ValueError:
+        raise ValueError(
+            f"Invalid --since value: {value!r}. Expected a relative age (90d, 12h, 4w) or an ISO date."
+        )
+
+
+def _format_duration(seconds: float) -> str:
+    """Render a duration compactly, in the largest unit that keeps it readable."""
+    if seconds < 90:  # noqa: PLR2004
+        return f"{seconds:.0f}s"
+    if seconds < 5400:  # noqa: PLR2004
+        return f"{seconds / 60:.0f}m"
+    return f"{seconds / 3600:.1f}h"
+
+
+def _resource_table_row(profile: ResourceProfile, label: str) -> dict[str, str | int]:
+    limit = profile.memory_limit_seen
+    headroom = profile.headroom_ratio
+    return {
+        label: profile.diagnostic_slug if profile.diagnostic_slug is not None else profile.provider_slug,
+        "n": profile.n_samples,
+        "fail": profile.n_failed,
+        "mem p50": format_size(profile.peak_memory_p50),
+        "mem p95": format_size(profile.peak_memory_p95),
+        "mem max": format_size(profile.peak_memory_max),
+        "rec mem": format_size(profile.recommended_memory_bytes),
+        "wall p95": _format_duration(profile.wall_p95),
+        "cpu/wall": f"{profile.parallelism_p95:.1f}",
+        "rec cpu": profile.recommended_cpus,
+        "limit": format_size(limit) if limit is not None else "-",
+        "headroom": f"{headroom:.1f}x" if headroom is not None else "-",
+        "flag": "OVER" if profile.over_limit else "",
+        "conf": profile.confidence,
+    }
+
+
+def _resource_json_record(profile: ResourceProfile) -> dict[str, object]:
+    return {
+        "provider": profile.provider_slug,
+        "diagnostic": profile.diagnostic_slug,
+        "n_samples": profile.n_samples,
+        "n_excluded": profile.n_excluded,
+        "n_failed": profile.n_failed,
+        "memory_source": profile.memory_source,
+        "peak_memory_p50": profile.peak_memory_p50,
+        "peak_memory_p95": profile.peak_memory_p95,
+        "peak_memory_max": profile.peak_memory_max,
+        "wall_p95": profile.wall_p95,
+        "cpu_seconds_p95": profile.cpu_seconds_p95,
+        "parallelism_p95": profile.parallelism_p95,
+        "memory_limit_seen": profile.memory_limit_seen,
+        "headroom_ratio": profile.headroom_ratio,
+        "recommended_memory_bytes": profile.recommended_memory_bytes,
+        "recommended_cpus": profile.recommended_cpus,
+        "confidence": profile.confidence,
+        "over_limit": profile.over_limit,
+    }
+
+
+def _warn_about_bias(profiles: Sequence[ResourceProfile]) -> None:
+    """
+    Surface the reasons a recommendation may be lower than the truth.
+
+    The table carries the same signals in its fail, conf and flag columns.
+    These warnings repeat them on stderr, which is the only place a ``--format json`` caller sees them.
+    """
+    over = [p for p in profiles if p.over_limit]
+    if over:
+        logger.warning(
+            f"{len(over)} row(s) flagged OVER: the p95 peak has outgrown the recorded memory limit, "
+            f"so those executions are being killed by the current container size."
+        )
+
+    failed = sum(p.n_failed for p in profiles)
+    if failed:
+        logger.warning(
+            f"{failed} failed execution(s) in this window. A failure that recorded a measurement "
+            f"is counted here, but a killed process records nothing at all, "
+            f"so the heaviest runs may be missing and the recommendations biased low."
+        )
+
+    thin = [p for p in profiles if p.confidence != "good"]
+    if thin:
+        logger.warning(
+            f"{len(thin)} row(s) rest on fewer than 10 samples (see the conf column). "
+            f"Their p95 is the maximum by another name."
+        )
+
+    excluded = sum(p.n_excluded for p in profiles)
+    if excluded:
+        logger.warning(
+            f"{excluded} measured execution(s) were excluded as non-exclusive, incomplete, "
+            f"or carrying a different memory source. Use --include-shared to count shared ones."
+        )
+
+
+@app.command()
+def resources(  # noqa: PLR0913
+    ctx: typer.Context,
+    provider: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by provider slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    diagnostic: Annotated[
+        list[str] | None,
+        typer.Option(
+            help="Filter by diagnostic slug (substring match, case-insensitive). "
+            "Multiple values can be provided."
+        ),
+    ] = None,
+    by: Annotated[
+        ResourceGroupBy,
+        typer.Option(help="Aggregate per diagnostic (default) or roll up per provider."),
+    ] = ResourceGroupBy.diagnostic,
+    since: Annotated[
+        str | None,
+        typer.Option(help="Only consider executions newer than this age (90d, 12h, 4w) or ISO date."),
+    ] = None,
+    safety: Annotated[
+        float,
+        typer.Option(help="Multiplier applied to the p95 peak when recommending a memory size."),
+    ] = 1.3,
+    include_shared: Annotated[
+        bool,
+        typer.Option(
+            "--include-shared",
+            help="Also count executions measured while other executions shared the worker. "
+            "Those readings cover the whole worker, not the execution.",
+        ),
+    ] = False,
+    output_format: Annotated[
+        OutputFormat,
+        typer.Option("--format", help="Output format: table (default) or json."),
+    ] = OutputFormat.table,
+) -> None:
+    """
+    Show measured resource usage and a recommended worker size.
+
+    One row per diagnostic by default, sorted by recommended memory descending.
+    Use --by provider for the roll-up a worker actually has to fit,
+    which takes the largest memory over the provider's diagnostics.
+
+    Three columns qualify the recommendation and should be read with it.
+    The OVER flag marks a p95 peak that has outgrown the recorded memory limit.
+    The fail column counts failed executions, which record nothing when they are killed,
+    so a high count means the numbers here are lower than the truth.
+    The conf column reports how many samples the percentiles rest on.
+    """
+    import pandas as pd
+
+    console = ctx.obj.console
+    reader = Reader(ctx.obj.database)
+
+    cutoff = None
+    if since is not None:
+        try:
+            cutoff = _parse_since(since)
+        except ValueError as e:
+            logger.error(str(e))
+            raise typer.Exit(code=1)
+
+    profiles = reader.resources.profiles(
+        diagnostic_contains=diagnostic,
+        provider_contains=provider,
+        since=cutoff,
+        group_by=by.value,
+        exclusive_only=not include_shared,
+        safety_factor=safety,
+    )
+
+    if not profiles:
+        console.print("No resource measurements found.")
+        return
+
+    ordered = sorted(
+        profiles,
+        key=lambda p: (-p.recommended_memory_bytes, p.provider_slug, p.diagnostic_slug or ""),
+    )
+
+    if output_format == OutputFormat.json:
+        render_dataframe(
+            pd.DataFrame.from_records([_resource_json_record(p) for p in ordered]),
+            output_format=output_format,
+        )
+        _warn_about_bias(ordered)
+        return
+
+    label = "provider" if by == ResourceGroupBy.provider else "diagnostic"
+    render_dataframe(
+        pd.DataFrame.from_records([_resource_table_row(p, label) for p in ordered]),
+        console=console,
+        output_format=output_format,
+    )
+    _warn_about_bias(ordered)
 
 
 # `get_executions_for_reingest` stays on the ORM helper by design.

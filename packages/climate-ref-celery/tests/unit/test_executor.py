@@ -16,6 +16,7 @@ def test_run_metric(provider, config, mock_diagnostic, metric_definition, mocker
         mock_app.send_task.assert_called_once_with(
             "mock_provider.mock",
             args=[metric_definition, "INFO"],
+            kwargs={"measure": True},
             link=handle_result.s(execution_id=mock_execution_result.id).set(queue="celery"),
             link_error=handle_failure.s(execution_id=mock_execution_result.id).set(queue="celery"),
             queue="mock_provider",
@@ -26,6 +27,7 @@ def test_run_metric(provider, config, mock_diagnostic, metric_definition, mocker
         mock_app.send_task.assert_called_once_with(
             "mock_provider.mock",
             args=[metric_definition, "INFO"],
+            kwargs={"measure": True},
             link=None,
             link_error=None,
             queue="mock_provider",

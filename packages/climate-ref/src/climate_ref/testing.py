@@ -11,7 +11,8 @@ This module provides:
 """
 
 import shutil
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
 
 from attrs import define
@@ -26,6 +27,7 @@ from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.regression import Manifest
+from climate_ref_core.resources import ResourceUsage, measure_resources
 from climate_ref_core.testing import (
     TestCasePaths,
     collect_test_case_params,
@@ -45,6 +47,78 @@ def _determine_test_directory() -> Path | None:
 TEST_DATA_DIR = _determine_test_directory()
 """Path to the centralised test data directory (for sample data)."""
 # SAMPLE_DATA_VERSION is imported from climate_ref to avoid circular imports
+
+
+def _describe_memory(usage: ResourceUsage) -> str:
+    """
+    Describe the peak memory of a completed test case.
+
+    The description names the source of the figure,
+    because a ``rusage`` reading is a process-lifetime high-water mark
+    rather than a measurement of this case alone,
+    and a cgroup reading covers every process in the container.
+
+    Parameters
+    ----------
+    usage
+        The measured usage of the case.
+
+    Returns
+    -------
+    :
+        A human readable fragment, without a leading or trailing separator.
+    """
+    from climate_ref.cli._utils import format_size  # noqa: PLC0415
+
+    if usage.peak_memory_bytes is None:
+        return "peak memory unmeasured"
+
+    qualifiers = [f"via {usage.memory_source}"]
+    if usage.memory_source == "rusage":
+        qualifiers.append("process lifetime high-water mark, not raised by this case alone")
+    elif usage.memory_source == "cgroup" and not usage.exclusive:
+        qualifiers.append("shared with another measured block")
+
+    described = f"peak memory {format_size(usage.peak_memory_bytes)} ({', '.join(qualifiers)})"
+
+    if usage.memory_limit_bytes is not None:
+        headroom = max(0, usage.memory_limit_bytes - usage.peak_memory_bytes)
+        described += f" of {format_size(usage.memory_limit_bytes)} limit, {format_size(headroom)} headroom"
+
+    return described
+
+
+@contextmanager
+def log_resources(case_id: str) -> Iterator[None]:
+    """
+    Measure a block of work and log what it cost once it finishes.
+
+    The measurement is logged whether or not the block raises.
+
+    Parameters
+    ----------
+    case_id
+        Identifier of the case the measurement belongs to.
+
+    Yields
+    ------
+    :
+        Nothing. The block is the span being measured.
+    """
+    recorder = None
+    try:
+        with measure_resources() as measured:
+            recorder = measured
+            yield
+    finally:
+        if recorder is not None:
+            usage = recorder.usage
+            prefix = f"Resources for {case_id}"
+            if usage is None:
+                logger.info(f"{prefix}: unmeasured")
+            else:
+                cpu = f"{usage.cpu_seconds:.1f}s" if usage.cpu_seconds is not None else "unmeasured"
+                logger.info(f"{prefix}: wall {usage.wall_seconds:.1f}s, cpu {cpu}, {_describe_memory(usage)}")
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:
@@ -240,7 +314,9 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
         if not paths.manifest.exists() or not paths.regression.exists():
             pytest.skip(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
 
-        assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)
+        case_id = f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}"
+        with log_resources(case_id):
+            assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)
 
     return test_run_test_cases
 

@@ -1,3 +1,5 @@
+from loguru import logger
+
 from climate_ref.executor.synchronous import SynchronousExecutor
 from climate_ref_core.executor import Executor
 
@@ -11,6 +13,28 @@ class TestSynchronousExecutor:
 
         assert executor.name == "synchronous"
         assert isinstance(executor, Executor)
+
+    def test_warns_that_peaks_can_span_executions(self, config):
+        records = []
+        sink_id = logger.add(lambda message: records.append(message.record), level="WARNING")
+        try:
+            SynchronousExecutor(config=config)
+        finally:
+            logger.remove(sink_id)
+
+        assert any("earlier execution" in record["message"] for record in records)
+
+    def test_does_not_warn_when_measurement_is_off(self, config):
+        config.executor.measure_resources = False
+
+        records = []
+        sink_id = logger.add(lambda message: records.append(message.record), level="WARNING")
+        try:
+            SynchronousExecutor(config=config)
+        finally:
+            logger.remove(sink_id)
+
+        assert not any("earlier execution" in record["message"] for record in records)
 
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog):
         mock_handle_result = mocker.patch("climate_ref.executor.result_handling.handle_execution_result")

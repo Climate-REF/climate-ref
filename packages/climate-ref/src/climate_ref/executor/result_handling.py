@@ -31,6 +31,7 @@ from climate_ref_core.output_files import copy_execution_outputs, copy_output_fi
 from climate_ref_core.pycmec.controlled_vocabulary import CV
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput, OutputDict
+from climate_ref_core.resources import ResourceUsage
 
 if TYPE_CHECKING:
     from climate_ref.config import Config
@@ -95,14 +96,55 @@ class ExecutionFuture:
     so that time spent waiting in the pool queue is not counted as execution time.
     """
 
+    @property
+    def queue_seconds(self) -> float | None:
+        """
+        Time spent waiting between submission and the start of execution, in seconds.
+
+        ``None`` when the start of execution could not be established.
+        """
+        if self.started_at is None:
+            return None
+        return max(0.0, self.started_at - self.submitted_at)
+
+    def infer_started_at(self, result: ExecutionResult, observed_at: float) -> None:
+        """
+        Place ``started_at`` using the worker's own wall time, if a poll never observed the start.
+
+        A task submitted and finished between two polls is never seen running,
+        which would leave the queue latency unrecorded for every short execution.
+        The worker measured how long it ran,
+        so subtracting that from the moment completion was observed puts the start
+        within one poll interval of the truth.
+
+        Parameters
+        ----------
+        result
+            The finished result, whose ``resource_usage`` carries the measured wall time.
+        observed_at
+            Wall-clock time (``time.time()``) at which the future was seen to be done.
+        """
+        if self.started_at is not None:
+            return
+        usage = result.resource_usage
+        if usage is None:
+            return
+        self.started_at = max(self.submitted_at, observed_at - usage.wall_seconds)
+
 
 def process_result(
     config: "Config",
     database: Database,
     result: ExecutionResult,
     execution: Execution | None,
+    *,
+    queue_seconds: float | None = None,
 ) -> None:
-    """Process the result of a diagnostic execution, persisting outcome to the DB."""
+    """Process the result of a diagnostic execution, persisting outcome to the DB.
+
+    ``queue_seconds`` is supplied by the submitting executor,
+    because only the parent knows when the task was submitted.
+    """
     if not result.successful:
         if execution is not None:  # pragma: no branch
             info_msg = (
@@ -114,7 +156,7 @@ def process_result(
         logger.error(f"Error running {result.definition.execution_slug()}. {info_msg}")
 
     if execution:
-        handle_execution_result(config, database, execution, result)
+        handle_execution_result(config, database, execution, result, queue_seconds=queue_seconds)
 
 
 def mark_execution_failed(
@@ -383,13 +425,40 @@ def register_execution_outputs(
         )
 
 
-def handle_execution_result(
+def record_resource_usage(
+    execution: Execution,
+    usage: ResourceUsage | None,
+    queue_seconds: float | None,
+) -> None:
+    """
+    Annotate an execution with its resource measurements, swallowing any failure.
+
+    These numbers are diagnostic metadata rather than scientific output,
+    so losing a measurement is always preferable to losing a result.
+
+    Parameters
+    ----------
+    execution
+        The execution record to annotate
+    usage
+        The measurements taken by the worker, or None when nothing was measured
+    queue_seconds
+        Submit-to-start latency observed by the submitting executor, or None when it is unknown
+    """
+    try:
+        execution.apply_resource_usage(usage, queue_seconds=queue_seconds)
+    except Exception:
+        logger.warning("Could not record resource usage for this execution", exc_info=True)
+
+
+def handle_execution_result(  # noqa: PLR0913
     config: "Config",
     database: Database,
     execution: Execution,
     result: "ExecutionResult",
     *,
     update_dirty: bool = True,
+    queue_seconds: float | None = None,
 ) -> None:
     """
     Handle the result of a diagnostic execution
@@ -410,7 +479,13 @@ def handle_execution_result(
     update_dirty
         Whether to update the execution group's dirty flag.
         Set to False for reingest which should not alter pending-work state.
+    queue_seconds
+        Submit-to-start latency observed by the submitting executor, or None when it is unknown.
     """
+    # Recorded before anything that can return early.
+    # A run that ran out of memory or blew up during ingest is exactly the run whose numbers are wanted.
+    record_resource_usage(execution, result.resource_usage, queue_seconds)
+
     # Always copy log data to the results directory
     try:
         copy_output_file(

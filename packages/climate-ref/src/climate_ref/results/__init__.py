@@ -19,6 +19,9 @@ Layers:
   facade, querying the polymorphic ``Dataset`` hierarchy directly.
 * [diagnostics][climate_ref.results.diagnostics] -- diagnostic DTOs + collection + the
   ``DiagnosticsReader`` facade, querying ``Diagnostic -> Provider`` directly.
+* [resources][climate_ref.results.resources] -- ``ResourceFilter`` + resource DTOs +
+  the ``ResourcesReader`` facade, aggregating the per-execution resource columns into a
+  worker-sizing profile.
 * [artifacts][climate_ref.results.artifacts] -- the ``ArtifactsReader`` facade,
   resolving execution output fragments into filesystem paths under a results root.
 
@@ -39,7 +42,7 @@ so the namespace stays small as domains are added:
 
 * the ``Reader`` entry point,
 * filter objects you construct and pass in (``MetricValueFilter``, ``ExecutionGroupFilter``,
-  ``DatasetFilter``, ``DiagnosticFilter``),
+  ``DatasetFilter``, ``DiagnosticFilter``, ``ResourceFilter``),
 * value objects you pass in (``OutlierPolicy``).
 
 Everything the package *returns* -- DTOs, collections, views -- and the sub-reader classes reached
@@ -55,6 +58,7 @@ from climate_ref.results.datasets import DatasetFilter
 from climate_ref.results.diagnostics import DiagnosticFilter
 from climate_ref.results.executions import ExecutionGroupFilter
 from climate_ref.results.outliers import OutlierPolicy
+from climate_ref.results.resources import ResourceFilter
 from climate_ref.results.values import Reader
 
 __all__ = [
@@ -64,4 +68,5 @@ __all__ = [
     "MetricValueFilter",
     "OutlierPolicy",
     "Reader",
+    "ResourceFilter",
 ]

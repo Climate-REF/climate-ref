@@ -46,10 +46,10 @@ def _process_initialiser() -> None:  # pragma: no cover
         logger.error(f"Failed to add log handler: {e}")
 
 
-def _process_run(definition: ExecutionDefinition, log_level: str) -> ExecutionResult:
+def _process_run(definition: ExecutionDefinition, log_level: str, measure: bool = True) -> ExecutionResult:
     # This is a catch-all for any exceptions that occur in the process
     try:
-        return execute_locally(definition=definition, log_level=log_level)
+        return execute_locally(definition=definition, log_level=log_level, measure=measure)
     except Exception:  # pragma: no cover
         # This isn't expected but if it happens we want to log the error before the process exits
         # Mark as retryable since this is an infrastructure-level failure
@@ -93,21 +93,27 @@ class LocalExecutor:
         self.config = config
 
         # Per-task wall-clock budget (default 6 hours, matching the Celery task_time_limit).
-        # This budgets *execution* time measured from when a worker starts the task,
-        # not from submission so a task that waits in the pool queue is never penalised for that wait.
-        # Diagnostics that hang past this while running are considered lost so the pool can
-        # recycle the slot rather than blocking ``join`` forever.
+        # This budgets *execution* time measured from when a worker starts the task (instead of submission),
+        # Diagnostics that hang past this while running are considered lost.
         # Set to ``0`` to disable.
         self.task_timeout = task_timeout
 
         if pool is not None:
             self.pool = pool
+            if config.executor.measure_resources and getattr(pool, "_max_tasks_per_child", None) != 1:
+                logger.warning(
+                    "The supplied pool does not recycle its worker after every task, "
+                    "so a recorded peak memory can include the footprint of an earlier execution "
+                    "in the same worker"
+                )
         else:
             self.pool = ProcessPoolExecutor(
                 max_workers=n,
                 initializer=_process_initialiser,
                 # Explicitly set the context to "spawn" to avoid issues with hanging on MacOS
                 mp_context=multiprocessing.get_context("spawn"),
+                # A fresh process per execution for the right rusage peak-memory
+                max_tasks_per_child=1,
             )
         self._results: list[ExecutionFuture] = []
 
@@ -127,19 +133,19 @@ class LocalExecutor:
             A database model representing the execution of the diagnostic.
             If provided, the result will be updated in the database when completed.
         """
-        # Submit the execution to the process pool
-        # and track the future so we can wait for it to complete
+        submitted_at = time.time()
         future = self.pool.submit(
             _process_run,
             definition=definition,
             log_level=self.config.log_level,
+            measure=self.config.executor.measure_resources,
         )
         self._results.append(
             ExecutionFuture(
                 future=future,
                 definition=definition,
                 execution_id=execution.id if execution else None,
-                submitted_at=time.time(),
+                submitted_at=submitted_at,
             )
         )
 
@@ -173,7 +179,11 @@ class LocalExecutor:
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
 
         results = self._results
-        t = tqdm(total=len(results), desc="Waiting for executions to complete", unit="execution")
+        t = tqdm(
+            total=len(results),
+            desc="Waiting for executions to complete",
+            unit="execution",
+        )
 
         try:
             while results:
@@ -181,6 +191,11 @@ class LocalExecutor:
 
                 # Iterate over a copy of the list and remove finished tasks
                 for result in results[:]:
+                    # Record when a worker first picks the task up.
+                    # ``submitted_at`` only marks enqueue time
+                    if result.started_at is None and result.future.running():
+                        result.started_at = now
+
                     if result.future.done():
                         try:
                             execution_result = result.future.result(timeout=0)
@@ -198,6 +213,8 @@ class LocalExecutor:
                             "Execution result should be of type ExecutionResult"
                         )
 
+                        result.infer_started_at(execution_result, now)
+
                         # Process the result in the main process
                         # The results should be committed after each execution
                         with self.database.session.begin():
@@ -206,16 +223,17 @@ class LocalExecutor:
                                 if result.execution_id
                                 else None
                             )
-                            process_result(self.config, self.database, execution_result, execution)
+                            process_result(
+                                self.config,
+                                self.database,
+                                execution_result,
+                                execution,
+                                queue_seconds=result.queue_seconds,
+                            )
                         logger.debug(f"Execution completed: {result}")
                         t.update(n=1)
                         results.remove(result)
                         continue
-
-                    # Record when a worker first picks the task up.
-                    # ``submitted_at`` only marks enqueue time
-                    if result.started_at is None and result.future.running():
-                        result.started_at = now
 
                     # Per-task timeout: a runaway *running* diagnostic cannot block the pool forever.
                     # Cancel its future and mark the row failed-retryable.

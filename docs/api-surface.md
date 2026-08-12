@@ -18,15 +18,15 @@ a major version bump and a migration guide.
 
 The primary module providers interact with.
 
-| Symbol                  | Kind          | Description                                      |
-| ----------------------- | ------------- | ------------------------------------------------ |
-| `Diagnostic`            | Class         | Base class all diagnostics must subclass         |
-| `AbstractDiagnostic`    | Protocol      | Protocol defining the diagnostic interface       |
-| `CommandLineDiagnostic` | Class         | Base for diagnostics that shell out to CLI tools |
-| `DataRequirement`       | Class (attrs) | Declares what datasets a diagnostic needs        |
-| `ExecutionDefinition`   | Class (attrs) | Immutable description of a single execution      |
-| `ExecutionResult`       | Class (attrs) | Result of running a diagnostic                   |
-| `ensure_relative_path`  | Function      | Resolve a path relative to root_directory        |
+| Symbol                  | Kind          | Description                                           |
+| ----------------------- | ------------- | ----------------------------------------------------- |
+| `Diagnostic`            | Class         | Base class all diagnostics must subclass              |
+| `AbstractDiagnostic`    | Protocol      | Protocol defining the diagnostic interface            |
+| `CommandLineDiagnostic` | Class         | Base for diagnostics that shell out to CLI tools      |
+| `DataRequirement`       | Class (attrs) | Declares what datasets a diagnostic needs             |
+| `ExecutionDefinition`   | Class (attrs) | Immutable description of a single execution           |
+| `ExecutionResult`       | Class (attrs) | Result of running a diagnostic, with `resource_usage` |
+| `ensure_relative_path`  | Function      | Resolve a path relative to root_directory             |
 
 ### Key extension points
 
@@ -91,6 +91,21 @@ The primary module providers interact with.
 | `Executor`            | Protocol | Interface for execution backends           |
 | `execute_locally`     | Function | Run a diagnostic in the current process    |
 | `import_executor_cls` | Function | Import an executor by fully qualified name |
+
+---
+
+## `climate_ref_core.resources` (Provisional)
+
+| Symbol              | Kind            | Description                                            |
+| ------------------- | --------------- | ------------------------------------------------------ |
+| `measure_resources` | Context manager | Measure wall time, CPU time and peak memory of a block |
+| `ResourceUsage`     | Class (attrs)   | Frozen record of what one block of work cost           |
+| `ResourceRecorder`  | Class           | Handle yielded by `measure_resources`, holding `usage` |
+| `MemorySource`      | TypeAlias       | Provenance of a peak memory figure                     |
+
+Provisional because the set of measured fields is expected to grow as more hosts are covered.
+`ExecutionResult.resource_usage` carries a `ResourceUsage` back from the worker,
+and defaults to `None`, so a provider that never sets it stays valid.
 
 ---
 

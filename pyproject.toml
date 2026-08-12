@@ -163,6 +163,7 @@ filterwarnings = [
 markers = [
     "slow: marks tests as slow (deselect with '-m \"not slow\"')",
     "test_cases: marks tests that run diagnostic test cases with ESGF data",
+    "resource_intensive: marks tests that time real CPU and memory spends, run them serially",
 ]
 strict = true
 

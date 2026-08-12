@@ -121,6 +121,22 @@ class TestConcatenateTimeseries:
         assert again == joined
         assert Path(again).read_text() == "sentinel"
 
+    def test_extended_input_set_writes_a_fresh_join(self, enso_driver, tmp_path):
+        """A join is only reused for the exact input set, so a new slice must not be lost."""
+        first = _write_slice(tmp_path, EARLY, "1850-01-01", 12)
+        second = _write_slice(tmp_path, LATE, "1851-01-01", 12)
+        third = _write_slice(
+            tmp_path, "ts_Amon_ACCESS-CM2_historical_r1i1p1f1_gn_185201-185212.nc", "1852-01-01", 12
+        )
+        out = tmp_path / "out"
+
+        enso_driver.concatenate_timeseries([first, second], output_dir=str(out))
+        extended = enso_driver.concatenate_timeseries([first, second, third], output_dir=str(out))
+
+        with xr.open_dataset(extended) as ds:
+            assert ds.sizes["time"] == 36
+            assert str(ds["time"].values[-1])[:7] == "1852-12"
+
     def test_overlapping_packagings_are_deduplicated(self, enso_driver, tmp_path):
         """
         One period can be registered twice in different packagings: GPCP-Monthly-3-2 arrives as a
@@ -178,7 +194,7 @@ class TestUpdateDictDatasets:
         enso_driver.update_dict_datasets(_dataset_dict(files), str(tmp_path))
 
         assert len(landmask_calls) == 1
-        assert landmask_calls[0][0].endswith("_concatenated.nc")
+        assert "_concatenated_" in Path(landmask_calls[0][0]).name
 
     def test_single_file_list_is_unwrapped_and_not_joined(self, enso_driver, tmp_path, landmask_calls):
         """A lone file is passed straight through, as it always has been."""

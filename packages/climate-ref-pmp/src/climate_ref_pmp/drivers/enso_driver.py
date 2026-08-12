@@ -6,8 +6,10 @@ This script runs inside the PMP conda environment due to the use of xcdat.
 
 import argparse
 import copy
+import hashlib
 import json
 import os
+import tempfile
 from collections import defaultdict
 
 import xcdat as xc
@@ -450,9 +452,13 @@ def concatenate_timeseries(file_paths, output_dir=".", output_filename=None) -> 
     os.makedirs(output_dir, exist_ok=True)
 
     if output_filename is None:
-        # ts_Amon_ACCESS-CM2_historical_r1i1p1f1_gn_185001-194912.nc -> ..._gn_concatenated.nc
+        # ts_Amon_ACCESS-CM2_historical_r1i1p1f1_gn_185001-194912.nc -> ..._gn_concatenated_<digest>.nc
+        # The digest covers the whole input set, so a join is only ever reused for the exact
+        # same set of files and a later run with an extra slice writes a fresh join.
         stem = os.path.basename(file_paths[0]).replace(".nc", "")
-        output_filename = f"{'_'.join(stem.split('_')[:-1])}_concatenated.nc"
+        names = "\n".join(os.path.basename(p) for p in file_paths)
+        digest = hashlib.sha256(names.encode()).hexdigest()[:8]
+        output_filename = f"{'_'.join(stem.split('_')[:-1])}_concatenated_{digest}.nc"
     concatenated_path = os.path.join(output_dir, output_filename)
 
     if os.path.exists(concatenated_path):
@@ -469,10 +475,16 @@ def concatenate_timeseries(file_paths, output_dir=".", output_filename=None) -> 
 
         if time_index.has_duplicates:
             ds = ds.isel(time=~time_index.duplicated())
-        tmp_path = f"{concatenated_path}.{os.getpid()}.tmp"
-        ds.to_netcdf(tmp_path)
-    # Rename atomically so a concurrent execution never reads a partial file.
-    os.replace(tmp_path, concatenated_path)
+        # A private temporary file, so concurrent writers cannot trample each other's output.
+        fd, tmp_path = tempfile.mkstemp(dir=output_dir, suffix=".tmp")
+        os.close(fd)
+        try:
+            ds.to_netcdf(tmp_path)
+            # Rename atomically so a concurrent execution never reads a partial file.
+            os.replace(tmp_path, concatenated_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
 
     return os.path.abspath(concatenated_path)
 

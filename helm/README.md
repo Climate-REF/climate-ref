@@ -206,6 +206,7 @@ We need to be resiliant to workers failing.
 | `CELERY_RESULT_EXPIRES`              | Result expiry in seconds                         | `172800` (48 hours)          |
 | `CELERY_WORKER_MAX_TASKS_PER_CHILD`  | Recycle worker after N tasks (memory leak guard) | `1` (fresh process per task) |
 | `CELERY_WORKER_MAX_MEMORY_PER_CHILD` | Max resident memory per worker in KB             | None (no limit)              |
+| `CELERY_SOCKET_TIMEOUT`              | Blocking Redis socket timeout in seconds         | None (transport default)     |
 | `CELERY_TASK_COMPRESSION`            | Codec for task message bodies (empty to disable) | `gzip`                       |
 | `CELERY_RESULT_COMPRESSION`          | Codec for result bodies (empty to disable)       | `gzip`                       |
 | `CELERY_ACCEPT_CONTENT`              | Comma separated content types the worker accepts | `json,ref-json`              |

@@ -4,8 +4,9 @@ End-to-end plumbing of the resource columns on the ``Execution`` row.
 The accuracy of the measurement itself is proven in
 ``climate-ref-core/tests/integration/test_resource_measurement.py``.
 These tests only check that a measurement taken inside an executor
-survives the trip through result handling into the database,
-so they make no timing assertions and can run in parallel with other tests.
+survives the trip through result handling into the database.
+They assert only lower bounds, which hold under any load,
+so they can run in parallel with other tests.
 
 The diagnostics are defined at module level because the process pool has to pickle them.
 """

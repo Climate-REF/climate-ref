@@ -28,6 +28,7 @@ Example:
 Rules are matched against the diagnostic slug in order, first match wins.
 Patterns use :func:`fnmatch.fnmatchcase` semantics, so exact strings and glob wildcards both work.
 Queue names are templates in which ``{provider}`` expands to the provider slug.
+
 A provider ``default`` applies when no rule matches.
 The top-level ``default`` applies when the provider has no entry.
 With no default and no match, the queue is the bare provider slug,
@@ -69,8 +70,6 @@ def _require_queue_template(value: Any, path: Path, entry: str) -> str:
         )
 
     # Allow only the bare {provider} field.
-    # Index/attribute lookups, conversions and format specs would mangle the queue name,
-    # for example {provider[0]}-large silently routes esmvaltool to e-large.
     try:
         fields = list(Formatter().parse(value))
     except ValueError as exc:
@@ -127,7 +126,8 @@ class RoutingTable:
     Deployment-supplied mapping of diagnostics to queue names
 
     An empty table routes everything to the bare provider queue,
-    which matches the behaviour when no table is configured.
+    which matches the behaviour when no table is configured,
+    i.e. `default = "{provider}"`.
     """
 
     providers: Mapping[str, ProviderRoutes] = field(factory=dict)

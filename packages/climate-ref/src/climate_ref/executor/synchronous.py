@@ -1,5 +1,7 @@
 from typing import Any
 
+from loguru import logger
+
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.executor.local import process_result
@@ -31,6 +33,12 @@ class SynchronousExecutor:
 
         self.database = database
         self.config = config
+
+        if self.config.executor.measure_resources:
+            logger.warning(
+                "The synchronous executor runs every execution in this one long-lived process, "
+                "so a recorded peak memory can include the footprint of an earlier execution"
+            )
 
     def run(
         self,

@@ -104,7 +104,7 @@ defaults:
     # CELERY_VISIBILITY_TIMEOUT: "21600"       # Must be >= CELERY_TASK_TIME_LIMIT
     # CELERY_WORKER_PREFETCH_MULTIPLIER: "1"
     # CELERY_RESULT_EXPIRES: "172800"          # 48 hours
-    # CELERY_WORKER_MAX_TASKS_PER_CHILD: "50"  # Recycle workers to prevent memory leaks
+    # CELERY_WORKER_MAX_TASKS_PER_CHILD: "1"   # Fresh process per task, keeps rusage peaks per-execution
     # CELERY_WORKER_MAX_MEMORY_PER_CHILD: "2097152"  # 2 GB cap per worker process (in KB)
     # CELERY_TASK_COMPRESSION: "gzip"          # Set to "" to send uncompressed task bodies
     # CELERY_RESULT_COMPRESSION: "gzip"        # Set to "" to store uncompressed results

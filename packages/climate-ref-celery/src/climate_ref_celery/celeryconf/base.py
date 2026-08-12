@@ -8,8 +8,6 @@ For example, ``CELERY_TASK_TIME_LIMIT=3600`` overrides ``task_time_limit``.
 See the Helm chart README for per-provider override examples.
 """
 
-import os
-
 from climate_ref_celery.serialisation import SERIALIZER
 from climate_ref_core.env import get_available_cpu_count, get_env
 
@@ -37,21 +35,19 @@ task_compression = env.str("CELERY_TASK_COMPRESSION", "gzip") or None
 result_compression = env.str("CELERY_RESULT_COMPRESSION", "gzip") or None
 
 # Number of concurrent worker processes to use
-worker_concurrency = int(os.environ.get("CELERY_WORKER_CONCURRENCY", get_available_cpu_count()))
+worker_concurrency = env.int("CELERY_WORKER_CONCURRENCY", get_available_cpu_count())
 
 # Only prefetch one task at a time per worker process.
 # Higher values cause multiple tasks to be lost/redelivered on a worker crash.
 worker_prefetch_multiplier = env.int("CELERY_WORKER_PREFETCH_MULTIPLIER", default=1)
 
-# Recycle worker processes after N tasks to prevent memory leaks from
-# scientific Python libraries (numpy, xarray, netCDF4).
-_max_tasks = os.environ.get("CELERY_WORKER_MAX_TASKS_PER_CHILD")
-worker_max_tasks_per_child = int(_max_tasks) if _max_tasks is not None else None
+# A fresh process per execution keeps the rusage peak-memory reading scoped to a single execution.
+# The execution is much longer than the time it takes to create a new process.
+worker_max_tasks_per_child = env.int("CELERY_WORKER_MAX_TASKS_PER_CHILD", 1)
 
 # Hard memory cap per worker process (in KB). Workers exceeding this are
 # replaced cleanly instead of being OOM-killed by the OS.
-_max_memory = os.environ.get("CELERY_WORKER_MAX_MEMORY_PER_CHILD")
-worker_max_memory_per_child = int(_max_memory) if _max_memory is not None else None
+worker_max_memory_per_child = env.int("CELERY_WORKER_MAX_MEMORY_PER_CHILD", None)
 
 # With task_acks_late=True,
 # if the Redis connection drops the running task can never ack.
@@ -75,17 +71,17 @@ task_track_started = True
 
 # Maximum number of retries for a task that fails or is killed.
 # After this many retries the task is marked as permanently failed.
-task_max_retries = int(os.environ.get("CELERY_TASK_MAX_RETRIES", 2))  # noqa: PLW1508
+task_max_retries = env.int("CELERY_TASK_MAX_RETRIES", 2)
 
 # Default hard kill after 6 hours
 # Override per-provider via CELERY_TASK_TIME_LIMIT env var.
-task_time_limit = int(os.environ.get("CELERY_TASK_TIME_LIMIT", 6 * 60 * 60))  # noqa: PLW1508
+task_time_limit = env.int("CELERY_TASK_TIME_LIMIT", 6 * 60 * 60)
 
 # Soft limit raises SoftTimeLimitExceeded, giving the task a chance to clean up.
-task_soft_time_limit = int(os.environ.get("CELERY_TASK_SOFT_TIME_LIMIT", int(5.5 * 60 * 60)))
+task_soft_time_limit = env.int("CELERY_TASK_SOFT_TIME_LIMIT", int(5.5 * 60 * 60))
 
 # Expire results after 48 hours to prevent unbounded Redis memory growth.
-result_expires = int(os.environ.get("CELERY_RESULT_EXPIRES", 48 * 60 * 60))  # noqa: PLW1508
+result_expires = env.int("CELERY_RESULT_EXPIRES", 48 * 60 * 60)
 
 # Store extended result metadata (task name, args, worker, retries, queue)
 # for post-mortem debugging of failed runs.
@@ -109,10 +105,16 @@ result_backend_always_retry = True
 # With task_acks_late=True the ACK is sent after execution,
 # so the task sits in the unacked set for its entire runtime.
 # Setting visibility_timeout shorter than task_time_limit will cause duplicate executions.
-_visibility_timeout = int(os.environ.get("CELERY_VISIBILITY_TIMEOUT", task_time_limit))
+_visibility_timeout = env.int("CELERY_VISIBILITY_TIMEOUT", task_time_limit)
 broker_transport_options = {
     "visibility_timeout": _visibility_timeout,
 }
+
+# Bound how long a blocking Redis socket operation may wait, in seconds.
+# Unset leaves the transport default in place.
+_socket_timeout = env.int("CELERY_SOCKET_TIMEOUT", None)
+if _socket_timeout is not None:
+    broker_transport_options["socket_timeout"] = _socket_timeout
 
 
 if _visibility_timeout < task_time_limit:

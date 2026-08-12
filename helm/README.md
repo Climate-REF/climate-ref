@@ -195,20 +195,20 @@ via environment variables globally (in `defaults.env`) or per-provider.
 If tasks are hanging or not resolving, then the celery configuration could be the issue.
 We need to be resiliant to workers failing.
 
-| Variable                            | Description                                      | Default             |
-| ----------------------------------- | ------------------------------------------------ | ------------------- |
-| `CELERY_TASK_TIME_LIMIT`            | Hard kill timeout in seconds                     | `21600` (6 hours)   |
-| `CELERY_TASK_SOFT_TIME_LIMIT`       | Soft timeout (raises exception for cleanup)      | `19800` (5.5 hours) |
-| `CELERY_TASK_MAX_RETRIES`           | Max retries before permanent failure             | `2`                 |
-| `CELERY_VISIBILITY_TIMEOUT`         | Redis redelivery timeout (must be >= time limit) | Matches time limit  |
-| `CELERY_WORKER_PREFETCH_MULTIPLIER` | Tasks prefetched per worker process              | `1`                 |
-| `CELERY_WORKER_CONCURRENCY`         | Worker processes per pod                         | CPU count           |
-| `CELERY_RESULT_EXPIRES`             | Result expiry in seconds                         | `172800` (48 hours) |
-| `CELERY_WORKER_MAX_TASKS_PER_CHILD` | Recycle worker after N tasks (memory leak guard) | None (no limit)     |
-| `CELERY_WORKER_MAX_MEMORY_PER_CHILD`| Max resident memory per worker in KB             | None (no limit)     |
-| `CELERY_TASK_COMPRESSION`           | Codec for task message bodies (empty to disable) | `gzip`              |
-| `CELERY_RESULT_COMPRESSION`         | Codec for result bodies (empty to disable)       | `gzip`              |
-| `CELERY_ACCEPT_CONTENT`             | Comma separated content types the worker accepts | `json,ref-json`     |
+| Variable                             | Description                                      | Default                      |
+| ------------------------------------ | ------------------------------------------------ | ---------------------------- |
+| `CELERY_TASK_TIME_LIMIT`             | Hard kill timeout in seconds                     | `21600` (6 hours)            |
+| `CELERY_TASK_SOFT_TIME_LIMIT`        | Soft timeout (raises exception for cleanup)      | `19800` (5.5 hours)          |
+| `CELERY_TASK_MAX_RETRIES`            | Max retries before permanent failure             | `2`                          |
+| `CELERY_VISIBILITY_TIMEOUT`          | Redis redelivery timeout (must be >= time limit) | Matches time limit           |
+| `CELERY_WORKER_PREFETCH_MULTIPLIER`  | Tasks prefetched per worker process              | `1`                          |
+| `CELERY_WORKER_CONCURRENCY`          | Worker processes per pod                         | CPU count                    |
+| `CELERY_RESULT_EXPIRES`              | Result expiry in seconds                         | `172800` (48 hours)          |
+| `CELERY_WORKER_MAX_TASKS_PER_CHILD`  | Recycle worker after N tasks (memory leak guard) | `1` (fresh process per task) |
+| `CELERY_WORKER_MAX_MEMORY_PER_CHILD` | Max resident memory per worker in KB             | None (no limit)              |
+| `CELERY_TASK_COMPRESSION`            | Codec for task message bodies (empty to disable) | `gzip`                       |
+| `CELERY_RESULT_COMPRESSION`          | Codec for result bodies (empty to disable)       | `gzip`                       |
+| `CELERY_ACCEPT_CONTENT`              | Comma separated content types the worker accepts | `json,ref-json`              |
 
 Tasks and results are encoded as JSON (`ref-json`).
 What this release sends is fixed, so `CELERY_ACCEPT_CONTENT` only widens what a worker will decode.

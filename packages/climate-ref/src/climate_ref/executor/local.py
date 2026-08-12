@@ -93,21 +93,27 @@ class LocalExecutor:
         self.config = config
 
         # Per-task wall-clock budget (default 6 hours, matching the Celery task_time_limit).
-        # This budgets *execution* time measured from when a worker starts the task,
-        # not from submission so a task that waits in the pool queue is never penalised for that wait.
-        # Diagnostics that hang past this while running are considered lost so the pool can
-        # recycle the slot rather than blocking ``join`` forever.
+        # This budgets *execution* time measured from when a worker starts the task (instead of submission),
+        # Diagnostics that hang past this while running are considered lost.
         # Set to ``0`` to disable.
         self.task_timeout = task_timeout
 
         if pool is not None:
             self.pool = pool
+            if config.executor.measure_resources and getattr(pool, "_max_tasks_per_child", None) != 1:
+                logger.warning(
+                    "The supplied pool does not recycle its worker after every task, "
+                    "so a recorded peak memory can include the footprint of an earlier execution "
+                    "in the same worker"
+                )
         else:
             self.pool = ProcessPoolExecutor(
                 max_workers=n,
                 initializer=_process_initialiser,
                 # Explicitly set the context to "spawn" to avoid issues with hanging on MacOS
                 mp_context=multiprocessing.get_context("spawn"),
+                # A fresh process per execution for the right rusage peak-memory
+                max_tasks_per_child=1,
             )
         self._results: list[ExecutionFuture] = []
 
@@ -127,10 +133,6 @@ class LocalExecutor:
             A database model representing the execution of the diagnostic.
             If provided, the result will be updated in the database when completed.
         """
-        # Submit the execution to the process pool
-        # and track the future so we can wait for it to complete.
-        # The timestamp is taken before the submission,
-        # because the future can start running before the call returns.
         submitted_at = time.time()
         future = self.pool.submit(
             _process_run,
@@ -177,7 +179,11 @@ class LocalExecutor:
         refresh_time = 0.5  # Time to wait between checking for completed tasks in seconds
 
         results = self._results
-        t = tqdm(total=len(results), desc="Waiting for executions to complete", unit="execution")
+        t = tqdm(
+            total=len(results),
+            desc="Waiting for executions to complete",
+            unit="execution",
+        )
 
         try:
             while results:

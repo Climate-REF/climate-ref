@@ -1,8 +1,10 @@
 import concurrent.futures
+import multiprocessing
 import re
 from concurrent.futures import Future
 
 import pytest
+from loguru import logger
 
 from climate_ref.executor.local import ExecutionFuture, LocalExecutor, execute_locally
 from climate_ref_core.diagnostics import ExecutionResult
@@ -44,6 +46,34 @@ class TestLocalExecutor:
         executor = LocalExecutor(pool=pool)
 
         assert executor.pool == pool
+
+    def test_a_supplied_pool_that_reuses_workers_warns(self):
+        records = []
+        sink_id = logger.add(lambda message: records.append(message.record), level="WARNING")
+        try:
+            LocalExecutor(pool=concurrent.futures.ThreadPoolExecutor(max_workers=1))
+        finally:
+            logger.remove(sink_id)
+
+        assert any("earlier execution" in record["message"] for record in records)
+
+    def test_a_supplied_single_task_pool_does_not_warn(self):
+        # A real pool, so the check on the private attribute breaks loudly if its name ever changes.
+        pool = concurrent.futures.ProcessPoolExecutor(
+            max_workers=1,
+            mp_context=multiprocessing.get_context("spawn"),
+            max_tasks_per_child=1,
+        )
+
+        records = []
+        sink_id = logger.add(lambda message: records.append(message.record), level="WARNING")
+        try:
+            LocalExecutor(pool=pool)
+        finally:
+            logger.remove(sink_id)
+            pool.shutdown(wait=False)
+
+        assert not any("earlier execution" in record["message"] for record in records)
 
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog):
         process_pool = mocker.MagicMock(spec=concurrent.futures.ProcessPoolExecutor)

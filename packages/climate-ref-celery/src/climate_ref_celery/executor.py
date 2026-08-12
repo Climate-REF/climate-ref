@@ -124,13 +124,11 @@ class CeleryExecutor(Executor):
 
     def log_submission_summary(self) -> None:
         """
-        Log a per-queue count of the tasks submitted so far
-
-        The solver calls this at the end of a solve,
-        so the counts appear whether or not the solve waits on ``join``.
+        Log a per-queue count of the tasks submitted since the last summary
         """
         for queue, count in sorted(self._queue_counts.items()):
             logger.info(f"Submitted {count} executions to queue {queue}")
+        self._queue_counts.clear()
 
     def join(self, timeout: float) -> None:
         """

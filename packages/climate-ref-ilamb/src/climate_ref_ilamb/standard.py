@@ -1023,6 +1023,12 @@ class ILAMBStandard(Diagnostic):
         _set_ilamb3_options(
             dataset_registry_manager[self.region_masks] if self.region_masks is not None else None
         )
+        # The obs4MIPs rewrite below replaces configured sources with the instance_ids selected for
+        # *this* execution. A provider hands the same diagnostic instance to every execution, so
+        # work on a copy: mutating `self` would leak one execution's reference selection into the
+        # next, and re-deriving the source keys from an already-rewritten mapping would add a
+        # spurious source under the on-disk variable name.
+        ilamb_kwargs = {**self.ilamb_kwargs, "sources": dict(self.ilamb_kwargs["sources"])}
         # Temporary hack of the ilamb3 inputs while we still need to refer to
         # data not yet available in obs4{MIPs,REF}. This logic allows for
         # DataRequirement filters to be added as a 'source' in the ilamb
@@ -1038,13 +1044,13 @@ class ILAMBStandard(Diagnostic):
             ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
             source_keys = {
                 entry["variable_id"]: key
-                for key, entry in self.ilamb_kwargs["sources"].items()
+                for key, entry in ilamb_kwargs["sources"].items()
                 if isinstance(entry, dict) and "variable_id" in entry
             }
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
                 source_key = source_keys.get(variable_id, variable_id)
-                self.ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
+                ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so
@@ -1084,7 +1090,7 @@ class ILAMBStandard(Diagnostic):
         #    covers 1850-1860 but WOA2023 reference covers 2005-2014)
         # The alternate surface variable is equivalent after select_depth and
         # typically has full temporal coverage.
-        alternate_vars = self.ilamb_kwargs.get("alternate_vars", [])
+        alternate_vars = ilamb_kwargs.get("alternate_vars", [])
         if alternate_vars:
             available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
             if available_alternates and self.variable_id in model_datasets["variable_id"].values:
@@ -1102,7 +1108,7 @@ class ILAMBStandard(Diagnostic):
                 ref_datasets,
                 model_datasets,
                 definition.output_directory,
-                **self.ilamb_kwargs,
+                **ilamb_kwargs,
             )
 
     def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:

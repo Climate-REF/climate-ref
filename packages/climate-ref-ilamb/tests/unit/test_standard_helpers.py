@@ -2,11 +2,14 @@
 Unit tests for the helpers in the standard module.
 """
 
+from types import SimpleNamespace
+
 import ilamb3
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+from climate_ref_ilamb import standard
 from climate_ref_ilamb.standard import (
     ILAMBStandard,
     _build_cmec_bundle,
@@ -20,6 +23,7 @@ from ilamb3.dataset import coarsen_dataset, convert
 from ilamb3.transform.amoc import msftmz_to_rapid
 
 from climate_ref_core.dataset_registry import dataset_registry_manager
+from climate_ref_core.datasets import DatasetCollection, ExecutionDatasetCollection, SourceDatasetType
 
 
 class TestRelationshipTimeTransform:
@@ -439,3 +443,82 @@ class TestRealmMaskDecoupling:
         # The merge in `execute()` must not crash on an empty ILAMB side.
         merged = diagnostic.ilamb_data.datasets.set_index(diagnostic.ilamb_data.slug_column)
         assert merged.empty
+
+
+class TestObs4MIPsSourceRewrite:
+    """
+    The obs4MIPs rewrite in ``execute()`` must not leak between executions.
+
+    A provider hands the same diagnostic instance to every execution, so rewriting
+    ``self.ilamb_kwargs["sources"]`` in place would let one execution's reference selection
+    survive into the next.
+    """
+
+    def _diagnostic(self) -> ILAMBStandard:
+        return ILAMBStandard(
+            realm="ocean",
+            metric_name="test-amoc-sources",
+            sources={
+                "amoc": {
+                    "obs_source": "obs4ref",
+                    "source_id": "RAPID-2023-1a",
+                    "variable_id": "msftmz",
+                }
+            },
+            analysis_variable="amoc",
+        )
+
+    def _definition(self, tmp_path, instance_id: str):
+        obs = pd.DataFrame(
+            {
+                "instance_id": [instance_id],
+                "variable_id": ["msftmz"],
+                "path": [f"/data/{instance_id}.nc"],
+            }
+        ).set_index("instance_id")
+        model = pd.DataFrame(
+            {
+                "instance_id": ["CMIP6.model"],
+                "variable_id": ["msftmz"],
+                "source_id": ["CanESM5"],
+                "path": ["/data/model.nc"],
+            }
+        )
+        datasets = ExecutionDatasetCollection(
+            {
+                SourceDatasetType.obs4MIPs: DatasetCollection(obs, "instance_id"),
+                SourceDatasetType.CMIP6: DatasetCollection(model, "instance_id"),
+            }
+        )
+        return SimpleNamespace(datasets=datasets, output_directory=tmp_path)
+
+    def _run_and_capture(self, diagnostic, definition, monkeypatch) -> dict:
+        captured: dict = {}
+
+        def _capture(slug, ref_datasets, model_datasets, output_directory, **kwargs):
+            captured.update(kwargs)
+
+        monkeypatch.setattr(standard.run, "run_single_block", _capture)
+        monkeypatch.setattr(standard.run, "set_model_colors", lambda _: None)
+        diagnostic.execute(definition)
+        return captured
+
+    def test_derived_analysis_variable_keeps_the_configured_key(self, tmp_path, monkeypatch):
+        diagnostic = self._diagnostic()
+        captured = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
+
+        # `amoc` is derived from the on-disk `msftmz`, so the configure key must survive.
+        assert captured["sources"] == {"amoc": "obs4REF.first*"}
+
+    def test_second_execution_is_unaffected_by_the_first(self, tmp_path, monkeypatch):
+        diagnostic = self._diagnostic()
+
+        first = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.first"), monkeypatch)
+        second = self._run_and_capture(diagnostic, self._definition(tmp_path, "obs4REF.second"), monkeypatch)
+
+        assert first["sources"] == {"amoc": "obs4REF.first*"}
+        # Not `{"amoc": "obs4REF.first*", "msftmz": "obs4REF.second*"}`: the second execution must
+        # neither inherit the first instance_id nor gain a source under the on-disk variable name.
+        assert second["sources"] == {"amoc": "obs4REF.second*"}
+        # The diagnostic itself still holds the configured mapping.
+        assert diagnostic.ilamb_kwargs["sources"]["amoc"]["source_id"] == "RAPID-2023-1a"

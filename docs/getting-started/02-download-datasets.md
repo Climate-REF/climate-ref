@@ -73,28 +73,49 @@ A diagnostic whose reference data is missing simply plans no executions,
 so an incomplete fetch shows up as a diagnostic that never runs rather than as an error.
 
 The same [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py)
-script used for the CMIP6 input data can fetch these,
-and `--kind obs4mips` restricts it to the reference data:
+script used for the CMIP6 input data fetches these.
+If you fetched the obs4REF registry in the previous step, ask for exactly these five:
 
 ```bash
-python scripts/fetch-esgf.py --kind obs4mips
+python scripts/fetch-esgf.py --request-id pmp-modes-20cr-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-ozone-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-cloud-radiative-effects-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-cloud-scatterplots-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-historical-obs4mips
+python scripts/fetch-esgf.py --request-id ilamb-lai-obs4mips
 ```
+
+(`ERA-5` is split across two requests, hence six commands for five datasets.)
+
+`--kind obs4mips` fetches all of the reference data in one go,
+but it also re-fetches four datasets the obs4REF registry already provides,
+so only use it if you are **not** using that registry — see the warning below.
 
 This is a much smaller download than the CMIP6 input data (a few GB).
 Files land in the [intake-esgf `local_cache`](https://intake-esgf.readthedocs.io/en/latest/configure.html),
 and are ingested with the `obs4mips` source type, the same as the obs4REF collection.
 
-/// admonition | Note
+/// admonition | Do not fetch these twice
+    type: warning
 
-The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and `TropFlux-1-0`,
-which the obs4REF registry ships as well.
+The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and `TropFlux-1-0`.
 These are the ESGF-published copies of datasets that were curated for the REF before publication,
-so if you have already fetched the obs4REF registry you do not need them.
+so the obs4REF registry ships them as well.
 
-Fetching both is safe. Where the two copies carry the same version they share an `instance_id`
-and ingest as a single dataset. Where the published copy is newer
-(for example `CERES-EBAF-4-2` `v20240513` on ESGF against `v20230209` in obs4REF)
-both are ingested and the catalog uses the later version.
+**If you have already fetched the obs4REF registry, do not fetch these from ESGF as well.**
+Where the two copies carry the same version they share an `instance_id` and ingest as a single
+dataset holding *both* sets of files, which covers the record twice. `GPCP-Monthly-3-2` `pr`
+`v20231205` is the clearest case: obs4REF ships one file spanning 1983-2023 and ESGF ships 41
+yearly files spanning the same period, giving one dataset of 42 files. A diagnostic reading it
+sees every time step twice.
+
+The four requests that fetch them (`pmp-enso-ceres-obs4mips`, `pmp-enso-gpcp-obs4mips`,
+`pmp-enso-tropflux-obs4mips` and `pmp-hadisst-obs4mips`) are for deployments that do not use
+the obs4REF registry at all.
+
+Where the published copy carries a *newer* version there is no such problem
+(for example `CERES-EBAF-4-2` `v20240513` on ESGF against `v20230209` in obs4REF):
+the two ingest as separate datasets and the catalog uses the later version.
 ///
 
 /// admonition | Why one request per `source_id`?

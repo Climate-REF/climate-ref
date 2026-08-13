@@ -51,6 +51,19 @@ ref doctor --format markdown
 
 `--format json` produces the same content for scripting.
 
+## From Python
+
+`diagnose` runs the checks and returns everything needed to report on them:
+the findings worst first, how many checks ran, and optionally a description of the deployment.
+
+```python
+from climate_ref.doctor import DoctorContext, Severity, diagnose
+
+report = diagnose(DoctorContext(config=config, database=database), environment=True)
+if report.worst_severity == Severity.ERROR:
+    ...
+```
+
 ## Adding a check
 
 A check is a function that takes a `DoctorContext` and returns a list of `Finding`s,

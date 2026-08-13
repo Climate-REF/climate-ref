@@ -6,8 +6,9 @@ import importlib.metadata
 
 import pytest
 
-from climate_ref.doctor import DoctorContext, Finding, RegisteredCheck, Severity, iter_checks, run_checks
+from climate_ref.doctor import DoctorContext, Finding, Severity, iter_checks
 from climate_ref.doctor import registry as registry_module
+from climate_ref.doctor.registry import RegisteredCheck, run_checks
 
 BUILT_IN_SLUGS = {
     "duplicate-coverage",

@@ -10,8 +10,9 @@ and datasets whose files cover the same period twice.
 from collections import defaultdict
 
 from climate_ref.doctor.context import DoctorContext
-from climate_ref.doctor.findings import Finding, Severity, pluralise
+from climate_ref.doctor.findings import Finding, Severity
 from climate_ref.doctor.registry import check
+from climate_ref.text import pluralise
 from climate_ref_core.reference_data import (
     ESGF_OBS4MIPS,
     ReferenceDataset,
@@ -61,8 +62,7 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
             spans = spans.sort_values("start_time")
             starts = spans["start_time"].to_numpy()
             ends = spans["end_time"].to_numpy()
-            # Walking the files in start order, an overlap is one that starts before the
-            # latest end seen so far.
+            # an overlap is one that starts before the latest end seen so far.
             running_end = ends[0]
             overlaps: list[tuple[str, str]] = []
             paths = spans["path"].tolist()

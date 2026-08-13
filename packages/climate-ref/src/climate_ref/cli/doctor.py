@@ -3,7 +3,7 @@ Check a deployment for problems that a solve would otherwise hide.
 """
 
 import json
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from enum import StrEnum
 from typing import Annotated
 
@@ -13,17 +13,15 @@ from rich.console import Console
 from rich.padding import Padding
 
 from climate_ref.doctor import (
-    SEVERITY_ORDER,
     DoctorContext,
-    EnvironmentReport,
+    DoctorReport,
     Finding,
     Severity,
-    collect_environment,
+    diagnose,
     iter_checks,
-    run_checks,
     worst_severity,
 )
-from climate_ref.doctor.findings import pluralise
+from climate_ref.text import pluralise
 
 _SEVERITY_STYLE = {
     Severity.ERROR: "red",
@@ -42,7 +40,7 @@ class DoctorFormat(StrEnum):
     json = "json"
 
 
-def _group[K](findings: list[Finding], key: Callable[[Finding], K]) -> dict[K, list[Finding]]:
+def _group[K](findings: Sequence[Finding], key: Callable[[Finding], K]) -> dict[K, list[Finding]]:
     """Group findings, keeping both the groups and their contents in the order given."""
     grouped: dict[K, list[Finding]] = {}
     for finding in findings:
@@ -55,8 +53,9 @@ def _indented(console: Console, text: str, indent: int, style: str = "") -> None
     console.print(Padding(text, (0, 0, 0, indent), expand=False), style=style)
 
 
-def _severity_counts(findings: list[Finding]) -> str:
-    counts = {severity: sum(f.severity == severity for f in findings) for severity in SEVERITY_ORDER}
+def _severity_counts(findings: Sequence[Finding]) -> str:
+    # Severity is declared worst-first
+    counts = {severity: sum(f.severity == severity for f in findings) for severity in Severity}
     return ", ".join(
         pluralise(count, severity, severity if severity == Severity.INFO else None)
         for severity, count in counts.items()
@@ -64,7 +63,7 @@ def _severity_counts(findings: list[Finding]) -> str:
     )
 
 
-def _print_findings(console: Console, findings: list[Finding], verbose: bool) -> None:
+def _print_findings(console: Console, findings: Sequence[Finding], verbose: bool) -> None:
     """
     Print the findings grouped by the check that produced them.
 
@@ -97,8 +96,8 @@ def _print_findings(console: Console, findings: list[Finding], verbose: bool) ->
             console.print()
 
 
-def _print_environment(console: Console, environment: EnvironmentReport) -> None:
-    for name, values in environment.sections.items():
+def _print_environment(console: Console, sections: dict[str, dict[str, str]]) -> None:
+    for name, values in sections.items():
         if not values:
             continue
         console.print(f"\n[bold]{name}[/bold]")
@@ -106,7 +105,7 @@ def _print_environment(console: Console, environment: EnvironmentReport) -> None
             console.print(f"  {key}: {value}", style="dim")
 
 
-def _summary_line(findings: list[Finding], check_count: int) -> str:
+def _summary_line(findings: Sequence[Finding], check_count: int) -> str:
     return (
         f"{pluralise(len(findings), 'finding')} from {pluralise(check_count, 'check')}: "
         f"{_severity_counts(findings)}"
@@ -121,11 +120,12 @@ def _table_cell(finding: Finding) -> str:
     return " ".join(part for part in parts if part).replace("|", "\\|").replace("\n", " ")
 
 
-def _render_markdown(findings: list[Finding], environment: EnvironmentReport | None, check_count: int) -> str:
+def _render_markdown(report: DoctorReport) -> str:
     """Render a report that can be pasted into an issue as-is."""
+    findings = report.findings
     lines = ["## `ref doctor`", ""]
     if findings:
-        lines.append(_summary_line(findings, check_count))
+        lines.append(_summary_line(findings, report.check_count))
         lines.append("")
         lines.append("| Severity | Check | Finding |")
         lines.append("| --- | --- | --- |")
@@ -133,11 +133,11 @@ def _render_markdown(findings: list[Finding], environment: EnvironmentReport | N
             f"| {finding.severity} | `{finding.check}` | {_table_cell(finding)} |" for finding in findings
         )
     else:
-        lines.append(f"No problems found ({pluralise(check_count, 'check')}).")
+        lines.append(f"No problems found ({pluralise(report.check_count, 'check')}).")
 
-    if environment is not None:
+    if report.environment is not None:
         lines.extend(["", "<details><summary>Environment</summary>", ""])
-        for name, values in environment.sections.items():
+        for name, values in report.environment.items():
             if not values:
                 continue
             lines.append(f"**{name}**")
@@ -149,14 +149,14 @@ def _render_markdown(findings: list[Finding], environment: EnvironmentReport | N
     return "\n".join(lines)
 
 
-def _render_json(findings: list[Finding], environment: EnvironmentReport | None) -> str:
-    report: dict[str, object] = {
-        "findings": [asdict(finding) for finding in findings],
-        "worst_severity": worst_severity(findings),
+def _render_json(report: DoctorReport) -> str:
+    rendered: dict[str, object] = {
+        "findings": [asdict(finding) for finding in report.findings],
+        "worst_severity": report.worst_severity,
     }
-    if environment is not None:
-        report["environment"] = environment.sections
-    return json.dumps(report, indent=2)
+    if report.environment is not None:
+        rendered["environment"] = report.environment
+    return json.dumps(rendered, indent=2)
 
 
 def _list_checks(console: Console) -> None:
@@ -208,29 +208,26 @@ def doctor(  # noqa: PLR0913
         _list_checks(console)
         return
 
-    context = DoctorContext(config=ctx.obj.config, database=ctx.obj.database)
-    findings = run_checks(context)
-    check_count = len(iter_checks())
-
     # The environment is the point of the machine-readable formats, and noise in the default one.
     if environment is None:
         environment = output_format != DoctorFormat.text
-    report = collect_environment(context) if environment else None
+
+    context = DoctorContext(config=ctx.obj.config, database=ctx.obj.database)
+    report = diagnose(context, environment=environment)
 
     if output_format == DoctorFormat.json:
-        print(_render_json(findings, report))
+        print(_render_json(report))
     elif output_format == DoctorFormat.markdown:
-        print(_render_markdown(findings, report, check_count))
+        print(_render_markdown(report))
     else:
-        if findings:
+        if report.findings:
             # Stated before the findings so the size of the problem does not need scrolling to.
-            console.print(f"[bold]{_summary_line(findings, check_count)}[/bold]")
-            _print_findings(console, findings, verbose)
+            console.print(f"[bold]{_summary_line(report.findings, report.check_count)}[/bold]")
+            _print_findings(console, report.findings, verbose)
         else:
-            console.print(f"[green]No problems found[/green] ({pluralise(check_count, 'check')})")
-        if report is not None:
-            _print_environment(console, report)
+            console.print(f"[green]No problems found[/green] ({pluralise(report.check_count, 'check')})")
+        if report.environment is not None:
+            _print_environment(console, report.environment)
 
-    worst = worst_severity(findings)
-    if worst == Severity.ERROR or (strict and worst == Severity.WARNING):
+    if report.worst_severity == Severity.ERROR or (strict and report.worst_severity == Severity.WARNING):
         raise typer.Exit(1)

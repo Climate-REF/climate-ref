@@ -11,9 +11,9 @@ import pytest
 from climate_ref.doctor import (
     DoctorContext,
     Finding,
-    RegisteredCheck,
     Severity,
-    run_checks,
+    diagnose,
+    iter_checks,
     worst_severity,
 )
 from climate_ref.doctor.checks.data import (
@@ -21,7 +21,7 @@ from climate_ref.doctor.checks.data import (
     check_missing_reference_data,
     check_unreachable_source_types,
 )
-from climate_ref.doctor.findings import pluralise
+from climate_ref.doctor.registry import RegisteredCheck, run_checks
 from climate_ref_core.datasets import FacetFilter
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
 from climate_ref_core.providers import DiagnosticProvider
@@ -184,16 +184,40 @@ class TestUnreachableSourceTypes:
         assert check_unreachable_source_types(context) == []
 
 
-@pytest.mark.parametrize(
-    "count, expected",
-    [(0, "0 diagnostics"), (1, "1 diagnostic"), (2, "2 diagnostics")],
-)
-def test_pluralise(count, expected):
-    assert pluralise(count, "diagnostic") == expected
+class TestDiagnose:
+    """
+    `diagnose` is the way in: one call, one value holding everything needed to report on it.
+    """
 
+    def test_it_runs_every_registered_check(self):
+        report = diagnose(_context())
 
-def test_pluralise_with_an_irregular_plural():
-    assert pluralise(2, "registry", "registries") == "2 registries"
+        assert report.check_count == len(iter_checks())
+
+    def test_the_environment_is_left_out_unless_asked_for(self):
+        assert diagnose(_context()).environment is None
+
+    def test_the_environment_is_collected_on_request(self):
+        report = diagnose(_context(), environment=True)
+
+        assert report.environment is not None
+        assert report.environment["versions"]["climate-ref"]
+
+    def test_the_worst_severity_is_carried_on_the_report(self, monkeypatch):
+        monkeypatch.setattr(
+            "climate_ref.doctor.report.run_checks",
+            lambda context: [
+                Finding(severity=Severity.INFO, summary="info"),
+                Finding(severity=Severity.WARNING, summary="warning"),
+            ],
+        )
+
+        assert diagnose(_context()).worst_severity == Severity.WARNING
+
+    def test_a_clean_deployment_has_no_worst_severity(self, monkeypatch):
+        monkeypatch.setattr("climate_ref.doctor.report.run_checks", lambda context: [])
+
+        assert diagnose(_context()).worst_severity is None
 
 
 def _registered(func, slug="a-check"):

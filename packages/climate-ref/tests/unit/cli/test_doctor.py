@@ -17,7 +17,7 @@ class TestDoctor:
         """Drive the command's output from a fixed set of findings."""
 
         def _set(values):
-            monkeypatch.setattr("climate_ref.cli.doctor.run_checks", lambda context: values)
+            monkeypatch.setattr("climate_ref.doctor.report.run_checks", lambda context: values)
 
         return _set
 
@@ -84,7 +84,7 @@ class TestGrouping:
     @pytest.fixture
     def findings(self, monkeypatch):
         def _set(values):
-            monkeypatch.setattr("climate_ref.cli.doctor.run_checks", lambda context: values)
+            monkeypatch.setattr("climate_ref.doctor.report.run_checks", lambda context: values)
 
         return _set
 
@@ -171,7 +171,7 @@ class TestJsonFormat:
     @pytest.fixture
     def report(self, invoke_cli, monkeypatch):
         def _run(findings, args=()):
-            monkeypatch.setattr("climate_ref.cli.doctor.run_checks", lambda context: findings)
+            monkeypatch.setattr("climate_ref.doctor.report.run_checks", lambda context: findings)
             result = invoke_cli(["doctor", "--format", "json", *args])
             return json.loads(result.stdout)
 
@@ -211,7 +211,7 @@ class TestMarkdownFormat:
     @pytest.fixture
     def render(self, invoke_cli, monkeypatch):
         def _render(findings, args=()):
-            monkeypatch.setattr("climate_ref.cli.doctor.run_checks", lambda context: findings)
+            monkeypatch.setattr("climate_ref.doctor.report.run_checks", lambda context: findings)
             return invoke_cli(["doctor", "--format", "markdown", *args]).stdout
 
         return _render

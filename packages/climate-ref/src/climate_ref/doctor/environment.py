@@ -14,7 +14,6 @@ import os
 import platform
 import sys
 
-from attrs import frozen
 from loguru import logger
 
 from climate_ref.config import env_prefix
@@ -31,18 +30,6 @@ _ENV_PREFIXES = (f"{env_prefix}_", "DASK_", "ESMVALTOOL_")
 
 _UNAVAILABLE = "unavailable"
 """Stands in for a section that could not be collected."""
-
-
-@frozen
-class EnvironmentReport:
-    """
-    What the deployment looks like, as sections of ``name: value`` pairs.
-
-    The sections are deliberately untyped strings: this is context for a human reading a bug
-    report, and a flat shape renders the same in text, JSON, and Markdown.
-    """
-
-    sections: dict[str, dict[str, str]]
 
 
 def _redact_env_value(name: str, value: str) -> str:
@@ -141,7 +128,7 @@ def _checks() -> dict[str, str]:
     return {registered.slug: registered.source for registered in iter_checks()}
 
 
-def collect_environment(context: DoctorContext) -> EnvironmentReport:
+def collect_environment(context: DoctorContext) -> dict[str, dict[str, str]]:
     """
     Describe the deployment being checked.
 
@@ -156,7 +143,7 @@ def collect_environment(context: DoctorContext) -> EnvironmentReport:
     Returns
     -------
     :
-        The report, with one section per area.
+        One entry per area, each holding that area's ``name: value`` pairs.
     """
     sections = {
         "versions": _versions,
@@ -177,4 +164,4 @@ def collect_environment(context: DoctorContext) -> EnvironmentReport:
             logger.exception(f"Could not collect the '{name}' section of the environment report")
             collected[name] = {"error": f"{type(exc).__name__}: {exc}"}
 
-    return EnvironmentReport(sections=collected)
+    return collected

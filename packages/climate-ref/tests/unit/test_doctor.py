@@ -11,12 +11,15 @@ import pytest
 from climate_ref.doctor import (
     DoctorContext,
     Finding,
+    RegisteredCheck,
     Severity,
+    run_checks,
+    worst_severity,
+)
+from climate_ref.doctor.checks.data import (
     check_duplicate_coverage,
     check_missing_reference_data,
     check_unreachable_source_types,
-    run_checks,
-    worst_severity,
 )
 from climate_ref_core.datasets import FacetFilter
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
@@ -72,7 +75,6 @@ class TestDuplicateCoverage:
 
         assert len(findings) == 1
         assert findings[0].severity == Severity.ERROR
-        assert findings[0].check == "duplicate-coverage"
         assert "obs4MIPs.X.pr" in findings[0].summary
 
     def test_contiguous_files_are_not_reported(self):
@@ -150,7 +152,6 @@ class TestUnreachableSourceTypes:
         findings = check_unreachable_source_types(context)
 
         assert len(findings) == 1
-        assert findings[0].check == "unreachable-source-type"
         assert "obs4ref" in findings[0].summary
         assert "--source-type obs4mips" in findings[0].detail
 
@@ -162,28 +163,45 @@ class TestUnreachableSourceTypes:
         assert check_unreachable_source_types(context) == []
 
 
+def _registered(func, slug="a-check"):
+    return RegisteredCheck(slug=slug, description="A check used by the tests", func=func)
+
+
 class TestRunChecks:
     def test_a_failing_check_becomes_a_finding(self):
         def broken(context):
             raise RuntimeError("boom")
 
-        findings = run_checks(_context(), checks=[broken])
+        findings = run_checks(_context(), checks=[_registered(broken, "broken")])
 
         assert len(findings) == 1
         assert findings[0].severity == Severity.ERROR
+        assert findings[0].check == "broken"
         assert "boom" in findings[0].detail
 
     def test_findings_are_ordered_worst_first(self):
         def mixed(context):
             return [
-                Finding(check="c", severity=Severity.INFO, summary="info"),
-                Finding(check="a", severity=Severity.ERROR, summary="error"),
-                Finding(check="b", severity=Severity.WARNING, summary="warning"),
+                Finding(severity=Severity.INFO, summary="info"),
+                Finding(severity=Severity.ERROR, summary="error"),
+                Finding(severity=Severity.WARNING, summary="warning"),
             ]
 
-        findings = run_checks(_context(), checks=[mixed])
+        findings = run_checks(_context(), checks=[_registered(mixed)])
 
         assert [f.severity for f in findings] == [Severity.ERROR, Severity.WARNING, Severity.INFO]
+
+    def test_the_slug_is_stamped_onto_every_finding(self):
+        # A check states its slug once, in its registration, so the two cannot drift apart.
+        def two_findings(context):
+            return [
+                Finding(severity=Severity.INFO, summary="one"),
+                Finding(severity=Severity.INFO, summary="two"),
+            ]
+
+        findings = run_checks(_context(), checks=[_registered(two_findings, "stamped")])
+
+        assert [f.check for f in findings] == ["stamped", "stamped"]
 
     @pytest.mark.parametrize(
         "severities, expected",
@@ -195,6 +213,6 @@ class TestRunChecks:
         ],
     )
     def test_worst_severity(self, severities, expected):
-        findings = [Finding(check="c", severity=s, summary="s") for s in severities]
+        findings = [Finding(severity=s, summary="s") for s in severities]
 
         assert worst_severity(findings) == expected

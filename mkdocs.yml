@@ -35,6 +35,7 @@ nav:
       - how-to-guides/control-memory-use.md
       - how-to-guides/dataset-selection.py
       - how-to-guides/ingest-datasets.md
+      - how-to-guides/diagnose-a-deployment.md
       - how-to-guides/running-diagnostics-locally.py
       - how-to-guides/adding_custom_diagnostics.md
       - how-to-guides/testing-diagnostics.md

@@ -1,26 +1,18 @@
 """
-Health checks for a Climate-REF deployment.
+Checks over the data a deployment has ingested.
 
 These look for the conditions that make a solve quietly do the wrong thing rather than fail:
 reference data that no diagnostic can reach, reference data that is missing so its diagnostics
 never run, and datasets whose files cover the same period twice.
-
-Each check is a function taking a `DoctorContext` and returning `Finding`s. Checks read the
-database and the configuration; none of them write.
 """
 
 from collections import defaultdict
-from collections.abc import Callable, Iterable, Iterator, Sequence
+from collections.abc import Iterator
 
-import pandas as pd
-from attrs import define, field, frozen
-from loguru import logger
-
-from climate_ref.config import Config
-from climate_ref.database import Database
-from climate_ref.datasets import get_dataset_adapter
+from climate_ref.doctor.context import DoctorContext
+from climate_ref.doctor.findings import Finding, Severity
+from climate_ref.doctor.registry import check
 from climate_ref_core.diagnostics import DataRequirement, Diagnostic
-from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.reference_data import (
     ESGF_OBS4MIPS,
     ReferenceDataset,
@@ -30,100 +22,10 @@ from climate_ref_core.reference_data import (
 from climate_ref_core.source_types import SourceDatasetType
 
 
-class Severity:
-    """How much a finding matters. Ordered worst-first for reporting."""
-
-    ERROR = "error"
-    """Results computed in this state are wrong."""
-
-    WARNING = "warning"
-    """Something the deployment probably did not intend, but results remain valid."""
-
-    INFO = "info"
-    """Worth knowing; no action required."""
-
-
-SEVERITY_ORDER = (Severity.ERROR, Severity.WARNING, Severity.INFO)
-
-EMPTY_CATALOG = pd.DataFrame()
-"""Stands in for a source type with nothing ingested."""
-
-
-@frozen
-class Finding:
-    """
-    One problem found by a check.
-    """
-
-    check: str
-    """Slug of the check that produced it, e.g. ``duplicate-coverage``."""
-
-    severity: str
-    """One of `Severity`."""
-
-    summary: str
-    """One line stating what is wrong."""
-
-    detail: str = ""
-    """Optional further explanation, including what to do about it."""
-
-
-@define
-class DoctorContext:
-    """
-    The deployment being checked.
-
-    Providers and catalogs are loaded lazily so a check that does not need them does not
-    pay for them, and so a failure to load one provider does not stop the other checks.
-    """
-
-    config: Config | None
-    database: Database | None
-    _providers: list[DiagnosticProvider] | None = field(default=None, alias="_providers")
-    _catalogs: dict[SourceDatasetType, pd.DataFrame] = field(factory=dict, alias="_catalogs")
-
-    @classmethod
-    def from_catalogs(
-        cls,
-        catalogs: dict[SourceDatasetType, pd.DataFrame],
-        providers: Iterable[DiagnosticProvider],
-    ) -> "DoctorContext":
-        """
-        Build a context from catalogs already in hand, with no database behind it.
-
-        Source types absent from ``catalogs`` are treated as having nothing ingested, so
-        every check can run without reaching for a database that is not there.
-        """
-        complete = {
-            source_type: catalogs.get(source_type, EMPTY_CATALOG) for source_type in SourceDatasetType
-        }
-        return cls(config=None, database=None, _providers=list(providers), _catalogs=complete)
-
-    @property
-    def providers(self) -> list[DiagnosticProvider]:
-        """The diagnostic providers this deployment has enabled."""
-        if self._providers is None:
-            from climate_ref.provider_registry import ProviderRegistry  # noqa: PLC0415
-
-            if self.config is None or self.database is None:
-                raise ValueError("This context has no configuration to load providers from")
-            self._providers = list(ProviderRegistry.build_from_config(self.config, self.database).providers)
-        return self._providers
-
-    def catalog(self, source_type: SourceDatasetType) -> pd.DataFrame:
-        """
-        Load the ingested catalog for a source type, one row per file.
-
-        Returns an empty frame when nothing of that type has been ingested.
-        """
-        if source_type not in self._catalogs:
-            if self.database is None:
-                raise ValueError("This context has no database to load a catalog from")
-            adapter = get_dataset_adapter(source_type.value)
-            self._catalogs[source_type] = adapter.load_catalog(self.database)
-        return self._catalogs[source_type]
-
-
+@check(
+    "duplicate-coverage",
+    "Datasets holding more than one file for the same period",
+)
 def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
     """
     Find datasets holding more than one file for the same period.
@@ -132,6 +34,16 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
     the files merge into one dataset because they share an ``instance_id``, and every diagnostic
     reading it then sees the overlapping period twice. The obs4REF registry and the obs4MIPs
     archive both carry several datasets, so ingesting both triggers it.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per dataset with overlapping files.
     """
     findings = []
 
@@ -164,7 +76,6 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
             roots = sorted({_collection_root(path) for pair in overlaps for path in pair})
             findings.append(
                 Finding(
-                    check="duplicate-coverage",
                     severity=Severity.ERROR,
                     summary=f"{instance_id} holds {len(spans)} files covering overlapping periods",
                     detail=(
@@ -185,12 +96,26 @@ def _collection_root(path: str, depth: int = 4) -> str:
     return "/".join(parts[:depth]) if len(parts) > depth else str(path)
 
 
+@check(
+    "missing-reference-data",
+    "Reference data the enabled diagnostics require but which is not ingested",
+)
 def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
     """
     Find reference datasets the enabled diagnostics require but which are not ingested.
 
     An unmet reference requirement is silent: the diagnostic simply plans no executions,
     so a deployment can look healthy while producing nothing for whole diagnostics.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per required dataset that is not ingested.
     """
     required = collect_required_reference_data(context.providers)
     if not required:
@@ -211,7 +136,6 @@ def check_missing_reference_data(context: DoctorContext) -> list[Finding]:
             continue
         findings.append(
             Finding(
-                check="missing-reference-data",
                 severity=Severity.WARNING,
                 summary=(
                     f"{dataset.source_id} ({dataset.source_type}) is not ingested, "
@@ -242,6 +166,10 @@ def _how_to_obtain(dataset: ReferenceDataset) -> str:
     return f"Needed for {variables} by {diagnostics}. {how}"
 
 
+@check(
+    "unreachable-source-type",
+    "Data ingested under a source type that no enabled diagnostic asks for",
+)
 def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     """
     Find data ingested under a source type that no enabled diagnostic asks for.
@@ -249,6 +177,16 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
     The clearest case is obs4REF: the ``obs4ref`` source type exists and can be ingested,
     but no diagnostic declares an obs4REF data requirement, and the solver only matches a
     requirement against its own source type. Data ingested that way is never selected.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per source type that holds data nothing asks for.
     """
     requested: set[SourceDatasetType] = set()
     for provider in context.providers:
@@ -266,7 +204,6 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
         count = catalog["instance_id"].nunique()
         findings.append(
             Finding(
-                check="unreachable-source-type",
                 severity=Severity.WARNING,
                 summary=(
                     f"{count} dataset(s) are ingested as '{source_type.value}', "
@@ -297,12 +234,26 @@ def _iter_requirements(diagnostic: Diagnostic) -> Iterator[DataRequirement]:
             yield from item
 
 
+@check(
+    "overlapping-registries",
+    "Reference datasets that more than one registry carries",
+)
 def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
     """
     Report datasets that more than one registry carries.
 
     Fetching both copies is what produces the duplicate coverage that
     `check_duplicate_coverage` finds, so this is the warning before the error.
+
+    Parameters
+    ----------
+    context
+        The deployment to check.
+
+    Returns
+    -------
+    :
+        One finding per dataset carried by more than one registry.
     """
     findings = []
     # obs4REF registries answer for two source types, so the same overlap is reported under
@@ -317,7 +268,6 @@ def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
         seen.add(key)
         findings.append(
             Finding(
-                check="overlapping-registries",
                 severity=Severity.INFO,
                 summary=f"{source_id} is carried by {len(registries)} registries",
                 detail=(
@@ -328,59 +278,3 @@ def check_overlapping_registries(context: DoctorContext) -> list[Finding]:
             )
         )
     return findings
-
-
-CHECKS: tuple[Callable[[DoctorContext], list[Finding]], ...] = (
-    check_duplicate_coverage,
-    check_missing_reference_data,
-    check_unreachable_source_types,
-    check_overlapping_registries,
-)
-
-
-def run_checks(
-    context: DoctorContext,
-    checks: Iterable[Callable[[DoctorContext], list[Finding]]] = CHECKS,
-) -> list[Finding]:
-    """
-    Run the checks and collect their findings, worst first.
-
-    A check that raises is reported as a finding rather than stopping the run, so one broken
-    check cannot hide the others.
-
-    Parameters
-    ----------
-    context
-        The deployment to check.
-    checks
-        The checks to run. Defaults to all of them.
-
-    Returns
-    -------
-    :
-        Findings ordered by severity, then by the check that produced them.
-    """
-    findings: list[Finding] = []
-    for check in checks:
-        try:
-            findings.extend(check(context))
-        except Exception as exc:
-            logger.exception(f"Check '{check.__name__}' failed")
-            findings.append(
-                Finding(
-                    check=check.__name__,
-                    severity=Severity.ERROR,
-                    summary=f"Check '{check.__name__}' could not run",
-                    detail=f"{type(exc).__name__}: {exc}",
-                )
-            )
-
-    return sorted(findings, key=lambda f: (SEVERITY_ORDER.index(f.severity), f.check, f.summary))
-
-
-def worst_severity(findings: Sequence[Finding]) -> str | None:
-    """Return the most serious severity present, or ``None`` when there are no findings."""
-    for severity in SEVERITY_ORDER:
-        if any(finding.severity == severity for finding in findings):
-            return severity
-    return None

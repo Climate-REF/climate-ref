@@ -23,7 +23,22 @@ flower:
   # Additional Celery configuration for Flower (rendered as celeryconfig.py)
   # Use this for settings that cannot be set via environment variables
   celeryConfig: |
-    accept_content = ['application/json', 'application/x-python-serialize']
+    import json
+
+    from kombu.serialization import register
+
+    # Flower runs from the stock image and cannot import the REF codec.
+    # A ref-json body is plain JSON, so the json module decodes it well enough to monitor with.
+    # Tagged values arrive as their raw mappings, which is all the task views need.
+    register(
+        'ref-json',
+        encoder=json.dumps,
+        decoder=json.loads,
+        content_type='application/x-ref-json',
+        content_encoding='utf-8',
+    )
+
+    accept_content = ['application/json', 'application/x-ref-json']
 
   serviceMonitor:
     enabled: false
@@ -80,8 +95,6 @@ defaults:
   env:
     CELERY_BROKER_URL: redis://{{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port }}
     CELERY_RESULT_BACKEND: redis://{{ include "dragonfly.fullname" .Subcharts.dragonfly }}:{{ .Values.dragonfly.service.port }}
-    CELERY_ACCEPT_CONTENT: |
-      ["json", "pickle"]
     REF_EXECUTOR: climate_ref_celery.executor.CeleryExecutor
     # Set HOME to writable location to fix intake-esgf and ilamb3 config directory creation
     HOME: /tmp
@@ -91,15 +104,21 @@ defaults:
     # CELERY_VISIBILITY_TIMEOUT: "21600"       # Must be >= CELERY_TASK_TIME_LIMIT
     # CELERY_WORKER_PREFETCH_MULTIPLIER: "1"
     # CELERY_RESULT_EXPIRES: "172800"          # 48 hours
-    # CELERY_WORKER_MAX_TASKS_PER_CHILD: "50"  # Recycle workers to prevent memory leaks
+    # CELERY_WORKER_MAX_TASKS_PER_CHILD: "1"   # Fresh process per task, keeps rusage peaks per-execution
     # CELERY_WORKER_MAX_MEMORY_PER_CHILD: "2097152"  # 2 GB cap per worker process (in KB)
+    # CELERY_TASK_COMPRESSION: "gzip"          # Set to "" to send uncompressed task bodies
+    # CELERY_RESULT_COMPRESSION: "gzip"        # Set to "" to store uncompressed results
+    # Widens what a worker will decode. Accepting pickle lets anything that can write
+    # to the broker run code in a worker, and it will not revive messages from a
+    # pre-JSON release, so purge and re-solve instead. See the README.
+    # CELERY_ACCEPT_CONTENT: "json,ref-json"
 
   replicaCount: 1
 
   image:
     repository: ghcr.io/climate-ref/climate-ref
     pullPolicy: IfNotPresent
-    tag: v0.16.2
+    tag: v0.17.0
 
   annotations: {}
 

@@ -718,6 +718,29 @@ def test_solve_skips_join_when_no_wait(mocker, mock_metric_execution, mock_execu
     mock_executor.return_value.join.assert_not_called()
 
 
+def test_solve_logs_executor_submission_summary(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """The end-of-solve summary hook fires even when the solve does not wait"""
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    solve_required_executions(db_seeded, wait=False, timeout=0)
+
+    mock_executor.return_value.log_submission_summary.assert_called_once_with()
+
+
+def test_solve_tolerates_executor_without_summary(mocker, mock_metric_execution, mock_executor, db_seeded):
+    """Executors without the optional summary hook are still valid"""
+    del mock_executor.return_value.log_submission_summary
+    mock_build_solver = mocker.patch.object(ExecutionSolver, "build_from_db")
+    solver = mock.MagicMock(spec=ExecutionSolver)
+    solver.solve.return_value = [mock_metric_execution]
+    mock_build_solver.return_value = solver
+
+    solve_required_executions(db_seeded, wait=False, timeout=0)
+
+
 def test_two_executions_same_group_distinct_output_fragments(
     mocker, mock_metric_execution, mock_executor, db_seeded
 ):

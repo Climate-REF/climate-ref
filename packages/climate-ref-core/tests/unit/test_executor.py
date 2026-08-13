@@ -2,9 +2,10 @@ import pytest
 
 from climate_ref.executor import LocalExecutor
 from climate_ref_core.datasets import ExecutionDatasetCollection
-from climate_ref_core.diagnostics import ExecutionDefinition
-from climate_ref_core.exceptions import DiagnosticError, InvalidExecutorException
+from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
+from climate_ref_core.exceptions import CondaCommandError, DiagnosticError, InvalidExecutorException
 from climate_ref_core.executor import Executor, _is_system_error, execute_locally, import_executor_cls
+from climate_ref_core.resources import ResourceUsage
 
 
 @pytest.fixture
@@ -129,3 +130,80 @@ class TestExecuteLocally:
             execute_locally(definition, log_level="WARNING", raise_error=True)
 
         assert exc_info.value.result.retryable is False
+
+
+class TestExecuteLocallyResourceUsage:
+    def test_default_is_none(self, make_definition, mocker):
+        """A result built without the field carries no usage"""
+        result = ExecutionResult.build_from_failure(make_definition(mocker.Mock()))
+
+        assert result.resource_usage is None
+
+    def test_successful_execution(self, make_definition, mocker):
+        """A successful execution carries the usage measured around it"""
+        definition = make_definition(mocker.Mock())
+        diagnostic = definition.diagnostic
+        diagnostic.run.return_value = ExecutionResult(definition=definition, successful=True)
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.successful is True
+        assert isinstance(result.resource_usage, ResourceUsage)
+        assert result.resource_usage.wall_seconds >= 0.0
+
+    def test_diagnostic_failure(self, make_definition, mocker):
+        """A diagnostic that raises still reports what it consumed before failing"""
+        diagnostic = mocker.Mock()
+        diagnostic.run.side_effect = ValueError("bad diagnostic logic")
+        definition = make_definition(diagnostic)
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.successful is False
+        assert isinstance(result.resource_usage, ResourceUsage)
+
+    def test_conda_command_failure(self, make_definition, mocker):
+        """The conda failure branch carries the usage too"""
+        diagnostic = mocker.Mock()
+        diagnostic.run.side_effect = CondaCommandError("conda failed", stdout="", stderr="boom")
+        definition = make_definition(diagnostic)
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.successful is False
+        assert isinstance(result.resource_usage, ResourceUsage)
+
+    def test_raised_error_carries_usage(self, make_definition, mocker):
+        """The result attached to a raised DiagnosticError carries the usage"""
+        diagnostic = mocker.Mock()
+        diagnostic.run.side_effect = MemoryError("out of memory")
+        definition = make_definition(diagnostic)
+
+        with pytest.raises(DiagnosticError) as exc_info:
+            execute_locally(definition, log_level="WARNING", raise_error=True)
+
+        assert isinstance(exc_info.value.result.resource_usage, ResourceUsage)
+
+    def test_measure_false_records_nothing(self, make_definition, mocker):
+        """Turning the measurement off leaves the result without usage, and the run untouched"""
+        definition = make_definition(mocker.Mock())
+        definition.diagnostic.run.return_value = ExecutionResult(definition=definition, successful=True)
+
+        result = execute_locally(definition, log_level="WARNING", measure=False)
+
+        assert result.successful is True
+        assert result.resource_usage is None
+
+    def test_measurement_failure_does_not_fail_the_run(self, make_definition, mocker):
+        """A recorder that cannot report leaves a successful result successful"""
+        definition = make_definition(mocker.Mock())
+        definition.diagnostic.run.return_value = ExecutionResult(definition=definition, successful=True)
+        mocker.patch(
+            "climate_ref_core.resources.ResourceRecorder._build_usage",
+            side_effect=RuntimeError("sampler exploded"),
+        )
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.successful is True
+        assert result.resource_usage is None

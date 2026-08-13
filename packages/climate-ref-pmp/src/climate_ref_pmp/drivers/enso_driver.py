@@ -6,8 +6,10 @@ This script runs inside the PMP conda environment due to the use of xcdat.
 
 import argparse
 import copy
+import hashlib
 import json
 import os
+import tempfile
 from collections import defaultdict
 
 import xcdat as xc
@@ -311,9 +313,11 @@ def update_dict_datasets(dict_datasets: dict, output_dir: str = ".") -> dict:
     Raises
     ------
     FileNotFoundError
-        If the input file path is not valid.
+        If any of the input file paths is not valid.
+    ValueError
+        If a variable has no paths at all.
     NotImplementedError
-        If multiple paths are found for a dataset or if the path is not a string.
+        If a path is neither a string nor a list of strings.
     """
     dict_datasets2 = copy.deepcopy(dict_datasets)
     data_types = dict_datasets.keys()  # ["model", "observations"]
@@ -328,25 +332,8 @@ def update_dict_datasets(dict_datasets: dict, output_dir: str = ".") -> dict:
             for variable in variables:
                 path = dict_datasets[data_type][dataset][variable]["path + filename"]
 
-                # If path is a list and has one element, take it as a string,
-                # otherwise raise notImplementedError
-                if isinstance(path, list) and len(path) == 1:
-                    path = copy.deepcopy(path[0])
-                    dict_datasets2[data_type][dataset][variable]["path + filename"] = path
-                elif isinstance(path, list) and len(path) > 1:
-                    raise NotImplementedError(
-                        f"Multiple paths found for {data_type} {dataset} {variable}: {path}"
-                    )
-                elif not isinstance(path, str):
-                    raise NotImplementedError(
-                        f"Path is not a string for {data_type} {dataset} {variable}: {path}"
-                    )
-                else:
-                    dict_datasets2[data_type][dataset][variable]["path + filename"] = path
-
-                # Check if the file exists
-                if not os.path.exists(path):
-                    raise FileNotFoundError(f"File not found: {path}")
+                path = resolve_variable_path(path, f"{data_type} {dataset} {variable}", output_dir=output_dir)
+                dict_datasets2[data_type][dataset][variable]["path + filename"] = path
 
                 # Generate the landmask path regardless data_type is observation or model.
                 if (
@@ -387,6 +374,121 @@ def update_dict_datasets(dict_datasets: dict, output_dir: str = ".") -> dict:
     return dict_datasets2
 
 
+def resolve_variable_path(path: str | list[str], description: str, output_dir: str = ".") -> str:
+    """
+    Reduce the file(s) registered for one variable to the single file EnsoMetrics reads.
+
+    Parameters
+    ----------
+    path : str or list of str
+        Path, or paths, registered for the variable.
+    description : str
+        Identifies the variable in error messages, e.g. "model ACCESS-CM2_r1i1p1f1 ts".
+    output_dir : str
+        Directory a joined file is written to, when one is needed.
+
+    Returns
+    -------
+    str
+        Path to a single file holding the variable's whole timeseries.
+
+    Raises
+    ------
+    FileNotFoundError
+        If any of the registered paths is not valid.
+    ValueError
+        If the variable has no paths at all.
+    NotImplementedError
+        If the path is neither a string nor a list of strings.
+    """
+    if isinstance(path, list):
+        if not path:
+            raise ValueError(f"No paths found for {description}")
+        paths = sorted(path)
+    elif isinstance(path, str):
+        paths = [path]
+    else:
+        raise NotImplementedError(f"Path is not a string or list of strings for {description}: {path}")
+
+    for candidate in paths:
+        if not os.path.exists(candidate):
+            raise FileNotFoundError(f"File not found: {candidate}")
+
+    # Join identical files if ingested via two source_types
+    unique_paths = {}
+    for candidate in paths:
+        unique_paths.setdefault(os.path.basename(candidate), candidate)
+    paths = [unique_paths[name] for name in sorted(unique_paths)]
+
+    if len(paths) == 1:
+        return paths[0]
+    return concatenate_timeseries(paths, output_dir=output_dir)
+
+
+def concatenate_timeseries(file_paths, output_dir=".", output_filename=None) -> str:
+    """
+    Join a timeseries split over several files into a single file.
+
+    EnsoMetrics reads one file per variable.
+    `Read_data_mask_area_multifile` looks like it would take a list,
+    but it pairs each entry with a *variable name* to read several distinct datasets,
+    so handing it time slices of one variable makes every metric fail with
+    "'list' object has no attribute 'strip'" and produce no output.
+
+    Parameters
+    ----------
+    file_paths : list of str
+        Files to join, in chronological order.
+    output_dir : str
+        Directory the joined file is written to. Default is the current directory.
+    output_filename : str, optional
+        Name for the joined file. Derived from the first input file when not given.
+
+    Returns
+    -------
+    str
+        Absolute path to the joined file.
+    """
+    os.makedirs(output_dir, exist_ok=True)
+
+    if output_filename is None:
+        # ts_Amon_ACCESS-CM2_historical_r1i1p1f1_gn_185001-194912.nc -> ..._gn_concatenated_<digest>.nc
+        # The digest covers the whole input set, so a join is only ever reused for the exact
+        # same set of files and a later run with an extra slice writes a fresh join.
+        stem = os.path.basename(file_paths[0]).replace(".nc", "")
+        names = "\n".join(os.path.basename(p) for p in file_paths)
+        digest = hashlib.sha256(names.encode()).hexdigest()[:8]
+        output_filename = f"{'_'.join(stem.split('_')[:-1])}_concatenated_{digest}.nc"
+    concatenated_path = os.path.join(output_dir, output_filename)
+
+    if os.path.exists(concatenated_path):
+        return os.path.abspath(concatenated_path)
+
+    # Dask-backed, so the cube is streamed to disk rather than held in memory.
+    # `nested` rather than `by_coords` because the files need not tile the period cleanly.
+    with xc.open_mfdataset(file_paths, combine="nested", concat_dim="time", decode_times=True) as source:
+        ds = source
+        time_index = ds.indexes["time"]
+        if not time_index.is_monotonic_increasing:
+            ds = ds.sortby("time")
+            time_index = ds.indexes["time"]
+
+        if time_index.has_duplicates:
+            ds = ds.isel(time=~time_index.duplicated())
+        # A private temporary file, so concurrent writers cannot trample each other's output.
+        fd, tmp_path = tempfile.mkstemp(dir=output_dir, suffix=".tmp")
+        os.close(fd)
+        try:
+            ds.to_netcdf(tmp_path)
+            # Rename atomically so a concurrent execution never reads a partial file.
+            os.replace(tmp_path, concatenated_path)
+        finally:
+            if os.path.exists(tmp_path):
+                os.remove(tmp_path)
+
+    return os.path.abspath(concatenated_path)
+
+
 def generate_landmask_path(file_path, var_name, output_dir=".", output_filename=None):
     """
     Generate the landmask path based on the given file path.
@@ -417,10 +519,6 @@ def generate_landmask_path(file_path, var_name, output_dir=".", output_filename=
     ValueError
         If the variable name is not valid.
     """
-    # If file_path is a list, take the first element
-    if isinstance(file_path, list):
-        file_path = file_path[0]
-
     # Check if the file path is valid
     if not os.path.isfile(file_path):
         raise FileNotFoundError(f"File not found: {file_path}")

@@ -43,12 +43,9 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("test-cases", "fetch"),
     ("test-cases", "list"),
     ("test-cases", "run"),
-    ("test-cases", "sync"),
     ("test-cases", "replay"),
     ("test-cases", "mint"),
-    ("test-cases", "build"),
     ("test-cases", "ci-gate"),
-    ("test-cases", "check-store"),
 }
 
 # Commands whose job is to create or inspect the configuration file, so they must

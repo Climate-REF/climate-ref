@@ -2,7 +2,9 @@
 Executor for running diagnostics asynchronously using Celery
 """
 
+import os
 import time
+from collections import Counter
 from typing import Any
 
 import celery.exceptions
@@ -13,9 +15,32 @@ from tqdm import tqdm
 from climate_ref.config import Config
 from climate_ref.models import Execution
 from climate_ref_celery.app import app
+from climate_ref_celery.routing import ROUTES_ENV_VAR, load_routing_table
 from climate_ref_celery.tasks import generate_task_name
 from climate_ref_core.diagnostics import ExecutionDefinition, ExecutionResult
+from climate_ref_core.exceptions import InvalidProviderException
 from climate_ref_core.executor import Executor
+from climate_ref_core.providers import import_provider
+
+
+def _configured_provider_slugs(config: Config) -> list[str] | None:
+    """
+    Resolve the provider slugs configured for this deployment
+
+    Returns ``None`` when any provider cannot be imported,
+    which skips the stale-entry warning rather than risking a false one.
+    """
+    slugs = []
+    for provider_config in config.diagnostic_providers:
+        try:
+            slugs.append(import_provider(provider_config.provider).slug)
+        except InvalidProviderException:
+            logger.debug(
+                f"Could not import provider {provider_config.provider!r}, "
+                "skipping the routing table provider check"
+            )
+            return None
+    return slugs
 
 
 class CeleryExecutor(Executor):
@@ -45,6 +70,10 @@ class CeleryExecutor(Executor):
         self.config = config
         super().__init__(**kwargs)  # type: ignore
         self._results: list[celery.result.AsyncResult[ExecutionResult]] = []
+        self._queue_counts: Counter[str] = Counter()
+        # Resolving provider slugs imports the provider packages, so only do it when a table is set
+        known_providers = _configured_provider_slugs(config) if os.environ.get(ROUTES_ENV_VAR) else None
+        self._routing_table = load_routing_table(known_providers=known_providers)
 
     def run(
         self,
@@ -80,16 +109,27 @@ class CeleryExecutor(Executor):
         diagnostic = definition.diagnostic
 
         name = generate_task_name(diagnostic.provider, diagnostic)
+        queue = self._routing_table.queue_for(diagnostic.provider.slug, diagnostic.slug)
 
         async_result = app.send_task(
             name,
             args=[definition, self.config.log_level],
-            queue=diagnostic.provider.slug,
+            kwargs={"measure": self.config.executor.measure_resources},
+            queue=queue,
             link=handle_result.s(execution_id=execution.id).set(queue="celery") if execution else None,
             link_error=handle_failure.s(execution_id=execution.id).set(queue="celery") if execution else None,
         )
-        logger.debug(f"Celery task {async_result.id} submitted")
+        logger.debug(f"Celery task {async_result.id} for {diagnostic.slug} submitted to queue {queue}")
+        self._queue_counts[queue] += 1
         self._results.append(async_result)
+
+    def log_submission_summary(self) -> None:
+        """
+        Log a per-queue count of the tasks submitted since the last summary
+        """
+        for queue, count in sorted(self._queue_counts.items()):
+            logger.info(f"Submitted {count} executions to queue {queue}")
+        self._queue_counts.clear()
 
     def join(self, timeout: float) -> None:
         """

@@ -10,14 +10,10 @@ This module provides:
   used by every provider's integration test module)
 """
 
-import os
-import resource
 import shutil
-import sys
-import time
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from pathlib import Path
-from typing import NamedTuple
 
 from attrs import define
 from loguru import logger
@@ -31,6 +27,7 @@ from climate_ref_core.env import env
 from climate_ref_core.exceptions import DatasetResolutionError, NoTestDataSpecError, TestCaseNotFoundError
 from climate_ref_core.providers import DiagnosticProvider
 from climate_ref_core.regression import Manifest
+from climate_ref_core.resources import ResourceUsage, measure_resources
 from climate_ref_core.testing import (
     TestCasePaths,
     collect_test_case_params,
@@ -52,64 +49,76 @@ TEST_DATA_DIR = _determine_test_directory()
 # SAMPLE_DATA_VERSION is imported from climate_ref to avoid circular imports
 
 
-def _maxrss_bytes(who: int) -> int:
+def _describe_memory(usage: ResourceUsage) -> str:
     """
-    Peak RSS high-water mark for ``who`` in bytes.
+    Describe the peak memory of a completed test case.
 
-    ``ru_maxrss`` is reported in kilobytes on Linux and in bytes on macOS.
-    """
-    peak = resource.getrusage(who).ru_maxrss
-    return peak if sys.platform == "darwin" else peak * 1024
+    The description names the source of the figure,
+    because a ``rusage`` reading is a process-lifetime high-water mark
+    rather than a measurement of this case alone,
+    and a cgroup reading covers every process in the container.
 
+    Parameters
+    ----------
+    usage
+        The measured usage of the case.
 
-class ResourceSnapshot(NamedTuple):
-    """Point-in-time resource counters used to report per test case usage."""
-
-    wall: float
-    cpu: os.times_result
-    self_peak_rss: int
-    children_peak_rss: int
-
-    @classmethod
-    def capture(cls) -> "ResourceSnapshot":
-        """Capture the current wall clock, CPU, and peak RSS counters."""
-        return cls(
-            wall=time.monotonic(),
-            cpu=os.times(),
-            self_peak_rss=_maxrss_bytes(resource.RUSAGE_SELF),
-            children_peak_rss=_maxrss_bytes(resource.RUSAGE_CHILDREN),
-        )
-
-
-def log_resource_usage(case_id: str, start: ResourceSnapshot) -> None:
-    """
-    Log wall clock, CPU time, and peak memory for a completed test case.
-
-    The peak RSS values are process-lifetime high-water marks,
-    so they never decrease over a multi-case run.
-    A case that pushes a mark higher is flagged,
-    which identifies the memory-hungry case in a sequential run.
+    Returns
+    -------
+    :
+        A human readable fragment, without a leading or trailing separator.
     """
     from climate_ref.cli._utils import format_size  # noqa: PLC0415
 
-    end = ResourceSnapshot.capture()
-    wall = end.wall - start.wall
-    self_cpu = (end.cpu.user - start.cpu.user) + (end.cpu.system - start.cpu.system)
-    children_cpu = (end.cpu.children_user - start.cpu.children_user) + (
-        end.cpu.children_system - start.cpu.children_system
-    )
+    if usage.peak_memory_bytes is None:
+        return "peak memory unmeasured"
 
-    def _mark(before: int, after: int) -> str:
-        note = " (raised by this case)" if after > before else ""
-        return f"{format_size(after)}{note}"
+    qualifiers = [f"via {usage.memory_source}"]
+    if usage.memory_source == "rusage":
+        qualifiers.append("process lifetime high-water mark, not raised by this case alone")
+    elif usage.memory_source == "cgroup" and not usage.exclusive:
+        qualifiers.append("shared with another measured block")
 
-    logger.info(
-        f"Resources for {case_id}: "
-        f"wall {wall:.1f}s, cpu {self_cpu + children_cpu:.1f}s "
-        f"(self {self_cpu:.1f}s, subprocesses {children_cpu:.1f}s), "
-        f"peak RSS self {_mark(start.self_peak_rss, end.self_peak_rss)}, "
-        f"subprocesses {_mark(start.children_peak_rss, end.children_peak_rss)}"
-    )
+    described = f"peak memory {format_size(usage.peak_memory_bytes)} ({', '.join(qualifiers)})"
+
+    if usage.memory_limit_bytes is not None:
+        headroom = max(0, usage.memory_limit_bytes - usage.peak_memory_bytes)
+        described += f" of {format_size(usage.memory_limit_bytes)} limit, {format_size(headroom)} headroom"
+
+    return described
+
+
+@contextmanager
+def log_resources(case_id: str) -> Iterator[None]:
+    """
+    Measure a block of work and log what it cost once it finishes.
+
+    The measurement is logged whether or not the block raises.
+
+    Parameters
+    ----------
+    case_id
+        Identifier of the case the measurement belongs to.
+
+    Yields
+    ------
+    :
+        Nothing. The block is the span being measured.
+    """
+    recorder = None
+    try:
+        with measure_resources() as measured:
+            recorder = measured
+            yield
+    finally:
+        if recorder is not None:
+            usage = recorder.usage
+            prefix = f"Resources for {case_id}"
+            if usage is None:
+                logger.info(f"{prefix}: unmeasured")
+            else:
+                cpu = f"{usage.cpu_seconds:.1f}s" if usage.cpu_seconds is not None else "unmeasured"
+                logger.info(f"{prefix}: wall {usage.wall_seconds:.1f}s, cpu {cpu}, {_describe_memory(usage)}")
 
 
 def fetch_sample_data(force_cleanup: bool = False, symlink: bool = False) -> None:
@@ -305,14 +314,9 @@ def create_no_drift_test(provider: DiagnosticProvider) -> Callable[..., None]:
         if not paths.manifest.exists() or not paths.regression.exists():
             pytest.skip(f"No committed baseline for {diagnostic.slug}/{test_case_name}")
 
-        resources_before = ResourceSnapshot.capture()
-        try:
+        case_id = f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}"
+        with log_resources(case_id):
             assert_test_case_no_drift(config, diagnostic, test_case_name, paths, tmp_path)
-        finally:
-            log_resource_usage(
-                f"{diagnostic.provider.slug}/{diagnostic.slug}/{test_case_name}",
-                resources_before,
-            )
 
     return test_run_test_cases
 

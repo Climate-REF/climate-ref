@@ -1,6 +1,7 @@
 import pytest
 
 from climate_ref_core.exceptions import ResultValidationError
+from climate_ref_core.pycmec import BUNDLED_AFT_CV
 from climate_ref_core.pycmec.controlled_vocabulary import CV, Dimension
 from climate_ref_core.pycmec.metric import CMECMetric
 
@@ -113,3 +114,11 @@ def test_missing_value(cv, cmec_metric):
     )
     with pytest.raises(ResultValidationError, match="Unknown value 'unknown' for dimension 'statistic'"):
         cv.validate_metrics(cmec_metric)
+
+
+def test_load_from_file_round_trips(tmp_path):
+    """The path-based loader is kept for callers outside this repository."""
+    source = tmp_path / "cv.yaml"
+    source.write_text(BUNDLED_AFT_CV.read_text(), encoding="utf-8")
+
+    assert CV.load_from_file(source) == CV.load(BUNDLED_AFT_CV)

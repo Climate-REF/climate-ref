@@ -67,7 +67,6 @@ log = "$REF_CONFIGURATION/log"
 scratch = "$REF_CONFIGURATION/scratch"
 software = "$REF_CONFIGURATION/software"
 results = "$REF_CONFIGURATION/results"
-dimensions_cv = "$REF_INSTALL_DIR/climate-ref-core/src/climate_ref_core/pycmec/cv_cmip7_aft.yaml"
 
 [db]
 database_url = "sqlite:///$REF_CONFIGURATION/db/climate_ref.db"

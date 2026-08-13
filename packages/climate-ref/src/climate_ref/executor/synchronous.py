@@ -1,5 +1,7 @@
 from typing import Any
 
+from loguru import logger
+
 from climate_ref.config import Config
 from climate_ref.database import Database
 from climate_ref.executor.local import process_result
@@ -32,6 +34,12 @@ class SynchronousExecutor:
         self.database = database
         self.config = config
 
+        if self.config.executor.measure_resources:
+            logger.warning(
+                "The synchronous executor runs every execution in this one long-lived process, "
+                "so a recorded peak memory can include the footprint of an earlier execution"
+            )
+
     def run(
         self,
         definition: ExecutionDefinition,
@@ -48,7 +56,11 @@ class SynchronousExecutor:
             A database model representing the execution of the diagnostic.
             If provided, the result will be updated in the database when completed.
         """
-        result = execute_locally(definition, log_level=self.config.log_level)
+        result = execute_locally(
+            definition,
+            log_level=self.config.log_level,
+            measure=self.config.executor.measure_resources,
+        )
 
         # Solver now commits the Execution row before submitting to the executor,
         # so the instance handed to ``run`` is detached and DB writes inside
@@ -58,10 +70,10 @@ class SynchronousExecutor:
         if isinstance(execution, Execution):
             with self.database.session.begin():
                 attached = self.database.session.merge(execution)
-                process_result(self.config, self.database, result, attached)
+                process_result(self.config, self.database, result, attached, queue_seconds=0.0)
             return
 
-        process_result(self.config, self.database, result, execution)
+        process_result(self.config, self.database, result, execution, queue_seconds=0.0)
 
     def join(self, timeout: float) -> None:
         """

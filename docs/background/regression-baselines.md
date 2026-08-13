@@ -40,8 +40,7 @@ The two layers are bound by a **`manifest.json`** alongside the bundle, which re
 These give the manifest **two orthogonal version axes**:
 `test_case_version` is per-case and mint-authored (it authorises a new committed baseline),
 while `diagnostic_version` is per-diagnostic and author-authored (it declares that the
-diagnostic's *results* changed). `test_case_version` remains monotonic, and `diagnostic_version`
-may move backwards only for an authorised revert. The gate consults each for a different purpose.
+diagnostic's *results* changed). Both remain monotonic.
 
 !!! note "An empty native set is a permanent, valid state"
     Fork contributors cannot mint
@@ -59,9 +58,7 @@ flowchart LR
     run["run<br/>(no creds)"] -->|"seed committed bundle<br/>+ manifest, native = {}"| repo[("regression/<br/>+ manifest.json")]
     repo --> mint["mint<br/>(write creds, CI)"]
     mint -->|"upload blobs to store<br/>populate manifest.native"| store[("native object<br/>store (sha256)")]
-    store --> sync["sync<br/>(public read)"]
     store --> replay["replay<br/>(public read)"]
-    sync -->|"fetch blobs locally"| local[(local native)]
     replay -->|"materialise native +<br/>re-run build_execution_result +<br/>tolerant compare"| verdict{matches<br/>committed?}
     verdict -->|yes| ok([pass])
     verdict -->|no| bad([fail])
@@ -69,17 +66,13 @@ flowchart LR
 
 | Verb | Credentials | What it does |
 | --- | --- | --- |
-| `run` | none | Execute the diagnostic, curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and — when seeding or `--force-regen` — promote it to `regression/` and update `manifest.json` (first seed uses `native = {}`; existing manifests keep their native block). |
-| `build` | none | Rebuild the committed bundle from an existing output slot (no execution), under the same promotion gate as `run`. Handy for regenerating the bundle after an extraction-code change, from already-materialised native. |
+| `run` | none | Execute the diagnostic (or, with `--from-slot`, reuse the native already in the output slot instead of executing), curate its native into the output slot `output/<label>/`, rebuild the committed bundle, and, when seeding or `--force-regen`, promote it to `regression/` and update `manifest.json`. The first seed uses `native = {}`, and existing manifests keep their native block. |
 | `mint` | write | Execute (or, with `--from-replay`, replay the stored native), upload the curated native to the object store, and populate `manifest.native`. Generally run by CI. |
-| `sync` | public read | Fetch the native blobs referenced by the manifest into the local store cache. |
 | `replay` | public read | Materialise the native baseline into a slot, re-run only `build_execution_result`, and tolerantly compare to the committed bundle. |
-| `check-store` | write | Preflight the writable native store (credentials + bucket) without uploading anything. Run this before a slow `mint` to confirm credentials are correct. |
-| `migrate-manifests` | none | One-shot, idempotent maintenance command that rewrites every committed `manifest.json` at the current `SCHEMA_VERSION`, stamping each case's `diagnostic_version` from the diagnostic's in-code `Diagnostic.version`. |
 
 ### Output slots
 
-Every `run`, `build`, `replay`, and `mint` materialises what it produced into a gitignored
+Every `run`, `replay`, and `mint` materialises what it produced into a gitignored
 *output slot*, so a developer can actually see and diff what a run or replay generated:
 
 ```text
@@ -88,11 +81,10 @@ Every `run`, `build`, `replay`, and `mint` materialises what it produced into a 
 ├── output.json
 ├── series.json
 ├── ...                 # plus any referenced plots/data/html and native .nc files
-├── regression/         # the committed bundle rebuilt from this slot
-│   ├── diagnostic.json
-│   ├── output.json
-│   └── series.json
-└── .source.json        # {label, verb, source, test_case_version, created}
+└── regression/         # the committed bundle rebuilt from this slot
+    ├── diagnostic.json
+    ├── output.json
+    └── series.json
 ```
 
 Slots are never committed — the whole `**/test-data/**/output/` tree is gitignored —
@@ -103,13 +95,13 @@ Named slots persist, so two runs can be compared side by side:
 for example `run --label fresh` then `replay --label fromstore`,
 or `run --label before`, edit the diagnostic, then `run --label after`.
 
-`run` and `build` write the slot on every invocation
-but only *promote* the rebuilt bundle to the tracked `regression/` baseline
+`run` writes the slot on every invocation,
+but it only *promotes* the rebuilt bundle to the tracked `regression/` baseline
 when `--force-regen` is given or no baseline exists yet,
-so a labelled run never silently clobbers a committed baseline;
+so a labelled run never silently clobbers a committed baseline.
 `mint` always promotes and uploads.
 When a promoted bundle's underlying native digests differ from the minted baseline,
-`run` and `build` warn (they never block) that a re-mint is needed.
+`run` warns (it never blocks) that a re-mint is needed.
 `mint --from-replay` re-authors the manifest from the stored native instead of re-executing,
 and uploads only blobs whose digest actually changed.
 
@@ -155,7 +147,7 @@ a value that rounds identically on all machines will always compare within toler
 
 ## Tolerant comparison
 
-`replay` and the execute path do not require byte-equality of the regenerated JSON.
+`replay` does not require byte-equality of the regenerated JSON.
 A byte-equal fast path short-circuits the common case;
 otherwise values are compared with a small relative/absolute tolerance
 (`math.isclose`), and volatile keys/values are sanitised to placeholders before comparison.
@@ -178,10 +170,9 @@ because an empty native set is legitimate, a missing native baseline downgrades 
 
 ### Actions
 
-- **`skip`** — nothing relevant to this case changed, or the case is not under regression management.
-- **`replay`** — cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
-- **`execute`** — full end-to-end re-run with tolerant compare; required when `test_case_version` was bumped to authorise a new baseline *and* no native baseline exists to replay against.
-- **`fail`** — an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
+- **`skip`**: nothing relevant to this case changed, the case is not under regression management, or the committed bundle changed (e.g. a `test_case_version` bump) with no native baseline to replay against, so the diff review is the only signal.
+- **`replay`**: cheap, anonymous re-check against the cached native baseline (only when native blobs exist). This also verifies a `test_case_version` bump that ships native blobs.
+- **`fail`**: an unauthorised or unverifiable change: the committed bundle or catalog changed without a version bump, a version moved backwards, the bundle drifted from its manifest, or the in-code `Diagnostic.version` no longer matches the recorded `diagnostic_version`.
 
 ### Decision flow
 
@@ -211,25 +202,20 @@ flowchart TD
     seeding -->|no| versionCmp{test_case_version<br/>vs base}
     versionCmp -->|decreased| failVersion[["FAIL<br/>version not monotonic"]]
     versionCmp -->|"unchanged or bumped"| diagVersionCmp{diagnostic_version<br/>decreased vs base?}
-    diagVersionCmp -->|"yes, committed unchanged"| failBareDowngrade[["FAIL<br/>bare downgrade<br/>re-mint required"]]
-    diagVersionCmp -->|"no, or committed re-minted"| versionBumped{test_case_version<br/>bumped?}
+    diagVersionCmp -->|yes| failDowngrade2[["FAIL<br/>version not monotonic"]]
+    diagVersionCmp -->|no| versionBumped{test_case_version<br/>bumped?}
     versionBumped -->|yes| bumpNative{native<br/>present?}
     bumpNative -->|yes| replayBump[["REPLAY<br/>verify new baseline<br/>reproduces from native"]]
-    bumpNative -->|no| execute[["EXECUTE<br/>full re-run<br/>(no native to replay)"]]
+    bumpNative -->|no| skipBump[["SKIP<br/>no native to replay"]]
     versionBumped -->|no| committedChanged{committed<br/>changed?}
 
     committedChanged -->|yes| failUnauthorised[["FAIL<br/>baseline changed without<br/>version bump"]]
-    committedChanged -->|no| nativeChanged{native<br/>changed?}
+    committedChanged -->|no| nativeOrExtraction{native changed<br/>or extraction<br/>code changed?}
 
-    nativeChanged -->|yes| nativeEmpty{"head native<br/>empty?<br/>(de-mint)"}
-    nativeEmpty -->|no| replayNative[["REPLAY<br/>confirm new native<br/>reproduces committed"]]
-    nativeEmpty -->|yes| skipDemint[["SKIP + WARN<br/>native removed"]]
-
-    nativeChanged -->|no| extractionChanged{extraction<br/>code changed?}
-    extractionChanged -->|no| skipNothing[["SKIP<br/>nothing to verify"]]
-    extractionChanged -->|yes| extractNative{native<br/>non-empty?}
-    extractNative -->|yes| replayExtract[["REPLAY<br/>verify against cached native"]]
-    extractNative -->|no| skipExtract[["SKIP<br/>no native to replay"]]
+    nativeOrExtraction -->|no| skipNothing[["SKIP<br/>nothing to verify"]]
+    nativeOrExtraction -->|yes| triggerNative{native<br/>non-empty?}
+    triggerNative -->|yes| replayTrigger[["REPLAY<br/>verify against cached native"]]
+    triggerNative -->|no| skipTrigger[["SKIP<br/>no native to replay"]]
 ```
 
 ### How changed files map to the signals
@@ -247,9 +233,7 @@ and maps the changed-file list onto each case:
   This closes the **replay blind-spot** that `extraction_changed` alone leaves open:
   an execution-affecting change with no extraction-path edit (the #671 ECS case) would otherwise
   route to a green replay against a stale bundle.
-  A `diagnostic_version` decrease is permitted only as an **authorised revert**: the author lowers
-  the code version *and* re-mints, so the committed bundle changes and the gate recognises the
-  revert structurally rather than via a flag.
+  `diagnostic_version` is monotonic, like `test_case_version`: it may never decrease.
 - **`committed_integrity_ok`** recomputes the committed digests from the working tree
   and compares them to `manifest.committed`.
 - **`catalog_integrity_ok`** recomputes the input catalog hash
@@ -257,10 +241,10 @@ and maps the changed-file list onto each case:
   catching an input change that was not accompanied by a regenerated baseline.
 
 The gate exits non-zero if any case is gated `fail`;
-the `--json` output drives CI's dispatch of the `replay` and `execute` jobs.
+the `--json` output drives CI's dispatch of the `replay` jobs.
 
 !!! warning "Credentials never cross the trust boundary"
-    `replay`, `sync`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
+    `replay`, `run`, and the gate itself are anonymous and safe to run on untrusted pull-request code.
     Only `mint` holds object-store write credentials,
     and it runs exclusively on the trusted-tier runner — never on fork pull-request code.
 
@@ -274,7 +258,7 @@ Since this is a public project we have to be careful about when this is run to n
 | --- | --- | --- | --- |
 | `regression-pr-gate.yaml` | every pull request | none | Runs the coupling gate, then `replay`s every case it routes to `replay`. |
 | `regression-mint.yaml` | manual dispatch | R2 write | `mint`s native baselines and commits the regenerated manifest back to the branch. |
-| `regression-drift.yaml` | nightly + manual | none | `sync`s and `replay`s every baseline to catch silent drift. |
+| `regression-drift.yaml` | nightly + manual | none | `replay`s every baseline to catch silent drift. |
 
 ### PR gate (`regression-pr-gate.yaml`)
 
@@ -283,8 +267,9 @@ branch and acts on each decision:
 
 - **`fail`** aborts the job with the offending cases and their reasons.
 - **`replay`** is verified in place against the public native baseline.
-- **`execute`** is surfaced as a warning: a `test_case_version` bump with no native baseline to replay against cannot be verified
-   (it would need a full diagnostic run), so the committed bundle is gated by review here and and requires `minting`.
+- **`skip`** cases with no native baseline to replay against (e.g. a `test_case_version` bump with
+  nothing minted yet) are not verified further here.
+  The committed bundle is gated by review in the diff, and minting enables replay verification later.
 
 The job runs on the public `ubuntu-latest` runner with no secrets, so it is safe on fork pull requests.
 The decision-to-replay fan-out lives in `scripts/ci/regression-pr-gate.sh`.
@@ -334,5 +319,5 @@ A `dry_run` input previews without uploading or committing, and the job refuses 
 
 ### Nightly drift (`regression-drift.yaml`)
 
-A scheduled (and manually dispatchable) job `sync`s every referenced native blob and `replay`s it against the committed bundle.
+A scheduled (and manually dispatchable) job `replay`s every referenced native blob against the committed bundle.
 This catches a baseline that no longer reproduce the committed results within tolerance — for example after a dependency upgrade. It is read-only and credential-free.

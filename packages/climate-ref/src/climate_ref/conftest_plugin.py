@@ -26,23 +26,28 @@ Provided fixtures
 
 from __future__ import annotations
 
-import importlib.resources
+import atexit
 import os
 import re
 import tempfile
 from collections.abc import Callable, Iterator
+from contextlib import ExitStack
+from functools import lru_cache
 from pathlib import Path
 from typing import Any, cast
 
 import pandas as pd
 import pytest
 from _pytest.logging import LogCaptureFixture
-from click.testing import Result
 from loguru import logger
-from typer.testing import CliRunner
+from typer.testing import CliRunner, Result
 
 from climate_ref import cli
-from climate_ref.config import DEFAULT_IGNORE_DATASETS_FILENAME, Config, DiagnosticProviderConfig
+from climate_ref.config import (
+    BUNDLED_IGNORE_DATASETS,
+    Config,
+    DiagnosticProviderConfig,
+)
 from climate_ref.datasets.cmip6 import CMIP6DatasetAdapter
 from climate_ref.datasets.obs4mips import Obs4MIPsDatasetAdapter
 from climate_ref.models import Execution
@@ -232,36 +237,32 @@ def data_catalog(
     }
 
 
+@lru_cache(maxsize=1)
 def packaged_ignore_datasets_file() -> Path:
     """
-    Locate the ``default_ignore_datasets.yaml`` shipped inside the ``climate_ref`` package.
+    Expose the grey list shipped inside the ``climate_ref`` package as a real file.
+
+    The path lives for the duration of the test session.
+    For an ordinary install this is the packaged file itself rather than a copy,
+    so treat it as read only.
 
     Returns
     -------
     :
-        Path to the packaged ignore datasets file.
-
-    Raises
-    ------
-    ValueError
-        If the file is missing from the installed package.
+        Path to the packaged grey list.
     """
-    resource = importlib.resources.files("climate_ref") / DEFAULT_IGNORE_DATASETS_FILENAME
-    local_ignore_file = Path(str(resource))
-    if not local_ignore_file.is_file():  # pragma: no cover - indicates a packaging error
-        raise ValueError(f"Could not find ignore file at {local_ignore_file}")
-    return local_ignore_file
+    stack = ExitStack()
+    atexit.register(stack.close)
+    return stack.enter_context(BUNDLED_IGNORE_DATASETS.as_path())
 
 
 def _use_local_ignore_datasets_file(cfg: Config) -> None:
     """
-    Point the config at the packaged default_ignore_datasets.yaml and disable fetching.
+    Pin the config to the packaged grey list and disable fetching.
 
     This keeps tests deterministic and offline:
     they exercise the shipped default file rather than whatever copy happens to be cached on the host.
-
-    The file is resolved from the installed package rather than the source tree,
-    so the fixtures also work for provider packages that depend on a released ``climate-ref`` wheel.
+    Pinning it as an explicit override also stops a stale host cache from being picked up.
     """
     cfg.ignore_datasets_file = packaged_ignore_datasets_file()
     cfg.ignore_datasets_url = ""

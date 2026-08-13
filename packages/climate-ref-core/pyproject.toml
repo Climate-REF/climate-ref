@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-core"
-version = "0.16.2"
+version = "0.17.0"
 description = "Core library for the CMIP Rapid Evaluation Framework"
 readme = "README.md"
 authors = [
@@ -37,8 +37,9 @@ dependencies = [
     "pooch>=1.8.0,<2",
     "environs>=11",
     "pyyaml>=6.0.2",
+    "psutil>=5.9.8",
     # Not used directly, but required to support some installations
-    "setuptools<81",
+    "setuptools<84",
 
     # ESGF data fetching
     "intake-esgf>=2025.7.16",
@@ -65,6 +66,7 @@ aws = [
 [dependency-groups]
 dev = [
     "types-requests",
+    "types-psutil",
 ]
 
 [build-system]

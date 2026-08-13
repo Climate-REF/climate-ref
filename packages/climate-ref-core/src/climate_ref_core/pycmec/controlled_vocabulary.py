@@ -7,6 +7,7 @@ from cattrs import Converter, transform_error
 from loguru import logger
 from yaml import safe_load
 
+from climate_ref_core.data import FileResource, Resource
 from climate_ref_core.exceptions import ResultValidationError
 from climate_ref_core.metric_values import ScalarMetricValue, SeriesMetricValue
 from climate_ref_core.pycmec.metric import CMECMetric
@@ -169,6 +170,50 @@ class CV:
             self._validate_value(result)
 
     @staticmethod
+    def from_text(contents: str, source: str = "<string>") -> "CV":
+        """
+        Parse a CV from YAML text
+
+        Parameters
+        ----------
+        contents
+            The YAML document describing the controlled vocabulary.
+        source
+            Description of where the text came from, used in error messages.
+
+        Returns
+        -------
+            A new CV instance
+        """
+        convertor = Converter(forbid_extra_keys=True)
+
+        try:
+            return convertor.structure(safe_load(contents), CV)
+        except Exception as exc:
+            logger.error(f"Error loading CV from {source}")
+            for error in transform_error(exc):
+                logger.error(error)
+            raise
+
+    @staticmethod
+    def load(resource: Resource) -> "CV":
+        """
+        Load a CV from a resource
+
+        The CV may come from an operator override or from the copy shipped with the REF.
+
+        Parameters
+        ----------
+        resource
+            The resource describing where the CV may be found.
+
+        Returns
+        -------
+            A new CV instance
+        """
+        return CV.from_text(resource.read_text(), source=resource.describe())
+
+    @staticmethod
     def load_from_file(filename: pathlib.Path | str) -> "CV":
         """
         Load a CV from disk
@@ -178,13 +223,4 @@ class CV:
             A new CV instance
 
         """
-        convertor = Converter(forbid_extra_keys=True)
-
-        try:
-            contents = safe_load(pathlib.Path(filename).read_text(encoding="utf-8"))
-            return convertor.structure(contents, CV)
-        except Exception as exc:
-            logger.error(f"Error loading CV from {filename}")
-            for error in transform_error(exc):
-                logger.error(error)
-            raise
+        return CV.load(FileResource(pathlib.Path(filename)))

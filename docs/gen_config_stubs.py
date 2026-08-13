@@ -12,13 +12,13 @@ as a preview.
 from __future__ import annotations
 
 import ast
-import importlib.resources
 import inspect
 import os
 import textwrap
 from collections.abc import Sequence
 from itertools import pairwise
-from typing import Any, get_origin
+from types import UnionType
+from typing import Any, Union, get_args, get_origin
 
 import attrs
 import mkdocs_gen_files
@@ -41,11 +41,6 @@ def _get_default_value(items: Sequence[str]) -> Any:
         value = getattr(value, item)
         if isinstance(value, list):
             value = value[0]
-
-    # We need to replace a path within the installation directory with a dummy values
-    ref_install_directory = str(importlib.resources.files("climate_ref_core.pycmec"))
-    if ref_install_directory in str(value):
-        return str(value).replace(ref_install_directory, "$REF_INSTALL_DIRECTORY")
 
     if "__REF_CONFIGURATION__" in str(value):
         return str(value).replace("/__REF_CONFIGURATION__", "$REF_CONFIGURATION")
@@ -142,6 +137,19 @@ def write_field_set(fh, field_parent_names: list[str], target: type[Any]) -> Non
         write_field_set(fh, [*field_parent_names, field.name], field_type)
 
 
+def _type_name(field_type: Any) -> str:
+    """
+    Render a field annotation for display.
+
+    Unions have no ``__name__``, so an optional field is rendered from its members.
+    """
+    if get_origin(field_type) in (UnionType, Union):
+        return " | ".join(_type_name(arg) for arg in get_args(field_type))
+    if field_type is type(None):
+        return "None"
+    return getattr(field_type, "__name__", str(field_type))
+
+
 def write_field(fh, field_parent_names: list[str], field, description: str) -> None:
     """
     Write a single field of the configuration.
@@ -164,7 +172,7 @@ def write_field(fh, field_parent_names: list[str], field, description: str) -> N
         default_value = _get_default_value([*field_parent_names, field.name])
         fh.write(f"**Default**: {default_value!r}\n\n")
 
-    fh.write(f"**Type**: `{field.type.__name__}`\n\n")
+    fh.write(f"**Type**: `{_type_name(field.type)}`\n\n")
 
     if field.metadata.get("env"):
         env_variable = f"{env_prefix}_{field.metadata.get('env')}"

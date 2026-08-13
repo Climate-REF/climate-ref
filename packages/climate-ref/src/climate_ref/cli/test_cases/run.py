@@ -4,6 +4,9 @@
 Executes diagnostics for their declared test cases, writes the native into an
 output slot, rebuilds the committed bundle, and (when asked) promotes it to the
 tracked regression baseline.
+
+``--from-slot`` skips the execution and reuses the native already in the slot,
+so the bundle can be regenerated after an extraction-code change.
 """
 
 from __future__ import annotations
@@ -19,24 +22,20 @@ from climate_ref.cli._git_utils import collect_regression_file_info, get_repo_fo
 from climate_ref.cli._utils import format_size
 from climate_ref.cli.test_cases._app import app
 from climate_ref.cli.test_cases._catalog import _fetch_and_build_catalog
-from climate_ref.cli.test_cases._common import (
-    _validate_provider_in_registry,
-    _validate_requested_filters,
-    _write_test_case_manifest,
-)
+from climate_ref.cli.test_cases._common import VerbDriver, VerbSummary
 from climate_ref.cli.test_cases._stages import (
+    SourceOutputs,
     StageError,
     baseline_placeholders,
-    native_is_stale,
     prepare_slot,
-    promote_to_baseline,
-    snapshot_native,
+    promote_and_author_manifest,
+    slot_native_relpaths,
     stage_build,
     stage_execute,
-    write_source_stamp,
+    stage_rebuild_from_slot,
 )
 from climate_ref.config import Config
-from climate_ref.testing import ResourceSnapshot, log_resource_usage
+from climate_ref.testing import log_resources
 from climate_ref_core.exceptions import (
     DatasetResolutionError,
     InvalidDiagnosticException,
@@ -48,7 +47,8 @@ if TYPE_CHECKING:
     from rich.console import Console
 
     from climate_ref_core.diagnostics import Diagnostic
-    from climate_ref_core.testing import TestCase
+    from climate_ref_core.output_files import PlaceholderMap
+    from climate_ref_core.testing import TestCase, TestCasePaths
 
 
 def _print_regression_summary(  # pragma: no cover
@@ -116,6 +116,38 @@ def _print_regression_summary(  # pragma: no cover
     console.print(summary)
 
 
+def _rebuild_from_slot(
+    *,
+    diag: Diagnostic,
+    tc: TestCase,
+    paths: TestCasePaths,
+    label: str,
+    placeholders: PlaceholderMap,
+) -> tuple[Path, SourceOutputs] | None:
+    """
+    Rebuild a test case's execution result from the native already in its output slot.
+
+    Returns the slot and the rebuilt source outputs, or ``None`` when the slot holds no
+    native or the catalog is missing (both logged as errors).
+    """
+    case_id = f"{diag.provider.slug}/{diag.slug}/{tc.name}"
+    slot = paths.output_slot(label)
+    if not slot.exists() or not slot_native_relpaths(slot):
+        logger.error(f"{case_id}: no native in output slot {label!r}. Run/replay/mint it first")
+        return None
+    if not paths.catalog.exists():
+        logger.error(f"No catalog file for {case_id}. Run `ref test-cases fetch` first")
+        return None
+
+    try:
+        source = stage_rebuild_from_slot(diag=diag, tc=tc, paths=paths, slot=slot, placeholders=placeholders)
+    except Exception as exc:
+        logger.error(f"{case_id}: failed to rebuild bundle from slot: {exc}")
+        return None
+    logger.info(f"Rebuilt {case_id} from output slot {slot} without executing")
+    return slot, source
+
+
 def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     config: Config,
     console: Console,
@@ -128,6 +160,7 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     size_threshold: float,
     clean: bool,
     label: str,
+    from_slot: bool,
 ) -> bool:
     """
     Run a single test case for a diagnostic, writing its native into an output slot.
@@ -137,9 +170,11 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
     ``--force-regen`` is given or no baseline exists yet, so a labelled run never silently
     clobbers a committed baseline.
 
+    With ``from_slot`` the diagnostic is not executed at all: the native already in
+    ``output/<label>/`` is reused and only the committed bundle is regenerated.
+
     Returns True if successful, False otherwise.
     """
-    from climate_ref_core.regression.manifest import Manifest
     from climate_ref_core.testing import TestCasePaths, load_datasets_from_yaml
 
     provider_slug = diag.provider.slug
@@ -161,86 +196,82 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
         logger.error(f"Could not determine test data directory for {provider_slug}/{diagnostic_slug}")
         return False
 
-    if not fetch:
-        if not paths.catalog.exists():
-            logger.error(f"No catalog file found for {case_id}")
-            logger.error("Run 'ref test-cases fetch' first or use --fetch flag")
-            return False
-        logger.info(f"Loading catalog from {paths.catalog}")
-        datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
+    placeholders = baseline_placeholders(paths, config)
 
-    paths.create()
-    slot = prepare_slot(paths, label)
-    logger.info(f"Running test case {test_case_name!r} for {provider_slug}/{diagnostic_slug}")
-    try:
-        source = stage_execute(
-            config=config,
-            diag=diag,
-            tc=tc,
-            datasets=datasets,
-            slot=slot,
-            execution_dir=execution_dir,
-            clean=clean,
+    if from_slot:
+        source_or_none = _rebuild_from_slot(
+            diag=diag, tc=tc, paths=paths, label=label, placeholders=placeholders
         )
-    except NoTestDataSpecError:
-        logger.error(f"Diagnostic {provider_slug}/{diagnostic_slug} has no test_data_spec")
-        return False
-    except TestCaseNotFoundError:
-        logger.error(f"Test case {test_case_name!r} not found for {provider_slug}/{diagnostic_slug}")
-        if diag.test_data_spec:
-            logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
-        return False
-    except DatasetResolutionError as e:
-        logger.error(str(e))
-        logger.error("Have you run 'ref test-cases fetch' first?")
-        return False
-    except StageError:
-        logger.error(f"Execution failed: {case_id}")
-        return False
-    except Exception as e:
-        logger.error(f"Diagnostic execution failed for {case_id}: {e!s}")
-        return False
+        if source_or_none is None:
+            return False
+        slot, source = source_or_none
+    else:
+        if not fetch:
+            if not paths.catalog.exists():
+                logger.error(
+                    f"No catalog file for {case_id}. Run `ref test-cases fetch` first, or pass --fetch"
+                )
+                return False
+            logger.info(f"Loading catalog from {paths.catalog}")
+            datasets = load_datasets_from_yaml(paths.catalog, paths.catalog_paths)
 
-    result = source.result
-    logger.info(f"Execution completed: {case_id}")
-    if result.metric_bundle_filename:
-        logger.info(f"Metric bundle: {result.to_output_path(result.metric_bundle_filename)}")
-    if result.output_bundle_filename:
-        logger.info(f"Output bundle: {result.to_output_path(result.output_bundle_filename)}")
+        paths.create()
+        slot = prepare_slot(paths, label)
+        logger.info(f"Running test case {test_case_name!r} for {provider_slug}/{diagnostic_slug}")
+        try:
+            source = stage_execute(
+                config=config,
+                diag=diag,
+                tc=tc,
+                datasets=datasets,
+                slot=slot,
+                execution_dir=execution_dir,
+                clean=clean,
+            )
+        except NoTestDataSpecError:
+            logger.error(f"Diagnostic {provider_slug}/{diagnostic_slug} has no test_data_spec")
+            return False
+        except TestCaseNotFoundError:
+            logger.error(f"Test case {test_case_name!r} not found for {provider_slug}/{diagnostic_slug}")
+            if diag.test_data_spec:
+                logger.error(f"Available test cases: {diag.test_data_spec.case_names}")
+            return False
+        except DatasetResolutionError as e:
+            logger.error(str(e))
+            logger.error("Have you run 'ref test-cases fetch' first?")
+            return False
+        except StageError:
+            logger.error(f"Execution failed: {case_id}")
+            return False
+        except Exception as e:
+            logger.error(f"Diagnostic execution failed for {case_id}: {e!s}")
+            return False
+
+        result = source.result
+        logger.info(f"Execution completed: {case_id}")
+        if result.metric_bundle_filename:
+            logger.info(f"Metric bundle: {result.to_output_path(result.metric_bundle_filename)}")
+        if result.output_bundle_filename:
+            logger.info(f"Output bundle: {result.to_output_path(result.output_bundle_filename)}")
 
     # Rebuild the slot's committed bundle, then decide whether to promote it to the
     # tracked baseline. The native block is mint-owned, so a run preserves the previous
     # one (or seeds an empty set) and never authors native here.
-    placeholders = baseline_placeholders(paths, config)
     committed = stage_build(slot=slot, source=source, placeholders=placeholders)
-    previous = Manifest.load(paths.manifest) if paths.manifest.exists() else None
-    version = previous.test_case_version if previous else 1
 
     if force_regen or not paths.regression.exists():
-        promote_to_baseline(slot, paths)
-        native = snapshot_native(slot, source=source, placeholders=placeholders)
-        if previous is not None:
-            _write_test_case_manifest(
-                paths,
-                test_case_version=previous.test_case_version,
-                diagnostic_version=previous.diagnostic_version,
-                committed=committed,
-                native=previous.native,
-                schema=previous.schema,
-            )
-            if native_is_stale(native, previous.native):
-                logger.warning(
-                    f"{case_id}: committed bundle regenerated but the native baseline differs; "
-                    "re-mint with `ref test-cases mint` (or `mint --from-replay`)"
-                )
-        else:
-            _write_test_case_manifest(
-                paths,
-                test_case_version=1,
-                diagnostic_version=diag.version,
-                committed=committed,
-                native={},
-            )
+        promote_and_author_manifest(
+            paths=paths,
+            diag=diag,
+            slot=slot,
+            source=source,
+            placeholders=placeholders,
+            committed=committed,
+            stale_message=(
+                f"{case_id}: committed bundle regenerated but the native baseline differs. "
+                "Re-mint with `ref test-cases mint` (or `mint --from-replay`)"
+            ),
+        )
         logger.info(f"Updated regression baseline: {paths.regression}")
         _print_regression_summary(console, paths.regression, size_threshold)
     else:
@@ -248,7 +279,6 @@ def _run_single_test_case(  # noqa: PLR0911, PLR0912, PLR0913, PLR0915
             f"Wrote output slot {slot} (committed baseline unchanged; use --force-regen to update it)"
         )
 
-    write_source_stamp(slot, label=label, verb="run", source="execute", test_case_version=version)
     return True
 
 
@@ -308,6 +338,13 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
         str,
         typer.Option(help="Output slot name under output/ (default: latest)"),
     ] = "latest",
+    from_slot: Annotated[
+        bool,
+        typer.Option(
+            "--from-slot",
+            help="Rebuild the committed bundle from the native already in the output slot",
+        ),
+    ] = False,
 ) -> None:
     """
     Run test cases for diagnostics.
@@ -318,6 +355,12 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
     Use --provider to select which provider's diagnostics to run (required).
     Use --diagnostic and --test-case to further narrow the scope.
 
+    With --from-slot the diagnostic is not executed.
+    The native already materialised in ``output/<label>/`` by a previous run, replay or mint is reused,
+    and only the committed bundle is regenerated.
+    This is how a bundle is refreshed after an extraction-code change.
+    It cannot be combined with the options that only make sense when executing.
+
     Examples
     --------
         ref test-cases run --provider ilamb              # Run all ILAMB test cases
@@ -325,50 +368,51 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
         ref test-cases run --provider ilamb --test-case default --fetch
         ref test-cases run --provider pmp --only-missing # Skip test cases with regression data
         ref test-cases run --provider pmp --if-changed   # Only run if catalog changed
+        ref test-cases run --provider example --from-slot --label before --force-regen
     """
-    from climate_ref.provider_registry import ProviderRegistry
     from climate_ref_core.testing import (
         TestCasePaths,
         catalog_changed_since_regression,
     )
 
     config: Config = ctx.obj.config
-    db = ctx.obj.database
     console: Console = ctx.obj.console
 
-    # Build provider registry
-    registry = ProviderRegistry.build_from_config(config, db)
+    if from_slot:
+        # --only-missing and --if-changed would skip exactly the cases a rebuild targets,
+        # and the rest configure an execution that never happens.
+        conflicting = [
+            name
+            for name, given in (
+                ("--fetch", fetch),
+                ("--output-directory", output_directory is not None),
+                ("--clean", clean),
+                ("--only-missing", only_missing),
+                ("--if-changed", if_changed),
+            )
+            if given
+        ]
+        if conflicting:
+            logger.error(f"--from-slot cannot be combined with {', '.join(conflicting)}")
+            raise typer.Exit(code=1)
 
-    # Find the provider
-    _validate_provider_in_registry(registry, provider)
-    _validate_requested_filters(registry, provider=provider, diagnostic=diagnostic, test_case=test_case)
-    provider_instance = next(p for p in registry.providers if p.slug == provider)
+    driver = VerbDriver(ctx, provider=provider, diagnostic=diagnostic, test_case=test_case)
 
     # Collect test cases to run
     test_cases_to_run: list[tuple[Diagnostic, TestCase]] = []
     skipped_cases: list[tuple[Diagnostic, TestCase]] = []
 
-    for diag in provider_instance.diagnostics():
-        if diagnostic and diag.slug != diagnostic:
+    for diag, tc in driver.cases:
+        paths = TestCasePaths.from_diagnostic(diag, tc.name)
+        # Skip if regression exists when using --only-missing
+        if only_missing and paths and paths.regression.exists():
+            skipped_cases.append((diag, tc))
             continue
-        if diag.test_data_spec is None:
+        # Skip if catalog hasn't changed when using --if-changed
+        if if_changed and paths and not catalog_changed_since_regression(paths):
+            skipped_cases.append((diag, tc))
             continue
-
-        for tc in diag.test_data_spec.test_cases:
-            if test_case and tc.name != test_case:
-                continue
-            # Skip if regression exists when using --only-missing
-            paths = TestCasePaths.from_diagnostic(diag, tc.name)
-            if only_missing:
-                if paths and paths.regression.exists():
-                    skipped_cases.append((diag, tc))
-                    continue
-            # Skip if catalog hasn't changed when using --if-changed
-            if if_changed:
-                if paths and not catalog_changed_since_regression(paths):
-                    skipped_cases.append((diag, tc))
-                    continue
-            test_cases_to_run.append((diag, tc))
+        test_cases_to_run.append((diag, tc))
 
     if not test_cases_to_run:
         if only_missing and skipped_cases:
@@ -412,11 +456,6 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
         console.print(table)
         return
 
-    # Run each test case
-    successes = 0
-    failures = 0
-    failed_cases: list[str] = []
-
     if output_directory is not None:
         logger.info(
             f"Using {output_directory} as the execution scratch directory; rebuilt native/bundle files "
@@ -425,33 +464,29 @@ def run_test_case(  # noqa: PLR0912, PLR0913, PLR0915
 
     for diag, tc in test_cases_to_run:
         case_id = f"{provider}/{diag.slug}/{tc.name}"
-        resources_before = ResourceSnapshot.capture()
-        success = _run_single_test_case(
-            config=config,
-            console=console,
-            diag=diag,
-            tc=tc,
-            execution_dir=output_directory,
-            force_regen=force_regen,
-            fetch=fetch,
-            size_threshold=size_threshold,
-            clean=clean,
-            label=label,
-        )
-        log_resource_usage(case_id, resources_before)
+        with log_resources(case_id):
+            success = _run_single_test_case(
+                config=config,
+                console=console,
+                diag=diag,
+                tc=tc,
+                execution_dir=output_directory,
+                force_regen=force_regen,
+                fetch=fetch,
+                size_threshold=size_threshold,
+                clean=clean,
+                label=label,
+                from_slot=from_slot,
+            )
         if success:
-            successes += 1
+            driver.ok()
         else:
-            failures += 1
-            failed_cases.append(case_id)
+            driver.fail(case_id)
 
-    # Print summary
-    console.print()
-    if failures == 0:
-        console.print(f"[green]All {successes} test case(s) passed[/green]")
-    else:
-        console.print(f"[yellow]Results: {successes} passed, {failures} failed[/yellow]")
-        console.print("[red]Failed test cases:[/red]")
-        for case in failed_cases:
-            console.print(f"  - {case}")
-        raise typer.Exit(code=1)
+    driver.finish(
+        VerbSummary(
+            mixed="Results: {successes} passed, {failures} failed",
+            failed_header="Failed test cases:",
+            success="All {successes} test case(s) passed",
+        )
+    )

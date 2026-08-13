@@ -159,9 +159,17 @@ test: clean test-core test-ref test-executors test-diagnostics test-integration 
 test-quick: clean  ## run all the tests at once
 	# This is a quicker way of running all the tests
 	# It doesn't execute each test using the target package as above
+	# The resource measurement tests time real work,
+	# so they run serially after the parallel workers have finished.
+	# A new resource_intensive test has to live under a path listed here.
 	uv run \
 		pytest tests packages \
-		-r a -v  --cov-report=term -n auto
+		-r a -v  --cov-report=term -n auto \
+		-m "not resource_intensive"
+	uv run \
+		pytest packages/climate-ref-core/tests/integration packages/climate-ref/tests/integration \
+		-r a -v \
+		-m resource_intensive
 
 # Note on code coverage and testing:
 # If you want to debug what is going on with coverage, we have found

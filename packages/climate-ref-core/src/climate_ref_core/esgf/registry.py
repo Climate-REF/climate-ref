@@ -8,7 +8,7 @@ This module provides request classes for fetching datasets from pooch registries
 from __future__ import annotations
 
 import re
-from collections.abc import Callable, Collection
+from collections.abc import Callable, Collection, Mapping
 from typing import Any
 
 import pandas as pd
@@ -155,7 +155,7 @@ def _parse_pmp_climatology_key(key: str) -> dict[str, Any]:
 
 def _matches_facets(
     metadata: dict[str, Any],
-    facets: dict[str, FacetValue],
+    facets: Mapping[str, FacetValue],
 ) -> bool:
     """
     Check if metadata matches all provided facets.
@@ -231,7 +231,7 @@ class RegistryRequest:
         self,
         slug: str,
         registry_name: str,
-        facets: dict[str, FacetValue],
+        facets: Mapping[str, FacetValue],
         source_type: str = "PMPClimatology",
         time_span: tuple[str, str] | None = None,
         *,

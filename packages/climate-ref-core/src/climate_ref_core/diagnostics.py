@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import pathlib
 from collections.abc import Iterable, Sequence
-from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
+from typing import TYPE_CHECKING, Any, Protocol, cast, runtime_checkable
 
 from attrs import field, frozen
 
@@ -16,6 +16,7 @@ from climate_ref_core.metric_values import SeriesMetricValue
 from climate_ref_core.metric_values.typing import FileDefinition, SeriesDefinition
 from climate_ref_core.pycmec.metric import CMECMetric
 from climate_ref_core.pycmec.output import CMECOutput
+from climate_ref_core.resources import ResourceUsage
 
 if TYPE_CHECKING:
     import pandas as pd
@@ -64,9 +65,12 @@ class ExecutionDefinition:
     for a specific set of datasets fulfilling the requirements.
     """
 
-    diagnostic: Diagnostic
+    _diagnostic: Diagnostic | None = field(eq=False)
     """
     The diagnostic that is being executed
+
+    May be None on a definition that has been deserialised,
+    in which case it is resolved from :attr:`diagnostic_full_slug` on first access.
     """
 
     key: str
@@ -93,11 +97,65 @@ class ExecutionDefinition:
     Root directory for storing the output of the diagnostic execution
     """
 
+    _diagnostic_full_slug: str | None = field(default=None)
+    """
+    Slug of the diagnostic, supplied when the diagnostic itself is not available.
+
+    Read through :attr:`diagnostic_full_slug`.
+    It is derived from the diagnostic at construction when it was not given,
+    so it carries the diagnostic's identity into equality even though
+    :attr:`_diagnostic` itself takes no part in it.
+    """
+
+    def __attrs_post_init__(self) -> None:
+        # The diagnostic is excluded from equality because a deserialised definition resolves
+        # its own instance, so the slug has to stand in for it.
+        # Deriving it here means a definition always compares on which diagnostic it runs.
+        #
+        # A diagnostic that has not been registered with a provider yet has no slug to derive.
+        # That stays permitted, and the slug is only demanded when something asks for it.
+        # A subclass that never ran this class's __init__ has no _provider at all,
+        # so the default keeps construction working for it too.
+        if (
+            self._diagnostic_full_slug is None
+            and self._diagnostic is not None
+            and getattr(self._diagnostic, "_provider", None) is not None
+        ):
+            object.__setattr__(self, "_diagnostic_full_slug", self._diagnostic.full_slug())
+
+    @property
+    def diagnostic_full_slug(self) -> str:
+        """
+        Slug of the diagnostic being executed, of the form `{provider_slug}/{diagnostic_slug}`
+
+        This is the definition's identity that is serialised across the wire.
+        """
+        if self._diagnostic_full_slug is not None:
+            return self._diagnostic_full_slug
+        if self._diagnostic is None:
+            raise ValueError("Either diagnostic or diagnostic_full_slug must be given")
+        # Only reachable while the diagnostic is still unregistered, which raises on the provider.
+        return self._diagnostic.full_slug()
+
+    @property
+    def diagnostic(self) -> Diagnostic:
+        """
+        The diagnostic that is being executed
+
+        Resolved from the provider registry on first access if it was not supplied,
+        which imports only the provider named in the slug.
+        """
+        if self._diagnostic is None:
+            from climate_ref_core.providers import resolve_diagnostic  # noqa: PLC0415
+
+            object.__setattr__(self, "_diagnostic", resolve_diagnostic(self.diagnostic_full_slug))
+        return cast("Diagnostic", self._diagnostic)
+
     def execution_slug(self) -> str:
         """
         Get a slug for the execution
         """
-        return f"{self.diagnostic.full_slug()}/{self.key}"
+        return f"{self.diagnostic_full_slug}/{self.key}"
 
     def to_output_path(self, filename: pathlib.Path | str | None) -> pathlib.Path:
         """
@@ -202,6 +260,14 @@ class ExecutionResult:
     A collection of series metric values that were extracted from the execution.
 
     These are written to a CSV file in the output directory.
+    """
+
+    resource_usage: ResourceUsage | None = None
+    """
+    What the execution cost in wall time, CPU time and peak memory.
+
+    None when the measurement was unavailable,
+    or when the result predates this field.
     """
 
     @staticmethod

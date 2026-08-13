@@ -421,7 +421,7 @@ class Database:
 
         database_url = validate_database_url(database_url)
 
-        cv = CV.load_from_file(config.paths.dimensions_cv)
+        cv = CV.load(config.paths.dimensions_cv_resource)
         db = Database(database_url, connect_args=connect_args or None)
 
         if run_migrations:

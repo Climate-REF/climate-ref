@@ -15,12 +15,14 @@ import pooch
 import xarray as xr
 from ilamb3 import run
 from ilamb3.dataset import coarsen_dataset, get_dim_name
+from ilamb3.transform.amoc import msftmz_to_rapid
 from ilamb3.transform.base import ILAMBTransform
 from loguru import logger
 
 from climate_ref_core.cmip6_to_cmip7 import get_dreq_entry
 from climate_ref_core.constraints import AddSupplementaryDataset, RequireFacets
-from climate_ref_core.dataset_registry import dataset_registry_manager, resolve_cache_dir
+from climate_ref_core.data import resolve_cache_dir
+from climate_ref_core.dataset_registry import dataset_registry_manager
 from climate_ref_core.datasets import (
     DatasetCollection,
     ExecutionDatasetCollection,
@@ -89,6 +91,24 @@ class _RelationshipTimeTransform(ILAMBTransform):
 
 
 ilamb3.transform.ALL_TRANSFORMS.setdefault("climate_ref_relationship_time", _RelationshipTimeTransform)
+
+
+class _MsftmzToRapid(msftmz_to_rapid):
+    """
+    Derive the AMOC index from ``msftmz`` for references that carry no ``basin`` dimension.
+
+    ILAMB's ``msftmz_to_rapid`` selects the Atlantic overturning with a hardcoded ``isel(basin=0)``
+    That holds for CMIP ``msftmz``, which is resolved by basin, and for the older ``RAPID`` dataset.
+    The ``RAPID-2023-1a`` file does not include a basin dimension.
+    """
+
+    def __call__(self, ds: xr.Dataset) -> xr.Dataset:
+        if "msftmz" in ds and "basin" not in ds["msftmz"].dims:
+            ds = ds.assign(msftmz=ds["msftmz"].expand_dims("basin"))
+        return super().__call__(ds)
+
+
+ilamb3.transform.ALL_TRANSFORMS["climate_ref_msftmz_to_rapid"] = _MsftmzToRapid
 
 
 class _CoarsenSpatial(ILAMBTransform):
@@ -669,7 +689,7 @@ def _build_test_data_spec(  # noqa: PLR0913
                 RegistryRequest(
                     slug=slug,
                     registry_name="obs4ref",
-                    facets=obs_filters,  # type: ignore
+                    facets=obs_filters,
                     source_type="obs4MIPs",
                 ),
             )
@@ -1003,6 +1023,9 @@ class ILAMBStandard(Diagnostic):
         _set_ilamb3_options(
             dataset_registry_manager[self.region_masks] if self.region_masks is not None else None
         )
+        # The rewrite below is per-execution, but the provider shares one diagnostic instance
+        # across executions, so copy rather than mutate `self`.
+        ilamb_kwargs = {**self.ilamb_kwargs, "sources": dict(self.ilamb_kwargs["sources"])}
         # Temporary hack of the ilamb3 inputs while we still need to refer to
         # data not yet available in obs4{MIPs,REF}. This logic allows for
         # DataRequirement filters to be added as a 'source' in the ilamb
@@ -1016,9 +1039,15 @@ class ILAMBStandard(Diagnostic):
             ref_datasets = definition.datasets[SourceDatasetType.obs4MIPs].datasets
             ref_datasets = ref_datasets.reset_index()
             ref_datasets["key"] = ref_datasets["instance_id"] + ref_datasets.index.astype(str)
+            source_keys = {
+                entry["variable_id"]: key
+                for key, entry in ilamb_kwargs["sources"].items()
+                if isinstance(entry, dict) and "variable_id" in entry
+            }
             for instance_id, df in ref_datasets.groupby("instance_id"):
                 variable_id = df["variable_id"].unique()[0]
-                self.ilamb_kwargs["sources"][variable_id] = f"{instance_id}*"
+                source_key = source_keys.get(variable_id, variable_id)
+                ilamb_kwargs["sources"][source_key] = f"{instance_id}*"
             # Relationship analyses (and any remaining legacy string-path sources)
             # still refer to keys in the ILAMB/obs4REF registries.
             # Keep those keys in the reference dataframe alongside the ingested obs4MIPs datasets so
@@ -1058,7 +1087,7 @@ class ILAMBStandard(Diagnostic):
         #    covers 1850-1860 but WOA2023 reference covers 2005-2014)
         # The alternate surface variable is equivalent after select_depth and
         # typically has full temporal coverage.
-        alternate_vars = self.ilamb_kwargs.get("alternate_vars", [])
+        alternate_vars = ilamb_kwargs.get("alternate_vars", [])
         if alternate_vars:
             available_alternates = [v for v in alternate_vars if v in model_datasets["variable_id"].values]
             if available_alternates and self.variable_id in model_datasets["variable_id"].values:
@@ -1076,7 +1105,7 @@ class ILAMBStandard(Diagnostic):
                 ref_datasets,
                 model_datasets,
                 definition.output_directory,
-                **self.ilamb_kwargs,
+                **ilamb_kwargs,
             )
 
     def build_execution_result(self, definition: ExecutionDefinition) -> ExecutionResult:

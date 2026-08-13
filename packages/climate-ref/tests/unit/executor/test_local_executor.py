@@ -1,8 +1,10 @@
 import concurrent.futures
+import multiprocessing
 import re
 from concurrent.futures import Future
 
 import pytest
+from loguru import logger
 
 from climate_ref.executor.local import ExecutionFuture, LocalExecutor, execute_locally
 from climate_ref_core.diagnostics import ExecutionResult
@@ -44,6 +46,34 @@ class TestLocalExecutor:
         executor = LocalExecutor(pool=pool)
 
         assert executor.pool == pool
+
+    def test_a_supplied_pool_that_reuses_workers_warns(self):
+        records = []
+        sink_id = logger.add(lambda message: records.append(message.record), level="WARNING")
+        try:
+            LocalExecutor(pool=concurrent.futures.ThreadPoolExecutor(max_workers=1))
+        finally:
+            logger.remove(sink_id)
+
+        assert any("earlier execution" in record["message"] for record in records)
+
+    def test_a_supplied_single_task_pool_does_not_warn(self):
+        # A real pool, so the check on the private attribute breaks loudly if its name ever changes.
+        pool = concurrent.futures.ProcessPoolExecutor(
+            max_workers=1,
+            mp_context=multiprocessing.get_context("spawn"),
+            max_tasks_per_child=1,
+        )
+
+        records = []
+        sink_id = logger.add(lambda message: records.append(message.record), level="WARNING")
+        try:
+            LocalExecutor(pool=pool)
+        finally:
+            logger.remove(sink_id)
+            pool.shutdown(wait=False)
+
+        assert not any("earlier execution" in record["message"] for record in records)
 
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog):
         process_pool = mocker.MagicMock(spec=concurrent.futures.ProcessPoolExecutor)
@@ -93,6 +123,33 @@ class TestLocalExecutor:
         executor.join(0.1)
 
         assert len(executor._results) == 0
+
+    def test_join_forwards_queue_seconds(self, metric_definition, mocker):
+        """Only the parent knows when the task was submitted, so it supplies the latency."""
+        executor = LocalExecutor(n=1)
+        future = Future()
+        future.set_result(
+            ExecutionResult(
+                definition=metric_definition,
+                successful=False,
+                output_bundle_filename=None,
+                metric_bundle_filename=None,
+            )
+        )
+        executor._results = [
+            ExecutionFuture(
+                future,
+                definition=metric_definition,
+                execution_id=None,
+                submitted_at=1000.0,
+                started_at=1002.5,
+            )
+        ]
+        process_spy = mocker.patch("climate_ref.executor.local.process_result")
+
+        executor.join(0.1)
+
+        assert process_spy.call_args.kwargs["queue_seconds"] == pytest.approx(2.5)
 
     def test_join_exception(self, metric_definition, mocker):
         executor = LocalExecutor(n=1)

@@ -61,6 +61,9 @@ In the future, these datasets will be available on ESGF and can be fetched direc
 ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION/datasets/obs4ref
 ```
 
+The command fetches up to four files concurrently by default.
+This can be overridden by setting the `REF_DATASET_FETCH_WORKERS` environment variable.
+
 [](){#fetch-obs4mips-datasets}
 
 ## 2. Fetching obs4MIPs datasets from ESGF

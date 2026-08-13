@@ -13,7 +13,6 @@ These data will be able to be fetched from an object store in CI and replayed lo
 
 from climate_ref_core.regression.capture import (
     build_native_snapshot,
-    capture_execution,
     materialise_native,
     write_committed_bundle,
 )
@@ -39,11 +38,9 @@ from climate_ref_core.regression.manifest import (
     verify_committed_integrity,
 )
 from climate_ref_core.regression.store import (
-    LocalFilesystemStore,
     NativeStore,
     NativeStoreUnavailableError,
-    PoochReadStore,
-    R2WriteStore,
+    S3WriteConfig,
     build_native_store,
 )
 
@@ -52,18 +49,15 @@ __all__ = [
     "SCHEMA_VERSION",
     "Action",
     "GateDecision",
-    "LocalFilesystemStore",
     "Manifest",
     "NativeEntry",
     "NativeStore",
     "NativeStoreUnavailableError",
-    "PoochReadStore",
-    "R2WriteStore",
+    "S3WriteConfig",
     "Tolerance",
     "assert_bundle_regression",
     "build_native_snapshot",
     "build_native_store",
-    "capture_execution",
     "compare_json_content",
     "compute_committed_digests",
     "decide_coupling",

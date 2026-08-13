@@ -1,6 +1,6 @@
 [project]
 name = "climate-ref-ilamb"
-version = "0.16.2"
+version = "0.17.0"
 description = "ILAMB diagnostic provider for the Rapid Evaluation Framework"
 readme = "README.md"
 authors = [
@@ -23,9 +23,7 @@ classifiers = [
 ]
 dependencies = [
   "climate-ref-core",
-  "ilamb3>=2026.2.19",
-  "scipy<1.16",        # https://github.com/statsmodels/statsmodels/issues/9584
-  "xarray<2025.11",    # ilamb3 incompatibility with integrate_space units handling
+  "ilamb3>=2026.6.15",
 ]
 [project.entry-points."climate-ref.providers"]
 ilamb = "climate_ref_ilamb:provider"

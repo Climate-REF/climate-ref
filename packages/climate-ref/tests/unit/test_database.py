@@ -36,11 +36,8 @@ class TestRedactUrl:
     def test_a_password_is_removed(self):
         redacted = redact_url("postgresql+psycopg2://ref_user:hunter2@db.example.org:5432/ref")
 
-        assert "hunter2" not in redacted
-        # The parts a maintainer needs in order to read the report survive.
-        assert "ref_user" in redacted
-        assert "db.example.org:5432" in redacted
-        assert redacted.startswith("postgresql+psycopg2://")
+        # Everything a maintainer needs in order to read the report survives, and nothing else.
+        assert redacted == "postgresql+psycopg2://ref_user:***@db.example.org:5432/ref"
 
     def test_a_percent_escaped_password_is_removed(self):
         # A password holding a URL-significant character is escaped, and must still be found.

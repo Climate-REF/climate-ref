@@ -1,16 +1,23 @@
 # Download Required Datasets
 
-This tutorial covers how to fetch all reference datasets needed to run Climate-REF diagnostics. You may see references to *fetch*, *download*, and *retrieve* all of which refer to the process of copying data from one computer system to another. [Ingesting](../concepts.md) these datasets is covered in the next tutorial.
+This tutorial covers how to fetch all reference datasets needed to run Climate-REF diagnostics.
+You may see references to *fetch*, *download*, and *retrieve* all of which refer to the process of copying data from one computer system to another. [Ingesting](../concepts.md) these datasets is covered in the next tutorial.
 
 These commands should be rerun after new releases of Climate-REF to ensure you have the latest datasets.
 
 ## Input datasets
 
-The Climate-REF requires local input datasets from CMIP6/CMIP6plus to evaluate. Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already, if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly. We have provided a script in [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py) for fetching the datasets that can be evaluated by the REF. This involves a moderate volume of data, requireing more than 4TB of storage when assessing a single ensemble member per model.
+The Climate-REF requires local input datasets from CMIP6/CMIP6plus/CMIP7 to evaluate.
+Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already,
+if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly.
+We have provided a script in [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py) for fetching the datasets that can be evaluated by the REF.
+This involves a moderate volume of data, requiring more than 4TB of storage when assessing a single ensemble member per model.
 
-Note that not all of these datasets are required. The Climate-REF will determine which diagnostics can be evaluated according the datasets that are available.
+Note that not all of these datasets are required.
+The Climate-REF will determine which diagnostics can be evaluated according to the datasets that are available.
 
-The data used by the Climate-REF do not necessarily need to have been previously published to ESGF. As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process they can be evaluated via the REF.
+The data used by the Climate-REF do not necessarily need to have been previously published to ESGF.
+As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process, they can be evaluated via the REF.
 
 If you are preparing data for a modelling centre,
 start with the [modelling centre onboarding guide](modelling-centres.md)
@@ -56,6 +63,65 @@ ref datasets fetch-data --registry obs4ref --output-directory $REF_CONFIGURATION
 
 The command fetches up to four files concurrently by default.
 This can be overridden by setting the `REF_DATASET_FETCH_WORKERS` environment variable.
+
+[](){#fetch-obs4mips-datasets}
+
+## 2. Fetching obs4MIPs datasets from ESGF
+
+The obs4REF registry does not cover every reference dataset the diagnostics need.
+The following are already published to obs4MIPs on ESGF and must be fetched from there:
+
+| `source_id` | Variables | Required by |
+| --- | --- | --- |
+| `20CR-V2` | `psl` | `pmp/extratropical-modes-of-variability-{nam,nao,npo,pna,sam}` |
+| `C3S-GTO-ECV-9-0` | `toz` | `esmvaltool/ozone-{annual-cycle,lat-time,nh-mar,sh-oct}` |
+| `CERES-EBAF-4-2-1` | `rlut`, `rlutcs`, `rsut`, `rsutcs` | `esmvaltool/cloud-radiative-effects` |
+| `ERA-5` | `psl`, `ta`, `tas`, `ua` | `esmvaltool/cloud-scatterplots-reference`, `esmvaltool/regional-historical-{annual-cycle,timeseries,trend}` |
+| `NOAA-NCEI-LAI-AVHRR-5-0` | `lai` | `ilamb/lai-avh15c1` |
+
+A diagnostic whose reference data is missing simply plans no executions,
+so an incomplete fetch shows up as a diagnostic that never runs rather than as an error.
+
+The same [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py)
+script used for the CMIP6 input data fetches these.
+If you fetched the obs4REF registry in the previous step, ask for exactly these five:
+
+```bash
+python scripts/fetch-esgf.py --request-id pmp-modes-20cr-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-ozone-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-cloud-radiative-effects-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-cloud-scatterplots-obs4mips
+python scripts/fetch-esgf.py --request-id esmvaltool-historical-obs4mips
+python scripts/fetch-esgf.py --request-id ilamb-lai-obs4mips
+```
+
+(`ERA-5` is split across two requests, hence six commands for five datasets.)
+
+`--kind obs4mips` fetches all of the reference data in one go,
+but it also re-fetches four datasets the obs4REF registry already provides,
+so only use it if you are **not** using that registry — see the warning below.
+
+Files land in the [intake-esgf `local_cache`](https://intake-esgf.readthedocs.io/en/latest/configure.html),
+and are ingested with the `obs4mips` source type, the same as the obs4REF collection.
+
+/// admonition | Do not fetch these twice
+    type: warning
+
+The script also fetches `CERES-EBAF-4-2`, `GPCP-Monthly-3-2`, `HadISST-1-1` and `TropFlux-1-0`.
+These are the ESGF-published copies of datasets that were curated for the REF before publication,
+so the obs4REF registry ships them as well.
+
+**If you have already fetched the obs4REF registry, do not fetch these from ESGF as well.**
+Where the two copies carry the same version they share an `instance_id` and ingest as a single
+dataset holding *both* sets of files, which covers the record twice.
+`GPCP-Monthly-3-2` `pr` `v20231205` is the clearest case: obs4REF ships one file spanning 1983-2023 and ESGF ships 41 yearly files spanning the same period, giving one dataset of 42 files.
+A diagnostic reading it sees every time step twice.
+
+Where the published copy carries a *newer* version, there is no such problem:
+the two ingest as separate datasets and the catalog uses the later version.
+
+This is temporary until we split the obs4REF ingest from the obs4MIPs ingest.
+///
 
 ### Future work
 

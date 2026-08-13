@@ -451,6 +451,17 @@ class TestCollectBySourceType:
         assert ref.provider_slug == "test-provider"
         assert ref.label == "Simple Diagnostic (test-provider)"
 
+    def test_sort_key_breaks_ties_on_slug(self):
+        """Several diagnostics can share a name, so the slug has to settle the order."""
+        shared = [
+            DiagnosticReference(name="Ozone Diagnostics", slug=slug, provider_slug="esmvaltool")
+            for slug in ("ozone-sh-oct", "ozone-annual-cycle", "ozone-nh-mar")
+        ]
+
+        ordered = sorted(shared, key=lambda r: r.sort_key)
+
+        assert [r.slug for r in ordered] == ["ozone-annual-cycle", "ozone-nh-mar", "ozone-sh-oct"]
+
     def test_empty_providers(self):
         result = collect_by_source_type([])
         assert result == []

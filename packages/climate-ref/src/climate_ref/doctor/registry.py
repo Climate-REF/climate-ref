@@ -81,7 +81,7 @@ def register_check(registered: RegisteredCheck) -> None:
     ------
     ValueError
         If another check already claims the same slug. Two checks sharing a slug would be
-        indistinguishable in the output and in ``--only``.
+        indistinguishable in the report.
     """
     existing = _REGISTRY.get(registered.slug)
     if existing is not None:

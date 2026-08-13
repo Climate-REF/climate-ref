@@ -1,12 +1,10 @@
 """
 Tests that `scripts/fetch-esgf.py` fetches the obs4MIPs reference data the diagnostics ask for.
 
-The requests in that script are maintained by hand, so they can drift from the providers'
-data requirements without anything failing until a solve quietly plans no executions for a
-diagnostic. These tests close that gap offline: they read the requirements from the installed
-providers and check them against the request list and the committed ESGF catalog snapshot.
+The requests in that script are maintained by hand so they can drift from the providers' data requirements.
+These tests check that the obs data requested is covered by a download.
 
-No network access is performed; nothing is fetched.
+No network access is performed and nothing is fetched.
 """
 
 import importlib.util
@@ -61,9 +59,6 @@ def obs4mips_requirements() -> list[tuple[str, DataRequirement]]:
         climate_ref_ilamb.provider,
     ):
         for diagnostic in provider.diagnostics():
-            # A diagnostic declares either a flat sequence of requirements or a sequence of
-            # alternative branches. Every branch is a way the diagnostic can run, so the data
-            # for all of them has to be fetchable.
             for item in diagnostic.data_requirements:
                 branch = item if isinstance(item, (list, tuple)) else [item]
                 for requirement in branch:
@@ -130,8 +125,8 @@ def test_every_required_source_is_obtainable(script, obs4mips_requirements, obs4
     """
     Every `source_id` a diagnostic asks for is either in the obs4REF registry or fetched from ESGF.
 
-    This is the check that catches a new diagnostic naming a reference dataset that no one
-    can obtain, which would otherwise surface only as a diagnostic that never runs.
+    This is the check that catches a new diagnostic naming a reference dataset that no one can obtain,
+    which would otherwise surface only as a diagnostic that never runs.
     """
     requested = {source_id for source_id, _ in _requested_pairs(script)}
 
@@ -152,9 +147,10 @@ def test_every_selectable_dataset_is_fetched(script, obs4mips_requirements, esgf
     """
     Every ESGF dataset a requirement can actually select is covered by a request.
 
-    Resolving against the catalog rather than taking the cross product of the requirement's
-    facets matters: ESGF intersects its facets, so a requirement naming four sources and eight
-    variables does not need all thirty-two combinations, only the ones that exist.
+    Resolving against the catalog rather than taking the cross product of the requirement's facets matters.
+    ESGF intersects its facets,
+    so a requirement naming four sources and eight variables does not need all thirty-two combinations,
+    only the ones that exist.
     """
     requested = _requested_pairs(script)
 
@@ -171,12 +167,11 @@ def test_every_selectable_dataset_is_fetched(script, obs4mips_requirements, esgf
     )
 
 
-def test_no_request_is_stale(script, obs4mips_requirements, obs4ref_source_ids):
+def test_no_request_is_stale(script, obs4mips_requirements):
     """
     Every requested `source_id` is still named by a requirement.
 
-    A request left behind after a diagnostic stops using a dataset silently downloads data
-    that nothing will read.
+    Avoid silently downloads data that nothing will read.
     """
     required = {
         source_id

@@ -34,6 +34,13 @@ class DataRequirementSummary:
     tables: tuple[str, ...]
     frequencies: tuple[str, ...]
     group_by: tuple[str, ...] | None
+    source_ids: tuple[str, ...] = ()
+    """
+    The ``source_id``s the requirement names, empty when it does not filter on one.
+
+    Reference requirements name the observational dataset here, which is what
+    :mod:`climate_ref_core.reference_data` uses to work out where that dataset comes from.
+    """
 
 
 @frozen
@@ -154,6 +161,7 @@ def summarize_data_requirement(req: DataRequirement) -> DataRequirementSummary:
         tables=_extract_facet_values(req.filters, "table_id"),
         frequencies=_extract_facet_values(req.filters, "frequency"),
         group_by=req.group_by,
+        source_ids=_extract_facet_values(req.filters, "source_id"),
     )
 
 

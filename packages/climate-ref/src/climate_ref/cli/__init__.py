@@ -33,6 +33,7 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("db", "history"),
     ("db", "tables"),
     ("diagnostics", "list"),
+    ("doctor", ""),
     ("executions", "list-groups"),
     ("executions", "inspect"),
     ("executions", "stats"),
@@ -61,11 +62,16 @@ _CONFIG_BOOTSTRAP_COMMANDS: set[tuple[str, str]] = {
 
 def _command_path_in_argv(command_paths: set[tuple[str, str]]) -> bool:
     args = sys.argv[1:]
-    for index, arg in enumerate(args[:-1]):
+    # A group with an empty command name is a group that is itself the command
+    # (``ref doctor``), so seeing the group is enough to identify it.
+    bare_groups = {group for group, command in command_paths if not command}
+    for index, arg in enumerate(args):
         if arg.startswith("-"):
             continue
+        if arg in bare_groups:
+            return True
         for group, command in command_paths:
-            if arg != group:
+            if arg != group or not command:
                 continue
             remaining = [candidate for candidate in args[index + 1 :] if not candidate.startswith("-")]
             if remaining and remaining[0] == command:
@@ -223,6 +229,7 @@ def build_app() -> typer.Typer:
         datasets,
         db,
         diagnostics,
+        doctor,
         executions,
         providers,
         solve,
@@ -232,6 +239,7 @@ def build_app() -> typer.Typer:
     app = typer.Typer(name="ref", no_args_is_help=True)
 
     app.command(name="solve")(solve.solve)
+    app.command(name="doctor")(doctor.doctor)
     app.add_typer(config.app, name="config")
     app.add_typer(datasets.app, name="datasets")
     app.add_typer(db.app, name="db")

@@ -137,7 +137,7 @@ def test_build_app(expected_groups):
     registered_commands = [command.name for command in app.registered_commands]
     registered_groups = [group.name for group in app.registered_groups]
 
-    assert registered_commands == ["solve"]
+    assert registered_commands == ["solve", "doctor"]
     assert set(registered_groups) == expected_groups
 
 
@@ -148,7 +148,7 @@ def test_build_app_without_celery(mocker, expected_groups):
     registered_commands = [command.name for command in app.registered_commands]
     registered_groups = [group.name for group in app.registered_groups]
 
-    assert ["solve"] == registered_commands
+    assert ["solve", "doctor"] == registered_commands
     assert set(registered_groups) == expected_groups - {"celery"}
 
 

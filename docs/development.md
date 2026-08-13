@@ -32,9 +32,8 @@ as well as set up the configuration for the REF.
 make virtual-environment
 
 # Configure the REF.
-mkdir $PWD/.ref
-uv run ref config list > $PWD/.ref/ref.toml
 export REF_CONFIGURATION=$PWD/.ref
+uv run ref config init
 ```
 
 `uv` will create a virtual Python environment in the directory `.venv` containing
@@ -51,13 +50,14 @@ If there are any issues, the messages from the `Makefile` should guide you
 through. If not, please raise an issue in the
 [issue tracker](https://github.com/Climate-REF/climate-ref/issues).
 
-### Ingesting datasets
+### Ingesting the sample data
 
-The REF requires datasets, both reference and model, to be ingested into the database.
-These ingested datasets are then used to solve for what executions are available and require running.
+The REF requires datasets, both reference and model, to be ingested into the database
+before it can solve for which executions are required.
+The [Ingest tutorial](getting-started/03-ingest.md) covers this in general.
 
-We have a consistent set of decimated sample data that is used for testing.
-These can be ingested using the following command:
+For development we use a consistent set of decimated sample data.
+`make fetch-test-data` downloads it into `tests/test-data/sample-data`:
 
 ```bash
 make fetch-test-data
@@ -65,46 +65,24 @@ uv run ref datasets ingest --source-type cmip6 $PWD/tests/test-data/sample-data/
 uv run ref datasets ingest --source-type obs4mips $PWD/tests/test-data/sample-data/obs4REF/
 ```
 
-Additional reference datasets can be fetched by following the instructions [here](getting-started/02-download-datasets.md).
-The Obs4REF step is not required as we have already ingested these datasets above.
+This is enough to run a `solve` against.
+The full reference archive is only needed for a real assessment,
+see [Download Required Datasets](getting-started/02-download-datasets.md).
 
-### Setting up providers
+### Setting up providers and running a `solve`
 
-The REF uses a number of different providers to run the diagnostics.
-Providers may require conda environments and reference data to be set up before running.
+Providers may need conda environments and reference data before they can run.
+Set them up with `uv run ref providers setup`,
+described in full under [Setting up diagnostic providers](installation.md#provider-dependencies).
 
-```bash
-uv run ref providers setup
-```
+Then run your first solve with `uv run ref solve`,
+described in the [Solve tutorial](getting-started/04-solve.md).
+Prefix each command with `uv run` when working from a source checkout.
+Don't worry too much if some executions fail, things are still in active development.
 
-This command creates conda environments and fetches any required reference data.
-All operations are idempotent, so it's safe to run multiple times.
-
-The installed providers and their status can be viewed using:
-
-```bash
-uv run ref providers list
-```
-
-### Running your first `solve`
-
-Once you have ingested some sample data and created any required environments,
-you can run your first `solve` command.
-
-A `solve` will take the ingested datasets and the providers declared in the configuration, and determine
-which new executions are required.
-
-Note that this will take a while to run.
-
-```shell
-uv run ref solve
-```
-
-Afterwards, you can check the output of `uv run ref executions list-groups` to see if metrics
-were evaluated successfully, and if they were, you find the results in the
-`$PWD/.ref/results` folder.
-Don't worry too much if some executions are failing for you,
-things are still in active development at the moment.
+If you want the shortest possible end-to-end loop,
+the [Five-minute Quick Start](getting-started/quickstart.md) uses the pure-Python example provider
+and needs no conda environments at all.
 
 ### Pip editable installation
 
@@ -117,32 +95,7 @@ for package in packages/climate-ref*; do
 done
 ```
 
-### Advanced provider setup
-
-/// admonition | Windows support
-   type: warning
-
-Window's doesn't support some of the packages required by the diagnostic providers,
-so we only support MacOS and Linux.
-Windows users are recommended to use [WSL](https://learn.microsoft.com/en-us/windows/wsl/install)
-or a Linux VM if they wish to use the REF.
-
-///
-
-/// admonition | Note
-
-The PMP conda environment is not yet available for arm-based MacOS users,
-so the automatic installation process will fail.
-
-Arm-based MacOS users can use the following command to set up the PMP provider manually:
-
-```bash
-MAMBA_PLATFORM=osx-64 uv run ref providers setup --provider pmp
-```
-
-///
-
-#### Updating conda-lock files
+### Updating conda-lock files
 
 To update a conda-lock file for a provider, run for example:
 
@@ -179,9 +132,8 @@ pytest --slow -k gpp-fluxnet2015
 Some diagnostics may require additional filtering to limit the pytest's scope to a directory or test name.
 Adding `--collect-only` to this will describe which tests will be executed which is useful as some of these test may take 30s to minutes to run.
 
-When adding a new diagnostic to a provider, record its regression baseline with
-`ref test-cases run --provider <provider> --diagnostic <diagnostic> --force-regen`
-(see [Regression baselines](how-to-guides/testing-diagnostics.md#regression-baselines)).
+When adding a new diagnostic to a provider, you also need to record its regression baseline.
+See [Regression baselines](how-to-guides/testing-diagnostics.md#regression-baselines).
 
 ### Sample data
 

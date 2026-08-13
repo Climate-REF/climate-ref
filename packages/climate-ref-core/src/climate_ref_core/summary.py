@@ -267,9 +267,9 @@ class DiagnosticReference:
         return f"{self.name} ({self.provider_slug})"
 
     @property
-    def sort_key(self) -> str:
-        """Sort by provider then name."""
-        return f"{self.provider_slug}/{self.name}"
+    def sort_key(self) -> tuple[str, str, str]:
+        """Sort by provider, then name, then slug. Several diagnostics can share a name."""
+        return (self.provider_slug, self.name, self.slug)
 
 
 @frozen

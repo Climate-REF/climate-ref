@@ -29,7 +29,7 @@ def fake_cgroup(tmp_path, monkeypatch):
 
 
 def test_usage_is_none_inside_and_populated_after():
-    with measure_resources(interval=0.01) as recorder:
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as recorder:
         assert recorder.usage is None
         time.sleep(0.02)
 
@@ -38,6 +38,39 @@ def test_usage_is_none_inside_and_populated_after():
     assert usage.wall_seconds >= 0.02
     assert usage.memory_source in {"cgroup", "proc_tree", "rusage", "unavailable"}
     assert usage.exclusive is True
+
+
+def test_exclusive_is_false_unless_the_caller_declares_it():
+    """
+    The default is not exclusive, because a worker cannot see its siblings.
+
+    Nothing in this process overlaps the block,
+    so the old in-process-only rule would have called it exclusive
+    even with three sibling workers saturating the same cgroup.
+    """
+    with measure_resources(interval=0.01) as recorder:
+        pass
+
+    assert recorder.usage is not None
+    assert recorder.usage.exclusive is False
+    assert recorder.usage.context["cgroup_exclusive_declared"] is False
+
+
+def test_both_peaks_are_recorded_whichever_one_is_reported(fake_cgroup):
+    """Both sampled sources survive into the record, so precedence stays a read-time decision."""
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as recorder:
+        time.sleep(0.03)
+
+    usage = recorder.usage
+    assert usage is not None
+    assert usage.memory_source == "cgroup"
+    assert usage.cgroup_peak_bytes == 500
+    assert usage.proc_tree_peak_bytes is not None
+    assert usage.proc_tree_peak_bytes > 0
+    # The reported figure is one of the two, and the other is still available for comparison.
+    assert usage.peak_memory_bytes == usage.cgroup_peak_bytes
+    assert usage.context["cgroup_peak_bytes"] == usage.cgroup_peak_bytes
+    assert usage.context["proc_tree_peak_bytes"] == usage.proc_tree_peak_bytes
 
 
 def test_disabled_measures_nothing():
@@ -144,7 +177,7 @@ def test_exclusive_is_false_for_overlapping_blocks():
     recorders = {}
 
     def measure(name):
-        with measure_resources(interval=0.01) as recorder:
+        with measure_resources(interval=0.01, cgroup_exclusive=True) as recorder:
             entered.wait(timeout=5)
         recorders[name] = recorder
 
@@ -159,8 +192,8 @@ def test_exclusive_is_false_for_overlapping_blocks():
 
 
 def test_exclusive_is_false_for_a_block_that_was_overlapped():
-    with measure_resources(interval=0.01) as outer:
-        with measure_resources(interval=0.01) as inner:
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as outer:
+        with measure_resources(interval=0.01, cgroup_exclusive=True) as inner:
             pass
 
     assert inner.usage is not None
@@ -181,7 +214,7 @@ def test_a_failure_while_finishing_does_not_leak_the_registry_entry(monkeypatch)
         raise RuntimeError("measurement fell over")
 
     monkeypatch.setattr(ResourceRecorder, "_finish", explode)
-    with measure_resources(interval=0.01) as broken:
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as broken:
         pass
     monkeypatch.undo()
 
@@ -194,7 +227,7 @@ def test_a_failure_while_finishing_does_not_leak_the_registry_entry(monkeypatch)
         broken._sampler.join(timeout=5)
         assert not broken._sampler.is_alive()
 
-    with measure_resources(interval=0.01) as later:
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as later:
         pass
 
     assert later.usage is not None
@@ -204,7 +237,7 @@ def test_a_failure_while_finishing_does_not_leak_the_registry_entry(monkeypatch)
 def test_cgroup_sources_are_used(fake_cgroup):
     (fake_cgroup / "memory.peak").write_text("1000\n")
 
-    with measure_resources(interval=0.01) as recorder:
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as recorder:
         # The block pushes the group high-water mark, so memory.peak describes it.
         (fake_cgroup / "memory.peak").write_text("4096\n")
 
@@ -218,7 +251,7 @@ def test_cgroup_sources_are_used(fake_cgroup):
 
 
 def test_sampled_current_is_used_when_the_peak_was_inherited(fake_cgroup):
-    with measure_resources(interval=0.01) as recorder:
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as recorder:
         time.sleep(0.05)
 
     usage = recorder.usage
@@ -227,6 +260,57 @@ def test_sampled_current_is_used_when_the_peak_was_inherited(fake_cgroup):
     # memory.peak did not move, so the sampled memory.current is the honest number.
     assert usage.peak_memory_bytes == 500
     assert usage.context["samples"] >= 2
+
+
+def test_a_shared_cgroup_is_measured_over_the_process_tree(fake_cgroup):
+    """
+    Without a declaration the cgroup describes the container, so the process tree is reported.
+
+    The cgroup figure is still recorded, it just does not get to be the answer.
+    """
+    (fake_cgroup / "memory.peak").write_text("1000\n")
+
+    with measure_resources(interval=0.01) as recorder:
+        (fake_cgroup / "memory.peak").write_text("4096\n")
+
+    usage = recorder.usage
+    assert usage is not None
+    assert usage.memory_source == "proc_tree"
+    assert usage.peak_memory_bytes == usage.proc_tree_peak_bytes
+    assert usage.cgroup_peak_bytes == 4096
+    assert usage.exclusive is False
+
+
+def test_a_shared_cgroup_still_beats_rusage_without_psutil(fake_cgroup, monkeypatch):
+    """
+    With no process tree to sweep, a container-wide reading is better than a lifetime mark.
+
+    ``exclusive`` being False is what tells a reader the figure covers the container.
+    """
+    monkeypatch.setattr("climate_ref_core.resources._psutil", None)
+
+    with measure_resources(interval=0.01) as recorder:
+        time.sleep(0.03)
+
+    usage = recorder.usage
+    assert usage is not None
+    assert usage.memory_source == "cgroup"
+    assert usage.peak_memory_bytes == 500
+    assert usage.proc_tree_peak_bytes is None
+    assert usage.exclusive is False
+
+
+def test_an_overlapped_block_loses_the_cgroup_even_when_declared(fake_cgroup):
+    """A declaration only covers other processes; an overlapping block in this one still voids it."""
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as outer:
+        with measure_resources(interval=0.01, cgroup_exclusive=True) as inner:
+            time.sleep(0.03)
+
+    for recorder in (outer, inner):
+        usage = recorder.usage
+        assert usage is not None
+        assert usage.exclusive is False
+        assert usage.memory_source == "proc_tree"
 
 
 def test_unlimited_cgroup_reads_as_none(fake_cgroup):

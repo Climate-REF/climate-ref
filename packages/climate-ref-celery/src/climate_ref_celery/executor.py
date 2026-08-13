@@ -114,6 +114,9 @@ class CeleryExecutor(Executor):
         async_result = app.send_task(
             name,
             args=[definition, self.config.log_level],
+            # ``exclusive`` is left at its default: the worker's concurrency is set on the worker,
+            # not here, so this process cannot promise the worker's cgroup holds one execution.
+            # Peak memory is measured over the task's process tree instead.
             kwargs={"measure": self.config.executor.measure_resources},
             queue=queue,
             link=handle_result.s(execution_id=execution.id).set(queue="celery") if execution else None,

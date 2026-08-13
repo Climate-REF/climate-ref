@@ -87,6 +87,40 @@ class TestLocalExecutor:
         # This directory is created by the executor
         assert process_pool.submit.call_count == 1
 
+    @pytest.mark.parametrize("workers, expected", [(1, True), (2, False)])
+    def test_only_a_single_worker_pool_claims_the_cgroup(self, metric_definition, workers, expected):
+        """
+        Every worker shares this process's cgroup, and none of them can see the others.
+
+        So the executor is the only party that can say whether a cgroup reading
+        describes one execution, and it can only say yes when it runs one at a time.
+        """
+        pool = concurrent.futures.ProcessPoolExecutor(
+            max_workers=workers,
+            mp_context=multiprocessing.get_context("spawn"),
+            max_tasks_per_child=1,
+        )
+        try:
+            executor = LocalExecutor(pool=pool)
+            assert executor._exclusive is expected
+        finally:
+            pool.shutdown(wait=False)
+
+    def test_the_exclusivity_declaration_reaches_the_worker(self, metric_definition, mocker):
+        process_pool = mocker.MagicMock(spec=concurrent.futures.ProcessPoolExecutor)
+        executor = LocalExecutor(pool=process_pool)
+        executor._exclusive = True
+
+        executor.run(metric_definition, None)
+
+        assert process_pool.submit.call_args.kwargs["exclusive"] is True
+
+    def test_an_unrecognised_pool_is_treated_as_concurrent(self, mocker):
+        """A pool that will not say how many workers it has does not get the benefit of the doubt."""
+        executor = LocalExecutor(pool=mocker.MagicMock(spec=concurrent.futures.Executor))
+
+        assert executor._exclusive is False
+
     def test_join(self, metric_definition, mocker):
         executor = LocalExecutor(n=1)
         future = Future()

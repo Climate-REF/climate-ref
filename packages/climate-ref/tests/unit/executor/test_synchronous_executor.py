@@ -36,6 +36,18 @@ class TestSynchronousExecutor:
 
         assert not any("earlier execution" in record["message"] for record in records)
 
+    def test_declares_the_cgroup_exclusive(self, metric_definition, mocker):
+        """One execution at a time in one process, so a cgroup reading describes that execution."""
+        mock_execute = mocker.patch(
+            "climate_ref.executor.synchronous.execute_locally",
+            return_value=mocker.MagicMock(),
+        )
+        mocker.patch("climate_ref.executor.synchronous.process_result")
+
+        self.executor().run(metric_definition, None)
+
+        assert mock_execute.call_args.kwargs["exclusive"] is True
+
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog):
         mock_handle_result = mocker.patch("climate_ref.executor.result_handling.handle_execution_result")
         mock_execution_result = mocker.MagicMock()

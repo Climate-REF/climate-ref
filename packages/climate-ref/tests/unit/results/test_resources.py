@@ -156,6 +156,42 @@ class TestProfiles:
         assert profile.peak_memory_max == 40 * GIB
         assert profile.n_excluded == 1
 
+    def test_a_process_tree_reading_survives_a_busy_worker(self, db_seeded):
+        """
+        Exclusivity only disqualifies a cgroup reading.
+
+        A process tree sweep covers the execution's own processes,
+        so it stays usable however many siblings shared the worker.
+        Excluding those rows too would empty the profile of every diagnostic run by a pool,
+        which is every diagnostic.
+        """
+        with db_seeded.session.begin():
+            _register_provider(db_seeded, pmp_provider)
+            diagnostic = db_seeded.session.query(Diagnostic).filter_by(slug="enso_tel").first()
+            group = ExecutionGroup(key="enso", diagnostic_id=diagnostic.id, selectors={})
+            db_seeded.session.add(group)
+            db_seeded.session.flush()
+
+            for index in range(3):
+                _add_execution(
+                    db_seeded.session,
+                    group.id,
+                    index,
+                    **_sample(
+                        peak_memory_bytes=2 * GIB,
+                        memory_source="proc_tree",
+                        resources_exclusive=False,
+                    ),
+                )
+        db_seeded.session.commit()
+
+        profile = _by_slug(Reader(db_seeded).resources.profiles())["enso_tel"]
+
+        assert profile.memory_source == "proc_tree"
+        assert profile.n_samples == 3
+        assert profile.n_excluded == 0
+        assert profile.peak_memory_max == 2 * GIB
+
     def test_mixed_memory_sources_take_the_dominant_one(self, db_with_resources):
         profile = _by_slug(Reader(db_with_resources).resources.profiles())["enso-characteristics"]
 

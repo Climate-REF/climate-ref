@@ -231,6 +231,8 @@ def _usage(**overrides):
         "cpu_seconds": 20.5,
         "peak_memory_bytes": 1024**3,
         "memory_source": "cgroup",
+        "cgroup_peak_bytes": 1024**3,
+        "proc_tree_peak_bytes": 1024**3,
         "memory_limit_bytes": None,
         "cpu_limit": None,
         "exclusive": True,
@@ -259,14 +261,16 @@ class TestDescribeMemory:
             "peak memory 1.0 GB (via rusage, process lifetime high-water mark, not raised by this case alone)"
         )
 
-    def test_overlapping_cgroup_block_is_flagged(self):
-        """A cgroup reading covers the whole container, so an overlap makes it unattributable."""
+    def test_non_exclusive_cgroup_block_is_flagged(self):
+        """A cgroup reading covers the whole container, so undeclared makes it unattributable."""
         described = _describe_memory(_usage(exclusive=False))
 
-        assert described == "peak memory 1.0 GB (via cgroup, shared with another measured block)"
+        assert described == (
+            "peak memory 1.0 GB (via cgroup, cgroup not declared exclusive, so it covers the whole container)"
+        )
 
-    def test_overlap_is_not_flagged_for_a_per_process_source(self):
-        """The process tree sweep only ever covers this process, so an overlap does not matter."""
+    def test_sharing_is_not_flagged_for_a_per_process_source(self):
+        """The process tree sweep only ever covers this process, so sharing does not matter."""
         described = _describe_memory(_usage(memory_source="proc_tree", exclusive=False))
 
         assert described == "peak memory 1.0 GB (via proc_tree)"

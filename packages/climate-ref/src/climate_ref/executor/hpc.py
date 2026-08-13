@@ -153,12 +153,20 @@ def limit_from_env(*args: Any, **kwargs: Any) -> float | None:
 
 @python_app
 @with_memory_limit(limit_from_env)
-def _process_run(definition: ExecutionDefinition, log_level: str, measure: bool = True) -> ExecutionResult:
+def _process_run(
+    definition: ExecutionDefinition, log_level: str, measure: bool = True, exclusive: bool = False
+) -> ExecutionResult:
     """Run the function on computer nodes"""
     # This is a catch-all for any exceptions that occur in the process and need to raise for
     # parsl retries to work
     try:
-        return execute_locally(definition=definition, log_level=log_level, raise_error=True, measure=measure)
+        return execute_locally(
+            definition=definition,
+            log_level=log_level,
+            raise_error=True,
+            measure=measure,
+            exclusive=exclusive,
+        )
     except DiagnosticError as e:  # pragma: no cover
         # any diagnostic error will be caught here
         logger.exception("Error running diagnostic")
@@ -256,11 +264,17 @@ class HPCExecutor:
         if self.scheduler == "slurm":
             self.slurm_config = SlurmConfig.model_validate(executor_config)
             hours, minutes, seconds = map(int, self.slurm_config.walltime.split(":"))
+            workers_per_node = self.slurm_config.max_workers_per_node
 
             if self.slurm_config.validation and HAS_REAL_SLURM:
                 self._validate_slurm_params()
         else:
             hours, minutes, seconds = map(int, self.walltime.split(":"))
+            workers_per_node = _to_int(executor_config.get("max_workers_per_node", 16)) or 16
+
+        # Workers on the same node share a cgroup,
+        # so a cgroup reading is only attributable to one execution when a node runs one worker.
+        self._exclusive = workers_per_node == 1
 
         total_minutes = hours * 60 + minutes + seconds / 60
         self.total_minutes = total_minutes
@@ -490,6 +504,7 @@ class HPCExecutor:
             definition=definition,
             log_level=self.config.log_level,
             measure=self.config.executor.measure_resources,
+            exclusive=self._exclusive,
         )
 
         self.parsl_results.append(

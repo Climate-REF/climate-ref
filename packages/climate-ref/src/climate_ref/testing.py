@@ -77,7 +77,7 @@ def _describe_memory(usage: ResourceUsage) -> str:
     if usage.memory_source == "rusage":
         qualifiers.append("process lifetime high-water mark, not raised by this case alone")
     elif usage.memory_source == "cgroup" and not usage.exclusive:
-        qualifiers.append("shared with another measured block")
+        qualifiers.append("cgroup not declared exclusive, so it covers the whole container")
 
     described = f"peak memory {format_size(usage.peak_memory_bytes)} ({', '.join(qualifiers)})"
 

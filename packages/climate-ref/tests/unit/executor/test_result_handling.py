@@ -348,6 +348,8 @@ def resource_usage():
         cpu_seconds=41.0,
         peak_memory_bytes=8 * 1024**3,
         memory_source="cgroup",
+        cgroup_peak_bytes=8 * 1024**3,
+        proc_tree_peak_bytes=6 * 1024**3,
         memory_limit_bytes=40 * 1024**3,
         cpu_limit=4.0,
         exclusive=True,

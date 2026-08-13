@@ -41,6 +41,7 @@ def execute_locally(
     log_level: str,
     raise_error: bool = False,
     measure: bool = True,
+    exclusive: bool = False,
 ) -> ExecutionResult:
     """
     Run a diagnostic execution
@@ -57,12 +58,18 @@ def execute_locally(
         Whether to record what the execution costs in wall time, CPU time and peak memory.
 
         When False the result carries no resource usage.
+    exclusive
+        Whether this process has its cgroup to itself for the duration of the execution.
+
+        Only the executor knows its own concurrency,
+        so it has to say: a worker cannot see its siblings' memory from the inside.
+        When False the peak memory is measured over this process tree rather than the cgroup.
     """
     logger.info(f"Executing {definition.execution_slug()!r}")
 
     deferred: Exception | None = None
 
-    with measure_resources(enabled=measure) as recorder:
+    with measure_resources(enabled=measure, cgroup_exclusive=exclusive) as recorder:
         try:
             if definition.output_directory.exists():
                 logger.warning(

@@ -14,7 +14,6 @@ so the assertions bound the measurement rather than pin it.
 """
 
 import json
-import multiprocessing
 import subprocess
 import sys
 import textwrap
@@ -57,30 +56,60 @@ def allocate_in_pieces(mib):
     return pieces
 
 
+def hold(mib, seconds):
+    buf = allocate(mib)
+    time.sleep(seconds)
+    del buf
+
+
 def measure(block):
     with measure_resources(interval=0.05) as recorder:
         block()
     usage = recorder.usage
-    return {{"peak": usage.peak_memory_bytes, "source": usage.memory_source}}
+    return {{
+        "peak": usage.peak_memory_bytes,
+        "source": usage.memory_source,
+        "exclusive": usage.exclusive,
+    }}
 """
 
+HOG_SCRIPT = f"""
+import time
 
-def probe(body: str) -> dict:
+buf = bytearray({ALLOCATION_MIB} * 1024 * 1024)
+for offset in range(0, len(buf), 4096):
+    buf[offset] = 1
+print("ready", flush=True)
+time.sleep(120)
+"""
+"""A neighbour that holds a large allocation until it is killed."""
+
+
+def start_probe(body: str) -> subprocess.Popen:
     """
-    Run a measurement in a fresh interpreter and return what it reported.
+    Start a measurement in a fresh interpreter.
 
     The body is appended to :data:`PROBE_PRELUDE` and must print a JSON object.
     """
     script = PROBE_PRELUDE + textwrap.dedent(body)
-    completed = subprocess.run(  # noqa: S603
+    return subprocess.Popen(  # noqa: S603
         [sys.executable, "-c", script],
-        capture_output=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
         text=True,
-        check=False,
-        timeout=180,
     )
-    assert completed.returncode == 0, completed.stderr
-    return json.loads(completed.stdout.strip().splitlines()[-1])
+
+
+def read_probe(process: subprocess.Popen) -> dict:
+    """Wait for a probe to finish and return the object it reported."""
+    stdout, stderr = process.communicate(timeout=180)
+    assert process.returncode == 0, stderr
+    return json.loads(stdout.strip().splitlines()[-1])
+
+
+def probe(body: str) -> dict:
+    """Run a measurement in a fresh interpreter and return what it reported."""
+    return read_probe(start_probe(body))
 
 
 def burn_cpu(seconds: float) -> None:
@@ -228,36 +257,61 @@ def test_overlapping_blocks_in_one_process_are_not_exclusive():
     assert recorders[0].usage.exclusive is False
 
 
-def _measure_in_child(hold_seconds: float, queue) -> None:  # pragma: no cover
-    """Measure a block in a separate process and report whether it claimed exclusivity."""
-    with measure_resources(interval=0.05) as recorder:
-        buf = bytearray(ALLOCATION_MIB * MIB)  # noqa: F841
-        time.sleep(hold_seconds)
-
-    queue.put(recorder.usage.exclusive)
-
-
-@pytest.mark.xfail(
-    strict=True,
-    reason="Exclusivity is tracked per process, so two workers on one host never see each other",
-)
 def test_workers_running_at_the_same_time_are_not_exclusive():
     """
     The shape of a process pool, or of a Celery worker with concurrency above one.
 
     Two executions overlap on the same host and inside the same cgroup,
     so a reading taken from that cgroup belongs to neither of them.
+    Neither worker can see the other, which is why neither claims exclusivity:
+    the executor that spawned them is the only party that knows they overlap,
+    and it declared nothing.
     """
-    ctx = multiprocessing.get_context("spawn")
-    queue = ctx.Queue()
-    children = [ctx.Process(target=_measure_in_child, args=(1.0, queue)) for _ in range(2)]
+    body = """
+        print(json.dumps(measure(lambda: hold(ALLOCATION_MIB, 1.0))))
+        """
+    workers = [start_probe(body) for _ in range(2)]
+    results = [read_probe(worker) for worker in workers]
 
-    for child in children:
-        child.start()
-    for child in children:
-        child.join(timeout=120)
+    assert [result["exclusive"] for result in results] == [False, False]
+    # And each one reports its own process tree rather than the cgroup they share.
+    assert [result["source"] for result in results] == ["proc_tree", "proc_tree"]
 
-    assert [queue.get(timeout=5) for _ in children] == [False, False]
+
+def test_a_neighbour_in_the_same_cgroup_does_not_inflate_a_measurement():
+    """
+    A neighbour allocates half a gigabyte and holds it while a cheap block is measured.
+
+    This is what a saturated worker looks like from inside one of its executions,
+    and it is the contamination that no in-process check can catch.
+    The measured block allocates nothing,
+    so a peak anywhere near the neighbour's allocation means the container was measured
+    in place of the block.
+    """
+    neighbour = subprocess.Popen(  # noqa: S603
+        [sys.executable, "-c", HOG_SCRIPT],
+        stdout=subprocess.PIPE,
+        text=True,
+    )
+
+    try:
+        assert neighbour.stdout is not None
+        assert neighbour.stdout.readline().strip() == "ready", "the neighbour never finished allocating"
+
+        result = probe(
+            """
+            print(json.dumps(measure(lambda: time.sleep(0.3))))
+            """
+        )
+    finally:
+        neighbour.kill()
+        neighbour.wait(timeout=30)
+
+    assert result["source"] == "proc_tree"
+    assert result["peak"] < 0.5 * ALLOCATION_MIB * MIB, (
+        f"a block that allocated nothing was charged {result['peak'] / MIB:.0f} MiB "
+        f"while a neighbour held {ALLOCATION_MIB} MiB"
+    )
 
 
 @pytest.mark.xfail(

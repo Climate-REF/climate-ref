@@ -226,7 +226,8 @@ class ResourceProfile:
     Every percentile is computed over the *usable samples* only.
     A usable sample is an execution that recorded a wall time, a CPU time and a peak memory figure,
     whose memory source matches ``memory_source``,
-    and which was measured exclusively when ``exclusive_only`` was requested.
+    and whose peak is attributable to it alone when ``exclusive_only`` was requested,
+    which only rules out a cgroup reading taken from a shared container.
     Executions that recorded nothing at all are absent from both counts,
     because an unmeasured run is not a run that used no memory.
 
@@ -247,8 +248,9 @@ class ResourceProfile:
     """
     Executions that were measured but not usable.
 
-    A row lands here when it was non-exclusive, incomplete,
-    or carried a memory source other than ``memory_source``.
+    A row lands here when it carried a cgroup reading from a container it did not have to itself,
+    when it was incomplete,
+    or when it carried a memory source other than ``memory_source``.
     """
 
     n_failed: int
@@ -438,6 +440,25 @@ def _is_measured(row: ResourceMeasurementView) -> bool:
     return row.wall_seconds is not None or row.cpu_seconds is not None or row.peak_memory_bytes is not None
 
 
+def _is_attributable(row: ResourceMeasurementView) -> bool:
+    """
+    Whether the peak on a row describes the execution rather than everything sharing its container.
+
+    Only a cgroup reading has that problem, and this is the axis ``exclusive_only`` is about.
+    A ``proc_tree`` reading sweeps the execution's own processes,
+    so it stays attributable however busy the worker was.
+
+    A ``rusage`` reading is not contaminated by neighbours either, but it is a process-lifetime
+    high-water mark, so on a worker that reuses processes it can carry an earlier execution's peak.
+    That is a temporal weakness rather than a shared-container one,
+    and it is handled by naming the source on the profile rather than by dropping the row:
+    ``rusage`` is the last resort, reached only when neither other source answered,
+    and dropping it would leave such a host with no profile at all rather than a high one.
+    Erring high is the safe direction for a sizing recommendation.
+    """
+    return row.memory_source != "cgroup" or row.resources_exclusive is True
+
+
 def _is_complete(row: ResourceMeasurementView) -> bool:
     return (
         row.wall_seconds is not None
@@ -494,7 +515,7 @@ def _build_profile(
     measured = [row for row in rows if _is_measured(row)]
     candidates = [row for row in measured if _is_complete(row)]
     if exclusive_only:
-        candidates = [row for row in candidates if row.resources_exclusive is True]
+        candidates = [row for row in candidates if _is_attributable(row)]
 
     source = _dominant_source(_source_weights(candidates))
     samples = [row for row in candidates if row.memory_source == source] if source else []
@@ -708,6 +729,8 @@ class ResourcesReader:
         A cgroup peak recorded while a worker ran four executions at once measures the worker,
         not the execution, so ``exclusive_only`` defaults to ``True``.
         Those rows are counted in ``n_excluded`` rather than dropped silently.
+        It costs nothing on the other sources,
+        which sweep the execution's own processes and stay attributable however busy the worker was.
 
         Failed executions that recorded a measurement are aggregated alongside successful ones.
         A run that died at 40 GiB is the strongest evidence there is about what the diagnostic needs.
@@ -729,7 +752,7 @@ class ResourcesReader:
             ``diagnostic`` for one profile per diagnostic,
             or ``provider`` for the worker-sizing roll-up across a provider's diagnostics.
         exclusive_only
-            Restrict samples to executions measured while nothing else ran on the worker.
+            Drop cgroup readings taken from a container the execution did not have to itself.
         safety_factor
             Multiplier applied to the p95 peak by ``recommended_memory_bytes``.
 

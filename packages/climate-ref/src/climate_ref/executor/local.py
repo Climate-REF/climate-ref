@@ -46,10 +46,25 @@ def _process_initialiser() -> None:  # pragma: no cover
         logger.error(f"Failed to add log handler: {e}")
 
 
-def _process_run(definition: ExecutionDefinition, log_level: str, measure: bool = True) -> ExecutionResult:
+def _pool_is_serial(pool: concurrent.futures.Executor) -> bool:
+    """
+    Whether a pool runs one task at a time, so a worker has the container's memory to itself.
+
+    Every worker in the pool shares one cgroup,
+    so a cgroup reading is only attributable to a single execution when the pool has one worker.
+    An unrecognised pool is treated as concurrent.
+    """
+    return getattr(pool, "_max_workers", None) == 1
+
+
+def _process_run(
+    definition: ExecutionDefinition, log_level: str, measure: bool = True, exclusive: bool = False
+) -> ExecutionResult:
     # This is a catch-all for any exceptions that occur in the process
     try:
-        return execute_locally(definition=definition, log_level=log_level, measure=measure)
+        return execute_locally(
+            definition=definition, log_level=log_level, measure=measure, exclusive=exclusive
+        )
     except Exception:  # pragma: no cover
         # This isn't expected but if it happens we want to log the error before the process exits
         # Mark as retryable since this is an infrastructure-level failure
@@ -115,6 +130,10 @@ class LocalExecutor:
                 # A fresh process per execution for the right rusage peak-memory
                 max_tasks_per_child=1,
             )
+
+        # Every worker shares this process's cgroup,
+        # so only a single-worker pool can attribute a cgroup reading to one execution.
+        self._exclusive = _pool_is_serial(self.pool)
         self._results: list[ExecutionFuture] = []
 
     def run(
@@ -139,6 +158,7 @@ class LocalExecutor:
             definition=definition,
             log_level=self.config.log_level,
             measure=self.config.executor.measure_resources,
+            exclusive=self._exclusive,
         )
         self._results.append(
             ExecutionFuture(

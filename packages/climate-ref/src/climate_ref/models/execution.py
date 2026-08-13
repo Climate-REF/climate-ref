@@ -297,10 +297,11 @@ class Execution(CreatedUpdatedMixin, Base):
 
     resources_exclusive: Mapped[bool | None] = mapped_column(nullable=True)
     """
-    Whether this execution was the only one running on the worker.
+    Whether this execution had the worker's cgroup to itself.
 
+    Declared by the executor, which is the only party that knows its own concurrency.
     A cgroup reading covers the whole container,
-    so it is meaningless when a worker runs several executions at once.
+    so it is meaningless when a container runs several executions at once.
     Non-exclusive measurements are excluded from aggregation by default.
     """
 
@@ -316,6 +317,10 @@ class Execution(CreatedUpdatedMixin, Base):
     Supporting detail for the resource measurements.
 
     Host, CPU count, sampler settings and any cross-checks the worker made.
+    Both sampled peaks are kept here, under ``cgroup_peak_bytes`` and ``proc_tree_peak_bytes``,
+    whichever of them ``peak_memory_bytes`` reports,
+    so which one to trust stays a read-time decision.
+    A large gap between the two says the cgroup was shared.
     Purely informational, so nothing here is a query predicate.
     """
 

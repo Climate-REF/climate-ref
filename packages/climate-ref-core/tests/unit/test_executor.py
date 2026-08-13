@@ -151,6 +151,31 @@ class TestExecuteLocallyResourceUsage:
         assert isinstance(result.resource_usage, ResourceUsage)
         assert result.resource_usage.wall_seconds >= 0.0
 
+    @pytest.mark.parametrize("exclusive", [True, False])
+    def test_the_executors_declaration_is_recorded(self, make_definition, mocker, exclusive):
+        """
+        Only the caller knows whether this process shares its cgroup, so its word is what is stored.
+
+        Defaulting to False rather than True is the point:
+        a worker that cannot see its siblings must not claim the container's memory as its own.
+        """
+        definition = make_definition(mocker.Mock())
+        definition.diagnostic.run.return_value = ExecutionResult(definition=definition, successful=True)
+
+        result = execute_locally(definition, log_level="WARNING", exclusive=exclusive)
+
+        assert result.resource_usage.exclusive is exclusive
+        assert result.resource_usage.context["cgroup_exclusive_declared"] is exclusive
+
+    def test_defaults_to_a_shared_cgroup(self, make_definition, mocker):
+        """A caller that says nothing gets the conservative reading."""
+        definition = make_definition(mocker.Mock())
+        definition.diagnostic.run.return_value = ExecutionResult(definition=definition, successful=True)
+
+        result = execute_locally(definition, log_level="WARNING")
+
+        assert result.resource_usage.exclusive is False
+
     def test_diagnostic_failure(self, make_definition, mocker):
         """A diagnostic that raises still reports what it consumed before failing"""
         diagnostic = mocker.Mock()

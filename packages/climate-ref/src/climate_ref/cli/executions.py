@@ -1090,8 +1090,9 @@ def _warn_about_bias(profiles: Sequence[ResourceProfile]) -> None:
     excluded = sum(p.n_excluded for p in profiles)
     if excluded:
         logger.warning(
-            f"{excluded} measured execution(s) were excluded as non-exclusive, incomplete, "
-            f"or carrying a different memory source. Use --include-shared to count shared ones."
+            f"{excluded} measured execution(s) were excluded as incomplete, "
+            f"carrying a different memory source, or carrying a cgroup reading from a shared container. "
+            f"Use --include-shared to count the shared ones."
         )
 
 
@@ -1128,7 +1129,7 @@ def resources(  # noqa: PLR0913
         bool,
         typer.Option(
             "--include-shared",
-            help="Also count executions measured while other executions shared the worker. "
+            help="Also count cgroup readings taken while other executions shared the worker. "
             "Those readings cover the whole worker, not the execution.",
         ),
     ] = False,

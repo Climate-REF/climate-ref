@@ -60,6 +60,9 @@ class SynchronousExecutor:
             definition,
             log_level=self.config.log_level,
             measure=self.config.executor.measure_resources,
+            # One execution at a time in this one process,
+            # so nothing else in the cgroup is competing for the memory being measured.
+            exclusive=True,
         )
 
         # Solver now commits the Execution row before submitting to the executor,

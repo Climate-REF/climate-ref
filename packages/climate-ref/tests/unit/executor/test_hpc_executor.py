@@ -80,6 +80,22 @@ class TestHPCExecutor:
 
         parsl.dfk().cleanup()
 
+    @pytest.mark.parametrize("workers_per_node, expected", [(1, True), (16, False)])
+    def test_only_one_worker_per_node_claims_the_cgroup(self, base_config, workers_per_node, expected):
+        """
+        Workers sharing a node share a cgroup, and none of them can see the others.
+
+        A cgroup reading is only attributable to one execution when a node runs one worker,
+        which is a deployment fact only this side knows.
+        """
+        base_config["max_workers_per_node"] = workers_per_node
+
+        executor = HPCExecutor(**base_config)
+        try:
+            assert executor._exclusive is expected
+        finally:
+            parsl.dfk().cleanup()
+
     def test_run_metric(self, metric_definition, provider, mock_diagnostic, mocker, caplog, base_config):
         with patch.object(HPCExecutor, "run", autospec=True) as mock_run:
             # Configure the mock to behave similarly to the original

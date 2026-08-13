@@ -16,13 +16,19 @@ Measurement never raises.
 Any probe that fails degrades a single field to None,
 or degrades :attr:`ResourceUsage.memory_source` to ``"unavailable"``.
 
-Peak memory comes from the first source that answers:
-cgroup v2 ``memory.peak``,
-then sampled cgroup ``memory.current``,
-then a summed sweep of the process tree,
-then ``getrusage``.
+Peak memory comes from a summed sweep of the process tree by default.
+`proc_tree` observes this block's processes and nothing else.
+A cgroup reading covers every process in the container,
+so it only describes this block when the caller declares, via ``cgroup_exclusive``,
+that nothing else shares the cgroup.
+The fallbacks, in order, are a cgroup reading and then ``getrusage``.
 :attr:`ResourceUsage.memory_source` records which one won,
 because a ``getrusage`` figure must never be silently compared against a cgroup figure.
+
+Both sampled peaks are always recorded,
+in :attr:`ResourceUsage.cgroup_peak_bytes` and :attr:`ResourceUsage.proc_tree_peak_bytes`,
+whichever of them was reported.
+A large divergence between the two is itself the evidence that the cgroup was shared.
 """
 
 import os
@@ -375,6 +381,18 @@ class ResourceUsage:
     Two numbers are only comparable when they share a source.
     """
 
+    cgroup_peak_bytes: int | None
+    """Peak memory of the whole cgroup, whether or not it was the source that won.
+
+    None when this is not a cgroup v2 host or the control files could not be read.
+    """
+
+    proc_tree_peak_bytes: int | None
+    """Peak summed resident memory of this process and its descendants, whether or not it won.
+
+    None when psutil is missing or every sweep failed.
+    """
+
     memory_limit_bytes: int | None
     """cgroup ``memory.max`` at run time, or None when the group is unlimited."""
 
@@ -382,10 +400,12 @@ class ResourceUsage:
     """cgroup ``cpu.max`` quota expressed in cores, or None when the group is unlimited."""
 
     exclusive: bool
-    """Whether this was the only measured block in flight for its whole duration.
+    """Whether the cgroup readings are attributable to this block alone.
 
-    A cgroup reading covers the whole container,
-    so it is only attributable to one block when no other block overlapped it.
+    True only when the caller declared the cgroup exclusive
+    *and* no other measured block overlapped this one in this process.
+    Sibling worker processes saturating the same container are invisible from here,
+    so without it a cgroup figure describes the container rather than this block.
     """
 
     context: dict[str, Any]
@@ -397,12 +417,20 @@ class ResourceRecorder:
     Handle yielded by :func:`measure_resources`.
 
     :attr:`usage` is None while the block runs and holds a :class:`ResourceUsage` once it exits.
+
+    The priority for the method of determining memory usage is:
+
+    cgroup (exclusive) > proc_tree > cgroup > rusage
+
+    In practice this generally means ``proc_tree`` for most use cases
+    (LocalExecutor or Celery under MacOS/Linux).
     """
 
-    def __init__(self, interval: float) -> None:
+    def __init__(self, interval: float, cgroup_exclusive: bool = False) -> None:
         self.usage: ResourceUsage | None = None
         self._interval = interval
-        self._exclusive = True
+        self._cgroup_exclusive = cgroup_exclusive
+        self._exclusive = cgroup_exclusive
         self._cgroup: Path | None = None
         self._sampler: _PeakSampler | None = None
         self._wall_start = 0.0
@@ -414,7 +442,7 @@ class ResourceRecorder:
         with _registry_lock:
             for other in _in_flight:
                 other._exclusive = False
-            self._exclusive = not _in_flight
+            self._exclusive = self._cgroup_exclusive and not _in_flight
             _in_flight.append(self)
 
         self._wall_start = time.monotonic()
@@ -475,14 +503,18 @@ class ResourceRecorder:
         cpu_seconds = _safe(self._elapsed_cpu, None)
         sampler = self._sampler
         rusage_peak = _safe(_rusage_peak_bytes, None)
+        cgroup_peak = _safe(lambda: self._cgroup_peak(sampler), None)
+        proc_tree_peak = sampler.proc_tree_peak if sampler is not None else None
         unmeasured: tuple[int | None, MemorySource] = (None, "unavailable")
-        peak, source = _safe(lambda: self._resolve_peak(sampler, rusage_peak), unmeasured)
+        peak, source = _safe(lambda: self._resolve_peak(cgroup_peak, proc_tree_peak, rusage_peak), unmeasured)
 
         return ResourceUsage(
             wall_seconds=wall_seconds,
             cpu_seconds=cpu_seconds,
             peak_memory_bytes=peak,
             memory_source=source,
+            cgroup_peak_bytes=cgroup_peak,
+            proc_tree_peak_bytes=proc_tree_peak,
             memory_limit_bytes=_safe(self._memory_limit, None),
             cpu_limit=_safe(self._cpu_limit, None),
             exclusive=self._exclusive,
@@ -493,6 +525,9 @@ class ResourceRecorder:
                 "samples": sampler.samples if sampler is not None else 0,
                 "cgroup": str(self._cgroup) if self._cgroup is not None else None,
                 "cgroup_peak_at_entry": self._cgroup_peak_at_entry,
+                "cgroup_exclusive_declared": self._cgroup_exclusive,
+                "cgroup_peak_bytes": cgroup_peak,
+                "proc_tree_peak_bytes": proc_tree_peak,
                 "psutil_available": _psutil is not None,
                 "rusage_peak_bytes": rusage_peak,
                 "rusage_is_process_lifetime_peak": True,
@@ -506,23 +541,47 @@ class ResourceRecorder:
             return None
         return max(0.0, end - self._cpu_start)
 
-    def _resolve_peak(
-        self, sampler: _PeakSampler | None, rusage_peak: int | None
-    ) -> tuple[int | None, MemorySource]:
-        """Pick the peak from the first source that answers, and name that source."""
+    def _cgroup_peak(self, sampler: _PeakSampler | None) -> int | None:
+        """
+        Best cgroup figure for this block, or None when the group could not be read.
+
+        The group high-water mark when this block raised it,
+        otherwise the largest sampled ``memory.current``.
+        """
         if self._cgroup is not None:
             peak = _read_cgroup_int(self._cgroup / "memory.peak")
             entry = self._cgroup_peak_at_entry
             # memory.peak is a high-water mark for the whole group,
             # so it only describes this block when the block pushed it higher.
-            if peak is not None and (entry is None or peak > entry):
-                return peak, "cgroup"
+            # Without the entry reading there is nothing to subtract the group's history from,
+            # and the sampled series below is a measurement of this block rather than a guess.
+            if peak is not None and entry is not None and peak > entry:
+                return peak
 
-        if sampler is not None and sampler.cgroup_peak is not None:
-            return sampler.cgroup_peak, "cgroup"
+        return sampler.cgroup_peak if sampler is not None else None
 
-        if sampler is not None and sampler.proc_tree_peak is not None:
-            return sampler.proc_tree_peak, "proc_tree"
+    def _resolve_peak(
+        self, cgroup_peak: int | None, proc_tree_peak: int | None, rusage_peak: int | None
+    ) -> tuple[int | None, MemorySource]:
+        """
+        Pick the peak to report, and name the source it came from.
+
+        The cgroup wins only when this block had the cgroup to itself,
+        because otherwise it measures the container rather than the block.
+        The process tree is the default because it sweeps this process and its descendants and nothing else.
+
+        A shared cgroup reading is still preferred over ``getrusage``,
+        which cannot be attributed to a block at all.
+        """
+        if self._exclusive and cgroup_peak is not None:
+            return cgroup_peak, "cgroup"
+
+        if proc_tree_peak is not None:
+            return proc_tree_peak, "proc_tree"
+
+        if cgroup_peak is not None:
+            # Names the container, not this block, which ``exclusive`` being False records.
+            return cgroup_peak, "cgroup"
 
         if rusage_peak is not None:
             # A lifetime high-water mark rather than a measurement of this block,
@@ -553,7 +612,9 @@ def _hostname() -> str | None:
 
 
 @contextmanager
-def measure_resources(*, interval: float = 0.5, enabled: bool = True) -> Iterator[ResourceRecorder]:
+def measure_resources(
+    *, interval: float = 0.5, enabled: bool = True, cgroup_exclusive: bool = False
+) -> Iterator[ResourceRecorder]:
     """
     Measure wall time, CPU time and peak memory of everything done in the block.
 
@@ -573,13 +634,20 @@ def measure_resources(*, interval: float = 0.5, enabled: bool = True) -> Iterato
         When False the block runs untouched and ``usage`` stays None,
         which every consumer already reads as unmeasured.
         No sampler thread is started and no cgroup file is read.
+    cgroup_exclusive
+        Whether the caller can promise that nothing else shares this process's cgroup while the block runs.
+
+        Only a caller that owns the concurrency knows this.
+        It defaults to False,
+        under which a cgroup figure is reported only when the process tree cannot be swept,
+        and is marked as non-exclusive so aggregation excludes it.
 
     Yields
     ------
     :
         The recorder holding the result.
     """
-    recorder = ResourceRecorder(interval)
+    recorder = ResourceRecorder(interval, cgroup_exclusive)
     if not enabled:
         yield recorder
         return

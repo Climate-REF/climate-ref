@@ -48,6 +48,9 @@ _READ_ONLY_COMMANDS: set[tuple[str, str]] = {
     ("test-cases", "ci-gate"),
 }
 
+# Read-only commands that sit at the top level rather than inside a group.
+_READ_ONLY_TOP_LEVEL_COMMANDS: set[str] = {"doctor"}
+
 # Commands whose job is to create or inspect the configuration file, so they must
 # run even when that file is missing or malformed.
 _CONFIG_BOOTSTRAP_COMMANDS: set[tuple[str, str]] = {
@@ -56,18 +59,27 @@ _CONFIG_BOOTSTRAP_COMMANDS: set[tuple[str, str]] = {
 }
 
 
-def _command_path_in_argv(command_paths: set[tuple[str, str]]) -> bool:
-    args = sys.argv[1:]
-    for index, arg in enumerate(args[:-1]):
-        if arg.startswith("-"):
+_VALUE_TAKING_OPTIONS: set[str] = {"--configuration-directory", "--log-level"}
+"""Options on the root callback that consume the argument after them."""
+
+
+def _command_argv() -> list[str]:
+    """Read the command path given on the command line, with options and their values removed."""
+    path = []
+    skip_value = False
+    for arg in sys.argv[1:]:
+        if skip_value:
+            skip_value = False
             continue
-        for group, command in command_paths:
-            if arg != group:
-                continue
-            remaining = [candidate for candidate in args[index + 1 :] if not candidate.startswith("-")]
-            if remaining and remaining[0] == command:
-                return True
-    return False
+        if arg.startswith("-"):
+            skip_value = arg in _VALUE_TAKING_OPTIONS
+            continue
+        path.append(arg)
+    return path
+
+
+def _command_path_in_argv(command_paths: set[tuple[str, str]]) -> bool:
+    return tuple(_command_argv()[:2]) in command_paths
 
 
 def _is_read_only_command() -> bool:
@@ -77,6 +89,11 @@ def _is_read_only_command() -> bool:
     This checks against a registry of known read-only command paths since
     the Typer callback runs before nested commands are resolved.
     """
+    # A top-level command is the first argument of the command path. Looking anywhere else would
+    # treat a path or an option value that happens to read as a command name as read-only.
+    command = _command_argv()
+    if command and command[0] in _READ_ONLY_TOP_LEVEL_COMMANDS:
+        return True
     return _command_path_in_argv(_READ_ONLY_COMMANDS)
 
 
@@ -220,6 +237,7 @@ def build_app() -> typer.Typer:
         datasets,
         db,
         diagnostics,
+        doctor,
         executions,
         providers,
         solve,
@@ -229,6 +247,7 @@ def build_app() -> typer.Typer:
     app = typer.Typer(name="ref", no_args_is_help=True)
 
     app.command(name="solve")(solve.solve)
+    app.command(name="doctor")(doctor.doctor)
     app.add_typer(config.app, name="config")
     app.add_typer(datasets.app, name="datasets")
     app.add_typer(db.app, name="db")

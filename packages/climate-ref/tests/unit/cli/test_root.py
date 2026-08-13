@@ -137,7 +137,7 @@ def test_build_app(expected_groups):
     registered_commands = [command.name for command in app.registered_commands]
     registered_groups = [group.name for group in app.registered_groups]
 
-    assert registered_commands == ["solve"]
+    assert registered_commands == ["solve", "doctor"]
     assert set(registered_groups) == expected_groups
 
 
@@ -148,7 +148,7 @@ def test_build_app_without_celery(mocker, expected_groups):
     registered_commands = [command.name for command in app.registered_commands]
     registered_groups = [group.name for group in app.registered_groups]
 
-    assert ["solve"] == registered_commands
+    assert ["solve", "doctor"] == registered_commands
     assert set(registered_groups) == expected_groups - {"celery"}
 
 
@@ -196,10 +196,17 @@ def test_cli_context_skip_backup(config, mocker):
         (["test-cases", "run", "--provider", "example"], True),
         (["test-cases", "replay", "--provider", "example"], True),
         (["test-cases", "mint", "--provider", "example"], True),
+        # A read-only top-level command is still recognised behind a global option.
+        (["doctor"], True),
+        (["--log-level", "info", "doctor"], True),
+        (["--configuration-directory", "somewhere", "config", "list"], True),
         # Data-modifying commands must still take a pre-migration backup.
         (["datasets", "ingest"], False),
         (["providers", "create-env"], False),
         (["solve"], False),
+        # A command name appearing as an argument value does not make the command read-only.
+        (["datasets", "ingest", "doctor"], False),
+        (["--configuration-directory", "doctor", "solve"], False),
     ],
 )
 def test_is_read_only_command(command, expected, monkeypatch):

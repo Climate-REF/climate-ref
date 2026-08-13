@@ -24,7 +24,8 @@ from alembic.config import Config as AlembicConfig
 from alembic.runtime.migration import MigrationContext
 from alembic.script import ScriptDirectory
 from loguru import logger
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.engine import make_url
+from sqlalchemy.exc import ArgumentError, IntegrityError
 from sqlalchemy.orm import Session
 
 from climate_ref.models import MetricValue, Table
@@ -243,6 +244,38 @@ class MigrationState(enum.Enum):
     REMOVED = "removed"
 
 
+REDACTED = "<redacted>"
+"""Stands in for a value that may be a credential."""
+
+
+def redact_url(url: str) -> str:
+    """
+    Remove any password from a database URL, keeping the rest legible.
+
+    A URL is printed in logs, in a doctor report, and in anything either is pasted into,
+    so a password in one must never survive to any of them.
+
+    Parameters
+    ----------
+    url
+        The database URL to redact.
+
+    Returns
+    -------
+    :
+        The URL with its password replaced, or a placeholder if it could not be parsed.
+    """
+    try:
+        # SQLAlchemy parses this URL to build the engine, so it is what parses it here too:
+        # a driver-qualified scheme or a percent-escaped password is then hidden the same way
+        # it is understood.
+        return make_url(url).render_as_string(hide_password=True)
+    except ArgumentError:
+        # An unparseable URL is a finding for another check to make, not a reason to print
+        # something that might hold a credential.
+        return REDACTED
+
+
 class Database:
     """
     Manage the database connection and migrations
@@ -251,7 +284,7 @@ class Database:
     """
 
     def __init__(self, url: str, *, connect_args: dict[str, Any] | None = None) -> None:
-        logger.info(f"Connecting to database at {url}")
+        logger.info(f"Connecting to database at {redact_url(url)}")
         self.url = url
         engine_kwargs: dict[str, Any] = {}
         if connect_args:

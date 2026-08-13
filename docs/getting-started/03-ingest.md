@@ -18,6 +18,13 @@ ref datasets ingest --source-type obs4mips $REF_CONFIGURATION/datasets/obs4ref
 
 Replace `$REF_CONFIGURATION/datasets/obs4ref` with the directory used when [fetched the obs4REF data](02-download-datasets.md#fetch-obs4ref-datasets).
 
+!!! note "Why not the `obs4ref` source type?"
+
+    An `obs4ref` source type also exists, but ingesting this collection with it will leave the data unused:
+    no diagnostic declares an `obs4REF` data requirement yet,
+    and the solver matches a requirement against its own source type only.
+    Use `obs4mips` until that changes.
+
 ## 2. Ingest CMIP6 data
 
 To ingest CMIP6 files, point the CLI at a directory of netCDF files and set `cmip6` as the source type:

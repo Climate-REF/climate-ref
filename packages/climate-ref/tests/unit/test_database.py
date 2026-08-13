@@ -6,9 +6,11 @@ import numpy as np
 import pandas as pd
 import pytest
 import sqlalchemy
+from loguru import logger
 from sqlalchemy import inspect
 
 from climate_ref.database import (
+    REDACTED,
     Database,
     MigrationState,
     ModelState,
@@ -16,6 +18,7 @@ from climate_ref.database import (
     _get_sqlite_path,
     _make_readonly_sqlite_url,
     _values_differ,
+    redact_url,
     validate_database_url,
 )
 from climate_ref.models import MetricValue
@@ -23,6 +26,51 @@ from climate_ref.models.dataset import CMIP6Dataset, Dataset, Obs4MIPsDataset
 from climate_ref.models.provider import Provider
 from climate_ref_core.datasets import SourceDatasetType
 from climate_ref_core.pycmec.controlled_vocabulary import CV
+
+
+class TestRedactUrl:
+    """
+    A database URL reaches logs and doctor reports, so a password in one must not survive.
+    """
+
+    def test_a_password_is_removed(self):
+        redacted = redact_url("postgresql+psycopg2://ref_user:hunter2@db.example.org:5432/ref")
+
+        assert "hunter2" not in redacted
+        # The parts a maintainer needs in order to read the report survive.
+        assert "ref_user" in redacted
+        assert "db.example.org:5432" in redacted
+        assert redacted.startswith("postgresql+psycopg2://")
+
+    def test_a_percent_escaped_password_is_removed(self):
+        # A password holding a URL-significant character is escaped, and must still be found.
+        redacted = redact_url("postgresql://ref_user:p%40ss%2Fword@db.example.org/ref")
+
+        assert "p@ss/word" not in redacted
+        assert "p%40ss%2Fword" not in redacted
+
+    def test_an_unparseable_url_is_redacted_entirely(self):
+        assert redact_url("not a url at all") == REDACTED
+
+    def test_a_url_without_a_password_is_left_alone(self):
+        url = "sqlite:///home/user/.ref/db/climate_ref.db"
+
+        assert redact_url(url) == url
+
+    def test_the_connection_log_carries_no_password(self, mocker):
+        # The engine is never built, so this holds for a backend whose driver is not installed.
+        mocker.patch.object(sqlalchemy, "create_engine")
+        mocker.patch("climate_ref.database.Session")
+        logged = []
+        handler = logger.add(logged.append, level="INFO")
+
+        try:
+            Database("postgresql+psycopg2://ref_user:hunter2@db.example.org:5432/ref")
+        finally:
+            logger.remove(handler)
+
+        assert any("Connecting to database" in message for message in logged)
+        assert not any("hunter2" in message for message in logged)
 
 
 class TestGetSqlitePath:

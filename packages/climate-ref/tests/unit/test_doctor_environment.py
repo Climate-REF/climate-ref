@@ -3,28 +3,11 @@ Tests for the environment report that accompanies the findings.
 """
 
 import climate_ref
+from climate_ref.database import REDACTED
 from climate_ref.doctor import DoctorContext, collect_environment
-from climate_ref.doctor.environment import REDACTED, _redact_url
 
 
 class TestRedaction:
-    def test_a_password_is_removed_from_a_database_url(self):
-        redacted = _redact_url("postgresql+psycopg2://ref_user:hunter2@db.example.org:5432/ref")
-
-        assert "hunter2" not in redacted
-        # The parts a maintainer needs in order to read the report survive.
-        assert "ref_user" in redacted
-        assert "db.example.org:5432" in redacted
-        assert redacted.startswith("postgresql+psycopg2://")
-
-    def test_an_unparseable_url_is_redacted_entirely(self):
-        assert _redact_url("not a url at all") == REDACTED
-
-    def test_a_url_without_a_password_is_left_alone(self):
-        url = "sqlite:///home/user/.ref/db/climate_ref.db"
-
-        assert _redact_url(url) == url
-
     def test_a_secret_environment_variable_is_hidden(self, monkeypatch):
         monkeypatch.setenv("REF_NATIVE_STORE_SECRET_ACCESS_KEY", "s3cret")
         monkeypatch.setenv("REF_RESULTS_ROOT", "/data/results")

@@ -16,16 +16,12 @@ import sys
 
 from attrs import frozen
 from loguru import logger
-from sqlalchemy.engine import make_url
-from sqlalchemy.exc import ArgumentError
 
 from climate_ref.config import env_prefix
+from climate_ref.database import REDACTED, redact_url
 from climate_ref.doctor.context import DoctorContext
 from climate_ref.doctor.registry import iter_checks
 from climate_ref_core.source_types import SourceDatasetType
-
-REDACTED = "<redacted>"
-"""Stands in for a value that may be a credential."""
 
 _SECRET_MARKERS = ("SECRET", "TOKEN", "PASSWORD", "PASSWD", "ACCESS_KEY", "API_KEY")
 """Substrings that make an environment variable's value too risky to print."""
@@ -47,22 +43,6 @@ class EnvironmentReport:
     """
 
     sections: dict[str, dict[str, str]]
-
-
-def _redact_url(url: str) -> str:
-    """
-    Remove any password from a database URL, keeping the rest legible.
-
-    SQLAlchemy parses this URL to build the engine, so it is what parses it here too: a
-    driver-qualified scheme or a percent-escaped password is then hidden the same way it is
-    understood.
-    """
-    try:
-        return make_url(url).render_as_string(hide_password=True)
-    except ArgumentError:
-        # An unparseable URL is a finding for another check to make, not a reason to print
-        # something that might hold a credential.
-        return REDACTED
 
 
 def _redact_env_value(name: str, value: str) -> str:
@@ -111,7 +91,7 @@ def _configuration(context: DoctorContext) -> dict[str, str]:
         "cmip6_parser": config.cmip6_parser,
         "cmip7_parser": config.cmip7_parser,
         "executor": config.executor.executor,
-        "database_url": _redact_url(config.db.database_url),
+        "database_url": redact_url(config.db.database_url),
         "ignore_datasets_file": str(config.ignore_datasets_file),
     }
 
@@ -165,8 +145,8 @@ def collect_environment(context: DoctorContext) -> EnvironmentReport:
     """
     Describe the deployment being checked.
 
-    A section that cannot be collected is reported as such rather than raising: an
-    environment report is only useful if it survives the deployment being broken.
+    A section that cannot be collected is reported as such rather than raising.
+    An environment report is only useful if it survives the deployment being broken.
 
     Parameters
     ----------

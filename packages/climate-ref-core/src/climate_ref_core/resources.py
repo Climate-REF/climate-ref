@@ -553,7 +553,9 @@ class ResourceRecorder:
             entry = self._cgroup_peak_at_entry
             # memory.peak is a high-water mark for the whole group,
             # so it only describes this block when the block pushed it higher.
-            if peak is not None and (entry is None or peak > entry):
+            # Without the entry reading there is nothing to subtract the group's history from,
+            # and the sampled series below is a measurement of this block rather than a guess.
+            if peak is not None and entry is not None and peak > entry:
                 return peak
 
         return sampler.cgroup_peak if sampler is not None else None

@@ -444,9 +444,17 @@ def _is_attributable(row: ResourceMeasurementView) -> bool:
     """
     Whether the peak on a row describes the execution rather than everything sharing its container.
 
-    Only a cgroup reading has that problem.
-    The other sources sweep the execution's own processes,
-    so they stay usable however busy the worker was.
+    Only a cgroup reading has that problem, and this is the axis ``exclusive_only`` is about.
+    A ``proc_tree`` reading sweeps the execution's own processes,
+    so it stays attributable however busy the worker was.
+
+    A ``rusage`` reading is not contaminated by neighbours either, but it is a process-lifetime
+    high-water mark, so on a worker that reuses processes it can carry an earlier execution's peak.
+    That is a temporal weakness rather than a shared-container one,
+    and it is handled by naming the source on the profile rather than by dropping the row:
+    ``rusage`` is the last resort, reached only when neither other source answered,
+    and dropping it would leave such a host with no profile at all rather than a high one.
+    Erring high is the safe direction for a sizing recommendation.
     """
     return row.memory_source != "cgroup" or row.resources_exclusive is True
 

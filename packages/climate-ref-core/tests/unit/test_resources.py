@@ -6,6 +6,7 @@ import time
 
 import pytest
 
+from climate_ref_core import resources
 from climate_ref_core.resources import (
     ResourceRecorder,
     ResourceUsage,
@@ -260,6 +261,38 @@ def test_sampled_current_is_used_when_the_peak_was_inherited(fake_cgroup):
     # memory.peak did not move, so the sampled memory.current is the honest number.
     assert usage.peak_memory_bytes == 500
     assert usage.context["samples"] >= 2
+
+
+def test_an_unbaselined_peak_falls_back_to_the_sampled_series(fake_cgroup, monkeypatch):
+    """
+    Without an entry reading there is nothing to tell this block's memory from the group's history.
+
+    ``memory.peak`` covers the whole life of the cgroup,
+    so reporting it unbaselined would charge this block for whatever ran in the container before it.
+    The sampled ``memory.current`` is a measurement of this block, so it wins instead.
+    """
+    (fake_cgroup / "memory.peak").write_text("100000\n")
+    entry_reads = []
+    real_read = resources._read_cgroup_int
+
+    def fail_the_entry_read(path):
+        # Only the entry reading of memory.peak fails; everything else answers normally.
+        if path.name == "memory.peak" and not entry_reads:
+            entry_reads.append(path)
+            return None
+        return real_read(path)
+
+    monkeypatch.setattr(resources, "_read_cgroup_int", fail_the_entry_read)
+
+    with measure_resources(interval=0.01, cgroup_exclusive=True) as recorder:
+        time.sleep(0.05)
+
+    usage = recorder.usage
+    assert usage is not None
+    assert usage.context["cgroup_peak_at_entry"] is None
+    assert usage.memory_source == "cgroup"
+    assert usage.peak_memory_bytes == 500
+    assert usage.cgroup_peak_bytes == 500
 
 
 def test_a_shared_cgroup_is_measured_over_the_process_tree(fake_cgroup):

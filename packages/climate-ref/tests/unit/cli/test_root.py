@@ -196,10 +196,17 @@ def test_cli_context_skip_backup(config, mocker):
         (["test-cases", "run", "--provider", "example"], True),
         (["test-cases", "replay", "--provider", "example"], True),
         (["test-cases", "mint", "--provider", "example"], True),
+        # A read-only top-level command is still recognised behind a global option.
+        (["doctor"], True),
+        (["--log-level", "info", "doctor"], True),
+        (["--configuration-directory", "somewhere", "config", "list"], True),
         # Data-modifying commands must still take a pre-migration backup.
         (["datasets", "ingest"], False),
         (["providers", "create-env"], False),
         (["solve"], False),
+        # A command name appearing as an argument value does not make the command read-only.
+        (["datasets", "ingest", "doctor"], False),
+        (["--configuration-directory", "doctor", "solve"], False),
     ],
 )
 def test_is_read_only_command(command, expected, monkeypatch):

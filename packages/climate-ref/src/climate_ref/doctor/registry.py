@@ -142,6 +142,10 @@ def load_plugin_checks() -> dict[str, str]:
         except Exception as exc:
             logger.exception(f"Could not load doctor checks from '{entry_point.value}'")
             _LOAD_ERRORS[entry_point.name] = f"{type(exc).__name__}: {exc}"
+            # A module can register checks before it fails to import. Keeping those would run a
+            # half-loaded plugin's checks, and `iter_checks` would present them as built-in.
+            for slug in set(_REGISTRY) - known:
+                del _REGISTRY[slug]
             continue
         for slug in set(_REGISTRY) - known:
             _REGISTRY[slug] = evolve(_REGISTRY[slug], source=entry_point.name)

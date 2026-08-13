@@ -11,6 +11,7 @@ import mkdocs_gen_files
 from loguru import logger
 
 import climate_ref  # noqa: F401  registers the obs4REF and quickstart registries
+from climate_ref_core.exceptions import InvalidProviderException
 from climate_ref_core.providers import import_provider
 from climate_ref_core.reference_data import (
     collect_required_reference_data,
@@ -32,8 +33,10 @@ def _load_providers():
     for slug, fqn in PROVIDERS:
         try:
             loaded.append(import_provider(fqn))
-        except Exception:
-            logger.warning(f"Could not load provider '{slug}' ({fqn}), skipping.")
+        except InvalidProviderException as exc:
+            # A provider that is not installed leaves a gap in the table. Anything else is a defect,
+            # and publishing a table that silently omits its datasets would hide it.
+            logger.warning(f"Could not load provider '{slug}' ({fqn}), skipping: {exc}")
     return loaded
 
 

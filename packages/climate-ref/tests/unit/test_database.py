@@ -43,8 +43,7 @@ class TestRedactUrl:
         # A password holding a URL-significant character is escaped, and must still be found.
         redacted = redact_url("postgresql://ref_user:p%40ss%2Fword@db.example.org/ref")
 
-        assert "p@ss/word" not in redacted
-        assert "p%40ss%2Fword" not in redacted
+        assert redacted == "postgresql://ref_user:***@db.example.org/ref"
 
     def test_an_unparseable_url_is_redacted_entirely(self):
         assert redact_url("not a url at all") == REDACTED

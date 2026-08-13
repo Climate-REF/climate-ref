@@ -18,6 +18,14 @@ class TestRedaction:
         assert variables["REF_NATIVE_STORE_SECRET_ACCESS_KEY"] == REDACTED
         assert variables["REF_RESULTS_ROOT"] == "/data/results"
 
+    def test_a_password_inside_a_url_is_hidden(self, monkeypatch):
+        # The name says nothing about a credential, but the value carries one.
+        monkeypatch.setenv("REF_DATABASE_URL", "postgresql://ref_user:hunter2@db.example.org:5432/ref")
+
+        variables = collect_environment(DoctorContext.from_catalogs({}, []))["environment_variables"]
+
+        assert variables["REF_DATABASE_URL"] == "postgresql://ref_user:***@db.example.org:5432/ref"
+
 
 class TestCollectEnvironment:
     def test_it_reports_the_installed_versions(self):

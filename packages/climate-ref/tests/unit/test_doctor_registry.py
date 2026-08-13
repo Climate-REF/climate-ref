@@ -141,6 +141,19 @@ class TestPluginChecks:
         assert "broken_provider" in load_findings[0].summary
         assert "no module named 'nope'" in load_findings[0].detail
 
+    def test_a_partly_loaded_plugin_contributes_nothing(self, isolated_registry, monkeypatch):
+        # A module can register a check and then fail to import. Keeping that check would run
+        # half a plugin, and present it as built-in.
+        def register_then_fail():
+            isolated_registry.check("half-loaded", "A check")(lambda context: [])
+            raise ImportError("boom")
+
+        _entry_points(monkeypatch, [_EntryPoint("broken_provider", register_then_fail)])
+
+        checks = {c.slug for c in isolated_registry.iter_checks()}
+
+        assert "half-loaded" not in checks
+
     def test_a_broken_plugin_does_not_stop_the_other_checks(self, isolated_registry, monkeypatch):
         def broken():
             raise ImportError("boom")

@@ -25,6 +25,9 @@ from climate_ref_core.source_types import SourceDatasetType
 _SECRET_MARKERS = ("SECRET", "TOKEN", "PASSWORD", "PASSWD", "ACCESS_KEY", "API_KEY")
 """Substrings that make an environment variable's value too risky to print."""
 
+_URL_MARKERS = ("URL", "URI", "DSN", "CONNECTION_STRING")
+"""Substrings that mark a value as a URL, whose own password must be hidden."""
+
 _ENV_PREFIXES = (f"{env_prefix}_", "DASK_", "ESMVALTOOL_")
 """Environment variable prefixes that change how a deployment behaves."""
 
@@ -33,8 +36,13 @@ _UNAVAILABLE = "unavailable"
 
 
 def _redact_env_value(name: str, value: str) -> str:
-    """Hide the value of a variable whose name suggests it holds a credential."""
-    return REDACTED if any(marker in name.upper() for marker in _SECRET_MARKERS) else value
+    """Hide a credential a variable holds, whether as the whole value or inside a URL."""
+    upper = name.upper()
+    if any(marker in upper for marker in _SECRET_MARKERS):
+        return REDACTED
+    if any(marker in upper for marker in _URL_MARKERS):
+        return redact_url(value)
+    return value
 
 
 def _versions() -> dict[str, str]:

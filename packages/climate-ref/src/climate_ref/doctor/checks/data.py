@@ -51,7 +51,8 @@ def check_duplicate_coverage(context: DoctorContext) -> list[Finding]:
 
     for source_type in SourceDatasetType:
         catalog = context.catalog(source_type)
-        if not len(catalog) or "start_time" not in catalog:
+        required = {"instance_id", "start_time", "end_time", "path"}
+        if not len(catalog) or not required.issubset(catalog.columns):
             continue
 
         for instance_id, group in catalog.groupby("instance_id"):
@@ -206,7 +207,7 @@ def check_unreachable_source_types(context: DoctorContext) -> list[Finding]:
         if source_type.value in requested:
             continue
         catalog = context.catalog(source_type)
-        if not len(catalog):
+        if not len(catalog) or "instance_id" not in catalog.columns:
             continue
         count = catalog["instance_id"].nunique()
         findings.append(

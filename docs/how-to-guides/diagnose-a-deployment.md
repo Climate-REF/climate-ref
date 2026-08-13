@@ -1,6 +1,6 @@
 # Diagnose a deployment
 
-`ref doctor` looks for the problems that a solve hides rather than reports:reference data that is missing,
+`ref doctor` looks for the problems that a solve hides rather than reports: reference data that is missing,
 so its diagnostics quietly plan no executions;
 data ingested under a source type no diagnostic requires, so nothing selects it;
 and datasets whose files cover the same period twice, so a diagnostic reads that period more than once.
@@ -43,7 +43,7 @@ ref doctor --list
 `--format markdown` produces a report that can be pasted into an issue.
 Alongside the findings it describes the environment:
 package versions, platform, configuration, paths, enabled providers, what is ingested, and the `REF_*`, `DASK_*` and `ESMVALTOOL_*` environment variables that are set.
-This environment excluded with the `--no-environment` option.
+This environment is excluded with the `--no-environment` option.
 
 ```bash
 ref doctor --format markdown

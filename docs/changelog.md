@@ -21,6 +21,136 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.17.0 (2026-08-13)
+
+### Breaking Changes
+
+- Removed the `ref test-cases migrate-manifests` and `ref test-cases check-store` commands,
+  along with the unused `validate_cmec_bundles`, `validate_series_regression` and
+  `capture_execution` helpers and the slot `.source.json` stamp.
+  The CI coupling gate no longer emits an `execute` action,
+  and a `diagnostic_version` decrease now always fails the gate,
+  so reverting a diagnostic requires re-minting its baseline. ([#854](https://github.com/Climate-REF/climate-ref/pull/854))
+- Removes the `ref test-cases build` and `ref test-cases sync` commands.
+  `build` is now `ref test-cases run --from-slot`,
+  which rebuilds the committed bundle from the native already in the output slot without executing.
+  `sync` is no longer needed because `replay` warms the same store cache when it materialises.
+  Also replaces the `NativeStore` protocol and its three implementations
+  (`LocalFilesystemStore`, `PoochReadStore` and `R2WriteStore`)
+  with a single `NativeStore` class built from the store URL. ([#858](https://github.com/Climate-REF/climate-ref/pull/858))
+
+### Features
+
+- Added opt-in solve-time selection of ESMValTool reference data.
+  Diagnostics can now request ESMValTool observational and reanalysis datasets
+  the same way they request other reference data so each request resolves against the tracked catalog. ([#835](https://github.com/Climate-REF/climate-ref/pull/835))
+- Added a `key_parser` to `RegistryRequest`, so the package that owns a registry owns how its keys are read.
+  The ESMValTool provider uses it to fetch the reference data an opt-in diagnostic selects.
+  The fetch and ingest sides parse through the same function,
+  so a request cannot name a facet value that ingest would spell differently. ([#843](https://github.com/Climate-REF/climate-ref/pull/843))
+- Ingests the ESMValTool reference data as part of `ref providers setup`,
+  so the catalog a diagnostic selects from is populated by the same command that downloads the data.
+  `sea-ice-area-basic` is the first diagnostic to declare the requirement.
+  It now selects the OSI-450 observations it compares against rather than being handed the whole registry.
+  An existing installation already has the files on disk but no catalog entries for them,
+  so `ref providers setup --provider esmvaltool` needs running again before sea ice will solve. ([#846](https://github.com/Climate-REF/climate-ref/pull/846))
+- Records what each execution cost in wall time, CPU time and peak memory.
+  `ref executions resources` aggregates the results per diagnostic or per provider to help right-size the executors.
+  The capture can be turned off with `executor.measure_resources = false`, or with `REF_EXECUTOR_MEASURE_RESOURCES=false`. ([#859](https://github.com/Climate-REF/climate-ref/pull/859))
+- Added queue routing for the Celery executor.
+  A TOML routing table named by the `REF_CELERY_ROUTES` environment variable maps diagnostics to queue names,
+  so each execution is submitted to a queue such as `esmvaltool-large` and differently sized worker pools can consume them independently.
+  Without the variable set, behaviour is unchanged. ([#860](https://github.com/Climate-REF/climate-ref/pull/860))
+
+### Improvements
+
+- Reworks the finalisation of datasets that were ingested with a `drs` parser.
+
+  - Adds an `n_jobs` configuration value that controls how many worker processes parse dataset files.
+    Solve-time finalisation used to be permanently serial because `n_jobs` was only plumbed through `ref datasets ingest`.
+  - Finalisation now runs in chunks of whole datasets, committing each chunk before parsing the next.
+    Progress is logged as it goes, and a cancelled solve keeps the work it has already done.
+  - `ref datasets ingest` reports how many datasets are still missing metadata that can only be read from the files themselves.
+    This makes the cost that the `drs` parser defers to the first solve visible up front.
+  - Fixes per-file metadata (`start_time`, `end_time`) being broadcast across every file of a dataset during finalisation.
+    A catalog loaded from the database repeats its dataset id once per file, and the per-row update did not account for that.
+
+  ([#837](https://github.com/Climate-REF/climate-ref/pull/837))
+- Reworks how the controlled vocabulary and the grey list are distributed.
+  Both now resolve the same way.
+  Both now work on read-only filesystems and in air-gapped deployments.
+
+  - Adds `climate_ref_core.data` with `PackagedResource` and `LayeredResource`.
+    These resolve a data file across an operator override, a local cache and the copy shipped in the package.
+  - The packaged copy is now the floor for both files,
+    so neither the network nor a writable cache is needed to run.
+  - `paths.dimensions_cv` and `ignore_datasets_file` are now optional.
+    Leaving them unset uses the packaged copy.
+  - A failed grey list refresh is no longer fatal.
+    An unreachable network, an HTTP error and an unwritable cache
+    all fall back to the cached or packaged copy with a warning.
+  - A cached grey list that has not been refreshed for 30 days is ignored in favour of the packaged copy.
+  - The grey list cache moved under `REF_DATASET_CACHE_DIR`,
+    so it shares one cache root with the dataset registries.
+    The copy in the old location is left in place and is no longer read.
+  - `paths.dimensions_cv` is now resolved to an absolute path like every other path field,
+    rather than being left relative.
+  - Reading the configuration no longer imports the diagnostic bundle parsing machinery,
+    so `climate_ref.config` no longer pulls in numpy and pydantic.
+  - Removes `IgnoreDatasetsRefreshError`, which nothing raises any more.
+
+  ([#840](https://github.com/Climate-REF/climate-ref/pull/840))
+- Improved reference dataset download times by fetching up to four registry files concurrently.
+  Set `REF_DATASET_FETCH_WORKERS` to tune the concurrency or to `1` for sequential fetching. ([#848](https://github.com/Climate-REF/climate-ref/pull/848))
+- Encoded Celery tasks and results as JSON instead of pickle, and compressed the message bodies with gzip.
+  `pickle` is no longer in `accept_content`, and bodies shrink by roughly 80%,
+  which cuts broker memory on a full solve.
+  Compression is tuned with `CELERY_TASK_COMPRESSION` and `CELERY_RESULT_COMPRESSION`,
+  or disabled by setting either to an empty string.
+  Messages queued by an earlier release cannot be decoded by this one,
+  so purge the queues as part of the upgrade and re-solve to requeue the outstanding work.
+  A deployment that overrides `flower.celeryConfig` needs to accept the new format there too. ([#850](https://github.com/Climate-REF/climate-ref/pull/850))
+- Extracts the duplicated per-verb driver loop in the `ref test-cases` CLI
+  into a shared `VerbDriver` helper,
+  covering selector validation, case enumeration, skip policy and the summary epilogue. ([#856](https://github.com/Climate-REF/climate-ref/pull/856))
+
+### Bug Fixes
+
+- Fixed `esmvaltool/sea-ice-sensitivity` failing over the full CMIP6 archive.
+  The diagnostic script expects one ensemble member per model, but every ingested
+  member was fed into its single execution, tripping
+  `None or too many matching files found for siconc`.
+  A new `SelectFirstMember` constraint now keeps one member per model
+  (the lowest CMIP index, e.g. `r1i1p1f1`) for both the CMIP6 and CMIP7 requirements.
+  The `CAS-ESM2-0` grey-list entry was also broadened from a single member to
+  model-wide, since its curvilinear siconc grid fails the CMOR check for every member. ([#827](https://github.com/Climate-REF/climate-ref/pull/827))
+- Stops `climate_ref_pmp` downloading micromamba while the provider registry is built.
+
+  `PMPDiagnosticProvider.configure` resolved its conda executable eagerly,
+  which downloaded micromamba when it was missing or more than a week old.
+  `configure` runs whenever the provider registry is built, so that download sat on the solve path
+  and a solve on a host with no outbound network access failed there.
+
+  It now records where the executable will be, using the new `CondaDiagnosticProvider.conda_exe_path`.
+  The download stays in `ref providers setup`, and in the execute path that already installs on demand. ([#840](https://github.com/Climate-REF/climate-ref/pull/840))
+- Stored non-finite floats as null in JSON columns, so a metric series containing NaN can be ingested on PostgreSQL.
+  `json.dumps` writes the bare tokens `NaN`, `Infinity` and `-Infinity` by default,
+  which Python reads back and SQLite stores without complaint,
+  but PostgreSQL validates the value on insert and rejects the whole row. ([#850](https://github.com/Climate-REF/climate-ref/pull/850))
+- Fixed `ilamb/mrsos-wangmao`, `ilamb/snc-esacci` and `ilamb/amoc-rapid`,
+  none of which could complete over the full CMIP6 archive.
+
+  `ilamb3` is now required at `>=2026.6.15`.
+  This also retires the `xarray<2025.11` and `scipy<1.16` pins, which existed only for `ilamb3` issues the new release resolves.
+
+  `amoc-rapid` additionally needed a `climate_ref_msftmz_to_rapid` transform.
+  ILAMB's `msftmz_to_rapid` selects the Atlantic with a hardcoded `isel(basin=0)`,
+  but the `RAPID-2023-1a` reference has no `basin` dimension. ([#861](https://github.com/Climate-REF/climate-ref/pull/861))
+- Fixed `pmp/enso_proc` and `pmp/enso_tel` errors found when running.
+  The REF ENSO driver required exactly one file per variable and raised `NotImplementedError: Multiple paths found ...` otherwise.
+  The driver now joins the files into one before handing them over. ([#862](https://github.com/Climate-REF/climate-ref/pull/862))
+
+
 ## climate-ref 0.16.2 (2026-07-15)
 
 ### Breaking Changes

@@ -56,7 +56,7 @@ The REF requires datasets, both reference and model, to be ingested into the dat
 before it can solve for which executions are required.
 The [Ingest tutorial](getting-started/03-ingest.md) covers this in general.
 
-For development we use a consistent set of decimated sample data.
+For development, we use a consistent set of decimated sample data.
 `make fetch-test-data` downloads it into `tests/test-data/sample-data`:
 
 ```bash

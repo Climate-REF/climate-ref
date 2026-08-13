@@ -61,8 +61,7 @@ def execute_locally(
     exclusive
         Whether this process has its cgroup to itself for the duration of the execution.
 
-        Only the executor knows its own concurrency,
-        so it has to say: a worker cannot see its siblings' memory from the inside.
+        Only the executor knows its own concurrency.
         When False the peak memory is measured over this process tree rather than the cgroup.
     """
     logger.info(f"Executing {definition.execution_slug()!r}")

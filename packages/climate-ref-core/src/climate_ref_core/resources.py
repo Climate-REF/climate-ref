@@ -16,14 +16,11 @@ Measurement never raises.
 Any probe that fails degrades a single field to None,
 or degrades :attr:`ResourceUsage.memory_source` to ``"unavailable"``.
 
-Peak memory comes from a summed sweep of the process tree by default,
-because that is the only source that is correct by construction:
-it observes this block's processes and nothing else.
+Peak memory comes from a summed sweep of the process tree by default.
+`proc_tree` observes this block's processes and nothing else.
 A cgroup reading covers every process in the container,
-so it only describes this block when the caller declares,
-via ``cgroup_exclusive``, that nothing else shares the cgroup.
-The library cannot verify that on its own,
-so it is preferred only when it has been declared.
+so it only describes this block when the caller declares, via ``cgroup_exclusive``,
+that nothing else shares the cgroup.
 The fallbacks, in order, are a cgroup reading and then ``getrusage``.
 :attr:`ResourceUsage.memory_source` records which one won,
 because a ``getrusage`` figure must never be silently compared against a cgroup figure.
@@ -407,8 +404,7 @@ class ResourceUsage:
 
     True only when the caller declared the cgroup exclusive
     *and* no other measured block overlapped this one in this process.
-    The declaration is the load-bearing half:
-    sibling worker processes saturating the same container are invisible from here,
+    Sibling worker processes saturating the same container are invisible from here,
     so without it a cgroup figure describes the container rather than this block.
     """
 
@@ -421,6 +417,13 @@ class ResourceRecorder:
     Handle yielded by :func:`measure_resources`.
 
     :attr:`usage` is None while the block runs and holds a :class:`ResourceUsage` once it exits.
+
+    The priority for the method of determining memory usage is:
+
+    cgroup (exclusive) > proc_tree > cgroup > rusage
+
+    In practice this generally means ``proc_tree`` for most use cases
+    (LocalExecutor or Celery under MacOS/Linux).
     """
 
     def __init__(self, interval: float, cgroup_exclusive: bool = False) -> None:
@@ -563,8 +566,8 @@ class ResourceRecorder:
 
         The cgroup wins only when this block had the cgroup to itself,
         because otherwise it measures the container rather than the block.
-        The process tree is the default because it is correct by construction:
-        it sweeps this process and its descendants and nothing else.
+        The process tree is the default because it sweeps this process and its descendants and nothing else.
+
         A shared cgroup reading is still preferred over ``getrusage``,
         which cannot be attributed to a block at all.
         """
@@ -630,14 +633,11 @@ def measure_resources(
         which every consumer already reads as unmeasured.
         No sampler thread is started and no cgroup file is read.
     cgroup_exclusive
-        Whether the caller can promise that nothing else shares this process's cgroup
-        while the block runs.
+        Whether the caller can promise that nothing else shares this process's cgroup while the block runs.
 
-        Only a caller that owns the concurrency knows this,
-        which is why it is declared rather than probed:
-        sibling worker processes in the same container are invisible from inside one of them.
-        It defaults to False, under which a cgroup figure is reported
-        only when the process tree cannot be swept,
+        Only a caller that owns the concurrency knows this.
+        It defaults to False,
+        under which a cgroup figure is reported only when the process tree cannot be swept,
         and is marked as non-exclusive so aggregation excludes it.
 
     Yields

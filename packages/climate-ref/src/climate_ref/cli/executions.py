@@ -1091,8 +1091,8 @@ def _warn_about_bias(profiles: Sequence[ResourceProfile]) -> None:
     if excluded:
         logger.warning(
             f"{excluded} measured execution(s) were excluded as incomplete, "
-            f"carrying a different memory source, or carrying a cgroup reading from a shared "
-            f"container. Use --include-shared to count the shared ones."
+            f"carrying a different memory source, or carrying a cgroup reading from a shared container. "
+            f"Use --include-shared to count the shared ones."
         )
 
 

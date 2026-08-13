@@ -52,8 +52,7 @@ def _pool_is_serial(pool: concurrent.futures.Executor) -> bool:
 
     Every worker in the pool shares one cgroup,
     so a cgroup reading is only attributable to a single execution when the pool has one worker.
-    An unrecognised pool is treated as concurrent, which costs a cgroup reading rather than
-    silently attributing a whole container's memory to one execution.
+    An unrecognised pool is treated as concurrent.
     """
     return getattr(pool, "_max_workers", None) == 1
 

@@ -11,13 +11,13 @@ The Climate-REF requires local input datasets from CMIP6/CMIP6plus/CMIP7 to eval
 Depending on where you are running the REF, a local archive of CMIP6 datasets may be available already,
 if not the target datasets can be fetched from [ESGF](https://esgf-node.ornl.gov/search) directly.
 We have provided a script in [./scripts/fetch-esgf.py](https://github.com/Climate-REF/climate-ref/blob/main/scripts/fetch-esgf.py) for fetching the datasets that can be evaluated by the REF.
-This involves a moderate volume of data, requireing more than 4TB of storage when assessing a single ensemble member per model.
+This involves a moderate volume of data, requiring more than 4TB of storage when assessing a single ensemble member per model.
 
 Note that not all of these datasets are required.
-The Climate-REF will determine which diagnostics can be evaluated according the datasets that are available.
+The Climate-REF will determine which diagnostics can be evaluated according to the datasets that are available.
 
 The data used by the Climate-REF do not necessarily need to have been previously published to ESGF.
-As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process they can be evaluated via the REF.
+As long as the datasets match the data requirements of the diagnostics and they conform with the CMIP6 era cmorisation process, they can be evaluated via the REF.
 
 If you are preparing data for a modelling centre,
 start with the [modelling centre onboarding guide](modelling-centres.md)
@@ -117,10 +117,10 @@ dataset holding *both* sets of files, which covers the record twice.
 `GPCP-Monthly-3-2` `pr` `v20231205` is the clearest case: obs4REF ships one file spanning 1983-2023 and ESGF ships 41 yearly files spanning the same period, giving one dataset of 42 files.
 A diagnostic reading it sees every time step twice.
 
-Where the published copy carries a *newer* version there is no such problem:
+Where the published copy carries a *newer* version, there is no such problem:
 the two ingest as separate datasets and the catalog uses the later version.
 
-This is temporary until we split the obs4REF ingest from the obs4MIPs
+This is temporary until we split the obs4REF ingest from the obs4MIPs ingest.
 ///
 
 ### Future work

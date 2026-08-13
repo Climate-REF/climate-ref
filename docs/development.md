@@ -77,7 +77,6 @@ described in full under [Setting up diagnostic providers](installation.md#provid
 
 Then run your first solve with `uv run ref solve`,
 described in the [Solve tutorial](getting-started/04-solve.md).
-Prefix each command with `uv run` when working from a source checkout.
 Don't worry too much if some executions fail, things are still in active development.
 
 If you want the shortest possible end-to-end loop,

@@ -21,6 +21,26 @@ from the examples given in that link.
 
 <!-- towncrier release notes start -->
 
+## climate-ref 0.17.1 (2026-08-13)
+
+### Improvements
+
+- Peak memory is now measured over the execution's own process tree unless the executor declares that the execution has its cgroup to itself.
+  `proc_tree` is now preferred to `cgroup` readings, which cover every process in the container. ([#868](https://github.com/Climate-REF/climate-ref/pull/868))
+
+### Bug Fixes
+
+- Fixed the `resources_exclusive` flag recorded against each execution.
+  Executors now declare whether an execution has the container to itself,
+  which means `ref executions resources` no longer treats contaminated readings as clean samples. ([#868](https://github.com/Climate-REF/climate-ref/pull/868))
+
+### Improved Documentation
+
+- Documented the obs4MIPs reference datasets that must be fetched from ESGF because the obs4REF registry does not carry them
+  (`20CR-V2`, `C3S-GTO-ECV-9-0`, `CERES-EBAF-4-2-1`, `ERA-5` and `NOAA-NCEI-LAI-AVHRR-5-0`),
+  including which diagnostics require each one and the `scripts/fetch-esgf.py` commands that fetch them. ([#864](https://github.com/Climate-REF/climate-ref/pull/864))
+
+
 ## climate-ref 0.17.0 (2026-08-13)
 
 ### Breaking Changes
